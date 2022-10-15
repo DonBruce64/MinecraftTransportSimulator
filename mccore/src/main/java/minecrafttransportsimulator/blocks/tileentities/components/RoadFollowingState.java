@@ -27,10 +27,10 @@ public class RoadFollowingState {
         this.currentSegment = currentSegment;
     }
 
-    public RoadFollowingState(RoadFollowingState state) {
+    public RoadFollowingState(RoadFollowingState state, boolean flipped) {
         this.lane = state.lane;
         this.curve = state.curve;
-        this.goingForwards = state.goingForwards;
+        this.goingForwards = flipped ? !state.goingForwards : state.goingForwards;
         this.currentSegment = state.currentSegment;
     }
 

@@ -75,6 +75,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
     private double totalPathDelta;
     private double prevTotalPathDelta;
+    private boolean invertedRoadOrientation;
 
     //Internal movement variables.
     private final Point3D serverDeltaM;
@@ -520,36 +521,86 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             collidedEntities.clear();
             groundDeviceCollective.updateCollisions();
 
-            //If we aren't on a road, try to find one.
-            //If we are an aircraft, don't check as we shouldn't have aircraft on roads.
-            //If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
-            world.beginProfiling("RoadChecks", false);
-            if (definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.towingVehicle.lockedOnRoad)) {
-                frontFollower = null;
-                rearFollower = null;
-            } else if ((frontFollower == null || rearFollower == null) && ticksExisted % 20 == 0) {
-                Point3D frontContact = groundDeviceCollective.getContactPoint(true);
-                Point3D rearContact = groundDeviceCollective.getContactPoint(false);
-                if (frontContact != null && rearContact != null) {
-                    rearFollower = getFollower();
-                    //If we are being towed, and we got followers, adjust them to our actual position.
-                    //This is because we might have connected to the vehicle this tick, but won't be aligned
-                    //to our towed position as connections are exact.
-                    if (rearFollower != null) {
-                        float pointDelta = (float) rearContact.distanceTo(frontContact);
-                        if (towedByConnection == null) {
-                            frontFollower = new RoadFollowingState(rearFollower).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
-                        } else {
-                            //Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
-                            float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());
-                            //If the hitch is on the back of the vehicle, we need to have our offset be negative.
-                            if (towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0) {
-                                segmentDelta = -segmentDelta;
+            if (!definition.motorized.isAircraft) {
+                //If we aren't on a road, try to find one.
+                //Don't check for aircraft though.
+                world.beginProfiling("RoadChecks", false);
+                if ((frontFollower == null || rearFollower == null) && ticksExisted % 20 == 0) {
+                    Point3D frontContact = groundDeviceCollective.getContactPoint(true);
+                    Point3D rearContact = groundDeviceCollective.getContactPoint(false);
+                    if (frontContact != null && rearContact != null) {
+                        rearFollower = getFollower();
+                        //If we are being towed, and we got followers, adjust them to our actual position.
+                        //This is because we might have connected to the vehicle this tick, but won't be aligned
+                        //to our towed position as connections are exact.
+                        if (rearFollower != null) {
+                            float pointDelta = (float) rearContact.distanceTo(frontContact);
+                            if (towedByConnection == null) {
+                                frontFollower = new RoadFollowingState(rearFollower, false).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
+                            } else if (towedByConnection.towingVehicle.lockedOnRoad) {
+                                //Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
+                                //We need to use the GDB position for the towed, to the hitch, and same for ourselves.  Otherwise the value will be wrong.
+
+                                //Get length between contact and hitch, in XZ plane.
+                                //This has to be done in local coords to remove the Y-component.
+                                //If the hitch is on the front, the towing vehicle is pushing us so we need to use front offsets.
+                                boolean frontHitch = towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z > 0 : towedByConnection.hitchConnection.pos.z > 0;
+                                Point3D towingContact = towedByConnection.towingVehicle.groundDeviceCollective.getContactPoint(frontHitch);
+                                Point3D towingHitchDelta = towedByConnection.hitchConnection.pos.copy().multiply(towedByConnection.towingEntity.scale);
+                                if (towedByConnection.towingEntity instanceof APart) {
+                                    APart part = (APart) towedByConnection.towingEntity;
+                                    towingHitchDelta.rotate(part.localOrientation);
+                                    towingHitchDelta.add(part.localOffset);
+                                }
+                                towingHitchDelta.subtract(towingContact);
+                                towingHitchDelta.y = 0;
+
+                                //Now get delta for ourselves, so we know how far to offset from this point.
+                                //The same logic applies to us.
+                                boolean frontHookup = towedByConnection.towedEntity instanceof APart ? ((APart) towedByConnection.towedEntity).localOffset.z > 0 : towedByConnection.hookupConnection.pos.z > 0;
+                                Point3D towedContact = towedByConnection.towedVehicle.groundDeviceCollective.getContactPoint(frontHookup);
+                                Point3D towedHitchDelta = towedByConnection.hookupConnection.pos.copy().multiply(towedByConnection.towedEntity.scale);
+                                if (towedByConnection.towedEntity instanceof APart) {
+                                    APart part = (APart) towedByConnection.towedEntity;
+                                    towedHitchDelta.rotate(part.localOrientation);
+                                    towedHitchDelta.add(part.localOffset);
+                                }
+                                towedHitchDelta.subtract(towedContact);
+                                towedHitchDelta.y = 0;
+
+                                //Now that we have both points, get the delta between them and set followers.
+                                float segmentDelta = (float) (towingHitchDelta.length() + towedHitchDelta.length());
+                                selectedSegment = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment;
+                                if (frontHitch) {
+                                    if (frontHookup) {
+                                        invertedRoadOrientation = true;
+                                        frontFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).frontFollower, invertedRoadOrientation);
+                                        frontFollower.updateCurvePoints(-segmentDelta, selectedSegment);
+                                        rearFollower = new RoadFollowingState(frontFollower, false);
+                                        rearFollower.updateCurvePoints(-pointDelta, selectedSegment);
+                                    } else {
+                                        invertedRoadOrientation = false;
+                                        rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).frontFollower, invertedRoadOrientation);
+                                        rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
+                                        frontFollower = new RoadFollowingState(rearFollower, false);
+                                        frontFollower.updateCurvePoints(pointDelta, selectedSegment);
+                                    }
+                                } else {
+                                    if (frontHookup) {
+                                        invertedRoadOrientation = false;
+                                        frontFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower, invertedRoadOrientation);
+                                        frontFollower.updateCurvePoints(-segmentDelta, selectedSegment);
+                                        rearFollower = new RoadFollowingState(frontFollower, false);
+                                        rearFollower.updateCurvePoints(-pointDelta, selectedSegment);
+                                    } else {
+                                        invertedRoadOrientation = true;
+                                        rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower, invertedRoadOrientation);
+                                        rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
+                                        frontFollower = new RoadFollowingState(rearFollower, false);
+                                        frontFollower.updateCurvePoints(pointDelta, selectedSegment);
+                                    }
+                                }
                             }
-                            rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower);
-                            rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
-                            frontFollower = new RoadFollowingState(rearFollower);
-                            frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
                         }
                     }
                 }
@@ -622,7 +673,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     }
                 } else {
                     //Set followers to null, as something is invalid.
-                    //InterfaceChunkloader.removeEntityTicket(this);
                     frontFollower = null;
                     rearFollower = null;
                 }
@@ -750,6 +800,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 rotationApplied.angles.add(roadRotation);
                 if (towedByConnection != null) {
                     pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
+                    if (invertedRoadOrientation) {
+                        pathingApplied = -pathingApplied;
+                    }
                 } else {
                     pathingApplied = goingInReverse ? -velocity * speedFactor : velocity * speedFactor;
                 }
