@@ -679,15 +679,13 @@ public class WrapperWorld extends AWrapperWorld {
     public void setToFire(BlockHitResult hitResult) {
         BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).offset(EnumFacing.valueOf(hitResult.side.name()));
         if (world.isAirBlock(blockpos)) {
-            System.out.println(hitResult.side);
             world.setBlockState(blockpos, Blocks.FIRE.getDefaultState());
         }
     }
 
     @Override
     public void extinguish(BlockHitResult hitResult) {
-        EnumFacing side = EnumFacing.valueOf(hitResult.side.name());
-        world.extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).offset(side), side);
+        world.extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z), EnumFacing.valueOf(hitResult.side.name()));
     }
 
     @Override
