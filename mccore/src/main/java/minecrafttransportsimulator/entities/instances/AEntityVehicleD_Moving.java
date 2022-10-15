@@ -81,9 +81,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D serverDeltaM;
     private final Point3D serverDeltaR;
     private double serverDeltaP;
+    private final Point3D serverDeltaMApplied = new Point3D();
+    private final Point3D serverDeltaRApplied = new Point3D();
+    private double serverDeltaPApplied;
+
     private final Point3D serverDeltaMAtSync = new Point3D();
     private final Point3D serverDeltaRAtSync = new Point3D();
     private double serverDeltaPAtSync;
+
     private final Point3D clientDeltaM;
     private final Point3D clientDeltaR;
     private double clientDeltaP;
@@ -903,12 +908,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             orientation.set(rotation).convertToAngles();
 
             //For syncing, just add our deltas.  We don't actually do syncing operations here.
+            AEntityVehicleD_Moving towingVehicle = towedByConnection.towingVehicle;
             if (world.isClient()) {
-                clientDeltaM.add(motionApplied);
-                rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
-                clientDeltaR.add(rotationApplied.angles);
+                clientDeltaM.add(towingVehicle.clientDeltaMApplied);
+                clientDeltaR.add(towingVehicle.clientDeltaRApplied);
+                clientDeltaP += towingVehicle.clientDeltaPApplied;
             } else {
-                addToServerDeltas(null, null, 0);
+                serverDeltaM.add(towingVehicle.serverDeltaMApplied);
+                serverDeltaR.add(towingVehicle.serverDeltaRApplied);
+                serverDeltaP += towingVehicle.serverDeltaPApplied;
             }
         }
         world.endProfiling();
@@ -1016,13 +1024,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             serverDeltaR.add(rotationAdded);
             serverDeltaP += pathingAdded;
         } else {
-            //Internal call either from server, add normally and send packet if needed.
-            if (!motionApplied.isZero() || !rotationApplied.angles.isZero()) {
-                if (!rotationApplied.angles.isZero()) {
-                    rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
-                }
+            //Internal call, add normally and send packet if needed.
+            if (!motionApplied.isZero()) {
+                serverDeltaMApplied.set(motionApplied);
                 serverDeltaM.add(motionApplied);
-                serverDeltaR.add(rotationApplied.angles);
+                if (!orientation.angles.equals(prevOrientation.angles)) {
+                    rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
+                    serverDeltaRApplied.set(rotationApplied.angles);
+                    serverDeltaR.add(rotationApplied.angles);
+                }
+                serverDeltaPApplied += pathingApplied;
                 serverDeltaP += pathingApplied;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
             }
