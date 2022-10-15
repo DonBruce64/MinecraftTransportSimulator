@@ -78,12 +78,11 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                                     return CallbackType.NONE;
                                 } else {
                                     //Player can remove part, spawn item in the world and remove part.
-                                    //Make sure to remove the part before spawning the item.
-                                    part.entityOn.removePart(part, null);
                                     AItemPart droppedItem = part.getItem();
                                     if (droppedItem != null) {
                                         part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
                                     }
+                                    part.entityOn.removePart(part, null);
                                 }
                             } else if (player.isSneaking()) {
                                 //Attacker is a sneaking player with a wrench.
