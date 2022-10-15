@@ -876,8 +876,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
         super.renderBoundingBoxes(transform);
-        for (BoundingBox box : groundDeviceCollective.getGroundBounds()) {
-            box.renderWireframe(this, transform, null, ColorRGB.BLUE);
+        if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
+            for (BoundingBox box : groundDeviceCollective.getGroundBounds()) {
+                box.renderWireframe(this, transform, null, ColorRGB.BLUE);
+            }
         }
     }
 
