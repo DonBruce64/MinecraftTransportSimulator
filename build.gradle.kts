@@ -53,13 +53,8 @@ tasks.register("buildForge1.16.5") {
 
 @OptIn(ExperimentalPathApi::class)
 fun moveToOut(subProject: Project, versionStr: String) {
-    mkdir("/out/$versionStr")
-    var jarName = "Immersive Vehicles-${subProject.version}.jar"
-
-    if ("core" == versionStr) {
-        jarName = "Immersive Vehicles-Core.jar"
-    }
-
+    mkdir("out/$versionStr")
+    val jarName = "Immersive Vehicles-${subProject.version}.jar"
     Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
         .moveTo(Paths.get("${project.projectDir.canonicalPath}/out/$versionStr/$jarName"), true)
 }
