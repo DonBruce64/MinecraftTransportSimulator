@@ -133,6 +133,11 @@ public class PartEngine extends APart {
             }
         }
 
+        //Verify gears aren't out of range.  This can happen if a pack updates to lower number of gears.
+        if (definition.engine.gearRatios.size() <= getVariable(GEAR_VARIABLE) + reverseGears) {
+            setVariable(GEAR_VARIABLE, currentGear + reverseGears - 1);
+        }
+
         //Verify the vehicle has the right fuel for us.  If not, clear it out.
         //This allows us to swap in an engine with a different fuel type than the last one.
         if (!vehicleOn.fuelTank.getFluid().isEmpty()) {
