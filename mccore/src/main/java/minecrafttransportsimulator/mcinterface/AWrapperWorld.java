@@ -179,7 +179,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * Returns the position where the first block along the path can be hit, or null if there are
      * no blocks along the path.
      */
-    public abstract Point3D getBlockHit(Point3D position, Point3D delta);
+    public abstract BlockHitResult getBlockHit(Point3D position, Point3D delta);
 
     /**
      * Returns true if the block at the passed-in position is solid at the passed-in axis.
@@ -307,7 +307,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
      */
-    public abstract void setToFire(Point3D position);
+    public abstract void setToFire(BlockHitResult hitResult);
 
     /**
      * Extinguishes the block at the passed-in position if it's fire.
@@ -315,7 +315,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * Note that the position assumes the block hit is the one that is on fire,
      * not that the fire itself was hit.  This is because fire blocks do not have collision.
      */
-    public abstract void extinguish(Point3D position);
+    public abstract void extinguish(BlockHitResult hitResult);
 
     /**
      * Tries to fertilize the block at the passed-in position with the passed-in stack.
@@ -383,4 +383,17 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns an explosion of the specified strength at the passed-in point.
      */
     public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+
+    /**
+     * Class for hitting on blocks.
+     */
+    public static class BlockHitResult {
+        public final Point3D position;
+        public final Axis side;
+
+        public BlockHitResult(Point3D position, Axis side) {
+            this.position = position;
+            this.side = side;
+        }
+    }
 }

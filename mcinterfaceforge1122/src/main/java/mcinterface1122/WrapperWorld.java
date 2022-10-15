@@ -413,13 +413,13 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public Point3D getBlockHit(Point3D position, Point3D delta) {
+    public BlockHitResult getBlockHit(Point3D position, Point3D delta) {
         Vec3d start = new Vec3d(position.x, position.y, position.z);
         RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
         if (trace != null) {
             BlockPos pos = trace.getBlockPos();
             if (pos != null) {
-                return new Point3D(pos.getX(), pos.getY(), pos.getZ());
+                return new BlockHitResult(new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(trace.sideHit.name()));
             }
         }
         return null;
@@ -676,13 +676,18 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void setToFire(Point3D position) {
-        world.setBlockState(new BlockPos(position.x, position.y, position.z), Blocks.FIRE.getDefaultState());
+    public void setToFire(BlockHitResult hitResult) {
+        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).offset(EnumFacing.valueOf(hitResult.side.name()));
+        if (world.isAirBlock(blockpos)) {
+            System.out.println(hitResult.side);
+            world.setBlockState(blockpos, Blocks.FIRE.getDefaultState());
+        }
     }
 
     @Override
-    public void extinguish(Point3D position) {
-        world.extinguishFire(null, new BlockPos(position.x, position.y, position.z), EnumFacing.UP);
+    public void extinguish(BlockHitResult hitResult) {
+        EnumFacing side = EnumFacing.valueOf(hitResult.side.name());
+        world.extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).offset(side), side);
     }
 
     @Override

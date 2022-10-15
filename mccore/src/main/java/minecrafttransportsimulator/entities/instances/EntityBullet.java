@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -306,29 +307,26 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Didn't hit an entity.  Check for blocks.
-        Point3D hitPos = world.getBlockHit(position, motion);
-        if (hitPos != null) {
+        BlockHitResult hitResult = world.getBlockHit(position, motion);
+        if (hitResult != null) {
             //Only change block state on the server.
             if (!world.isClient()) {
                 if (definition.bullet.types.contains(BulletType.WATER)) {
-                    world.extinguish(hitPos);
+                    world.extinguish(hitResult);
                 } else {
-                    float hardnessHit = world.getBlockHardness(hitPos);
+                    float hardnessHit = world.getBlockHardness(hitResult.position);
                     if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * definition.bullet.diameter / 20F)) {
-                        world.destroyBlock(hitPos, true);
+                        world.destroyBlock(hitResult.position, true);
                     } else if (definition.bullet.types.contains(BulletType.INCENDIARY)) {
                         //Couldn't break block, but we might be able to set it on fire.
-                        hitPos.add(0, 1, 0);
-                        if (world.isAir(hitPos)) {
-                            world.setToFire(hitPos);
-                        }
+                        world.setToFire(hitResult);
                     } else {
                         //Couldn't break the block or set it on fire.  Have clients do sounds.
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(hitPos));
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(hitResult.position));
                     }
                 }
             }
-            position.set(hitPos);
+            position.set(hitResult.position);
             lastHit = HitType.BLOCK;
             displayDebugMessage("HIT BLOCK");
             startDespawn();
@@ -341,7 +339,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (targetPosition != null) {
                 targetToHit = targetPosition;
             } else {
-                targetToHit = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
+                hitResult = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
+                targetToHit = hitResult != null ? hitResult.position : null;
             }
             if (targetToHit != null) {
                 double distanceToTarget = position.distanceTo(targetToHit);
