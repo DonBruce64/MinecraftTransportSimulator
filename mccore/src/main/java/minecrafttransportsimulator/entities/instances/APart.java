@@ -146,6 +146,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (isActive && internalActiveSwitchbox != null) {
             isActive = internalActiveSwitchbox.runSwitchbox(0, false);
         }
+        if (!isActive && rider != null) {
+            //Kick out rider from inactive seat.
+            removeRider();
+        }
 
         //Set initial offsets.
         motion.set(entityOn.motion);
