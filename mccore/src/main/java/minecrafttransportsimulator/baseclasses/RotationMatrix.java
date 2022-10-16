@@ -395,8 +395,10 @@ public class RotationMatrix {
     public void interploate(RotationMatrix start, RotationMatrix end, double delta) {
         //Convert start and end matrix to quaternions.
         double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22) / 2D;
-        if (quatStartw == 0) {
-            //No delta between the quaternions, just return the start.
+        double quatEndw = Math.sqrt(1 + end.m00 + end.m11 + end.m22) / 2D;
+        if (quatStartw < 1.0e-6 && quatEndw < 1.0e-6) {
+            //Quaternions are axis-aligned.  If we continue, we get NaNed or get funny results.
+            //TODO find better maths to handle this condition rather than just not interpolating.
             this.set(start);
             return;
         }
@@ -405,7 +407,6 @@ public class RotationMatrix {
         double quatStartj = 1 / (4 * quatStartw) * (start.m02 - start.m20);
         double quatStartk = 1 / (4 * quatStartw) * (start.m10 - start.m01);
 
-        double quatEndw = Math.sqrt(1 + end.m00 + end.m11 + end.m22) / 2D;
         double quatEndi = 1 / (4 * quatEndw) * (end.m21 - end.m12);
         double quatEndj = 1 / (4 * quatEndw) * (end.m02 - end.m20);
         double quatEndk = 1 / (4 * quatEndw) * (end.m10 - end.m01);
@@ -424,7 +425,7 @@ public class RotationMatrix {
         double segment1;
         double segment2;
         //Need to not do interpolation at really small values, as it leads to issues.
-        if (1.0 - dotProduct > 1.0e-8) {
+        if (1.0 - dotProduct > 1.0e-6) {
             double angle = Math.acos(dotProduct);
             double sinAngle = Math.sin(angle);
             segment1 = Math.sin((1.0 - delta) * angle) / sinAngle;
