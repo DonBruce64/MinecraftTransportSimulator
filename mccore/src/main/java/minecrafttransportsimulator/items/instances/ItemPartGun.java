@@ -1,20 +1,19 @@
 package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-public class ItemPartGun extends AItemPart implements IItemEntityProvider<EntityPlayerGun> {
+public class ItemPartGun extends AItemPart {
 
     public ItemPartGun(JSONPart definition, String subName, String sourcePackID) {
         super(definition, subName, sourcePackID);
@@ -51,13 +50,9 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
     }
 
     @Override
-    public EntityPlayerGun createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        return new EntityPlayerGun(world, placingPlayer, data);
-    }
-
-    @Override
-    public Class<EntityPlayerGun> getEntityClass() {
-        return EntityPlayerGun.class;
+    public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
+        super.registerEntities(entityMap);
+        entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlayerGun(world, placingPlayer, data));
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

@@ -109,7 +109,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
      * Repairs the item.  What happens during repair differs from item to item.
      */
     public void repair(IWrapperNBT data) {
-        if (this instanceof IItemEntityProvider && AEntityE_Interactable.class.isAssignableFrom(((IItemEntityProvider<?>) this).getEntityClass())) {
+        if (data.getDouble(AEntityE_Interactable.DAMAGE_VARIABLE) > 0) {
             data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
         }
     }

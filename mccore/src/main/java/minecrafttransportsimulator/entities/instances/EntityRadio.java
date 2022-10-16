@@ -58,13 +58,6 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     @Override
-    public boolean changesPosition() {
-        //We return false here, even though we set our position, as we don't need to
-        //set all the other variables except position.
-        return false;
-    }
-
-    @Override
     public boolean shouldSavePosition() {
         //Don't save positional data.  We don't care about that as that comes from our provider.
         return false;

@@ -123,20 +123,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.clientDeltaP = serverDeltaP;
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
-
-        //Set position to the spot that was clicked by the player.
-        //Add a -90 rotation offset so the vehicle is facing perpendicular.
-        //Remove motion to prevent it if it was previously stored.
-        //Makes placement easier and is less likely for players to get stuck.
-        if (placingPlayer != null) {
-            Point3D playerSightVector = placingPlayer.getLineOfSight(3);
-            position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
-            prevPosition.set(position);
-            orientation.setToAngles(new Point3D(0, placingPlayer.getYaw() + 90, 0));
-            prevOrientation.set(orientation);
-            motion.set(0, 0, 0);
-            prevMotion.set(motion);
-        }
     }
 
     @Override
@@ -205,7 +191,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         world.endProfiling();
-        world.endProfiling();
     }
 
     @Override
@@ -217,8 +202,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    protected void updateEncompassingBoxLists() {
-        super.updateEncompassingBoxLists();
+    protected void updateEncompassingBox() {
+        super.updateEncompassingBox();
         if (ticksExisted == 1 || updateGroundDevicesRequest) {
             groundDeviceCollective.updateMembers();
             groundDeviceCollective.updateBounds();
@@ -900,7 +885,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         } else {
             //Mounted vehicles don't do most motions, only a sub-set of them.
-            world.beginProfiling("ApplyMotions", false);
+            world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(speedFactor);
             position.add(motionApplied);
 

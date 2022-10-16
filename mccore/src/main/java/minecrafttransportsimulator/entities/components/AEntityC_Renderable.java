@@ -61,7 +61,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
         if (!disableRendering(partialTicks)) {
             //Get the render offset.
             //This is the interpolated movement, plus the prior position.
-            if (changesPosition()) {
+            if (requiresDeltaUpdates()) {
                 interpolatedPositionHolder.set(prevPosition);
                 interpolatedPositionHolder.interpolate(position, partialTicks);
             } else {
@@ -72,7 +72,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             interpolatedPositionHolder.subtract(InterfaceManager.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
 
             //Get interpolated orientation if required.
-            if (changesPosition()) {
+            if (requiresDeltaUpdates()) {
                 getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
             } else {
                 interpolatedOrientationHolder.set(orientation);

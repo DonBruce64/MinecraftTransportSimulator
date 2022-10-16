@@ -383,6 +383,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
     }
 
+    @Override
+    public boolean requiresDeltaUpdates() {
+        return true;
+    }
+
     private void startDespawn() {
         //Spawn an explosion if we are an explosive bullet.
         if (!world.isClient() && definition.bullet.types.contains(BulletType.EXPLOSIVE) && lastHit != null) {

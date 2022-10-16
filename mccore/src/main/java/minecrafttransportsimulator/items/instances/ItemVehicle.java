@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -15,7 +17,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics> {
+public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider {
 
     public ItemVehicle(JSONVehicle definition, String subName, String sourcePackID) {
         super(definition, subName, sourcePackID);
@@ -34,7 +36,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             //This takes into account all saved data in the stack, so the vehicle will re-load its data from it
             //as if it has been saved in the world rather than into an item.  If there's no data,
             //then we just make a blank, new instance.
-            EntityVehicleF_Physics vehicle = createEntity(world, player, data);
+            EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, player, data);
             vehicle.addPartsPostAddition(player, data);
 
             //If we have a default fuel, add it now as we SHOULD have an engine to tell
@@ -58,6 +60,17 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
                 }
             }
 
+            //Set position to the spot that was clicked by the player.
+            //Add a -90 rotation offset so the vehicle is facing perpendicular.
+            //Remove motion to prevent it if it was previously stored.
+            //Makes placement easier and is less likely for players to get stuck.
+            vehicle.position.set(position).add(0.5, 1, 0.5);
+            vehicle.prevPosition.set(position);
+            vehicle.orientation.setToAngles(new Point3D(0, player.getYaw() + 90, 0));
+            vehicle.prevOrientation.set(vehicle.orientation);
+            vehicle.motion.set(0, 0, 0);
+            vehicle.prevMotion.set(vehicle.motion);
+
             //Entity is valid.  Spawn it into the world.
             vehicle.world.spawnEntity(vehicle);
 
@@ -70,28 +83,13 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
     }
 
     @Override
-    public void populateDefaultData(IWrapperNBT data) {
-        super.populateDefaultData(data);
-        //Make sure we don't restore any world-based entity properties.
-        data.setPoint3d("position", new Point3D());
-        data.setPoint3d("motion", new Point3D());
-        data.setPoint3d("angles", new Point3D());
-        data.setPoint3d("rotation", new Point3D());
-    }
-
-    @Override
     public void repair(IWrapperNBT data) {
         super.repair(data);
         data.setDouble("electricPower", 12);
     }
 
     @Override
-    public EntityVehicleF_Physics createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        return new EntityVehicleF_Physics(world, placingPlayer, data);
-    }
-
-    @Override
-    public Class<EntityVehicleF_Physics> getEntityClass() {
-        return EntityVehicleF_Physics.class;
+    public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
+        entityMap.put(EntityVehicleF_Physics.class.getSimpleName(), (world, placingPlayer, data) -> new EntityVehicleF_Physics(world, placingPlayer, data));
     }
 }

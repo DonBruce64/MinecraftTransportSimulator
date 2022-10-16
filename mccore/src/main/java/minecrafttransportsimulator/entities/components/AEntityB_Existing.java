@@ -61,18 +61,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         super(world, data);
         this.position = data.getPoint3d("position");
         this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
-
-        if (changesPosition()) {
-            this.prevPosition = position.copy();
-            this.prevOrientation = new RotationMatrix().set(orientation);
-            this.motion = data.getPoint3d("motion");
-            this.prevMotion = motion.copy();
-        } else {
-            this.prevPosition = null;
-            this.prevOrientation = null;
-            this.motion = null;
-            this.prevMotion = null;
-        }
+        this.prevPosition = position.copy();
+        this.prevOrientation = new RotationMatrix().set(orientation);
+        this.motion = data.getPoint3d("motion");
+        this.prevMotion = motion.copy();
 
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
         if (hasRadio()) {
@@ -90,19 +82,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         super(world, null);
         this.position = position.copy();
         this.orientation = new RotationMatrix().setToAngles(angles);
-
-        if (changesPosition()) {
-            this.prevPosition = position.copy();
-            this.prevOrientation = new RotationMatrix().set(orientation);
-            this.motion = motion.copy();
-            this.prevMotion = motion.copy();
-        } else {
-            this.prevPosition = null;
-            this.prevOrientation = null;
-            this.motion = null;
-            this.prevMotion = null;
-        }
-
+        this.prevPosition = position.copy();
+        this.prevOrientation = new RotationMatrix().set(orientation);
+        this.motion = motion.copy();
+        this.prevMotion = motion.copy();
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
         this.radio = null;
     }
@@ -114,7 +97,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (world.isClient()) {
             updateSounds(0);
         }
-        if (changesPosition()) {
+        if (requiresDeltaUpdates()) {
             prevPosition.set(position);
             prevMotion.set(motion);
             prevOrientation.set(orientation);
@@ -154,7 +137,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public boolean updateRider() {
         //Update entity position, motion, and orientation.
         if (rider.isValid()) {
-            if (changesPosition()) {
+            if (requiresDeltaUpdates()) {
                 rider.setPosition(position, false);
                 rider.setVelocity(motion);
                 prevRiderRelativeOrientation.set(riderRelativeOrientation);
@@ -269,13 +252,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     }
 
     /**
-     * This method returns true if this entity can change position (or if positional data is important to it).
-     * This is normally true, but some entities may not ever move, and so there are some calls we can skip.
-     * If this is set true, then {@link #prevPosition}, {@link #motion}, {@link #prevMotion}, and {@link #prevOrientation}
-     * will be null and will not be used in various calls.
+     * This method returns true if this entity needs to handle positional delta data.
+     * This is normally false, since basic "entities" like radios, fluid tanks, bullets, and decor, either don't every move,
+     * or do move, but their movement is based on another entity that does handle deltas.  Returning false here will make
+     * this entity not care about {@link #prevPosition}, {@link #motion}, {@link #prevMotion}, and {@link #prevOrientation}.
+     * It should also be used to bypass bounding box and collision updates, since those won't change if this entity delta doesn't,
+     * as well as not doing rider positional updates, since the rider won't change position if the entity doesn't.
      */
-    public boolean changesPosition() {
-        return true;
+    public boolean requiresDeltaUpdates() {
+        return false;
     }
 
     /**
@@ -284,7 +269,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      * only contains the rotational elements of this entity.
      */
     public void getInterpolatedOrientation(RotationMatrix store, double partialTicks) {
-        if (changesPosition()) {
+        if (requiresDeltaUpdates()) {
             store.interploate(prevOrientation, orientation, partialTicks);
         } else {
             store.set(orientation);
@@ -350,9 +335,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         super.save(data);
         if (shouldSavePosition()) {
             data.setPoint3d("position", position);
-            if (changesPosition()) {
-                data.setPoint3d("motion", motion);
-            }
+            data.setPoint3d("motion", motion);
             data.setPoint3d("angles", orientation.convertToAngles());
         }
         if (radio != null) {

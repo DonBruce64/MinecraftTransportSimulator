@@ -16,6 +16,7 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -51,7 +52,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     /**
      * Maps Entity class names to instances of the IItemEntityProvider class that creates them.
      **/
-    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<>();
+    protected static final Map<String, IItemEntityFactory> entityMap = new HashMap<>();
 
     /**
      * Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.
@@ -279,8 +280,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
         //Iterate over all pack items and find those that spawn entities.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-            if (packItem instanceof IItemEntityProvider<?>) {
-                entityMap.put(((IItemEntityProvider<?>) packItem).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) packItem);
+            if (packItem instanceof IItemEntityProvider) {
+                ((IItemEntityProvider) packItem).registerEntities(entityMap);
             }
         }
 

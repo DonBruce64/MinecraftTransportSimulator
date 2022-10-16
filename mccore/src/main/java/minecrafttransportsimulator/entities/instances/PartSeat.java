@@ -113,8 +113,8 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    protected void updateEncompassingBoxLists() {
-        super.updateEncompassingBoxLists();
+    protected void updateEncompassingBox() {
+        super.updateEncompassingBox();
 
         //Don't have any interaction boxes if we are on a client and the player is sitting in us.
         //This keeps us from clicking our own seat when we want to click other things.
@@ -197,55 +197,57 @@ public final class PartSeat extends APart {
 
     @Override
     public void removeRider() {
-        //Check if we have another controller, and if they are creative.
-        boolean otherController = false;
-        boolean otherCreativeController = false;
-        for (APart part : vehicleOn.allParts) {
-            if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
-                otherController = true;
-                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
-                    otherCreativeController = true;
-                    break;
+        if (vehicleOn != null) {
+            //Check if we have another controller, and if they are creative.
+            boolean otherController = false;
+            boolean otherCreativeController = false;
+            for (APart part : vehicleOn.allParts) {
+                if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
+                    otherController = true;
+                    if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
+                        otherCreativeController = true;
+                        break;
+                    }
                 }
             }
-        }
 
-        //Set creative to false if there are no other creative controllers.
-        if (!otherCreativeController) {
-            vehicleOn.isCreative = false;
+            //Set creative to false if there are no other creative controllers.
+            if (!otherCreativeController) {
+                vehicleOn.isCreative = false;
+            }
+
+            boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
+            if (clientRiderOnVehicle) {
+                //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
+                if (vehicleOn.definition.motorized.isAircraft) {
+                    AGUIBase.closeIfOpen(GUIPanelAircraft.class);
+                } else {
+                    AGUIBase.closeIfOpen(GUIPanelGround.class);
+                }
+                AGUIBase.closeIfOpen(GUIHUD.class);
+                AGUIBase.closeIfOpen(GUIRadio.class);
+
+                //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
+                if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
+                    vehicleOn.engines.forEach(engine -> {
+                        if (engine.magnetoOn) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+                        }
+                        if (engine.electricStarterEngaged) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+                        }
+                    });
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
+                    if (!vehicleOn.parkingBrakeOn) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                    }
+                }
+            }
         }
 
         //De-select active gun if required.
         if (placementDefinition.canDisableGun) {
             activeGunItem = null;
-        }
-
-        boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
-        if (clientRiderOnVehicle) {
-            //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-            if (vehicleOn.definition.motorized.isAircraft) {
-                AGUIBase.closeIfOpen(GUIPanelAircraft.class);
-            } else {
-                AGUIBase.closeIfOpen(GUIPanelGround.class);
-            }
-            AGUIBase.closeIfOpen(GUIHUD.class);
-            AGUIBase.closeIfOpen(GUIRadio.class);
-
-            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
-            if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
-                vehicleOn.engines.forEach(engine -> {
-                    if (engine.magnetoOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                    }
-                    if (engine.electricStarterEngaged) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                    }
-                });
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
-                if (!vehicleOn.parkingBrakeOn) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
-                }
-            }
         }
 
         //Get rid of any potion effects that were caused by the seat
@@ -303,8 +305,8 @@ public final class PartSeat extends APart {
             //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
-            if (vehicleOn != null && world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
-                ControlSystem.controlVehicle(vehicleOn, placementDefinition.isController);
+            if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
+                ControlSystem.controlMultipart(masterEntity, placementDefinition.isController);
             }
             return true;
         } else {

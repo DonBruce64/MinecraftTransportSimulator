@@ -63,6 +63,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public boolean isInvisible = false;
     public boolean isActive = true;
+    public boolean isMoveable;
     public final boolean turnsWithSteer;
     public final boolean isSpare;
     public final boolean isMirrored;
@@ -115,15 +116,18 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     protected void initializeAnimations() {
         super.initializeAnimations();
+        isMoveable = false;
         if (placementDefinition.animations != null || placementDefinition.applyAfter != null) {
             List<JSONAnimationDefinition> animations = new ArrayList<>();
             if (placementDefinition.animations != null) {
                 animations.addAll(placementDefinition.animations);
             }
             placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
+            isMoveable = true;
         }
         if (definition.generic.movementAnimations != null) {
             internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
+            isMoveable = true;
         }
         if (placementDefinition.activeAnimations != null) {
             placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
@@ -223,6 +227,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public boolean requiresDeltaUpdates() {
+        return super.requiresDeltaUpdates() || entityOn.requiresDeltaUpdates() || isMoveable;
+    }
+
+    @Override
     protected void updateCollisionBoxes() {
         //Add collision if we aren't a fake part.
         if (!isFake()) {
@@ -232,8 +241,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    protected void updateEncompassingBoxLists() {
-        super.updateEncompassingBoxLists();
+    protected void updateEncompassingBox() {
+        super.updateEncompassingBox();
 
         //Don't add our interaction boxes to the box list if we aren't active and on the client.
         //Servers need all of these since we might be active for some players and not others.

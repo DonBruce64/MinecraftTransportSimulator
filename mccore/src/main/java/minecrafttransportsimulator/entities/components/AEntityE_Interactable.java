@@ -146,6 +146,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public double damageAmount;
     public static final String DAMAGE_VARIABLE = "damage";
 
+    /**
+     * Internal variable to force collision box updates, even if we aren't normally a moveable entity.
+     * Useful if we don't normally move and shouldn't run box updates, but can move on state-change.
+     **/
+    public boolean forceCollisionUpdateThisTick;
+
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
         this.locked = data.getBoolean("locked");
@@ -217,6 +223,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
         //Update collision boxes as they might have changed.
         updateCollisionBoxes();
+        updateEncompassingBox();
 
         //Create instrument lists and animation clocks.
         if (definition.instruments != null) {
@@ -255,6 +262,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         damageAmount = getVariable(DAMAGE_VARIABLE);
         locked = isVariableActive(LOCKED_VARIABLE);
         world.endProfiling();
+        //Reset collision override flag.
+        forceCollisionUpdateThisTick = false;
+    }
+
+    @Override
+    public boolean requiresDeltaUpdates() {
+        return super.requiresDeltaUpdates() || forceCollisionUpdateThisTick;
     }
 
     @Override
@@ -316,8 +330,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             }
         }
         interactionBoxes.addAll(entityCollisionBoxes);
+    }
 
-        //Now get the encompassing box.
+    /**
+     * Updates the encompassinb box.  This has to run after {@link #updateCollisionBoxes()} to ensure
+     * we get all boxes for the encompassing box.
+     */
+    protected void updateEncompassingBox() {
         encompassingBox.widthRadius = 0;
         encompassingBox.heightRadius = 0;
         encompassingBox.depthRadius = 0;
@@ -355,10 +374,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     public void doPostUpdateLogic() {
         super.doPostUpdateLogic();
-        if (changesPosition()) {
+        if (requiresDeltaUpdates()) {
             //Update collision boxes to new position.
             world.beginProfiling("CollisionBoxUpdates", true);
             updateCollisionBoxes();
+            updateEncompassingBox();
             world.endProfiling();
 
             //Move all entities that are touching this entity.
@@ -524,7 +544,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         //Normalization is required here, as otherwise the normals get scaled with the
         //scaling operations, and shading gets applied funny.
         if (definition.instruments != null) {
-            world.beginProfiling("Instruments", false);
+            world.beginProfiling("Instruments", true);
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 ItemInstrument instrument = instruments.get(i);
                 if (instrument != null) {

@@ -193,6 +193,11 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     @Override
+    public boolean requiresDeltaUpdates() {
+        return true;
+    }
+
+    @Override
     public boolean shouldSync() {
         return false;
     }

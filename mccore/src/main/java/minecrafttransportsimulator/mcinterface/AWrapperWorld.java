@@ -15,8 +15,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 
@@ -140,12 +139,12 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList);
 
     /**
-     * Loads all entities that are in the passed-in range into the passed-in vehicle.
-     * Will either load the whole vehicle besides controllers if a general area of the vehicle is clicked,
-     * or the specific seat if a seat is clicked.
+     * Loads all entities that are in the passed-in range into the passed-in entity.
+     * If a vehicle is clicked, it will load the whole vehicle besides controllers.
+     * Otherwise, only the specific entity will be loaded.
      * Only non-hostile mobs that are not already riding an entity will be loaded.
      */
-    public abstract void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart);
+    public abstract void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad);
 
     /**
      * Returns the block at the passed-in position, or null if it doesn't exist in the world.

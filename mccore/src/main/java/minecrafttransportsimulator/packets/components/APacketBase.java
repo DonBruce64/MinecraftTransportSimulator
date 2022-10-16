@@ -14,6 +14,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
@@ -47,7 +48,6 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisi
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
@@ -223,6 +223,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableSet.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableToggle.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInteract.class);
 
         //Bullet packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
@@ -272,7 +273,6 @@ public abstract class APacketBase {
 
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleInteract.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 

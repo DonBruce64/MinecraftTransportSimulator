@@ -8,6 +8,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONPartDefinition {
+    public boolean bypassSlotChecks;
+
     @JSONRequired
     @JSONDescription("An entry of x, y, and z coordinates that define the center point of where this part will attach to the object.")
     public Point3D pos;

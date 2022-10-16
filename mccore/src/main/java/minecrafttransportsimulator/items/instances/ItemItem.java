@@ -9,7 +9,9 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -17,8 +19,8 @@ import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.items.components.IItemFood;
-import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -38,7 +40,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInteractable, IItemFood {
+public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteractable, IItemFood {
     /*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
     public int pageNumber;
     /*First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.*/
@@ -56,41 +58,59 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
     }
 
     @Override
-    public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
+    public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
         switch (definition.item.type) {
             case WRENCH: {
-                if (!vehicle.world.isClient()) {
-                    //If the player isn't the owner of the vehicle, they can't interact with it.
+                if (!entity.world.isClient()) {
+                    //If the player isn't the owner of the entity, they can't interact with it.
                     if (!ownerState.equals(PlayerOwnerState.USER)) {
                         if (rightClick) {
-                            if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
-                                player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
-                            } else if (player.isSneaking()) {
-                                player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
-                            } else {
-                                player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
-                            }
-                        } else {
-                            if (part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid) {
-                                LanguageEntry partResult = part.checkForRemoval();
-                                if (partResult != null) {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, partResult));
-                                    return CallbackType.NONE;
+                            //Right-clicking opens GUIs.
+                            if (entity instanceof EntityVehicleF_Physics) {
+                                EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                                if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
+                                    player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
                                 } else {
-                                    //Player can remove part, spawn item in the world and remove part.
-                                    AItemPart droppedItem = part.getItem();
-                                    if (droppedItem != null) {
-                                        part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
-                                    }
-                                    part.entityOn.removePart(part, null);
+                                    player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                                 }
                             } else if (player.isSneaking()) {
-                                //Attacker is a sneaking player with a wrench.
-                                //Remove this vehicle if possible.
-                                if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid) {
-                                    vehicle.disconnectAllConnections();
-                                    vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), vehicle.position);
-                                    vehicle.remove();
+                                player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+                            }
+                        } else {
+                            //Left clicking removes parts, or removes vehicles, if we were sneaking.
+                            if(player.isSneaking()) {
+                                EntityVehicleF_Physics vehicle;
+                                if(entity instanceof APart) {
+                                    vehicle = ((APart) entity).vehicleOn;
+                                }else if(entity instanceof EntityVehicleF_Physics) {
+                                    vehicle = (EntityVehicleF_Physics) entity;
+                                } else {
+                                    vehicle = null;
+                                }
+                                if(vehicle != null) {
+                                    if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
+                                        vehicle.disconnectAllConnections();
+                                        vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), hitBox.globalCenter);
+                                        vehicle.remove();
+                                    }
+                                }
+                            }else {
+                                if (entity instanceof APart) {
+                                    APart part = (APart) entity;
+                                    if (!part.placementDefinition.isPermanent && part.isValid) {
+                                        LanguageEntry partResult = part.checkForRemoval();
+                                        if (partResult != null) {
+                                            player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+                                            return CallbackType.NONE;
+                                        } else {
+                                            //Player can remove part, spawn item in the world and remove part.
+                                            AItemPart droppedItem = part.getItem();
+                                            if (droppedItem != null) {
+                                                part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
+                                            }
+                                            part.entityOn.removePart(part, null);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -101,14 +121,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                 return CallbackType.NONE;
             }
             case PAINT_GUN: {
-                if (!vehicle.world.isClient() && rightClick) {
-                    //If the player isn't the owner of the vehicle, they can't interact with it.
+                if (!entity.world.isClient() && rightClick) {
+                    //If the player isn't the owner of the entity, they can't interact with it.
                     if (!ownerState.equals(PlayerOwnerState.USER)) {
-                        if (part != null) {
-                            player.sendPacket(new PacketEntityGUIRequest(part, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
-                        } else {
-                            player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
-                        }
+                        player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     } else {
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
                     }
@@ -116,18 +132,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                 return CallbackType.NONE;
             }
             case KEY: {
-                if (rightClick && !vehicle.world.isClient()) {
-                        //Try to lock the vehicle.
-                    //First check to see if we need to set this key's vehicle.
+                if (rightClick && !entity.world.isClient()) {
+                    //Try to lock the entity.
+                    //First check to see if we need to set this key's entity.
                     IWrapperItemStack stack = player.getHeldStack();
                     IWrapperNBT data = stack.getData();
                     UUID keyVehicleUUID = data.getUUID("vehicle");
                     if (keyVehicleUUID == null) {
                         //Check if we are the owner before making this a valid key.
-                        if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
+                        if (entity.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
                         } else {
-                            keyVehicleUUID = vehicle.uniqueUUID;
+                            keyVehicleUUID = entity.uniqueUUID;
                             data.setUUID("vehicle", keyVehicleUUID);
                             stack.setData(data);
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
@@ -135,31 +151,31 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                         return CallbackType.NONE;
                     }
 
-                    //Try to lock or unlock this vehicle.
+                    //Try to lock or unlock this entity.
                     //If we succeed, send callback to clients to change locked state.
-                    if (!keyVehicleUUID.equals(vehicle.uniqueUUID)) {
+                    if (!keyVehicleUUID.equals(entity.uniqueUUID)) {
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_WRONGKEY));
                     } else {
-                        if (part instanceof PartSeat) {
-                            //Part is a seat, don't do locking changes, instead, change seat.
+                        if (entity instanceof PartSeat) {
+                            //Entity clicked is a seat, don't do locking changes, instead, change seat.
                             //Returning skip will make the seat-clicking code activate in the packet.
                             return CallbackType.SKIP;
-                        } else if (vehicle.locked) {
-                            //Unlock vehicle and process hitbox action if it's a closed door.
-                            vehicle.toggleLock();
+                        } else if (entity.locked) {
+                            //Unlock entity and process hitbox action if it's a closed door.
+                            entity.toggleLock();
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_UNLOCK));
                             if (hitBox.definition != null) {
-                                if (hitBox.definition.variableName != null && !vehicle.isVariableActive(hitBox.definition.variableName) && hitBox.definition.variableName.startsWith("door")) {
+                                if (hitBox.definition.variableName != null && !entity.isVariableActive(hitBox.definition.variableName) && hitBox.definition.variableName.startsWith("door")) {
                                     return CallbackType.SKIP;
                                 }
                             }
                         } else {
                             //Lock vehicle.  Don't interact with hitbox unless it's NOT a door, as the locking code will close doors.
                             //If we skipped, we'd just re-open the closed door.
-                            vehicle.toggleLock();
+                            entity.toggleLock();
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_LOCK));
                             if (hitBox.definition != null) {
-                                if (hitBox.definition.variableName != null && vehicle.isVariableActive(hitBox.definition.variableName) && !hitBox.definition.variableName.startsWith("door")) {
+                                if (hitBox.definition.variableName != null && entity.isVariableActive(hitBox.definition.variableName) && !hitBox.definition.variableName.startsWith("door")) {
                                     return CallbackType.SKIP;
                                 }
                             }
@@ -169,24 +185,30 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                 return CallbackType.NONE;
             }
             case TICKET: {
-                if (!vehicle.world.isClient() && rightClick) {
+                if (!entity.world.isClient() && rightClick) {
                     if (player.isSneaking()) {
-                        for (APart otherPart : vehicle.allParts) {
-                            if (otherPart.rider != null) {
-                                otherPart.removeRider();
+                        if (entity instanceof PartSeat) {
+                            if (entity.rider != null) {
+                                entity.removeRider();
+                            }
+                        } else if (entity instanceof AEntityF_Multipart) {
+                            for (APart otherPart : ((AEntityF_Multipart<?>) entity).allParts) {
+                                if (otherPart.rider != null) {
+                                    otherPart.removeRider();
+                                }
                             }
                         }
                     } else {
-                        vehicle.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), vehicle, part);
+                        entity.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), entity);
                     }
                 }
                 return CallbackType.NONE;
             }
             case FUEL_HOSE: {
-                if (!vehicle.world.isClient() && rightClick) {
+                if (!entity.world.isClient() && rightClick) {
                     if (firstPartClicked == null) {
-                        if (part instanceof PartInteractable) {
-                            PartInteractable interactable = (PartInteractable) part;
+                        if (entity instanceof PartInteractable) {
+                            PartInteractable interactable = (PartInteractable) entity;
                             if (interactable.tank != null) {
                                 if (interactable.linkedPart == null && interactable.linkedVehicle == null) {
                                     firstPartClicked = interactable;
@@ -197,11 +219,11 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                             }
                         }
                     } else {
-                        if (part instanceof PartInteractable) {
-                            PartInteractable interactable = (PartInteractable) part;
+                        if (entity instanceof PartInteractable) {
+                            PartInteractable interactable = (PartInteractable) entity;
                             if (interactable.tank != null && !interactable.equals(firstPartClicked)) {
                                 if (interactable.linkedPart == null && interactable.linkedVehicle == null) {
-                                    if (part.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
+                                    if (interactable.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
                                         if (interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                             firstPartClicked.linkedPart = interactable;
                                             InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
@@ -220,7 +242,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                                     player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_ALREADYLINKED));
                                 }
                             }
-                        } else if (part == null) {
+                        } else if (entity instanceof EntityVehicleF_Physics) {
+                            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
                             if (vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
                                 if (vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                     firstPartClicked.linkedVehicle = vehicle;
@@ -241,31 +264,33 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                 return CallbackType.NONE;
             }
             case JUMPER_CABLES: {
-                if (!vehicle.world.isClient() && rightClick) {
-                    if (part instanceof PartEngine && part.vehicleOn != null) {
-                        PartEngine engine = (PartEngine) part;
-                        if (engine.linkedEngine == null) {
-                            if (firstEngineClicked == null) {
-                                firstEngineClicked = engine;
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_FIRSTLINK));
-                            } else if (!firstEngineClicked.equals(engine)) {
-                                if (firstEngineClicked.vehicleOn.equals(engine.vehicleOn)) {
-                                    firstEngineClicked = null;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SAMEVEHICLE));
-                                } else if (engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)) {
-                                    engine.linkedEngine = firstEngineClicked;
-                                    firstEngineClicked.linkedEngine = engine;
-                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
-                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
-                                    firstEngineClicked = null;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SECONDLINK));
-                                } else {
-                                    firstEngineClicked = null;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_TOOFAR));
+                if (!entity.world.isClient() && rightClick) {
+                    if (entity instanceof PartEngine) {
+                        PartEngine engine = (PartEngine) entity;
+                        if (engine.vehicleOn != null) {
+                            if (engine.linkedEngine == null) {
+                                if (firstEngineClicked == null) {
+                                    firstEngineClicked = engine;
+                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_FIRSTLINK));
+                                } else if (!firstEngineClicked.equals(engine)) {
+                                    if (firstEngineClicked.vehicleOn.equals(engine.vehicleOn)) {
+                                        firstEngineClicked = null;
+                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SAMEVEHICLE));
+                                    } else if (engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)) {
+                                        engine.linkedEngine = firstEngineClicked;
+                                        firstEngineClicked.linkedEngine = engine;
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
+                                        firstEngineClicked = null;
+                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SECONDLINK));
+                                    } else {
+                                        firstEngineClicked = null;
+                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_TOOFAR));
+                                    }
                                 }
+                            } else {
+                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_ALREADYLINKED));
                             }
-                        } else {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_ALREADYLINKED));
                         }
                     }
                 }
@@ -273,14 +298,16 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
             }
             case JUMPER_PACK: {
                 if (rightClick) {
-                    //Use jumper on vehicle.
-                    vehicle.electricPower = 12;
-                    if (!vehicle.world.isClient()) {
-                        InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
-                        if (!player.isCreative()) {
-                            player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                    if (entity instanceof EntityVehicleF_Physics) {
+                        //Use jumper on vehicle.
+                        ((EntityVehicleF_Physics) entity).electricPower = 12;
+                        if (!entity.world.isClient()) {
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
+                            if (!player.isCreative()) {
+                                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                            }
+                            return CallbackType.ALL;
                         }
-                        return CallbackType.ALL;
                     }
                 }
                 return CallbackType.NONE;

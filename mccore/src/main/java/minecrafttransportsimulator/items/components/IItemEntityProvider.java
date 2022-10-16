@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.Map;
+
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -10,17 +12,16 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  *
  * @author don_bruce
  */
-public interface IItemEntityProvider<EntityType extends AEntityB_Existing> {
+public interface IItemEntityProvider {
 
     /**
-     * Gets a new instance of the entity this item creates.
+     * Registers all applicable entities this item can create.
+     * An item can create multiple entities, provided those entities
+     * have unique class names.
      */
-    EntityType createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data);
+    void registerEntities(Map<String, IItemEntityFactory> entityMap);
 
-    /**
-     * Gets the class of the Entity this item makes.
-     * This is for registration, not construction.  For construction,
-     * use {@link #createEntity(AWrapperWorld, IWrapperNBT)}
-     */
-    Class<EntityType> getEntityClass();
+    public static interface IItemEntityFactory {
+        AEntityB_Existing createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data);
+    }
 }

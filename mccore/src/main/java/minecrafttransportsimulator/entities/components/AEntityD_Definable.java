@@ -982,8 +982,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         if (!InterfaceManager.clientInterface.isGamePaused() && !blendingEnabled) {
             world.beginProfiling("Particles", false);
             spawnParticles(partialTicks);
-            world.endProfiling();
         }
+        world.endProfiling();
     }
 
     @Override

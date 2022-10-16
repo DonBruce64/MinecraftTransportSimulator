@@ -18,6 +18,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -167,20 +168,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.update();
         world.beginProfiling("EntityF_Level", true);
 
-        //Update part slot box positions.
-        world.beginProfiling("PartSlotPositions", true);
-        partSlotBoxes.forEach((box, partDef) -> {
-            AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
-            if (switchBox != null) {
-                if (switchBox.runSwitchbox(0, false)) {
-                    box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
-                    box.updateToEntity(this, box.globalCenter);
-                }
-            } else {
-                box.updateToEntity(this, null);
-            }
-        });
-
         //Populate active part slot list.
         //Only do this on clients; servers reference the main list to handle clicks.
         //Boxes added on clients depend on what the player is holding.
@@ -204,10 +191,29 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             box.heightRadius = (heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height / 2D : PART_SLOT_HITBOX_HEIGHT / 2D) * scale.y;
                             box.depthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width / 2D : PART_SLOT_HITBOX_WIDTH / 2D) * scale.z;
                             activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+                            forceCollisionUpdateThisTick = true;
                         }
                     }
                 }
+            } else if (heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER) {
+                forceCollisionUpdateThisTick = true;
             }
+        }
+
+        if (requiresDeltaUpdates()) {
+            //Update part slot box positions.
+            world.beginProfiling("PartSlotPositions", true);
+            partSlotBoxes.forEach((box, partDef) -> {
+                AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
+                if (switchBox != null) {
+                    if (switchBox.runSwitchbox(0, false)) {
+                        box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
+                        box.updateToEntity(this, box.globalCenter);
+                    }
+                } else {
+                    box.updateToEntity(this, null);
+                }
+            });
         }
 
         world.endProfiling();
@@ -290,19 +296,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         }
         world.endProfiling();
         super.doPostUpdateLogic();
-        if (changesPosition()) {
-            //Update all-box lists now that all parts are updated.
-            //If we don't do this, then the box size might get de-synced.
-            world.beginProfiling("BoxAlignment_" + allInteractionBoxes.size(), true);
-            updateEncompassingBoxLists();
-            world.endProfiling();
-        }
     }
 
     @Override
     protected void updateCollisionBoxes() {
         super.updateCollisionBoxes();
-
         //Add part slot boxes to interaction boxes since we can interact with those.
         interactionBoxes.addAll(activePartSlotBoxes.keySet());
     }
@@ -451,7 +449,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public APart addPartFromItem(AItemPart partItem, IWrapperPlayer playerAdding, IWrapperNBT partData, int slotIndex) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
-        if (partsInSlots.get(slotIndex) == null && partItem.isPartValidForPackDef(newPartDef, subName, true)) {
+        if (partsInSlots.get(slotIndex) == null && (newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subName, true))) {
             //Part is not already present, and is valid, add it.
             partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
@@ -606,13 +604,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partSlotBoxes.put(newSlotBox, partDef);
             }
         }
+        forceCollisionUpdateThisTick = true;
     }
 
-    /**
-     * Call to re-create the lists of the encompassing collision and interaction boxes.
-     * This should be run every tick so we have up-to-date lists.
-     */
-    protected void updateEncompassingBoxLists() {
+    @Override
+    protected void updateEncompassingBox() {
+        super.updateEncompassingBox();
         //Set active collision box, door box, and interaction box lists to current boxes.
         allEntityCollisionBoxes.clear();
         allEntityCollisionBoxes.addAll(entityCollisionBoxes);
@@ -646,9 +643,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (!parts.isEmpty()) {
             for (APart part : parts) {
                 if (!part.isFake()) {
-                    encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x + part.encompassingBox.widthRadius));
-                    encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y + part.encompassingBox.heightRadius));
-                    encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z + part.encompassingBox.depthRadius));
+                    encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x) + part.encompassingBox.widthRadius);
+                    encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y) + part.encompassingBox.heightRadius);
+                    encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z) + part.encompassingBox.depthRadius);
                 }
             }
         }
@@ -657,9 +654,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         //Servers will just get packets to the box, but clients need to raytrace the slots.
         if (world.isClient() && !activePartSlotBoxes.isEmpty()) {
             for (BoundingBox box : activePartSlotBoxes.keySet()) {
-                encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
-                encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
-                encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
+                encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x) + box.widthRadius);
+                encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y) + box.heightRadius);
+                encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z) + box.depthRadius);
             }
         }
         encompassingBox.updateToEntity(this, null);

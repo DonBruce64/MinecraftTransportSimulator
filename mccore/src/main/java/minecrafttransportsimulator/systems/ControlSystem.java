@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -19,12 +20,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
 /**
  * Class that handles all control operations.
@@ -42,7 +43,6 @@ public final class ControlSystem {
     private static boolean parkingBrakePressedLastCheck = false;
 
     private static BoundingBox closestBox = null;
-    private static EntityVehicleF_Physics closestVehicle = null;
     private static AEntityF_Multipart<?> closestEntity = null;
 
     /**
@@ -105,7 +105,6 @@ public final class ControlSystem {
             BoundingBox clickBounds = new BoundingBox(startPosition, endPosition);
 
             closestBox = null;
-            closestVehicle = null;
             closestEntity = null;
             for (EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)) {
                 if (vehicle.encompassingBox.intersects(clickBounds)) {
@@ -114,10 +113,25 @@ public final class ControlSystem {
                         if (box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null) {
                             if (closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
                                 closestBox = box;
-                                closestVehicle = vehicle;
                                 closestEntity = vehicle.getPartWithBox(closestBox);
                                 if (closestEntity == null) {
-                                    closestEntity = closestVehicle;
+                                    closestEntity = vehicle;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for (EntityPlacedPart placer : player.getWorld().getEntitiesOfType(EntityPlacedPart.class)) {
+                if (placer.encompassingBox.intersects(clickBounds)) {
+                    //Could have hit this part, check if and what we did via raytracing.
+                    for (BoundingBox box : placer.allInteractionBoxes) {
+                        if (box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null) {
+                            if (closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
+                                closestBox = box;
+                                closestEntity = placer.getPartWithBox(closestBox);
+                                if (closestEntity == null) {
+                                    closestEntity = placer;
                                 }
                             }
                         }
@@ -125,20 +139,27 @@ public final class ControlSystem {
                 }
             }
             if (closestBox != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
             }
         } else if (closestBox != null) {
             //Fire off un-click to entity last clicked.
-            InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, false, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(closestEntity, player, closestBox, false, false));
         }
     }
 
-    public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController) {
+    public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController) {
         clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-        if (vehicle.definition.motorized.isAircraft) {
-            controlAircraft(vehicle, isPlayerController);
+        if (multipart instanceof EntityVehicleF_Physics) {
+            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) multipart;
+            if (vehicle.definition.motorized.isAircraft) {
+                controlAircraft(vehicle, isPlayerController);
+            } else {
+                controlGroundVehicle(vehicle, isPlayerController);
+            }
         } else {
-            controlGroundVehicle(vehicle, isPlayerController);
+            controlCamera(ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
+            rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
+            controlGun(multipart, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
         }
     }
 
@@ -202,10 +223,10 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
+    private static void controlGun(AEntityF_Multipart<?> multipart, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
         boolean gunSwitchPressedThisScan = gunSwitch.isPressed();
         IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-        for (APart part : vehicle.allParts) {
+        for (APart part : multipart.allParts) {
             if (part instanceof PartGun) {
                 PartGun gun = (PartGun) part;
                 if (clientPlayer.equals(gun.getGunController())) {

@@ -185,6 +185,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
+    public boolean requiresDeltaUpdates() {
+        return true;
+    }
+
+    @Override
     public double getMass() {
         //Need to use a list here to make sure we don't end up with infinite recursion due to bad trailer linkings.
         //This could lock up a world if not detected!

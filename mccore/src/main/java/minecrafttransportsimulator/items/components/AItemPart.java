@@ -1,11 +1,19 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.Map;
+
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Base class for part items.  Contains methods on what part to spawn from
@@ -13,10 +21,48 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  *
  * @author don_bruce
  */
-public abstract class AItemPart extends AItemSubTyped<JSONPart> {
+public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider {
 
     public AItemPart(JSONPart definition, String subName, String sourcePackID) {
         super(definition, subName, sourcePackID);
+    }
+
+    @Override
+    public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
+        if (definition.generic.canBePlacedOnGround) {
+            if (!world.isClient()) {
+
+                //Construct the class, add ourselves as a part, and spawn.
+                IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                EntityPlacedPart entity = new EntityPlacedPart(world, player, placerData);
+                entity.addPartsPostAddition(player, placerData);
+                IWrapperItemStack heldStack = player.getHeldStack();
+                IWrapperNBT data = heldStack.getData();
+                populateDefaultData(data);
+                entity.addPartFromItem(this, player, data, 0);
+
+                //Set position to the spot that was clicked by the player.
+                //Set orientation to that to face the player.
+                entity.position.set(position).add(0.5, 1, 0.5);
+                entity.prevPosition.set(position);
+                entity.orientation.setToAngles(new Point3D(0, Math.round((player.getYaw() + 180) / 90) * 90 % 360, 0));
+                entity.prevOrientation.set(entity.orientation);
+                entity.world.spawnEntity(entity);
+
+                //Decrement stack if we are not in creative.
+                if (!player.isCreative()) {
+                    player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
+        entityMap.put(EntityPlacedPart.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlacedPart(world, placingPlayer, data));
     }
 
     /**

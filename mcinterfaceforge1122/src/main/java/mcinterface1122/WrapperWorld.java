@@ -20,6 +20,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -343,20 +344,20 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
+    public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
             if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
-                if (clickedPart instanceof PartSeat) {
-                    if (clickedPart.rider == null) {
-                        clickedPart.setRider(new WrapperEntity(entity), true);
-                        break;
-                    }
-                } else {
-                    for (APart part : vehicleToLoad.parts) {
+                if (entityToLoad instanceof EntityVehicleF_Physics) {
+                    for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
                             part.setRider(new WrapperEntity(entity), true);
                             break;
                         }
+                    }
+                } else {
+                    if (entityToLoad.rider == null) {
+                        entityToLoad.setRider(new WrapperEntity(entity), true);
+                        break;
                     }
                 }
             }

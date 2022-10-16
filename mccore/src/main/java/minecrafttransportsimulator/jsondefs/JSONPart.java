@@ -96,11 +96,20 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this part will forward damage onto the vehicle it is on when hit by a bullet.  This will also cause the bullet to stop when it hits this part.  Engines ignore this behavior and always forward damage.")
         public boolean forwardsDamage;
 
+        @JSONDescription("If true, this part can be placed on the ground.  It will be placed axis-aligned when placed.")
+        public boolean canBePlacedOnGround;
+
+        @JSONDescription("If true, this part will fall to the ground when placed, if it's not on the ground already when placed.  Only valid for parts with canBePlacedOnGround as true.")
+        public boolean fallsToGround;
+
         @JSONDescription("The width of the part.")
         public float width;
 
         @JSONDescription("The height of the part.")
         public float height;
+
+        @JSONDescription("The offset, in the Y direction, as to where this part will exist when placed in the world.  Has no effect if canBePlacedOnGround is false.")
+        public float placedOffset;
 
         @JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
         public int mass;

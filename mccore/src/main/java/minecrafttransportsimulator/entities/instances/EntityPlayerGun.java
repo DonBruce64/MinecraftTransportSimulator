@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -14,9 +12,8 @@ import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -34,7 +31,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
+public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<>();
     public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
 
@@ -90,17 +87,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
     }
 
     @Override
-    public JSONPlayerGun generateDefaultDefinition() {
-        JSONPlayerGun defaultDefinition = new JSONPlayerGun();
-        defaultDefinition.packID = "dummy";
-        defaultDefinition.systemName = "dummy";
-        defaultDefinition.general = new AJSONItem.General();
-        defaultDefinition.general.health = 100;
+    public JSONDummyPartProvider generateDefaultDefinition() {
+        JSONDummyPartProvider defaultDefinition = JSONDummyPartProvider.generateDummy();
 
-        JSONPartDefinition fakeDef = new JSONPartDefinition();
-        fakeDef.pos = new Point3D();
-        fakeDef.types = new ArrayList<>();
         //Look though all gun types and add them.
+        JSONPartDefinition fakeDef = defaultDefinition.parts.get(0);
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
             if (packItem instanceof ItemPartGun) {
                 ItemPartGun gunItem = (ItemPartGun) packItem;
@@ -112,9 +103,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
             }
         }
 
-        fakeDef.maxValue = Float.MAX_VALUE;
-        defaultDefinition.parts = new ArrayList<>();
-        defaultDefinition.parts.add(fakeDef);
         return defaultDefinition;
     }
 
@@ -225,6 +213,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         if (activeGun != null) {
             activeGun.isInvisible = player != null && player.isSpectator();
         }
+    }
+
+    @Override
+    public boolean requiresDeltaUpdates() {
+        return true;
     }
 
     @Override
