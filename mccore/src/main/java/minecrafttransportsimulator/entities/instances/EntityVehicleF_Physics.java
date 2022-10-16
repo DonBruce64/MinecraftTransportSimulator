@@ -133,6 +133,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double ballastForce;//kg*m/ticks^2
     private double gravitationalForce;//kg*m/ticks^2
     private final Point3D thrustForce = new Point3D();//kg*m/ticks^2
+    private double thrustForceValue;
+    private final Point3D towingThrustForce = new Point3D();//kg*m/ticks^2
     private final Point3D totalForce = new Point3D();//kg*m/ticks^2
 
     //Torques.
@@ -344,6 +346,47 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
     @Override
     protected void getForcesAndMotions() {
+        //Get engine thrust force contributions.  This happens for all vehicles, towed or not.
+        hasRotors = false;
+        thrustForce.set(0, 0, 0);
+        thrustTorque.set(0, 0, 0);
+        rotorRotation.set(0, 0, 0);
+        thrustForceValue = 0;
+        for (APart part : allParts) {
+            if (part instanceof PartEngine) {
+                thrustForceValue += ((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
+            } else if (part instanceof PartPropeller) {
+                PartPropeller propeller = (PartPropeller) part;
+                thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
+                if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
+                    hasRotors = true;
+                    if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
+                        rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
+                    } else {
+                        if (autopilotSetting == 0) {
+                            rotorRotation.set(-5D * elevatorAngle / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, 5D * aileronAngle / MAX_AILERON_ANGLE);
+                        } else {
+                            if (orientation.angles.x < -1) {
+                                rotorRotation.x = 1;
+                            } else if (orientation.angles.x > 1) {
+                                rotorRotation.x = -1;
+                            } else {
+                                rotorRotation.x = -orientation.angles.x;
+                            }
+                            if (orientation.angles.z < -1) {
+                                rotorRotation.z = 1;
+                            } else if (orientation.angles.z > 1) {
+                                rotorRotation.z = -1;
+                            } else {
+                                rotorRotation.z = -orientation.angles.z;
+                            }
+                            rotorRotation.y = -5D * rudderAngle / MAX_RUDDER_ANGLE;
+                        }
+                    }
+                }
+            }
+        }
+
         //If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
@@ -353,44 +396,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
 
-            //Get engine thrust force contributions.
-            hasRotors = false;
-            thrustForce.set(0, 0, 0);
-            thrustTorque.set(0, 0, 0);
-            rotorRotation.set(0, 0, 0);
-            for (APart part : allParts) {
-                if (part instanceof PartEngine) {
-                    ((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
-                } else if (part instanceof PartPropeller) {
-                    PartPropeller propeller = (PartPropeller) part;
-                    propeller.addToForceOutput(thrustForce, thrustTorque);
-                    if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
-                        hasRotors = true;
-                        if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
-                            rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
-                        } else {
-                            if (autopilotSetting == 0) {
-                                rotorRotation.set(-5D * elevatorAngle / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, 5D * aileronAngle / MAX_AILERON_ANGLE);
-                            } else {
-                                if (orientation.angles.x < -1) {
-                                    rotorRotation.x = 1;
-                                } else if (orientation.angles.x > 1) {
-                                    rotorRotation.x = -1;
-                                } else {
-                                    rotorRotation.x = -orientation.angles.x;
-                                }
-                                if (orientation.angles.z < -1) {
-                                    rotorRotation.z = 1;
-                                } else if (orientation.angles.z > 1) {
-                                    rotorRotation.z = -1;
-                                } else {
-                                    rotorRotation.z = -orientation.angles.z;
-                                }
-                                rotorRotation.y = -5D * rudderAngle / MAX_RUDDER_ANGLE;
-                            }
-                        }
-                    }
-                }
+            //If we are towing any non-mounted vehicles, get their thrust contributions as well.
+            double towedThrust = getRecursiveTowingThrust();
+            if (towedThrust != 0) {
+                towingThrustForce.set(0, 0, towedThrust).rotate(orientation);
+                thrustForce.add(towingThrustForce);
             }
 
             //Get forces.  Some forces are specific to JSON sections.
@@ -730,6 +740,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 --rudderInputCooldown;
             }
 
+        }
+    }
+
+    protected double getRecursiveTowingThrust() {
+        if (!towingConnections.isEmpty()) {
+            double thrust = 0;
+            for (TowingConnection connection : towingConnections) {
+                if (!connection.hitchConnection.mounted) {
+                    thrust += connection.towedVehicle.thrustForceValue + connection.towedVehicle.getRecursiveTowingThrust();
+                }
+            }
+            return thrust;
+        } else {
+            return 0;
         }
     }
 

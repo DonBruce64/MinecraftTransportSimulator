@@ -100,6 +100,7 @@ public class PartEngine extends APart {
     private final List<PartPropeller> linkedPropellers = new ArrayList<>();
     private final Point3D engineAxisVector = new Point3D();
     private final Point3D engineForce = new Point3D();
+    private double engineForceValue;
 
     //Constants and static variables.
     public static final String MAGNETO_VARIABLE = "engine_magneto";
@@ -1117,8 +1118,9 @@ public class PartEngine extends APart {
         return partialTicks != 0 ? driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation) * partialTicks : driveshaftRotation;
     }
 
-    public void addToForceOutput(Point3D force, Point3D torque) {
+    public double addToForceOutput(Point3D force, Point3D torque) {
         engineForce.set(0D, 0D, 0D);
+        engineForceValue = 0;
         //First get wheel forces, if we have friction to do so.
         if (definition.engine.jetPowerFactor == 0 && wheelFriction != 0) {
             double wheelForce;
@@ -1168,6 +1170,7 @@ public class PartEngine extends APart {
                 //Not running, do engine braking.
                 wheelForce = -rpm / currentMaxRPM * Math.signum(currentGear) * 30;
             }
+            engineForceValue += wheelForce;
             engineForce.set(0, 0, wheelForce).rotate(vehicleOn.orientation);
             force.add(engineForce);
         }
@@ -1191,12 +1194,14 @@ public class PartEngine extends APart {
             double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * definition.engine.jetPowerFactor;
 
             //Add the jet force to the engine.  Use the engine rotation to define the power vector.
+            engineForceValue += thrust;
             engineForce.set(engineAxisVector).scale(thrust);
             force.add(engineForce);
             engineForce.reOrigin(vehicleOn.orientation);
             torque.y -= engineForce.z * localOffset.x + engineForce.x * localOffset.z;
             torque.z += engineForce.y * localOffset.x - engineForce.x * localOffset.y;
         }
+        return engineForceValue;
     }
 
     @Override

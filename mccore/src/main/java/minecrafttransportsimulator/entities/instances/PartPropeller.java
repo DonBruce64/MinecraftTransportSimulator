@@ -44,6 +44,7 @@ public class PartPropeller extends APart {
     private final List<PartEngine> connectedEngines = new ArrayList<>();
     protected final Point3D propellerAxisVector = new Point3D();
     private final Point3D propellerForce = new Point3D();
+    private double propellerForceValue;
     private final BoundingBox damageBounds;
 
     public static final int MIN_DYNAMIC_PITCH = 45;
@@ -218,7 +219,8 @@ public class PartPropeller extends APart {
         return super.getRawVariableValue(variable, partialTicks);
     }
 
-    public void addToForceOutput(Point3D force, Point3D torque) {
+    public double addToForceOutput(Point3D force, Point3D torque) {
+        propellerForceValue = 0;
         propellerAxisVector.set(0, 0, 1).rotate(orientation);
         if (currentRPM != 0 && desiredLinearVelocity != 0) {
             //Thrust produced by the propeller is the difference between the desired linear velocity and the airstream linear velocity.
@@ -247,11 +249,13 @@ public class PartPropeller extends APart {
 
             //Add propeller force to total engine force as a vector.
             //Depends on propeller orientation, as upward propellers provide upwards thrust.
+            propellerForceValue += thrust;
             propellerForce.set(propellerAxisVector).scale(thrust);
             force.add(propellerForce);
             propellerForce.reOrigin(vehicleOn.orientation);
             torque.y -= propellerForce.z * localOffset.x;
             torque.z += propellerForce.y * localOffset.x;
         }
+        return propellerForceValue;
     }
 }
