@@ -63,10 +63,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public boolean isInvisible = false;
     public boolean isActive = true;
+    public boolean isPermanent = false;
     public final boolean turnsWithSteer;
     public final boolean isSpare;
     public final boolean isMirrored;
-    public final boolean isPermanent;
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.
@@ -103,8 +103,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
-        this.isPermanent = areVariablesLocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer(),placementDefinition.isPermanent);
-
+        
         //Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
         //when we initialize all of our animations.
@@ -148,6 +147,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (isActive && internalActiveSwitchbox != null) {
             isActive = internalActiveSwitchbox.runSwitchbox(0, false);
         }
+        
+        //Update permanent-ness
+        isPermanent = areVariablesLocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer(),placementDefinition.isPermanent);
 
         //Set initial offsets.
         motion.set(entityOn.motion);
