@@ -68,8 +68,12 @@ public class TowingConnection {
             towingEntity = world.getEntity(hitchEntityUUID);
             if (towingEntity != null) {
                 towingVehicle = towingEntity instanceof APart ? ((APart) towingEntity).vehicleOn : (EntityVehicleF_Physics) towingEntity;
-                hitchConnectionGroup = towingEntity.definition.connectionGroups.get(hitchGroupIndex);
-                hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
+                if (towingEntity.definition.connectionGroups.size() > hitchGroupIndex) {
+                    hitchConnectionGroup = towingEntity.definition.connectionGroups.get(hitchGroupIndex);
+                    if (hitchConnectionGroup.connections.size() > hitchConnectionIndex) {
+                        hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
+                    }
+                }
             }
         }
 
@@ -77,8 +81,12 @@ public class TowingConnection {
             towedEntity = world.getEntity(hookupEntityUUID);
             if (towedEntity != null) {
                 towedVehicle = towedEntity instanceof APart ? ((APart) towedEntity).vehicleOn : (EntityVehicleF_Physics) towedEntity;
-                hookupConnectionGroup = towedEntity.definition.connectionGroups.get(hookupGroupIndex);
-                hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
+                if (towedEntity.definition.connectionGroups.size() > hookupGroupIndex) {
+                    hookupConnectionGroup = towedEntity.definition.connectionGroups.get(hookupGroupIndex);
+                    if (hookupConnectionGroup.connections.size() > hookupConnectionIndex) {
+                        hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
+                    }
+                }
             }
         }
         return hitchConnection != null && hookupConnection != null && towedVehicle != towingVehicle;

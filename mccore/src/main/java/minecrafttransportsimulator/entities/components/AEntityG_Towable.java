@@ -244,8 +244,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
     /**
      * Method block for handling a trailer connection request.
-     * If this request is made on a hookup group, then this entity will try to become towed by another entity.
-     * If this request is a hitch and NOT a hookup, then this entity will try to find an entity to tow.
+     * If this request is on a hitch, then this entity will try to find an entity to tow.
+     * If this request is on a hookup, and we aren't currently being towed, then this entity will try to become towed by another entity.
      * In all cases, the definer is on our side, either as ourselves or a part.
      */
     private void handleConnectionRequest(AEntityE_Interactable<?> connectionDefiner, int connectionGroupIndex) {
@@ -253,9 +253,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         TowingConnection connectionToDisconnect = null;
 
         //Check if this is a connect or disconnect request.
-        if (requestedGroup.isHookup && towedByConnection != null) {
-            connectionToDisconnect = towedByConnection;
-        } else if (requestedGroup.isHitch) {
+        if (requestedGroup.isHitch) {
             for (TowingConnection connection : towingConnections) {
                 if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
                     connectionToDisconnect = connection;
@@ -263,18 +261,21 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 }
             }
         }
+        if (requestedGroup.isHookup && towedByConnection != null && towedByConnection.hookupGroupIndex == connectionGroupIndex) {
+            connectionToDisconnect = towedByConnection;
+        }
 
         if (connectionToDisconnect == null) {
             TrailerConnectionResult result;
             List<AEntityG_Towable<?>> entitiesToCheck = new ArrayList<>(world.getEntitiesOfType(EntityVehicleF_Physics.class));
 
-            if (requestedGroup.isHookup) {
-                //Find entity that can tow us.
+            if (requestedGroup.isHitch) {
+                //Find an entity to tow.
                 for (AEntityG_Towable<?> testEntity : entitiesToCheck) {
-                    result = testEntity.checkIfTrailerCanConnect(testEntity, testEntity, -1, this, connectionDefiner, connectionGroupIndex);
+                    result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testEntity, -1);
                     if (result.skip) {
                         for (APart testPart : testEntity.allParts) {
-                            result = testEntity.checkIfTrailerCanConnect(testEntity, testPart, -1, this, connectionDefiner, connectionGroupIndex);
+                            result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testPart, -1);
                             if (!result.skip) {
                                 result.handlePacket(this);
                                 return;
@@ -285,13 +286,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         return;
                     }
                 }
-            } else {
-                //Find an entity to tow.
+            }
+            if (requestedGroup.isHookup) {
+                //Find entity that can tow us.
                 for (AEntityG_Towable<?> testEntity : entitiesToCheck) {
-                    result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testEntity, -1);
+                    result = testEntity.checkIfTrailerCanConnect(testEntity, testEntity, -1, this, connectionDefiner, connectionGroupIndex);
                     if (result.skip) {
                         for (APart testPart : testEntity.allParts) {
-                            result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testPart, -1);
+                            result = testEntity.checkIfTrailerCanConnect(testEntity, testPart, -1, this, connectionDefiner, connectionGroupIndex);
                             if (!result.skip) {
                                 result.handlePacket(this);
                                 return;
