@@ -37,9 +37,7 @@ public final class ControlSystem {
     private static IWrapperPlayer clientPlayer;
 
     private static boolean clickingLeft = false;
-    private static byte ticksLeftHeld = 0;
     private static boolean clickingRight = false;
-    private static byte ticksRightHeld = 0;
 
     private static boolean parkingBrakePressedLastCheck = false;
 
@@ -73,31 +71,21 @@ public final class ControlSystem {
 
     public static void controlGlobal(IWrapperPlayer player) {
         if (InterfaceManager.inputInterface.isLeftMouseButtonDown()) {
-            if (ticksLeftHeld++ == 5) {
-                ticksLeftHeld = 0;
-                clickingLeft = false;
-            }
             if (!clickingLeft) {
                 clickingLeft = true;
                 handleClick(player);
             }
         } else if (clickingLeft) {
             clickingLeft = false;
-            ticksLeftHeld = 0;
             handleClick(player);
         }
         if (InterfaceManager.inputInterface.isRightMouseButtonDown()) {
-            if (ticksRightHeld++ == 5) {
-                ticksRightHeld = 0;
-                clickingRight = false;
-            }
             if (!clickingRight) {
                 clickingRight = true;
                 handleClick(player);
             }
         } else if (clickingRight) {
             clickingRight = false;
-            ticksRightHeld = 0;
             handleClick(player);
         }
     }
