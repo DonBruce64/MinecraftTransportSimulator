@@ -130,7 +130,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
      **/
-    private AItemPack<JSONDefinition> cachedItem;
+    public AItemPack<JSONDefinition> cachedItem;
 
     /**
      * Constructor for synced entities

@@ -322,6 +322,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 String partTone = partTones.get(placementDefinition.toneIndex - 1);
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
+                        cachedItem = null;
                         subName = partTone;
                         return;
                     }
