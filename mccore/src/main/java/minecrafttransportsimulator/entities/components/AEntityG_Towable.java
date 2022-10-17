@@ -130,8 +130,16 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 handleConnectionRequest(this, connectionRequestIndex - 1);
             }
             setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+        } else if (!world.isClient() && !snapConnectionIndexes.isEmpty() && ticksExisted % (10 / snapConnectionIndexes.size()) == 0) {
+            if (++lastSnapConnectionTried == snapConnectionIndexes.size()) {
+                lastSnapConnectionTried = 0;
+            }
+            if (!connectionGroupsIndexesInUse.contains(lastSnapConnectionTried)) {
+                setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, lastSnapConnectionTried + 1);
+                bypassConnectionPacket = true;
+            }
         }
-        //also check parts, in case they got a request.
+        //Also check parts, in case they got a request.
         for (APart part : allParts) {
             connectionRequestIndex = (int) part.getVariable(TOWING_CONNECTION_REQUEST_VARIABLE);
             if (connectionRequestIndex != 0) {
@@ -140,6 +148,15 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     handleConnectionRequest(part, connectionRequestIndex - 1);
                 }
                 part.setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+            } else if (!world.isClient() && towedByConnection == null && !part.snapConnectionIndexes.isEmpty() && part.ticksExisted % (10 / part.snapConnectionIndexes.size()) == 0) {
+                if (++part.lastSnapConnectionTried == part.snapConnectionIndexes.size()) {
+                    part.lastSnapConnectionTried = 0;
+                }
+                if (!part.connectionGroupsIndexesInUse.contains(part.lastSnapConnectionTried)) {
+                    part.setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, part.lastSnapConnectionTried + 1);
+                    part.bypassConnectionPacket = true;
+                    break;
+                }
             }
         }
 
@@ -217,6 +234,20 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             }
             world.endProfiling();
         }
+        if (!disconnectedTowingConnections.isEmpty()) {
+            world.beginProfiling("DisconnectedEntities", true);
+            for (TowingConnection connection : disconnectedTowingConnections) {
+                connection.hitchCurrentPosition.set(connection.hitchConnection.pos).multiply(connection.towingEntity.scale).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
+                connection.hookupCurrentPosition.set(connection.hookupConnection.pos).multiply(connection.towedEntity.scale).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
+                if (!connection.towingEntity.isValid || !connection.towedEntity.isValid || !connection.hitchCurrentPosition.isDistanceToCloserThan(connection.hookupCurrentPosition, connection.hitchConnection.distance * 2)) {
+                    disconnectedTowingConnections.remove(connection);
+                    connection.towingEntity.connectionGroupsIndexesInUse.remove(connection.hitchGroupIndex);
+                    connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
+                    break;
+                }
+            }
+            world.endProfiling();
+        }
     }
 
     @Override
@@ -282,12 +313,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         for (APart testPart : testEntity.allParts) {
                             result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testPart, -1);
                             if (!result.skip) {
-                                result.handlePacket(this);
+                                result.handlePacket(connectionDefiner);
                                 return;
                             }
                         }
                     } else {
-                        result.handlePacket(this);
+                        result.handlePacket(connectionDefiner);
                         return;
                     }
                 }
@@ -300,17 +331,17 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         for (APart testPart : testEntity.allParts) {
                             result = testEntity.checkIfTrailerCanConnect(testEntity, testPart, -1, this, connectionDefiner, connectionGroupIndex);
                             if (!result.skip) {
-                                result.handlePacket(this);
+                                result.handlePacket(connectionDefiner);
                                 return;
                             }
                         }
                     } else {
-                        result.handlePacket(this);
+                        result.handlePacket(connectionDefiner);
                         return;
                     }
                 }
             }
-            TrailerConnectionResult.NOTFOUND.handlePacket(this);
+            TrailerConnectionResult.NOTFOUND.handlePacket(connectionDefiner);
         } else {
             if (connectionToDisconnect.equals(towedByConnection)) {
                 towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
@@ -331,7 +362,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
      */
     private TrailerConnectionResult checkIfTrailerCanConnect(AEntityG_Towable<?> hitchEntity, AEntityE_Interactable<?> hitchConnectionDefiner, int requestedHitchGroupIndex, AEntityG_Towable<?> hookupEntity, AEntityE_Interactable<?> hookupConnectionDefiner, int requestedHookupGroupIndex) {
         //Make sure we should be connecting.
-        if (hookupEntity.towedByConnection != null) {
+        if (hitchConnectionDefiner.connectionGroupsIndexesInUse.contains(requestedHitchGroupIndex) || hookupConnectionDefiner.connectionGroupsIndexesInUse.contains(requestedHookupGroupIndex)) {
+            return TrailerConnectionResult.ALREADY_TOWED; //Entity is either connected, or just disconnected.
+        } else if (hookupEntity.towedByConnection != null) {
             return TrailerConnectionResult.ALREADY_TOWED; //Entity is already hooked up.
         } else if (hookupEntity.equals(hitchEntity)) {
             return TrailerConnectionResult.FEEDBACK_LOOP; //We can't connect to ourself.
@@ -343,7 +376,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         boolean matchingConnection = false;
         boolean trailerInRange = false;
 
-        //First make sure the entity is in-even somewhat close.
+        //First make sure the entity is even somewhat close.
         if (hitchConnectionDefiner.position.isDistanceToCloserThan(hookupConnectionDefiner.position, 25)) {
             //If we or the other entity don't have connection groups, don't bother checking.
             if (hitchConnectionDefiner.definition.connectionGroups != null && !hitchConnectionDefiner.definition.connectionGroups.isEmpty() && hookupConnectionDefiner.definition.connectionGroups != null && !hookupConnectionDefiner.definition.connectionGroups.isEmpty()) {
@@ -404,7 +437,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     private boolean isAlreadyTowing(AEntityG_Towable<?> vehicleTowing, AEntityG_Towable<?> vehicleToTow) {
         for (TowingConnection connection : towingConnections) {
             if (connection.towedVehicle.equals(vehicleTowing) || connection.towedVehicle.equals(vehicleToTow)) {
-                return true; //We can't 
+                return true;
             } else {
                 for (TowingConnection nextConnection : connection.towedVehicle.towingConnections) {
                     if (((AEntityG_Towable<?>) nextConnection.towedVehicle).isAlreadyTowing(vehicleTowing, vehicleToTow)) {
@@ -422,6 +455,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     public void connectTrailer(TowingConnection connection) {
         towingConnections.add(connection);
         connection.towedVehicle.towedByConnection = connection;
+        connection.towingEntity.connectionGroupsIndexesInUse.add(connection.hitchGroupIndex);
+        connection.towedEntity.connectionGroupsIndexesInUse.add(connection.hookupGroupIndex);
         ((AEntityG_Towable<?>) connection.towedVehicle).savedTowedByConnection = null;
 
         //Need to set initial values to avoid bad-syncing.
@@ -441,6 +476,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.remove(connectionIndex);
         connection.towedVehicle.towedByConnection = null;
+
+        if (connection.hitchConnectionGroup.isSnap || connection.hookupConnectionGroup.isSnap) {
+            disconnectedTowingConnections.add(connection);
+        } else {
+            connectionGroupsIndexesInUse.remove(connection.hitchGroupIndex);
+            connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
+        }
+
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
         } else if (AGUIBase.activeInputGUI instanceof AGUIPanel) {
@@ -474,6 +517,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
         data.setInteger("towingConnectionCount", towingConnectionIndex);
+
         return data;
     }
 
@@ -498,10 +542,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             this.language = language;
         }
 
-        private void handlePacket(AEntityG_Towable<?> messageSource) {
-            for (IWrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))) {
-                if (entity instanceof IWrapperPlayer) {
-                    ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, language));
+        private void handlePacket(AEntityE_Interactable<?> messageSource) {
+            if (messageSource.bypassConnectionPacket) {
+                messageSource.bypassConnectionPacket = false;
+            } else {
+                for (IWrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))) {
+                    if (entity instanceof IWrapperPlayer) {
+                        ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, language));
+                    }
                 }
             }
         }

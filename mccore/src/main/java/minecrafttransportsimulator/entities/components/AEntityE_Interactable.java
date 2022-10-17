@@ -18,12 +18,14 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -152,6 +154,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      **/
     public boolean forceCollisionUpdateThisTick;
 
+    /**
+     * List of disconnected connections from snap connections.  These query each second and reset if we are far enough away.
+     * This prevents the connection from being re-connected instantly.
+     **/
+    protected final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
+
+    protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
+    protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
+    protected int lastSnapConnectionTried = 0;
+    protected boolean bypassConnectionPacket;
+
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
         this.locked = data.getBoolean("locked");
@@ -195,6 +208,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                         }
                     }
                 }
+            }
+        }
+
+        //Load disabled connections.
+        int towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
+        for (int i = 0; i < towingConnectionCount; ++i) {
+            IWrapperNBT towData = data.getData("disconnectedTowingConnection" + i);
+            if (towData != null) {
+                this.disconnectedTowingConnections.add(new TowingConnection(towData));
             }
         }
     }
@@ -251,6 +273,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
             }
         }
+
+        //Check if we have snap connections.
+        snapConnectionIndexes.clear();
+        lastSnapConnectionTried = 0;
+        if (definition.connectionGroups != null) {
+            for (JSONConnectionGroup group : definition.connectionGroups) {
+                if (group.isSnap && group.isHookup) {
+                    snapConnectionIndexes.add(definition.connectionGroups.indexOf(group));
+                }
+            }
+        }
     }
 
     @Override
@@ -261,9 +294,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
         locked = isVariableActive(LOCKED_VARIABLE);
-        world.endProfiling();
+
         //Reset collision override flag.
         forceCollisionUpdateThisTick = false;
+
+        world.endProfiling();
     }
 
     @Override
@@ -594,6 +629,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
             }
         }
+
+        int towingConnectionIndex = 0;
+        for (TowingConnection towingEntry : disconnectedTowingConnections) {
+            data.setData("disconnectedTowingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        }
+        data.setInteger("disconnectedTowingConnectionCount", towingConnectionIndex);
         return data;
     }
 

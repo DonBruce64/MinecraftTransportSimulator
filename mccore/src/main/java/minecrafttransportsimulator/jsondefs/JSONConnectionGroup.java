@@ -22,6 +22,9 @@ public class JSONConnectionGroup {
     @JSONDescription("If true, this group will be allowed to tow hitch groups.  Note that you can have a connection group as both a hookup and a hitch if you want connections for either.  Think train couplers.")
     public boolean isHookup;
 
+    @JSONDescription("If true, this group will auto-connect to any valid connections.  It will only disconnect if disabled.  This can be done by clicking the hitbox, or clicking the button in the panel.  After going double the connection distance away, it will re-enable itself.")
+    public boolean isSnap;
+
     @JSONDescription("A listing of connections for this group.")
     public List<JSONConnection> connections;
 
