@@ -1111,11 +1111,11 @@ public class PartEngine extends APart {
     }
 
     public double getEngineRotation(float partialTicks) {
-        return partialTicks != 0 ? engineRotation + (engineRotation - prevEngineRotation) * partialTicks : engineRotation;
+        return partialTicks != 0 ? prevEngineRotation + (engineRotation - prevEngineRotation) * partialTicks : engineRotation;
     }
 
     public double getDriveshaftRotation(float partialTicks) {
-        return partialTicks != 0 ? driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation) * partialTicks : driveshaftRotation;
+        return partialTicks != 0 ? prevDriveshaftRotation + (driveshaftRotation - prevDriveshaftRotation) * partialTicks : driveshaftRotation;
     }
 
     public double addToForceOutput(Point3D force, Point3D torque) {
