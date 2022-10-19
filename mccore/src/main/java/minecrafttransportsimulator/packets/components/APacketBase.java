@@ -33,6 +33,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPartInteractableInteract;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -249,6 +250,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGroundDevice.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractable.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractableInteract.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartSeat.class);
 
         //Player packets.

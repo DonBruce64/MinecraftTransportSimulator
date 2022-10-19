@@ -9,9 +9,9 @@ import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.instances.GUIFurnace;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
-import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**
@@ -65,13 +65,23 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                 }
             }
         } else {
-            if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)) {
-                new GUIPartBench(interactable.definition.interactable.crafting);
-            } else if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
-                new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
-            } else if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
-                new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
+            switch (interactable.definition.interactable.interactionType) {
+                case CRAFTING_BENCH: {
+                    new GUIPartBench(interactable.definition.interactable.crafting);
+                    break;
+                }
+                case CRATE: {
+                    new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
+                    break;
+                }
+                case FURNACE: {
+                    new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
+                    break;
+                }
+                default:
+                    return false;
             }
+            InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(interactable, player, true));
         }
         return true;
     }
