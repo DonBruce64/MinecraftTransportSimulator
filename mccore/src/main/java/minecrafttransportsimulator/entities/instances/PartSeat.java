@@ -161,9 +161,13 @@ public final class PartSeat extends APart {
     @Override
     public boolean setRider(IWrapperEntity rider, boolean facesForwards) {
         if (super.setRider(rider, facesForwards)) {
-            //Set the vehicle creative status, if it's not true already.
-            if (placementDefinition.isController && rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
-                vehicleOn.isCreative = true;
+            //Set if vehicle has a controller or not.
+            if (vehicleOn != null && placementDefinition.isController) {
+                ++vehicleOn.controllerCount;
+                //Set the vehicle creative status, if it's not true already.
+                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
+                    vehicleOn.isCreative = true;
+                }
             }
 
             boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
@@ -214,6 +218,11 @@ public final class PartSeat extends APart {
             //Set creative to false if there are no other creative controllers.
             if (!otherCreativeController) {
                 vehicleOn.isCreative = false;
+            }
+
+            //Remove controller from count, if we are one.
+            if (placementDefinition.isController) {
+                --vehicleOn.controllerCount;
             }
 
             boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);

@@ -26,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
 
 /**
  * Class that handles all control operations.
@@ -259,7 +260,7 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue) {
+    private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue, double dampenRate) {
         if (InterfaceManager.inputInterface.isJoystickPresent(axis.config.joystickName)) {
             double axisValue = axis.getAxisState(false);
             if (Double.isNaN(axisValue)) {
@@ -270,8 +271,18 @@ public final class ControlSystem {
         } else {
             if (increment.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate * (currentValue < 0 ? 2 : 1), -bounds, bounds));
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(vehicle, clientPlayer));
             } else if (decrement.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate * (currentValue > 0 ? 2 : 1), -bounds, bounds));
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleControlNotification(vehicle, clientPlayer));
+            } else if (clientPlayer.equals(vehicle.lastController)) {
+                if (currentValue > dampenRate) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -dampenRate, 0, bounds));
+                } else if (currentValue < -dampenRate) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, dampenRate, -bounds, 0));
+                } else if (currentValue != 0) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
+                }
             }
         }
     }
@@ -341,15 +352,15 @@ public final class ControlSystem {
         }
 
         //Check yaw.
-        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, aircraft.rudderInput);
+        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, aircraft.rudderInput, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE);
 
         //Check pitch.
-        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_INPUT_VARIABLE, aircraft.elevatorInput);
+        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_INPUT_VARIABLE, aircraft.elevatorInput, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE);
 
         //Check roll.
-        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_INPUT_VARIABLE, aircraft.aileronInput);
+        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_INPUT_VARIABLE, aircraft.aileronInput, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 
         //Check to see if we request a different auto-level state.
@@ -488,7 +499,7 @@ public final class ControlSystem {
 
         //Check steering.  Don't check while on a road, since we auto-drive on those.
         if (!powered.lockedOnRoad) {
-            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput);
+            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
         }
 
         //Check if we are shifting.
