@@ -484,8 +484,6 @@ public class JSONPart extends AJSONPartProvider {
         CRAFTING_TABLE,
         @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
         FURNACE,
-        @JSONDescription("Works as a standard brewing stand when clicked.")
-        BREWING_STAND,
         @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
         JERRYCAN,
         @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")

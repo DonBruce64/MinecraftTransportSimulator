@@ -577,12 +577,6 @@ public final class LegacyCompatSystem {
                 definition.interactable.interactionType = InteractableComponentType.FURNACE;
                 break;
             }
-            case ("brewing_stand"): {
-                definition.generic.type = "interactable_brewing_stand";
-                definition.interactable = new JSONPart.JSONPartInteractable();
-                definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
-                break;
-            }
             case ("fertilizer"): {
                 definition.generic.type = "effector_fertilizer";
                 definition.effector = new JSONPart.JSONPartEffector();
