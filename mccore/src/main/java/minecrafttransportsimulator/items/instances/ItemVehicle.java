@@ -9,6 +9,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -19,8 +20,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider {
 
-    public ItemVehicle(JSONVehicle definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemVehicle(JSONVehicle definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override

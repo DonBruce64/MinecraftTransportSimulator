@@ -19,6 +19,7 @@ import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadGeneric;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -29,8 +30,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
     private final Map<IWrapperPlayer, RotationMatrix> lastRoadGenRotationClicked = new HashMap<>();
     private final Map<IWrapperPlayer, RoadClickData> lastRoadGenClickedData = new HashMap<>();
 
-    public ItemRoadComponent(JSONRoadComponent definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemRoadComponent(JSONRoadComponent definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override

@@ -112,8 +112,8 @@ public final class ConfigSystem {
                     if (packItem instanceof AItemSubTyped) {
                         List<String> materials = new ArrayList<>();
                         materials.addAll(packItem.definition.general.materialLists.get(0));
-                        materials.addAll(((AItemSubTyped<?>) packItem).getExtraMaterials().get(0));
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subName, materials);
+                        materials.addAll(((AItemSubTyped<?>) packItem).subDefinition.extraMaterialLists.get(0));
+                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subDefinition.subName, materials);
                     } else {
                         craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materialLists.get(0));
                     }
@@ -132,7 +132,7 @@ public final class ConfigSystem {
                     for (String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()) {
                         AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
                         if (item instanceof AItemSubTyped) {
-                            List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).getExtraMaterials();
+                            List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).subDefinition.extraMaterialLists;
                             extraMaterialLists.clear();
                             extraMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
 

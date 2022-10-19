@@ -62,9 +62,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final JSONDefinition definition;
 
     /**
-     * The current subName for this entity.  Used to select which definition represents this entity.
+     * The current sub-definition for this entity.
      */
-    public String subName;
+    public JSONSubDefinition subDefinition;
 
     /**
      * Variable for saving animation definition initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animation definitions.
@@ -130,16 +130,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
      **/
-    public AItemPack<JSONDefinition> cachedItem;
+    private AItemPack<JSONDefinition> cachedItem;
 
     /**
      * Constructor for synced entities
      **/
     public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
-        this.subName = data.getString("subName");
+        String subName = data.getString("subName");
         AItemSubTyped<JSONDefinition> item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), subName);
         this.definition = item != null ? item.definition : generateDefaultDefinition();
+        updateSubDefinition(subName);
 
         //Load text.
         if (definition.rendering != null && definition.rendering.textObjects != null) {
@@ -165,8 +166,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      **/
     public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem) {
         super(world, position, motion, angles);
-        this.subName = creatingItem.subName;
         this.definition = creatingItem.definition;
+        updateSubDefinition(creatingItem.subDefinition.subName);
     }
 
     @Override
@@ -198,10 +199,35 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Updates the subDefinition to match the one passed-in.  Used for paint guns to change the sub-def,
+     * but should also be called on initial setting to ensure other state-based operations are performed.
+     */
+    public void updateSubDefinition(String newSubDefName) {
+        for (JSONSubDefinition testSubDef : definition.definitions) {
+            if (testSubDef.subName.equals(newSubDefName)) {
+                //Remove existing constants, if we have them, then add them, if we have them.
+                if (subDefinition != null && subDefinition.constants != null) {
+                    variables.keySet().removeAll(subDefinition.constants);
+                }
+                if (testSubDef.constants != null) {
+                    testSubDef.constants.forEach(var -> variables.put(var, 1D));
+                }
+                subDefinition = testSubDef;
+                cachedItem = null;
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + newSubDefName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+    }
+
+    /**
      * Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
      * This should create (and reset) all JSON clocks and other static objects that depend on the definition.
      */
     protected void initializeAnimations() {
+        //Update subdef, in case this was modified.
+        updateSubDefinition(subDefinition.subName);
+
         if (definition.rendering != null && definition.rendering.sounds != null) {
             allSoundDefs.clear();
             soundActiveSwitchboxes.clear();
@@ -317,7 +343,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @SuppressWarnings("unchecked")
     public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem() {
         if (cachedItem == null) {
-            cachedItem = PackParser.getItem(definition.packID, definition.systemName, subName);
+            cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
         }
         return (ItemInstance) cachedItem;
     }
@@ -349,7 +375,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
     public String getTexture() {
-        return definition.getTextureLocation(subName);
+        return definition.getTextureLocation(subDefinition);
     }
 
     /**
@@ -368,16 +394,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public ColorRGB getTextColor(int index, ColorRGB defaultColor) {
         if (index != 0) {
-            for (JSONSubDefinition subDefinition : definition.definitions) {
-                if (subDefinition.subName.equals(subName)) {
-                    if (subDefinition.secondaryTextColors != null && subDefinition.secondaryTextColors.size() >= index) {
-                        return subDefinition.secondaryTextColors.get(index - 1);
-                    } else {
-                        return defaultColor;
-                    }
-                }
+            if (subDefinition.secondaryTextColors != null && subDefinition.secondaryTextColors.size() >= index) {
+                return subDefinition.secondaryTextColors.get(index - 1);
+            } else {
+                return defaultColor;
             }
-            throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
         } else {
             return defaultColor;
         }
@@ -957,7 +978,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Parse model if it hasn't been already.
         world.beginProfiling("ParsingMainModel", false);
-        String modelLocation = definition.getModelLocation(subName);
+        String modelLocation = definition.getModelLocation(subDefinition);
         if (!objectLists.containsKey(modelLocation)) {
             objectLists.put(modelLocation, AModelParser.generateRenderables(this));
         }
@@ -997,7 +1018,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public static void clearObjectCaches(AJSONMultiModelProvider definition) {
         for (JSONSubDefinition subDef : definition.definitions) {
-            String modelLocation = definition.getModelLocation(subDef.subName);
+            String modelLocation = definition.getModelLocation(subDef);
             List<RenderableModelObject> resetObjects = objectLists.remove(modelLocation);
             if (resetObjects != null) {
                 for (RenderableModelObject modelObject : resetObjects) {
@@ -1012,7 +1033,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         super.save(data);
         data.setString("packID", definition.packID);
         data.setString("systemName", definition.systemName);
-        data.setString("subName", subName);
+        data.setString("subName", subDefinition.subName);
         int lineNumber = 0;
         for (String textLine : text.values()) {
             data.setString("textLine" + lineNumber++, textLine);

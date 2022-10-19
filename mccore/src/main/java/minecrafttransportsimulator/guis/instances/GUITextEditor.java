@@ -50,8 +50,8 @@ public class GUITextEditor extends AGUIBase {
             //Add the render to render the sign.
             GUIComponent3DModel modelRender = new GUIComponent3DModel(guiLeft + 3 * getWidth() / 4, guiTop + 160, 64.0F, false, false, false);
             addComponent(modelRender);
-            modelRender.modelLocation = entity.definition.getModelLocation(entity.subName);
-            modelRender.textureLocation = entity.definition.getTextureLocation(entity.subName);
+            modelRender.modelLocation = entity.definition.getModelLocation(entity.subDefinition);
+            modelRender.textureLocation = entity.definition.getTextureLocation(entity.subDefinition);
 
             //Set text and text objects.
             boxWidth = 100;

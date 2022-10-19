@@ -147,7 +147,7 @@ public abstract class APacketBase {
     protected static void writeItemToBuffer(AItemPack<?> item, ByteBuf buf) {
         writeStringToBuffer(item.definition.packID, buf);
         writeStringToBuffer(item.definition.systemName, buf);
-        writeStringToBuffer(item instanceof AItemSubTyped ? ((AItemSubTyped<?>) item).subName : "", buf);
+        writeStringToBuffer(item instanceof AItemSubTyped ? ((AItemSubTyped<?>) item).subDefinition.subName : "", buf);
     }
 
     /**

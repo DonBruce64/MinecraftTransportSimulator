@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -21,8 +22,8 @@ import minecrafttransportsimulator.packloading.PackParser;
 
 public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implements IItemBlock {
 
-    public ItemPoleComponent(JSONPoleComponent definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemPoleComponent(JSONPoleComponent definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override

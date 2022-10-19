@@ -56,7 +56,7 @@ public class GUIPaintGun extends AGUIBase {
         super();
         this.entity = entity;
         this.player = player;
-        this.currentItem = (AItemSubTyped<?>) PackParser.getItem(entity.definition.packID, entity.definition.systemName, entity.subName);
+        this.currentItem = (AItemSubTyped<?>) PackParser.getItem(entity.definition.packID, entity.definition.systemName, entity.subDefinition.subName);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class GUIPaintGun extends AGUIBase {
         addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 233, guiTop + 100, 20, 20, 80, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
-                if (++recipeIndex == currentItem.getExtraMaterials().size()) {
+                if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
                     recipeIndex = 0;
                 }
                 updateNames();
@@ -120,7 +120,7 @@ public class GUIPaintGun extends AGUIBase {
         nextColorButton.enabled = nextSubItem != null;
 
         //Enable repair recipe button if we have multiple indexes.
-        nextRecipeButton.enabled = currentItem.getExtraMaterials().size() > 1;
+        nextRecipeButton.enabled = currentItem.subDefinition.extraMaterialLists.size() > 1;
 
         //Set confirm button based on if player has materials.
         confirmButton.enabled = currentItem != null && (player.isCreative() || (materials != null && player.getInventory().hasMaterials(materials)));
@@ -192,7 +192,7 @@ public class GUIPaintGun extends AGUIBase {
                 }
             } else {
                 craftingItemIcons.forEach(icon -> icon.stacks = null);
-                if (++recipeIndex == currentItem.getExtraMaterials().size()) {
+                if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
                     recipeIndex = 0;
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
@@ -204,7 +204,7 @@ public class GUIPaintGun extends AGUIBase {
         } while (materials == null);
 
         //Set model render properties.
-        modelRender.modelLocation = currentItem.definition.getModelLocation(currentItem.subName);
-        modelRender.textureLocation = currentItem.definition.getTextureLocation(currentItem.subName);
+        modelRender.modelLocation = currentItem.definition.getModelLocation(currentItem.subDefinition);
+        modelRender.textureLocation = currentItem.definition.getTextureLocation(currentItem.subDefinition);
     }
 }

@@ -95,7 +95,7 @@ public class GUIOverlay extends AGUIBase {
                     for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
                         if (packItem instanceof AItemPart) {
                             AItemPart part = (AItemPart) packItem;
-                            if (part.isPartValidForPackDef(packVehicleDef, multipart.subName, true)) {
+                            if (part.isPartValidForPackDef(packVehicleDef, multipart.subDefinition, true)) {
                                 validParts.add(part);
                             }
                         }

@@ -8,42 +8,29 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider> extends AItemPack<JSONDefinition> {
-    public final String subName;
+    public JSONSubDefinition subDefinition;
 
-    public AItemSubTyped(JSONDefinition definition, String subName, String sourcePackID) {
+    public AItemSubTyped(JSONDefinition definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, sourcePackID);
-        this.subName = subName;
+        this.subDefinition = subDefinition;
     }
 
     @Override
     public String getRegistrationName() {
-        return super.getRegistrationName() + subName;
+        return super.getRegistrationName() + subDefinition.subName;
     }
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        for (JSONSubDefinition subDefinition : definition.definitions) {
-            if (subDefinition.subName.equals(subName)) {
-                if (subDefinition.description != null) {
-                    Collections.addAll(tooltipLines, subDefinition.description.split("\n"));
-                }
-            }
+        if (subDefinition.description != null) {
+            Collections.addAll(tooltipLines, subDefinition.description.split("\n"));
         }
     }
 
     @Override
     public void populateDefaultData(IWrapperNBT data) {
         super.populateDefaultData(data);
-        data.setString("subName", subName);
-    }
-
-    public List<List<String>> getExtraMaterials() {
-        for (JSONSubDefinition subDefinition : definition.definitions) {
-            if (subDefinition.subName.equals(subName)) {
-                return subDefinition.extraMaterialLists;
-            }
-        }
-        return null;
+        data.setString("subName", subDefinition.subName);
     }
 }

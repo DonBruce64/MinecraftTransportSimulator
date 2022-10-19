@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -94,6 +95,9 @@ public class JSONPartDefinition {
 
     @JSONDescription("Normally vehicles come bare-bones, but in the case you want to have the part in this position come with the vehicle, you can set this.  If a part name is put here, MTS will automatically add said part when the vehicle is spawned for the first time.  Note that MTS won't check if the part actually exists, so either keep things in-house, or require packs you use as a dependency.  Note that putting this on an additionalPart without the parent part having a defaultPart WILL crash the game!")
     public String defaultPart;
+
+    @JSONDescription("Like defaultPart, but this is a map of variable values associated with individual parts.  If the variable is true, then that default part will be used.  If multiple possible parts are present, the first valid one is used.")
+    public LinkedHashMap<String, String> conditionalDefaultParts;
 
     @JSONRequired
     @JSONDescription("A list of part types that can go in this position.  Normally you'll only have one entry in this list, as there's really no reason to have a ground_device at the same location as an engine.  There are some exceptions to this, however.  One is for interior equipment, like seats and chests, where you want players to be able to choose what they put in that position. ")

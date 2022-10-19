@@ -433,7 +433,7 @@ public final class PartSeat extends APart {
         if (activeGunItem != null) {
             data.setString("activeGunPackID", activeGunItem.definition.packID);
             data.setString("activeGunSystemName", activeGunItem.definition.systemName);
-            data.setString("activeGunSubName", activeGunItem.subName);
+            data.setString("activeGunSubName", activeGunItem.subDefinition.subName);
         }
         return data;
     }

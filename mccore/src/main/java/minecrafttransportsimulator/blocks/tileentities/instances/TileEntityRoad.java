@@ -337,7 +337,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     ItemRoadComponent componentItem = components.get(component);
                     switch (component) {
                         case CORE_STATIC: {
-                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
                             int totalVertices = 0;
                             for (RenderableObject object : parsedModel) {
                                 totalVertices += object.vertices.capacity();
@@ -349,12 +349,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 totalModel.put(object.vertices);
                             }
                             totalModel.flip();
-                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), totalModel, true));
+                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subDefinition), new ColorRGB(), totalModel, true));
                             break;
                         }
                         case CORE_DYNAMIC: {
                             //Get model and convert to a single buffer of vertices.
-                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
                             int totalVertices = 0;
                             for (RenderableObject object : parsedModel) {
                                 totalVertices += object.vertices.capacity();
@@ -463,7 +463,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 convertedVertices.put(segmentVertex);
                             }
                             convertedVertices.flip();
-                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), convertedVertices, true));
+                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subDefinition), new ColorRGB(), convertedVertices, true));
                             break;
                         }
                     }

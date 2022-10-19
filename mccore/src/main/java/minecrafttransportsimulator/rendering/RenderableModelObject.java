@@ -242,7 +242,7 @@ public class RenderableModelObject {
     }
 
     private void doTreadRendering(PartGroundDevice tread, float partialTicks) {
-        String treadPathModel = tread.entityOn.definition.getModelLocation(tread.entityOn.subName);
+        String treadPathModel = tread.entityOn.definition.getModelLocation(tread.entityOn.subDefinition);
         Map<Integer, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
         if (treadPointsMap == null) {
             treadPointsMap = new HashMap<>();
@@ -599,7 +599,7 @@ public class RenderableModelObject {
     private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread) {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
-        List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0).subName));
+        List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0)));
         List<TreadRoller> rollers = new ArrayList<>();
         if (tread.placementDefinition.treadPath == null) {
             throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo.getItem().getItemName() + "!");

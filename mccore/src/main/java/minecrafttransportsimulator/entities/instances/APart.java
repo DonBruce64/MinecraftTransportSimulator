@@ -312,18 +312,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      */
     public void updateTone(boolean recursive) {
         if (placementDefinition.toneIndex != 0) {
-            List<String> partTones = null;
-            for (JSONSubDefinition subDefinition : entityOn.definition.definitions) {
-                if (subDefinition.subName.equals(entityOn.subName)) {
-                    partTones = subDefinition.partTones;
-                }
-            }
-            if (partTones != null && partTones.size() >= placementDefinition.toneIndex) {
-                String partTone = partTones.get(placementDefinition.toneIndex - 1);
+            if (entityOn.subDefinition.partTones != null && entityOn.subDefinition.partTones.size() >= placementDefinition.toneIndex) {
+                String partTone = entityOn.subDefinition.partTones.get(placementDefinition.toneIndex - 1);
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
-                        cachedItem = null;
-                        subName = partTone;
+                        updateSubDefinition(partTone);
                         return;
                     }
                 }

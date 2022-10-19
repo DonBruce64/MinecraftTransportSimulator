@@ -8,7 +8,6 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -71,12 +70,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
     public boolean isBenchValid(JSONCraftingBench craftingDefinition) {
         boolean hasMaterials = !definition.general.materialLists.isEmpty();
         if (!hasMaterials && this instanceof AItemSubTyped) {
-            AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) this;
-            for (JSONSubDefinition subDefinition : subTypedItem.definition.definitions) {
-                if (subDefinition.subName.equals(subTypedItem.subName)) {
-                    hasMaterials = !subDefinition.extraMaterialLists.isEmpty();
-                }
-            }
+            hasMaterials = !((AItemSubTyped<?>) this).subDefinition.extraMaterialLists.isEmpty();
         }
 
         if (hasMaterials) {

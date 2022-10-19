@@ -8,18 +8,19 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartPropeller extends AItemPart {
 
-    public ItemPartPropeller(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemPartPropeller(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override
-    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax) {
-        return super.isPartValidForPackDef(placementDefinition, subNameToPlaceOn, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.propeller.diameter && placementDefinition.maxValue >= definition.propeller.diameter));
+    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, JSONSubDefinition subDefinition, boolean checkMinMax) {
+        return super.isPartValidForPackDef(placementDefinition, subDefinition, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.propeller.diameter && placementDefinition.maxValue >= definition.propeller.diameter));
     }
 
     @Override
@@ -42,8 +43,8 @@ public class ItemPartPropeller extends AItemPart {
         }
 
         @Override
-        public ItemPartPropeller createItem(JSONPart definition, String subName, String sourcePackID) {
-            return new ItemPartPropeller(definition, subName, sourcePackID);
+        public ItemPartPropeller createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartPropeller(definition, subDefinition, sourcePackID);
         }
     };
 }

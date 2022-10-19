@@ -20,6 +20,11 @@ public class JSONDummyPartProvider extends AJSONPartProvider {
         definition.parts = new ArrayList<>();
         definition.parts.add(fakeDef);
 
+        JSONSubDefinition subDef = new JSONSubDefinition();
+        subDef.subName = "";
+        definition.definitions = new ArrayList<>();
+        definition.definitions.add(subDef);
+
         return definition;
     }
 }

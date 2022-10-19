@@ -2245,7 +2245,7 @@ public final class LegacyCompatSystem {
         }
 
         try {
-            List<RenderableObject> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+            List<RenderableObject> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0)));
 
             //If we don't have lights, check for them.
             if (definition.rendering.lightObjects == null) {

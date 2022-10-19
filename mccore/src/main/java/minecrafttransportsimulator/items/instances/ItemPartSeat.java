@@ -5,13 +5,14 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartSeat extends AItemPart {
 
-    public ItemPartSeat(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemPartSeat(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override
@@ -26,8 +27,8 @@ public class ItemPartSeat extends AItemPart {
         }
 
         @Override
-        public ItemPartSeat createItem(JSONPart definition, String subName, String sourcePackID) {
-            return new ItemPartSeat(definition, subName, sourcePackID);
+        public ItemPartSeat createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartSeat(definition, subDefinition, sourcePackID);
         }
     };
 }

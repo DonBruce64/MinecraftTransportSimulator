@@ -24,18 +24,14 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
     /**
      * Returns the model location in the classpath for this definition.
      */
-    public String getModelLocation(String currentSubName) {
-        for (JSONSubDefinition subDefinition : definitions) {
-            if (subDefinition.subName.equals(currentSubName)) {
-                switch (rendering.modelType) {
-                    case OBJ:
-                        return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
-                    case LITTLETILES:
-                        return PackResourceLoader.getPackResource(this, ResourceType.LT_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
-                    case NONE:
-                        return null;
-                }
-            }
+    public String getModelLocation(JSONSubDefinition subDefinition) {
+        switch (rendering.modelType) {
+            case OBJ:
+                return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+            case LITTLETILES:
+                return PackResourceLoader.getPackResource(this, ResourceType.LT_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+            case NONE:
+                return null;
         }
         //We'll never get here.
         return null;
@@ -45,18 +41,14 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
      * Returns the OBJ model texture location in the classpath for this definition.
      * Sub-name is passed-in as different sub-names have different textures.
      */
-    public String getTextureLocation(String currentSubName) {
-        for (JSONSubDefinition subDefinition : definitions) {
-            if (subDefinition.subName.equals(currentSubName)) {
-                switch (rendering.modelType) {
-                    case OBJ:
-                        return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + currentSubName);
-                    case LITTLETILES:
-                        return RenderableObject.GLOBAL_TEXTURE_NAME;
-                    case NONE:
-                        return null;
-                }
-            }
+    public String getTextureLocation(JSONSubDefinition subDefinition) {
+        switch (rendering.modelType) {
+            case OBJ:
+                return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + subDefinition.subName);
+            case LITTLETILES:
+                return RenderableObject.GLOBAL_TEXTURE_NAME;
+            case NONE:
+                return null;
         }
         //We'll never get here.
         return null;

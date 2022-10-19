@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 
 /**
  * Decor item.  Note that while this item can (and does) spawn decor blocks,
@@ -24,8 +25,8 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
  */
 public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock {
 
-    public ItemDecor(JSONDecor definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemDecor(JSONDecor definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override

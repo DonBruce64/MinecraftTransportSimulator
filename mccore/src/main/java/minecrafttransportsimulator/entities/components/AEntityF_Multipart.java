@@ -181,7 +181,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
                     AItemPart heldPart = (AItemPart) heldItem;
                     //Does the part held match this packPart?
-                    if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)) {
+                    if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subDefinition, false)) {
                         //Are there any doors blocking us from clicking this part?
                         if (!areVariablesBlocking(partSlotBoxEntry.getValue(), player)) {
                             //Part matches.  Add the box.  Set the box bounds to the generic box, or the
@@ -428,8 +428,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Add default parts.  We need to do this after we actually create this part so its slots are valid.
                 //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                 JSONPartDefinition partDef = definition.parts.get(i);
-                if (newEntity && partDef.defaultPart != null) {
-                    addDefaultPart(partDef, placingPlayer, definition);
+                if (newEntity) {
+                    if (partDef.defaultPart != null) {
+                        addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
+                    }
+                    if (partDef.conditionalDefaultParts != null) {
+                        for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
+                            if (getRawVariableValue(conditionalDef.getKey(), 0) > 0) {
+                                addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -449,7 +459,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public APart addPartFromItem(AItemPart partItem, IWrapperPlayer playerAdding, IWrapperNBT partData, int slotIndex) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
-        if (partsInSlots.get(slotIndex) == null && (newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subName, true))) {
+        if (partsInSlots.get(slotIndex) == null && (newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, true))) {
             //Part is not already present, and is valid, add it.
             partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
@@ -569,11 +579,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * This method should only be called when the entity or part with the
      * passed-in definition is placed on this entity, not when it's being loaded from saved data.
      */
-    public void addDefaultPart(JSONPartDefinition partDef, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
+    public void addDefaultPart(String partName, int partSlot, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
         try {
-            String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
-            String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
-            int partSlot = definition.parts.indexOf(partDef);
+            String partPackID = partName.substring(0, partName.indexOf(':'));
+            String partSystemName = partName.substring(partName.indexOf(':') + 1);
             try {
                 APart addedPart = addPartFromItem(PackParser.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partSlot);
                 if (addedPart != null) {
@@ -584,7 +593,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
             }
         } catch (IndexOutOfBoundsException e) {
-            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\""));
+            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
         }
     }
 
@@ -726,7 +735,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (holdingScanner) {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : partSlotBoxes.entrySet()) {
                         JSONPartDefinition placementDefinition = partSlotEntry.getValue();
-                        if (!areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subName))) {
+                        if (!areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subDefinition.subName))) {
                             BoundingBox box = partSlotEntry.getKey();
                             Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
                             box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
@@ -737,9 +746,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         boolean isHoldingCorrectTypePart = false;
                         boolean isHoldingCorrectParamPart = false;
 
-                        if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, false)) {
+                        if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subDefinition, false)) {
                             isHoldingCorrectTypePart = true;
-                            if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, true)) {
+                            if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subDefinition, true)) {
                                 isHoldingCorrectParamPart = true;
                             }
                         }

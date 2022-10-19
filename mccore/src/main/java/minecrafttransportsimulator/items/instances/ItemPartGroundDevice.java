@@ -10,18 +10,19 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartGroundDevice extends AItemPart {
 
-    public ItemPartGroundDevice(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemPartGroundDevice(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override
-    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax) {
-        return super.isPartValidForPackDef(placementDefinition, subNameToPlaceOn, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.ground.height && placementDefinition.maxValue >= definition.ground.height));
+    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, JSONSubDefinition subDefinition, boolean checkMinMax) {
+        return super.isPartValidForPackDef(placementDefinition, subDefinition, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.ground.height && placementDefinition.maxValue >= definition.ground.height));
     }
 
     @Override
@@ -62,8 +63,8 @@ public class ItemPartGroundDevice extends AItemPart {
         }
 
         @Override
-        public ItemPartGroundDevice createItem(JSONPart definition, String subName, String sourcePackID) {
-            return new ItemPartGroundDevice(definition, subName, sourcePackID);
+        public ItemPartGroundDevice createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartGroundDevice(definition, subDefinition, sourcePackID);
         }
     };
 }

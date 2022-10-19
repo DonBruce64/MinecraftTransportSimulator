@@ -6,12 +6,13 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet> {
 
-    public ItemBullet(JSONBullet definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemBullet(JSONBullet definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override

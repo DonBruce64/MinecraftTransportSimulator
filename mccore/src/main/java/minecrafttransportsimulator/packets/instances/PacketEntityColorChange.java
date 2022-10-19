@@ -48,8 +48,7 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
             if (!player.isCreative()) {
                 inventory.removeMaterials(newItem, recipeIndex, false, true, false);
             }
-            entity.subName = newItem.subName;
-            entity.cachedItem = null;
+            entity.updateSubDefinition(newItem.subDefinition.subName);
 
             //If we have parts, and have a second tone, change parts to match if possible.
             if (entity instanceof AEntityF_Multipart) {

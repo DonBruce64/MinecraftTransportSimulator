@@ -46,7 +46,7 @@ public class JSONConfigLanguage {
                 if (packItem instanceof AItemSubTyped) {
                     AItemSubTyped<?> subTyped = (AItemSubTyped<?>) packItem;
                     for (JSONSubDefinition subDefinition : subTyped.definition.definitions) {
-                        if (subDefinition.subName.equals(subTyped.subName)) {
+                        if (subDefinition.subName.equals(subTyped.subDefinition.subName)) {
                             itemName = subDefinition.name;
                             break;
                         }

@@ -63,7 +63,7 @@ public abstract class AModelParser {
      * are assured to be turned into one of the objects in the returned list.
      */
     public static List<RenderableModelObject> generateRenderables(AEntityD_Definable<?> entity) {
-        String modelLocation = entity.definition.getModelLocation(entity.subName);
+        String modelLocation = entity.definition.getModelLocation(entity.subDefinition);
         List<RenderableModelObject> modelObjects = new ArrayList<>();
         for (RenderableObject parsedObject : parseModel(modelLocation)) {
             modelObjects.add(new RenderableModelObject(modelLocation, parsedObject));

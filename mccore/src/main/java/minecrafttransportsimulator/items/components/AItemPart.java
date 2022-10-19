@@ -9,6 +9,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -23,8 +24,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider {
 
-    public AItemPart(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public AItemPart(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override
@@ -70,9 +71,9 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
      * min/max may be ignored in some cases (such as holo-boxes where you want them to be red of the part is the right
      * type, but the wrong size).
      */
-    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax) {
+    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, JSONSubDefinition subDefinition, boolean checkMinMax) {
         //First make sure we are the right type.
-        if (placementDefinition.types.contains(definition.generic.type) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subNameToPlaceOn))) {
+        if (placementDefinition.types.contains(definition.generic.type) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subDefinition.subName))) {
             //Check if our custom type matches, or if we aren't a custom type and the definition doesn't care.
             if (placementDefinition.customTypes == null) {
                 return definition.generic.customType == null;
@@ -112,6 +113,6 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
         /**
          * Creates a part item from data.
          */
-        public abstract AItemPart createItem(JSONPart definition, String subName, String sourcePackID);
+        public abstract AItemPart createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID);
     }
 }

@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -29,13 +30,13 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemPartInteractable extends AItemPart implements IItemEntityInteractable {
 
-    public ItemPartInteractable(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
+    public ItemPartInteractable(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
     }
 
     @Override
-    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax) {
-        return super.isPartValidForPackDef(placementDefinition, subNameToPlaceOn, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.interactable.inventoryUnits && placementDefinition.maxValue >= definition.interactable.inventoryUnits));
+    public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, JSONSubDefinition subDefinition, boolean checkMinMax) {
+        return super.isPartValidForPackDef(placementDefinition, subDefinition, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.interactable.inventoryUnits && placementDefinition.maxValue >= definition.interactable.inventoryUnits));
     }
 
     @Override
@@ -161,8 +162,8 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
         }
 
         @Override
-        public ItemPartInteractable createItem(JSONPart definition, String subName, String sourcePackID) {
-            return new ItemPartInteractable(definition, subName, sourcePackID);
+        public ItemPartInteractable createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartInteractable(definition, subDefinition, sourcePackID);
         }
     };
 }

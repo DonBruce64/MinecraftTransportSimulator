@@ -33,6 +33,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -44,6 +45,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
@@ -602,6 +604,13 @@ public class JSONParser {
                 ((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
                 ((AJSONMultiModelProvider) definitionToOverride).variableModifiers = ((AJSONMultiModelProvider) loadedDefinition).variableModifiers;
                 ((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
+
+                //Reload item subdefs, since it will have changed.
+                for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
+                    AItemSubTyped<?> item = (AItemSubTyped<?>) PackParser.getItem(definitionToOverride.packID, definitionToOverride.systemName, subDefinition.subName);
+                    item.subDefinition = subDefinition;
+                }
+
                 if (definitionToOverride instanceof AJSONInteractableEntity) {
                     ((AJSONInteractableEntity) definitionToOverride).collisionGroups = ((AJSONInteractableEntity) loadedDefinition).collisionGroups;
                     ((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;

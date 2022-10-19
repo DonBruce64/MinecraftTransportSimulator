@@ -94,11 +94,11 @@ public final class PackParser {
         public int compare(AItemPack<?> itemA, AItemPack<?> itemB) {
             String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
             if (itemA instanceof AItemSubTyped) {
-                totalAName += ((AItemSubTyped<?>) itemA).subName;
+                totalAName += ((AItemSubTyped<?>) itemA).subDefinition.subName;
             }
             String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
             if (itemB instanceof AItemSubTyped) {
-                totalBName += ((AItemSubTyped<?>) itemB).subName;
+                totalBName += ((AItemSubTyped<?>) itemB).subDefinition.subName;
             }
 
             if (itemA.getClass().equals(itemB.getClass()) || (itemA instanceof AItemPart && itemB instanceof AItemPart)) {
@@ -546,13 +546,13 @@ public final class PackParser {
             AItemPack<?> item = null;
             switch (mainDefinition.classification) {
                 case VEHICLE:
-                    item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName, sourcePackID);
+                    item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition, sourcePackID);
                     break;
                 case PART: {
                     JSONPart partDef = (JSONPart) mainDefinition;
                     for (AItemPartCreator creator : partCreators) {
                         if (creator.isCreatorValid(partDef)) {
-                            item = creator.createItem(partDef, subDefinition.subName, sourcePackID);
+                            item = creator.createItem(partDef, subDefinition, sourcePackID);
                             break;
                         }
                     }
@@ -563,16 +563,16 @@ public final class PackParser {
                     break;
                 }
                 case DECOR:
-                    item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName, sourcePackID);
+                    item = new ItemDecor((JSONDecor) mainDefinition, subDefinition, sourcePackID);
                     break;
                 case POLE:
-                    item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName, sourcePackID);
+                    item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition, sourcePackID);
                     break;
                 case ROAD:
-                    item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName, sourcePackID);
+                    item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition, sourcePackID);
                     break;
                 case BULLET:
-                    item = new ItemBullet((JSONBullet) mainDefinition, subDefinition.subName, sourcePackID);
+                    item = new ItemBullet((JSONBullet) mainDefinition, subDefinition, sourcePackID);
                     break;
                 default: {
                     throw new IllegalArgumentException("A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
