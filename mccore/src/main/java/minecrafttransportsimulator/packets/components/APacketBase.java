@@ -49,7 +49,6 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnect
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -274,7 +273,6 @@ public abstract class APacketBase {
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);

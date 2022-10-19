@@ -22,7 +22,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -84,10 +83,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D serverDeltaMApplied = new Point3D();
     private final Point3D serverDeltaRApplied = new Point3D();
     private double serverDeltaPApplied;
-
-    private final Point3D serverDeltaMAtSync = new Point3D();
-    private final Point3D serverDeltaRAtSync = new Point3D();
-    private double serverDeltaPAtSync;
 
     private final Point3D clientDeltaM;
     private final Point3D clientDeltaR;
@@ -871,15 +866,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     clientDeltaP += clientDeltaPApplied;
                     totalPathDelta += clientDeltaPApplied;
                 }
-
-                //If this is the 20th tick (1 second), and we are on the client, request a sync packet.
-                //This ensures that we have the proper deltas and didn't miss any updates from the server
-                //since we were spanwed.
-                if (ticksExisted == 100 && world.isClient()) {
-                    //TODO this seems to cause more issues than it fixes, because it can come any time during server packets.
-                    //This results in incorrect delta application and the system doesn't know if it missed a sync packet or not.
-                    //syncServerDeltas(null, null, 0);
-                }
             } else {
                 addToServerDeltas(null, null, 0);
             }
@@ -1022,23 +1008,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 serverDeltaP += pathingApplied;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
             }
-        }
-    }
-
-    public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot) {
-        if (!world.isClient()) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerSync((EntityVehicleF_Physics) this, serverDeltaM, serverDeltaR, serverDeltaP));
-        } else if (motionSnapshot != null && !serverDeltaMAtSync.isZero()) {
-            serverDeltaM.add(motionSnapshot).subtract(serverDeltaMAtSync);
-            serverDeltaR.add(rotationSnapshot).subtract(serverDeltaRAtSync);
-            serverDeltaP += (pathingSnapshot - serverDeltaPAtSync);
-            //Doing this keeps us from responding to future broadcast packets that were requested by other clients.
-            serverDeltaMAtSync.set(0, 0, 0);
-        } else {
-            serverDeltaMAtSync.set(serverDeltaM);
-            serverDeltaRAtSync.set(serverDeltaR);
-            serverDeltaPAtSync = serverDeltaP;
-            InterfaceManager.packetInterface.sendToServer(new PacketVehicleServerSync((EntityVehicleF_Physics) this));
         }
     }
 
