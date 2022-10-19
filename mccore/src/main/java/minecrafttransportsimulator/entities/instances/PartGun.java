@@ -836,6 +836,8 @@ public class PartGun extends APart {
         switch (variable) {
             case ("gun_inhand"):
                 return entityOn instanceof EntityPlayerGun ? 1 : 0;
+            case ("gun_controller_firstperson"):
+                return InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.inFirstPerson() ? 1 : 0;
             case ("gun_inhand_sneaking"):
                 return entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0;
             case ("gun_active"):
