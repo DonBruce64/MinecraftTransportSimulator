@@ -36,6 +36,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -44,7 +45,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDirt;
-import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
@@ -58,6 +58,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
@@ -316,7 +317,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (mcRidingEntity instanceof BuilderEntityLinkedSeat) {
                         //Entity hit is riding something of ours.
                         //Verify that it's not the entity that is doing the attacking.
-                        AEntityE_Interactable<?> internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
+                        AEntityB_Existing internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
                         if (damage.damgeSource == internalRidingEntity) {
                             //Entity can't attack entities riding itself.
                             continue;
@@ -348,20 +349,20 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
+    public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (Entity entity : world.getEntitiesOfClass(Entity.class, WrapperWorld.convert(box))) {
             if (entity.getVehicle() == null && (entity instanceof INPC || entity instanceof AnimalEntity) && !(entity instanceof IMob)) {
-                if (clickedPart instanceof PartSeat) {
-                    if (clickedPart.rider == null) {
-                        clickedPart.setRider(new WrapperEntity(entity), true);
-                        break;
-                    }
-                } else {
-                    for (APart part : vehicleToLoad.parts) {
+                if (entityToLoad instanceof EntityVehicleF_Physics) {
+                    for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
                             part.setRider(new WrapperEntity(entity), true);
                             break;
                         }
+                    }
+                } else {
+                    if (entityToLoad.rider == null) {
+                        entityToLoad.setRider(new WrapperEntity(entity), true);
+                        break;
                     }
                 }
             }
@@ -407,7 +408,7 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperItemStack> getBlockDrops(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         BlockState state = world.getBlockState(pos);
-        List<ItemStack> drops = state.getBlock().getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
+        List<ItemStack> drops = Block.getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
         List<IWrapperItemStack> convertedList = new ArrayList<>();
         for (ItemStack stack : drops) {
             convertedList.add(new WrapperItemStack(stack.copy()));
@@ -416,13 +417,13 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public Point3D getBlockHit(Point3D position, Point3D delta) {
+    public BlockHitResult getBlockHit(Point3D position, Point3D delta) {
         Vector3d start = new Vector3d(position.x, position.y, position.z);
         BlockRayTraceResult trace = world.clip(new RayTraceContext(start, start.add(delta.x, delta.y, delta.z), RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
         if (trace != null) {
             BlockPos pos = trace.getBlockPos();
             if (pos != null) {
-                return new Point3D(pos.getX(), pos.getY(), pos.getZ());
+                return new BlockHitResult(new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(trace.getDirection().name()));
             }
         }
         return null;
@@ -573,7 +574,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public int getRedstonePower(Point3D position) {
-        return world.getRedstonePowerFromNeighbors(new BlockPos(position.x, position.y, position.z));
+        return world.getBestNeighborSignal(new BlockPos(position.x, position.y, position.z));
     }
 
     @Override
@@ -594,13 +595,14 @@ public class WrapperWorld extends AWrapperWorld {
             BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
             BlockPos pos = new BlockPos(position.x, position.y, position.z);
             if (playerWrapper != null) {
-                EntityPlayer mcPayer = ((WrapperPlayer) playerWrapper).player;
+                PlayerEntity mcPayer = ((WrapperPlayer) playerWrapper).player;
                 WrapperItemStack stack = (WrapperItemStack) playerWrapper.getHeldStack();
                 AItemBase item = stack.getItem();
-                EnumFacing facing = EnumFacing.valueOf(axis.name());
-                if (!world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
-                    pos = pos.offset(facing);
-                    position.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
+                Direction facing = Direction.valueOf(axis.name());
+                BlockState state = world.getBlockState(pos);
+                if (!state.getBlock().isAir(state, world, pos)) {
+                    pos = pos.relative(facing);
+                    position.add(facing.getStepX(), facing.getStepY(), facing.getStepZ());
                 }
 
                 if (item != null && mcPayer.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)) {
@@ -608,7 +610,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (world.setBlockState(pos, newState, 11)) {
                         //Block is set.  See if we need to set TE data.
                         if (block instanceof ABlockBaseTileEntity) {
-                            BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
+                            BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getBlockEntity(pos);
                             IWrapperNBT data = stack.getData();
                             if (item instanceof AItemPack) {
                                 ((AItemPack<JSONDefinition>) item).populateDefaultData(data);
@@ -632,19 +634,19 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     @SuppressWarnings("unchecked")
     public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3D position) {
-        TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
-        return tile instanceof BuilderTileEntity ? ((BuilderTileEntity<TileEntityType>) tile).tileEntity : null;
+        TileEntity tile = world.getBlockEntity(new BlockPos(position.x, position.y, position.z));
+        return tile instanceof BuilderTileEntity ? (TileEntityType) ((BuilderTileEntity) tile).tileEntity : null;
     }
 
     @Override
     public void markTileEntityChanged(Point3D position) {
-        world.getTileEntity(new BlockPos(position.x, position.y, position.z)).markDirty();
+        world.getBlockEntity(new BlockPos(position.x, position.y, position.z)).setChanged();
     }
 
     @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        float sunLight = world.getSunBrightness(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;
+        float sunLight = world.getLightEngine()..getSunBrightness(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;
         float blockLight = calculateBlock ? world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos) / 15F : 0.0F;
         return Math.max(sunLight, blockLight);
     }
@@ -654,7 +656,7 @@ public class WrapperWorld extends AWrapperWorld {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         //This needs to get fired manually as even if we update the blockstate the light value won't change
         //as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
-        world.checkLight(pos);
+        world.getLightEngine().checkBlock(pos);
     }
 
     @Override
@@ -665,7 +667,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean isAir(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         return block.isAir(state, world, pos);
     }
@@ -673,18 +675,21 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean isFire(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         return state.getMaterial().equals(Material.FIRE);
     }
 
     @Override
-    public void setToFire(Point3D position) {
-        world.setBlockState(new BlockPos(position.x, position.y, position.z), Blocks.FIRE.getDefaultState());
+    public void setToFire(BlockHitResult hitResult) {
+        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+        if (isAir(hitResult.position)) {
+            world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
+        }
     }
 
     @Override
-    public void extinguish(Point3D position) {
-        world.extinguishFire(null, new BlockPos(position.x, position.y, position.z), EnumFacing.UP);
+    public void extinguish(BlockHitResult hitResult) {
+        world..extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z), Direction.valueOf(hitResult.side.name()));
     }
 
     @Override

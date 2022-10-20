@@ -3,7 +3,7 @@ package mcinterface1165;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -61,7 +61,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public double getSeatOffset() {
-        AEntityE_Interactable<?> riding = getEntityRiding();
+        AEntityB_Existing riding = getEntityRiding();
         if (riding != null) {
             if (riding instanceof PartSeat) {
                 PartSeat seat = (PartSeat) riding;
@@ -79,7 +79,6 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
         return player.getServer() == null || player.getServer().getPlayerList().getOps().get(player.getGameProfile()) != null || player.getServer().isSingleplayer();
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void displayChatMessage(LanguageEntry language, Object... args) {
         Minecraft.getInstance().gui.getChat().addMessage(new StringTextComponent(String.format(language.value, args)));
