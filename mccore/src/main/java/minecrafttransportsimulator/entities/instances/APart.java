@@ -63,6 +63,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public boolean isInvisible = false;
     public boolean isActive = true;
+    public boolean isPermanent = false;
     public boolean isMoveable;
     public final boolean turnsWithSteer;
     public final boolean isSpare;
@@ -160,6 +161,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         position.set(entityOn.position);
         orientation.set(entityOn.orientation);
         localOffset.set(placementDefinition.pos);
+        
+        //Update permanent-ness
+        isPermanent = areVariablesLocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer(),placementDefinition.isPermanent);
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
@@ -256,7 +260,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Again, this only applies on clients for that client player.
         if (world.isClient() && InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH)) {
             for (APart childPart : parts) {
-                if (!childPart.placementDefinition.isPermanent) {
+                if (!childPart.isPermanent) {
                     allInteractionBoxes.removeAll(interactionBoxes);
                     return;
                 }
@@ -267,7 +271,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void attack(Damage damage) {
         //Check if we can be removed by this attack.
-        if (!placementDefinition.isPermanent && definition.generic.canBeRemovedByHand && damage.isHand) {
+        if (!isPermanent && definition.generic.canBeRemovedByHand && damage.isHand) {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;

@@ -888,6 +888,9 @@ public class PartEngine extends APart {
 
         	//If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
         	int camMultiplier = 1;
+        	if (variable.endsWith("_crank")) {
+        		variable = variable.substring(0, variable.length() - "_crank".length());
+        	}
         	if (variable.endsWith("_cam")) {
         		camMultiplier = 2;
         		variable = variable.substring(0, variable.length() - "_cam".length());
@@ -909,7 +912,8 @@ public class PartEngine extends APart {
             }
             
             //Map the shaft rotation to a value between 0 and 359.99...
-            double shaftRotation = (offset + getEngineRotation(partialTicks)) - ((360D * camMultiplier) * Math.floor((offset + getEngineRotation(partialTicks)) / (360D * camMultiplier)));
+            //double shaftRotation = (offset + getEngineRotation(partialTicks)) - ((360D * camMultiplier) * Math.floor((offset + getEngineRotation(partialTicks)) / (360D * camMultiplier)));
+            double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
             
             //Calculate the angle of a 'sector'
             double sector = (360D * camMultiplier) / totalPistons;

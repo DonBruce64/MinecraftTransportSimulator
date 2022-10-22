@@ -381,6 +381,42 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     /**
+     * Returns true if any lockingVariables are locking the passed-in part slot.
+     */
+    public boolean areVariablesLocking(JSONPartDefinition partDef, IWrapperPlayer player, boolean defaultValue) {
+        if (partDef.lockingVariables != null) {
+            for (List<String> variableList : partDef.lockingVariables) {
+                boolean listIsTrue = false;
+                for (String variableName : variableList) {
+                    if (variableName.startsWith("!")) {
+                        double value = getRawVariableValue(variableName.substring(1), 0);
+                        if (value == 0 || Double.isNaN(value)) {
+                            //Inverted variable value is 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    } else {
+                        double value = getRawVariableValue(variableName, 0);
+                        if (!Double.isNaN(value) && value > 0) {
+                            //Normal variable value is non-zero 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    }
+                }
+                if (!listIsTrue) {
+                    //List doesn't have any true variables, therefore variables are locking.
+                    return false;
+                }
+            }
+            //No false lists were found for this collection, therefore no variables are locking.
+            return true;
+        }  
+        //No lists found for this entry, set to json-defined value.
+        return defaultValue;
+    }
+
+    /**
      * Called to add parts from NBT.  This cannot be done during construction, as this method adds sub-parts
      * defined in this multipart's definition.  If this was done in the constructor, and those sub parts
      * depended on some property that was present in the extended constructor of this multipart, then the

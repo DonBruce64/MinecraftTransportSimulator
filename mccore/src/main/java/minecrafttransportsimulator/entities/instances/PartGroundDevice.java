@@ -233,7 +233,7 @@ public class PartGroundDevice extends APart {
             case ("ground_rotation"):
                 return vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0;
             case ("ground_rotation_normalized"):
-                return vehicleOn != null ? (vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D) % 360D : 0;
+            	return vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0;
             case ("ground_onground"):
                 return vehicleOn != null && animateAsOnGround ? 1 : 0;
             case ("ground_isflat"):
