@@ -20,26 +20,27 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
-import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -67,7 +68,7 @@ public class BuilderBlock extends Block {
      * Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops
      * created during the drop checks here to ensure they actually drop when the block is broken.
      **/
-    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<>();
+    private static final Map<TileEntity, List<ItemStack>> dropMap = new HashMap<>();
 
     BuilderBlock(ABlockBase block) {
         super(AbstractBlock.Properties.of(Material.STONE, MaterialColor.STONE).strength(block.hardness, block.blastResistance).noOcclusion());
@@ -95,43 +96,45 @@ public class BuilderBlock extends Block {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         //Forward this click to the block.  For left-clicks we'll need to use item attack calls.
         if (block instanceof ABlockBaseTileEntity) {
-            if (!world.isRemote) {
-                TileEntity tile = world.getTileEntity(pos);
+            if (!world.isClientSide()) {
+                TileEntity tile = world.getBlockEntity(pos);
                 if (tile instanceof BuilderTileEntity) {
-                    if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                        return ((BuilderTileEntity<?>) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(player));
+                    if (((BuilderTileEntity) tile).tileEntity != null) {
+                        return ((BuilderTileEntity) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(player)) ? ActionResultType.CONSUME : ActionResultType.FAIL;
                     }
                 }
             } else {
-                return true;
+                return ActionResultType.CONSUME;
             }
         }
-        return super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
+        return super.use(state, world, pos, player, hand, hit);
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block blockIn, BlockPos fromPos) {
+    public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
         //Forward the change of state of a neighbor to the tile if we have one.
         if (block instanceof ABlockBaseTileEntity) {
-            if (!world.isRemote) {
-                TileEntity tile = world.getTileEntity(pos);
+            if (!world.isClientSide()) {
+                TileEntity tile = world.getBlockEntity(pos);
                 if (tile instanceof BuilderTileEntity) {
-                    if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                        ((BuilderTileEntity<?>) tile).tileEntity.onNeighborChanged(new Point3D(fromPos.getX(), fromPos.getY(), fromPos.getZ()));
+                    if (((BuilderTileEntity) tile).tileEntity != null) {
+                        ((BuilderTileEntity) tile).tileEntity.onNeighborChanged(new Point3D(facingPos.getX(), facingPos.getY(), facingPos.getZ()));
                     }
                 }
             }
         }
-        super.neighborChanged(state, world, pos, blockIn, fromPos);
+        return super.updateShape(state, facing, facingState, world, pos, facingPos);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
+    public ItemStack getCloneItemStack(IBlockReader world, BlockPos pos, BlockState state) {
         //Returns the ItemStack that gets put in the player's inventory when they middle-click this block.
         //This calls down into getItem, which then uses the Item class's block<->item mapping to get a block.
         //By overriding here, we intercept those calls and return our own.  This also allows us to put NBT
@@ -140,138 +143,99 @@ public class BuilderBlock extends Block {
         //Note that this method is only used for middle-clicking and nothing else.  Failure to return valid results
         //here will result in air being grabbed, and no WAILA support.
         if (block instanceof ABlockBaseTileEntity) {
-            TileEntity mcTile = world.getTileEntity(pos);
+            TileEntity mcTile = world.getBlockEntity(pos);
             if (mcTile instanceof BuilderTileEntity) {
-                ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
+                ATileEntityBase<?> tile = ((BuilderTileEntity) mcTile).tileEntity;
                 if (tile != null) {
                     AItemPack<?> item = tile.getItem();
                     if (item != null) {
-                        return ((WrapperItemStack) item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
+                        return ((WrapperItemStack) item.getNewStack(((BuilderTileEntity) mcTile).tileEntity.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
                     }
                 }
             }
         }
-        return super.getPickBlock(state, target, world, pos, player);
+        return super.getCloneItemStack(world, pos, state);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public void getDrops(BlockState pState, LootContext.Builder pBuilder) {
+    public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
         //If this is a TE, drop TE drops.  Otherwise, drop normal drops.
-        if (block instanceof ABlockBaseTileEntity) {
-            List<IWrapperItemStack> positionDrops = dropsAtPositions.get(pos);
-            if (positionDrops != null) {
-                for (IWrapperItemStack stack : positionDrops) {
-                    drops.add(((WrapperItemStack) stack).stack);
-                }
-                dropsAtPositions.remove(pos);
-            }
+        TileEntity tile = builder.getOptionalParameter(LootParameters.BLOCK_ENTITY);
+        if (tile instanceof BuilderTileEntity) {
+            List<ItemStack> positionDrops = dropMap.get(tile);
+            dropMap.remove(tile);
+            return positionDrops;
         } else {
-            super.getDrops(drops, world, pos, state, fortune);
+            return super.getDrops(state, builder);
         }
-
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+    public void spawnAfterBreak(BlockState state, ServerWorld world, BlockPos pos, ItemStack stack) {
         //Forward the breaking call to the block to allow for breaking logic.
         block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
         //This gets called before the block is broken to do logic.  Save drops to static map to be
         //spawned during the getDrops method.  Also notify the block that it's been broken in case
         //it needs to do operations.
         if (block instanceof ABlockBaseTileEntity) {
-            TileEntity tile = world.getTileEntity(pos);
+            TileEntity tile = world.getBlockEntity(pos);
             if (tile instanceof BuilderTileEntity) {
-                if (((BuilderTileEntity<?>) tile).tileEntity != null) {
+                if (((BuilderTileEntity) tile).tileEntity != null) {
                     List<IWrapperItemStack> drops = new ArrayList<>();
-                    ((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
-                    dropsAtPositions.put(pos, drops);
+                    ((BuilderTileEntity) tile).tileEntity.addDropsToList(drops);
+                    List<ItemStack> convertedDrops = new ArrayList<>();
+                    drops.forEach(drop -> convertedDrops.add(((WrapperItemStack) drop).stack));
+                    dropMap.put(tile, convertedDrops);
                 }
             }
         }
-        super.breakBlock(world, pos, state);
+        super.spawnAfterBreak(state, world, pos, stack);
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_) {
-        AxisAlignedBB mcBox = getBlockBox(state, world, pos, true);
-        if (mcBox.intersects(entityBox)) {
-            collidingBoxes.add(mcBox);
-        }
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess access, BlockPos pos) {
-        return getBlockBox(state, access, pos, false);
-    }
-
-    private AxisAlignedBB getBlockBox(IBlockState state, IBlockAccess access, BlockPos pos, boolean globalCoords) {
+    public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
         //Gets the bounding boxes. We forward this call to the tile entity to handle if we have one.
         //Otherwise, get the bounds from the main block, or just the standard bounds.
         //We add-on 0.5D to offset the box to the correct location, as our blocks are centered.
         //Bounding boxes are not offset, whereas collision are, which is what the boolean parameter is for.
         if (block instanceof ABlockBaseTileEntity) {
-            TileEntity mcTile = access.getTileEntity(pos);
+            TileEntity mcTile = world.getBlockEntity(pos);
             if (mcTile instanceof BuilderTileEntity) {
-                ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
+                ATileEntityBase<?> tile = ((BuilderTileEntity) mcTile).tileEntity;
                 if (tile != null) {
-                    if (globalCoords) {
-                        return WrapperWorld.convert(tile.boundingBox);
-                    } else {
-                        return WrapperWorld.convertWithOffset(tile.boundingBox, -pos.getX(), -pos.getY(), -pos.getZ());
-                    }
+                    return VoxelShapes.create(WrapperWorld.convertWithOffset(tile.boundingBox, -pos.getX(), -pos.getY(), -pos.getZ()));
                 }
             }
         } else if (block instanceof BlockCollision) {
-            if (globalCoords) {
-                return WrapperWorld.convertWithOffset(((BlockCollision) block).blockBounds, pos.getX(), pos.getY(), pos.getZ());
-            } else {
-                return WrapperWorld.convert(((BlockCollision) block).blockBounds);
-            }
+            return VoxelShapes.create(WrapperWorld.convert(((BlockCollision) block).blockBounds));
         }
-        if (globalCoords) {
-            return FULL_BLOCK_AABB.offset(pos);
-        } else {
-            return FULL_BLOCK_AABB;
-        }
+        return VoxelShapes.block();
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public boolean isOpaqueCube(IBlockState state) {
-        //If this is opaque, we block light.  None of our blocks are opaque and block light.
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public boolean isShapeFullBlock(VoxelShape pShape) {
-        //If this is a full cube, we do culling on faces and potentially connections.  None of our blocks are full cubes.
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
+    public VoxelShape getBlockSupportShape(BlockState state, IBlockReader world, BlockPos pos) {
         //If this is SOLID, we can attach things to this block (e.g. torches).  We don't want that for any of our blocks.
-        return BlockFaceShape.UNDEFINED;
+        return VoxelShapes.empty();
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public EnumBlockRenderType getRenderType(IBlockState state) {
+    public BlockRenderType getRenderShape(BlockState state) {
         //Don't render this block.  We manually render via the TE.
-        return EnumBlockRenderType.INVISIBLE;
+        return BlockRenderType.INVISIBLE;
     }
 
     @Override
-    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
+    public int getLightBlock(BlockState state, IBlockReader world, BlockPos pos) {
         if (block instanceof ABlockBaseTileEntity) {
-            TileEntity tile = world.getTileEntity(pos);
+            TileEntity tile = world.getBlockEntity(pos);
             if (tile instanceof BuilderTileEntity) {
-                if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                    return (int) (((BuilderTileEntity<?>) tile).tileEntity.getLightProvided() * 15);
+                if (((BuilderTileEntity) tile).tileEntity != null) {
+                    return (int) (((BuilderTileEntity) tile).tileEntity.getLightProvided() * 15);
                 }
             }
         }

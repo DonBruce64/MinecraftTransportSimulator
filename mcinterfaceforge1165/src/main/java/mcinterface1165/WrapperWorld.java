@@ -1,6 +1,7 @@
 package mcinterface1165;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,52 +37,53 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockBush;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.BushBlock;
+import net.minecraft.block.CropsBlock;
+import net.minecraft.block.FarmlandBlock;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.INPC;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.state.properties.SlabType;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.shapes.IBooleanFunction;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.Explosion;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -208,7 +210,24 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public File getDataFile() {
-        return new File(world.getLevelData().getSaveHandler().getWorldDirectory(), "mtsdata.dat");
+        //Need to do reflection to get hidden field.  Stupid Mojang restrictions..
+        //FD: net/minecraft/world/storage/DimensionSavedDataManager/field_215759_d net/minecraft/world/storage/DimensionSavedDataManager/dataFolder
+        File dataFolder;
+        for (Field field : DimensionSavedDataManager.class.getDeclaredFields()) {
+            if (field.getName().equals("dataFolder") || field.getName().equals("field_215759_d")) {
+                try {
+                    if (!field.isAccessible()) {
+                        field.setAccessible(true);
+                    }
+
+                    dataFolder = (File) field.get(((ServerWorld) world).getDataStorage());
+                    return new File(dataFolder, "mtsdata.dat");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -467,6 +486,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void updateBoundingBoxCollisions(BoundingBox box, Point3D collisionMotion, boolean ignoreIfGreater) {
         AxisAlignedBB mcBox = WrapperWorld.convert(box);
+        VoxelShape mcShape = VoxelShapes.create(mcBox);
         box.collidingBlockPositions.clear();
         mutableCollidingAABBs.clear();
         for (int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i) {
@@ -475,16 +495,13 @@ public class WrapperWorld extends AWrapperWorld {
                     BlockPos pos = new BlockPos(i, j, k);
                     if (!world.isEmptyBlock(pos)) {
                         BlockState state = world.getBlockState(pos);
-                        if (state.getBlock().canCollideCheck(state, false) && state.getCollisionShape(world, pos) != null) {
-                            int oldCollidingBlockCount = mutableCollidingAABBs.size();
-                            state.getCollisionShape(world, pos).collide(null, mcBox, 0);
-                            state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
-                            if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
-                                box.collidingBlockPositions.add(new Point3D(i, j, k));
-                            }
+                        VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                        if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
+                            mutableCollidingAABBs.addAll(collisionShape.toAabbs());
+                            box.collidingBlockPositions.add(new Point3D(i, j, k));
                         }
                         if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                            mutableCollidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
+                            mutableCollidingAABBs.add(collisionShape.bounds().move(pos));
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
                         }
                     }
@@ -543,24 +560,22 @@ public class WrapperWorld extends AWrapperWorld {
         }
         mutableCollidingAABBs.clear();
         AxisAlignedBB mcBox = WrapperWorld.convertWithOffset(box, offset.x, offset.y, offset.z);
+        VoxelShape mcShape = VoxelShapes.create(mcBox);
         for (int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i) {
             for (int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j) {
                 for (int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k) {
                     BlockPos pos = new BlockPos(i, j, k);
                     if (!knownAirBlocks.contains(pos)) {
-                        if (world.isBlockLoaded(pos)) {
-                            IBlockState state = world.getBlockState(pos);
-                            if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
-                                int oldCollidingBlockCount = mutableCollidingAABBs.size();
-                                state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
-                                if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
-                                    return true;
-                                }
+                        if (world.isLoaded(pos)) {
+                            BlockState state = world.getBlockState(pos);
+                            VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                            if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
+                                return true;
                             } else {
                                 knownAirBlocks.add(pos);
                             }
                             if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                                if (mcBox.intersects(state.getBoundingBox(world, pos).offset(pos))) {
+                                if (mcBox.intersects(collisionShape.bounds().move(pos))) {
                                     return true;
                                 }
                             }
@@ -579,7 +594,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public float getRainStrength(Point3D position) {
-        return world.isRainingAt(new BlockPos(position.x, position.y + 1, position.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
+        return world.isRainingAt(new BlockPos(position.x, position.y + 1, position.z)) ? world.getRainLevel(1.0F) + world.getThunderLevel(1.0F) : 0.0F;
     }
 
     @Override
@@ -595,27 +610,26 @@ public class WrapperWorld extends AWrapperWorld {
             BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
             BlockPos pos = new BlockPos(position.x, position.y, position.z);
             if (playerWrapper != null) {
-                PlayerEntity mcPayer = ((WrapperPlayer) playerWrapper).player;
+                PlayerEntity mcPlayer = ((WrapperPlayer) playerWrapper).player;
                 WrapperItemStack stack = (WrapperItemStack) playerWrapper.getHeldStack();
                 AItemBase item = stack.getItem();
                 Direction facing = Direction.valueOf(axis.name());
-                BlockState state = world.getBlockState(pos);
-                if (!state.getBlock().isAir(state, world, pos)) {
+                if (!world.isEmptyBlock(pos)) {
                     pos = pos.relative(facing);
                     position.add(facing.getStepX(), facing.getStepY(), facing.getStepZ());
                 }
 
-                if (item != null && mcPayer.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)) {
-                    IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, mcPayer, EnumHand.MAIN_HAND);
-                    if (world.setBlockState(pos, newState, 11)) {
+                if (item != null && world.mayInteract(mcPlayer, pos) && world.isEmptyBlock(pos)) {
+                    BlockState newState = wrapper.defaultBlockState();
+                    if (world.setBlock(pos, newState, 11)) {
                         //Block is set.  See if we need to set TE data.
                         if (block instanceof ABlockBaseTileEntity) {
-                            BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getBlockEntity(pos);
+                            BuilderTileEntity builderTile = (BuilderTileEntity) world.getBlockEntity(pos);
                             IWrapperNBT data = stack.getData();
                             if (item instanceof AItemPack) {
                                 ((AItemPack<JSONDefinition>) item).populateDefaultData(data);
                             }
-                            builderTile.setInternalTile(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data));
+                            builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data));
                             addEntity(builderTile.tileEntity);
                         }
                         //Shrink stack as we placed this block.
@@ -624,8 +638,8 @@ public class WrapperWorld extends AWrapperWorld {
                     }
                 }
             } else {
-                IBlockState newState = wrapper.getDefaultState();
-                return world.setBlockState(pos, newState, 11);
+                BlockState newState = wrapper.defaultBlockState();
+                return world.setBlock(pos, newState, 11);
             }
         }
         return false;
@@ -646,8 +660,8 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        float sunLight = world.getLightEngine()..getSunBrightness(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;
-        float blockLight = calculateBlock ? world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos) / 15F : 0.0F;
+        float sunLight = (world.getBrightness(LightType.SKY, pos) - world.getSkyDarken()) / 15F;
+        float blockLight = calculateBlock ? world.getBrightness(LightType.BLOCK, pos) / 15F : 0.0F;
         return Math.max(sunLight, blockLight);
     }
 
@@ -666,10 +680,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean isAir(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        BlockState state = world.getBlockState(pos);
-        Block block = state.getBlock();
-        return block.isAir(state, world, pos);
+        return world.isEmptyBlock(new BlockPos(position.x, position.y, position.z));
     }
 
     @Override
@@ -689,22 +700,25 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void extinguish(BlockHitResult hitResult) {
-        world..extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z), Direction.valueOf(hitResult.side.name()));
+        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+        if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
+            world.removeBlock(blockpos, false);
+        }
     }
 
     @Override
     public boolean fertilizeBlock(Point3D position, IWrapperItemStack stack) {
         //Check if the item can fertilize things and we are on the server.
         ItemStack mcStack = ((WrapperItemStack) stack).stack;
-        if (mcStack.getItem() == Items.DYE && !world.isRemote) {
+        if (mcStack.getItem() == Items.BONE_MEAL && !world.isClientSide) {
             //Check if we are in crops.
             BlockPos cropPos = new BlockPos(position.x, position.y, position.z);
-            IBlockState cropState = world.getBlockState(cropPos);
+            BlockState cropState = world.getBlockState(cropPos);
             Block cropBlock = cropState.getBlock();
             if (cropBlock instanceof IGrowable) {
                 IGrowable growable = (IGrowable) cropState.getBlock();
-                if (growable.canGrow(world, cropPos, cropState, world.isRemote)) {
-                    ItemDye.applyBonemeal(mcStack.copy(), world, cropPos);
+                if (growable.isValidBonemealTarget(world, cropPos, cropState, world.isClientSide)) {
+                    growable.performBonemeal((ServerWorld) world, world.random, cropPos, cropState);
                     return true;
                 }
             }
@@ -715,25 +729,24 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperItemStack> harvestBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         List<IWrapperItemStack> cropDrops = new ArrayList<>();
-        if ((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush) {
+        if ((state.getBlock() instanceof CropsBlock && ((CropsBlock) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BushBlock) {
             Block harvestedBlock = state.getBlock();
-            NonNullList<ItemStack> drops = NonNullList.create();
-            world.playSound(pos.getX(), pos.getY(), pos.getZ(), harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+            world.playSound(null, pos, harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F);
 
             //Only return drops on servers.  Clients don't do items.
-            if (!world.isRemote) {
-                harvestedBlock.getDrops(drops, world, pos, state, 0);
-                world.setBlockToAir(pos);
-                if (harvestedBlock instanceof BlockCrops) {
+            if (!world.isClientSide) {
+                List<ItemStack> drops = Block.getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
+                world.removeBlock(pos, false);
+                if (harvestedBlock instanceof CropsBlock) {
                     for (ItemStack drop : drops) {
                         cropDrops.add(new WrapperItemStack(drop.copy()));
                     }
                 } else {
                     for (ItemStack stack : drops) {
                         if (stack.getCount() > 0) {
-                            world.spawnEntity(new EntityItem(world, position.x, position.y, position.z, stack));
+                            world.addFreshEntity(new ItemEntity(world, position.x, position.y, position.z, stack));
                         }
                     }
                 }
@@ -751,16 +764,16 @@ public class WrapperWorld extends AWrapperWorld {
 
             //Check if we have farmland below and air above.
             BlockPos farmlandPos = new BlockPos(position.x, position.y, position.z);
-            IBlockState farmlandState = world.getBlockState(farmlandPos);
+            BlockState farmlandState = world.getBlockState(farmlandPos);
             Block farmlandBlock = farmlandState.getBlock();
-            if (farmlandBlock.equals(Blocks.FARMLAND)) {
-                BlockPos cropPos = farmlandPos.up();
-                if (world.isAirBlock(cropPos)) {
+            if (farmlandBlock instanceof FarmlandBlock) {
+                BlockPos cropPos = farmlandPos.above();
+                if (world.isEmptyBlock(cropPos)) {
                     //Check to make sure the block can sustain the plant we want to plant.
-                    IBlockState plantState = plantable.getPlant(world, cropPos);
-                    if (farmlandBlock.canSustainPlant(plantState, world, farmlandPos, EnumFacing.UP, plantable)) {
-                        world.setBlockState(cropPos, plantState, 11);
-                        world.playSound(farmlandPos.getX(), farmlandPos.getY(), farmlandPos.getZ(), plantState.getBlock().getSoundType(plantState, world, farmlandPos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+                    BlockState plantState = plantable.getPlant(world, cropPos);
+                    if (farmlandBlock.canSustainPlant(plantState, world, farmlandPos, Direction.UP, plantable)) {
+                        world.setBlock(cropPos, plantState, 11);
+                        world.playSound(null, farmlandPos, plantState.getBlock().getSoundType(plantState, world, farmlandPos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F);
                         return true;
                     }
                 }
@@ -772,47 +785,38 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean plowBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState oldState = world.getBlockState(pos);
-        IBlockState newState;
+        BlockState oldState = world.getBlockState(pos);
+        BlockState newState;
         Block block = oldState.getBlock();
-        if (block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)) {
-            newState = Blocks.FARMLAND.getDefaultState();
-        } else if (block.equals(Blocks.DIRT)) {
-            switch (oldState.getValue(BlockDirt.VARIANT)) {
-                case DIRT:
-                    newState = Blocks.FARMLAND.getDefaultState();
-                    break;
-                case COARSE_DIRT:
-                    newState = Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT);
-                    break;
-                default:
-                    return false;
-            }
+        if (block == Blocks.GRASS || block == Blocks.GRASS_PATH || block == Blocks.DIRT) {
+            newState = Blocks.FARMLAND.defaultBlockState();
+        } else if (block.equals(Blocks.COARSE_DIRT)) {
+            newState = Blocks.DIRT.defaultBlockState();
         } else {
             return false;
         }
 
-        world.setBlockState(pos, newState, 11);
-        world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+        world.setBlock(pos, newState, 11);
+        world.playSound(null, pos, SoundEvents.HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
         return true;
     }
 
     @Override
     public void removeSnow(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
-        if (state.getMaterial().equals(Material.SNOW) || state.getMaterial().equals(Material.CRAFTED_SNOW)) {
-            world.setBlockToAir(pos);
-            world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+        BlockState state = world.getBlockState(pos);
+        if (state.getMaterial().equals(Material.SNOW) || state.getMaterial().equals(Material.TOP_SNOW)) {
+            world.removeBlock(pos, false);
+            world.playSound(null, pos, SoundEvents.SNOW_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }
 
     @Override
     public boolean insertStack(Point3D position, Axis axis, IWrapperItemStack stack) {
-        EnumFacing facing = EnumFacing.valueOf(axis.name());
-        TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z).offset(facing));
+        Direction facing = Direction.valueOf(axis.name());
+        TileEntity tile = world.getBlockEntity(new BlockPos(position.x, position.y, position.z).relative(facing));
         if (tile != null) {
-            IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite());
+            IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite()).orElse(null);
             if (itemHandler != null) {
                 for (int i = 0; i < itemHandler.getSlots(); ++i) {
                     ItemStack remainingStack = itemHandler.insertItem(i, ((WrapperItemStack) stack).stack, true);
@@ -829,10 +833,10 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperItemStack extractStack(Point3D position, Axis axis) {
-        EnumFacing facing = EnumFacing.valueOf(axis.name());
-        TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z).offset(facing));
+        Direction facing = Direction.valueOf(axis.name());
+        TileEntity tile = world.getBlockEntity(new BlockPos(position.x, position.y, position.z).relative(facing));
         if (tile != null) {
-            IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite());
+            IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite()).orElse(null);
             if (itemHandler != null) {
                 for (int i = 0; i < itemHandler.getSlots(); ++i) {
                     ItemStack extractedStack = itemHandler.extractItem(i, 1, false);
@@ -848,17 +852,17 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void spawnItem(AItemBase item, IWrapperNBT data, Point3D point) {
         //Spawn 1 block above in case we're right on a block.
-        world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) item.getNewStack(data)).stack));
+        world.addFreshEntity(new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) item.getNewStack(data)).stack));
     }
 
     @Override
     public void spawnItemStack(IWrapperItemStack stack, Point3D point) {
-        world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack));
+        world.addFreshEntity(new ItemEntity(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack));
     }
 
     @Override
     public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value);
+        world.explode(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
     }
 
     /**
@@ -908,14 +912,14 @@ public class WrapperWorld extends AWrapperWorld {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isClientSide && event.world.equals(world) && event.phase.equals(Phase.END)) {
-            for (EntityPlayer player : event.world.playerEntities) {
-                UUID playerUUID = player.getUniqueID();
+            for (PlayerEntity player : event.world.players()) {
+                UUID playerUUID = player.getUUID();
                 BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
                 if (gunBuilder != null) {
                     //Gun exists, check if world is the same and it is actually updating.
                     //We check basic states, and then the watchdog bit that gets reset every tick.
                     //This way if we're in the world, but not valid we will know.
-                    if (gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
+                    if (gunBuilder.level != player.level || !player.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
                         //Follower is not linked.  Remove it and re-create in code below.
                         gunBuilder.setDead();
                         playerServerGunBuilders.remove(playerUUID);
@@ -923,7 +927,7 @@ public class WrapperWorld extends AWrapperWorld {
                     } else {
                         ++gunBuilder.idleTickCounter;
                     }
-                } else if (!player.isDead) {
+                } else if (player.isAlive()) {
                     //Gun does not exist, check if player has been present for 3 seconds and spawn it.
                     int totalTicksWaited = 0;
                     if (ticksSincePlayerJoin.containsKey(playerUUID)) {
