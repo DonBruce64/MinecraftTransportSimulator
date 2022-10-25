@@ -883,7 +883,7 @@ public class PartEngine extends APart {
         }
         if (variable.startsWith("engine_piston_")) {
         	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
-        	//i.e. engine_piston_2_6 will return 1 when the crank is in the second of 6 sectors.
+        	//i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
         	//When suffixed with _cam, it will instead return the sector the camshaft rotation.
 
         	//If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
@@ -912,7 +912,6 @@ public class PartEngine extends APart {
             }
             
             //Map the shaft rotation to a value between 0 and 359.99...
-            //double shaftRotation = (offset + getEngineRotation(partialTicks)) - ((360D * camMultiplier) * Math.floor((offset + getEngineRotation(partialTicks)) / (360D * camMultiplier)));
             double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
             
             //Calculate the angle of a 'sector'
