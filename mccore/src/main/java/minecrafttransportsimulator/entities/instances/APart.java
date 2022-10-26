@@ -163,7 +163,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         localOffset.set(placementDefinition.pos);
         
         //Update permanent-ness
-        isPermanent = areVariablesLocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer(),placementDefinition.isPermanent);
+        isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
