@@ -183,7 +183,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     //Does the part held match this packPart?
                     if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subDefinition, false)) {
                         //Are there any doors blocking us from clicking this part?
-                        if (!areVariablesBlocking(partSlotBoxEntry.getValue(), player)) {
+                        if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
                             //Part matches.  Add the box.  Set the box bounds to the generic box, or the
                             //special bounds of the generic part if we're holding one.
                             BoundingBox box = partSlotBoxEntry.getKey();
@@ -348,36 +348,36 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Returns true if any linked variables are blocking the player from
      * accessing the passed-in part slot.
      */
-    public boolean areVariablesBlocking(JSONPartDefinition partDef, IWrapperPlayer player) {
-        if (partDef.interactableVariables != null) {
-            for (List<String> variableList : partDef.interactableVariables) {
-                boolean listIsTrue = false;
-                for (String variableName : variableList) {
-                    if (variableName.startsWith("!")) {
-                        double value = getRawVariableValue(variableName.substring(1), 0);
-                        if (value == 0 || Double.isNaN(value)) {
-                            //Inverted variable value is 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
-                    } else {
-                        double value = getRawVariableValue(variableName, 0);
-                        if (!Double.isNaN(value) && value > 0) {
-                            //Normal variable value is non-zero 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
-                    }
-                }
-                if (!listIsTrue) {
-                    //List doesn't have any true variables, therefore variables are blocking.
-                    return true;
-                }
-            }
-            //No false lists were found for this collection, therefore no variables are blocking.
-        }  //No lists found for this entry, therefore no variables are blocking.
+    public boolean isVariableListTrue(List<List<String>> list) {
+        if (list != null) {
+	        for (List<String> variableList : list) {
+	            boolean listIsTrue = false;
+	            for (String variableName : variableList) {
+	                if (variableName.startsWith("!")) {
+	                    double value = getRawVariableValue(variableName.substring(1), 0);
+	                    if (value == 0 || Double.isNaN(value)) {
+	                        //Inverted variable value is 0, therefore list is true.
+	                        listIsTrue = true;
+	                        break;
+	                    }
+	                } else {
+	                    double value = getRawVariableValue(variableName, 0);
+	                    if (!Double.isNaN(value) && value > 0) {
+	                        //Normal variable value is non-zero 0, therefore list is true.
+	                        listIsTrue = true;
+	                        break;
+	                    }
+	                }
+	            }
+	            if (!listIsTrue) {
+	                //List doesn't have any true variables, therefore the value is false.
+	                return false;
+	            }
+	        }
+	        //No false lists were found for this collection, therefore the list is true.
+        }  //No lists found for this entry, therefore no variables are false.
 
-        return false;
+        return true;
     }
 
     /**
@@ -735,7 +735,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (holdingScanner) {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : partSlotBoxes.entrySet()) {
                         JSONPartDefinition placementDefinition = partSlotEntry.getValue();
-                        if (!areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subDefinition.subName))) {
+                        if (isVariableListTrue(placementDefinition.interactableVariables) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subDefinition.subName))) {
                             BoundingBox box = partSlotEntry.getKey();
                             Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
                             box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);

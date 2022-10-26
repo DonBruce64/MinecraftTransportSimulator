@@ -45,6 +45,9 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If included and set to true, then when a custom camera is available for use, then this custom camera will ALWAYS be used in first-person mode.  This is designed for seats where first-person mode is not desired, such as tanks or gunner pods.  Does not affect third-person mode.")
     public boolean forceCameras;
 
+    @JSONDescription("This parameter is optional.  If included and set to true, then this part will not block the removal of its parent.")
+    public boolean allowParentRemoval;
+
     @JSONDescription("This parameter is optional.  If set, then whenever the paint gun is used on the vehicle this part is on, this part will attempt to match the tone specified by the index.  If the specified tone does not exist, the part will not change.  Default parts will automatically attempt to match tones, but hand-placed parts will not change unless painted.")
     public int toneIndex;
 
@@ -114,6 +117,9 @@ public class JSONPartDefinition {
 
     @JSONDescription("A double-nested list of variables.  If this is set, then this part will not be interactable with unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
     public List<List<String>> interactableVariables;
+
+    @JSONDescription("A double-nested list of variables.  If this is set, then this part will be unlocked (not permanent) unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).  Additionally, should the part not exist, it will not be able to be placed.")
+    public List<List<String>> lockingVariables;
 
     @JSONDescription("A list of indexes for parts that are linked to this one.  Normally not used, but is required to link wheels to engines, propellers to engines, guns to seats that control them, guns to ammo crates for them to pull from, and effectors to crates they can pull supplies from and feed drops into.  The linking is bi-directional: you can link an engine to a wheel, or a wheel to an engine.  Also, linking is recursive.  So if you link an engine to an axle custom part, any wheels on that part when placed will be linked as if they were in that slot.  Similar logic applies for seats to hardmount points that might hold guns.")
     public List<Integer> linkedParts;
