@@ -896,7 +896,7 @@ public class PartGun extends APart {
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        if (!entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer())) {
+        if (entityOn.isVariableListTrue(placementDefinition.interactableVariables)) {
             super.renderBoundingBoxes(transform);
             //Draw the gun muzzle bounding boxes.
             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
