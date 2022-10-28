@@ -54,72 +54,107 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 
     @Override
     public boolean canBreakBlocks() {
-        return !definition.item.type.equals(ItemComponentType.WRENCH);
+        return !(definition.item.type.equals(ItemComponentType.WRENCH) || definition.item.type.equals(ItemComponentType.SCREWDRIVER));
     }
 
     @Override
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
         switch (definition.item.type) {
-            case WRENCH: {
-                if (!entity.world.isClient()) {
-                    //If the player isn't the owner of the entity, they can't interact with it.
-                    if (!ownerState.equals(PlayerOwnerState.USER)) {
-                        if (rightClick) {
-                            //Right-clicking opens GUIs.
-                            if (entity instanceof EntityVehicleF_Physics) {
-                                EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-                                if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
-                                    player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
-                                } else {
-                                    player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
-                                }
-                            } else if (player.isSneaking()) {
-                                player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+        case WRENCH: {
+            if (!entity.world.isClient()) {
+                //If the player isn't the owner of the entity, they can't interact with it.
+                if (!ownerState.equals(PlayerOwnerState.USER)) {
+                    if (rightClick) {
+                        //Right-clicking opens GUIs.
+                        if (entity instanceof EntityVehicleF_Physics) {
+                            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                            if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
+                                player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
+                            } else {
+                                player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                             }
-                        } else {
-                            //Left clicking removes parts, or removes vehicles, if we were sneaking.
-                            if(player.isSneaking()) {
-                                EntityVehicleF_Physics vehicle;
-                                if(entity instanceof APart) {
-                                    vehicle = ((APart) entity).vehicleOn;
-                                }else if(entity instanceof EntityVehicleF_Physics) {
-                                    vehicle = (EntityVehicleF_Physics) entity;
-                                } else {
-                                    vehicle = null;
+                        } else if (player.isSneaking()) {
+                            player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+                        }
+                    } else {
+                        //Left clicking removes parts, or removes vehicles, if we were sneaking.
+                        if(player.isSneaking()) {
+                            EntityVehicleF_Physics vehicle;
+                            if(entity instanceof APart) {
+                                vehicle = ((APart) entity).vehicleOn;
+                            }else if(entity instanceof EntityVehicleF_Physics) {
+                                vehicle = (EntityVehicleF_Physics) entity;
+                            } else {
+                                vehicle = null;
+                            }
+                            if(vehicle != null) {
+                                if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
+                                    vehicle.disconnectAllConnections();
+                                    vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), hitBox.globalCenter);
+                                    vehicle.remove();
                                 }
-                                if(vehicle != null) {
-                                    if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
-                                        vehicle.disconnectAllConnections();
-                                        vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), hitBox.globalCenter);
-                                        vehicle.remove();
-                                    }
-                                }
-                            }else {
-                                if (entity instanceof APart) {
-                                    APart part = (APart) entity;
-                                    if (!part.isPermanent && part.isValid) {
-                                        LanguageEntry partResult = part.checkForRemoval();
-                                        if (partResult != null) {
-                                            player.sendPacket(new PacketPlayerChatMessage(player, partResult));
-                                            return CallbackType.NONE;
-                                        } else {
-                                            //Player can remove part, spawn item in the world and remove part.
-                                            AItemPart droppedItem = part.getItem();
-                                            if (droppedItem != null) {
-                                                part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
-                                            }
-                                            part.entityOn.removePart(part, null);
+                            }
+                        }else {
+                            if (entity instanceof APart) {
+                                APart part = (APart) entity;
+                                if (!part.isPermanent && part.isValid && !part.definition.generic.mustBeRemovedByScrewdriver) {
+                                    LanguageEntry partResult = part.checkForRemoval();
+                                    if (partResult != null) {
+                                        player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+                                        return CallbackType.NONE;
+                                    } else {
+                                        //Player can remove part, spawn item in the world and remove part.
+                                        AItemPart droppedItem = part.getItem();
+                                        if (droppedItem != null) {
+                                            part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
                                         }
+                                        part.entityOn.removePart(part, null);
                                     }
                                 }
                             }
                         }
-                    } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
                     }
+                } else {
+                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
                 }
-                return CallbackType.NONE;
             }
+            return CallbackType.NONE;
+        }
+        case SCREWDRIVER: {
+            if (!entity.world.isClient()) {
+                //If the player isn't the owner of the entity, they can't interact with it.
+                if (!ownerState.equals(PlayerOwnerState.USER)) {
+                    if (rightClick) {
+                        //Right-clicking
+                    } else {
+                        //Left clicking removes parts, or X, if we were sneaking.
+                        if(player.isSneaking()) {
+                        }else {
+                            if (entity instanceof APart) {
+                                APart part = (APart) entity;
+                                if (!part.isPermanent && part.isValid && part.definition.generic.mustBeRemovedByScrewdriver) {
+                                    LanguageEntry partResult = part.checkForRemoval();
+                                    if (partResult != null) {
+                                        player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+                                        return CallbackType.NONE;
+                                    } else {
+                                        //Player can remove part, spawn item in the world and remove part.
+                                        AItemPart droppedItem = part.getItem();
+                                        if (droppedItem != null) {
+                                            part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
+                                        }
+                                        part.entityOn.removePart(part, null);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
+                }
+            }
+            return CallbackType.NONE;
+        }
             case PAINT_GUN: {
                 if (!entity.world.isClient() && rightClick) {
                     //If the player isn't the owner of the entity, they can't interact with it.
