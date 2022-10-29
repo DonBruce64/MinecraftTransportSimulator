@@ -255,32 +255,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             return;
         }
 
-        //If we are holding a wrench, and the part has children, don't add the interaction boxes.  We can't wrench those parts.
-        //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be wrenched.
-        //Again, this only applies on clients for that client player.
-        if (world.isClient() && InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH)) {
-        	//If we are holding a screwdriver, remove the interaction boxes so they don't get in the way.
-            if (definition.generic.mustBeRemovedByScrewdriver) {
+        //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed.
+        if (world.isClient() && (InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) || InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER))) {
+            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
+            if ((InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) && definition.generic.mustBeRemovedByScrewdriver) || (InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER) && !definition.generic.mustBeRemovedByScrewdriver)) {
                 allInteractionBoxes.removeAll(interactionBoxes);
                 return;
             }
-            for (APart childPart : parts) {
-                if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
-                    allInteractionBoxes.removeAll(interactionBoxes);
-                    return;
-                }
-            }
-        }
-
-        //If we are holding a screwdriver, and the part has children, don't add the interaction boxes.  We can't screwdriver those parts.
-        //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be screwdrivered.
-        //Again, this only applies on clients for that client player.
-        if (world.isClient() && InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER)) {
-            //If we are holding a wrench, remove the interaction boxes so they don't get in the way.
-            if (!definition.generic.mustBeRemovedByScrewdriver) {
-                allInteractionBoxes.removeAll(interactionBoxes);
-                return;
-            }
+            //If we are holding a wrench or screwdriver, and the part has children, don't add the interaction boxes.  We can't wrench those parts.
+            //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be removed.
+            //Again, this only applies on clients for that client player.
         	for (APart childPart : parts) {
                 if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
                     allInteractionBoxes.removeAll(interactionBoxes);
