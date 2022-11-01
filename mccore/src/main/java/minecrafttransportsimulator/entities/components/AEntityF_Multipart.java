@@ -433,6 +433,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
                     }
                     if (partDef.conditionalDefaultParts != null) {
+                        //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
+                    	//the value will be set before spawning in any conditional parts.
+                        if (definition.rendering != null && definition.rendering.constants != null) {
+                            for (String variable : definition.rendering.constants) {
+                                variables.put(variable, 1D);
+                            }
+                        }
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
                             if (getRawVariableValue(conditionalDef.getKey(), 0) > 0) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
