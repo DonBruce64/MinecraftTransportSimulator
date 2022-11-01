@@ -429,9 +429,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (newEntity) {
-                    if (partDef.defaultPart != null) {
-                        addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
-                    }
                     if (partDef.conditionalDefaultParts != null) {
                         //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     	//the value will be set before spawning in any conditional parts.
@@ -446,6 +443,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 break;
                             }
                         }
+                    }
+                    if (partDef.defaultPart != null) {
+                        addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
                     }
                 }
             }
