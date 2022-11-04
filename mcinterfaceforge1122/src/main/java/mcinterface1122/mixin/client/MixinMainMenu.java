@@ -21,8 +21,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Field;
-
 @Mixin(GuiMainMenu.class)
 public abstract class MixinMainMenu extends GuiScreen {
     private static final ResourceLocation mainMenuImage = new ResourceLocation("mts:textures/splash/splashscreen.png");
@@ -58,10 +56,8 @@ public abstract class MixinMainMenu extends GuiScreen {
     protected abstract boolean areRealmsNotificationsEnabled();
 
     @Inject(at = @At("RETURN"), method = "initGui")
-    public void getModUpdateScreen(CallbackInfo ci) throws NoSuchFieldException, IllegalAccessException {
-        Field modUpdateScreen = GuiMainMenu.class.getDeclaredField("modUpdateNotification");
-        modUpdateScreen.setAccessible(true);
-        updateNotification = (NotificationModUpdateScreen) modUpdateScreen.get(this);
+    public void getModUpdateScreen(CallbackInfo ci) {
+        updateNotification = net.minecraftforge.client.gui.NotificationModUpdateScreen.init((GuiMainMenu) ((Object) this), modButton);
     }
 
     @Redirect(at = @At(value = "NEW", target = "net/minecraft/client/gui/GuiButton"), method = "initGui")
@@ -93,9 +89,9 @@ public abstract class MixinMainMenu extends GuiScreen {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 1700, 750, this.width, this.height);
 
-            java.util.List<String> brandings = com.google.common.collect.Lists.reverse(net.minecraftforge.fml.common.FMLCommonHandler.instance().getBrandings(true));
-            for (int brdline = 0; brdline < brandings.size(); brdline++) {
-                String brd = brandings.get(brdline);
+            java.util.List<String> branding = com.google.common.collect.Lists.reverse(net.minecraftforge.fml.common.FMLCommonHandler.instance().getBrandings(true));
+            for (int brdline = 0; brdline < branding.size(); brdline++) {
+                String brd = branding.get(brdline);
                 if (!com.google.common.base.Strings.isNullOrEmpty(brd)) {
                     this.drawString(this.fontRenderer, brd, 2, this.height - (10 + brdline * (this.fontRenderer.FONT_HEIGHT + 1)), 16777215);
                 }

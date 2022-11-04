@@ -68,7 +68,7 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    compileOnly.extendsFrom(embed)
+    implementation.extendsFrom(embed)
 }
 
 //Specify dependencies.
