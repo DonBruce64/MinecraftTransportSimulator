@@ -42,16 +42,16 @@ public class JSONSound {
     @JSONDescription("An entry of x, y, and z coordinates that define the center point of where this sound will be played relative to the center of the object.  May be omitted if you just want the sound to play at the center.")
     public Point3D pos;
 
-    @JSONDescription("Just min distance.")
+    @JSONDescription("Blocking the Doppler effect.")
+    public boolean blockDoppler;
+
+    @JSONDescription("A list of random sounds without taking into account the main one.")
+    public List<String> soundVariations;
+
+    @JSONDescription("Minimum distance for sound playback.")
     public double minDistance = 0.0;
 
-    @JSONDescription("Just max distance.")
+    @JSONDescription("Maximum distance for sound playback.")
     public double maxDistance = 64.0;
-
-    @JSONDescription("Doppler pitch effect switch.")
-    public boolean dopplerPitch = true;
-
-    @JSONDescription("A list of random sounds in addition to the main one.")
-    public List<String> randomSounds;
 
 }

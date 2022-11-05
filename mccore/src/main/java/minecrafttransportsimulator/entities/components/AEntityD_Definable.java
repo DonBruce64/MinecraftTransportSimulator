@@ -580,7 +580,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
                     }
                     if (!isSoundPlaying) {
-                        //We get the distance from the sound to the player
+                        //We get the distance from the sound to the player using Point3D (this may not be accurate)
                         double distance = this.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
 
                         //Checking the distance in the range of minimum and maximum values
