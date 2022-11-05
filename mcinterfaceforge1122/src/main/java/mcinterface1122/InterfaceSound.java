@@ -3,13 +3,7 @@ package mcinterface1122;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
@@ -152,7 +146,7 @@ public class InterfaceSound implements IInterfaceSound {
 
                     //If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
                     //Otherwise, set pitch as normal.
-                    if (sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())) {
+                    if (sound.soundDef != null && sound.soundDef.dopplerPitch && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())) {
                         Point3D playerVelocity = player.getVelocity();
                         playerVelocity.y = 0;
                         double initalDelta = player.getPosition().subtract(sound.entity.position).length();
@@ -214,6 +208,18 @@ public class InterfaceSound implements IInterfaceSound {
     @Override
     public void playQuickSound(SoundInstance sound) {
         if (AL.isCreated() && sourceGetFailures < 10) {
+
+            if (sound.soundDef.randomSounds != null && !sound.soundDef.randomSounds.isEmpty()) {
+                //Copying a random sounds list and adding the main one
+                List<String> sounds = new ArrayList<>(sound.soundDef.randomSounds);
+                if (sound.soundDef.name != null && !sound.soundDef.name.equals(""))
+                    sounds.add(sound.soundDef.name);
+                //Mixing sounds
+                Collections.shuffle(sounds);
+                //Replacing the final sound
+                sound.soundName = sounds.get(0);
+            }
+
             //First get the IntBuffer pointer to where this sound data is stored.
             Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
             if (dataBufferPointer != null) {

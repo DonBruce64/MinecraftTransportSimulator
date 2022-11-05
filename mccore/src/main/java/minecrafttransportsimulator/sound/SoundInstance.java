@@ -16,13 +16,14 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public class SoundInstance {
+
     public final AEntityB_Existing entity;
-    public final String soundName;
     public final JSONSound soundDef;
     public final EntityRadio radio;
     public final Point3D position;
 
     //Runtime variables.
+    public String soundName;
     public int sourceIndex;
     public float volume = 1.0F;
     public float pitch = 1.0F;
