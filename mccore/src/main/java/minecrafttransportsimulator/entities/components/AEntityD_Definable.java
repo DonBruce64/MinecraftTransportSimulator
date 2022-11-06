@@ -584,7 +584,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         double distance = this.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
 
                         //Checking the distance in the range of minimum and maximum values
-                        if ((soundDef.maxDistance != 0) && (distance <= soundDef.maxDistance && distance >= soundDef.minDistance)) {
+                        if (distance <= soundDef.maxDistance && distance >= soundDef.minDistance) {
                             InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
                         }
                     }
