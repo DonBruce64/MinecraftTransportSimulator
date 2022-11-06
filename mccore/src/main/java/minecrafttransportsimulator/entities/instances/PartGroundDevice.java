@@ -246,8 +246,6 @@ public class PartGroundDevice extends APart {
                 return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
             case ("ground_distance"):
                 return world.getHeight(zeroReferencePosition);
-            case("ground_isspare"):
-            	return isSpare ? 1 : 0;
         }
 
         return super.getRawVariableValue(variable, partialTicks);
