@@ -482,6 +482,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 return 1;
             case ("part_ismirrored"):
                 return isMirrored ? 1 : 0;
+            case ("part_isspare"):
+                return isSpare ? 1 : 0;
         }
 
         //No variables, check super variables before doing generic forwarding.
