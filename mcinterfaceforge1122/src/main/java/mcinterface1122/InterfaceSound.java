@@ -145,7 +145,7 @@ public class InterfaceSound implements IInterfaceSound {
 
                     //If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
                     //Otherwise, set pitch as normal.
-                    if (sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding()) && !sound.soundDef.blockDoppler) {
+                    if (sound.soundDef != null && !sound.soundDef.blockDoppler && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())) {
                         Point3D playerVelocity = player.getVelocity();
                         playerVelocity.y = 0;
                         double initalDelta = player.getPosition().subtract(sound.entity.position).length();

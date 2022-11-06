@@ -49,9 +49,9 @@ public class JSONSound {
     public List<String> soundVariations;
 
     @JSONDescription("Minimum distance for sound playback.")
-    public double minDistance = 0.0;
+    public double minDistance;
 
     @JSONDescription("Maximum distance for sound playback.")
-    public double maxDistance = 64.0;
+    public double maxDistance;
 
 }
