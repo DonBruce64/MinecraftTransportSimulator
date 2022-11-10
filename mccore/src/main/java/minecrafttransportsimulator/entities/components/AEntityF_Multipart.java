@@ -600,7 +600,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
             }
         } catch (IndexOutOfBoundsException e) {
-            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+            if (!partName.isEmpty()) {
+                playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+            }
         }
     }
 
