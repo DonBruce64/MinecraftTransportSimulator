@@ -246,6 +246,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     protected void updateEncompassingBox() {
+    	IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+    	boolean isHoldingWrench = player.isHoldingItemType(ItemComponentType.WRENCH);
+    	boolean isHoldingScrewdriver = player.isHoldingItemType(ItemComponentType.SCREWDRIVER);
         super.updateEncompassingBox();
 
         //Don't add our interaction boxes to the box list if we aren't active and on the client.
@@ -256,9 +259,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed.
-        if (world.isClient() && (InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) || InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER))) {
+        if (world.isClient() && (isHoldingWrench || isHoldingScrewdriver)) {
             //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
-            if ((InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) && definition.generic.mustBeRemovedByScrewdriver) || (InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER) && !definition.generic.mustBeRemovedByScrewdriver)) {
+            if ((isHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (isHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
                 allInteractionBoxes.removeAll(interactionBoxes);
                 return;
             }
