@@ -45,6 +45,8 @@ public class PartGroundDevice extends APart {
     private float currentMotiveFriction;
     @ModifiedValue
     private float currentLateralFriction;
+    @ModifiedValue
+    private float currentHeight;
 
     //Internal states for control and physics.
     public boolean isFlat;
@@ -192,6 +194,7 @@ public class PartGroundDevice extends APart {
     protected void updateVariableModifiers() {
         currentMotiveFriction = definition.ground.motiveFriction;
         currentLateralFriction = definition.ground.lateralFriction;
+        currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -202,6 +205,9 @@ public class PartGroundDevice extends APart {
                         break;
                     case "lateralFriction":
                         currentLateralFriction = adjustVariable(modifier, currentLateralFriction);
+                        break;
+                    case "height":
+                    	currentHeight = adjustVariable(modifier, currentHeight);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -258,7 +264,7 @@ public class PartGroundDevice extends APart {
 
     @Override
     public double getHeight() {
-        return (isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y;
+        return currentHeight;
     }
 
     /**
