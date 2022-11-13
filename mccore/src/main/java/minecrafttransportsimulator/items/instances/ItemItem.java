@@ -60,7 +60,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     @Override
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
         switch (definition.item.type) {
-	        case WRENCH: {
+	        case WRENCH: 
+	        case SCREWDRIVER: {
 	            if (!entity.world.isClient()) {
 	                //If the player isn't the owner of the entity, they can't interact with it.
 	                if (!ownerState.equals(PlayerOwnerState.USER)) {
@@ -97,42 +98,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 	                        }else {
 	                            if (entity instanceof APart) {
 	                                APart part = (APart) entity;
-	                                if (!part.isPermanent && part.isValid && !part.definition.generic.mustBeRemovedByScrewdriver) {
-	                                    LanguageEntry partResult = part.checkForRemoval();
-	                                    if (partResult != null) {
-	                                        player.sendPacket(new PacketPlayerChatMessage(player, partResult));
-	                                        return CallbackType.NONE;
-	                                    } else {
-	                                        //Player can remove part, spawn item in the world and remove part.
-	                                        AItemPart droppedItem = part.getItem();
-	                                        if (droppedItem != null) {
-	                                            part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
-	                                        }
-	                                        part.entityOn.removePart(part, null);
-	                                    }
-	                                }
-	                            }
-	                        }
-	                    }
-	                } else {
-	                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
-	                }
-	            }
-	            return CallbackType.NONE;
-	        }
-	        case SCREWDRIVER: {
-	            if (!entity.world.isClient()) {
-	                //If the player isn't the owner of the entity, they can't interact with it.
-	                if (!ownerState.equals(PlayerOwnerState.USER)) {
-	                    if (rightClick) {
-	                        //Right-clicking
-	                    } else {
-	                        //Left clicking removes parts, or X, if we were sneaking.
-	                        if(player.isSneaking()) {
-	                        }else {
-	                            if (entity instanceof APart) {
-	                                APart part = (APart) entity;
-	                                if (!part.isPermanent && part.isValid && part.definition.generic.mustBeRemovedByScrewdriver) {
+	                                if (!part.isPermanent && part.isValid) {
 	                                    LanguageEntry partResult = part.checkForRemoval();
 	                                    if (partResult != null) {
 	                                        player.sendPacket(new PacketPlayerChatMessage(player, partResult));
