@@ -246,9 +246,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     protected void updateEncompassingBox() {
-    	IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-    	boolean isHoldingWrench = player.isHoldingItemType(ItemComponentType.WRENCH);
-    	boolean isHoldingScrewdriver = player.isHoldingItemType(ItemComponentType.SCREWDRIVER);
         super.updateEncompassingBox();
 
         //Don't add our interaction boxes to the box list if we aren't active and on the client.
