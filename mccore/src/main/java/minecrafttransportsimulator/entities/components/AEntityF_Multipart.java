@@ -587,21 +587,24 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * passed-in definition is placed on this entity, not when it's being loaded from saved data.
      */
     public void addDefaultPart(String partName, int partSlot, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
-        try {
-            String partPackID = partName.substring(0, partName.indexOf(':'));
-            String partSystemName = partName.substring(partName.indexOf(':') + 1);
-            try {
-                APart addedPart = addPartFromItem(PackParser.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partSlot);
-                if (addedPart != null) {
-                    //Set the default tone for the part, if it requests one and we can provide one.
-                    addedPart.updateTone(false);
-                }
-            } catch (NullPointerException e) {
-                playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
-            }
-        } catch (IndexOutOfBoundsException e) {
-            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
-        }
+    	//Don't even try if the partName is an empty string
+    	if (!partName.isEmpty()) {
+	        try {
+	            String partPackID = partName.substring(0, partName.indexOf(':'));
+	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
+	            try {
+	                APart addedPart = addPartFromItem(PackParser.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partSlot);
+	                if (addedPart != null) {
+	                    //Set the default tone for the part, if it requests one and we can provide one.
+	                    addedPart.updateTone(false);
+	                }
+	            } catch (NullPointerException e) {
+	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+	            }
+	        } catch (IndexOutOfBoundsException e) {
+	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+	        }
+    	}
     }
 
     /**
