@@ -258,6 +258,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             return;
         }
 
+    	boolean isHoldingWrench = world.isClient() ? InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) : false;
+    	boolean isHoldingScrewdriver = world.isClient() ? InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER) : false;
+
         //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed.
         if (world.isClient() && (isHoldingWrench || isHoldingScrewdriver)) {
             //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
