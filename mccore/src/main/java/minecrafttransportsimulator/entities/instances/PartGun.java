@@ -286,7 +286,11 @@ public class PartGun extends APart {
                             List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
                             int thisGunIndex = gunGroup.indexOf(this);
                             if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
-                                camOffset = ((int) definition.gun.fireDelay) / gunGroup.size();
+                                if (gunGroup.size() > 1) {
+                                    camOffset = ((int) definition.gun.fireDelay) / gunGroup.size();
+                                } else {
+                                    camOffset = 0;
+                                }
                             } else {
                                 //Wait for our turn.
                                 camOffset = -1;
