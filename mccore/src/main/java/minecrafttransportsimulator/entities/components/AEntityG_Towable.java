@@ -480,7 +480,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         if (connection.hitchConnectionGroup.isSnap || connection.hookupConnectionGroup.isSnap) {
             disconnectedTowingConnections.add(connection);
         } else {
-            connectionGroupsIndexesInUse.remove(connection.hitchGroupIndex);
+            connection.towingEntity.connectionGroupsIndexesInUse.remove(connection.hitchGroupIndex);
             connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
         }
 
