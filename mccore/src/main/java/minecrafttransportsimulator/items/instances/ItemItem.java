@@ -66,15 +66,20 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     if (!ownerState.equals(PlayerOwnerState.USER)) {
                         if (rightClick) {
                             //Right-clicking opens GUIs.
-                            if (entity instanceof EntityVehicleF_Physics) {
+                            if (player.isSneaking()) {
+                                //If we clicked a part without text, use the master entity instead.  This allows players to click wheels and engines.
+                                if (entity instanceof APart && entity.text.isEmpty()) {
+                                    player.sendPacket(new PacketEntityGUIRequest(((APart) entity).masterEntity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+                                } else {
+                                    player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+                                }
+                            } else if (entity instanceof EntityVehicleF_Physics) {
                                 EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
                                 if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
                                     player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
                                 } else {
                                     player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                                 }
-                            } else if (player.isSneaking()) {
-                                player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                             }
                         } else {
                             //Left clicking removes parts, or removes vehicles, if we were sneaking.
