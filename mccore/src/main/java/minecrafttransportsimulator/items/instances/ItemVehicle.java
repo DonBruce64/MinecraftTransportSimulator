@@ -9,6 +9,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -45,11 +46,16 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             if (!wasSaved && vehicle.definition.motorized.defaultFuelQty > 0) {
                 for (APart part : vehicle.parts) {
                     if (part instanceof PartEngine) {
-                        //Get the most potent fuel for the vehicle from the fuel configs.
                         String mostPotentFluid = "";
-                        for (String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()) {
-                            if (mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)) {
-                                mostPotentFluid = fluidName;
+                        //If the engine is electric, just use the electric fuel type.
+                        if (part.definition.engine.type == EngineType.ELECTRIC) {
+                            mostPotentFluid = PartEngine.ELECTRICITY_FUEL;
+                        } else {
+                            //Get the most potent fuel for the vehicle from the fuel configs.
+                            for (String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()) {
+                                if (mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)) {
+                                    mostPotentFluid = fluidName;
+                                }
                             }
                         }
                         vehicle.fuelTank.manuallySet(mostPotentFluid, vehicle.definition.motorized.defaultFuelQty);
