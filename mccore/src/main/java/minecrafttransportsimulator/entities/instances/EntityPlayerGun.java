@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -243,7 +244,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     private void saveGun(boolean remove) {
-        gunStack.setData(activeGun.save(gunStack.getData()));
+        gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
             removePart(activeGun, null);

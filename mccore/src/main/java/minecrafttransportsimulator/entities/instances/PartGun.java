@@ -173,6 +173,7 @@ public class PartGun extends APart {
         if (!reloadingBulletPack.isEmpty()) {
             String reloadingBulletName = data.getString("reloadingBulletName");
             this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
+            reloadTimeRemaining = definition.gun.reloadTime;
         }
         //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
         //This prevents pack changes from locking guns.
