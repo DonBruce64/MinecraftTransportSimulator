@@ -105,13 +105,18 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
-        //Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
+        //Set initial position, rotation, and scale.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
         //when we initialize all of our animations.
         position.set(localOffset).add(entityOn.position);
         prevPosition.set(position);
         orientation.set(entityOn.orientation);
         prevOrientation.set(orientation);
+        scale.set(entityOn.scale);
+        if (placementDefinition.partScale != null) {
+            scale.multiply(placementDefinition.partScale);
+        }
+        prevScale.set(scale);
     }
 
     @Override
