@@ -270,7 +270,7 @@ public class WrapperWorld extends AWrapperWorld {
             if (!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getVehicle())) {
                 float distance = mcLooker.distanceTo(entity);
                 if (distance < smallestDistance) {
-                    AxisAlignedBB testBox = generalArea ? entity.getBoundingBox().inflate(2) : entity.getBoundingBox();
+                    AxisAlignedBB testBox = generalArea ? entity.getBoundingBox().inflate(2F * distance / searchDistance) : entity.getBoundingBox();
                     Optional<Vector3d> rayHit = testBox.clip(raytraceStart, raytraceEnd);
                     if (rayHit != null) {
                         smallestDistance = distance;
