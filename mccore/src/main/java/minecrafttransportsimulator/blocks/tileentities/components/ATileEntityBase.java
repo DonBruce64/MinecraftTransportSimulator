@@ -37,8 +37,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
         boundingBox.globalCenter.set(this.position);
 
         //Set angles to placement rotation.
+        //Make sure to set to 0 first though since we could be a re-placed decor.
         if (placingPlayer != null) {
-            orientation.rotateY(getPlacementRotation(placingPlayer));
+            orientation.setToZero().rotateY(getPlacementRotation(placingPlayer));
         }
     }
 
