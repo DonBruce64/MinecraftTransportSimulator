@@ -116,7 +116,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
         }
 
         //Fuel type can be taken by vehicle, check to make sure engines can take it.
-        for (APart part : vehicle.parts) {
+        for (APart part : vehicle.allParts) {
             if (part instanceof PartEngine) {
                 if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())) {
                     return PumpResult.VALID;

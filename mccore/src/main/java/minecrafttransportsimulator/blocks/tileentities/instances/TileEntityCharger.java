@@ -31,7 +31,7 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
     @Override
     protected PumpResult checkPump(EntityVehicleF_Physics vehicle) {
         //Just check that the engines are electric. If so, the vehicle will have the right fuel.
-        for (APart part : vehicle.parts) {
+        for (APart part : vehicle.allParts) {
             if (part instanceof PartEngine) {
                 if (part.definition.engine.type == EngineType.ELECTRIC) {
                     return PumpResult.VALID;
