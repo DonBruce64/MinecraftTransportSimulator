@@ -122,6 +122,7 @@ public class GUIPartBench extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = prevPack;
+                viewingRepair = false;
                 currentItem = null;
                 updateNames();
             }
@@ -130,6 +131,7 @@ public class GUIPartBench extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = nextPack;
+                viewingRepair = false;
                 currentItem = null;
                 updateNames();
             }
@@ -142,6 +144,7 @@ public class GUIPartBench extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevItem;
+                viewingRepair = false;
                 updateNames();
             }
         });
@@ -149,6 +152,7 @@ public class GUIPartBench extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextItem;
+                viewingRepair = false;
                 updateNames();
             }
         });
