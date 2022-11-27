@@ -262,7 +262,7 @@ public class GUIPartBench extends AGUIBase {
         nextColorButton.visible = currentItem instanceof AItemSubTyped;
         nextColorButton.enabled = nextSubItem != null;
 
-        //Enable repair recipe button if we have multiple indexes.
+        //Enable next recipe button if we have multiple valid recipes.
         nextRecipeButton.enabled = currentItem != null && (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() > 1 : currentItem.definition.general.materialLists.size() > 1);
 
         vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
