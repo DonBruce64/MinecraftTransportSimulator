@@ -79,7 +79,7 @@ public class GUIOverlay extends AGUIBase {
 
                 BoundingBox mousedOverBox = null;
                 JSONPartDefinition packVehicleDef = null;
-                for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.allPartSlotBoxes.entrySet()) {
+                for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activePartSlotBoxes.entrySet()) {
                     BoundingBox box = boxEntry.getKey();
                     if (box.getIntersectionPoint(playerEyesStartVector, playerEyesEndVector) != null) {
                         if (mousedOverBox == null || (box.globalCenter.distanceTo(playerEyesStartVector) < mousedOverBox.globalCenter.distanceTo(playerEyesStartVector))) {

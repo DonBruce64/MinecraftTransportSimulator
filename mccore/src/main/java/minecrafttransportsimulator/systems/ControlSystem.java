@@ -129,10 +129,11 @@ public final class ControlSystem {
                     for (BoundingBox box : placer.allInteractionBoxes) {
                         if (box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null) {
                             if (closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
-                                closestBox = box;
-                                closestEntity = placer.getPartWithBox(closestBox);
-                                if (closestEntity == null) {
-                                    closestEntity = placer;
+                                APart clickedPart = placer.getPartWithBox(box);
+                                //Only register clicks on the part-boxes, not the placer itself.  It just encompasses them.
+                                if (clickedPart != null) {
+                                    closestEntity = clickedPart;
+                                    closestBox = box;
                                 }
                             }
                         }

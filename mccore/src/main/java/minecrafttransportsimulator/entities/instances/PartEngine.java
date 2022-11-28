@@ -141,7 +141,7 @@ public class PartEngine extends APart {
 
         //Verify the vehicle has the right fuel for us.  If not, clear it out.
         //This allows us to swap in an engine with a different fuel type than the last one.
-        if (!vehicleOn.fuelTank.getFluid().isEmpty()) {
+        if (vehicleOn != null && !vehicleOn.fuelTank.getFluid().isEmpty()) {
             switch (definition.engine.type) {
                 case ELECTRIC: {
                     //Check for electricity.

@@ -295,9 +295,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         damageAmount = getVariable(DAMAGE_VARIABLE);
         locked = isVariableActive(LOCKED_VARIABLE);
 
-        //Reset collision override flag.
-        forceCollisionUpdateThisTick = false;
-
         world.endProfiling();
     }
 
@@ -459,6 +456,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
                 world.endProfiling();
             }
+
+            //Reset collision override flag.
+            forceCollisionUpdateThisTick = false;
         }
     }
 

@@ -315,6 +315,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         return false;
     }
 
+    @Override
+    public boolean canBeClicked() {
+        return entityOn.isVariableListTrue(placementDefinition.interactableVariables);
+    }
+
     /**
      * Updates the tone of the part to its appropriate type.
      * If the part can't match the tone of this vehicle, then it is not modified.
@@ -419,14 +424,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      */
     public LanguageEntry checkForRemoval() {
         return null;
-    }
-
-    /**
-     * Returns true if this part can be clicked.  Normally true unless there are false linkedVariables.
-     * However, some parts (like seats) may choose to ignore these in specific cases.
-     */
-    public boolean canBeClicked() {
-        return entityOn.isVariableListTrue(placementDefinition.interactableVariables);
     }
 
     /**
