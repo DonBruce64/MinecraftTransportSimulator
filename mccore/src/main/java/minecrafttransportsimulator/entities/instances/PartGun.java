@@ -243,6 +243,21 @@ public class PartGun extends APart {
                         }
                     }
                 }
+
+                //Conversely, if we are a coaxial gun, and our parent is being controlled, we need to be controlled by it. 
+                if (placementDefinition.isCoAxial && entityOn instanceof PartGun) {
+                    controller = ((PartGun) entityOn).getGunController();
+                    if (controller != null) {
+                        //Check if the coaxial is controlled or not.
+                        lastController = controller;
+                        lastControllerSeat = (PartSeat) lastController.getEntityRiding();
+                        if (entityOn.getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(entityOn.getItem()).get(lastControllerSeat.gunIndex) == entityOn)) {
+                            state = state.promote(GunState.CONTROLLED);
+                            isRunningInCoaxialMode = true;
+                        }
+                    }
+                }
+
                 if (controller == null) {
                     state = state.demote(GunState.ACTIVE);
                     //If we are hand-held, we need to die since we aren't a valid gun.
