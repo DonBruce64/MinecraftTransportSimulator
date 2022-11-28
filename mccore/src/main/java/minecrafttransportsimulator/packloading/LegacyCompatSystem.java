@@ -1552,23 +1552,25 @@ public final class LegacyCompatSystem {
             if (definition.rendering != null && definition.rendering.textObjects != null) {
                 for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                     JSONText textDef = definition.rendering.textObjects.get(i);
-                    switch (i % 3) {
-                        case (0): {
-                            textDef.variableName = "fuelpump_fluid";
-                            textDef.variableFormat = "%s";
-                            break;
-                        }
-                        case (1): {
-                            textDef.variableName = "fuelpump_stored";
-                            textDef.variableFactor = 0.001F;
-                            textDef.variableFormat = "LVL:%04.1fb";
-                            break;
-                        }
-                        case (2): {
-                            textDef.variableName = "fuelpump_dispensed";
-                            textDef.variableFactor = 0.001F;
-                            textDef.variableFormat = "DISP:%04.1fb";
-                            break;
+                    if (textDef.variableName == null) {
+                        switch (i % 3) {
+                            case (0): {
+                                textDef.variableName = "fuelpump_fluid";
+                                textDef.variableFormat = "%s";
+                                break;
+                            }
+                            case (1): {
+                                textDef.variableName = "fuelpump_stored";
+                                textDef.variableFactor = 0.001F;
+                                textDef.variableFormat = "LVL:%04.1fb";
+                                break;
+                            }
+                            case (2): {
+                                textDef.variableName = "fuelpump_dispensed";
+                                textDef.variableFactor = 0.001F;
+                                textDef.variableFormat = "DISP:%04.1fb";
+                                break;
+                            }
                         }
                     }
                 }
