@@ -21,6 +21,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -466,7 +468,17 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public String getTexture() {
-        return definition.generic.useVehicleTexture ? entityOn.getTexture() : super.getTexture();
+        if (definition.generic.useVehicleTexture) {
+            if (vehicleOn != null) {
+                return vehicleOn.getTexture();
+            } else if (definition.generic.benchTexture != null) {
+                return PackResourceLoader.getPackResource(definition, ResourceType.PNG, definition.generic.benchTexture);
+            } else {
+                return null;
+            }
+        } else {
+            return super.getTexture();
+        }
     }
 
     @Override
