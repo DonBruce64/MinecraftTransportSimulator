@@ -43,7 +43,7 @@ public class VehicleGroundDeviceBox {
      **/
     public final Point3D contactPoint = new Point3D();
 
-    private static final double MAX_DELTA_FROM_ZERO = 0.25;
+    private static final double MAX_DELTA_FROM_ZERO = 0.00001;
 
     public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft) {
         this.vehicle = vehicle;
