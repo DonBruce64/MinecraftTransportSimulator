@@ -294,6 +294,15 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public void setVariable(String variable, double value) {
+        if (variable.startsWith("parent_")) {
+            entityOn.setVariable(variable.substring("parent_".length()), value);
+        } else {
+            super.setVariable(variable, value);
+        }
+    }
+
+    @Override
     public void updatePartList() {
         super.updatePartList();
         linkedParts.clear();
