@@ -71,9 +71,9 @@ public class CameraSystem {
         //Do camera operations.
         if (InterfaceManager.clientInterface.inFirstPerson()) {
             //Force custom cameras for some states.
-            //If we are sneaking and holding a gun, enable custom cameras.
+            //If we are sneaking and holding a gun, or it has forced cameras, enable custom cameras.
             if (playerGunEntity != null && playerGunEntity.activeGun != null && sittingSeat == null) {
-                enableCustomCameras = playerGunEntity.activeGun.isHandHeldGunAimed;
+                enableCustomCameras = playerGunEntity.activeGun.isHandHeldGunAimed || playerGunEntity.activeGun.definition.gun.forceHandheldCameras;
                 customCameraIndex = 0;
             }
 

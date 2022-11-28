@@ -359,6 +359,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
         public boolean handHeld;
 
+        @JSONDescription("If true, then this gun will force the custom camera when hand-held.  Useful for custom HUDs.  Does not affect third-person mode.")
+        public boolean forceHandheldCameras;
+
         @JSONDescription("If set, the gun will only be able to be fired once per button press.")
         public boolean isSemiAuto;
 
