@@ -385,16 +385,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Set blimp-specific states before calculating forces.
             if (definition.motorized.isBlimp) {
-                //Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
-                //we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
-                //which key is pressed, they both activate the rudder for turning.
-                if ((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle)) {
-                    rudderAngle = aileronAngle;
-                }
-
                 //If we have the brake pressed at a slow speed, stop the blimp.
                 //This is needed to prevent runaway blimps.
-                if (Math.abs(velocity) < 0.15 && (brake > 0 || parkingBrakeOn)) {
+                if (Math.hypot(motion.x, motion.z) < 0.15 && (brake > 0 || parkingBrakeOn)) {
                     motion.x = 0;
                     motion.z = 0;
                     thrustForce.set(0D, 0D, 0D);
@@ -488,7 +481,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
                 //If we are turning with the rudder, don't let us heel out of line easily.
                 //Rudder force should be minimal for blimps due to their moment of inertia.
-                if (rudderTorque * rudderAngle <= 0) {
+                if (rudderTorque * rudderAngle > 0) {
                     rudderTorque = 0;
                 }
             }
