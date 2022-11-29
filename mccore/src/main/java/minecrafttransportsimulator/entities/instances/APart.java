@@ -255,25 +255,27 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             return;
         }
 
-    	boolean isHoldingWrench = world.isClient() ? InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH) : false;
-    	boolean isHoldingScrewdriver = world.isClient() ? InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER) : false;
-
-        //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed.
-        if (world.isClient() && (isHoldingWrench || isHoldingScrewdriver)) {
-            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
-            if ((isHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (isHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
-                allInteractionBoxes.removeAll(interactionBoxes);
-                return;
-            }
-            //If we are holding a wrench or screwdriver, and the part has children, don't add the interaction boxes.  We can't wrench those parts.
-            //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be removed.
-            //Again, this only applies on clients for that client player.
-        	for (APart childPart : parts) {
-                if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
-                    allInteractionBoxes.removeAll(interactionBoxes);
-                    return;
-                }
-            }
+        //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed. This can only be done on the client.
+        if (world.isClient()) {
+	    	boolean isHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
+	    	boolean isHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
+	
+	        if (isHoldingWrench || isHoldingScrewdriver) {
+	            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
+	            if ((isHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (isHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
+	                allInteractionBoxes.removeAll(interactionBoxes);
+	                return;
+	            }
+	            //If we are holding a wrench or screwdriver, and the part has children, don't add the interaction boxes.  We can't wrench those parts.
+	            //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be removed.
+	            //Again, this only applies on clients for that client player.
+	        	for (APart childPart : parts) {
+	                if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
+	                    allInteractionBoxes.removeAll(interactionBoxes);
+	                    return;
+	                }
+	            }
+	        }
         }
     }
 
