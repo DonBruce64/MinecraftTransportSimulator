@@ -373,13 +373,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 thrustForce.add(towingThrustForce);
             }
 
-            //Get forces.  Some forces are specific to JSON sections.
-            //First get gravity.
-            gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
-            if (!definition.motorized.isAircraft) {
-                gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
-            }
-
             //Get the track angle.  This is used for control surfaces.
             trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector, true)));
 
@@ -492,7 +485,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 elevatorTorque += 100;
             }
 
-            //If we are damaged, don't apply control surface and ballast forces.
+            //If we are dead, don't apply control surface and ballast forces.
             if (damageAmount == definition.general.health) {
                 wingForce = 0;
                 elevatorForce = 0;
@@ -502,6 +495,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 aileronTorque = 0;
                 rudderTorque = 0;
                 ballastForce = 0;
+                currentBallastVolume = 0;
+            }
+
+            //Finally, get gravity.
+            gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
+            if (!definition.motorized.isAircraft) {
+                gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
 
             //Add all forces to the main force matrix and apply them.
