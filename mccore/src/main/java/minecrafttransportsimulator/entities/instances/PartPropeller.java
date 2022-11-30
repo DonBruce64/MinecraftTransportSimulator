@@ -214,8 +214,8 @@ public class PartPropeller extends APart {
                 return 1D * (currentPitch - PartPropeller.MIN_DYNAMIC_PITCH) / (definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
             case ("propeller_rotation"):
                 return (angularPosition + angularVelocity * partialTicks) * 360D;
-	    case("propeller_rpm"):
-		return currentRPM;
+            case ("propeller_rpm"):
+                return currentRPM;
         }
 
         return super.getRawVariableValue(variable, partialTicks);

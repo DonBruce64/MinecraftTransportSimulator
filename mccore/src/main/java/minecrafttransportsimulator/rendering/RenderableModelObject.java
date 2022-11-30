@@ -93,7 +93,6 @@ public class RenderableModelObject {
      * Renders this object, applying any transforms that need to happen.  This method also
      * renders any objects that depend on this object's transforms after rendering.
      */
-    @SuppressWarnings("RedundantCast")
     public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
@@ -167,6 +166,15 @@ public class RenderableModelObject {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
                         //Need to disable light-mapping from daylight if we are a light-up texture.
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+                        //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
+                        if(blendingEnabled && switchbox != null && switchbox.lastVisibilityClock != null) {
+                        	object.alpha = (float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin)/(switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin);
+                            if (object.alpha < 0) {
+                                object.alpha = 0;
+                            } else if (object.alpha > 1) {
+                                object.alpha = 1;
+                            }
+                        }
                         object.render();
                         if (interiorWindowObject != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
                             interiorWindowObject.transform.set(object.transform);
@@ -194,7 +202,7 @@ public class RenderableModelObject {
     }
 
     /**
-     * Call to destory this renderable object.  This should be done prior to re-parsing the model
+     * Call to destroy this renderable object.  This should be done prior to re-parsing the model
      * as it allows for the freeing of OpenGL resources.
      */
     public void destroy() {
@@ -226,7 +234,7 @@ public class RenderableModelObject {
         if (lightDef != null && blendingEnabled && !object.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
             return false;
         }
-        //If we have an applyAfter, and that object isn't being renderd, don't render us either.
+        //If we have an applyAfter, and that object isn't being rendered, don't render us either.
         JSONAnimatedObject objectDef = entity.animatedObjectDefinitions.get(object.name);
         if (objectDef != null) {
             if (objectDef.applyAfter != null) {

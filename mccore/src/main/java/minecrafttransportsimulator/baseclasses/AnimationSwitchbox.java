@@ -23,6 +23,8 @@ public class AnimationSwitchbox {
     public final RotationMatrix rotation = new RotationMatrix();
     public final Point3D translation = new Point3D();
     public Point3D scale = new Point3D();
+    public double lastVisibilityValue = 1.0D;
+    public DurationDelayClock lastVisibilityClock;
     public boolean anyClockMovedThisUpdate;
 
     //Computational variables.
@@ -91,13 +93,15 @@ public class AnimationSwitchbox {
                     }
                     case VISIBILITY: {
                         if (!inhibitAnimations) {
-                            double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+                        	lastVisibilityValue = entity.getAnimatedVariableValue(clock, partialTicks);
                             if (!anyClockMovedThisUpdate) {
                                 anyClockMovedThisUpdate = clock.movedThisUpdate;
                             }
-                            if (variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax) {
+                            if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
                                 switchboxEnabled = false;
                                 return false;
+                            }else {
+                            	lastVisibilityClock = clock;
                             }
                         }
                         break;

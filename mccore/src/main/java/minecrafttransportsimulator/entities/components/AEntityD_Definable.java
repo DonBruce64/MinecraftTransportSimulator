@@ -544,7 +544,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
     }
 
-    @SuppressWarnings("RedundantCast")
     @Override
     public void updateSounds(float partialTicks) {
         super.updateSounds(partialTicks);
