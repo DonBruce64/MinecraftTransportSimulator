@@ -53,6 +53,8 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
+    private final boolean resetPosition;
+
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
 
     //Stored variables used to determine bullet firing behavior.
@@ -158,6 +160,8 @@ public class PartGun extends APart {
         } else {
             this.pitchSpeed = placementDefinition.pitchSpeed;
         }
+        
+        this.resetPosition = definition.gun.resetPosition || placementDefinition.resetPosition;
 
         //Load saved data.
         this.state = GunState.values()[data.getInteger("state")];
@@ -462,7 +466,7 @@ public class PartGun extends APart {
             state = GunState.INACTIVE;
             entityTarget = null;
             engineTarget = null;
-            if (definition.gun.resetPosition) {
+            if (resetPosition) {
                 handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
             }
         }

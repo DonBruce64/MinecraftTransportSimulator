@@ -42,6 +42,9 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If included and set to true, then when selecting guns from this seat the ability to select no gun will be present.  Useful for seats controlling guns that you may not want to always be active.")
     public boolean canDisableGun;
 
+    @JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
+    public boolean resetPosition;
+
     @JSONDescription("This parameter is optional.  If included and set to true, then when a custom camera is available for use, then this custom camera will ALWAYS be used in first-person mode.  This is designed for seats where first-person mode is not desired, such as tanks or gunner pods.  Does not affect third-person mode.")
     public boolean forceCameras;
 
