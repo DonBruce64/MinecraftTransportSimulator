@@ -16,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -514,6 +515,27 @@ public class PartGun extends APart {
         }
         addLinkedPartsToList(connectedCrates, PartInteractable.class);
         connectedCrates.removeIf(crate -> crate.definition.interactable.interactionType != InteractableComponentType.CRATE || !crate.definition.interactable.feedsVehicles);
+    }
+
+    @Override
+    protected void updateVariableModifiers() {
+
+        //Adjust current variables to modifiers, if any exist.
+        if (definition.variableModifiers != null) {
+            for (JSONVariableModifier modifier : definition.variableModifiers) {
+                switch (modifier.variable) {
+                    case "gunYaw":
+                        internalOrientation.angles.y = adjustVariable(modifier, (float) internalOrientation.angles.y);
+                        break;
+                    case "gunPitch":
+                        internalOrientation.angles.x = adjustVariable(modifier, (float) internalOrientation.angles.x);
+                        break;
+                    default:
+                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        break;
+                }
+            }
+        }
     }
 
     /**
