@@ -58,9 +58,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     @Override
     public void update() {
         super.update();
-        //Forward update call to components.
+        //Forward update call to components and get light level.
+        maxTotalLightLevel = 0;
         for (ATileEntityPole_Component component : components.values()) {
             component.update();
+            maxTotalLightLevel = Math.max(maxTotalLightLevel, component.getLightProvided());
         }
 
         //If this is the first tick, update collision on ourselves and others.
@@ -169,12 +171,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
             world.addEntity(newComponent);
         } else if (components.containsKey(newAxis)) {
             components.remove(newAxis).remove();
-        }
-
-        //Update lighting state.
-        maxTotalLightLevel = 0;
-        for (ATileEntityPole_Component component : components.values()) {
-            maxTotalLightLevel = Math.max(maxTotalLightLevel, component.getLightProvided());
         }
     }
 
