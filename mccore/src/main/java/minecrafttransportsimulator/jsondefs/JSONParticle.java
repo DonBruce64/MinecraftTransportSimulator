@@ -39,6 +39,13 @@ public class JSONParticle {
     @JSONDescription("Normally particles use the standard particle texture.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
 
+    @JSONDescription("This allows for a list of textures, rather than a single one.  The delay between each texture is goverend by the textureDelay variable.")
+    public List<String> textureList;
+
+    @JSONRequired(dependentField = "textureList")
+    @JSONDescription("The delay between each texture in the textureList.  This list will always have one fewer entry than the textureList, since there won't be any delay for the first texture.")
+    public List<Integer> textureDelay;
+
     @JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
     public ColorRGB color;
 

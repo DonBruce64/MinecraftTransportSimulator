@@ -39,7 +39,8 @@ public class EntityParticle extends AEntityC_Renderable {
 
     //Runtime variables.
     private boolean touchingBlocks;
-    private int age;
+    private int timeAtNextTexture;
+    private int textureIndex;
 
     public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
@@ -92,6 +93,12 @@ public class EntityParticle extends AEntityC_Renderable {
         STANDARD_RENDER_BUFFER.rewind();
         buffer.flip();
         this.renderable = new RenderableObject("particle", definition.texture != null ? definition.texture : (definition.type.equals(ParticleType.BREAK) ? RenderableObject.GLOBAL_TEXTURE_NAME : RenderableObject.PARTICLE_TEXTURE_NAME), staticColor != null ? staticColor : new ColorRGB(), buffer, false);
+        if (definition.textureList != null) {
+            this.timeAtNextTexture = definition.textureDelay.get(0);
+            renderable.texture = definition.textureList.get(0);
+        } else {
+            this.timeAtNextTexture = maxAge + 1;
+        }
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = true;
         if (definition.type.equals(ParticleType.BREAK)) {
@@ -179,7 +186,7 @@ public class EntityParticle extends AEntityC_Renderable {
         position.add(motion);
 
         //Check age to see if we are on our last tick.
-        if (++age == maxAge) {
+        if (ticksExisted == maxAge) {
             remove();
         }
 
@@ -190,6 +197,16 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Update orientation to always face the player.
         orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceManager.clientInterface.getCameraPosition()).subtract(position), true);
+
+        //Check if we need to change textures.
+        if (timeAtNextTexture == ticksExisted) {
+            renderable.texture = definition.textureList.get(++textureIndex);
+            if ((textureIndex + 1) < definition.textureList.size()) {
+                timeAtNextTexture += definition.textureDelay.get(textureIndex - 1);
+            } else {
+                timeAtNextTexture = maxAge + 1;
+            }
+        }
     }
 
     @Override
@@ -211,9 +228,9 @@ public class EntityParticle extends AEntityC_Renderable {
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (blendingEnabled) {
             if (staticColor == null) {
-                renderable.color.red = startColor.red + (endColor.red - startColor.red) * (age + partialTicks) / maxAge;
-                renderable.color.green = startColor.green + (endColor.green - startColor.green) * (age + partialTicks) / maxAge;
-                renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue) * (age + partialTicks) / maxAge;
+                renderable.color.red = startColor.red + (endColor.red - startColor.red) * (ticksExisted + partialTicks) / maxAge;
+                renderable.color.green = startColor.green + (endColor.green - startColor.green) * (ticksExisted + partialTicks) / maxAge;
+                renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue) * (ticksExisted + partialTicks) / maxAge;
             }
             renderable.alpha = getAlpha(partialTicks);
             renderable.transform.set(transform);
@@ -222,7 +239,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
             switch (definition.type) {
                 case SMOKE:
-                    setParticleTextureBounds(7 - age * 8 / maxAge, 0);
+                    setParticleTextureBounds((int) (7 - ticksExisted * 8 / maxAge), 0);
                     break;//Smoke gets smaller as it ages.
                 case FLAME:
                     setParticleTextureBounds(0, 3);
@@ -285,7 +302,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private float getAlpha(float partialTicks) {
         if (definition.transparency != 0) {
             if (definition.toTransparency != 0) {
-                return definition.transparency + (definition.toTransparency - definition.transparency) * (age + partialTicks) / maxAge;
+                return definition.transparency + (definition.toTransparency - definition.transparency) * (ticksExisted + partialTicks) / maxAge;
             } else {
                 return definition.transparency;
             }
@@ -301,14 +318,14 @@ public class EntityParticle extends AEntityC_Renderable {
     private float getScale(float partialTicks) {
         if (definition.scale != 0) {
             if (definition.toScale != 0) {
-                return definition.scale + (definition.toScale - definition.scale) * (age + partialTicks) / maxAge;
+                return definition.scale + (definition.toScale - definition.scale) * (ticksExisted + partialTicks) / maxAge;
             } else {
                 return definition.scale;
             }
         } else {
             switch (definition.type) {
                 case FLAME:
-                    return (float) (1.0F - Math.pow((age + partialTicks) / maxAge, 2) / 2F);
+                    return (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F);
                 case DRIP:
                     return touchingBlocks ? 3.0F : 1.0F;
                 default:
