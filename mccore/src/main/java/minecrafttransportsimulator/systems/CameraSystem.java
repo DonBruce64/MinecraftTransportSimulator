@@ -11,6 +11,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect.PotionDefaults;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
@@ -25,6 +27,7 @@ public class CameraSystem {
     private static int zoomLevel;
     private static boolean enableCustomCameras;
     public static boolean runningCustomCameras;
+    private static boolean nightVisionEnabled;
     private static int customCameraIndex;
     private static int customCamerasChecked;
     private static float currentFOV;
@@ -32,6 +35,13 @@ public class CameraSystem {
 
     private static final Point3D cameraOffset = new Point3D();
     private static final RotationMatrix riderOrientation = new RotationMatrix();
+
+    private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
+
+    static {
+        NIGHT_VISION_CAMERA_POTION.duration = 300;
+        NIGHT_VISION_CAMERA_POTION.name = PotionDefaults.NIGHT_VISION.name().toLowerCase();
+    }
 
     /**
      * Adjusts the camera zoom, zooming in or out depending on the flag.
@@ -62,12 +72,16 @@ public class CameraSystem {
         EntityVehicleF_Physics ridingVehicle = sittingSeat != null ? sittingSeat.vehicleOn : null;
         EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 
-        //Reset FOV and overlay.
+        //Reset FOV, overlay, and effect.
         if (!enableCustomCameras && currentFOV != 0) {
             InterfaceManager.clientInterface.setFOV(currentFOV);
             currentFOV = 0;
         }
         customCameraOverlay = null;
+        if (nightVisionEnabled) {
+            player.removePotionEffect(NIGHT_VISION_CAMERA_POTION);
+            nightVisionEnabled = false;
+        }
         //Do camera operations.
         if (InterfaceManager.clientInterface.inFirstPerson()) {
             //Force custom cameras for some states.
@@ -161,6 +175,13 @@ public class CameraSystem {
                     cameraOffset.set(cameraProvider.prevPosition).interpolate(cameraProvider.position, partialTicks).subtract(player.getRenderedPosition(partialTicks));
                     cameraOffset.y -= player.getEyeHeight();
                     cameraAdjustedPosition.add(cameraOffset);
+
+                    //Also check night vision.
+                    if (!camera.nightVision) {
+                        player.addPotionEffect(NIGHT_VISION_CAMERA_POTION);
+                        nightVisionEnabled = true;
+                    }
+
                     return true;
                 }
 
