@@ -46,7 +46,7 @@ public final class PartInteractable extends APart {
             }
         }
         if (definition.interactable.interactionType.equals(InteractableComponentType.BARREL)) {
-            this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits * 10000);
+            this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), (int) (definition.interactable.inventoryUnits * 10000));
             world.addEntity(tank);
         } else {
             this.tank = null;
