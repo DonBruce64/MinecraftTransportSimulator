@@ -177,7 +177,7 @@ public class CameraSystem {
                     cameraAdjustedPosition.add(cameraOffset);
 
                     //Also check night vision.
-                    if (!camera.nightVision) {
+                    if (camera.nightVision) {
                         player.addPotionEffect(NIGHT_VISION_CAMERA_POTION);
                         nightVisionEnabled = true;
                     }
