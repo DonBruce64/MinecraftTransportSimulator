@@ -154,12 +154,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))) {
                     //New vehicle shouldn't have been spawned.  Bail out.
-                    remove();
                     placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
                     //Need to add stack back as it will have been removed here.
                     if (!placingPlayer.isCreative()) {
                         placingPlayer.setHeldStack(getItem().getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())));
                     }
+                    remove();
                     return;
                 } else {
                     addToServerDeltas(null, null, 0);
