@@ -74,13 +74,6 @@ public class ItemPartEngine extends AItemPart {
         } else {
             tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_GEARRATIOS.value + definition.engine.gearRatios.get(definition.engine.gearRatios.size() - 1));
         }
-
-        if (data.getBoolean("oilLeak")) {
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_OILLEAK.value);
-        }
-        if (data.getBoolean("fuelLeak")) {
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELLEAK.value);
-        }
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

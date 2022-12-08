@@ -2244,6 +2244,9 @@ public final class LegacyCompatSystem {
     private static void performModelLegacyCompats(AJSONMultiModelProvider definition) {
         if (definition.rendering == null) {
             definition.rendering = new JSONRendering();
+        } else if (definition.rendering.particles != null) {
+            //Remove any drip particles, those don't exist anymore.
+            definition.rendering.particles.removeIf(particle -> particle.type == JSONParticle.ParticleType.DRIP);
         }
 
         try {

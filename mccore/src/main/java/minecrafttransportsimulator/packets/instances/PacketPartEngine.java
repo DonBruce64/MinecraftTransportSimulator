@@ -20,8 +20,6 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 public class PacketPartEngine extends APacketEntity<PartEngine> {
     private final Signal packetType;
     private final double hours;
-    private final boolean oilLeak;
-    private final boolean fuelLeak;
     private final UUID linkedID;
     private final int linkedIndex;
 
@@ -29,18 +27,14 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         super(engine);
         this.packetType = packetType;
         this.hours = 0;
-        this.oilLeak = false;
-        this.fuelLeak = false;
         this.linkedID = null;
         this.linkedIndex = 0;
     }
 
-    public PacketPartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak) {
+    public PacketPartEngine(PartEngine engine, double hours) {
         super(engine);
         this.packetType = Signal.DAMAGE;
         this.hours = hours;
-        this.oilLeak = oilLeak;
-        this.fuelLeak = fuelLeak;
         this.linkedID = null;
         this.linkedIndex = 0;
     }
@@ -49,8 +43,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         super(engine);
         this.packetType = Signal.LINK;
         this.hours = 0;
-        this.oilLeak = false;
-        this.fuelLeak = false;
         this.linkedID = linkedEngine.entityOn.uniqueUUID;
         this.linkedIndex = linkedEngine.placementSlot;
     }
@@ -60,12 +52,8 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         this.packetType = Signal.values()[buf.readByte()];
         if (packetType.equals(Signal.DAMAGE)) {
             this.hours = buf.readDouble();
-            this.oilLeak = buf.readBoolean();
-            this.fuelLeak = buf.readBoolean();
         } else {
             this.hours = 0;
-            this.oilLeak = false;
-            this.fuelLeak = false;
         }
         if (packetType.equals(Signal.LINK)) {
             this.linkedID = readUUIDFromBuffer(buf);
@@ -82,8 +70,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         buf.writeByte(packetType.ordinal());
         if (packetType.equals(Signal.DAMAGE)) {
             buf.writeDouble(hours);
-            buf.writeBoolean(oilLeak);
-            buf.writeBoolean(fuelLeak);
         } else if (packetType.equals(Signal.LINK)) {
             writeUUIDToBuffer(linkedID, buf);
             buf.writeInt(linkedIndex);
@@ -126,12 +112,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
                 break;
             case DAMAGE: {
                 engine.hours += hours;
-                if (fuelLeak) {
-                    engine.fuelLeak = true;
-                }
-                if (oilLeak) {
-                    engine.oilLeak = true;
-                }
                 break;
             }
             case LINK: {

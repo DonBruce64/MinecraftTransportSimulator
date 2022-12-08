@@ -58,9 +58,6 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
 
-    //Copied from ParticleManager as it's not accessable.
-    private static final ResourceLocation PARTICLE_TEXTURES = new ResourceLocation("textures/particle/particles.png");
-
     @Override
     public float[] getBlockBreakTexture(AWrapperWorld world, Point3D position) {
         //Get normal model.
@@ -265,9 +262,6 @@ public class InterfaceRender implements IInterfaceRender {
         } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        } else if (textureLocation.equals(RenderableObject.PARTICLE_TEXTURE_NAME)) {
-            //Particle texture.
-            Minecraft.getMinecraft().getTextureManager().bindTexture(PARTICLE_TEXTURES);
         } else {
             //Parse texture if we don't have it yet.
             if (!internalTextures.containsKey(textureLocation)) {
