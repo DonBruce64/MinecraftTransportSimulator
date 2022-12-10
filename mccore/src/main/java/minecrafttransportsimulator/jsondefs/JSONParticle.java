@@ -42,7 +42,7 @@ public class JSONParticle {
     @JSONDescription("If you want your particle to have multiple textures, you can specify the texture PNG files to use here.  The delay between each texture segment is goverend by the textureDelay variable.  If you delay past the last texture, the cycle repeats.")
     public List<String> textureList;
 
-    @JSONRequired(dependentField = "textureSections")
+    @JSONRequired(dependentField = "textureList")
     @JSONDescription("A list of delays between cycling to the next texture.  If the end of this list is reached, the delay sequence will repeat from the start of the list.")
     public List<Integer> textureDelays;
 
