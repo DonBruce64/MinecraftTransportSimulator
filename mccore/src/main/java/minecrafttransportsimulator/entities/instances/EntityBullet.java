@@ -50,6 +50,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private PartEngine engineTargeted;
     private IWrapperEntity externalEntityTargeted;
     private HitType lastHit;
+    private Point3D relativeGunPos;
+    private Point3D prevRelativeGunPos;
 
     /**
      * Generic constructor for no target.
@@ -57,6 +59,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
         super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
         this.gun = gun;
+        gun.currentBullet = this;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter / 1000D / 2D;
         this.boundingBox.heightRadius = definition.bullet.diameter / 1000D / 2D;
@@ -383,11 +386,34 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!isBomb && (definition.bullet.accelerationDelay == 0 || ticksExisted > definition.bullet.accelerationDelay)) {
             orientation.setToVector(motion, true);
         }
+
+        //Set gun pos if the gun has requested it by creating it.
+        if (relativeGunPos != null) {
+            prevRelativeGunPos.set(relativeGunPos);
+            relativeGunPos.set(position).subtract(gun.position).reOrigin(gun.orientation);
+        }
     }
 
     @Override
     public boolean requiresDeltaUpdates() {
         return true;
+    }
+
+    public double getRelativePos(int axisIndex, float partialTicks) {
+        if (relativeGunPos == null) {
+            relativeGunPos = position.copy().subtract(gun.position).reOrigin(gun.orientation);
+            prevRelativeGunPos = relativeGunPos.copy();
+        }
+        switch (axisIndex) {
+            case (1):
+                return partialTicks != 0 ? prevRelativeGunPos.x + (relativeGunPos.x - prevRelativeGunPos.x) * partialTicks : relativeGunPos.x;
+            case (2):
+                return partialTicks != 0 ? prevRelativeGunPos.y + (relativeGunPos.y - prevRelativeGunPos.y) * partialTicks : relativeGunPos.y;
+            case (3):
+                return partialTicks != 0 ? prevRelativeGunPos.z + (relativeGunPos.z - prevRelativeGunPos.z) * partialTicks : relativeGunPos.z;
+            default:
+                throw new IllegalArgumentException("There are only three axis in the world you idiot!");
+        }
     }
 
     private void startDespawn() {
@@ -397,6 +423,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
         }
         impactDesapawnTimer = definition.bullet.impactDespawnTime;
+        gun.currentBullet = null;
     }
 
     private void displayDebugMessage(String message) {

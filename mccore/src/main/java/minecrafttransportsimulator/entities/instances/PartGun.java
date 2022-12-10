@@ -84,6 +84,7 @@ public class PartGun extends APart {
     private Point3D controllerRelativeLookVector = new Point3D();
     private IWrapperEntity entityTarget;
     private PartEngine engineTarget;
+    public EntityBullet currentBullet;
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
     private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -206,6 +207,9 @@ public class PartGun extends APart {
         firedThisCheck = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
+        if (currentBullet != null && !currentBullet.isValid) {
+            currentBullet = null;
+        }
         if (isActive && !isSpare) {
             //Check if we have a controller.
             //We aren't making sentry turrets here.... yet.
@@ -926,6 +930,18 @@ public class PartGun extends APart {
                 return bulletsLeft / definition.gun.capacity;
             case ("gun_active_muzzlegroup"):
                 return currentMuzzleGroupIndex + 1;
+            case ("gun_bullet_present"):
+                return currentBullet != null ? 1 : 0;
+            case ("gun_bullet_x"):
+                return currentBullet != null ? currentBullet.getRelativePos(1, partialTicks) : 0;
+            case ("gun_bullet_y"):
+                return currentBullet != null ? currentBullet.getRelativePos(2, partialTicks) : 0;
+            case ("gun_bullet_z"):
+                return currentBullet != null ? currentBullet.getRelativePos(3, partialTicks) : 0;
+            case ("gun_bullet_yaw"):
+                return currentBullet != null ? currentBullet.orientation.angles.y - orientation.angles.y : 0;
+            case ("gun_bullet_pitch"):
+                return currentBullet != null ? currentBullet.orientation.angles.x - orientation.angles.x : 0;
         }
 
         return super.getRawVariableValue(variable, partialTicks);
