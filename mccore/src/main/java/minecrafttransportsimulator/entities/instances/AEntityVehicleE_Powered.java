@@ -154,7 +154,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             if (towedByConnection != null) {
                 electricPower = towedByConnection.towingVehicle.electricPower;
             }
-        } else if (damageAmount < definition.general.health) {
+        } else if (!outOfHealth) {
             electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
             electricFlow = electricUsage;
             electricUsage = 0;

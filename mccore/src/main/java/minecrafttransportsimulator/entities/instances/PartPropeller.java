@@ -74,7 +74,7 @@ public class PartPropeller extends APart {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
                     });
                 }
-            } else if (damageAmount == definition.general.health) {
+            } else if (outOfHealth) {
                 if (ConfigSystem.settings.damage.explosions.value) {
                     world.spawnExplosion(position, 1F, true);
                 } else {

@@ -486,7 +486,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //If we are dead, don't apply control surface and ballast forces.
-            if (damageAmount == definition.general.health) {
+            if (outOfHealth) {
                 wingForce = 0;
                 elevatorForce = 0;
                 aileronForce = 0;

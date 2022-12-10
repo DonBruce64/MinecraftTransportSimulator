@@ -147,6 +147,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @DerivedValue
     public double damageAmount;
     public static final String DAMAGE_VARIABLE = "damage";
+    public boolean outOfHealth;
 
     /**
      * Internal variable to force collision box updates, even if we aren't normally a moveable entity.
@@ -294,6 +295,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
         locked = isVariableActive(LOCKED_VARIABLE);
+        outOfHealth = damageAmount == definition.general.health;
 
         world.endProfiling();
     }
@@ -307,6 +309,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public double getRawVariableValue(String variable, float partialTicks) {
         if ("damage_percent".equals(variable)) {
             return damageAmount / definition.general.health;
+        } else if ("damage_totaled".equals(variable)) {
+            return outOfHealth ? 1 : 0;
         }
 
         //Not a towing variable, check others.
@@ -552,6 +556,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             if (damageAmount > definition.general.health) {
                 double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
                 damageAmount = definition.general.health;
+                outOfHealth = true;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
             } else {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));

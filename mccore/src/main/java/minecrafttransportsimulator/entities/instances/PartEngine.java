@@ -358,7 +358,7 @@ public class PartEngine extends APart {
                     if (!isActive) {
                         stallEngine(Signal.FUEL_OUT);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                    } else if (vehicleOn.damageAmount == vehicleOn.definition.general.health) {
+                    } else if (vehicleOn.outOfHealth) {
                         stallEngine(Signal.DEAD_VEHICLE);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
                     } else if (ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName())) {
@@ -461,7 +461,7 @@ public class PartEngine extends APart {
                         //Start engine if the RPM is high enough to cause it to start by itself.
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
-                        if (rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
+                        if (rpm >= definition.engine.startRPM && !world.isClient() && !vehicleOn.outOfHealth) {
                             if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (!isInLiquid() && magnetoOn) {
                                     startEngine();
@@ -507,7 +507,7 @@ public class PartEngine extends APart {
                         }
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
-                        if (!world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
+                        if (!world.isClient() && !vehicleOn.outOfHealth) {
                             if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (magnetoOn) {
                                     startEngine();

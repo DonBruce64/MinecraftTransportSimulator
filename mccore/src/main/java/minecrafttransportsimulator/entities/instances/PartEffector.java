@@ -39,7 +39,7 @@ public class PartEffector extends APart {
     public void update() {
         super.update();
         //If we are active, do effector things.
-        if (isActive && !world.isClient() && damageAmount < definition.general.health) {
+        if (isActive && !world.isClient() && !outOfHealth) {
             drops.clear();
             blockFlooredPositionsBrokeThisTick.clear();
             for (BoundingBox box : entityCollisionBoxes) {

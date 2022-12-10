@@ -793,7 +793,7 @@ public class PartGun extends APart {
      */
     public IWrapperEntity getGunController() {
         //If the master entity we are on is destroyed, don't allow anything to control us.
-        if (masterEntity.damageAmount == masterEntity.definition.general.health) {
+        if (masterEntity.outOfHealth) {
             return null;
         }
 
