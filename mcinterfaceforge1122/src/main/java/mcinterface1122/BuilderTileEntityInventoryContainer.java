@@ -10,13 +10,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 /**
  * Builder for tile entities that contain inventories.  This builder ticks.
  *
  * @author don_bruce
  */
-public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATileEntityBase<?> & ITileEntityInventoryProvider> extends BuilderTileEntity<InventoryTileEntity> implements IInventory {
+public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATileEntityBase<?> & ITileEntityInventoryProvider> extends BuilderTileEntity<InventoryTileEntity> implements IInventory, IItemHandler {
 
     public BuilderTileEntityInventoryContainer() {
         super();
@@ -34,39 +36,94 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
 
     @Override
     public int getSizeInventory() {
-        return tileEntity.getInventory().getSize();
+        return tileEntity != null ? tileEntity.getInventory().getSize() : 0;
+    }
+
+    @Override
+    public int getSlots() {
+        return getSizeInventory();
     }
 
     @Override
     public boolean isEmpty() {
-        return tileEntity.getInventory().getCount() == 0;
+        return tileEntity != null ? tileEntity.getInventory().getCount() == 0 : false;
     }
 
     @Override
     public ItemStack getStackInSlot(int index) {
-        return ((WrapperItemStack) tileEntity.getInventory().getStack(index)).stack;
+        return tileEntity != null ? ((WrapperItemStack) tileEntity.getInventory().getStack(index)).stack : ItemStack.EMPTY;
     }
+
 
     @Override
     public ItemStack decrStackSize(int index, int count) {
-        tileEntity.getInventory().removeFromSlot(index, count);
-        return getStackInSlot(index);
+        if (tileEntity != null) {
+            tileEntity.getInventory().removeFromSlot(index, count);
+            return getStackInSlot(index);
+        } else {
+            return ItemStack.EMPTY;
+        }
     }
 
     @Override
     public ItemStack removeStackFromSlot(int index) {
-        tileEntity.getInventory().removeFromSlot(index, tileEntity.getInventory().getStack(index).getSize());
+        if (tileEntity != null) {
+            tileEntity.getInventory().removeFromSlot(index, tileEntity.getInventory().getStack(index).getSize());
+        }
         return ItemStack.EMPTY;
     }
 
     @Override
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        ItemStack stack = getStackInSlot(slot);
+        if (stack.getCount() < amount) {
+            amount = stack.getCount();
+        }
+        ItemStack extracted = stack.copy();
+        extracted.setCount(amount);
+        if (!simulate) {
+            stack.setCount(stack.getCount() - amount);
+            setInventorySlotContents(slot, stack);
+        }
+        return extracted;
+    }
+
+    @Override
     public void setInventorySlotContents(int index, ItemStack stack) {
-        tileEntity.getInventory().setStack(new WrapperItemStack(stack), index);
+        if (tileEntity != null) {
+            tileEntity.getInventory().setStack(new WrapperItemStack(stack), index);
+        }
+    }
+
+    @Override
+    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        ItemStack existingStack = getStackInSlot(slot);
+        if (ItemHandlerHelper.canItemStacksStack(stack, existingStack)) {
+            int amount = existingStack.getMaxStackSize() - existingStack.getCount();
+            if (amount != 0) {
+                if (amount > stack.getCount()) {
+                    amount = stack.getCount();
+                }
+                ItemStack remainderStack = stack.copy();
+                remainderStack.setCount(remainderStack.getCount() - amount);
+                if (!simulate) {
+                    existingStack.setCount(existingStack.getCount() + amount);
+                    setInventorySlotContents(slot, existingStack);
+                }
+                return remainderStack;
+            }
+        }
+        return stack;
     }
 
     @Override
     public int getInventoryStackLimit() {
         return 64;
+    }
+
+    @Override
+    public int getSlotLimit(int slot) {
+        return getInventoryStackLimit();
     }
 
     @Override
