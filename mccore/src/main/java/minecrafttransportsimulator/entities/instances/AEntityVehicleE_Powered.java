@@ -26,7 +26,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
+public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //Static variables used in logic that are kept in the global map.
     public static final String RUNNINGLIGHT_VARIABLE = "running_light";
     public static final String HEADLIGHT_VARIABLE = "headlight";
@@ -233,6 +233,25 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
     }
 
+    public FuelTankResult checkFuelTankCompatibility(String fluid) {
+        //Check tank first to make sure there's not a mis-match.
+        if (!fuelTank.getFluid().isEmpty()) {
+            if (!fluid.equals(fuelTank.getFluid())) {
+                return FuelTankResult.MISMATCH;
+            }
+        }
+
+        //Fuel type can be taken by vehicle, check to make sure engines can take it.
+        for (APart part : allParts) {
+            if (part instanceof PartEngine) {
+                if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluid)) {
+                    return FuelTankResult.VALID;
+                }
+            }
+        }
+        return FuelTankResult.INVALID;
+    }
+
     public boolean canPlayerStartEngines(IWrapperPlayer player) {
         if (!ConfigSystem.settings.general.keyRequiredToStartVehicles.value) {
             return true;
@@ -280,5 +299,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         data.setString("selectedBeaconName", selectedBeaconName);
         data.setData("fuelTank", fuelTank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         return data;
+    }
+
+    public enum FuelTankResult {
+        VALID,
+        INVALID,
+        MISMATCH;
     }
 }

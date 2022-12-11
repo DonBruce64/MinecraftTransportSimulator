@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -149,7 +150,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         connectedVehicle = newVehicle;
     }
 
-    protected abstract PumpResult checkPump(EntityVehicleF_Physics vehicle);
+    protected abstract FuelTankResult checkPump(EntityVehicleF_Physics vehicle);
 
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
@@ -163,11 +164,5 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             data.setUUID("placingPlayerID", placingPlayerID);
         }
         return data;
-    }
-
-    protected enum PumpResult {
-        VALID,
-        INVALID,
-        MISMATCH;
     }
 }

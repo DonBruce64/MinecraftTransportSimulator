@@ -3,10 +3,9 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -20,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEntityFluidTankProvider {
     private final EntityFluidTank tank;
@@ -107,23 +105,8 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
-    protected PumpResult checkPump(EntityVehicleF_Physics vehicle) {
-        //Check to make sure this vehicle can take this fuel pump's fuel type.
-        if (!vehicle.fuelTank.getFluid().isEmpty()) {
-            if (!tank.getFluid().equals(vehicle.fuelTank.getFluid())) {
-                return PumpResult.MISMATCH;
-            }
-        }
-
-        //Fuel type can be taken by vehicle, check to make sure engines can take it.
-        for (APart part : vehicle.allParts) {
-            if (part instanceof PartEngine) {
-                if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())) {
-                    return PumpResult.VALID;
-                }
-            }
-        }
-        return PumpResult.MISMATCH;
+    protected FuelTankResult checkPump(EntityVehicleF_Physics vehicle) {
+        return vehicle.checkFuelTankCompatibility(tank.getFluid());
     }
 
     @Override

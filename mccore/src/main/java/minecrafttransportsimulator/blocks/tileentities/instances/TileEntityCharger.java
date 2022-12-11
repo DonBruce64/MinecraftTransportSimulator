@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
+import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -29,16 +30,16 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
     }
 
     @Override
-    protected PumpResult checkPump(EntityVehicleF_Physics vehicle) {
+    protected FuelTankResult checkPump(EntityVehicleF_Physics vehicle) {
         //Just check that the engines are electric. If so, the vehicle will have the right fuel.
         for (APart part : vehicle.allParts) {
             if (part instanceof PartEngine) {
                 if (part.definition.engine.type == EngineType.ELECTRIC) {
-                    return PumpResult.VALID;
+                    return FuelTankResult.VALID;
                 }
             }
         }
-        return PumpResult.INVALID;
+        return FuelTankResult.INVALID;
     }
 
     @Override

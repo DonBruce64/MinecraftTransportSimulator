@@ -117,17 +117,26 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                     } else if (!jerrrycanFluid.isEmpty()) {
                         if (entity instanceof EntityVehicleF_Physics) {
                             EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-                            if (vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(jerrrycanFluid)) {
-                                if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_TOOFULL));
-                                } else {
-                                    vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
-                                    data.setString("jerrycanFluid", "");
-                                    stack.setData(data);
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
+                            switch (vehicle.checkFuelTankCompatibility(jerrrycanFluid)) {
+                                case VALID: {
+                                    if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
+                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_TOOFULL));
+                                    } else {
+                                        vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
+                                        data.setString("jerrycanFluid", "");
+                                        stack.setData(data);
+                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
+                                    }
+                                    break;
                                 }
-                            } else {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
+                                case INVALID: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGENGINES));
+                                    break;
+                                }
+                                case MISMATCH: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
+                                    break;
+                                }
                             }
                         }
                     } else {
