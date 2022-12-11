@@ -754,6 +754,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.isBlockLiquid(position) ? 1 : 0;
             case ("config_simplethrottle"):
                 return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
+            case ("config_innerwindows"):
+                return ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0;
         }
 
         //Check if this is a cycle variable.
