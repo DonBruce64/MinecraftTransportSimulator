@@ -119,6 +119,16 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public float getMouseSensitivity() {
+        return Minecraft.getMinecraft().gameSettings.mouseSensitivity;
+    }
+
+    @Override
+    public void setMouseSensitivity(float setting) {
+        Minecraft.getMinecraft().gameSettings.mouseSensitivity = setting;
+    }
+
+    @Override
     public float getFOV() {
         return Minecraft.getMinecraft().gameSettings.fovSetting;
     }

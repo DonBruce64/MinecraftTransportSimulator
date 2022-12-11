@@ -18,6 +18,9 @@ public class JSONCameraObject {
     @JSONDescription("This parameter is optional.  If included, MTS will set the player's FOV to this value when they are in this camera mode.  Useful for simulating zoom functions on scopes and sights.")
     public float fovOverride;
 
+    @JSONDescription("This parameter is optional.  If included, MTS will set the player's mouse sensitivity to this value when they are in this camera mode.  Useful if you have a zoomed view and want to make aiming easier.")
+    public float mouseSensitivityOverride;
+
     @JSONDescription("This parameter is optional.  If included, MTS will render the specified texture as an overlay when this camera is active.  This overlay will also disable the hotbar and cross-hair rendering.  The format is [packID:path/to/texture]")
     public String overlay;
 

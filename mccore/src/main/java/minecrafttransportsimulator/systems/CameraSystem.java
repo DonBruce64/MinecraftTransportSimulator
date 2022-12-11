@@ -31,6 +31,7 @@ public class CameraSystem {
     private static int customCameraIndex;
     private static int customCamerasChecked;
     private static float currentFOV;
+    private static float currentMouseSensitivity;
     public static String customCameraOverlay;
 
     private static final Point3D cameraOffset = new Point3D();
@@ -72,10 +73,16 @@ public class CameraSystem {
         EntityVehicleF_Physics ridingVehicle = sittingSeat != null ? sittingSeat.vehicleOn : null;
         EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 
-        //Reset FOV, overlay, and effect.
-        if (!enableCustomCameras && currentFOV != 0) {
-            InterfaceManager.clientInterface.setFOV(currentFOV);
-            currentFOV = 0;
+        //Reset FOV, sensitivity, overlay, and effect.
+        if (!enableCustomCameras) {
+            if (currentFOV != 0) {
+                InterfaceManager.clientInterface.setFOV(currentFOV);
+                currentFOV = 0;
+            }
+            if (currentMouseSensitivity != 0) {
+                InterfaceManager.clientInterface.setMouseSensitivity(currentMouseSensitivity);
+                currentMouseSensitivity = 0;
+            }
         }
         customCameraOverlay = null;
         if (nightVisionEnabled) {
@@ -142,6 +149,14 @@ public class CameraSystem {
                             currentFOV = InterfaceManager.clientInterface.getFOV();
                         }
                         InterfaceManager.clientInterface.setFOV(camera.fovOverride);
+                    }
+
+                    //If the camera has a mouse sensitivity override, apply it.
+                    if (camera.mouseSensitivityOverride != 0) {
+                        if (currentMouseSensitivity == 0) {
+                            currentMouseSensitivity = InterfaceManager.clientInterface.getMouseSensitivity();
+                        }
+                        InterfaceManager.clientInterface.setMouseSensitivity(camera.mouseSensitivityOverride);
                     }
 
                     //First set the position of the camera to the defined position.

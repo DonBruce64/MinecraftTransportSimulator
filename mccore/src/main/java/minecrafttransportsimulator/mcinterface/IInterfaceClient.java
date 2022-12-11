@@ -98,6 +98,16 @@ public interface IInterfaceClient {
     void setFOV(float setting);
 
     /**
+     * Returns the current mouse sensitivity.  Useful in conjunction with zoomed cameras to reduce travel speed.
+     */
+    float getMouseSensitivity();
+
+    /**
+     * Sets the current mouse sensitivity.
+     */
+    void setMouseSensitivity(float setting);
+
+    /**
      * Returns the entity we are moused over.  This includes Tile Entities.
      */
     AEntityB_Existing getMousedOverEntity();

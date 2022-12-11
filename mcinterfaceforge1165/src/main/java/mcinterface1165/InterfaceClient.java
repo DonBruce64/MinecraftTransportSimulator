@@ -132,6 +132,16 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public float getMouseSensitivity() {
+        return (float) Minecraft.getInstance().options.sensitivity;
+    }
+
+    @Override
+    public void setMouseSensitivity(float setting) {
+        Minecraft.getInstance().options.sensitivity = setting;
+    }
+
+    @Override
     public AEntityB_Existing getMousedOverEntity() {
         //See what we are hitting.
         RayTraceResult lastHit = Minecraft.getInstance().hitResult;
