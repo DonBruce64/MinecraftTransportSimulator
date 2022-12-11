@@ -268,6 +268,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         } else {
                             //Need to re-create damage object to reference this hitbox.
                             damage = new Damage(damage.amount, hitBox, gun, null, null);
+                            damage.setBullet(getItem());
 
                             //Now check which damage we need to apply.
                             if (hitBox.groupDef != null) {
@@ -298,6 +299,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     if (!world.isClient()) {
                                         //Need to re-create damage object to use box on vehicle.  Otherwise, we'll attack the part.
                                         damage = new Damage(damage.amount, null, gun, null, null);
+                                        damage.setBullet(getItem());
                                         hitVehicle.attack(damage);
                                     }
                                     displayDebugMessage("FORWARDING DAMAGE TO VEHICLE.  CURRENT DAMAGE IS: " + (int) hitVehicle.damageAmount);
