@@ -911,9 +911,9 @@ public class PartGun extends APart {
             case ("gun_yaw"):
                 return partialTicks != 0 ? prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks : internalOrientation.angles.y;
             case ("gun_pitching"):
-                return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
+                return Math.abs(prevInternalOrientation.angles.x - internalOrientation.angles.x) > 0.01 ? 1 : 0;
             case ("gun_yawing"):
-                return prevInternalOrientation.angles.y != internalOrientation.angles.y ? 1 : 0;
+                return Math.abs(prevInternalOrientation.angles.y - internalOrientation.angles.y) > 0.01 ? 1 : 0;
             case ("gun_cooldown"):
                 return cooldownTimeRemaining > 0 ? 1 : 0;
             case ("gun_windup_time"):
