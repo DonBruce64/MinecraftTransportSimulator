@@ -141,7 +141,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 multimap.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, AttributeModifier.Operation.ADDITION));
             }
             if (weapon.definition.weapon.attackCooldown != 0) {
-                multimap.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", 20 / weapon.definition.weapon.attackCooldown, AttributeModifier.Operation.ADDITION));
+                multimap.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", 20D / weapon.definition.weapon.attackCooldown - 4.0, AttributeModifier.Operation.ADDITION));
             }
         }
         return multimap;

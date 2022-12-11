@@ -142,7 +142,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, 0));
             }
             if (weapon.definition.weapon.attackCooldown != 0) {
-                multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", 20 / weapon.definition.weapon.attackCooldown, 0));
+                multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", 20D / weapon.definition.weapon.attackCooldown - 4.0, 0));
             }
         }
         return multimap;
