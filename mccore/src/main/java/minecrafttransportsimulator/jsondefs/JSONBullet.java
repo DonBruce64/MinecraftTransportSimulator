@@ -59,6 +59,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("The maximum velocity of this bullet, in m/s. If this and accelerationTime are used, the bullet will be spawned with the gun's muzzleVelocity + the vehicle's motion, then it will accelerate at a constant rate and reach maxVelocity when the accelerationTime is about to expire.")
         public int maxVelocity;
 
+        @JSONDescription("The time between bullet firing and de-spawning.  Normally 200 ticks (10 seconds) but can be shorter or longer as needed.  e.g., water might not need to exist more than 2 seconds, but a lob shot from artillery might need 30 seconds.")
+        public int despawnTime;
+
         @JSONDescription("The time between when the bullet impacts, and it despawns.  Normally 0 since you want bullets to go away when they impact.  But can be higher if you want them to do fancy animations or sounds.")
         public int impactDespawnTime;
 

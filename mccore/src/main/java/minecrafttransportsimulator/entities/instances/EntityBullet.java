@@ -40,6 +40,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public final double initialVelocity;
     private final double velocityToAddEachTick;
     private final Point3D motionToAddEachTick;
+    private final int despawnTime;
 
     //States
     private int impactDesapawnTimer = -1;
@@ -72,6 +73,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             velocityToAddEachTick = 0;
             motionToAddEachTick = null;
         }
+        this.despawnTime = definition.bullet.despawnTime != 0 ? definition.bullet.despawnTime : 200;
         this.orientation.set(orientation);
         prevOrientation.set(orientation);
     }
@@ -124,7 +126,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             motion.y -= gun.definition.gun.gravitationalVelocity;
 
             //Check to make sure we haven't gone too many ticks.
-            if (ticksExisted > definition.bullet.burnTime + 200) {
+            if (ticksExisted > definition.bullet.burnTime + despawnTime) {
                 displayDebugMessage("TIEMOUT");
                 remove();
                 return;
