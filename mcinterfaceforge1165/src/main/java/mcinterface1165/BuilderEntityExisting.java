@@ -15,25 +15,24 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntitySize;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.Pose;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
 /**
  * Builder for the main entity classes for MTS.  This builder allows us to create a new entity
@@ -48,10 +47,13 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  */
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase {
+    protected static EntityType<BuilderEntityExisting> E_TYPE2;
+    private EntitySize mutableDims = new EntitySize(1.0F, 1.0F, false);
+
     /**
      * Maps Entity class names to instances of the IItemEntityProvider class that creates them.
      **/
-    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<>();
+    protected static final Map<String, IItemEntityFactory> entityMap = new HashMap<>();
 
     /**
      * Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.
@@ -70,22 +72,22 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      **/
     private WrapperAABBCollective collisionBoxes;
 
-    public BuilderEntityExisting(World world) {
-        super(world);
+    public BuilderEntityExisting(EntityType<? extends BuilderEntityExisting> eType, World world) {
+        super(eType, world);
     }
 
     @Override
-    public void onEntityUpdate() {
-        super.onEntityUpdate();
+    public void baseTick() {
+        super.baseTick();
 
         //If our entity isn't null, update it and our position.
         if (entity != null) {
             //Check if we are still valid, or need to be set dead.
             if (!entity.isValid) {
-                setDead();
+                remove();
             } else {
                 //Start master profiling section.
-                entity.world.beginProfiling("MTSEntity_" + getEntityId(), true);
+                entity.world.beginProfiling("MTSEntity_" + getUUID(), true);
                 entity.world.beginProfiling("Main_Execution", true);
 
                 //Forward the update call.
@@ -98,11 +100,11 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
 
                 //Set the new position.
                 entity.world.beginProfiling("MovementOverhead", false);
-                setPosition(entity.position.x, entity.position.y, entity.position.z);
+                setPos(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.
-                if (!world.isRemote && posY < 0 && world.isOutsideBuildHeight(getPosition())) {
-                    setDead();
+                if (!level.isClientSide && position().y < 0 && World.isOutsideBuildHeight(blockPosition())) {
+                    remove();
                     entity.world.endProfiling();
                     entity.world.endProfiling();
                     return;
@@ -120,10 +122,11 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     interactionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getInteractionBoxes());
                     collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
                     if (interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
-                        setSize((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F);
+                        mutableDims = new EntitySize((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F, false);
                         //Make sure the collision bounds for MC are big enough to collide with this entity.
-                        if (World.MAX_ENTITY_RADIUS < interactable.encompassingBox.widthRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.heightRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.depthRadius) {
-                            World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
+                        double maxEntityRadius = level.getMaxEntityRadius();
+                        if (maxEntityRadius < interactable.encompassingBox.widthRadius || maxEntityRadius < interactable.encompassingBox.heightRadius || maxEntityRadius < interactable.encompassingBox.depthRadius) {
+                            level.increaseMaxEntityRadius(Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius));
                         }
                     }
                 }
@@ -133,7 +136,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         } else {
             //If we have NBT, and haven't loaded it, do so now.
             if (!loadedFromSavedNBT && loadFromSavedNBT) {
-                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                 try {
                     WrapperNBT data = new WrapperNBT(lastLoadedNBT);
                     entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, data);
@@ -146,15 +149,20 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
-                    setDead();
+                    remove();
                 }
             }
         }
     }
 
     @Override
-    public void setDead() {
-        super.setDead();
+    public EntitySize getDimensions(Pose pPose) {
+        return mutableDims;
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
         //Notify internal entity of it being invalid.
         if (entity != null) {
             entity.remove();
@@ -162,12 +170,12 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource source, float amount) {
-        if (ConfigSystem.settings.damage.allowExternalDamage.value && !world.isRemote && entity instanceof AEntityE_Interactable) {
+    public boolean hurt(DamageSource source, float amount) {
+        if (ConfigSystem.settings.damage.allowExternalDamage.value && !level.isClientSide && entity instanceof AEntityE_Interactable) {
             AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
-            Entity attacker = source.getImmediateSource();
-            Entity trueSource = source.getTrueSource();
-            WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) trueSource) : null;
+            Entity attacker = source.getDirectEntity();
+            Entity trueSource = source.getEntity();
+            WrapperPlayer playerSource = trueSource instanceof PlayerEntity ? WrapperPlayer.getWrapperFor((PlayerEntity) trueSource) : null;
             if (lastExplosionPosition != null && source.isExplosion()) {
                 //We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
@@ -182,7 +190,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             } else if (attacker != null) {
                 Damage damage = null;
                 //Check the damage at the current position of the attacker.
-                Point3D attackerPosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
+                Vector3d attackerMcPos = attacker.position();
+                Point3D attackerPosition = new Point3D(attackerMcPos.x, attackerMcPos.y, attackerMcPos.z);
                 for (BoundingBox box : interactionBoxes.boxes) {
                     if (box.isPointInside(attackerPosition)) {
                         damage = new Damage(amount, box, null, playerSource, null);
@@ -194,7 +203,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Check the theoretical position of the entity should it have moved.
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
-                    RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().add(attacker.motionX, attacker.motionY, attacker.motionZ));
+                    RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attackerMcPos, attackerMcPos.add(attacker.getDeltaMovement()));
                     if (hitRaytrace != null) {
                         damage = new Damage(amount, interactionBoxes.lastBoxRayTraced, null, playerSource, null);
                     }
@@ -210,10 +219,10 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public AxisAlignedBB getEntityBoundingBox() {
+    public AxisAlignedBB getBoundingBox() {
         //Override this to make interaction checks work with the multiple collision points.
         //We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
-        return interactionBoxes != null ? interactionBoxes : super.getEntityBoundingBox();
+        return interactionBoxes != null ? interactionBoxes : super.getBoundingBox();
     }
 
     @Override
@@ -229,7 +238,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.interactionBoxes) {
-                    if (box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z))) {
+                    if (box.isPointInside(new Point3D(target.getLocation().x, target.getLocation().y, target.getLocation().z))) {
                         AItemPack<?> partItem = part.getItem();
                         if (partItem != null) {
                             return ((WrapperItemStack) part.getItem().getNewStack(part.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
@@ -248,13 +257,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundNBT saveWithoutId(CompoundNBT tag) {
+        super.saveWithoutId(tag);
         if (entity != null) {
             //Entity is valid, save it and return the modified tag.
             //Also save the class ID so we know what to construct when MC loads this Entity back up.
             entity.save(new WrapperNBT(tag));
-            tag.setString("entityid", entity.getClass().getSimpleName());
+            tag.putString("entityid", entity.getClass().getSimpleName());
         }
         return tag;
     }
@@ -267,24 +276,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      */
     @SubscribeEvent
     public static void on(ExplosionEvent.Detonate event) {
-        if (!event.getWorld().isRemote) {
+        if (!event.getWorld().isClientSide) {
             lastExplosionPosition = new Point3D(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
         }
-    }
-
-    /**
-     * Registers all builder instances that build our own entities into the game.
-     */
-    @SubscribeEvent
-    public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
-        //Iterate over all pack items and find those that spawn entities.
-        for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-            if (packItem instanceof IItemEntityProvider<?>) {
-                entityMap.put(((IItemEntityProvider<?>) packItem).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) packItem);
-            }
-        }
-
-        //Now register our own classes.
-        event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityExisting.class).id(new ResourceLocation(InterfaceManager.coreModID, "mts_entity"), 0).name("mts_entity").tracker(32 * 16, 5, false).build());
     }
 }

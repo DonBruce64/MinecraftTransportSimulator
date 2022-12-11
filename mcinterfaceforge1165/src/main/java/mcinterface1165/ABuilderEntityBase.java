@@ -7,8 +7,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
 import net.minecraft.world.World;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Builder for a basic MC Entity class.  This builder provides basic entity logic that's common
@@ -17,6 +21,9 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class ABuilderEntityBase extends Entity {
+    protected static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, InterfaceLoader.MODID);
+    protected static EntityType<ABuilderEntityBase> E_TYPE;
+
     /**
      * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
      **/
@@ -52,7 +59,11 @@ public abstract class ABuilderEntityBase extends Entity {
     public int idleTickCounter;
 
     public ABuilderEntityBase(World level) {
-        super(level);
+        super(E_TYPE, level);
+    }
+
+    public ABuilderEntityBase(EntityType<?> etype, World level) {
+        super(etype, level);
     }
 
     @Override
@@ -132,5 +143,15 @@ public abstract class ABuilderEntityBase extends Entity {
         if (lastLoadedNBT != null) {
             tag.merge(lastLoadedNBT);
         }
+    }
+
+    //Junk methods.
+    @Override
+    protected void defineSynchedData() {
+    }
+
+    @Override
+    public IPacket<?> getAddEntityPacket() {
+        return null;
     }
 }

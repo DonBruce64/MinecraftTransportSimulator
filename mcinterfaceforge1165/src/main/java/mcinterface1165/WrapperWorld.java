@@ -291,7 +291,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
-        BuilderEntityExisting builder = new BuilderEntityExisting(((WrapperWorld) entity.world).world);
+        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2, ((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
         builder.setPos(entity.position.x, entity.position.y, entity.position.z);
         builder.entity = entity;
@@ -921,7 +921,7 @@ public class WrapperWorld extends AWrapperWorld {
                     //This way if we're in the world, but not valid we will know.
                     if (gunBuilder.level != player.level || !player.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
                         //Follower is not linked.  Remove it and re-create in code below.
-                        gunBuilder.setDead();
+                        gunBuilder.remove();
                         playerServerGunBuilders.remove(playerUUID);
                         ticksSincePlayerJoin.remove(playerUUID);
                     } else {

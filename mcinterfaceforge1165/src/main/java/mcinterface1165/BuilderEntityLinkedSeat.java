@@ -5,14 +5,10 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.entity.EntityType;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
 /**
  * Builder for an entity to sit in so they can ride another entity.  We use this rather
@@ -24,6 +20,7 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  */
 @EventBusSubscriber
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
+    protected static EntityType<BuilderEntityLinkedSeat> E_TYPE3;
 
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
@@ -38,14 +35,13 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
      **/
     private boolean dismountedRider;
 
-    public BuilderEntityLinkedSeat(World world) {
-        super(world);
-        setSize(0.05F, 0.05F);
+    public BuilderEntityLinkedSeat(EntityType<? extends BuilderEntityLinkedSeat> eType, World world) {
+        super(eType, world);
     }
 
     @Override
-    public void onEntityUpdate() {
-        super.onEntityUpdate();
+    public void baseTick() {
+        super.baseTick();
 
         //If our entity isn't null, update us to the entity position.
         //What really matters is the player's position, and that comes later.
@@ -53,9 +49,9 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
         if (entity != null) {
             //Check if the entity we are a seat on is still valid, or need to be set dead.
             if (!entity.isValid) {
-                setDead();
+                remove();
             } else {
-                setPosition(entity.position.x, entity.position.y, entity.position.z);
+                setPos(entity.position.x, entity.position.y, entity.position.z);
 
                 //Constantly check for the rider.  They might take a bit to load in.
                 //If the rider dismounted us, just die.
@@ -68,36 +64,36 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     //Only set the rider loaded on the server though: clients will get packets.
                     if (entity.rider != null) {
                         rider = (WrapperEntity) entity.rider;
-                    } else if (!world.isRemote) {
+                    } else if (!level.isClientSide) {
                         entity.setRider(rider, true);
                     }
                 } else if (dismountedRider) {
-                    setDead();
+                    remove();
                 }
             }
         } else {
             //If we have NBT, and haven't loaded it, do so now.
             if (!loadedFromSavedNBT && loadFromSavedNBT) {
-                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                 try {
-                    entity = worldWrapper.getEntity(lastLoadedNBT.getUniqueId("entityUUID"));
+                    entity = worldWrapper.getEntity(lastLoadedNBT.getUUID("entityUUID"));
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
-                    setDead();
+                    remove();
                 }
             }
         }
     }
 
     @Override
-    public void setDead() {
-        super.setDead();
+    public void remove() {
+        super.remove();
         //Notify internal entity of rider being removed.
         if (entity != null && rider != null) {
-            if (!world.isRemote && rider.equals(entity.rider)) {
+            if (!level.isClientSide && rider.equals(entity.rider)) {
                 entity.removeRider();
             }
             rider = null;
@@ -106,7 +102,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     }
 
     @Override
-    public void updatePassenger(Entity passenger) {
+    public void positionRider(Entity passenger) {
         //Forward passenger updates to the entity.
         //Need to verify the entity has a rider, it might not if we are on the
         //client and waiting for the rider packet.  Or on the server and waiting for loading of the player.
@@ -134,20 +130,12 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundNBT saveWithoutId(CompoundNBT tag) {
+        super.saveWithoutId(tag);
         if (entity != null) {
             //Entity is valid, save UUID and return the modified tag.
-            tag.setUniqueId("entityUUID", entity.uniqueUUID);
+            tag.putUUID("entityUUID", entity.uniqueUUID);
         }
         return tag;
-    }
-
-    /**
-     * Registers our own class for use.
-     */
-    @SubscribeEvent
-    public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
-        event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityLinkedSeat.class).id(new ResourceLocation(InterfaceManager.coreModID, "mts_entity_seat"), 1).tracker(32 * 16, 5, false).name("mts_entity_seat").build());
     }
 }

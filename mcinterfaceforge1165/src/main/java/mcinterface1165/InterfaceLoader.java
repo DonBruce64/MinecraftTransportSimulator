@@ -17,11 +17,14 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInv
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
@@ -52,6 +55,7 @@ public final class InterfaceLoader {
         BuilderItem.ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderBlock.BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderTileEntity.TILE_ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
+        ABuilderEntityBase.ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
 
         //Add ourselves to the boot process.
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::initClient);
@@ -100,6 +104,7 @@ public final class InterfaceLoader {
         }
 
         //Create creative tabs.  Required before items since those need tabs in their constructors.
+        //FIXME do we need to do anything here?
 
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
@@ -141,6 +146,7 @@ public final class InterfaceLoader {
 
             //If the item is for OreDict, add it.
             //Well, we would if that existed....
+            //FIXME add tags perhaps?
         }
 
         //Register the IItemBlock blocks.  We cheat here and
@@ -195,6 +201,18 @@ public final class InterfaceLoader {
         BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null)).get();
         BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null)).get();
         BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> TileEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+
+        //Init entities.
+        BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
+        BuilderEntityLinkedSeat.E_TYPE3 = ABuilderEntityBase.ENTITIES.register("builder_seat", () -> EntityType.Builder.<BuilderEntityLinkedSeat>of(BuilderEntityLinkedSeat::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
+        BuilderEntityRenderForwarder.E_TYPE4 = ABuilderEntityBase.ENTITIES.register("builder_rendering", () -> EntityType.Builder.<BuilderEntityRenderForwarder>of(BuilderEntityRenderForwarder::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
+
+        //Iterate over all pack items and find those that spawn entities.
+        for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
+            if (packItem instanceof IItemEntityProvider) {
+                ((IItemEntityProvider) packItem).registerEntities(BuilderEntityExisting.entityMap);
+            }
+        }
 
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();

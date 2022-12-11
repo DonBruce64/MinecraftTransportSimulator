@@ -120,7 +120,7 @@ public class WrapperEntity implements IWrapperEntity {
             if (entityRiding == null) {
                 //Only spawn and start riding on the server, clients will get packets.
                 if (!entity.level.isClientSide) {
-                    BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(((WrapperWorld) entityToRide.world).world);
+                    BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(BuilderEntityLinkedSeat.E_TYPE3, ((WrapperWorld) entityToRide.world).world);
                     seat.loadedFromSavedNBT = true;
                     seat.setPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z);
                     seat.entity = entityToRide;
