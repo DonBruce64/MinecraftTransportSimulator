@@ -61,14 +61,12 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 //If the rider dismounted us, just die.
                 List<Entity> riders = getPassengers();
                 if (rider == null && !riders.isEmpty()) {
-                    rider = WrapperEntity.getWrapperFor(riders.get(0));
-                    //Check if the entity has a rider, if so, set ourselves to it.
-                    //Otherwise, set it to ourselves.  We can get a rider here if we
-                    //load it from saved disk, or we might be given one if the entity is clicked.
-                    //Only set the rider loaded on the server though: clients will get packets.
+                    //If we already have a rider on the entity, just use it.  Otherwise, set it.
+                    //This prevents us from changing the riding entity if a packet gets there before we do.
                     if (entity.rider != null) {
                         rider = (WrapperEntity) entity.rider;
-                    } else if (!world.isRemote) {
+                    } else {
+                        rider = WrapperEntity.getWrapperFor(riders.get(0));
                         entity.setRider(rider, true);
                     }
                 } else if (dismountedRider) {
@@ -81,13 +79,22 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
                 try {
                     entity = worldWrapper.getEntity(lastLoadedNBT.getUniqueId("entityUUID"));
-                    loadedFromSavedNBT = true;
-                    lastLoadedNBT = null;
+                    //If entity doesn't exist, wait until it does.
+                    if (entity != null) {
+                        loadedFromSavedNBT = true;
+                        lastLoadedNBT = null;
+                    }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
                     setDead();
                 }
+            }
+        }
+        if (rider == null && ticksExisted > 100) {
+            //We have existed for over 5 seconds without the rider loading in.  Clearly, they don't exist.
+            if (!world.isRemote) {
+                setDead();
             }
         }
     }
@@ -125,7 +132,11 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     @Override
     protected void removePassenger(Entity passenger) {
         super.removePassenger(passenger);
-        dismountedRider = true;
+        //Need to make sure we actually have a rider as MC wipes out the rider list on init.
+        //This sends a fake "dismount" command to saved entities and makes us dismount riders that shouldn't be.
+        if (rider != null) {
+            dismountedRider = true;
+        }
     }
 
     @Override

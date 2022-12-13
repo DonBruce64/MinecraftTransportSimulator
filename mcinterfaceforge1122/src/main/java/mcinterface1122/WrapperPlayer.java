@@ -31,7 +31,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
-    private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<>();
+    private static final Map<EntityPlayer, WrapperPlayer> playerClientWrappers = new HashMap<>();
+    private static final Map<EntityPlayer, WrapperPlayer> playerServerWrappers = new HashMap<>();
 
     protected final EntityPlayer player;
 
@@ -44,6 +45,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      */
     public static WrapperPlayer getWrapperFor(EntityPlayer player) {
         if (player != null) {
+            Map<EntityPlayer, WrapperPlayer> playerWrappers = player.world.isRemote ? playerClientWrappers : playerServerWrappers;
             WrapperPlayer wrapper = playerWrappers.get(player);
             if (wrapper == null || !wrapper.isValid() || player != wrapper.player) {
                 wrapper = new WrapperPlayer(player);
@@ -173,6 +175,10 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
-        playerWrappers.keySet().removeIf(entityPlayer -> entityPlayer.world.equals(event.getWorld()));
+        if (event.getWorld().isRemote) {
+            playerClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        } else {
+            playerServerWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        }
     }
 }

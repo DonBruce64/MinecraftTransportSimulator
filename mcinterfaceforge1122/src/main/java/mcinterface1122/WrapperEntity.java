@@ -34,7 +34,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
-    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityClientWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityServerWrappers = new HashMap<>();
 
     protected final Entity entity;
     private AEntityB_Existing cachedEntityRiding;
@@ -49,6 +50,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (entity instanceof EntityPlayer) {
             return WrapperPlayer.getWrapperFor((EntityPlayer) entity);
         } else if (entity != null) {
+            Map<Entity, WrapperEntity> entityWrappers = entity.world.isRemote ? entityClientWrappers : entityServerWrappers;
             WrapperEntity wrapper = entityWrappers.get(entity);
             if (wrapper == null || !wrapper.isValid() || entity != wrapper.entity) {
                 wrapper = new WrapperEntity(entity);
@@ -412,6 +414,10 @@ public class WrapperEntity implements IWrapperEntity {
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
-        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        if (event.getWorld().isRemote) {
+            entityClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        } else {
+            entityServerWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        }
     }
 }
