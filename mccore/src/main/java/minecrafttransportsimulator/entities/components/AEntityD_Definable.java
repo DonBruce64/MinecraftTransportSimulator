@@ -808,7 +808,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         case ("altitude"):
                             return contact.position.y;
                         case ("angle"):
-                            return Math.toDegrees(Math.atan2(-contact.position.y + position.y,-contact.position.z + position.z)) + orientation.angles.x;
+                            return -Math.toDegrees(Math.atan2(-contact.position.y + position.y,Math.hypot(-contact.position.z + position.z,-contact.position.x + position.x))) + orientation.angles.x;
                     }
                 }
             }
