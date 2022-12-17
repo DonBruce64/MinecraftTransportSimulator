@@ -3,7 +3,6 @@ package minecrafttransportsimulator.systems;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -24,7 +23,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public class CameraSystem {
-    private static int zoomLevel;
+    public static int zoomLevel;
     private static boolean enableCustomCameras;
     public static boolean runningCustomCameras;
     private static boolean nightVisionEnabled;
@@ -66,7 +65,7 @@ public class CameraSystem {
      * transforms for the camera, return true.  If we only offset the camera and want to keep its
      * frame of reference and use local transformations rather than global, return false.
      */
-    public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, TransformationMatrix cameraOrientation, float partialTicks) {
+    public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, RotationMatrix cameraRotation, float partialTicks) {
         //Get variables.
         AEntityB_Existing ridingEntity = player.getEntityRiding();
         PartSeat sittingSeat = ridingEntity instanceof PartSeat ? (PartSeat) ridingEntity : null;
@@ -170,18 +169,18 @@ public class CameraSystem {
 
                     //Get the rotational component of the operation.
                     //First, get the orientation of the entity we are on.
-                    cameraProvider.getInterpolatedOrientation(cameraOrientation, partialTicks);
+                    cameraProvider.getInterpolatedOrientation(cameraRotation, partialTicks);
 
-                    //We need to transform the camera position by our orientation here.
+                    //We need to rotate the camera position by our orientation here.
                     //This puts the position into global orientation rather than animation-local.
-                    cameraAdjustedPosition.transform(cameraOrientation);
+                    cameraAdjustedPosition.rotate(cameraRotation);
 
                     //Now add the rotation from the animation, plus the definition rotation, if we have it.
                     if (switchbox != null) {
-                        cameraOrientation.applyRotation(switchbox.rotation);
+                        cameraRotation.multiply(switchbox.rotation);
                     }
                     if (camera.rot != null) {
-                        cameraOrientation.applyRotation(camera.rot);
+                        cameraRotation.multiply(camera.rot);
                     }
 
                     //Rotational portion is good.  Finally, get the offset from the player to the provider origin.
@@ -204,13 +203,13 @@ public class CameraSystem {
                 enableCustomCameras = false;
                 runningCustomCameras = false;
             } else if (sittingSeat != null) {
-                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
-                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
+                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraRotation).add(0, -eyeHeight, 0);
                 sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
-                cameraOrientation.applyRotation(riderOrientation);
+                cameraRotation.multiply(riderOrientation);
                 return true;
             } else {
                 //No custom camera, and no seat camera modifications.  Standard world view.
@@ -234,15 +233,14 @@ public class CameraSystem {
                 customCameraIndex = 0;
 
                 //Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
-                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
-                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOffset.set(0, 0, -zoomLevel);
-                cameraOrientation.setTranslation(cameraOffset);
+                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraRotation).add(0, -eyeHeight, 0);
                 sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
-                cameraOrientation.applyRotation(riderOrientation);
+                cameraRotation.multiply(riderOrientation);
+                cameraAdjustedPosition.add(cameraOffset.set(0, 0, -zoomLevel).rotate(cameraRotation));
                 return true;
             }
         } else {
@@ -264,15 +262,14 @@ public class CameraSystem {
                 }
 
                 //Add the zoom offset for third-person view.
-                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
-                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOffset.set(0, 0, zoomLevel);
-                cameraOrientation.setTranslation(cameraOffset);
+                cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraRotation).add(0, -eyeHeight, 0);
                 sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
-                cameraOrientation.applyRotation(riderOrientation);
+                cameraRotation.multiply(riderOrientation);
+                cameraAdjustedPosition.add(cameraOffset.set(0, 0, zoomLevel).rotate(cameraRotation));
                 return true;
             }
         }

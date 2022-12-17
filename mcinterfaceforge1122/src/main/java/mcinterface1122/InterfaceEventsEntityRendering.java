@@ -20,7 +20,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -258,6 +257,7 @@ public class InterfaceEventsEntityRendering {
 
             //Get total translation.
             riderTotalTransformation.resetTransforms();
+            //riderTotalTransformation.setTranslation
             riderTotalTransformation.setRotation(riderBodyOrientation);
 
             //Apply scale.
@@ -266,18 +266,15 @@ public class InterfaceEventsEntityRendering {
             //Adjust for seated offset.
             riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
 
-            //Push matrix and apply transform.
-            //If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
-            EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
-            if (!entity.equals(masterPlayer)) {
-                double playerDistanceX = entity.lastTickPosX - masterPlayer.lastTickPosX + (entity.posX - entity.lastTickPosX - (masterPlayer.posX - masterPlayer.lastTickPosX)) * event.getPartialRenderTick();
-                double playerDistanceY = entity.lastTickPosY - masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY - (masterPlayer.posY - masterPlayer.lastTickPosY)) * event.getPartialRenderTick();
-                double playerDistanceZ = entity.lastTickPosZ - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (masterPlayer.posZ - masterPlayer.lastTickPosZ)) * event.getPartialRenderTick();
+            //Translate the rider to the camera so it rotates on the proper coordinate system.
+            EntityPlayer cameraEntity = InterfaceEventsCamera.fakeCameraPlayerEntity;
+            if (cameraEntity != null) {
+                double playerDistanceX = entity.lastTickPosX - cameraEntity.lastTickPosX + (entity.posX - entity.lastTickPosX - (cameraEntity.posX - cameraEntity.lastTickPosX)) * event.getPartialRenderTick();
+                double playerDistanceY = entity.lastTickPosY - cameraEntity.lastTickPosY + (entity.posY - entity.lastTickPosY - (cameraEntity.posY - cameraEntity.lastTickPosY)) * event.getPartialRenderTick();
+                double playerDistanceZ = entity.lastTickPosZ - cameraEntity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (cameraEntity.posZ - cameraEntity.lastTickPosZ)) * event.getPartialRenderTick();
                 GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
-                InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation, false);
+                InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation);
                 GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
-            } else {
-                InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation, false);
             }
 
             needToPopMatrix = true;

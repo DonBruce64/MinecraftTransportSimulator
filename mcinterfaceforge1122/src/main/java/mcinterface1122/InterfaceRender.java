@@ -87,7 +87,7 @@ public class InterfaceRender implements IInterfaceRender {
             setInternalLightingState(false);
 
             //Apply existing transform.
-            applyTransformOpenGL(stackEntry.getValue(), false);
+            applyTransformOpenGL(stackEntry.getValue());
 
             //Need to translate back to pre-undo the renderer offset.
             float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
@@ -122,7 +122,7 @@ public class InterfaceRender implements IInterfaceRender {
         setColorState(object.color, object.alpha);
 
         GL11.glPushMatrix();
-        applyTransformOpenGL(object.transform, false);
+        applyTransformOpenGL(object.transform);
         if (object.cacheVertices) {
             if (object.cachedVertexIndex == -1) {
                 object.cachedVertexIndex = cacheVertices(object.vertices);
@@ -148,43 +148,24 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void applyTransformOpenGL(TransformationMatrix matrix, boolean inverted) {
+    public void applyTransformOpenGL(TransformationMatrix matrix) {
         buffer.clear();
-        if (inverted) {
-            buffer.put(matrix.m00);
-            buffer.put(matrix.m01);
-            buffer.put(matrix.m02);
-            buffer.put(matrix.m30);
-            buffer.put(matrix.m10);
-            buffer.put(matrix.m11);
-            buffer.put(matrix.m12);
-            buffer.put(matrix.m31);
-            buffer.put(matrix.m20);
-            buffer.put(matrix.m21);
-            buffer.put(matrix.m22);
-            buffer.put(matrix.m32);
-            buffer.put(-matrix.m03);
-            buffer.put(-matrix.m13);
-            buffer.put(-matrix.m23);
-            buffer.put(matrix.m33);
-        } else {
-            buffer.put(matrix.m00);
-            buffer.put(matrix.m10);
-            buffer.put(matrix.m20);
-            buffer.put(matrix.m30);
-            buffer.put(matrix.m01);
-            buffer.put(matrix.m11);
-            buffer.put(matrix.m21);
-            buffer.put(matrix.m31);
-            buffer.put(matrix.m02);
-            buffer.put(matrix.m12);
-            buffer.put(matrix.m22);
-            buffer.put(matrix.m32);
-            buffer.put(matrix.m03);
-            buffer.put(matrix.m13);
-            buffer.put(matrix.m23);
-            buffer.put(matrix.m33);
-        }
+        buffer.put(matrix.m00);
+        buffer.put(matrix.m10);
+        buffer.put(matrix.m20);
+        buffer.put(matrix.m30);
+        buffer.put(matrix.m01);
+        buffer.put(matrix.m11);
+        buffer.put(matrix.m21);
+        buffer.put(matrix.m31);
+        buffer.put(matrix.m02);
+        buffer.put(matrix.m12);
+        buffer.put(matrix.m22);
+        buffer.put(matrix.m32);
+        buffer.put(matrix.m03);
+        buffer.put(matrix.m13);
+        buffer.put(matrix.m23);
+        buffer.put(matrix.m33);
         buffer.flip();
         GL11.glMultMatrix(buffer);
     }

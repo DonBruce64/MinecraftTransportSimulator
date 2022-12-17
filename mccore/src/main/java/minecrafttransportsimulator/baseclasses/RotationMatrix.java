@@ -229,6 +229,16 @@ public class RotationMatrix {
     }
 
     /**
+     * Like {@link #convertToAngles()}, but this method doesn't calculate the angles.
+     * Instead, it prevents their calculation and checks on future {@link #rotate(Point3D)}
+     * and {@link #reOrigin(Point3D)} calls.  This can be done if the angles might 
+     * be not current, but this won't matter for future calls.
+     */
+    public void bypassAngles() {
+        lastAngles.set(angles);
+    }
+
+    /**
      * Rotates this matrix by the specified X-angle.
      */
     public RotationMatrix rotateX(double angle) {
