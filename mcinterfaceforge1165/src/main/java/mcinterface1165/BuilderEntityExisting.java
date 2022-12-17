@@ -2,8 +2,7 @@ package mcinterface1165;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -203,7 +202,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Check the theoretical position of the entity should it have moved.
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
-                    RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attackerMcPos, attackerMcPos.add(attacker.getDeltaMovement()));
+                    Optional<Vector3d> hitRaytrace = interactionBoxes.clip(attackerMcPos, attackerMcPos.add(attacker.getDeltaMovement()));
                     if (hitRaytrace != null) {
                         damage = new Damage(amount, interactionBoxes.lastBoxRayTraced, null, playerSource, null);
                     }
@@ -223,14 +222,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         //Override this to make interaction checks work with the multiple collision points.
         //We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
         return interactionBoxes != null ? interactionBoxes : super.getBoundingBox();
-    }
-
-    @Override
-    @Nullable
-    public AxisAlignedBB getCollisionBoundingBox() {
-        //Override this to make collision checks work with the multiple collision points.
-        //We only return collision boxes here as we don't want the player to collide with interaction boxes.
-        return collisionBoxes != null ? collisionBoxes : super.getCollisionBoundingBox();
+        //FIXME need to swap these out for collision boxes or something, to prevent excess collisions with entities.
     }
 
     @Override

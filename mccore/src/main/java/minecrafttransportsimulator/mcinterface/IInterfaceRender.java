@@ -40,11 +40,9 @@ public interface IInterfaceRender {
 
     /**
      * Applies an OpenGL transform to the current pipeline based on the
-     * passed-in matrix.  Allows for inverted transformation, should this
-     * be desired.  In this case, the rotation will be transposed and the
-     * translation will be inverted.  Fourth-row elements will be left as-is.
+     * passed-in matrix.
      */
-    void applyTransformOpenGL(TransformationMatrix matrix, boolean inverted);
+    void applyTransformOpenGL(TransformationMatrix matrix);
 
     /**
      * Deletes the cached vertices associated with the specified {@link RenderableObject}.

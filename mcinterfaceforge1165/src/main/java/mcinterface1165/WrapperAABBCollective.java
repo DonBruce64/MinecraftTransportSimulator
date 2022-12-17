@@ -5,9 +5,7 @@ import java.util.Optional;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 
 /**
@@ -32,6 +30,10 @@ class WrapperAABBCollective extends AxisAlignedBB {
         return this;
     }
 
+    //FIXME this got moved to entities, we need to intercept that call...somehow.
+    //It's a VoxelShape though, so we can't really do anything except change our AABB on the entity
+    //to be the last-collided AABB, that should trick MC into using the right box...hopefully.
+    /*
     @Override
     public double calculateXOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
@@ -53,7 +55,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
         }
         return offset;
     }
-
+    
     @Override
     public double calculateYOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
@@ -75,7 +77,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
         }
         return offset;
     }
-
+    
     @Override
     public double calculateZOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
@@ -96,7 +98,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
             }
         }
         return offset;
-    }
+    }*/
 
     @Override
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
@@ -123,31 +125,17 @@ class WrapperAABBCollective extends AxisAlignedBB {
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
         Point3D intersection = null;
-        Direction sideHit = null;
         for (BoundingBox testBox : boxes) {
             Point3D testIntersection = testBox.getIntersectionPoint(start, end);
             if (testIntersection != null) {
                 if (intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)) {
                     intersection = testIntersection;
-                    if (testIntersection.x == testBox.globalCenter.x - testBox.widthRadius) {
-                        sideHit = Direction.WEST;
-                    } else if (testIntersection.x == testBox.globalCenter.x + testBox.widthRadius) {
-                        sideHit = Direction.EAST;
-                    } else if (testIntersection.y == testBox.globalCenter.y - testBox.heightRadius) {
-                        sideHit = Direction.UP;
-                    } else if (testIntersection.y == testBox.globalCenter.y + testBox.heightRadius) {
-                        sideHit = Direction.DOWN;
-                    } else if (testIntersection.z == testBox.globalCenter.z - testBox.depthRadius) {
-                        sideHit = Direction.NORTH;
-                    } else {
-                        sideHit = Direction.SOUTH;
-                    }
                     lastBoxRayTraced = testBox;
                 }
             }
         }
         if (intersection != null) {
-            return new RayTraceResult(new Vector3d(intersection.x, intersection.y, intersection.z), sideHit);
+            return Optional.of(new Vector3d(intersection.x, intersection.y, intersection.z));
         } else {
             return null;
         }

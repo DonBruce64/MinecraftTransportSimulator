@@ -274,6 +274,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         } else {
             store.set(orientation);
         }
+        store.bypassAngles();
     }
 
     /**
