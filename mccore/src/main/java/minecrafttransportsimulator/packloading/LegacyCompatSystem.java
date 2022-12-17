@@ -1673,7 +1673,7 @@ public final class LegacyCompatSystem {
         }
          //Default duidance if not specified
         if(definition.bullet.turnRate > 0 && definition.bullet.guidanceTypes == null) {
-           definition.bullet.guidanceTypes = Collections.singletonList(GuidanceType.VISUAL);
+           definition.bullet.guidanceTypes = Collections.singletonList(GuidanceType.DEFAULT);
         }
 
         //Add damage value.
