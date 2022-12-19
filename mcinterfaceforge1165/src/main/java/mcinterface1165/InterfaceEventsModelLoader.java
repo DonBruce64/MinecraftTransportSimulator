@@ -1,7 +1,7 @@
 package mcinterface1165;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,12 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -25,23 +20,15 @@ import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.culling.ICamera;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.resources.FilePack;
+import net.minecraft.resources.IResourcePack;
+import net.minecraft.resources.ResourcePackType;
+import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.resource.VanillaResourceType;
-import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -50,72 +37,22 @@ import net.minecraftforge.fml.relauncher.Side;
  *
  * @author don_bruce
  */
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceEventsModelLoader {
 
     /**
      * Event that's called to register models.  We register our render wrapper
      * classes here, as well as all item JSONs.
      */
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
-        //Register the global entity rendering class.
-        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.class, manager -> new Render<BuilderEntityRenderForwarder>(manager) {
-            @Override
-            protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder) {
-                return null;
-            }
-
-            @Override
-            public boolean shouldRender(BuilderEntityRenderForwarder builder, ICamera camera, double camX, double camY, double camZ) {
-                //Always render the forwarder, no matter where the camera is.
-                return true;
-            }
-
-            @Override
-            public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
-                //Get all entities in the world, and render them manually for this one builder.
-                //Only do this if the player the builder is following is the client player.
-                WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
-                if (Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
-                    ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-                    if (allEntities != null) {
-                        boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
-
-                        //Use smooth shading for model rendering.
-                        GL11.glShadeModel(GL11.GL_SMOOTH);
-                        //Disable alpha testing on blended pass as it discards transparent fragments.
-                        if (blendingEnabled) {
-                            GlStateManager.disableAlpha();
-                        }
-                        //Enable normal re-scaling for model rendering.
-                        //This prevents bad lighting.
-                        GlStateManager.enableRescaleNormal();
-
-                        //Start master profiling section.
-                        for (AEntityC_Renderable entity : allEntities) {
-                            world.beginProfiling("MTSRendering", true);
-                            entity.render(blendingEnabled, partialTicks);
-                            world.endProfiling();
-                        }
-
-                        //Reset states.
-                        GL11.glShadeModel(GL11.GL_FLAT);
-                        if (blendingEnabled) {
-                            GlStateManager.enableAlpha();
-                        }
-                        GlStateManager.disableRescaleNormal();
-                    }
-                }
-            }
-        });
 
         //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
         //FAR easier than trying to use the bloody bakery system.
         //Normally we'd add our pack to the current loader, but this gets wiped out during reloads and unless we add our pack to the main list, it won't stick.
         //To do this, we use reflection to get the field from the main MC class that holds the master list to add our custom ones.
-        //((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterLoader.MODID + "_packs"));
+        //FIXME this isn't right, at all, but we can still boot!
         List<IResourcePack> defaultPacks = null;
         for (Field field : Minecraft.class.getDeclaredFields()) {
             if (field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")) {
@@ -124,7 +61,7 @@ public class InterfaceEventsModelLoader {
                         field.setAccessible(true);
                     }
 
-                    defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
+                    defaultPacks = (List<IResourcePack>) field.get(Minecraft.getInstance());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -139,11 +76,13 @@ public class InterfaceEventsModelLoader {
 
         //Now that we have the custom resource pack location, add our built-in loader.
         //This one auto-generates item JSONs.
-        defaultPacks.add(new PackResourcePack(InterfaceManager.coreModID + "_packs"));
+        //defaultPacks.add(new PackResourcePack(InterfaceManager.coreModID + "_packs"));
 
         //Now register items for the packs.
         //When we register a pack item from an external pack, we'll need to make a resource loader for it.
         //This is done to allow MC/Forge to play nice with item textures.
+        //FIXME we can't register item models anymore, we just need to make an inject the custom pack loader.
+        /*
         for (AItemBase item : BuilderItem.itemMap.keySet()) {
             if (item instanceof AItemPack) {
                 AItemPack<?> packItem = (AItemPack<?>) item;
@@ -153,20 +92,22 @@ public class InterfaceEventsModelLoader {
                 ModelLoader.setCustomModelResourceLocation(BuilderItem.itemMap.get(packItem), 0, new ModelResourceLocation(InterfaceManager.coreModID + "_packs:" + packItem.getRegistrationName(), "inventory"));
             }
         }
-
+        
         //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
         FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
+        */
     }
 
     /**
      * Custom ResourcePack class for auto-generating item JSONs.
      */
-    private static class PackResourcePack implements IResourcePack {
+    private static class PackResourcePack extends FilePack {
         private static final Map<String, PackResourcePack> createdLoaders = new HashMap<>();
         private final String domain;
         private final Set<String> domains;
 
-        private PackResourcePack(String domain) {
+        private PackResourcePack(String domain, File jarFile) {
+            super(jarFile);
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
@@ -174,7 +115,7 @@ public class InterfaceEventsModelLoader {
         }
 
         @Override
-        public InputStream getInputStream(ResourceLocation location) throws IOException {
+        public InputStream getResource(ResourcePackType type, ResourceLocation location) throws IOException {
             //Create stream return variable and get raw data.
             InputStream stream;
             String rawPackInfo = location.getPath();
@@ -314,28 +255,27 @@ public class InterfaceEventsModelLoader {
         }
 
         @Override
-        public boolean resourceExists(ResourceLocation location) {
+        public boolean hasResource(ResourcePackType type, ResourceLocation location) {
             return domains.contains(location.getNamespace()) && !location.getPath().contains("blockstates") && !location.getPath().contains("armatures") && !location.getPath().contains("mcmeta") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
         }
 
         @Override
-        public Set<String> getResourceDomains() {
+        public Set<String> getNamespaces(ResourcePackType pType) {
             return domains;
         }
 
         @Override
-        public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) {
+        public <T> T getMetadataSection(IMetadataSectionSerializer<T> pDeserializer) {
             return null;
         }
 
         @Override
-        public BufferedImage getPackImage() {
-            return null;
-        }
-
-        @Override
-        public String getPackName() {
+        public String getName() {
             return "Internal:" + domain;
+        }
+
+        @Override
+        public void close() {
         }
     }
 }

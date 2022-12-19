@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**
@@ -26,7 +25,7 @@ public interface IInterfaceRender {
      * Renders the item model for the passed-in stack.  Only
      * renders the item model: does not render text for counts.
      */
-    void renderItemModel(IWrapperItemStack stack, TransformationMatrix transform);
+    void renderItemModel(IWrapperItemStack stack, Point3D translation);
 
     /**
      * Renders the vertices stored in the passed-in {@link RenderableObject}.
@@ -39,12 +38,6 @@ public interface IInterfaceRender {
     void renderVertices(RenderableObject object);
 
     /**
-     * Applies an OpenGL transform to the current pipeline based on the
-     * passed-in matrix.
-     */
-    void applyTransformOpenGL(TransformationMatrix matrix);
-
-    /**
      * Deletes the cached vertices associated with the specified {@link RenderableObject}.
      */
     void deleteVertices(RenderableObject object);
@@ -54,29 +47,16 @@ public interface IInterfaceRender {
      * URL and then added to the texture rendering system.  The integer of the The instance
      * of the texture is cached in this class once created for later use, so feel free to not
      * cache the string URL that is passed-in.  If the texture downloading was successful, null is
-     * returned.  Otherwise, an error message is returned.  Bind the downloaded texture by calling
-     * {@link #bindTexture(String)} with the passed-in URL.
+     * returned.  Otherwise, an error message is returned.  Use the new texture by setting 
+     * {@link RenderableObject#texture} to the URL.
      */
     String downloadURLTexture(String textureURL);
-
-    /**
-     * Helper method to completely disable or enable lighting.
-     * This disables both the system lighting and internal lighting.
-     */
-    void setLightingState(boolean enabled);
 
     /**
      * Updates the internal lightmap to be consistent with the light at the
      * passed-in position.
      */
     void setLightingToPosition(Point3D position);
-
-    /**
-     * Manually enables and disables blending. Do NOT use this during normal model rendering, as it
-     * can seriously mess up states.  Only use this for simple things, like GUIs or screen overlays.
-     * This is not reset with resetting states, so make sure to turn it back off when you're done.
-     */
-    void setBlend(boolean enabled);
 
     /**
      * Returns true if bounding boxes should be rendered.

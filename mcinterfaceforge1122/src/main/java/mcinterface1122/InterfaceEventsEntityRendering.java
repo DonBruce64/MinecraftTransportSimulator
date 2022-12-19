@@ -14,15 +14,12 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelPlayer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -34,7 +31,6 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -42,7 +38,7 @@ import net.minecraftforge.fml.relauncher.Side;
 /**
  * Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
  * to handle them being in vehicles, as well as ensuring their model adapts to any objects they may be holding.
- * This also handles the final world rendering pass, which may render entities, and the 2D GUI rendering.
+ * This also handles the 2D GUI rendering.
  *
  * @author don_bruce
  */
@@ -60,45 +56,6 @@ public class InterfaceEventsEntityRendering {
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
-
-    /**
-     * World last event.  This occurs at the end of rendering in a special pass of -1.
-     * We normally don't do anything here.  The exception is if the {@link BuilderEntityRenderForwarder}
-     * didn't get rendered.  In this case, we manually render it.  The rendering pipelines
-     * of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
-     */
-    @SubscribeEvent
-    public static void on(RenderWorldLastEvent event) {
-        float partialTicks = event.getPartialTicks();
-
-        //Enable lighting as pass -1 has that disabled.
-        RenderHelper.enableStandardItemLighting();
-        //TODO check if we need this.  If so, this goes into the render interface as a block.
-        //Minecraft.getMinecraft().entityRenderer.enableLightmap();
-        InterfaceManager.renderingInterface.setLightingState(true);
-
-        //Render pass 0 and 1 here manually.
-        for (int pass = 0; pass < 2; ++pass) {
-            if (pass == 1) {
-                InterfaceManager.renderingInterface.setBlend(true);
-                GlStateManager.depthMask(false);
-            }
-
-            if (BuilderEntityRenderForwarder.lastClientInstance != null) {
-                Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, partialTicks);
-            }
-
-            if (pass == 1) {
-                InterfaceManager.renderingInterface.setBlend(false);
-                GlStateManager.depthMask(true);
-            }
-        }
-
-        //Turn lighting back off.
-        RenderHelper.disableStandardItemLighting();
-        InterfaceManager.renderingInterface.setLightingState(false);
-    }
-
     private static int lastScreenWidth;
     private static int lastScreenHeight;
 
@@ -140,62 +97,7 @@ public class InterfaceEventsEntityRendering {
                 lastScreenWidth = screenWidth;
                 lastScreenHeight = screenHeight;
             }
-
-            //Render GUIs, re-creating their components if needed.
-            //Set Y-axis to inverted to have correct orientation.
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
-
-            //Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
-            //We don't want to enable blending though, as that's on-demand.
-            //Just in case it is enabled, however, disable it.
-            //This ensures the blending state is as it will be for the main rendering pass of -1.
-            InterfaceManager.renderingInterface.setBlend(false);
-            GL11.glEnable(GL11.GL_ALPHA_TEST);
-
-            //Enable lighting.
-            RenderHelper.enableStandardItemLighting();
-            Minecraft.getMinecraft().entityRenderer.enableLightmap();
-            InterfaceManager.renderingInterface.setLightingState(true);
-
-            //Render main pass, then blended pass.
-            int displayGUIIndex = 0;
-            for (AGUIBase gui : AGUIBase.activeGUIs) {
-                if (updateGUIs || gui.components.isEmpty()) {
-                    gui.setupComponentsInit(screenWidth, screenHeight);
-                }
-                GL11.glPushMatrix();
-                if (gui.capturesPlayer()) {
-                    //Translate in front of the main GUI components.
-                    GL11.glTranslated(0, 0, 250);
-                } else {
-                    //Translate far enough to render behind the chat window.
-                    GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-                }
-                gui.render(mouseX, mouseY, false, partialTicks);
-                ((InterfaceRender) InterfaceManager.renderingInterface).renderAllStacks();
-                GL11.glPopMatrix();
-            }
-            displayGUIIndex = 0;
-            InterfaceManager.renderingInterface.setBlend(true);
-            for (AGUIBase gui : AGUIBase.activeGUIs) {
-                GL11.glPushMatrix();
-                if (gui.capturesPlayer()) {
-                    //Translate in front of the main GUI components.
-                    GL11.glTranslated(0, 0, 250);
-                } else {
-                    //Translate far enough to render behind the chat window.
-                    GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-                }
-                gui.render(mouseX, mouseY, true, partialTicks);
-                GL11.glPopMatrix();
-            }
-
-            //Set state back to normal.
-            InterfaceManager.renderingInterface.setLightingState(false);
-            Minecraft.getMinecraft().entityRenderer.disableLightmap();
-            RenderHelper.disableStandardItemLighting();
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
+            InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
         }
     }
 
@@ -255,26 +157,20 @@ public class InterfaceEventsEntityRendering {
             entity.renderYawOffset = 0;
             entity.prevRenderYawOffset = 0;
 
-            //Get total translation.
-            riderTotalTransformation.resetTransforms();
-            //riderTotalTransformation.setTranslation
-            riderTotalTransformation.setRotation(riderBodyOrientation);
-
-            //Apply scale.
-            riderTotalTransformation.applyScaling(entityScale);
-
-            //Adjust for seated offset.
-            riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-
             //Translate the rider to the camera so it rotates on the proper coordinate system.
             EntityPlayer cameraEntity = InterfaceEventsCamera.fakeCameraPlayerEntity;
             if (cameraEntity != null) {
-                double playerDistanceX = entity.lastTickPosX - cameraEntity.lastTickPosX + (entity.posX - entity.lastTickPosX - (cameraEntity.posX - cameraEntity.lastTickPosX)) * event.getPartialRenderTick();
-                double playerDistanceY = entity.lastTickPosY - cameraEntity.lastTickPosY + (entity.posY - entity.lastTickPosY - (cameraEntity.posY - cameraEntity.lastTickPosY)) * event.getPartialRenderTick();
-                double playerDistanceZ = entity.lastTickPosZ - cameraEntity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (cameraEntity.posZ - cameraEntity.lastTickPosZ)) * event.getPartialRenderTick();
-                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
-                InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation);
-                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+                //Get delta between camera and rendered entity.
+                Point3D deltaDistance = new Point3D(entity.lastTickPosX - cameraEntity.lastTickPosX + (entity.posX - entity.lastTickPosX - (cameraEntity.posX - cameraEntity.lastTickPosX)) * event.getPartialRenderTick(), entity.lastTickPosY - cameraEntity.lastTickPosY + (entity.posY - entity.lastTickPosY - (cameraEntity.posY - cameraEntity.lastTickPosY)) * event.getPartialRenderTick(), entity.lastTickPosZ - cameraEntity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (cameraEntity.posZ - cameraEntity.lastTickPosZ)) * event.getPartialRenderTick());
+
+                //Apply translations and rotations to move entity to correct position relative to the camera entity.
+                riderTotalTransformation.resetTransforms();
+                riderTotalTransformation.setTranslation(deltaDistance);
+                riderTotalTransformation.applyRotation(riderBodyOrientation);
+                riderTotalTransformation.applyScaling(entityScale);
+                riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+                riderTotalTransformation.applyInvertedTranslation(deltaDistance);
+                InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
             }
 
             needToPopMatrix = true;

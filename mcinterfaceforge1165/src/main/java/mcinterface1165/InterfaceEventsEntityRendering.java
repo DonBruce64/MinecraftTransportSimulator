@@ -5,49 +5,44 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import org.spongepowered.asm.mixin.MixinEnvironment.Side;
-
-import com.mojang.blaze3d.platform.GlStateManager;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelPlayer;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderLivingBase;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.LivingRenderer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
+import net.minecraft.client.renderer.entity.model.PlayerModel;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderSpecificHandEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
  * Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
  * to handle them being in vehicles, as well as ensuring their model adapts to any objects they may be holding.
- * This also handles the final world rendering pass, which may render entities, and the 2D GUI rendering.
+ * This also handles the 2D GUI rendering.
  *
  * @author don_bruce
  */
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceEventsEntityRendering {
     public static boolean renderCurrentRiderSitting;
     public static boolean renderCurrentRiderStanding;
@@ -61,45 +56,6 @@ public class InterfaceEventsEntityRendering {
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
-
-    /**
-     * World last event.  This occurs at the end of rendering in a special pass of -1.
-     * We normally don't do anything here.  The exception is if the {@link BuilderEntityRenderForwarder}
-     * didn't get rendered.  In this case, we manually render it.  The rendering pipelines
-     * of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
-     */
-    @SubscribeEvent
-    public static void on(RenderWorldLastEvent event) {
-        float partialTicks = event.getPartialTicks();
-
-        //Enable lighting as pass -1 has that disabled.
-        RenderHelper.enableStandardItemLighting();
-        //TODO check if we need this.  If so, this goes into the render interface as a block.
-        //Minecraft.getMinecraft().entityRenderer.enableLightmap();
-        InterfaceManager.renderingInterface.setLightingState(true);
-
-        //Render pass 0 and 1 here manually.
-        for (int pass = 0; pass < 2; ++pass) {
-            if (pass == 1) {
-                InterfaceManager.renderingInterface.setBlend(true);
-                GlStateManager.depthMask(false);
-            }
-
-            if (BuilderEntityRenderForwarder.lastClientInstance != null) {
-                Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, partialTicks);
-            }
-
-            if (pass == 1) {
-                InterfaceManager.renderingInterface.setBlend(false);
-                GlStateManager.depthMask(true);
-            }
-        }
-
-        //Turn lighting back off.
-        RenderHelper.disableStandardItemLighting();
-        InterfaceManager.renderingInterface.setLightingState(false);
-    }
-
     private static int lastScreenWidth;
     private static int lastScreenHeight;
 
@@ -118,7 +74,7 @@ public class InterfaceEventsEntityRendering {
         //If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
         if ((event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR || event.getType() == RenderGameOverlayEvent.ElementType.FOOD || event.getType() == RenderGameOverlayEvent.ElementType.HEALTH || event.getType() == RenderGameOverlayEvent.ElementType.ARMOR || event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) && (InterfaceManager.clientInterface.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)) {
             IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-            AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+            AEntityB_Existing ridingEntity = player.getEntityRiding();
             if (ridingEntity instanceof PartSeat && ((PartSeat) ridingEntity).placementDefinition.isController) {
                 event.setCanceled(true);
                 return;
@@ -132,8 +88,12 @@ public class InterfaceEventsEntityRendering {
             long displaySize = InterfaceManager.clientInterface.getPackedDisplaySize();
             int screenWidth = (int) (displaySize >> Integer.SIZE);
             int screenHeight = (int) displaySize;
-            int mouseX = Mouse.getX() * screenWidth / Minecraft.getMinecraft().displayWidth;
-            int mouseY = screenHeight - Mouse.getY() * screenHeight / Minecraft.getMinecraft().displayHeight - 1;
+            double[] xPos = new double[1];
+            double[] yPos = new double[1];
+            //FIXME this might not work if units aren't the same.
+            GLFW.glfwGetCursorPos(Minecraft.getInstance().getWindow().getWindow(), xPos, yPos);
+            int mouseX = (int) (xPos[0] * screenWidth / Minecraft.getInstance().getWindow().getWidth());
+            int mouseY = (int) (screenHeight - yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight() - 1);
 
             float partialTicks = event.getPartialTicks();
             boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
@@ -141,62 +101,7 @@ public class InterfaceEventsEntityRendering {
                 lastScreenWidth = screenWidth;
                 lastScreenHeight = screenHeight;
             }
-
-            //Render GUIs, re-creating their components if needed.
-            //Set Y-axis to inverted to have correct orientation.
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
-
-            //Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
-            //We don't want to enable blending though, as that's on-demand.
-            //Just in case it is enabled, however, disable it.
-            //This ensures the blending state is as it will be for the main rendering pass of -1.
-            InterfaceManager.renderingInterface.setBlend(false);
-            GL11.glEnable(GL11.GL_ALPHA_TEST);
-
-            //Enable lighting.
-            RenderHelper.enableStandardItemLighting();
-            Minecraft.getMinecraft().entityRenderer.enableLightmap();
-            InterfaceManager.renderingInterface.setLightingState(true);
-
-            //Render main pass, then blended pass.
-            int displayGUIIndex = 0;
-            for (AGUIBase gui : AGUIBase.activeGUIs) {
-                if (updateGUIs || gui.components.isEmpty()) {
-                    gui.setupComponentsInit(screenWidth, screenHeight);
-                }
-                GL11.glPushMatrix();
-                if (gui.capturesPlayer()) {
-                    //Translate in front of the main GUI components.
-                    GL11.glTranslated(0, 0, 250);
-                } else {
-                    //Translate far enough to render behind the chat window.
-                    GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-                }
-                gui.render(mouseX, mouseY, false, partialTicks);
-                ((InterfaceRender) InterfaceManager.renderingInterface).renderAllStacks();
-                GL11.glPopMatrix();
-            }
-            displayGUIIndex = 0;
-            InterfaceManager.renderingInterface.setBlend(true);
-            for (AGUIBase gui : AGUIBase.activeGUIs) {
-                GL11.glPushMatrix();
-                if (gui.capturesPlayer()) {
-                    //Translate in front of the main GUI components.
-                    GL11.glTranslated(0, 0, 250);
-                } else {
-                    //Translate far enough to render behind the chat window.
-                    GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-                }
-                gui.render(mouseX, mouseY, true, partialTicks);
-                GL11.glPopMatrix();
-            }
-
-            //Set state back to normal.
-            InterfaceManager.renderingInterface.setLightingState(false);
-            Minecraft.getMinecraft().entityRenderer.disableLightmap();
-            RenderHelper.disableStandardItemLighting();
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
+            InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
         }
     }
 
@@ -211,9 +116,9 @@ public class InterfaceEventsEntityRendering {
         renderCurrentRiderStanding = false;
         leftArmAngles.set(0, 0, 0);
         rightArmAngles.set(0, 0, 0);
-        EntityLivingBase entity = event.getEntity();
+        LivingEntity entity = event.getEntity();
         WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
-        AEntityE_Interactable<?> ridingEntity = entityWrapper.getEntityRiding();
+        AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
         //This may be null if MC sets this player as riding before the actual entity has time to load NBT.
         if (ridingEntity != null) {
             GL11.glPushMatrix();
@@ -248,33 +153,30 @@ public class InterfaceEventsEntityRendering {
 
             //Set the entity's head yaw to the delta between their yaw and their angled yaw.
             //This needs to be relative as we're going to render relative to the body here, not the world.
-            entity.rotationYawHead = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
-            entity.prevRotationYawHead = entity.rotationYawHead;
+            entity.yHeadRot = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
+            entity.yHeadRotO = entity.yHeadRot;
 
             //Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
             //This isn't the entity's normal yaw, which is the direction they are facing.
-            entity.renderYawOffset = 0;
-            entity.prevRenderYawOffset = 0;
-
-            //Get total translation.
-            riderTotalTransformation.resetTransforms();
-            riderTotalTransformation.setRotation(riderBodyOrientation);
-
-            //Apply scale.
-            riderTotalTransformation.applyScaling(entityScale);
-
-            //Adjust for seated offset.
-            riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+            entity.yBodyRot = 0;
+            entity.yBodyRotO = 0;
 
             //Translate the rider to the camera so it rotates on the proper coordinate system.
-            EntityPlayer cameraEntity = InterfaceEventsCamera.fakeCameraPlayerEntity;
+            PlayerEntity cameraEntity = InterfaceEventsCamera.fakeCameraPlayerEntity;
             if (cameraEntity != null) {
-                double playerDistanceX = entity.lastTickPosX - cameraEntity.lastTickPosX + (entity.posX - entity.lastTickPosX - (cameraEntity.posX - cameraEntity.lastTickPosX)) * event.getPartialRenderTick();
-                double playerDistanceY = entity.lastTickPosY - cameraEntity.lastTickPosY + (entity.posY - entity.lastTickPosY - (cameraEntity.posY - cameraEntity.lastTickPosY)) * event.getPartialRenderTick();
-                double playerDistanceZ = entity.lastTickPosZ - cameraEntity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (cameraEntity.posZ - cameraEntity.lastTickPosZ)) * event.getPartialRenderTick();
-                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
-                InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation);
-                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+                //Get delta between camera and rendered entity.
+                Vector3d cameraEntityPos = cameraEntity.position();
+                Vector3d entityPos = entity.position();
+                Point3D deltaDistance = new Point3D(entity.xo - cameraEntity.xo + (entityPos.x - entity.xo - (cameraEntityPos.x - cameraEntity.xo)) * event.getPartialRenderTick(), entity.yo - cameraEntity.yo + (entityPos.y - entity.yo - (cameraEntityPos.y - cameraEntity.yo)) * event.getPartialRenderTick(), entity.zo - cameraEntity.zo + (entityPos.z - entity.zo - (cameraEntityPos.z - cameraEntity.zo)) * event.getPartialRenderTick());
+
+                //Apply translations and rotations to move entity to correct position relative to the camera entity.
+                riderTotalTransformation.resetTransforms();
+                riderTotalTransformation.setTranslation(deltaDistance);
+                riderTotalTransformation.applyRotation(riderBodyOrientation);
+                riderTotalTransformation.applyScaling(entityScale);
+                riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+                riderTotalTransformation.applyInvertedTranslation(deltaDistance);
+                InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
             }
 
             needToPopMatrix = true;
@@ -284,11 +186,11 @@ public class InterfaceEventsEntityRendering {
         }
 
         //Check for player model tweaks and changes.
-        if (entity instanceof EntityPlayer) {
+        if (entity instanceof PlayerEntity) {
             //Check if we are holding a gun.  This is the only other time
             //we apply player tweaks besides riding in a vehicle.
             if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-                EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
+                EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUUID());
                 if (gunEntity != null && gunEntity.activeGun != null) {
                     //Get arm rotations.
                     Point3D heldVector;
@@ -298,19 +200,19 @@ public class InterfaceEventsEntityRendering {
                         heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
                     }
                     double heldVectorLength = heldVector.length();
-                    double armPitchOffset = Math.toRadians(-90 + entity.rotationPitch) - Math.asin(heldVector.y / heldVectorLength);
+                    double armPitchOffset = Math.toRadians(-90 + entity.xRot) - Math.asin(heldVector.y / heldVectorLength);
                     double armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
 
                     //Set rotation points on the model.
-                    rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                    rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
                     if (gunEntity.activeGun.isHandHeldGunAimed) {
-                        leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                        leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
                     }
 
                     //Remove the held item from the enitty's hand
-                    EntityPlayer player = (EntityPlayer) entity;
-                    heldStackHolder = player.getHeldItemMainhand();
-                    player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
+                    PlayerEntity player = (PlayerEntity) entity;
+                    heldStackHolder = player.getMainHandItem();
+                    player.inventory.setItem(player.inventory.selected, ItemStack.EMPTY);
 
                     //Flag us for player tweaks in the render.
                     needPlayerTweaks = true;
@@ -321,21 +223,21 @@ public class InterfaceEventsEntityRendering {
             boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
             boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
             if (setModelToCustom || setModelToDefault) {
-                for (Field renderManagerField : RenderManager.class.getDeclaredFields()) {
-                    if (renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")) {
+                for (Field renderManagerField : EntityRendererManager.class.getDeclaredFields()) {
+                    if (renderManagerField.getName().equals("playerRenderers") || renderManagerField.getName().equals("field_178636_l")) {
                         try {
                             if (!renderManagerField.isAccessible()) {
                                 renderManagerField.setAccessible(true);
                             }
 
                             @SuppressWarnings("unchecked")
-                            Map<String, RenderPlayer> skinMap = (Map<String, RenderPlayer>) renderManagerField.get(Minecraft.getMinecraft().getRenderManager());
+                            Map<String, PlayerRenderer> skinMap = (Map<String, PlayerRenderer>) renderManagerField.get(Minecraft.getInstance().getEntityRenderDispatcher());
                             List<String> skinTypes = new ArrayList<>(skinMap.keySet());
 
                             for (String skinType : skinTypes) {
-                                RenderPlayer render = skinMap.get(skinType);
-                                for (Field field : RenderLivingBase.class.getDeclaredFields()) {
-                                    if (field.getName().equals("mainModel") || field.getName().equals("field_77045_g")) {
+                                PlayerRenderer render = skinMap.get(skinType);
+                                for (Field field : LivingRenderer.class.getDeclaredFields()) {
+                                    if (field.getName().equals("model") || field.getName().equals("field_77045_g")) {
                                         try {
                                             if (!field.isAccessible()) {
                                                 field.setAccessible(true);
@@ -343,10 +245,10 @@ public class InterfaceEventsEntityRendering {
 
                                             if (setModelToCustom) {
                                                 overwrotePlayerModel = true;
-                                                field.set(render, new ModelPlayerCustom((ModelPlayer) field.get(render), skinType.equals("slim")));
+                                                field.set(render, new ModelPlayerCustom<>((PlayerModel<?>) field.get(render), skinType.equals("slim")));
                                             } else {
                                                 overwrotePlayerModel = false;
-                                                field.set(render, ((ModelPlayerCustom) field.get(render)).base);
+                                                field.set(render, ((ModelPlayerCustom<?>) field.get(render)).base);
                                             }
                                         } catch (Exception e) {
                                             ConfigSystem.client.renderingSettings.playerTweaks.value = false;
@@ -374,70 +276,70 @@ public class InterfaceEventsEntityRendering {
             GL11.glPopMatrix();
         }
         if (heldStackHolder != null) {
-            EntityPlayer player = (EntityPlayer) event.getEntity();
-            player.inventory.setInventorySlotContents(player.inventory.currentItem, heldStackHolder);
+            PlayerEntity player = (PlayerEntity) event.getEntity();
+            player.inventory.setItem(player.inventory.selected, heldStackHolder);
             heldStackHolder = null;
         }
     }
 
-    private static class ModelPlayerCustom extends ModelPlayer {
-        private final ModelPlayer base;
+    private static class ModelPlayerCustom<T extends LivingEntity> extends PlayerModel<T> {
+        private final PlayerModel<T> base;
 
-        private ModelPlayerCustom(ModelPlayer base, boolean smallArms) {
+        private ModelPlayerCustom(PlayerModel<T> base, boolean smallArms) {
             super(0.0F, smallArms);
             this.base = base;
         }
 
         @Override
-        public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn) {
-            super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor, entityIn);
+        public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+            super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             if (needPlayerTweaks) {
                 if (renderCurrentRiderSitting) {
-                    this.bipedLeftLeg.rotateAngleX = (float) Math.toRadians(-90);
-                    this.bipedLeftLeg.rotateAngleY = 0;
-                    this.bipedLeftLeg.rotateAngleZ = 0;
-                    copyModelAngles(this.bipedLeftLeg, this.bipedLeftLegwear);
-                    this.bipedRightLeg.rotateAngleX = (float) Math.toRadians(-90);
-                    this.bipedRightLeg.rotateAngleY = 0;
-                    this.bipedRightLeg.rotateAngleZ = 0;
-                    copyModelAngles(this.bipedRightLeg, this.bipedRightLegwear);
+                    this.leftLeg.x = (float) Math.toRadians(-90);
+                    this.leftLeg.y = 0;
+                    this.leftLeg.z = 0;
+                    this.leftPants.copyFrom(this.leftLeg);
+                    this.rightLeg.x = (float) Math.toRadians(-90);
+                    this.rightLeg.y = 0;
+                    this.rightLeg.z = 0;
+                    this.rightPants.copyFrom(this.rightLeg);
                 } else if (renderCurrentRiderStanding) {
-                    this.bipedLeftLeg.rotateAngleX = 0;
-                    this.bipedLeftLeg.rotateAngleY = 0;
-                    this.bipedLeftLeg.rotateAngleZ = 0;
-                    copyModelAngles(this.bipedLeftLeg, this.bipedLeftLegwear);
-                    this.bipedRightLeg.rotateAngleX = 0;
-                    this.bipedRightLeg.rotateAngleY = 0;
-                    this.bipedRightLeg.rotateAngleZ = 0;
-                    copyModelAngles(this.bipedRightLeg, this.bipedRightLegwear);
+                    this.leftLeg.x = 0;
+                    this.leftLeg.y = 0;
+                    this.leftLeg.z = 0;
+                    this.leftPants.copyFrom(this.leftLeg);
+                    this.rightLeg.x = 0;
+                    this.rightLeg.y = 0;
+                    this.rightLeg.z = 0;
+                    this.rightPants.copyFrom(this.rightLeg);
                 }
-                this.bipedLeftArm.rotateAngleX = (float) leftArmAngles.x;
-                this.bipedLeftArm.rotateAngleY = (float) leftArmAngles.y;
-                this.bipedLeftArm.rotateAngleZ = (float) leftArmAngles.z;
-                copyModelAngles(this.bipedLeftArm, this.bipedLeftArmwear);
-                this.bipedRightArm.rotateAngleX = (float) rightArmAngles.x;
-                this.bipedRightArm.rotateAngleY = (float) rightArmAngles.y;
-                this.bipedRightArm.rotateAngleZ = (float) rightArmAngles.z;
-                copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
+                this.leftArm.x = (float) leftArmAngles.x;
+                this.leftArm.y = (float) leftArmAngles.y;
+                this.leftArm.z = (float) leftArmAngles.z;
+                this.leftSleeve.copyFrom(this.leftArm);
+                this.rightArm.x = (float) rightArmAngles.x;
+                this.rightArm.y = (float) rightArmAngles.y;
+                this.rightArm.z = (float) rightArmAngles.z;
+                this.rightSleeve.copyFrom(this.rightArm);
             }
         }
     }
 
     /**
-     * Hand render events.  We use these to disable rendering of the item in the player's hand
+     * Hand and arm render events.  We use these to disable rendering of the item in the player's hand
      * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
      */
     @SubscribeEvent
     public static void on(RenderHandEvent event) {
-        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent
-    public static void on(RenderSpecificHandEvent event) {
-        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+    public static void on(RenderArmEvent event) {
+        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);
         }

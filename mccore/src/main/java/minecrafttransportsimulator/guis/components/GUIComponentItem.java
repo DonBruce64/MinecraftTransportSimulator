@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText;
@@ -27,7 +27,7 @@ public class GUIComponentItem extends AGUIComponent {
     public IWrapperItemStack stack;
     public List<IWrapperItemStack> stacks;
     private IWrapperItemStack stackToRender;
-    private final TransformationMatrix transform = new TransformationMatrix();
+    private final Point3D translation = new Point3D();
 
     /**
      * Default item constructor.
@@ -64,10 +64,8 @@ public class GUIComponentItem extends AGUIComponent {
         }
 
         if (stackToRender != null) {
-            transform.resetTransforms();
-            transform.setTranslation(position.x, position.y, position.z);
-            transform.applyScaling(scale, scale, scale);
-            InterfaceManager.renderingInterface.renderItemModel(stackToRender, transform);
+            translation.set(position).scale(scale);
+            InterfaceManager.renderingInterface.renderItemModel(stackToRender, translation);
 
             if (stackToRender.getSize() > 1) {
                 text = RenderText.FORMATTING_CHAR + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + stackToRender.getSize();
