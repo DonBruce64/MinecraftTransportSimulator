@@ -765,6 +765,12 @@ public final class LegacyCompatSystem {
                 muzzleGroup.muzzles.add(muzzle);
                 definition.gun.muzzleGroups.add(muzzleGroup);
             }
+            if (definition.gun.lockOnType == null) {
+                definition.gun.lockOnType = JSONPart.LockOnType.DEFAULT;
+            }
+            if (definition.gun.targetTypes == null) {
+                definition.gun.targetTypes = Collections.singletonList(JSONPart.TargetTypes.ALL);
+            }
             definition.gun.length = 0;
         }
 
@@ -1672,8 +1678,8 @@ public final class LegacyCompatSystem {
             definition.definitions.add(subDefinition);
         }
          //Default duidance if not specified
-        if(definition.bullet.turnRate > 0 && definition.bullet.guidanceTypes == null) {
-           definition.bullet.guidanceTypes = Collections.singletonList(GuidanceType.DEFAULT);
+        if(definition.bullet.turnRate > 0 && definition.bullet.guidanceType == null) {
+           definition.bullet.guidanceType = JSONBullet.GuidanceType.DEFAULT;
         }
 
         //Add damage value.
