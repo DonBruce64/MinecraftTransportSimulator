@@ -622,7 +622,7 @@ public class PartGun extends APart {
                             }
                         }
                         //Locks only onto aircraft
-                    } else if (definition.gun.targetTypes != null && !definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.AIRCRAFT)) {
+                    } else if (!definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.AIRCRAFT)) {
                         if (entityTarget == null) {
                             engineTarget = null;
                             EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
@@ -638,7 +638,7 @@ public class PartGun extends APart {
                             }
                         }
                         //Locks only onto ground vehicles
-                    } else if (definition.gun.targetTypes != null && !definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.GROUND)) {
+                    } else if (!definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.GROUND)) {
                         if (entityTarget == null) {
                             engineTarget = null;
                             EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
@@ -654,7 +654,7 @@ public class PartGun extends APart {
                             }
                         }
                         //Locks only onto players or mobs. "soft targets"
-                    } else if (definition.gun.targetTypes != null && !definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.SOFT)) {
+                    } else if (!definition.gun.targetTypes.contains(TargetTypes.ALL) && definition.gun.targetTypes.contains(TargetTypes.SOFT)) {
                         entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
                     }
                 }
