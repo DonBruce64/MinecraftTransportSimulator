@@ -1677,10 +1677,6 @@ public final class LegacyCompatSystem {
             subDefinition.subName = "";
             definition.definitions.add(subDefinition);
         }
-         //Default duidance if not specified
-        if(definition.bullet.turnRate > 0 && definition.bullet.guidanceType == null) {
-           definition.bullet.guidanceType = JSONBullet.GuidanceType.DEFAULT;
-        }
 
         //Add damage value.
         if (definition.bullet.damage == 0) {
