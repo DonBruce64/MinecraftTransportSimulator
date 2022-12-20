@@ -612,7 +612,7 @@ public class PartGun extends APart {
                         if (entityTarget == null) {
                             engineTarget = null;
                             EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                            if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
+                            if (vehicleTargeted != null) {
                                 for (APart part : vehicleTargeted.parts) {
                                     if (part instanceof PartEngine) {
                                         engineTarget = (PartEngine) part;
