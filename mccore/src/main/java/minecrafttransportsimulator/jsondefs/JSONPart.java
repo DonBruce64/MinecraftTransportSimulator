@@ -356,8 +356,8 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How a gun that has guided bullets determines if it has a lock.")
         public LockOnType lockOnType;
 
-        @JSONDescription("A list of target types for a guided weapon. Aloows fo locking one type of thing, but not another.")
-        public List<TargetTypes> targetTypes;
+        @JSONDescription("Type of target this gun can lock on to.")
+        public TargetType targetType;
         
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
@@ -461,13 +461,15 @@ public class JSONPart extends AJSONPartProvider {
         RADAR
     }
 
-    public enum TargetTypes {
+    public enum TargetType {
         @JSONDescription("Will lock on to anything. Default")
         ALL,
         @JSONDescription("Only Locks onto ground vehicles.")
         GROUND,
         @JSONDescription("Only locks on to aircraft.")
         AIRCRAFT,
+        @JSONDescription("Will lock either aircraft or ground vehicles. Hard targets.")
+        HARD,
         @JSONDescription("Only locks on to players or mobs.")
         SOFT
     }
