@@ -768,8 +768,8 @@ public final class LegacyCompatSystem {
             if (definition.gun.lockOnType == null) {
                 definition.gun.lockOnType = JSONPart.LockOnType.DEFAULT;
             }
-            if (definition.gun.targetTypes == null) {
-                definition.gun.targetTypes = Collections.singletonList(JSONPart.TargetTypes.ALL);
+            if (definition.gun.targetType == null) {
+                definition.gun.targetType = JSONPart.TargetType.ALL;
             }
             definition.gun.length = 0;
         }
