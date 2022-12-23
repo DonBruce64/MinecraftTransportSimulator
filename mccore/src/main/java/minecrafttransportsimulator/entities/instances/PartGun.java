@@ -603,69 +603,114 @@ public class PartGun extends APart {
             //Only do this once every 1/2 second.
             //First, check if the loaded bullet is guided
             if (loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0) {
-                //New lock on logic. Determines if it can lock a target
-                //Default old method of looking at it to lock. Still has its uses for realistic instances.
-                if ((definition.gun.lockOnType == null || definition.gun.lockOnType == LockOnType.DEFAULT) ) {
-                    //check for valid target type. By default it locks any entity.
-                    if (definition.gun.targetType == TargetType.ALL) {
-                        entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
-                        if (entityTarget == null) {
-                            engineTarget = null;
-                            EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                            if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
-                                for (APart part : vehicleTargeted.parts) {
-                                    if (part instanceof PartEngine) {
-                                        engineTarget = (PartEngine) part;
-                                        break;
+                switch (definition.gun.lockOnType) {
+                    case DEFAULT:{
+                        switch (definition.gun.targetType) {
+                            case ALL:{
+                                entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
+                                if (entityTarget == null) {
+                                    engineTarget = null;
+                                    EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
+                                    if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
+                                        for (APart part : vehicleTargeted.parts) {
+                                            if (part instanceof PartEngine) {
+                                                engineTarget = (PartEngine) part;
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
+                                break;
                             }
-                        }
-                        //Locks only onto aircraft
-                    } else if (definition.gun.targetType == TargetType.AIRCRAFT) {
-                        if (entityTarget == null) {
-                            engineTarget = null;
-                            EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                            if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && vehicleTargeted.definition.motorized.isAircraft) {
-                                for (APart part : vehicleTargeted.parts) {
-                                    if (part instanceof PartEngine) {
-                                        engineTarget = (PartEngine) part;
-                                        break;
+                            case AIRCRAFT:{
+                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
+                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && vehicleTargeted.definition.motorized.isAircraft) {
+                                    for (APart part : vehicleTargeted.parts) {
+                                        if (part instanceof PartEngine) {
+                                            engineTarget = (PartEngine) part;
+                                            break;
+                                        }
                                     }
                                 }
+                                break;
                             }
-                        }
-                        //Locks only onto ground vehicles
-                    } else if (definition.gun.targetType == TargetType.GROUND) {
-                        if (entityTarget == null) {
-                            engineTarget = null;
-                            EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                            if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && !vehicleTargeted.definition.motorized.isAircraft) {
-                                for (APart part : vehicleTargeted.parts) {
-                                    if (part instanceof PartEngine) {
-                                        engineTarget = (PartEngine) part;
-                                        break;
+                            case GROUND:{
+                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
+                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && !vehicleTargeted.definition.motorized.isAircraft) {
+                                    for (APart part : vehicleTargeted.parts) {
+                                        if (part instanceof PartEngine) {
+                                            engineTarget = (PartEngine) part;
+                                            break;
+                                        }
                                     }
                                 }
+                                break;
                             }
-                        }
-                        //Locks only onto players or mobs. "soft targets"
-                    } else if (definition.gun.targetType == TargetType.HARD) {
-                        if (entityTarget == null) {
-                            engineTarget = null;
-                            EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                            if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
-                                for (APart part : vehicleTargeted.parts) {
-                                    if (part instanceof PartEngine) {
-                                        engineTarget = (PartEngine) part;
-                                        break;
+                            case HARD:{
+                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
+                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
+                                    for (APart part : vehicleTargeted.parts) {
+                                        if (part instanceof PartEngine) {
+                                            engineTarget = (PartEngine) part;
+                                            break;
+                                        }
                                     }
                                 }
+                                break;
+                            }
+                            case SOFT:{
+                                entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
+                                break;
                             }
                         }
-                        //Locks onto either ground or air vehicles.
-                    } else if (definition.gun.targetType == TargetType.SOFT) {
-                        entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
+                        break;
+                    }
+                    case BORESIGHT:{
+                        //Sees the closest target within a specified range and angle in front of the gun itself
+                        //rather than what the player looks at.
+                        switch (definition.gun.targetType) {
+                            case ALL: {
+                                break;
+                            }
+                            case AIRCRAFT: {
+                                break;
+                            }
+                            case GROUND: {
+                                break;
+                            }
+                            case HARD: {
+                                break;
+                            }
+                            case SOFT: {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case RADAR:{
+                        //select a specific target and lock the vehicle entity itself rather than the engine.
+                        switch (definition.gun.targetType) {
+                            case ALL: {
+                                break;
+                            }
+                            case AIRCRAFT: {
+                                break;
+                            }
+                            case GROUND: {
+                                break;
+                            }
+                            case HARD: {
+                                break;
+                            }
+                            case SOFT: {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case MANUAL:{
+                        //laser guidance. Just goes where the player or camera is pointed.
+                        break;
                     }
                 }
             }
