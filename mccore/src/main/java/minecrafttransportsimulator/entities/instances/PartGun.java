@@ -670,18 +670,102 @@ public class PartGun extends APart {
                         //rather than what the player looks at.
                         switch (definition.gun.targetType) {
                             case ALL: {
+                                //Impractical to use this
                                 break;
                             }
                             case AIRCRAFT: {
+                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
+                                EntityVehicleF_Physics closestVehicle;
+                                IWrapperEntity closestMob;
+                                double minDist = definition.gun.lockRange;
+                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
+                                    double dist = ivEntity.position.distanceTo(position);
+                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || !ivEntity.definition.motorized.isAircraft) {
+                                        engineTarget = null;
+                                    } else {
+                                        closestVehicle = ivEntity;
+                                        minDist = dist;
+                                        for (APart part : closestVehicle.parts) {
+                                            if (part instanceof PartEngine) {
+                                                engineTarget = (PartEngine) part;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 break;
                             }
                             case GROUND: {
+                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
+                                EntityVehicleF_Physics closestVehicle;
+                                IWrapperEntity closestMob;
+                                double minDist = definition.gun.lockRange;
+                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
+                                    double dist = ivEntity.position.distanceTo(position);
+                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || ivEntity.definition.motorized.isAircraft) {
+                                        engineTarget = null;
+                                    } else {
+                                        closestVehicle = ivEntity;
+                                        minDist = dist;
+                                        for (APart part : closestVehicle.parts) {
+                                            if (part instanceof PartEngine) {
+                                                engineTarget = (PartEngine) part;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 break;
                             }
                             case HARD: {
+                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
+                                EntityVehicleF_Physics closestVehicle;
+                                IWrapperEntity closestMob;
+                                double minDist = definition.gun.lockRange;
+                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
+                                    double dist = ivEntity.position.distanceTo(position);
+                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn) {
+                                        engineTarget = null;
+                                    } else {
+                                        closestVehicle = ivEntity;
+                                        minDist = dist;
+                                        for (APart part : closestVehicle.parts) {
+                                            if (part instanceof PartEngine) {
+                                                engineTarget = (PartEngine) part;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 break;
                             }
                             case SOFT: {
+                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
+                                IWrapperEntity closestEnt;
+                                double minDist = definition.gun.lockRange;
+                                for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, minDist,minDist,minDist))) {
+                                    Point3D vecToTarget = entity.getPosition().copy().subtract(position).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
+                                    double dist = entity.getPosition().distanceTo(position);
+                                    if (targetAngle > definition.gun.lockMaxAngle || dist > minDist) {
+                                        entityTarget = null;
+                                    } else {
+                                        closestEnt = entity;
+                                        //Don't target ourself
+                                        if (closestEnt == controller) {
+                                            entityTarget = null;
+                                        } else {
+                                            entityTarget = closestEnt;
+                                            break;
+                                        }
+                                    }
+                                }
                                 break;
                             }
                         }
