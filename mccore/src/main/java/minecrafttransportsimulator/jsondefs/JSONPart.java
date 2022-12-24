@@ -93,6 +93,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
         public boolean canBeRemovedByHand;
 
+        @JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
+        public boolean mustBeRemovedByScrewdriver;
+
         @JSONDescription("If true, this part will forward damage onto the vehicle it is on when hit by a bullet.  This will also cause the bullet to stop when it hits this part.  Engines ignore this behavior and always forward damage.")
         public boolean forwardsDamage;
 
