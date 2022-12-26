@@ -623,6 +623,7 @@ public class PartGun extends APart {
                                 break;
                             }
                             case AIRCRAFT:{
+                                engineTarget = null;
                                 EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
                                 if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && vehicleTargeted.definition.motorized.isAircraft) {
                                     for (APart part : vehicleTargeted.parts) {
@@ -635,6 +636,7 @@ public class PartGun extends APart {
                                 break;
                             }
                             case GROUND:{
+                                engineTarget = null;
                                 EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
                                 if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && !vehicleTargeted.definition.motorized.isAircraft) {
                                     for (APart part : vehicleTargeted.parts) {
@@ -647,6 +649,7 @@ public class PartGun extends APart {
                                 break;
                             }
                             case HARD:{
+                                engineTarget = null;
                                 EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
                                 if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
                                     for (APart part : vehicleTargeted.parts) {
