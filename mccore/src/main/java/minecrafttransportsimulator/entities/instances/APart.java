@@ -339,7 +339,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public boolean canBeClicked() {
-        return entityOn.isVariableListTrue(placementDefinition.interactableVariables) ? entityOn.canBeClicked() : false;
+        return entityOn.isVariableListTrue(placementDefinition.interactableVariables) && entityOn.canBeClicked();
     }
 
     /**
