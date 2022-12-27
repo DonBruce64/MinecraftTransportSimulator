@@ -679,18 +679,21 @@ public class PartGun extends APart {
                             case AIRCRAFT: {
                                 Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
                                 EntityVehicleF_Physics closestVehicle;
-                                IWrapperEntity closestMob;
+                                EntityVehicleF_Physics closestTarget;
                                 double minDist = definition.gun.lockRange;
                                 for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                                     Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
                                     double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
                                     double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || !ivEntity.definition.motorized.isAircraft) {
+                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || !ivEntity.definition.motorized.isAircraft) {
                                         engineTarget = null;
                                     } else {
                                         closestVehicle = ivEntity;
+                                    }
+                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
                                         minDist = dist;
-                                        for (APart part : closestVehicle.parts) {
+                                        closestTarget = closestVehicle;
+                                        for (APart part : closestTarget.parts) {
                                             if (part instanceof PartEngine) {
                                                 engineTarget = (PartEngine) part;
                                                 break;
@@ -703,18 +706,21 @@ public class PartGun extends APart {
                             case GROUND: {
                                 Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
                                 EntityVehicleF_Physics closestVehicle;
-                                IWrapperEntity closestMob;
+                                EntityVehicleF_Physics closestTarget;
                                 double minDist = definition.gun.lockRange;
                                 for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                                     Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
                                     double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
                                     double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || ivEntity.definition.motorized.isAircraft) {
+                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || ivEntity.definition.motorized.isAircraft) {
                                         engineTarget = null;
                                     } else {
                                         closestVehicle = ivEntity;
+                                    }
+                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
                                         minDist = dist;
-                                        for (APart part : closestVehicle.parts) {
+                                        closestTarget = closestVehicle;
+                                        for (APart part : closestTarget.parts) {
                                             if (part instanceof PartEngine) {
                                                 engineTarget = (PartEngine) part;
                                                 break;
@@ -727,18 +733,21 @@ public class PartGun extends APart {
                             case HARD: {
                                 Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
                                 EntityVehicleF_Physics closestVehicle;
-                                IWrapperEntity closestMob;
+                                EntityVehicleF_Physics closestTarget;
                                 double minDist = definition.gun.lockRange;
                                 for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                                     Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
                                     double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
                                     double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || ivEntity.outOfHealth || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn) {
+                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn) {
                                         engineTarget = null;
                                     } else {
                                         closestVehicle = ivEntity;
+                                    }
+                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
                                         minDist = dist;
-                                        for (APart part : closestVehicle.parts) {
+                                        closestTarget = closestVehicle;
+                                        for (APart part : closestTarget.parts) {
                                             if (part instanceof PartEngine) {
                                                 engineTarget = (PartEngine) part;
                                                 break;
