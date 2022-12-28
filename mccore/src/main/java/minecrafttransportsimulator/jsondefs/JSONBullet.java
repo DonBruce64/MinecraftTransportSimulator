@@ -88,4 +88,5 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
         ARMOR_PIERCING
     }
+    
 }

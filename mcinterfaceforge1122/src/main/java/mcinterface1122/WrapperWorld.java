@@ -215,7 +215,7 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
         List<IWrapperEntity> entities = new ArrayList<>();
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
-            if (!(entity instanceof ABuilderEntityBase)) {
+            if (entity instanceof EntityLivingBase) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
             }
         }
@@ -232,30 +232,6 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
         return entities;
-    }
-
-    @Override
-    public IWrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchDistance, boolean generalArea) {
-        double smallestDistance = searchDistance * 2;
-        Entity foundEntity = null;
-        Entity mcLooker = ((WrapperEntity) entityLooking).entity;
-        Vec3d raytraceStart = mcLooker.getPositionVector().add(0, (entityLooking.getEyeHeight() + entityLooking.getSeatOffset()), 0);
-        Point3D lookerLos = entityLooking.getLineOfSight(searchDistance);
-        Vec3d raytraceEnd = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
-        for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchDistance))) {
-            if (!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getRidingEntity())) {
-                float distance = mcLooker.getDistance(entity);
-                if (distance < smallestDistance) {
-                    AxisAlignedBB testBox = generalArea ? entity.getEntityBoundingBox().grow(2F * distance / searchDistance) : entity.getEntityBoundingBox();
-                    RayTraceResult rayTrace = testBox.calculateIntercept(raytraceStart, raytraceEnd);
-                    if (rayTrace != null) {
-                        smallestDistance = distance;
-                        foundEntity = entity;
-                    }
-                }
-            }
-        }
-        return WrapperEntity.getWrapperFor(foundEntity);
     }
 
     @Override

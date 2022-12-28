@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 
 /**
  * Class that manages entities in a world or other area.
@@ -64,43 +63,6 @@ public class EntityManager {
             entitiesByClass.put(entityClass, classListing);
         }
         return classListing;
-    }
-
-    /**
-     * Returns the closest entity of the specified class that intersects the ray-traced line,
-     * or null if none does. This up-scales the entity Bounding Boxes to
-     * allow for a somewhat easier targeting scheme if generalArea is true.
-     */
-    public <EntityType extends AEntityE_Interactable<?>> EntityType getRaytraced(Class<EntityType> entityClass, Point3D start, Point3D end, boolean generalArea, EntityType entityToIgnore) {
-        BoundingBox closestBox = null;
-        EntityType closestEntity = null;
-        BoundingBox clickBounds = new BoundingBox(start, end);
-        for (EntityType entity : getEntitiesOfType(entityClass)) {
-            if (!entity.equals(entityToIgnore) && entity.encompassingBox.intersects(clickBounds)) {
-                //Could have hit this entity, check if we did via raytracing.
-                for (BoundingBox box : entity.getInteractionBoxes()) {
-                    boolean intersects;
-                    if (generalArea) {
-                        box.widthRadius += 2;
-                        box.heightRadius += 2;
-                        box.depthRadius += 2;
-                        intersects = box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null;
-                        box.widthRadius -= 2;
-                        box.heightRadius -= 2;
-                        box.depthRadius -= 2;
-                    } else {
-                        intersects = box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null;
-                    }
-                    if (intersects) {
-                        if (closestBox == null || start.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
-                            closestBox = box;
-                            closestEntity = entity;
-                        }
-                    }
-                }
-            }
-        }
-        return closestEntity;
     }
 
     /**

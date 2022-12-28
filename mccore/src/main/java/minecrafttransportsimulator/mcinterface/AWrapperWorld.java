@@ -117,13 +117,6 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius);
 
     /**
-     * Returns the closest entity whose collision boxes are intercepted by the
-     * passed-in entity's line of sight.  This up-scales the entity Bounding Boxes to
-     * allow for a somewhat easier targeting scheme if generalArea is true.
-     */
-    public abstract IWrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchDistance, boolean generalArea);
-
-    /**
      * Spawns the brand-new entity into the world.
      */
     public abstract void spawnEntity(AEntityB_Existing entity);

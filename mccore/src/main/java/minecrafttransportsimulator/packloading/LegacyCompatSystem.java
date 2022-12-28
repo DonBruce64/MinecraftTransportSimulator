@@ -764,6 +764,12 @@ public final class LegacyCompatSystem {
                 muzzleGroup.muzzles.add(muzzle);
                 definition.gun.muzzleGroups.add(muzzleGroup);
             }
+            if (definition.gun.lockOnType == null) {
+                definition.gun.lockOnType = JSONPart.LockOnType.DEFAULT;
+            }
+            if (definition.gun.targetType == null) {
+                definition.gun.targetType = JSONPart.TargetType.ALL;
+            }
             definition.gun.length = 0;
         }
 
