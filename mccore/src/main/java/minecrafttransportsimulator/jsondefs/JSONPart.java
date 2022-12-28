@@ -433,6 +433,12 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
         public float defaultPitch;
+        
+        @JSONDescription("How far away the gun will be able to lock targets.")
+        public int lockRange;
+
+        @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
+        public double lockMaxAngle;
 
         @JSONRequired(dependentField = "handHeld", dependentValues = {"true"})
         @JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
