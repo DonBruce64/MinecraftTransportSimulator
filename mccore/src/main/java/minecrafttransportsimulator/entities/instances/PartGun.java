@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
@@ -99,9 +100,12 @@ public class PartGun extends APart {
     private final RotationMatrix firingSpreadRotation = new RotationMatrix();
     private final RotationMatrix pitchMuzzleRotation = new RotationMatrix();
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
+    private final Point3D normalizedConeVector = new Point3D();
+    private final Point3D normalizedEntityVector = new Point3D();
 
     //Global data.
     private static final int RAYTRACE_DISTANCE = 750;
+    private static final double DEFAULT_CONE_ANGLE = 2.0;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
@@ -603,6 +607,101 @@ public class PartGun extends APart {
             //Only do this once every 1/2 second.
             //First, check if the loaded bullet is guided
             if (loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0) {
+                //We are the type of bullet to get a target, figure out if we need one, or we don't do auto-targeting.
+                //If we do auto-target, we need to create a vector to look though.
+                Point3D startPoint = null;
+                Point3D searchVector;
+                double coneAngle;
+                switch (definition.gun.lockOnType) {
+                    case DEFAULT: {
+                        //Default gets target based on controller eyes and where they are looking.
+                        //Need to get their eye position though, not their main position, for accurate targeting.
+                        //Also, don't use gun max distance here, since that's only for boresight.
+                        startPoint = controller.getPosition().add(0, (controller.getEyeHeight() + controller.getSeatOffset()), 0);
+                        searchVector = controller.getLineOfSight(RAYTRACE_DISTANCE);
+                        coneAngle = DEFAULT_CONE_ANGLE;
+                        break;
+                    }
+                    case BORESIGHT: {
+                        //Boresight gets target based on gun position and barrel orientation, rather than player.
+                        startPoint = position;
+                        searchVector = new Point3D(0, 0, definition.gun.lockRange).rotate(orientation);
+                        coneAngle = definition.gun.lockMaxAngle;
+                        break;
+                    }
+                    case RADAR: {
+                        //Set target here immediately.
+                        break;
+                    }
+                    case MANUAL: {
+                        //No target to set, and no actions to perform.
+                        break;
+                    }
+                }
+
+                //If we are the type of gun that needs to lock-on, try to do so now.
+                //First set targets to null to clear any existing targets.
+                engineTarget = null;
+                entityTarget = null;
+
+                //If we have a start point, it means we're a cone-based target system and need to find a target.
+                if (startPoint != null) {
+                    //First check for hard targets, since those are more dangerous.
+                    if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.HARD || definition.gun.targetType == TargetType.AIRCRAFT || definition.gun.targetType == TargetType.GROUND) {
+                        normalizedConeVector.set(searchVector).normalize();
+                        EntityVehicleF_Physics vehicleTarget = null;
+                        double smallestDistance = searchVector.length();
+                        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                            //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
+                            if (vehicle != vehicleOn && !vehicle.outOfHealth && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
+                                double entityDistance = vehicle.position.distanceTo(startPoint);
+                                if (entityDistance < smallestDistance) {
+                                    //Potential match by distance, check if the entity is inside the cone.
+                                    normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                    if (targetAngle < coneAngle) {
+                                        smallestDistance = entityDistance;
+                                        vehicleTarget = vehicle;
+                                    }
+                                }
+                            }
+                        }
+
+                        //If we found a vehicle, get the engine to target.
+                        if (vehicleTarget != null) {
+                            for (APart part : vehicleTarget.parts) {
+                                if (part instanceof PartEngine) {
+                                    engineTarget = (PartEngine) part;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    //If we didn't find a hard vehicle target, try and get a soft one.
+                    if (engineTarget == null && definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.SOFT) {
+                        normalizedConeVector.set(searchVector).normalize();
+                        IWrapperEntity foundEntity = null;
+                        double smallestDistance = searchVector.length();
+                        BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
+                        for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
+                            if (entity.isValid() && entity != lastController) {
+                                double entityDistance = entity.getPosition().distanceTo(startPoint);
+                                if (entityDistance < smallestDistance) {
+                                    //Potential match by distance, check if the entity is inside the cone.
+                                    normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
+                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                    if (targetAngle < coneAngle) {
+                                        smallestDistance = entityDistance;
+                                        entityTarget = entity;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*
                 switch (definition.gun.lockOnType) {
                     case DEFAULT:{
                         switch (definition.gun.targetType) {
@@ -808,7 +907,7 @@ public class PartGun extends APart {
                         //laser guidance. Just goes where the player or camera is pointed.
                         break;
                     }
-                }
+                }*/
             }
 
             //If we are holding the trigger, request to fire.
