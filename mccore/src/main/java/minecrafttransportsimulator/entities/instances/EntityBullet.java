@@ -127,7 +127,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
             //Check to make sure we haven't gone too many ticks.
             if (ticksExisted > definition.bullet.burnTime + despawnTime) {
-                displayDebugMessage("TIEMOUT");
+                displayDebugMessage("TIMEOUT");
                 remove();
                 return;
             }

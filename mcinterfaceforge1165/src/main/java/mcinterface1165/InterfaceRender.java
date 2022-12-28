@@ -24,6 +24,7 @@ import org.lwjgl.opengl.GL11;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
@@ -43,14 +44,18 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -76,6 +81,8 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
+    private static MatrixStack matrixStack;
+    private static IRenderTypeBuffer renderBuffer;
 
     @Override
     public float[] getBlockBreakTexture(AWrapperWorld world, Point3D position) {
@@ -114,7 +121,6 @@ public class InterfaceRender implements IInterfaceRender {
         } else {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
-        GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
 
         GL11.glPushMatrix();
         applyTransformOpenGL(object.transform);
@@ -222,12 +228,14 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders a set of raw vertices without any caching.
      */
-    private static void renderVertices(FloatBuffer vertices) {
+    private static void renderVertices(FloatBuffer vertices, ColorRGB color) {
+
         GL11.glBegin(GL11.GL_TRIANGLES);
         while (vertices.hasRemaining()) {
             GL11.glNormal3f(vertices.get(), vertices.get(), vertices.get());
             GL11.glTexCoord2f(vertices.get(), vertices.get());
             GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
+            GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
         }
         GL11.glEnd();
         //Rewind buffer for next read.
@@ -238,10 +246,20 @@ public class InterfaceRender implements IInterfaceRender {
      * Renders a set of raw lines without any caching.
      */
     private static void renderLines(FloatBuffer vertices, float width) {
+        //pBuffer.getBuffer(RenderType.lines())
+        if (pEntity instanceof LivingEntity) {
+            float f1 = 0.01F;
+            WorldRenderer.renderLineBox(pMatrixStack, pBuffer, (double) (-f), (double) (pEntity.getEyeHeight() - 0.01F), (double) (-f), (double) f, (double) (pEntity.getEyeHeight() + 0.01F), (double) f, 1.0F, 0.0F, 0.0F, 1.0F);
+        }
+        Vector3d vector3d = pEntity.getViewVector(pPartialTicks);
+        Matrix4f matrix4f = pMatrixStack.last().pose();
+        pBuffer.vertex(matrix4f, 0.0F, pEntity.getEyeHeight(), 0.0F).color(0, 0, 255, 255).endVertex();
+        pBuffer.vertex(matrix4f, (float) (vector3d.x * 2.0D), (float) ((double) pEntity.getEyeHeight() + vector3d.y * 2.0D), (float) (vector3d.z * 2.0D)).color(0, 0, 255, 255).endVertex();
         GL11.glLineWidth(width);
         GL11.glBegin(GL11.GL_LINES);
         while (vertices.hasRemaining()) {
             GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
+            GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
         }
         GL11.glEnd();
         //Rewind buffer for next read.
@@ -523,14 +541,15 @@ public class InterfaceRender implements IInterfaceRender {
             }
 
             @Override
-            public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight) {
+            public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
                 //Get all entities in the world, and render them manually for this one builder.
                 //Only do this if the player the builder is following is the client player.
                 WrapperWorld world = WrapperWorld.getWrapperFor(builder.level);
                 if (Minecraft.getInstance().player.equals(builder.playerFollowing)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
                     if (allEntities != null) {
-
+                        matrixStack = stack;
+                        renderBuffer = buffer;
                         buffer.getBuffer(RenderType.solid());
 
                         //Use smooth shading for model rendering.
