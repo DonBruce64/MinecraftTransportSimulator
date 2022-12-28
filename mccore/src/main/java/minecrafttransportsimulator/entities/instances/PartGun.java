@@ -653,7 +653,7 @@ public class PartGun extends APart {
                         double smallestDistance = searchVector.length();
                         for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                             //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
-                            if (vehicle != vehicleOn && !vehicle.outOfHealth && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
+                            if (vehicle != vehicleOn && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
                                 double entityDistance = vehicle.position.distanceTo(startPoint);
                                 if (entityDistance < smallestDistance) {
                                     //Potential match by distance, check if the entity is inside the cone.
@@ -668,7 +668,7 @@ public class PartGun extends APart {
                         }
 
                         //If we found a vehicle, get the engine to target.
-                        if (vehicleTarget != null) {
+                        if (vehicleTarget != null && !vehicleTarget.outOfHealth) {
                             for (APart part : vehicleTarget.parts) {
                                 if (part instanceof PartEngine) {
                                     engineTarget = (PartEngine) part;
