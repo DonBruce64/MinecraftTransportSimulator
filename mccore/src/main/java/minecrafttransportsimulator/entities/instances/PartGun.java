@@ -610,8 +610,8 @@ public class PartGun extends APart {
                 //We are the type of bullet to get a target, figure out if we need one, or we don't do auto-targeting.
                 //If we do auto-target, we need to create a vector to look though.
                 Point3D startPoint = null;
-                Point3D searchVector;
-                double coneAngle;
+                Point3D searchVector = null;
+                double coneAngle = 0;
                 switch (definition.gun.lockOnType) {
                     case DEFAULT: {
                         //Default gets target based on controller eyes and where they are looking.
@@ -681,7 +681,6 @@ public class PartGun extends APart {
                     //If we didn't find a hard vehicle target, try and get a soft one.
                     if (engineTarget == null && definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.SOFT) {
                         normalizedConeVector.set(searchVector).normalize();
-                        IWrapperEntity foundEntity = null;
                         double smallestDistance = searchVector.length();
                         BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
                         for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
