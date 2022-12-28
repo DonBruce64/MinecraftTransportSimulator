@@ -54,13 +54,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 
     @Override
     public boolean canBreakBlocks() {
-        return !definition.item.type.equals(ItemComponentType.WRENCH);
+        return !(definition.item.type.equals(ItemComponentType.WRENCH) || definition.item.type.equals(ItemComponentType.SCREWDRIVER));
     }
 
     @Override
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
         switch (definition.item.type) {
-            case WRENCH: {
+	    	case WRENCH: 
+	    	case SCREWDRIVER: {
                 if (!entity.world.isClient()) {
                     //If the player isn't the owner of the entity, they can't interact with it.
                     if (!ownerState.equals(PlayerOwnerState.USER)) {

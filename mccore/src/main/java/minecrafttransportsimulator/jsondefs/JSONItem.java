@@ -97,6 +97,8 @@ public class JSONItem extends AJSONItem {
         SCANNER,
         @JSONDescription("Creates an item that works as a wrench.")
         WRENCH,
+        @JSONDescription("Creates an item that works as a screwdriver.")
+        SCREWDRIVER,
         @JSONDescription("Creates an item that works as a paint gun.")
         PAINT_GUN,
         @JSONDescription("Creates an item that works as a key.")
