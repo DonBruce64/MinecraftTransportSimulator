@@ -801,6 +801,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return ((rotation.angles.z) / 10 + rotation.angles.y) / 0.15D * 25;
             case ("turn_indicator"):
                 return (rotation.angles.y) / 0.15F * 25F;
+            case ("pitch_indicator"):
+                return (rotation.angles.x) / 0.15F * 25F;
             case ("slip"):
                 return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
             case ("gear_moving"):
