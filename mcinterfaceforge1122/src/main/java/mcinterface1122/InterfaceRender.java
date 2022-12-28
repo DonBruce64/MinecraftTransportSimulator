@@ -194,8 +194,7 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void setLightingToPosition(Point3D position) {
-        //Get lighting 1 block above position, as actual position will result in blocked light.
-        int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y + 1, position.z), 0);
+        int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar % 65536, lightVar / 65536);
     }
 

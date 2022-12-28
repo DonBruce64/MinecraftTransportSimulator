@@ -215,8 +215,7 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void setLightingToPosition(Point3D position) {
-        //Get lighting 1 block above position, as actual position will result in blocked light.
-        BlockPos pos = new BlockPos(position.x, position.y + 1, position.z);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
         currentPackedLight = LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.SKY, pos), Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos));
     }
 
