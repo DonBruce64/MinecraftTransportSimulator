@@ -685,7 +685,7 @@ public class PartGun extends APart {
                         double smallestDistance = searchVector.length();
                         BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
                         for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
-                            if (entity.isValid() && entity != lastController) {
+                            if (entity.isValid() && entity != controller) {
                                 double entityDistance = entity.getPosition().distanceTo(startPoint);
                                 if (entityDistance < smallestDistance) {
                                     //Potential match by distance, check if the entity is inside the cone.
