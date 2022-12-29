@@ -7,7 +7,6 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -69,7 +68,6 @@ public class CameraSystem {
         //Get variables.
         AEntityB_Existing ridingEntity = player.getEntityRiding();
         PartSeat sittingSeat = ridingEntity instanceof PartSeat ? (PartSeat) ridingEntity : null;
-        EntityVehicleF_Physics ridingVehicle = sittingSeat != null ? sittingSeat.vehicleOn : null;
         EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 
         //Reset FOV, sensitivity, overlay, and effect.
@@ -113,14 +111,14 @@ public class CameraSystem {
                 AEntityD_Definable<?> cameraProvider = null;
                 AnimationSwitchbox switchbox = null;
 
-                if (ridingVehicle != null) {
-                    camera = checkProviderForCameras(ridingVehicle, partialTicks);
+                if (sittingSeat != null) {
+                    camera = checkProviderForCameras(sittingSeat.masterEntity, partialTicks);
                     if (camera != null) {
-                        cameraProvider = ridingVehicle;
-                        switchbox = ridingVehicle.cameraSwitchboxes.get(camera);
+                        cameraProvider = sittingSeat.masterEntity;
+                        switchbox = sittingSeat.masterEntity.cameraSwitchboxes.get(camera);
                     }
                     if (camera == null) {
-                        for (APart part : ridingVehicle.allParts) {
+                        for (APart part : sittingSeat.masterEntity.allParts) {
                             camera = checkProviderForCameras(part, partialTicks);
                             if (camera != null) {
                                 cameraProvider = part;
@@ -249,10 +247,10 @@ public class CameraSystem {
             //If we do have custom cameras, use them instead.
             if (sittingSeat != null) {
                 if (InterfaceManager.clientInterface.changedCameraState()) {
-                    if (ridingVehicle.definition.rendering.cameraObjects != null) {
+                    if (sittingSeat.masterEntity.definition.rendering != null && sittingSeat.masterEntity.definition.rendering.cameraObjects != null) {
                         InterfaceManager.clientInterface.toggleFirstPerson();
                     } else {
-                        for (APart part : ridingVehicle.allParts) {
+                        for (APart part : sittingSeat.masterEntity.allParts) {
                             if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
                                 InterfaceManager.clientInterface.toggleFirstPerson();
                                 break;
