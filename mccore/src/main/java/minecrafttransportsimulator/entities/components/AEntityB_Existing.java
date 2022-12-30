@@ -142,7 +142,11 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 rider.setVelocity(motion);
                 prevRiderRelativeOrientation.set(riderRelativeOrientation);
                 riderRelativeOrientation.angles.y += rider.getYawDelta();
-                riderRelativeOrientation.angles.x += rider.getPitchDelta();
+                //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
+                float pitchDelta = rider.getPitchDelta();
+                if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
+                    riderRelativeOrientation.angles.x += pitchDelta;
+                }
                 riderRelativeOrientation.updateToAngles();
                 riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
                 rider.setOrientation(riderTempMatrix);
@@ -274,7 +278,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         } else {
             store.set(orientation);
         }
-        store.bypassAngles();
     }
 
     /**

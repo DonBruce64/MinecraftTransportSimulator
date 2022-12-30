@@ -235,6 +235,7 @@ public class RotationMatrix {
      * be not current, but this won't matter for future calls.
      */
     public void bypassAngles() {
+        angles.set(0, 0, 0);
         lastAngles.set(angles);
     }
 
@@ -401,6 +402,10 @@ public class RotationMatrix {
 
     /**
      * Interpolates between the two passed-in matrixes, storing the result in this matrix.
+     * Note that this matrix is told to bypass rotation-angle checks after this
+     * call, since interpolation changes the matrix elements, not the angles,
+     * and it is assumed that rotation about this matrix will be more
+     * probable than using the actual angles for some operation.
      */
     public void interploate(RotationMatrix start, RotationMatrix end, double delta) {
         //Convert start and end matrix to quaternions.
@@ -461,5 +466,7 @@ public class RotationMatrix {
         m02 = (2.0 * (quatNeti * quatNetk + quatNetr * quatNetj));
         m12 = (2.0 * (quatNetj * quatNetk - quatNetr * quatNeti));
         m22 = (1.0 - 2.0 * quatNeti * quatNeti - 2.0 * quatNetj * quatNetj);
+
+        bypassAngles();
     }
 }
