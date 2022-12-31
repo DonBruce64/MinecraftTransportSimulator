@@ -635,10 +635,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else if (definition.motorized.isAircraft && autopilotSetting != 0) {
             //Normal aircraft.  Do autopilot operations if required.
             //If we are not flying at a steady elevation, angle the elevator to compensate
-            if (-motion.y * 100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM) {
+            if (-motion.y * 10 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM) {
                 setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 0.1));
-            } else if (-motion.y * 100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM) {
+            } else if (-motion.y * 10 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM) {
                 setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -0.1));
             }
