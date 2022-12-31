@@ -96,10 +96,17 @@ public class RenderableModelObject {
     public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
+        JSONAnimatedObject objectDef = entity.animatedObjectDefinitions.get(object.name);
         JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
-        if (shouldRender(entity, lightDef, blendingEnabled, partialTicks)) {
+        if (shouldRender(entity, objectDef, lightDef, blendingEnabled, partialTicks)) {
             AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(object.name);
-            if (switchbox == null || switchbox.runSwitchbox(partialTicks, false)) {
+            if (objectDef == null || objectDef.blendedAnimations || switchbox == null || switchbox.runSwitchbox(partialTicks, false)) {
+                //If we are a blended animation object, run the switchbox.
+                //We won't have done this in the IF statement.
+                if (objectDef != null && objectDef.blendedAnimations && switchbox != null) {
+                    switchbox.runSwitchbox(partialTicks, false);
+                }
+
                 float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
                 object.transform.set(transform);
 
@@ -167,12 +174,14 @@ public class RenderableModelObject {
                         //Need to disable light-mapping from daylight if we are a light-up texture.
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
                         //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
-                        if(blendingEnabled && switchbox != null && switchbox.lastVisibilityClock != null) {
-                        	object.alpha = (float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin)/(switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin);
-                            if (object.alpha < 0) {
+                        if (blendingEnabled && objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
+                            if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
                                 object.alpha = 0;
-                            } else if (object.alpha > 1) {
+                            } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
+                                //Need >= here instead of above for things where min/max clamps are equal.
                                 object.alpha = 1;
+                            } else {
+                                object.alpha = (float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin);
                             }
                         }
                         object.render();
@@ -210,7 +219,7 @@ public class RenderableModelObject {
         treadPoints.remove(modelLocation);
     }
 
-    private boolean shouldRender(AEntityD_Definable<?> entity, JSONLight lightDef, boolean blendingEnabled, float partialTicks) {
+    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, JSONLight lightDef, boolean blendingEnabled, float partialTicks) {
         //Translucent only renders on blended pass.
         if (object.isTranslucent && !blendingEnabled) {
             return false;
@@ -235,7 +244,6 @@ public class RenderableModelObject {
             return false;
         }
         //If we have an applyAfter, and that object isn't being rendered, don't render us either.
-        JSONAnimatedObject objectDef = entity.animatedObjectDefinitions.get(object.name);
         if (objectDef != null) {
             if (objectDef.applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(objectDef.applyAfter);

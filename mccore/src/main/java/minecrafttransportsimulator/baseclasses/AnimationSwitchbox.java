@@ -93,15 +93,14 @@ public class AnimationSwitchbox {
                     }
                     case VISIBILITY: {
                         if (!inhibitAnimations) {
-                        	lastVisibilityValue = entity.getAnimatedVariableValue(clock, partialTicks);
+                            lastVisibilityClock = clock;
+                            lastVisibilityValue = entity.getAnimatedVariableValue(clock, partialTicks);
                             if (!anyClockMovedThisUpdate) {
                                 anyClockMovedThisUpdate = clock.movedThisUpdate;
                             }
                             if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
                                 switchboxEnabled = false;
                                 return false;
-                            }else {
-                            	lastVisibilityClock = clock;
                             }
                         }
                         break;
