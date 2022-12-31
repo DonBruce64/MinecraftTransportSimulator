@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -344,32 +345,49 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Check proximity fuze against our target and blocks.
         if (definition.bullet.proximityFuze != 0) {
-            Point3D targetToHit;
+            Point3D targetToHit = null;
             if (targetPosition != null) {
-                targetToHit = targetPosition;
+                //Have an entity target, check if we got close enough to them.
+                if (position.distanceTo(targetPosition) < definition.bullet.proximityFuze + velocity) {
+                    targetToHit = targetPosition;
+                }
             } else {
-                hitResult = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
-                targetToHit = hitResult != null ? hitResult.position : null;
+                //No entity target, first check blocks.
+                Point3D proxFuzeVector = motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity);
+                hitResult = world.getBlockHit(position, proxFuzeVector);
+                if (hitResult != null) {
+                    targetToHit = hitResult.position;
+                    lastHit = HitType.BLOCK;
+                    displayDebugMessage("PROX FUZE HIT BLOCK");
+                } else {
+                    //No block found, try entities.
+                    proxFuzeVector.add(position);//This is now the end position.
+                    EntityInteractResult interactResult = world.getMultipartEntityIntersect(position, proxFuzeVector);
+                    if (interactResult != null) {
+                        targetToHit = interactResult.point;
+                        lastHit = HitType.PART;
+                        displayDebugMessage("PROX FUZE HIT VEHICLE");
+                    } else {
+                        //Didn't hit an internal entity, check for external entities.
+                        for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, proxFuzeVector))) {
+                            if (entity.getBounds().getIntersectionPoint(position, proxFuzeVector) != null) {
+                                targetToHit = entity.getPosition();
+                                lastHit = HitType.ENTITY;
+                                displayDebugMessage("PROX FUZE HIT ENTITY");
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             if (targetToHit != null) {
                 double distanceToTarget = position.distanceTo(targetToHit);
-                if (distanceToTarget < definition.bullet.proximityFuze + velocity) {
-                    if (distanceToTarget > definition.bullet.proximityFuze) {
-                        position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze) / definition.bullet.proximityFuze);
-                    }
-                    if (externalEntityTargeted != null) {
-                        lastHit = HitType.ENTITY;
-                        displayDebugMessage("PROX FUZE HIT ENTITY");
-                    } else if (engineTargeted != null) {
-                        lastHit = HitType.PART;
-                        displayDebugMessage("PROX FUZE HIT ENGINE");
-                    } else {
-                        lastHit = HitType.BLOCK;
-                        displayDebugMessage("PROX FUZE HIT BLOCK");
-                    }
-                    startDespawn();
-                    return;
+                if (distanceToTarget > definition.bullet.proximityFuze) {
+                    //We will hit this target this tick, but we need to move right to the prox distance before detonating.
+                    position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze) / definition.bullet.proximityFuze);
                 }
+                startDespawn();
+                return;
             }
         }
 

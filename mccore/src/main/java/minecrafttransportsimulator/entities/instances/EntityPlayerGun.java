@@ -15,7 +15,6 @@ import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -56,12 +55,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Get player via saved NBT.  If the player isn't found, we're not valid.
             UUID playerUUID = data.getUUID("playerUUID");
             IWrapperPlayer foundPlayer = null;
-            for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
-                if (entity instanceof IWrapperPlayer) {
-                    if (entity.getID().equals(playerUUID)) {
-                        foundPlayer = (IWrapperPlayer) entity;
-                        break;
-                    }
+            for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
+                if (player.getID().equals(playerUUID)) {
+                    foundPlayer = player;
+                    break;
                 }
             }
             if (foundPlayer != null) {

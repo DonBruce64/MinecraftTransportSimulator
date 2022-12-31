@@ -235,10 +235,8 @@ public class PartEngine extends APart {
                     linkedEngine.linkedEngine = null;
                     linkedEngine = null;
                     if (world.isClient()) {
-                        for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
-                            if (entity instanceof IWrapperPlayer) {
-                                ((IWrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
-                            }
+                        for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
+                            player.displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
                         }
                     }
                 } else if (vehicleOn.electricPower + 0.5 < linkedEngine.vehicleOn.electricPower) {
@@ -251,10 +249,8 @@ public class PartEngine extends APart {
                     linkedEngine.linkedEngine = null;
                     linkedEngine = null;
                     if (world.isClient()) {
-                        for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
-                            if (entity instanceof IWrapperPlayer) {
-                                ((IWrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
-                            }
+                        for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
+                            player.displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
                         }
                     }
                 }

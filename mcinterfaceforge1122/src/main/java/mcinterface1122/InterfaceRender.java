@@ -109,8 +109,8 @@ public class InterfaceRender implements IInterfaceRender {
                 object.vertices = null;
             }
             GL11.glCallList(object.cachedVertexIndex);
-        } else if (object.lineWidth != 0) {
-            renderLines(object.vertices, object.lineWidth);
+        } else if (object.isLines) {
+            renderLines(object.vertices);
         } else {
             renderVertices(object.vertices);
         }
@@ -221,8 +221,8 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders a set of raw lines without any caching.
      */
-    private static void renderLines(FloatBuffer vertices, float width) {
-        GL11.glLineWidth(width);
+    private static void renderLines(FloatBuffer vertices) {
+        GL11.glLineWidth(2);
         GL11.glBegin(GL11.GL_LINES);
         while (vertices.hasRemaining()) {
             GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());

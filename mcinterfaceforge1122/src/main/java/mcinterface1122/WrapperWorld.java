@@ -223,6 +223,15 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public List<IWrapperPlayer> getPlayersWithin(BoundingBox box) {
+        List<IWrapperPlayer> players = new ArrayList<>();
+        for (EntityPlayer player : world.getEntitiesWithinAABB(EntityPlayer.class, WrapperWorld.convert(box))) {
+            players.add(WrapperPlayer.getWrapperFor(player));
+        }
+        return players;
+    }
+
+    @Override
     public List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius) {
         List<IWrapperEntity> entities = new ArrayList<>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;

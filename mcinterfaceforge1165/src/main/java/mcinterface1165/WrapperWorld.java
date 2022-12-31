@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -247,6 +246,15 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public List<IWrapperPlayer> getPlayersWithin(BoundingBox box) {
+        List<IWrapperPlayer> players = new ArrayList<>();
+        for (PlayerEntity player : world.getEntitiesOfClass(PlayerEntity.class, WrapperWorld.convert(box))) {
+            players.add(WrapperPlayer.getWrapperFor(player));
+        }
+        return players;
+    }
+
+    @Override
     public List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius) {
         List<IWrapperEntity> entities = new ArrayList<>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;
@@ -257,31 +265,6 @@ public class WrapperWorld extends AWrapperWorld {
         }
         return entities;
     }
-
-    @Override
-    public IWrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchDistance, boolean generalArea) {
-        double smallestDistance = searchDistance * 2;
-        Entity foundEntity = null;
-        Entity mcLooker = ((WrapperEntity) entityLooking).entity;
-        Vector3d raytraceStart = mcLooker.position().add(0, (entityLooking.getEyeHeight() + entityLooking.getSeatOffset()), 0);
-        Point3D lookerLos = entityLooking.getLineOfSight(searchDistance);
-        Vector3d raytraceEnd = new Vector3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
-        for (Entity entity : world.getEntities(mcLooker, mcLooker.getBoundingBox().inflate(searchDistance))) {
-            if (!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getVehicle())) {
-                float distance = mcLooker.distanceTo(entity);
-                if (distance < smallestDistance) {
-                    AxisAlignedBB testBox = generalArea ? entity.getBoundingBox().inflate(2F * distance / searchDistance) : entity.getBoundingBox();
-                    Optional<Vector3d> rayHit = testBox.clip(raytraceStart, raytraceEnd);
-                    if (rayHit != null) {
-                        smallestDistance = distance;
-                        foundEntity = entity;
-                    }
-                }
-            }
-        }
-        return WrapperEntity.getWrapperFor(foundEntity);
-    }
-
     @Override
     public void spawnEntity(AEntityB_Existing entity) {
         spawnEntityInternal(entity);

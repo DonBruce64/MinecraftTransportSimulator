@@ -23,6 +23,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -44,18 +45,15 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -83,6 +81,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
+    private static float[] matrixConvertArray = new float[16];
 
     @Override
     public float[] getBlockBreakTexture(AWrapperWorld world, Point3D position) {
@@ -130,8 +129,15 @@ public class InterfaceRender implements IInterfaceRender {
                 object.vertices = null;
             }
             GL11.glCallList(object.cachedVertexIndex);
-        } else if (object.lineWidth != 0) {
-            renderLines(object.vertices, object.lineWidth);
+        } else if (object.isLines) {
+            IVertexBuilder buffer = renderBuffer.getBuffer(RenderType.lines());
+            Matrix4f matrix = convertMatrix(object.transform);
+            while (object.vertices.hasRemaining()) {
+                buffer.vertex(matrix, object.vertices.get(), object.vertices.get(), object.vertices.get());
+                buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+            }
+            //Rewind buffer for next read.
+            object.vertices.rewind();
         } else {
             renderVertices(object.vertices);
         }
@@ -239,31 +245,6 @@ public class InterfaceRender implements IInterfaceRender {
         GL11.glEnd();
         //Rewind buffer for next read.
         vertices.rewind();
-    }
-
-    /**
-     * Renders a set of raw lines without any caching.
-     */
-    private static void renderLines(FloatBuffer vertices, float width) {
-        //pBuffer.getBuffer(RenderType.lines())
-        if (pEntity instanceof LivingEntity) {
-            float f1 = 0.01F;
-            WorldRenderer.renderLineBox(pMatrixStack, pBuffer, (double) (-f), (double) (pEntity.getEyeHeight() - 0.01F), (double) (-f), (double) f, (double) (pEntity.getEyeHeight() + 0.01F), (double) f, 1.0F, 0.0F, 0.0F, 1.0F);
-        }
-        Vector3d vector3d = pEntity.getViewVector(pPartialTicks);
-        Matrix4f matrix4f = pMatrixStack.last().pose();
-        pBuffer.vertex(matrix4f, 0.0F, pEntity.getEyeHeight(), 0.0F).color(0, 0, 255, 255).endVertex();
-        pBuffer.vertex(matrix4f, (float) (vector3d.x * 2.0D), (float) ((double) pEntity.getEyeHeight() + vector3d.y * 2.0D), (float) (vector3d.z * 2.0D)).color(0, 0, 255, 255).endVertex();
-        GL11.glLineWidth(width);
-        GL11.glBegin(GL11.GL_LINES);
-        while (vertices.hasRemaining()) {
-            GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
-            GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-        }
-        GL11.glEnd();
-        //Rewind buffer for next read.
-        vertices.rewind();
-        GL11.glLineWidth(1);
     }
 
     /**
@@ -518,6 +499,29 @@ public class InterfaceRender implements IInterfaceRender {
         } else {
             GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         }
+    }
+
+    /**
+     * Converts internal matrix to new external matrix.
+     */
+    private static Matrix4f convertMatrix(TransformationMatrix transform) {
+        matrixConvertArray[0] = (float) transform.m00;
+        matrixConvertArray[1] = (float) transform.m01;
+        matrixConvertArray[2] = (float) transform.m02;
+        matrixConvertArray[3] = (float) transform.m03;
+        matrixConvertArray[4] = (float) transform.m10;
+        matrixConvertArray[5] = (float) transform.m11;
+        matrixConvertArray[6] = (float) transform.m12;
+        matrixConvertArray[7] = (float) transform.m13;
+        matrixConvertArray[8] = (float) transform.m20;
+        matrixConvertArray[9] = (float) transform.m21;
+        matrixConvertArray[10] = (float) transform.m22;
+        matrixConvertArray[11] = (float) transform.m23;
+        matrixConvertArray[12] = (float) transform.m30;
+        matrixConvertArray[13] = (float) transform.m31;
+        matrixConvertArray[14] = (float) transform.m32;
+        matrixConvertArray[15] = (float) transform.m33;
+        return new Matrix4f(matrixConvertArray);
     }
 
     /**

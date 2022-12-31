@@ -60,7 +60,7 @@ public class RenderableObject {
     public int cachedVertexIndex = -1;
     public BlendState blend = BlendState.SOLID;
     public float alpha = 1.0F;
-    public float lineWidth = 0.0F;
+    public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();
     public boolean disableLighting;
     public boolean ignoreWorldShading;
@@ -120,7 +120,7 @@ public class RenderableObject {
     /*Shortened constructor used for lines.  Automatically sets line width and lighting.**/
     public RenderableObject(ColorRGB color, int numberLines) {
         this("", null, color, FloatBuffer.allocate(numberLines * BUFFERS_PER_LINE), false);
-        lineWidth = 2.0F;
+        isLines = true;
         disableLighting = true;
     }
 
@@ -132,7 +132,7 @@ public class RenderableObject {
             isTranslucent = true;
             alpha = 0.5F;
         } else {
-            lineWidth = 2.0F;
+            isLines = true;
         }
         disableLighting = true;
     }

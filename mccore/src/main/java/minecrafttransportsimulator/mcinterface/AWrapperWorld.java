@@ -112,6 +112,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract List<IWrapperEntity> getEntitiesWithin(BoundingBox box);
 
     /**
+     * Like {@link #getEntitiesWithin(BoundingBox)}, but for players.
+     */
+    public abstract List<IWrapperPlayer> getPlayersWithin(BoundingBox box);
+
+    /**
      * Returns a list of all hostile entities in the specified radius.
      */
     public abstract List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius);

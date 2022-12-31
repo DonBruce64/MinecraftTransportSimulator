@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.systems;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -43,9 +42,7 @@ public final class ControlSystem {
 
     private static boolean parkingBrakePressedLastCheck = false;
 
-    private static BoundingBox closestBox = null;
-    private static AEntityF_Multipart<?> closestEntity = null;
-    private static Point3D closestPoint = null;
+    private static EntityInteractResult interactResult = null;
 
     /**
      * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
@@ -102,60 +99,16 @@ public final class ControlSystem {
         if (clickingLeft || clickingRight) {
             Point3D startPosition = player.getPosition();
             startPosition.y += (player.getEyeHeight() + player.getSeatOffset()) * player.getVerticalScale();
-            Point3D endPosition = player.getLineOfSight(3.5);
-            endPosition.add(startPosition);
-            BoundingBox clickBounds = new BoundingBox(startPosition, endPosition);
+            Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
 
-            closestBox = null;
-            closestEntity = null;
-            closestPoint = null;
-            for (EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                if (vehicle.encompassingBox.intersects(clickBounds)) {
-                    //Could have hit this vehicle, check if and what we did via raytracing.
-                    for (BoundingBox box : vehicle.allInteractionBoxes) {
-                        if (box.intersects(clickBounds)) {
-                            Point3D intersectionPoint = box.getIntersectionPoint(startPosition, endPosition);
-                            if (intersectionPoint != null) {
-                                if (closestPoint == null || startPosition.isFirstCloserThanSecond(intersectionPoint, closestPoint)) {
-                                    closestBox = box;
-                                    closestEntity = vehicle.getPartWithBox(closestBox);
-                                    closestPoint = intersectionPoint;
-                                    if (closestEntity == null) {
-                                        closestEntity = vehicle;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+            if (interactResult != null) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, clickingLeft, clickingRight));
             }
-            for (EntityPlacedPart placer : player.getWorld().getEntitiesOfType(EntityPlacedPart.class)) {
-                if (placer.encompassingBox.intersects(clickBounds)) {
-                    //Could have hit this part, check if and what we did via raytracing.
-                    for (BoundingBox box : placer.allInteractionBoxes) {
-                        if (box.intersects(clickBounds)) {
-                            Point3D intersectionPoint = box.getIntersectionPoint(startPosition, endPosition);
-                            if (intersectionPoint != null) {
-                                if (closestPoint == null || startPosition.isFirstCloserThanSecond(intersectionPoint, closestPoint)) {
-                                    APart clickedPart = placer.getPartWithBox(box);
-                                    //Only register clicks on the part-boxes, not the placer itself.  It just encompasses them.
-                                    if (clickedPart != null) {
-                                        closestEntity = clickedPart;
-                                        closestBox = box;
-                                        closestPoint = intersectionPoint;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (closestBox != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
-            }
-        } else if (closestBox != null) {
+        } else if (interactResult != null) {
             //Fire off un-click to entity last clicked.
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(closestEntity, player, closestBox, false, false));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
+            interactResult = null;
         }
     }
 

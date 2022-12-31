@@ -16,7 +16,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -546,10 +545,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             if (messageSource.bypassConnectionPacket) {
                 messageSource.bypassConnectionPacket = false;
             } else {
-                for (IWrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))) {
-                    if (entity instanceof IWrapperPlayer) {
-                        ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, language));
-                    }
+                for (IWrapperPlayer player : messageSource.world.getPlayersWithin(new BoundingBox(messageSource.position, 16, 16, 16))) {
+                    player.sendPacket(new PacketPlayerChatMessage(player, language));
                 }
             }
         }
