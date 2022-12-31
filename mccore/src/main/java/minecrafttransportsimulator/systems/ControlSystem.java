@@ -113,12 +113,6 @@ public final class ControlSystem {
                 if (vehicle.encompassingBox.intersects(clickBounds)) {
                     //Could have hit this vehicle, check if and what we did via raytracing.
                     for (BoundingBox box : vehicle.allInteractionBoxes) {
-                        if (box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null) {
-                            if (closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
-
-                            }
-                        }
-
                         if (box.intersects(clickBounds)) {
                             Point3D intersectionPoint = box.getIntersectionPoint(startPosition, endPosition);
                             if (intersectionPoint != null) {
