@@ -590,15 +590,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 if (instrument != null) {
                     JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
 
-                    //Translate and rotate to standard position.
-                    //Note that instruments with rotation of Y=0 face backwards, which is opposite of normal rendering.
-                    //To compensate, we rotate them 180 here.
+                    //Set initial transform.
                     instrumentTransform.set(transform);
-                    instrumentTransform.applyTranslation(packInstrument.pos);
-                    if (packInstrument.rot != null) {
-                        instrumentTransform.applyRotation(packInstrument.rot);
-                    }
-                    instrumentTransform.applyRotation(INSTRUMENT_ROTATION_INVERSION);
 
                     //Do transforms if required and render if allowed.
                     AnimationSwitchbox switchbox = instrumentSlotSwitchboxes.get(packInstrument);
@@ -606,6 +599,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                         if (switchbox != null) {
                             instrumentTransform.multiply(switchbox.netMatrix);
                         }
+
+                        //Now that animations have adjusted us, apply final transforms.
+                        //Note that instruments with rotation of Y=0 face backwards, which is opposite of normal rendering.
+                        //To compensate, we rotate them 180 here.
+                        instrumentTransform.applyTranslation(packInstrument.pos);
+                        if (packInstrument.rot != null) {
+                            instrumentTransform.applyRotation(packInstrument.rot);
+                        }
+                        instrumentTransform.applyRotation(INSTRUMENT_ROTATION_INVERSION);
+
                         //Instruments render with 1 unit being 1 pixel, not 1 block, so scale by 1/16.
                         instrumentTransform.applyScaling(1 / 16F, 1 / 16F, 1 / 16F);
                         RenderInstrument.drawInstrument(this, instrumentTransform, i, false, blendingEnabled, partialTicks);
