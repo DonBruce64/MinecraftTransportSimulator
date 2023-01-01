@@ -36,6 +36,12 @@ public class JSONParticle {
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
 
+    @JSONDescription("How much off-zero the particle will be when spawned, in the XZ plane.  0 is no spread, higher values have higher spread.  This is per-particle, so if quantity is 10 they will all have different spread.")
+    public float spreadFactorHorizontal;
+
+    @JSONDescription("Like spreadFactorHorizontal, just for the vertical (Y) component.")
+    public float spreadFactorVertical;
+
     @JSONDescription("Normally particles use built-in textures.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
 

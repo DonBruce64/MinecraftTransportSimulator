@@ -7,6 +7,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -61,11 +62,21 @@ public class EntityParticle extends AEntityC_Renderable {
         position.add(helperOffset);
 
         if (definition.initialVelocity != null) {
-            //Set initial velocity, but add some randomness so particles don't all go in a line.
-            Point3D adjustedVelocity = definition.initialVelocity.copy().rotate(helperTransform);
-            motion.x += adjustedVelocity.x / 10D + 0.02 - Math.random() * 0.04;
-            motion.y += adjustedVelocity.y / 10D + 0.02 - Math.random() * 0.04;
-            motion.z += adjustedVelocity.z / 10D + 0.02 - Math.random() * 0.04;
+            Point3D adjustedVelocity = definition.initialVelocity.copy();
+            adjustedVelocity.y += (Math.random() - 0.5F) * definition.spreadFactorVertical;
+            adjustedVelocity.rotate(helperTransform);
+
+            if (definition.spreadFactorHorizontal != 0) {
+                motion.add(adjustedVelocity).scale(1D / 10D);
+                RotationMatrix spreadRotation = new RotationMatrix();
+                spreadRotation.angles.set((Math.random() - 0.5F) * definition.spreadFactorHorizontal, (Math.random() - 0.5F) * definition.spreadFactorHorizontal, 0);
+                motion.rotate(spreadRotation);
+            } else {
+                //Add some basic randomness so particles don't all go in a line.
+                motion.x += adjustedVelocity.x / 10D + 0.02 - Math.random() * 0.04;
+                motion.y += adjustedVelocity.y / 10D + 0.02 - Math.random() * 0.04;
+                motion.z += adjustedVelocity.z / 10D + 0.02 - Math.random() * 0.04;
+            }
         }
 
         this.entitySpawning = entitySpawning;
