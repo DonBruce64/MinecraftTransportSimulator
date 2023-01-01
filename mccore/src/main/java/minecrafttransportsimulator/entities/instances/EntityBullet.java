@@ -54,6 +54,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private HitType lastHit;
     private Point3D relativeGunPos;
     private Point3D prevRelativeGunPos;
+    private Point3D blockToBreakPos;
 
     /**
      * Generic constructor for no target.
@@ -115,6 +116,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (impactDesapawnTimer >= 0) {
             if (impactDesapawnTimer-- == 0) {
                 remove();
+                if (blockToBreakPos != null) {
+                    world.destroyBlock(blockToBreakPos, true);
+                }
             }
             return;
         }
@@ -326,7 +330,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 } else {
                     float hardnessHit = world.getBlockHardness(hitResult.position);
                     if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * definition.bullet.diameter / 20F)) {
-                        world.destroyBlock(hitResult.position, true);
+                        //Need to break the block after we die to allow particles to get the texture.
+                        blockToBreakPos = hitResult.position;
                     } else if (definition.bullet.types.contains(BulletType.INCENDIARY)) {
                         //Couldn't break block, but we might be able to set it on fire.
                         world.setToFire(hitResult);
