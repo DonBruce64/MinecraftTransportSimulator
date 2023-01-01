@@ -310,6 +310,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 } else {
                     world.spawnExplosion(position, 0F, false);
                 }
+                destroy(damage.box);
             }
         }
     }
