@@ -96,42 +96,41 @@ public class VehicleGroundDeviceBox {
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
                 if (!part.isSpare) {
-                    //X-offsets of 0 are both left and right as they are center points.
-                    //This ensures we don't roll to try and align a center point.
-                    if (isFront && part.localOffset.z > MAX_DELTA_FROM_ZERO) {
-                        if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
-                            groundDevices.add((PartGroundDevice) part);
-                            if (part.definition.ground.isWheel || part.definition.ground.isTread) {
+                    PartGroundDevice ground = (PartGroundDevice) part;
+                    if (isFront && ground.isFront) {
+                        if (isLeft && ground.isLeft) {
+                            groundDevices.add(ground);
+                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
-                            if (part.definition.ground.canFloat) {
-                                liquidDevices.add((PartGroundDevice) part);
+                            if (ground.definition.ground.canFloat) {
+                                liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO) {
-                            groundDevices.add((PartGroundDevice) part);
-                            if (part.definition.ground.isWheel || part.definition.ground.isTread) {
+                        } else if (!isLeft && ground.isRight) {
+                            groundDevices.add(ground);
+                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
-                            if (part.definition.ground.canFloat) {
-                                liquidDevices.add((PartGroundDevice) part);
+                            if (ground.definition.ground.canFloat) {
+                                liquidDevices.add(ground);
                             }
                         }
-                    } else if (!isFront && part.localOffset.z <= MAX_DELTA_FROM_ZERO) {
-                        if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
-                            groundDevices.add((PartGroundDevice) part);
-                            if (part.definition.ground.isWheel || part.definition.ground.isTread) {
+                    } else if (!isFront && !ground.isFront) {
+                        if (isLeft && ground.isLeft) {
+                            groundDevices.add(ground);
+                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
-                            if (part.definition.ground.canFloat) {
-                                liquidDevices.add((PartGroundDevice) part);
+                            if (ground.definition.ground.canFloat) {
+                                liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO) {
-                            groundDevices.add((PartGroundDevice) part);
-                            if (part.definition.ground.isWheel || part.definition.ground.isTread) {
+                        } else if (!isLeft && ground.isRight) {
+                            groundDevices.add(ground);
+                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
-                            if (part.definition.ground.canFloat) {
-                                liquidDevices.add((PartGroundDevice) part);
+                            if (ground.definition.ground.canFloat) {
+                                liquidDevices.add(ground);
                             }
                         }
                     }
