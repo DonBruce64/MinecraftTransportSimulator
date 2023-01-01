@@ -47,11 +47,9 @@ public class PartGroundDevice extends APart {
     private float currentLateralFriction;
     @ModifiedValue
     private float currentHeight;
+    public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
-    public final boolean isFront;
-    public final boolean isLeft;
-    public final boolean isRight;
     public boolean isFlat;
     public boolean contactThisTick = false;
     private boolean animateAsOnGround;
@@ -67,19 +65,16 @@ public class PartGroundDevice extends APart {
         this.isFlat = data.getBoolean("isFlat");
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
-        Point3D totalOffset = placementDefinition.pos.copy();
+        this.wheelbasePoint = placementDefinition.pos.copy();
         AEntityF_Multipart<?> parent = entityOn;
         while(parent instanceof APart) {
             APart parentPart = (APart) parent;
             if(parentPart.placementDefinition.rot != null) {
-                totalOffset.rotate(parentPart.placementDefinition.rot);
+                wheelbasePoint.rotate(parentPart.placementDefinition.rot);
             }
-            totalOffset.add(parentPart.placementDefinition.pos);
+            wheelbasePoint.add(parentPart.placementDefinition.pos);
             parent = parentPart.entityOn;
         }
-        this.isFront = totalOffset.z > 0;
-        this.isLeft = totalOffset.x >= 0;
-        this.isRight = totalOffset.x <= 0;
     }
 
     @Override

@@ -97,8 +97,8 @@ public class VehicleGroundDeviceBox {
             if (part instanceof PartGroundDevice) {
                 if (!part.isSpare) {
                     PartGroundDevice ground = (PartGroundDevice) part;
-                    if (isFront && ground.isFront) {
-                        if (isLeft && ground.isLeft) {
+                    if (isFront && ground.wheelbasePoint.z > 0) {
+                        if (isLeft && ground.wheelbasePoint.x >= 0) {
                             groundDevices.add(ground);
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -106,7 +106,7 @@ public class VehicleGroundDeviceBox {
                             if (ground.definition.ground.canFloat) {
                                 liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && ground.isRight) {
+                        } else if (!isLeft && ground.wheelbasePoint.x <= 0) {
                             groundDevices.add(ground);
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -115,8 +115,8 @@ public class VehicleGroundDeviceBox {
                                 liquidDevices.add(ground);
                             }
                         }
-                    } else if (!isFront && !ground.isFront) {
-                        if (isLeft && ground.isLeft) {
+                    } else if (!isFront && ground.wheelbasePoint.z <= 0) {
+                        if (isLeft && ground.wheelbasePoint.x >= 0) {
                             groundDevices.add(ground);
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -124,7 +124,7 @@ public class VehicleGroundDeviceBox {
                             if (ground.definition.ground.canFloat) {
                                 liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && ground.isRight) {
+                        } else if (!isLeft && ground.wheelbasePoint.x <= 0) {
                             groundDevices.add(ground);
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
