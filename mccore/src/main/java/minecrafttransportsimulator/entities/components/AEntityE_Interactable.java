@@ -295,7 +295,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
         locked = isVariableActive(LOCKED_VARIABLE);
-        outOfHealth = damageAmount == definition.general.health;
+        outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
         world.endProfiling();
     }
@@ -556,7 +556,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             if (damageAmount > definition.general.health) {
                 double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
                 damageAmount = definition.general.health;
-                outOfHealth = true;
+                outOfHealth = definition.general.health != 0;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
             } else {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));

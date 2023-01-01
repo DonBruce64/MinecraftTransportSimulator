@@ -74,13 +74,6 @@ public class PartPropeller extends APart {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
                     });
                 }
-            } else if (outOfHealth) {
-                if (ConfigSystem.settings.damage.explosions.value) {
-                    world.spawnExplosion(position, 1F, true);
-                } else {
-                    world.spawnExplosion(position, 0F, false);
-                }
-                remove();
             }
         }
     }
@@ -213,7 +206,7 @@ public class PartPropeller extends APart {
             case ("propeller_pitch_percent"):
                 return 1D * (currentPitch - PartPropeller.MIN_DYNAMIC_PITCH) / (definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
             case ("propeller_rotation"):
-                return (angularPosition + angularVelocity * partialTicks) * 360D;
+                return (partialTicks != 0 ? (angularPosition - (angularVelocity * (1 - partialTicks))) : angularPosition) * 360D;
             case ("propeller_rpm"):
                 return currentRPM;
         }

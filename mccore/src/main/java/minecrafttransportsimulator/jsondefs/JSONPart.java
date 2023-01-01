@@ -105,6 +105,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this part will fall to the ground when placed, if it's not on the ground already when placed.  Only valid for parts with canBePlacedOnGround as true.")
         public boolean fallsToGround;
 
+        @JSONDescription("If true, then when this part runs out of health it will be destroyed and removed rather than just become inoperable.")
+        public boolean destroyable;
+
         @JSONDescription("The width of the part.")
         public float width;
 

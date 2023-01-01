@@ -610,11 +610,6 @@ public final class LegacyCompatSystem {
             }
         }
 
-        //Set default health.
-        if (definition.general.health == 0) {
-            definition.general.health = 100;
-        }
-
         //Set engine new parameters.
         if (definition.engine != null) {
             //Add engine type if it is missing.

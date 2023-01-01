@@ -86,7 +86,7 @@ public final class PartInteractable extends APart {
     @Override
     public void attack(Damage damage) {
         super.attack(damage);
-        if (!damage.isWater && (damage.amount > 25 || outOfHealth)) {
+        if (!damage.isWater && damage.amount > 25) {
             destroy(damage.box);
         }
     }
@@ -100,7 +100,7 @@ public final class PartInteractable extends APart {
                 world.spawnExplosion(position, 0.25, false);
             } else {
                 world.spawnExplosion(position, explosivePower, true);
-                entityOn.destroy(boundingBox);
+                masterEntity.destroy(masterEntity.boundingBox);
             }
         } else {
             super.destroy(box);

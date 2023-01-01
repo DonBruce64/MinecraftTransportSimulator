@@ -56,7 +56,7 @@ public abstract class AJSONItem {
         @JSONDescription("The optional stack size for this item.  Items with this set will stack to the size specified, up to the standard stack size of 64.  This of course won't work if the item has NBT on it, such as used engines.")
         public int stackSize;
 
-        @JSONDescription("How much health the entity that this item spawns has.  When the damage reaches the health amount, the entity will execute its 'death' logic.  What exactly this entails depends on what the entity is.  Some entities do not have any logic for death, and items that don't spawn entities don't use this parameter at all.")
+        @JSONDescription("How much health the entity that this item spawns has.  When the damage reaches the health amount, the entity will execute its 'death' logic.  What exactly this entails depends on what the entity is.  Some entities do not have any logic for death, and items that don't spawn entities don't use this parameter at all.  Leaving this out will make the entity have infinite health.")
         public int health;
 
         @JSONRequired

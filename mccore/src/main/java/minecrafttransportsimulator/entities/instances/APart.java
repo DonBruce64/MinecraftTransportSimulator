@@ -23,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -303,6 +304,13 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         } else {
             //Not a removable part, or is an actual attack.
             super.attack(damage);
+            if (outOfHealth && definition.generic.destroyable) {
+                if (ConfigSystem.settings.damage.explosions.value) {
+                    world.spawnExplosion(position, 1F, true);
+                } else {
+                    world.spawnExplosion(position, 0F, false);
+                }
+            }
         }
     }
 

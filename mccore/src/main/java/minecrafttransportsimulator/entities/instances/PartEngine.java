@@ -667,8 +667,8 @@ public class PartEngine extends APart {
             }
             if (driveshaftDesiredSpeed != -999) {
                 driveshaftRotation += 360D * driveshaftDesiredSpeed * vehicleOn.speedFactor;
-            } else {
-                driveshaftRotation += 360D * rpm / 1200D / currentGearRatio;
+            } else if (propellerGearboxRatio != 0) {
+                driveshaftRotation += 360D * rpm / 1200D / propellerGearboxRatio;
             }
             if (driveshaftRotation > 3600000) {
                 driveshaftRotation -= 3600000;
