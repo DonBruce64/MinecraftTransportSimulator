@@ -145,14 +145,15 @@ public class InterfaceSound implements IInterfaceSound {
                 if (sound.stopSound) {
                     AL10.alSourceStop(sound.sourceIndex);
                 } else {
-                    //Update position and volume.
+                    //Update position and volume, and block rolloff.
                     sound.updatePosition();
                     AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
                     AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.masterVolume.value);
+                    AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 0);
 
                     //If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
                     //Otherwise, set pitch as normal.
-                    if (sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())) {
+                    if (sound.soundDef != null && sound.soundDef.looping && !sound.soundDef.blockDoppler && !sound.entity.equals(player.getEntityRiding())) {
                         Point3D playerVelocity = player.getVelocity();
                         playerVelocity.y = 0;
                         double initalDelta = player.getPosition().subtract(sound.entity.position).length();
@@ -162,9 +163,6 @@ public class InterfaceSound implements IInterfaceSound {
                     } else {
                         AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
                     }
-
-                    //Update rolloff distance, which is based on pitch.
-                    AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F / (0.25F + 3 * sound.pitch));
                 }
             } else {
                 //We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
@@ -215,7 +213,7 @@ public class InterfaceSound implements IInterfaceSound {
     public void playQuickSound(SoundInstance sound) {
         if (ALC.getFunctionProvider() != null && sourceGetFailures < 10) {
             //First get the IntBuffer pointer to where this sound data is stored.
-            Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
+            Integer dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
             if (dataBufferPointer != null) {
                 //Set the sound's source buffer index.
                 IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);

@@ -1,13 +1,12 @@
 package minecrafttransportsimulator.sound;
 
+import java.util.Random;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.util.List;
-import java.util.Random;
 
 /**
  * Class that holds sound information.  One class is created for each sound that's playing
@@ -22,6 +21,7 @@ public class SoundInstance {
 
     public final AEntityB_Existing entity;
     public final String soundName;
+    public final String soundPlayingName;
     public final JSONSound soundDef;
     public final EntityRadio radio;
     public final Point3D position;
@@ -43,8 +43,8 @@ public class SoundInstance {
     public SoundInstance(AEntityB_Existing entity, String soundName, JSONSound soundDef, EntityRadio radio) {
         this.entity = entity;
         this.soundDef = soundDef;
-        //If JSONSound is not NULL, then check for random sounds.
-        this.soundName = (soundDef != null) ? checkSoundVariations() : soundName;
+        this.soundName = soundName;
+        this.soundPlayingName = soundDef != null && soundDef.soundVariations != null ? soundDef.soundVariations.get(new Random().nextInt(soundDef.soundVariations.size())) : soundName;
         this.radio = radio;
         this.position = entity.position.copy();
     }
@@ -56,14 +56,4 @@ public class SoundInstance {
             position.set(entity.position);
         }
     }
-
-    private String checkSoundVariations() {
-        //If the sound has variations, then randomize them!
-        if (soundDef.soundVariations != null && !soundDef.soundVariations.isEmpty()) {
-            List<String> soundVariations = soundDef.soundVariations;
-            return soundVariations.get(new Random().nextInt(soundVariations.size()));
-        }
-        return soundDef.name;
-    }
-
 }

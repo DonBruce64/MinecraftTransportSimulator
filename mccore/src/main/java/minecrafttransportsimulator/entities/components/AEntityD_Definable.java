@@ -594,10 +594,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (JSONSound soundDef : allSoundDefs) {
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
+                //First check if we are in the right view to play.
                 AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
                 boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding)) || (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
                 boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
+
+                //Next, check the distance.
+                double distance = 0;
+                if (shouldSoundStartPlaying) {
+                    distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                    if (soundDef.maxDistance != soundDef.minDistance) {
+                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
+                    } else {
+                        shouldSoundStartPlaying = distance < 32;
+                    }
+                }
+
+                //Next, check animations.
                 if (shouldSoundStartPlaying) {
                     AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
                     shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
@@ -622,13 +636,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
                     }
                     if (!isSoundPlaying) {
-                        //We get the distance from the sound to the player using Point3D (this may not be accurate)
-                        double distance = this.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-
-                        //Checking the distance in the range of minimum and maximum values
-                        if (distance <= soundDef.maxDistance && distance >= soundDef.minDistance) {
-                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
-                        }
+                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
                     }
                 } else {
                     if (soundDef.looping) {
@@ -663,6 +671,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         } else if (sound.volume < 0) {
                             sound.volume = 0;
                         }
+
+                        //Adjust volume based on distance.
+                        if (soundDef.minDistance == 0) {
+                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : 32;
+                            sound.volume *= (maxDistance - distance) / (maxDistance);
+                        }
+
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.

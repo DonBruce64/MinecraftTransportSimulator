@@ -1,5 +1,20 @@
 package mcinterface1122;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -17,14 +32,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
-
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
 
 /**
  * Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
@@ -138,10 +145,11 @@ public class InterfaceSound implements IInterfaceSound {
                 if (sound.stopSound) {
                     AL10.alSourceStop(sound.sourceIndex);
                 } else {
-                    //Update position and volume.
+                    //Update position and volume, and block rolloff.
                     sound.updatePosition();
                     AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
                     AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.masterVolume.value);
+                    AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 0);
 
                     //If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
                     //Otherwise, set pitch as normal.
@@ -155,9 +163,6 @@ public class InterfaceSound implements IInterfaceSound {
                     } else {
                         AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
                     }
-
-                    //Update rolloff distance, which is based on pitch.
-                    AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F / (0.25F + 3 * sound.pitch));
                 }
             } else {
                 //We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
@@ -208,7 +213,7 @@ public class InterfaceSound implements IInterfaceSound {
     public void playQuickSound(SoundInstance sound) {
         if (AL.isCreated() && sourceGetFailures < 10) {
             //First get the IntBuffer pointer to where this sound data is stored.
-            Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
+            Integer dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
             if (dataBufferPointer != null) {
                 //Set the sound's source buffer index.
                 IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);

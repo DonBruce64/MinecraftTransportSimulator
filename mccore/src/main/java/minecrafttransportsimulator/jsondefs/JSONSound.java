@@ -11,6 +11,9 @@ public class JSONSound {
     @JSONDescription("The name for this sound.  This tells MTS where to find it.  Format is packID:soundName.  All sounds should be located in the 'sounds' folder as the first folder underneath your main pack folder.")
     public String name;
 
+    @JSONDescription("A list of sounds to play instead of the main sound.  If this is present, then one of these at random will be played each time this sound is played rather than the normal sound.  Note that a paramter for name is still required to allow the audio system to track this sound, and should be unique to the entity this is defined on.")
+    public List<String> soundVariations;
+
     @JSONRequired
     @JSONDescription("A required listing of animation objects for determining if this sound is active.  Visibility transforms will turn the sound on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.  Note that non-looping sounds are only played when all the animations in this block change the visibility state from 0 to 1.  If you want the sound to play every tick the visibility state is at 1, set repeating to true.")
     public List<JSONAnimationDefinition> activeAnimations;
@@ -36,22 +39,19 @@ public class JSONSound {
     @JSONDescription("Like isInterior, but blocks this sound if the player is in first-person and riding this entity.")
     public boolean isExterior;
 
+    @JSONDescription("Normally, all looping sounds have a doppler effect applied.  Setting this to true will block this.")
+    public boolean blockDoppler;
+
     @JSONDescription("The x, y, z position that this animation should be performed at.  If this is rotation, it is the rotation point.")
     public Point3D centerPoint;
 
     @JSONDescription("An entry of x, y, and z coordinates that define the center point of where this sound will be played relative to the center of the object.  May be omitted if you just want the sound to play at the center.")
     public Point3D pos;
 
-    @JSONDescription("Blocking the Doppler effect.")
-    public boolean blockDoppler;
+    @JSONDescription("The minimum distance for where this sound can be heard.")
+    public double minDistance;
 
-    @JSONDescription("A list of random sounds without taking into account the main one.")
-    public List<String> soundVariations;
-
-    @JSONDescription("Minimum distance for sound playback.")
-    public double minDistance = 0.0;
-
-    @JSONDescription("Maximum distance for sound playback.")
-    public double maxDistance = 64.0;
+    @JSONDescription("The maximum distance as to where this sound can be heard.  If minDistance is set to 0, then the sound will have its volume scaled to be 100% at the origin, and 0% at this distance.  If minDistance is included, then no scaling will be performed.  If this and minDistance are left out, 0-64 is used.")
+    public double maxDistance;
 
 }
