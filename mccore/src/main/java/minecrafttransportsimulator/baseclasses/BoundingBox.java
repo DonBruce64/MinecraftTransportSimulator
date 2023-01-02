@@ -47,6 +47,13 @@ public class BoundingBox {
     private static final Point3D helperPoint = new Point3D();
 
     /**
+     * Simplest constructor.  Used for simple bounds.
+     **/
+    public BoundingBox(Point3D center, double radius) {
+        this(new Point3D(), center, radius, radius, radius, false, null, null);
+    }
+
+    /**
      * Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.
      **/
     public BoundingBox(Point3D center, double widthRadius, double heightRadius, double depthRadius) {
