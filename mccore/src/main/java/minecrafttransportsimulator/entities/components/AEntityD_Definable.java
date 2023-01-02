@@ -622,7 +622,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
                     }
                     if (!isSoundPlaying) {
-                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
+                        //We get the distance from the sound to the player using Point3D (this may not be accurate)
+                        double distance = this.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+
+                        //Checking the distance in the range of minimum and maximum values
+                        if (distance <= soundDef.maxDistance && distance >= soundDef.minDistance) {
+                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
+                        }
                     }
                 } else {
                     if (soundDef.looping) {
