@@ -133,6 +133,16 @@ public class CameraSystem {
                         cameraProvider = playerGunEntity.activeGun;
                         switchbox = playerGunEntity.activeGun.cameraSwitchboxes.get(camera);
                     }
+                    if (camera == null) {
+                        for (APart part : playerGunEntity.activeGun.allParts) {
+                            camera = checkProviderForCameras(part, partialTicks);
+                            if (camera != null) {
+                                cameraProvider = part;
+                                switchbox = part.cameraSwitchboxes.get(camera);
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 //If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
