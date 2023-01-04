@@ -454,6 +454,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
         public Point3D handHeldAimedOffset;
 
+        @JSONDescription("An optional offset to move the gun in the player's hand off-center from the model.  This is different from the other offsets as it offsets the position the player holds the gun, but NOT where they actually hold their arm.")
+        public Point3D handHeldModelOffset;
+
         @JSONRequired
         @JSONDescription("A list of muzzle groups.  When firing this gun, the list is cycled though, and each group of muzzles takes turns firing.  If there are multiple muzzles in the group, they are all fired.  This allows for guns with muzzles that fire in sequence, or all at once.")
         public List<JSONMuzzleGroup> muzzleGroups;

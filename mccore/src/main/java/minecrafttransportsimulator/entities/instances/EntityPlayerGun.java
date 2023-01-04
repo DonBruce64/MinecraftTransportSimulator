@@ -160,7 +160,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Only change firing command on servers to prevent de-syncs.
             //Packets will get sent to clients to change them.
             if (activeGun != null) {
-                //First rotate transform to match the player's hand.
+                //First get the rotation transform to match the player's hand.
                 handRotation.setToZero().rotateX(player.getPitch());
 
                 //Offset to the end of the hand with our offset and current rotation.
@@ -169,6 +169,13 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 } else {
                     position.set(activeGun.definition.gun.handHeldNormalOffset);
                 }
+
+                //Add model offset if present.
+                if (activeGun.definition.gun.handHeldModelOffset != null) {
+                    position.add(activeGun.definition.gun.handHeldModelOffset);
+                }
+
+                //Rotate to align with the hand orientation.                
                 position.rotate(handRotation);
 
                 //Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
