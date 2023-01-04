@@ -24,6 +24,9 @@ public class JSONParticle {
     @JSONDescription("How long, in ticks, the particle should remain.  If not set on a defined type, the age will be auto-calculated the same way it would be for a Vanilla particle.  Defaults to 200 on any other types.")
     public int duration;
 
+    @JSONDescription("If set, the particle will linearly change its speed from the intialVelocity, to 0, after this many ticks.  If the particle is still present after this, it will not move.  If the particle's duration is less than this value, then the particle will only slow down according to the linear interpolation and will never stop. Note that movementVelocity and terminalVelocity is still applied if applicable, so the velocity may not follow this exact value if those are present.")
+    public int movementDuration;
+
     @JSONDescription("A number between 0.0 and 1.0 describing how transparent the particle should be.  If both this and toTransparency are not set, they are assumed to be 1.0 for both and no transparency changes will be performed.")
     public float transparency;
 

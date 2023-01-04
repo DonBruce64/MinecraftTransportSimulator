@@ -32,6 +32,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private final AEntityD_Definable<?> entitySpawning;
     private final JSONParticle definition;
     private final int maxAge;
+    private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 
     private final ColorRGB startColor;
@@ -78,6 +79,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 motion.z += adjustedVelocity.z / 10D + 0.02 - Math.random() * 0.04;
             }
         }
+        initialVelocity = motion.copy();
 
         this.entitySpawning = entitySpawning;
         this.definition = definition;
@@ -144,25 +146,35 @@ public class EntityParticle extends AEntityC_Renderable {
     public void update() {
         super.update();
         //Set movement.
+        if (definition.movementDuration != 0) {
+            if (ticksExisted <= definition.movementDuration) {
+                Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
+                Point3D velocityThisTick = initialVelocity.copy().scale((definition.movementDuration - ticksExisted) / (float) definition.movementDuration);
+                motion.add(velocityThisTick).subtract(velocityLastTick);
+            }
+        }
+
         if (definition.movementVelocity != null) {
             motion.add(definition.movementVelocity);
-            if (motion.x > definition.terminalVelocity.x) {
-                motion.x = definition.terminalVelocity.x;
-            }
-            if (motion.x < -definition.terminalVelocity.x) {
-                motion.x = -definition.terminalVelocity.x;
-            }
-            if (motion.y > definition.terminalVelocity.y) {
-                motion.y = definition.terminalVelocity.y;
-            }
-            if (motion.y < -definition.terminalVelocity.y) {
-                motion.y = -definition.terminalVelocity.y;
-            }
-            if (motion.z > definition.terminalVelocity.z) {
-                motion.z = definition.terminalVelocity.z;
-            }
-            if (motion.z < -definition.terminalVelocity.z) {
-                motion.z = -definition.terminalVelocity.z;
+            if (definition.terminalVelocity != null) {
+                if (motion.x > definition.terminalVelocity.x) {
+                    motion.x = definition.terminalVelocity.x;
+                }
+                if (motion.x < -definition.terminalVelocity.x) {
+                    motion.x = -definition.terminalVelocity.x;
+                }
+                if (motion.y > definition.terminalVelocity.y) {
+                    motion.y = definition.terminalVelocity.y;
+                }
+                if (motion.y < -definition.terminalVelocity.y) {
+                    motion.y = -definition.terminalVelocity.y;
+                }
+                if (motion.z > definition.terminalVelocity.z) {
+                    motion.z = definition.terminalVelocity.z;
+                }
+                if (motion.z < -definition.terminalVelocity.z) {
+                    motion.z = -definition.terminalVelocity.z;
+                }
             }
         } else {
             switch (definition.type) {
@@ -197,7 +209,7 @@ public class EntityParticle extends AEntityC_Renderable {
                     break;
                 }
                 default: {
-                    //Generic particles don't do any movement by default.
+                    //No default movement for generic particles.
                     break;
                 }
             }
