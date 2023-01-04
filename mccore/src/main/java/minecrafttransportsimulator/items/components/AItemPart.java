@@ -44,7 +44,7 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
 
                 //Set position to the spot that was clicked by the player.
                 //Set orientation to that to face the player.
-                entity.position.set(position).add(0.5, 1, 0.5);
+                entity.position.set(position).add(0.5, 0, 0.5).add(axis.xOffset, axis.yOffset, axis.zOffset);
                 entity.prevPosition.set(position);
                 entity.orientation.setToAngles(new Point3D(0, Math.round((player.getYaw() + 180) / 90) * 90 % 360, 0));
                 entity.prevOrientation.set(entity.orientation);
