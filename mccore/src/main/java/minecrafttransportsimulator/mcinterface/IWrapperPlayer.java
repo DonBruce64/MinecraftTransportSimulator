@@ -42,6 +42,11 @@ public interface IWrapperPlayer extends IWrapperEntity {
     boolean isSneaking();
 
     /**
+     * Returns true if the player has their right hand as primary (default).
+     */
+    boolean isRightHanded();
+
+    /**
      * Gets the currently-leashed entity for this player, or null if it doesn't exist.
      */
     IWrapperEntity getLeashedEntity();

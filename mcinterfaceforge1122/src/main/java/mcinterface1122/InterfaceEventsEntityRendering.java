@@ -186,6 +186,8 @@ public class InterfaceEventsEntityRendering {
             if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
                 EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
                 if (gunEntity != null && gunEntity.activeGun != null) {
+                    EntityPlayer player = (EntityPlayer) entity;
+
                     //Get arm rotations.
                     Point3D heldVector;
                     if (gunEntity.activeGun.isHandHeldGunAimed) {
@@ -198,13 +200,19 @@ public class InterfaceEventsEntityRendering {
                     double armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
 
                     //Set rotation points on the model.
-                    rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
-                    if (gunEntity.activeGun.isHandHeldGunAimed) {
+                    if (WrapperPlayer.getWrapperFor(player).isRightHanded()) {
+                        rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                        if (gunEntity.activeGun.isHandHeldGunAimed) {
+                            leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                        }
+                    } else {
                         leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                        if (gunEntity.activeGun.isHandHeldGunAimed) {
+                            rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                        }
                     }
 
                     //Remove the held item from the enitty's hand
-                    EntityPlayer player = (EntityPlayer) entity;
                     heldStackHolder = player.getHeldItemMainhand();
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
 

@@ -21,6 +21,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.inventory.container.WorkbenchContainer;
 import net.minecraft.item.Item;
+import net.minecraft.util.HandSide;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.StringTextComponent;
@@ -97,6 +98,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     @Override
     public boolean isSneaking() {
         return player.isCrouching();
+    }
+
+    @Override
+    public boolean isRightHanded() {
+        return player.getMainArm() == HandSide.RIGHT;
     }
 
     @Override

@@ -23,6 +23,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.Item;
+import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
@@ -100,6 +101,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     @Override
     public boolean isSneaking() {
         return player.isSneaking();
+    }
+
+    @Override
+    public boolean isRightHanded() {
+        return player.getPrimaryHand() == EnumHandSide.RIGHT;
     }
 
     @Override

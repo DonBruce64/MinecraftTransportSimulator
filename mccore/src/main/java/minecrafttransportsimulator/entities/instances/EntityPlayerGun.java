@@ -175,13 +175,18 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                     position.add(activeGun.definition.gun.handHeldModelOffset);
                 }
 
+                //If we are left-handed, offset the position in the -X direction to mirror.
+                if (!player.isRightHanded()) {
+                    position.x = -position.x;
+                }
+
                 //Rotate to align with the hand orientation.                
                 position.rotate(handRotation);
 
                 //Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
                 //Sneaking lowers arm by 0.2 blocks.
                 //We adjust this by the seated offset and scale to get the actual position.
-                position.add(-0.3125, ((player.isSneaking() ? 1.3125 - 0.2 : 1.3125) + player.getSeatOffset()) * player.getVerticalScale(), 0);
+                position.add(player.isRightHanded() ? -0.3125 : 0.3125, ((player.isSneaking() ? 1.3125 - 0.2 : 1.3125) + player.getSeatOffset()) * player.getVerticalScale(), 0);
 
                 //Rotate to player's yaw to match facing direction.
                 handRotation.setToZero().rotateY(player.getYaw());
