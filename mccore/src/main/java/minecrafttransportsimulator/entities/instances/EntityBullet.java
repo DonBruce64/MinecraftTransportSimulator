@@ -166,6 +166,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     targetPosition = null;
                 }
             } else if (engineTargeted != null) {
+                Point3D predictedCollisionPoint = new Point3D();
+                double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
+                predictedCollisionPoint.set(engineTargeted.vehicleOn.position).add(((((engineTargeted.vehicleOn.motion.x * engineTargeted.vehicleOn.speedFactor) / 20D) / 10D) * ticksToTarget) , ((((engineTargeted.vehicleOn.motion.y * engineTargeted.vehicleOn.speedFactor) / 20D) / 10D) * ticksToTarget), ((((engineTargeted.vehicleOn.motion.z * engineTargeted.vehicleOn.speedFactor) / 20D) / 10D) * ticksToTarget));
+                targetPosition.set(predictedCollisionPoint);
                 //Don't need to update the position variable for engines, as it auto-syncs.
                 //Do need to check if the engine is still warm and valid, however.
                 if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
