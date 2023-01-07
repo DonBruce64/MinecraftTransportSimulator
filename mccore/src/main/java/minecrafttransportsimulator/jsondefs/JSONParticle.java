@@ -80,8 +80,20 @@ public class JSONParticle {
     @JSONDescription("A listing of animation objects for determining if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
     public List<JSONAnimationDefinition> activeAnimations;
 
+    @JSONDescription("A list of sub-particles this particle can spawn.  They will be spawned when their conditions are met.  Note that sub-particles do not reference spawningAnimations or activeAnimations.")
+    public List<JSONSubParticle> subParticles;
+
     @Deprecated
     public Point3D velocityVector;
+
+    public static class JSONSubParticle {
+
+        @JSONDescription("The particle to spawn.")
+        public JSONParticle particle;
+
+        @JSONDescription("The time, in ticks, at which to spawn the particle.")
+        public int time;
+    }
 
     public enum ParticleType {
         @JSONDescription("The standard smoke particle.")

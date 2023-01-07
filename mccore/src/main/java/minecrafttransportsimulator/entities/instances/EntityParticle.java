@@ -10,8 +10,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -29,7 +29,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private static final Point3D helperOffset = new Point3D();
 
     //Constant properties.
-    private final AEntityD_Definable<?> entitySpawning;
+    private final AEntityC_Renderable entitySpawning;
     private final JSONParticle definition;
     private final int maxAge;
     private final Point3D initialVelocity;
@@ -47,7 +47,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private int textureDelayIndex;
     private List<String> textureList;
 
-    public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
         helperTransform.resetTransforms().set(entitySpawning.orientation);
@@ -249,6 +249,15 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 //Assume internal smoke, so use constant delay.
                 timeOfNextTexture += maxAge / 12F;
+            }
+        }
+
+        //Check for sub particles.
+        if (definition.subParticles != null) {
+            for (JSONSubParticle subDef : definition.subParticles) {
+                if (subDef.particle.spawnEveryTick ? subDef.time >= ticksExisted : subDef.time == ticksExisted) {
+                    world.addEntity(new EntityParticle(this, subDef.particle, null));
+                }
             }
         }
     }
