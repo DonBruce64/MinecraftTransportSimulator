@@ -175,9 +175,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             }
         }
 
-        //Check that missiles are still valid.
-        //If they are, update their distances. Otherwise, remove them.
-        missilesIncoming.removeIf(entityBullet -> !entityBullet.isValid);
+        //Update missile list to sort by distance.
         missilesIncoming.sort((missle1, missile2) -> missle1.targetDistance < missile2.targetDistance ? -1 : 1);
         world.endProfiling();
     }
@@ -224,13 +222,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 engines.add((PartEngine) part);
             }
         });
-    }
-
-    public void acquireMissile(EntityBullet missile) {
-        //Add this missile with its current distance
-        if (!missilesIncoming.contains(missile)) {
-            missilesIncoming.add(missile);
-        }
     }
 
     public FuelTankResult checkFuelTankCompatibility(String fluid) {

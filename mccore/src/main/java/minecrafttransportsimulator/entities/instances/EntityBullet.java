@@ -97,10 +97,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
      **/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
         this(position, motion, orientation, gun, engineTargeted.position);
-        if (engineTargeted.vehicleOn != null) {
-            engineTargeted.vehicleOn.acquireMissile(this);
-        }
         this.engineTargeted = engineTargeted;
+        engineTargeted.vehicleOn.missilesIncoming.add(this);
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
     }
 
@@ -492,6 +490,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
         impactDesapawnTimer = definition.bullet.impactDespawnTime;
         gun.currentBullet = null;
+        if (engineTargeted != null) {
+            engineTargeted.vehicleOn.missilesIncoming.remove(this);
+        }
     }
 
     private void displayDebugMessage(String message) {
