@@ -482,6 +482,7 @@ public class PartEngine extends APart {
                             running = true;
                         }
                     }
+                    break;
                 }
 
                 case ELECTRIC: {
