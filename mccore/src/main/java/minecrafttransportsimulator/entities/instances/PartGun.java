@@ -1,7 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -66,6 +69,7 @@ public class PartGun extends APart {
     protected ItemBullet loadedBullet;
     private ItemBullet reloadingBullet;
     public ItemBullet clientNextBullet;
+    private final Random randomGenerator = new Random();
 
     //These variables are used during firing and will be reset on loading.
     public GunState state;
@@ -185,6 +189,19 @@ public class PartGun extends APart {
             this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
             reloadTimeRemaining = definition.gun.reloadTime;
         }
+        if (data.getBoolean("savedSeed")) {
+            long randomSeed = (((long) data.getInteger("randomSeedPart1")) << 32) | (data.getInteger("randomSeedPart2") & 0xffffffffL);
+            try {
+                Field randomSeedFeild = Random.class.getDeclaredField("seed");
+                randomSeedFeild.setAccessible(true);
+                AtomicLong randomSeedObject = (AtomicLong) randomSeedFeild.get(randomGenerator);
+                randomSeedObject.set(randomSeed);
+            } catch (Exception e) {
+                //Nope, we'll never get here!
+                e.printStackTrace();
+            }
+        }
+
         //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
         //This prevents pack changes from locking guns.
         if (loadedBullet == null) {
@@ -338,7 +355,7 @@ public class PartGun extends APart {
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                     //Get the bullet's state.
-                                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+                                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 
                                     //Add the bullet to the world.
                                     //If the bullet is a missile, give it a target.
@@ -1120,20 +1137,22 @@ public class PartGun extends APart {
      * This is based on the passed-in muzzle, and the parameters of that muzzle.
      * Used in both spawning the bullet, and in rendering where the muzzle position is.
      */
-    public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle) {
+    public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, boolean addSpread) {
         //Set velocity.
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
             //Randomize the spread for normal bullet and pellets
-            if (loadedBullet == null) {
-                if (definition.gun.bulletSpreadFactor > 0) {
-                    firingSpreadRotation.angles.set((Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, (Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
-                    bulletVelocity.rotate(firingSpreadRotation);
-                }
-            } else {
-                if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-                    firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
-                    bulletVelocity.rotate(firingSpreadRotation);
+            if (addSpread) {
+                if (loadedBullet == null) {
+                    if (definition.gun.bulletSpreadFactor > 0) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * definition.gun.bulletSpreadFactor, (randomGenerator.nextFloat() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
+                        bulletVelocity.rotate(firingSpreadRotation);
+                    }
+                } else {
+                    if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (randomGenerator.nextFloat() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
+                        bulletVelocity.rotate(firingSpreadRotation);
+                    }
                 }
             }
 
@@ -1255,7 +1274,7 @@ public class PartGun extends APart {
             super.renderBoundingBoxes(transform);
             //Draw the gun muzzle bounding boxes.
             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                setBulletSpawn(bulletPositionRender, bulletVelocityRender, bulletOrientationRender, muzzle);
+                setBulletSpawn(bulletPositionRender, bulletVelocityRender, bulletOrientationRender, muzzle, false);
                 new BoundingBox(bulletPositionRender, 0.25, 0.25, 0.25).renderWireframe(this, transform, null, ColorRGB.BLUE);
             }
         }
@@ -1275,6 +1294,18 @@ public class PartGun extends APart {
         if (reloadingBullet != null) {
             data.setString("reloadingBulletPack", reloadingBullet.definition.packID);
             data.setString("reloadingBulletName", reloadingBullet.definition.systemName);
+        }
+        try {
+            Field randomSeedFeild = Random.class.getDeclaredField("seed");
+            randomSeedFeild.setAccessible(true);
+            AtomicLong randomSeedObject = (AtomicLong) randomSeedFeild.get(randomGenerator);
+            long randomSeed = randomSeedObject.get();
+            data.setBoolean("savedSeed", true);
+            data.setInteger("randomSeedPart1", (int) (randomSeed >> 32));
+            data.setInteger("randomSeedPart2", (int) randomSeed);
+        } catch (Exception e) {
+            //Nope, we'll never get here!
+            e.printStackTrace();
         }
         return data;
     }
