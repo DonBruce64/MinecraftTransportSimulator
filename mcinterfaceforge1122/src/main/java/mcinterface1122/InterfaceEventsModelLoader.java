@@ -52,6 +52,7 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsModelLoader {
+    private static boolean enableDebug = true;
 
     /**
      * Event that's called to register models.  We register our render wrapper
@@ -190,7 +191,7 @@ public class InterfaceEventsModelLoader {
                     //JSON reference.  Get the specified file.
                     stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
-                        if (ConfigSystem.settings.general.devMode.value) {
+                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
                         }
                         throw new FileNotFoundException(rawPackInfo);
@@ -231,7 +232,7 @@ public class InterfaceEventsModelLoader {
                             stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
                         }
                     } catch (Exception e) {
-                        if (ConfigSystem.settings.general.devMode.value) {
+                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
                         }
                         throw new FileNotFoundException(rawPackInfo);
@@ -268,7 +269,7 @@ public class InterfaceEventsModelLoader {
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
                                 stream = getClass().getResourceAsStream(streamJSONLocation);
                                 if (stream == null) {
-                                    if (ConfigSystem.settings.general.devMode.value) {
+                                    if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                                         if (streamLocation != null) {
                                             InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
                                         } else {
@@ -278,7 +279,7 @@ public class InterfaceEventsModelLoader {
                                     throw new FileNotFoundException(rawPackInfo);
                                 }
                             } else {
-                                if (ConfigSystem.settings.general.devMode.value) {
+                                if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                                     InterfaceManager.coreInterface.logError("Could not find OBJ PNG: " + streamLocation);
                                 }
                                 throw new FileNotFoundException(rawPackInfo);
@@ -290,7 +291,7 @@ public class InterfaceEventsModelLoader {
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
                         stream = getClass().getResourceAsStream(streamLocation);
                         if (stream == null) {
-                            if (ConfigSystem.settings.general.devMode.value) {
+                            if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                                 InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
                             }
                             throw new FileNotFoundException(rawPackInfo);
@@ -300,7 +301,7 @@ public class InterfaceEventsModelLoader {
                     if (e instanceof FileNotFoundException) {
                         throw e;
                     } else {
-                        if (ConfigSystem.settings.general.devMode.value) {
+                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not parse which item PNG to get from: " + rawPackInfo);
                         }
                         throw new FileNotFoundException(rawPackInfo);
@@ -315,7 +316,14 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public boolean resourceExists(ResourceLocation location) {
-            return domains.contains(location.getNamespace()) && !location.getPath().contains("blockstates") && !location.getPath().contains("armatures") && !location.getPath().contains("mcmeta") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
+            try {
+                enableDebug = false;
+                boolean returnValue = getInputStream(location) != null;
+                enableDebug = true;
+                return returnValue;
+            } catch (IOException e) {
+                return false;
+            }
         }
 
         @Override
