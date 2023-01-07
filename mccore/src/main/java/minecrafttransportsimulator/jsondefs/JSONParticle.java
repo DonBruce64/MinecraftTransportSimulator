@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -17,6 +18,9 @@ public class JSONParticle {
 
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
+
+    @JSONDescription("Normally, particles align themselves to face the player.  Set this to true if you want them to not do this and just be aligned as spawned.")
+    public boolean axisAligned;
 
     @JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
     public int quantity;
@@ -63,6 +67,10 @@ public class JSONParticle {
 
     @JSONDescription("The position where this particle should be spawned relative to the spawning object.  May be left out if the particle should spawn at the same position.")
     public Point3D pos;
+
+    @JSONRequired(dependentField = "textureList", dependentValues = "true")
+    @JSONDescription("The rotation to rotate this particle to.  Has no effect if axisAligned is false, as particles normally rotate to face the player.")
+    public RotationMatrix rot;
 
     @JSONDescription("The initial velocity of the particle, where +Z is straight ahead relative to the thing that is producing it.  May be omitted to make a particle that doesn't spawn with any initial velocity except the velocity of the object spawning it.")
     public Point3D initialVelocity;

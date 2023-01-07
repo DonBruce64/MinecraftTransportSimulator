@@ -50,6 +50,12 @@ public class EntityParticle extends AEntityC_Renderable {
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
+        if (definition.axisAligned) {
+            orientation.set(entitySpawning.orientation);
+            orientation.multiply(definition.rot);
+            prevOrientation.set(orientation);
+        }
+
         helperTransform.resetTransforms().set(entitySpawning.orientation);
         if (switchbox != null) {
             helperTransform.multiply(switchbox.netMatrix);
@@ -233,7 +239,9 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.depthRadius = boundingBox.widthRadius;
 
         //Update orientation to always face the player.
-        orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceManager.clientInterface.getCameraPosition()).subtract(position), true);
+        if (!definition.axisAligned) {
+            orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceManager.clientInterface.getCameraPosition()).subtract(position), true);
+        }
 
         //Check if we need to change textures.
         if (textureList != null && timeOfNextTexture <= ticksExisted) {
