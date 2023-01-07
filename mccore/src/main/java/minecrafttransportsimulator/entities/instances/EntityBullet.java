@@ -209,7 +209,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Now that we have an accurate motion, check for collisions.
         //First get a damage object to try to attack entities with.
-        Damage damage = new Damage((velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, gun.lastController, gun.lastController != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL);
+        Damage damage = new Damage(definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, gun.lastController, gun.lastController != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL);
         damage.setBullet(getItem());
 
         //Check for collided external entities and attack them.
