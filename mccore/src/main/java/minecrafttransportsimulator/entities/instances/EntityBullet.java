@@ -178,8 +178,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     targetVector = new Point3D();
                 }
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
-                targetVector.set(targetPosition.copy().addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor/ 20D/10D) * ticksToTarget)).subtract(position).reOrigin(orientation).getAngles(true);
-
+                if (externalEntityTargeted != null) {
+                    targetVector.set(targetPosition.copy().addScaled(externalEntityTargeted.getVelocity(),(externalEntityTargeted.getVelocity().length()/20.0D/10.0D) * ticksToTarget)).subtract(position).reOrigin(orientation).getAngles(true);
+                } else if (engineTargeted != null) {
+                    targetVector.set(targetPosition.copy().addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor/ 20.0D/10.0D) * ticksToTarget)).subtract(position).reOrigin(orientation).getAngles(true);
+                } else {
+                    targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
+                }
 
                 //Clamp angular delta to match turn rate and apply.
                 if (targetVector.y > definition.bullet.turnRate) {
