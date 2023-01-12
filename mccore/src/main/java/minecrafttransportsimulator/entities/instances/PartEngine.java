@@ -425,8 +425,8 @@ public class PartEngine extends APart {
                         }
 
                         //If the engine has high hours, give a chance for a backfire.
-                        if (hours > 250 && !world.isClient()) {
-                            if (Math.random() < (hours / 2) / (250 + (10000 - hours)) * (currentMaxSafeRPM / (rpm + currentMaxSafeRPM / 1.5))) {
+                        if (hours >= 500 && !world.isClient()) {
+                            if (Math.random() < (hours / 3) / (500 + (10000 - hours)) * (currentMaxSafeRPM / (rpm + currentMaxSafeRPM / 1.5))) {
                                 backfireEngine();
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
                             }
@@ -525,7 +525,7 @@ public class PartEngine extends APart {
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
                 wheelFriction = 0;
-                engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM : definition.engine.startRPM;
+                engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM : definition.engine.startRPM;
 
                 //Update wheel friction and velocity.
                 for (PartGroundDevice wheel : drivenWheels) {
@@ -544,11 +544,8 @@ public class PartEngine extends APart {
                     if (wheelFriction > 0) {
                         double desiredRPM = lowestWheelVelocity * 1200F * currentGearRatio * vehicleOn.currentAxleRatio;
                         rpm += (desiredRPM - rpm) / definition.engine.revResistance;
-                        if (rpm < currentIdleRPM && running && backfireCooldown <= 0) {//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
-                            rpm = currentIdleRPM;
-                        } else if (rpm < definition.engine.stallRPM && running) {
-                            rpm = definition.engine.stallRPM;
-                            backfireCooldown -= 1;
+                        if (rpm < (currentIdleRPM - ((currentIdleRPM - definition.engine.stallRPM) * 0.5)) && running) {
+                            rpm = currentIdleRPM - ((currentIdleRPM - definition.engine.stallRPM) * 0.5);
                         }
                     } else {
                         //No wheel force.  Adjust wheels to engine speed.
@@ -576,7 +573,7 @@ public class PartEngine extends APart {
 
                     if (running) {
                         propellerFeedback -= propellerForcePenalty * 50;
-                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM;
+                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
                         double engineRPMDifference = engineTargetRPM - rpm;
 
                         //propellerFeedback can't make an engine stall, but hours can.
@@ -603,7 +600,7 @@ public class PartEngine extends APart {
                     if (rocketFuel > 0) {
                         engineTargetRPM = currentMaxRPM;
                     } else {
-                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM;
+                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
                     }
                     rpm += (engineTargetRPM - rpm) / (definition.engine.revResistance * 3);
                     if (currentRevlimitRPM == -1) {
@@ -802,6 +799,8 @@ public class PartEngine extends APart {
                 return rpm / currentMaxRPM;
             case ("engine_rpm_percent_safe"):
                 return rpm / currentMaxSafeRPM;
+            case ("engine_rpm_target"):
+            	return engineTargetRPM;
             case ("engine_fuel_flow"):
                 return fuelFlow * 20D * 60D / 1000D;
             case ("engine_fuel_remaining"):
