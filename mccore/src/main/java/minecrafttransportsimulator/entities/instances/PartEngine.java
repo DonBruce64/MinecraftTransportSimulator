@@ -81,7 +81,6 @@ public class PartEngine extends APart {
     private boolean autoStarterEngaged;
     private int starterLevel;
     private int shiftCooldown;
-    private int backfireCooldown;
     private double lowestWheelVelocity;
     private double desiredWheelVelocity;
     private double engineAxialVelocity;
@@ -352,8 +351,8 @@ public class PartEngine extends APart {
                 //Stall engine for conditions.
                 if (!world.isClient()) {
                     if (!isActive) {
-                        stallEngine(Signal.FUEL_OUT);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+                        stallEngine(Signal.INACTIVE);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                     } else if (vehicleOn.outOfHealth) {
                         stallEngine(Signal.DEAD_VEHICLE);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
@@ -943,8 +942,7 @@ public class PartEngine extends APart {
     public void backfireEngine() {
         //Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
         backfired = true;
-        rpm -= currentMaxRPM < 15000 ? 100 : 500;
-        backfireCooldown = 4;
+        rpm -= currentMaxRPM < 15000 ? Math.round((0.05*rpm)+((hours*0.05)-25)) : Math.round((0.1*rpm)+((hours*0.1)-50));
     }
 
     public void badShiftEngine() {
