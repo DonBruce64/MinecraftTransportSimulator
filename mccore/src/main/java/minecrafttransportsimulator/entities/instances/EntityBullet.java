@@ -178,11 +178,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     targetVector = new Point3D();
                 }
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
-                if (externalEntityTargeted != null) {
-                    targetVector.set(targetPosition.copy().addScaled(externalEntityTargeted.getVelocity(),(externalEntityTargeted.getVelocity().length()/20.0D/10.0D) * ticksToTarget)).subtract(position).reOrigin(orientation).getAngles(true);
-                } else if (engineTargeted != null) {
-                    targetVector.set(targetPosition.copy().addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor/ 20.0D/10.0D) * ticksToTarget)).subtract(position).reOrigin(orientation).getAngles(true);
-                } else {
+                if ((gun.definition.gun.targetType == JSONPart.TargetType.ALL && engineTargeted != null) || gun.definition.gun.targetType == JSONPart.TargetType.AIRCRAFT || gun.definition.gun.targetType == JSONPart.TargetType.GROUND) {
+                    targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
+                } else if ((gun.definition.gun.targetType == JSONPart.TargetType.ALL && externalEntityTargeted != null) || gun.definition.gun.targetType == JSONPart.TargetType.SOFT) {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
                 }
 
