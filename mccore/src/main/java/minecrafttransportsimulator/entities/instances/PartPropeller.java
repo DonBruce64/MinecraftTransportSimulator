@@ -113,7 +113,8 @@ public class PartPropeller extends APart {
                 if (currentConnectedEngine != null && definition.propeller.isDynamicPitch) {
                     if (currentPitch > MIN_DYNAMIC_PITCH) {
                         decreasePitch = currentConnectedEngine.rpm < currentConnectedEngine.definition.engine.maxSafeRPM * 0.60;
-                    } else if (currentPitch < definition.propeller.pitch) {
+                    }
+                    if (currentPitch < definition.propeller.pitch) {
                         increasePitch = currentConnectedEngine.rpm > currentConnectedEngine.definition.engine.maxSafeRPM * 0.85;
                     }
                 }
