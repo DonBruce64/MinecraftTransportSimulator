@@ -32,6 +32,8 @@ public class SoundInstance {
     public float pitch = 1.0F;
     public boolean stopSound = false;
 
+    public static final int DEFAULT_MAX_DISTANCE = 32;
+
     public SoundInstance(AEntityB_Existing entity, String soundName) {
         this(entity, soundName, null, null);
     }
