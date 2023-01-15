@@ -189,7 +189,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 }
                 if (foundConnection == null && !towingConnections.isEmpty()) {
                     for (TowingConnection towingConnection : towingConnections) {
-                        if (towingConnection.hookupGroupIndex == groupIndex && towingConnection.hookupConnectionIndex == connectionIndex) {
+                        if (towingConnection.hitchGroupIndex == groupIndex && towingConnection.hitchConnectionIndex == connectionIndex) {
                             foundConnection = towingConnection;
                             break;
                         }
@@ -200,11 +200,11 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         case ("connected"):
                             return 1;
                         case ("pitch"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).x : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).x;
+                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).x : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).x;
                         case ("yaw"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).y : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).y;
+                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).y : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).y;
                         case ("roll"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z;
+                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z;
                     }
                 }
             }
@@ -251,25 +251,25 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
     @Override
     public boolean canCollideWith(AEntityB_Existing entityToCollide) {
-        return super.canCollideWith(entityToCollide) && !matchesTowing(entityToCollide) && !matchesTowed(entityToCollide);
+        return super.canCollideWith(entityToCollide) && !(entityToCollide instanceof AEntityG_Towable) || (!areWeTowedBy((AEntityG_Towable<?>) entityToCollide) && !areWeTowing((AEntityG_Towable<?>) entityToCollide));
     }
 
-    protected boolean matchesTowing(AEntityB_Existing entityToCollide) {
+    protected boolean areWeTowedBy(AEntityG_Towable<?> entity) {
         if (towedByConnection == null) {
             return false;
-        } else if (entityToCollide.equals(towedByConnection.towingVehicle)) {
+        } else if (entity == towedByConnection.towingVehicle) {
             return true;
         } else {
-            return towedByConnection.towingVehicle.matchesTowing(entityToCollide);
+            return towedByConnection.towingVehicle.areWeTowedBy(entity);
         }
     }
 
-    protected boolean matchesTowed(AEntityB_Existing entityToCollide) {
+    protected boolean areWeTowing(AEntityG_Towable<?> entity) {
         if (!towingConnections.isEmpty()) {
             for (TowingConnection connection : towingConnections) {
-                if (entityToCollide.equals(connection.towedVehicle)) {
+                if (entity == connection.towedVehicle) {
                     return true;
-                } else if (connection.towedVehicle.matchesTowed(entityToCollide)) {
+                } else if (connection.towedVehicle.areWeTowing(entity)) {
                     return true;
                 }
             }
