@@ -1038,6 +1038,41 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Returns true if any of the variables in the passed-in list are true.
+     */
+    public boolean isVariableListTrue(List<List<String>> list) {
+        if (list != null) {
+            for (List<String> variableList : list) {
+                boolean listIsTrue = false;
+                for (String variableName : variableList) {
+                    if (variableName.startsWith("!")) {
+                        double value = getRawVariableValue(variableName.substring(1), 0);
+                        if (value == 0 || Double.isNaN(value)) {
+                            //Inverted variable value is 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    } else {
+                        double value = getRawVariableValue(variableName, 0);
+                        if (!Double.isNaN(value) && value > 0) {
+                            //Normal variable value is non-zero 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    }
+                }
+                if (!listIsTrue) {
+                    //List doesn't have any true variables, therefore the value is false.
+                    return false;
+                }
+            }
+            //No false lists were found for this collection, therefore the list is true.
+        } //No lists found for this entry, therefore no variables are false.
+
+        return true;
+    }
+
+    /**
      * Custom variable modifier switchbox class.
      */
     private static class VariableModifierSwitchbox extends AnimationSwitchbox {
