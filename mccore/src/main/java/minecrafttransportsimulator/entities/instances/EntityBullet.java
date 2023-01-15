@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -178,9 +179,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     targetVector = new Point3D();
                 }
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
-                if ((gun.definition.gun.targetType == JSONPart.TargetType.ALL && engineTargeted != null) || gun.definition.gun.targetType == JSONPart.TargetType.AIRCRAFT || gun.definition.gun.targetType == JSONPart.TargetType.GROUND) {
+                if ((gun.definition.gun.targetType == TargetType.ALL && engineTargeted != null) || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND) {
                     targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
-                } else if ((gun.definition.gun.targetType == JSONPart.TargetType.ALL && externalEntityTargeted != null) || gun.definition.gun.targetType == JSONPart.TargetType.SOFT) {
+                } else if ((gun.definition.gun.targetType == TargetType.ALL && externalEntityTargeted != null) || gun.definition.gun.targetType == TargetType.SOFT) {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
                 }
 
