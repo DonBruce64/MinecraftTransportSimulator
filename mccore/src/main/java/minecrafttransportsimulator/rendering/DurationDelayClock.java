@@ -124,14 +124,24 @@ public class DurationDelayClock {
                         endedForwardsMovement = true;
                         movedThisUpdate = true;
                         if (animation.forwardsEndSound != null && entity.world.isClient()) {
-                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.forwardsEndSound));
+                            double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                            if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                                SoundInstance sound = new SoundInstance(entity, animation.forwardsEndSound);
+                                sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                                InterfaceManager.soundInterface.playQuickSound(sound);
+                            }
                         }
                     }
                 }
                 if (!startedForwardsMovement) {
                     startedForwardsMovement = true;
                     if (animation.forwardsStartSound != null && entity.world.isClient()) {
-                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.forwardsStartSound));
+                        double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                            SoundInstance sound = new SoundInstance(entity, animation.forwardsStartSound);
+                            sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                            InterfaceManager.soundInterface.playQuickSound(sound);
+                        }
                     }
                 }
             }
@@ -151,14 +161,24 @@ public class DurationDelayClock {
                         endedReverseMovement = true;
                         movedThisUpdate = true;
                         if (animation.reverseEndSound != null && entity.world.isClient()) {
-                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.reverseEndSound));
+                            double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                            if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                                SoundInstance sound = new SoundInstance(entity, animation.reverseEndSound);
+                                sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                                InterfaceManager.soundInterface.playQuickSound(sound);
+                            }
                         }
                     }
                 }
                 if (!startedReverseMovement) {
                     startedReverseMovement = true;
                     if (animation.reverseStartSound != null && entity.world.isClient()) {
-                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.reverseStartSound));
+                        double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                            SoundInstance sound = new SoundInstance(entity, animation.reverseStartSound);
+                            sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                            InterfaceManager.soundInterface.playQuickSound(sound);
+                        }
                     }
                 }
             }

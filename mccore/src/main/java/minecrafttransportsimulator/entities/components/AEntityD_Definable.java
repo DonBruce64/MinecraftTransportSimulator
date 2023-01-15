@@ -607,7 +607,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     if (soundDef.maxDistance != soundDef.minDistance) {
                         shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
                     } else {
-                        shouldSoundStartPlaying = distance < 32;
+                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
                     }
                 }
 
@@ -674,7 +674,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                         //Adjust volume based on distance.
                         if (soundDef.minDistance == 0) {
-                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : 32;
+                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
                             sound.volume *= (maxDistance - distance) / (maxDistance);
                         }
 
