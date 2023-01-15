@@ -177,6 +177,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (targetVector == null) {
                     targetVector = new Point3D();
                 }
+                
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
                 if ((gun.definition.gun.targetType == JSONPart.TargetType.ALL && engineTargeted != null) || gun.definition.gun.targetType == JSONPart.TargetType.AIRCRAFT || gun.definition.gun.targetType == JSONPart.TargetType.GROUND) {
                     targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
