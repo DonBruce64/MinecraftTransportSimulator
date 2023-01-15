@@ -24,12 +24,6 @@ public class JSONRendering {
     @JSONDescription("A list of custom variable names.  Currently only supported on vehicles, and will appear as switches in the panel with the names below them.  These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined definitions.  You may have up to 4 custom variables on any vehicle.  Surely, that's enough?")
     public List<String> customVariables;
 
-    @JSONDescription("A list of variables that will be set during initial placement of this object.  These can be used to set initial states, such as open doors or lights.")
-    public List<String> initialVariables;
-
-    @JSONDescription("A list of constant variable names. These variables will be added into the listing of active variables and will always return 1 if requested, no matter what. Useful for grouping parts and things internally where using custom typing would simply cause more issues than it would solve.")
-    public List<String> constants;
-
     @JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.  While you can hook sounds to animations, they are rather limited in how they can be triggered and manipulated.  Sounds here allow for looping, pitch-shifting, volume control, etc.  This is where you'll want to define your sounds for engines, horns, and annoying carnival music.")
     public List<JSONSound> sounds;
 
@@ -67,6 +61,10 @@ public class JSONRendering {
     public ColorRGB panelTextColor;
     @Deprecated
     public ColorRGB panelLitTextColor;
+    @Deprecated
+    public List<String> constants;
+    @Deprecated
+    public List<String> initialVariables;
 
     @Deprecated
     public static class VehicleDisplayText {

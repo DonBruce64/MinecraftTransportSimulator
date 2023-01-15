@@ -162,8 +162,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (String variableName : data.getStrings("variables")) {
             variables.put(variableName, data.getDouble(variableName));
         }
-        if (newlyCreated && definition.rendering != null && definition.rendering.initialVariables != null) {
-            for (String variable : definition.rendering.initialVariables) {
+        if (newlyCreated && definition.initialVariables != null) {
+            for (String variable : definition.initialVariables) {
                 variables.put(variable, 1D);
             }
         }
@@ -362,8 +362,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         //Add constants.
-        if (definition.rendering != null && definition.rendering.constants != null) {
-            for (String variable : definition.rendering.constants) {
+        if (definition.constants != null) {
+            for (String variable : definition.constants) {
                 variables.put(variable, 1D);
             }
         }

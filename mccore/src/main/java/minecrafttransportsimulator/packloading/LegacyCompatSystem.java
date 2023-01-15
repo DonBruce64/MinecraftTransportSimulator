@@ -128,8 +128,8 @@ public final class LegacyCompatSystem {
             definition.general.repairMaterials = null;
         }
 
-        //Check if the model needs a model type or has extraMaterials to convert..
         if (definition instanceof AJSONMultiModelProvider) {
+            //Check if the model needs a model type or has extraMaterials to convert..
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
             for (JSONSubDefinition subDef : provider.definitions) {
                 if (subDef.extraMaterials != null) {
@@ -144,6 +144,16 @@ public final class LegacyCompatSystem {
             }
             if (provider.rendering.modelType == null) {
                 provider.rendering.modelType = ModelType.OBJ;
+            }
+
+            //Move constants and initial variables to the main file and out of rendering.
+            if (provider.rendering != null && provider.rendering.constants != null) {
+                provider.constants = provider.rendering.constants;
+                provider.rendering.constants = null;
+            }
+            if (provider.rendering != null && provider.rendering.initialVariables != null) {
+                provider.initialVariables = provider.rendering.initialVariables;
+                provider.rendering.initialVariables = null;
             }
 
             //Parse the model and do LCs on it if we need to do so.
