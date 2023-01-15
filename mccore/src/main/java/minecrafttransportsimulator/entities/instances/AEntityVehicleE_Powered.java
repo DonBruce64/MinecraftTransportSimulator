@@ -51,6 +51,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public static final double MAX_THROTTLE = 1.0D;
 
     //Internal states.
+    public boolean hasReverseThrust;
     public int gearMovementTime;
     public double electricPower;
     public double electricUsage;
@@ -222,6 +223,24 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 engines.add((PartEngine) part);
             }
         });
+
+        //Set reverse thrust.
+        hasReverseThrust = false;
+        if (definition.motorized.isBlimp) {
+            hasReverseThrust = true;
+        } else {
+            for (APart part : allParts) {
+                if (part instanceof PartPropeller) {
+                    if (part.definition.propeller.isDynamicPitch) {
+                        hasReverseThrust = true;
+                        break;
+                    }
+                } else if (part instanceof PartEngine && part.definition.engine.jetPowerFactor > 0) {
+                    hasReverseThrust = true;
+                    break;
+                }
+            }
+        }
     }
 
     public FuelTankResult checkFuelTankCompatibility(String fluid) {

@@ -263,7 +263,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         addComponent(rudderTrimSelector);
 
         //If we have both reverse thrust AND autopilot, render them side-by-side. Otherwise just render one in the middle
-        if (haveReverseThrustOption && vehicle.definition.motorized.hasAutopilot) {
+        if (vehicle.hasReverseThrust && vehicle.definition.motorized.hasAutopilot) {
             reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_REVERSE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
@@ -283,7 +283,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                 }
             };
             addComponent(autopilotSelector);
-        } else if (haveReverseThrustOption) {
+        } else if (vehicle.hasReverseThrust) {
             reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE / 2, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_REVERSE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {

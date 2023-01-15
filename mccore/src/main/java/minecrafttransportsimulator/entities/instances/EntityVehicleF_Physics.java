@@ -781,6 +781,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return enginesRunning ? 1 : 0;
             case ("reverser"):
                 return reverseThrust ? 1 : 0;
+            case ("reverser_present"):
+                return hasReverseThrust ? 1 : 0;
             case ("locked"):
                 return locked ? 1 : 0;
             case ("door"):
