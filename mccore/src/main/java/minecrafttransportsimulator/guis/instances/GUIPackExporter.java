@@ -223,7 +223,7 @@ public class GUIPackExporter extends AGUIBase {
         for (byte i = 0; i < 5; ++i) {
             int height = i < 2 ? 40 : 10;
             GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
-            GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setBox(dataEntryBox);
+            GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setComponent(dataEntryBox);
             dataEntryBoxes.add(dataEntryBox);
             dataEntryLabels.add(dataEntryLabel);
             addComponent(dataEntryBox);

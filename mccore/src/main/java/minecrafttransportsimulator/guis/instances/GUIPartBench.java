@@ -175,7 +175,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
+        addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setComponent(nextColorButton));
 
         //Create recipe selection button.
         addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {

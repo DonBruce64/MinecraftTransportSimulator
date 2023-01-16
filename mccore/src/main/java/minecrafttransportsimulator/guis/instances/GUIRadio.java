@@ -74,7 +74,7 @@ public class GUIRadio extends AGUIBase {
                 teachMode = false;
             }
         });
-        addComponent(new GUIComponentLabel(offButton.constructedX + offButton.width / 2, offButton.constructedY - 10, ColorRGB.BLACK, "SOURCE", TextAlignment.CENTERED, 1.0F).setButton(offButton));
+        addComponent(new GUIComponentLabel(offButton.constructedX + offButton.width / 2, offButton.constructedY - 10, ColorRGB.BLACK, "SOURCE", TextAlignment.CENTERED, 1.0F).setComponent(offButton));
         addComponent(localButton = new GUIComponentButton(offButton.constructedX, offButton.constructedY + offButton.height, offButton.width, offButton.height, "PC") {
             @Override
             public void onClicked(boolean leftSide) {
@@ -150,7 +150,7 @@ public class GUIRadio extends AGUIBase {
                 equalizerMode = true;
             }
         });
-        addComponent(new GUIComponentLabel(volumeDisplay.constructedX + volumeDisplay.width, volumeDisplay.constructedY - 10, ColorRGB.BLACK, "VOLUME", TextAlignment.CENTERED, 1.0F).setButton(volUpButton));
+        addComponent(new GUIComponentLabel(volumeDisplay.constructedX + volumeDisplay.width, volumeDisplay.constructedY - 10, ColorRGB.BLACK, "VOLUME", TextAlignment.CENTERED, 1.0F).setComponent(volUpButton));
 
         //Preset buttons.
         presetButtons.clear();

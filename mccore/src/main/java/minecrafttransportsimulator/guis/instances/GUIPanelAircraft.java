@@ -350,7 +350,7 @@ public class GUIPanelAircraft extends AGUIPanel {
             addComponent(beaconBox);
 
             //Add beacon text box label.
-            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
+            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setComponent(beaconBox));
         }
 
         //If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle

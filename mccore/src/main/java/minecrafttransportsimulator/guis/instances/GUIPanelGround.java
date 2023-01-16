@@ -122,7 +122,7 @@ public class GUIPanelGround extends AGUIPanel {
             addComponent(beaconBox);
 
             //Add beacon text box label.
-            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
+            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setComponent(beaconBox));
         }
     }
 

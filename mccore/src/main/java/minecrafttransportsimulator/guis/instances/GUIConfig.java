@@ -152,7 +152,7 @@ public class GUIConfig extends AGUIBase {
             addComponent(buttonKeyboard);
             //Add screen label if we haven't already.
             if (vehicleSelectionButtons.size() == 1) {
-                addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_TITLE.value).setButton(buttonKeyboard));
+                addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_TITLE.value).setComponent(buttonKeyboard));
             }
         }
 
@@ -172,7 +172,7 @@ public class GUIConfig extends AGUIBase {
             }
         });
         addComponent(volumeLabel = new GUIComponentLabel(guiLeft + 128, guiTop + 165, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + ConfigSystem.client.controlSettings.masterVolume.value, TextAlignment.CENTERED, 1.0F));
-        volumeLabel.setButton(volumeDownButton);
+        volumeLabel.setComponent(volumeDownButton);
 
         //Now add joystick buttons.
         for (String vehicleType : vehicleTypes) {
@@ -214,7 +214,7 @@ public class GUIConfig extends AGUIBase {
                     addComponent(box);
 
                     //Now create the label.
-                    addComponent(new GUIComponentLabel(box.constructedX - 70, box.constructedY + 2, ColorRGB.BLACK, keyboardControl.language.value + ":").setBox(box));
+                    addComponent(new GUIComponentLabel(box.constructedX - 70, box.constructedY + 2, ColorRGB.BLACK, keyboardControl.language.value + ":").setComponent(box));
 
                     verticalOffset += 11;
                     if (verticalOffset > 20 + 11 * 9) {
@@ -260,8 +260,8 @@ public class GUIConfig extends AGUIBase {
 
             //Link the header text to the first joystick button.
             if (joystickSelectionButtons.size() == 1) {
-                addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_SELECT.value).setButton(button));
-                addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 25, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_NAME.value).setButton(button));
+                addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_SELECT.value).setComponent(button));
+                addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 25, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_NAME.value).setComponent(button));
             }
         }
 
@@ -312,11 +312,11 @@ public class GUIConfig extends AGUIBase {
         });
         addComponent(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 
-        addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 20, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_MAPPING.value).setButton(componentListUpButton));
-        addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 35, ColorRGB.BLACK, "#").setButton(componentListUpButton));
-        addComponent(new GUIComponentLabel(guiLeft + 30, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_NAME.value).setButton(componentListUpButton));
-        addComponent(new GUIComponentLabel(guiLeft + 100, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_STATE.value).setButton(componentListUpButton));
-        addComponent(new GUIComponentLabel(guiLeft + 140, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_ASSIGNMENT.value).setButton(componentListUpButton));
+        addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 20, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_MAPPING.value).setComponent(componentListUpButton));
+        addComponent(new GUIComponentLabel(guiLeft + 15, guiTop + 35, ColorRGB.BLACK, "#").setComponent(componentListUpButton));
+        addComponent(new GUIComponentLabel(guiLeft + 30, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_NAME.value).setComponent(componentListUpButton));
+        addComponent(new GUIComponentLabel(guiLeft + 100, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_STATE.value).setComponent(componentListUpButton));
+        addComponent(new GUIComponentLabel(guiLeft + 140, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_ASSIGNMENT.value).setComponent(componentListUpButton));
 
         //Joystick assignment buttons and text.
         //Global buttons and labels for digital and analog.
@@ -340,7 +340,7 @@ public class GUIConfig extends AGUIBase {
                 joystickComponentId = -1;
             }
         });
-        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CHOOSEMAP.value).setButton(clearAssignmentButton));
+        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CHOOSEMAP.value).setComponent(clearAssignmentButton));
 
         //Digital and analog buttons.
         digitalAssignButtons.clear();
@@ -412,8 +412,8 @@ public class GUIConfig extends AGUIBase {
         axisMinBoundsTextBox.enabled = false;
         addComponent(axisMaxBoundsTextBox = new GUIComponentTextBox(guiLeft + 50, guiTop + 60, 150, "0.0"));
         axisMaxBoundsTextBox.enabled = false;
-        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CALIBRATE1.value).setButton(confirmBoundsButton));
-        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 20, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CALIBRATE2.value).setButton(confirmBoundsButton));
+        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CALIBRATE1.value).setComponent(confirmBoundsButton));
+        addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 20, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CALIBRATE2.value).setComponent(confirmBoundsButton));
     }
 
     @Override
@@ -616,7 +616,7 @@ public class GUIConfig extends AGUIBase {
                         };
                         addComponent(button);
                         configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);
-                        addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + 5, ColorRGB.BLACK, field.getName()).setButton(button));
+                        addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + 5, ColorRGB.BLACK, field.getName()).setComponent(button));
                     }
                 } catch (Exception e) {
                     //How the heck does this even happen?
