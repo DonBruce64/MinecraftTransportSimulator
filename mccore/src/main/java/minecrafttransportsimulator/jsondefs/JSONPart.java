@@ -395,6 +395,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How long, in ticks, this gun takes to reload.  This is applied for hand-held reloading as well as automatic reloading.  This value should be similar to the duration of your gun _reloading sound to ensure players don't get confused about why they can't fire their guns.")
         public int reloadTime;
 
+        @JSONDescription("How long, in ticks, this gun has to wait after firing a shot to reload.  This differs from reloadTime, as it blocks the reload sequence from starting, rather than changes how long it takes.")
+        public int reloadDelay;
+
         @JSONDescription("How long, in ticks, this gun takes to start firing after pulling the trigger.  This is designed for chain-gun type guns that need a short period of wind-up before they can start firing.  When the trigger is released, the gun will wind-down for the same amount of time it took to wind up.  If the gun doesn't wind all the way down before pulling the trigger again, it will start to wind back up from that point rather than 0.")
         public int windupTime;
 

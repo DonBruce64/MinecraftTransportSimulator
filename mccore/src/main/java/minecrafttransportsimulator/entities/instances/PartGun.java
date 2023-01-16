@@ -80,6 +80,7 @@ public class PartGun extends APart {
     public boolean isRunningInCoaxialMode;
     private int camOffset;
     private int cooldownTimeRemaining;
+    private int reloadDelayRemaining;
     private int reloadTimeRemaining;
     private int windupTimeCurrent;
     private int windupRotation;
@@ -314,6 +315,13 @@ public class PartGun extends APart {
                 --cooldownTimeRemaining;
             }
 
+            //Set or decrement reloadDelay.
+            if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
+                reloadDelayRemaining = definition.gun.reloadDelay;
+            } else if (reloadDelayRemaining > 0) {
+                --reloadDelayRemaining;
+            }
+
             //Set final gun active state and variables, and fire if those line up with conditions.
             //Note that this code runs concurrently on the client and server.  This prevents the need for packets for bullet
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
@@ -425,7 +433,7 @@ public class PartGun extends APart {
             //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
-            if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null) {
+            if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null && reloadDelayRemaining == 0) {
                 if (entityOn instanceof EntityPlayerGun) {
                     if (definition.gun.autoReload || bulletsLeft == 0) {
                         //Check the player's inventory for bullets.
