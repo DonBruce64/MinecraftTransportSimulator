@@ -212,11 +212,7 @@ public class GUIPanelGround extends AGUIPanel {
             cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_CRUISECONTROL.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.velocity));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(cruiseControlSelector);
@@ -232,11 +228,7 @@ public class GUIPanelGround extends AGUIPanel {
             cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE / 2, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_CRUISECONTROL.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.velocity));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(cruiseControlSelector);

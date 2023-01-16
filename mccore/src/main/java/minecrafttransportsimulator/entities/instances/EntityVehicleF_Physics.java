@@ -83,7 +83,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @DerivedValue
     public double autopilotSetting;
     public double airDensity;
-    public static final String AUTOPILOT_VARIABLE = "autopilot";
+    public static final String AUTOPILOT_VALUE_VARIABLE = "autopilot";
+    public static final String AUTOPILOT_ACTIVE_VARIABLE = "autopilot_active";
     public static final String AUTOLEVEL_VARIABLE = "auto_level";
     public int controllerCount;
     public IWrapperPlayer lastController;
@@ -91,6 +92,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     //Internal states.
     private boolean hasRotors;
     private double trackAngle;
+    private double indicatedSpeed;
     private final Point3D normalizedVelocityVector = new Point3D();
     private final Point3D verticalVector = new Point3D();
     private final Point3D sideVector = new Point3D();
@@ -168,7 +170,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
         rudderInput = getVariable(RUDDER_INPUT_VARIABLE);
         rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
-        autopilotSetting = getVariable(AUTOPILOT_VARIABLE);
+        autopilotSetting = getVariable(AUTOPILOT_VALUE_VARIABLE);
         flapDesiredAngle = getVariable(FLAPS_VARIABLE);
 
         //Adjust flaps to current setting.
@@ -182,6 +184,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 flapCurrentAngle = flapDesiredAngle;
             }
         }
+
+        //Set indicated speed and autopilot state.
+        indicatedSpeed = axialVelocity * speedFactor * 20;
+        if (isVariableActive(AUTOPILOT_ACTIVE_VARIABLE)) {
+            if (!isVariableActive(AUTOPILOT_VALUE_VARIABLE)) {
+                //No value but we're supposed to be active, make us so.
+                if (definition.motorized.isAircraft) {
+                    setVariable(AUTOPILOT_VALUE_VARIABLE, position.y);
+                } else {
+                    setVariable(AUTOPILOT_VALUE_VARIABLE, indicatedSpeed);
+                }
+            }
+        } else if (autopilotSetting != 0) {
+            //Toggle off the autopilot value to set it to 0 next go around.
+            toggleVariable(AUTOPILOT_VALUE_VARIABLE);
+        }
+
         world.endProfiling();
     }
 
@@ -565,13 +584,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     protected void adjustControlSurfaces() {
         if (!definition.motorized.isAircraft && autopilotSetting != 0) {
             //Car, do cruise control.
-            if (velocity < autopilotSetting) {
+            if (indicatedSpeed < autopilotSetting) {
                 if (throttle < MAX_THROTTLE) {
                     throttle += MAX_THROTTLE / 100D;
                     setVariable(THROTTLE_VARIABLE, throttle);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE / 100D));
                 }
-            } else if (velocity > autopilotSetting) {
+            } else if (indicatedSpeed > autopilotSetting) {
                 if (throttle > 0) {
                     throttle -= MAX_THROTTLE / 100D;
                     setVariable(THROTTLE_VARIABLE, throttle);
@@ -754,9 +773,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("altitude"):
                 return position.y;
             case ("speed"):
-                return axialVelocity * speedFactor * 20;
+                return indicatedSpeed;
             case ("speed_scaled"):
-                return axialVelocity * 20;
+                return indicatedSpeed / speedFactor;
             case ("speed_factor"):
                 return speedFactor;
             case ("acceleration"):
@@ -767,6 +786,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
 
             //Vehicle state cases.
+            case("autopilot_present"):
+                return definition.motorized.hasAutopilot ? 1 : 0;
             case ("fuel"):
                 return fuelTank.getFluidLevel() / fuelTank.getMaxLevel();
             case ("mass"):

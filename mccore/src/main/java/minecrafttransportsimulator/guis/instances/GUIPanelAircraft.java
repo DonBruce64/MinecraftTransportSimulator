@@ -275,11 +275,7 @@ public class GUIPanelAircraft extends AGUIPanel {
             autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_AUTOPILOT.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.position.y));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(autopilotSelector);
@@ -295,11 +291,7 @@ public class GUIPanelAircraft extends AGUIPanel {
             autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE / 2, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_AUTOPILOT.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.position.y));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(autopilotSelector);
