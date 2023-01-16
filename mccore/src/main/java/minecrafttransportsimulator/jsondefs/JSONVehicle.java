@@ -148,10 +148,18 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("How big the ballast volume is for this vehicle.  An average value is 1/1000 of the empty weight.  Set higher or lower to your liking.  This will let your vehicle vertically ascend without power.  Used for blimps and janky elevators.")
         public float ballastVolume;
 
+        @JSONRequired
+        @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
+        public String litVariable;
+
+        @JSONDescription("The panel to use for this vehicle.  Format is packID:panelName.")
+        //@JSONRequired
+        public String panel;
+
         @JSONDescription("If this is present, MTS will render this texture for the HUD rather than the default texture.  Make sure to include a _lit variant otherwise things will look weird!")
         public String hudTexture;
 
-        @JSONDescription("Same as hudTexture, but for the panel.")
+        @JSONDescription("Same as hudTexture, but for the panel.  This will override the value in panel if set.")
         public String panelTexture;
 
         @JSONDescription("The color for the text in the panel that renders below components.  If this is not included MTS will default to white.")

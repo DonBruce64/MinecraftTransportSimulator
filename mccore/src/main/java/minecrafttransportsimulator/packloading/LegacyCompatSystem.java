@@ -259,6 +259,28 @@ public final class LegacyCompatSystem {
             definition.blimp = null;
         }
 
+        //Make litVariable if we don't have one.
+        if (definition.motorized.litVariable == null) {
+            if (definition.motorized.hasRunningLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+            } else if (definition.motorized.hasHeadlights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
+            } else if (definition.motorized.hasNavLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+            } else if (definition.motorized.hasNavLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+            } else if (definition.motorized.hasStrobeLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
+            } else if (definition.motorized.hasTaxiLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
+            } else if (definition.motorized.hasLandingLights) {
+                definition.motorized.litVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
+            } else {
+                //Probably a trailer, just use running lights.
+                definition.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+            }
+        }
+
         //Check for old hitches and hookups.
         if (definition.motorized.hitchPos != null) {
             definition.connections = new ArrayList<>();

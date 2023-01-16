@@ -287,19 +287,12 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
     @Override
     public boolean renderTextLit() {
-        if (definition.motorized.hasRunningLights && isVariableActive(RUNNINGLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasHeadlights && isVariableActive(HEADLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasNavLights && isVariableActive(NAVIGATIONLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasStrobeLights && isVariableActive(STROBELIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasTaxiLights && isVariableActive(TAXILIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasLandingLights && isVariableActive(LANDINGLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        return false;
+        if (super.renderTextLit() && electricPower > 3) {
+            double value = getRawVariableValue(definition.motorized.litVariable, 0);
+            return !Double.isNaN(value) && value > 0;
+        } else {
+            return false;
+        }
     }
 
     @Override
