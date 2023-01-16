@@ -310,11 +310,6 @@ public class PartGun extends APart {
                 }
             }
 
-            //Decrement cooldown, if we have it.
-            if (cooldownTimeRemaining > 0) {
-                --cooldownTimeRemaining;
-            }
-
             //Set or decrement reloadDelay.
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
@@ -518,6 +513,11 @@ public class PartGun extends APart {
         //Reset fire command bit if we aren't firing.
         if (!state.isAtLeast(GunState.FIRING_REQUESTED)) {
             firedThisRequest = false;
+        }
+
+        //Decrement cooldown, if we have it.
+        if (cooldownTimeRemaining > 0) {
+            --cooldownTimeRemaining;
         }
 
         //Now run super.  This needed to wait for the gun states to ensure proper states.
