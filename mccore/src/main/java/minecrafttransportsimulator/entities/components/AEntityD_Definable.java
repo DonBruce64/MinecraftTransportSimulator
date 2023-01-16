@@ -599,8 +599,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 //Check if the sound should be playing before we try to update state.
                 //First check if we are in the right view to play.
                 AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding)) || (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
-                boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
+                AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+                boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+                boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+                boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
 
                 //Next, check the distance.
@@ -684,7 +686,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                        if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
                             sound.volume *= 0.5F;
                         }
 
