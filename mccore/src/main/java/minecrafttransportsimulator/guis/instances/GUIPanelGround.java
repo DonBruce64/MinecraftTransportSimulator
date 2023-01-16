@@ -134,28 +134,20 @@ public class GUIPanelGround extends AGUIPanel {
                 GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_ENGINE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
-                        vehicle.engines.forEach(engine -> {
-                            if (selectorState == 1 && !leftSide) {
-                                //Clicked and held right side.  Engage electric starter if possible.
-                                if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
-                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                                }
-                            } else {
-                                //Clicked left side, or right side on state 1. change magneto.
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                            }
-                        });
+                        if (selectorState == 1 && !leftSide) {
+                            //Clicked and held right side.  Engage electric starter if possible.
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.ENGINES_START_REQUEST_VARIABLE));
+                        } else {
+                            //Clicked left side, or right side on state 1. change magneto.
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.ENGINES_ON_REQUEST_VARIABLE));
+                        }
                     }
 
                     @Override
                     public void onReleased() {
                         if (selectorState == 2) {
-                            vehicle.engines.forEach(engine -> {
-                                //Released during sate 2.  Disengage electric starter if possible.
-                                if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
-                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                                }
-                            });
+                            //Released during sate 2.  Disengage electric starter if possible.
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.ENGINES_START_REQUEST_VARIABLE));
                         }
                     }
                 };

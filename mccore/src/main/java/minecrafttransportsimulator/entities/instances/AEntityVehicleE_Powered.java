@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -38,12 +39,15 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public static final String GEAR_VARIABLE = "gear_setpoint";
     public static final String THROTTLE_VARIABLE = "throttle";
     public static final String REVERSE_THRUST_VARIABLE = "reverser";
+    public static final String ENGINES_ON_REQUEST_VARIABLE = "engines_on_request";
+    public static final String ENGINES_START_REQUEST_VARIABLE = "engines_start_request";
 
     //External state control.
     @DerivedValue
     public boolean reverseThrust;
     public boolean beingFueled;
     public boolean enginesOn;
+    public boolean enginesStarting;
     public boolean enginesRunning;
     public boolean isCreative;
     @DerivedValue
@@ -137,13 +141,49 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         } else {
             //Set engine state mapping variables.
             enginesOn = false;
+            enginesStarting = false;
             enginesRunning = false;
             for (PartEngine engine : engines) {
                 if (engine.magnetoOn) {
                     enginesOn = true;
+                    if (engine.electricStarterEngaged) {
+                        enginesStarting = true;
+                    }
                     if (engine.running) {
                         enginesRunning = true;
                         break;
+                    }
+                }
+            }
+
+            //Handle engine signals.
+            if (isVariableActive(ENGINES_ON_REQUEST_VARIABLE)) {
+                if (!enginesOn) {
+                    for (PartEngine engine : engines) {
+                        engine.setVariable(PartEngine.MAGNETO_VARIABLE, 1);
+                    }
+                }
+            } else {
+                if (enginesOn) {
+                    for (PartEngine engine : engines) {
+                        engine.setVariable(PartEngine.MAGNETO_VARIABLE, 0);
+                    }
+                }
+            }
+            if (isVariableActive(ENGINES_START_REQUEST_VARIABLE)) {
+                if (!enginesStarting) {
+                    for (PartEngine engine : engines) {
+                        if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == EngineType.NORMAL) {
+                            engine.setVariable(PartEngine.ELECTRIC_STARTER_VARIABLE, 1);
+                        }
+                    }
+                }
+            } else {
+                if (enginesStarting) {
+                    for (PartEngine engine : engines) {
+                        if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == EngineType.NORMAL) {
+                            engine.setVariable(PartEngine.ELECTRIC_STARTER_VARIABLE, 0);
+                        }
                     }
                 }
             }
@@ -166,7 +206,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
 
         //Adjust gear variables.
-        if (isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)) {
+        if (isVariableActive(GEAR_VARIABLE)) {
             if (gearMovementTime < definition.motorized.gearSequenceDuration) {
                 ++gearMovementTime;
             }
