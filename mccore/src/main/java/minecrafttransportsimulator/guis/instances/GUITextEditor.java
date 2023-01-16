@@ -104,7 +104,9 @@ public class GUITextEditor extends AGUIBase {
             public void onClicked(boolean leftSide) {
                 LinkedHashMap<String, String> packetTextLines = new LinkedHashMap<String, String>();
                 for (JSONText textObject : textObjects) {
-                    packetTextLines.put(textObject.fieldName, textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+                    if (textObject.variableName == null) {
+                        packetTextLines.put(textObject.fieldName, textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+                    }
                 }
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
                 close();

@@ -454,7 +454,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public void updateText(LinkedHashMap<String, String> textLines) {
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
+            String newLine = textLines.get(textEntry.getKey().fieldName);
+            if (newLine != null) {
+                textEntry.setValue(newLine);
+            }
         }
     }
 
