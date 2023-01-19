@@ -788,8 +788,6 @@ public class PartGun extends APart {
             //We also take into account tracking for bullet speed.
             targetVector.set(target.getPosition());
             targetVector.y += target.getEyeHeight() / 2D;
-            double ticksToTarget = target.getPosition().distanceTo(position) / definition.gun.muzzleVelocity / 20D / 10D;
-            targetVector.add(target.getVelocity().scale(ticksToTarget)).subtract(position);
 
             //Transform vector to gun's coordinate system.
             //Get the angles the gun has to rotate to match the target.
