@@ -88,7 +88,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Positional target.
      **/
-    private EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
         this(position, motion, orientation, gun);
         this.targetPosition = targetPosition;
     }
@@ -153,38 +153,77 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             motion.add(motionToAddEachTick);
         }
 
-        //We have a target. Go to it, unless we are waiting for acceleration.
-        //If the target is an external entity, update target position.
-        if (targetPosition != null && !notAcceleratingYet) {
-            if (externalEntityTargeted != null) {
-                if (externalEntityTargeted.isValid()) {
-                    targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
-                } else {
-                    //Entity is dead. Don't target it anymore.
-                    externalEntityTargeted = null;
-                    targetPosition = null;
+        //Guidance code for missiles
+        //First check to see if it can move yet
+        if (definition.bullet.turnRate > 0 && !notAcceleratingYet) {
+            //First, get target positions based on guidance method.
+            switch (definition.bullet.guidanceType){
+                //Bullet will track whatever the gun was locked to, but if it can't see it,
+                //it will continue looking and track the closest thing that comes into its view cone.
+                case PASSIVE: {
+                    //can't figure how to implement this yet.
+                    break;
                 }
-            } else if (engineTargeted != null) {
-                //Don't need to update the position variable for engines, as it auto-syncs.
-                //Do need to check if the engine is still warm and valid, however.
-                if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
-                    engineTargeted = null;
-                    targetPosition = null;
+                case SEMI_ACTIVE: {
+                    //Gun must be locked to the target for the bullet to know where it is.
+                    if (externalEntityTargeted != null) {
+                        if (externalEntityTargeted.isValid()) {
+                            targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
+                        } else if (gun.entityTarget == null) {
+                            targetPosition = null;
+                        } else {
+                            //Entity is dead. Don't target it anymore.
+                            externalEntityTargeted = null;
+                            targetPosition = null;
+                        }
+                    } else if (engineTargeted != null) {
+                        if (gun.engineTarget == null) {
+                            targetPosition = null;
+                        }
+                        //Don't need to update the position variable for engines, as it auto-syncs.
+                        //Do need to check if the engine is still warm and valid, however.
+                        if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted = null;
+                            targetPosition = null;
+                        }
+                    }
+                    break;
+                }
+                case ACTIVE: {
+                    //Always knows where the target is once fired.
+                    if (externalEntityTargeted != null) {
+                        if (externalEntityTargeted.isValid()) {
+                            targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
+                        } else {
+                            //Entity is dead. Don't target it anymore.
+                            externalEntityTargeted = null;
+                            targetPosition = null;
+                        }
+                    } else if (engineTargeted != null) {
+                        //Don't need to update the position variable for engines, as it auto-syncs.
+                        //Do need to check if the engine is still warm and valid, however.
+                        if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted = null;
+                            targetPosition = null;
+                        }
+                    }
+                    break;
                 }
             }
-
             if (targetPosition != null) {
                 //Get the angular delta between us and our target, in our local orientation coordinates.
                 if (targetVector == null) {
                     targetVector = new Point3D();
                 }
+                //Lead the target. Otherwise, just turn to face it
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
-                if ((gun.definition.gun.targetType == TargetType.ALL && engineTargeted != null) || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND) {
+                if ((gun.definition.gun.targetType == TargetType.ALL && engineTargeted != null) || (gun.definition.gun.targetType == TargetType.AIRCRAFT  && engineTargeted != null) || (gun.definition.gun.targetType == TargetType.GROUND  && engineTargeted != null)) {
                     targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
-                } else if ((gun.definition.gun.targetType == TargetType.ALL && externalEntityTargeted != null) || gun.definition.gun.targetType == TargetType.SOFT) {
+                } else if ((gun.definition.gun.targetType == TargetType.ALL && externalEntityTargeted != null) || (gun.definition.gun.targetType == TargetType.SOFT && externalEntityTargeted != null)) {
+                    targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
+                } else {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
                 }
-
                 //Clamp angular delta to match turn rate and apply.
                 if (targetVector.y > definition.bullet.turnRate) {
                     targetVector.y = definition.bullet.turnRate;

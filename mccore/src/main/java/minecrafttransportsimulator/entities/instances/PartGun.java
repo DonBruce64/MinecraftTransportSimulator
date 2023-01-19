@@ -18,9 +18,11 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
+import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -88,8 +90,9 @@ public class PartGun extends APart {
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
     private Point3D controllerRelativeLookVector = new Point3D();
-    private IWrapperEntity entityTarget;
-    private PartEngine engineTarget;
+    public IWrapperEntity entityTarget;
+    public PartEngine engineTarget;
+    public Point3D targetPosition;
     public EntityBullet currentBullet;
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
@@ -368,6 +371,8 @@ public class PartGun extends APart {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
                                         } else if (engineTarget != null) {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                        } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
                                         } else {
                                             //No entity found, just fire missile off in direction facing.
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
@@ -631,7 +636,7 @@ public class PartGun extends APart {
             //Check for a target for this gun if we have a lock-on missile.
             //Only do this once every 1/2 second.
             //First, check if the loaded bullet is guided
-            if (loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0) {
+            if (definition.gun.canLockTargets || (loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0)) {
                 //We are the type of bullet to get a target, figure out if we need one, or we don't do auto-targeting.
                 //If we do auto-target, we need to create a vector to look though.
                 Point3D startPoint = null;
@@ -642,7 +647,7 @@ public class PartGun extends APart {
                         //Default gets target based on controller eyes and where they are looking.
                         //Need to get their eye position though, not their main position, for accurate targeting.
                         //Also, don't use gun max distance here, since that's only for boresight.
-                        startPoint = controller.getPosition().add(0, (controller.getEyeHeight() + controller.getSeatOffset()), 0);
+                        startPoint = controller.getPosition();
                         searchVector = controller.getLineOfSight(RAYTRACE_DISTANCE);
                         coneAngle = DEFAULT_CONE_ANGLE;
                         break;
@@ -659,7 +664,16 @@ public class PartGun extends APart {
                         break;
                     }
                     case MANUAL: {
-                        //No target to set, and no actions to perform.
+                        if (targetPosition == null) {
+                            targetPosition = new Point3D();
+                        }
+                        Point3D laserStart = new Point3D(controller.getPosition().x, controller.getPosition().y, controller.getPosition().z);
+                        AWrapperWorld.BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
+                        if (laserHit != null) {
+                            targetPosition.set(laserHit.position);
+                        } else {
+                            targetPosition.set(laserStart).add(controller.getLineOfSight(1024));
+                        }
                         break;
                     }
                 }
@@ -724,214 +738,6 @@ public class PartGun extends APart {
                         }
                     }
                 }
-
-                /*
-                switch (definition.gun.lockOnType) {
-                    case DEFAULT:{
-                        switch (definition.gun.targetType) {
-                            case ALL:{
-                                entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
-                                if (entityTarget == null) {
-                                    engineTarget = null;
-                                    EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                                    if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
-                                        for (APart part : vehicleTargeted.parts) {
-                                            if (part instanceof PartEngine) {
-                                                engineTarget = (PartEngine) part;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case AIRCRAFT:{
-                                engineTarget = null;
-                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && vehicleTargeted.definition.motorized.isAircraft) {
-                                    for (APart part : vehicleTargeted.parts) {
-                                        if (part instanceof PartEngine) {
-                                            engineTarget = (PartEngine) part;
-                                            break;
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case GROUND:{
-                                engineTarget = null;
-                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth && !vehicleTargeted.definition.motorized.isAircraft) {
-                                    for (APart part : vehicleTargeted.parts) {
-                                        if (part instanceof PartEngine) {
-                                            engineTarget = (PartEngine) part;
-                                            break;
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case HARD:{
-                                engineTarget = null;
-                                EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
-                                if (vehicleTargeted != null && !vehicleTargeted.outOfHealth) {
-                                    for (APart part : vehicleTargeted.parts) {
-                                        if (part instanceof PartEngine) {
-                                            engineTarget = (PartEngine) part;
-                                            break;
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case SOFT:{
-                                entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case BORESIGHT:{
-                        //Sees the closest target within a specified range and angle in front of the gun itself
-                        //rather than what the player looks at.
-                        switch (definition.gun.targetType) {
-                            case ALL: {
-                                //Impractical to use this
-                                break;
-                            }
-                            case AIRCRAFT: {
-                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
-                                EntityVehicleF_Physics closestVehicle;
-                                EntityVehicleF_Physics closestTarget;
-                                double minDist = definition.gun.lockRange;
-                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
-                                    double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || !ivEntity.definition.motorized.isAircraft) {
-                                        engineTarget = null;
-                                    } else {
-                                        closestVehicle = ivEntity;
-                                    }
-                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
-                                        minDist = dist;
-                                        closestTarget = closestVehicle;
-                                        for (APart part : closestTarget.parts) {
-                                            if (part instanceof PartEngine) {
-                                                engineTarget = (PartEngine) part;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case GROUND: {
-                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
-                                EntityVehicleF_Physics closestVehicle;
-                                EntityVehicleF_Physics closestTarget;
-                                double minDist = definition.gun.lockRange;
-                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
-                                    double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn || ivEntity.definition.motorized.isAircraft) {
-                                        engineTarget = null;
-                                    } else {
-                                        closestVehicle = ivEntity;
-                                    }
-                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
-                                        minDist = dist;
-                                        closestTarget = closestVehicle;
-                                        for (APart part : closestTarget.parts) {
-                                            if (part instanceof PartEngine) {
-                                                engineTarget = (PartEngine) part;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case HARD: {
-                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
-                                EntityVehicleF_Physics closestVehicle;
-                                EntityVehicleF_Physics closestTarget;
-                                double minDist = definition.gun.lockRange;
-                                for (EntityVehicleF_Physics ivEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                                    Point3D vecToTarget = ivEntity.position.copy().subtract(position).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
-                                    double dist = ivEntity.position.distanceTo(position);
-                                    if (!ivEntity.isValid || targetAngle > definition.gun.lockMaxAngle || dist > minDist || ivEntity == this.entityOn) {
-                                        engineTarget = null;
-                                    } else {
-                                        closestVehicle = ivEntity;
-                                    }
-                                    if (closestVehicle != null && !closestVehicle.outOfHealth) {
-                                        minDist = dist;
-                                        closestTarget = closestVehicle;
-                                        for (APart part : closestTarget.parts) {
-                                            if (part instanceof PartEngine) {
-                                                engineTarget = (PartEngine) part;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                            case SOFT: {
-                                Point3D gunLookVec = new Point3D(0,0,1).rotate(orientation);
-                                IWrapperEntity closestEnt;
-                                double minDist = definition.gun.lockRange;
-                                for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, minDist,minDist,minDist))) {
-                                    Point3D vecToTarget = entity.getPosition().copy().subtract(position).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(vecToTarget.dotProduct(gunLookVec, false))));
-                                    double dist = entity.getPosition().distanceTo(position);
-                                    if (targetAngle > definition.gun.lockMaxAngle || dist > minDist) {
-                                        entityTarget = null;
-                                    } else {
-                                        closestEnt = entity;
-                                        //Don't target ourself
-                                        if (closestEnt == controller) {
-                                            entityTarget = null;
-                                        } else {
-                                            entityTarget = closestEnt;
-                                            break;
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case RADAR:{
-                        //select a specific target and lock the vehicle entity itself rather than the engine.
-                        switch (definition.gun.targetType) {
-                            case ALL: {
-                                break;
-                            }
-                            case AIRCRAFT: {
-                                break;
-                            }
-                            case GROUND: {
-                                break;
-                            }
-                            case HARD: {
-                                break;
-                            }
-                            case SOFT: {
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case MANUAL:{
-                        //laser guidance. Just goes where the player or camera is pointed.
-                        break;
-                    }
-                }*/
             }
 
             //If we are holding the trigger, request to fire.
