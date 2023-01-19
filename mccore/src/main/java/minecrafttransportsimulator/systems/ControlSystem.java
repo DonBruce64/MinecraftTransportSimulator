@@ -10,8 +10,8 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
-import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
@@ -354,10 +354,10 @@ public final class ControlSystem {
         //Open or close the panel.
         if (ControlsKeyboard.CAR_PANEL.isPressed()) {
             if (powered.canPlayerStartEngines(clientPlayer)) {
-                if (AGUIBase.activeInputGUI instanceof GUIPanelGround) {
+                if (AGUIBase.activeInputGUI instanceof GUIPanel) {
                     AGUIBase.activeInputGUI.close();
                 } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                    new GUIPanelGround(powered);
+                    new GUIPanel(powered);
                 }
             }
         }

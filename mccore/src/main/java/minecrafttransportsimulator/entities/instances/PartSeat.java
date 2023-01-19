@@ -10,8 +10,8 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
+import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
-import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -231,7 +231,7 @@ public final class PartSeat extends APart {
                 if (vehicleOn.definition.motorized.isAircraft) {
                     AGUIBase.closeIfOpen(GUIPanelAircraft.class);
                 } else {
-                    AGUIBase.closeIfOpen(GUIPanelGround.class);
+                    AGUIBase.closeIfOpen(GUIPanel.class);
                 }
                 AGUIBase.closeIfOpen(GUIHUD.class);
                 AGUIBase.closeIfOpen(GUIRadio.class);

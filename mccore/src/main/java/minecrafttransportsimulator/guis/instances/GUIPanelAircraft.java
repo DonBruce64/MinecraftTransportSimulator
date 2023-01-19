@@ -133,7 +133,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         starterSelectors.clear();
         if (vehicle.definition.motorized.hasSingleEngineControl) {
             if (!vehicle.engines.isEmpty()) {
-                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_MAGNETO.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, "MAG", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         vehicle.engines.forEach(engine -> {
@@ -144,7 +144,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                 magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
-                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, "START", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         vehicle.engines.forEach(engine -> {
@@ -175,7 +175,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                     xOffset += 2 * SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
                 }
 
-                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS) * (engineNumber % 4), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_MAGNETO.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS) * (engineNumber % 4), SELECTOR_SIZE, SELECTOR_SIZE, "MAG", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
@@ -184,7 +184,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                 magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
-                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, "START", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         PartEngine engine = vehicle.engines.get(engineNumber);

@@ -28,6 +28,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     public final boolean centeredText;
 
     public boolean enabled = true;
+    public boolean isDynamicTexture;
     public final ColorRGB textColor;
     protected RenderableObject renderable2;
     protected RenderableObject renderable3;
@@ -112,17 +113,9 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         if (textureSectionWidth != 0 && textureSectionHeight != 0) {
             if (renderable == null) {
-                for (int i = 0; i < 3; ++i) {
+                for (int i = 0; i < (isDynamicTexture ? 1 : 3); ++i) {
                     int textureUStart = textureYOffset + i * textureSectionHeight;
-
-                    FloatBuffer buffer = FloatBuffer.allocate(3 * 8 * 6);
-                    //Left border.
-                    gui.addRenderToBuffer(buffer, 0, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
-                    //Center stretched segment.
-                    gui.addRenderToBuffer(buffer, DEFAULT_BUTTON_SECTION_BORDER, 0, width - 2 * DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
-                    //Right border.
-                    gui.addRenderToBuffer(buffer, width - DEFAULT_BUTTON_SECTION_BORDER, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
-                    buffer.flip();
+                    FloatBuffer buffer = generateOffsetBuffer(gui, textureUStart);
 
                     if (i == 0) {
                         renderable = new RenderableObject("gui_button_disabled", gui.getTexture(), ColorRGB.WHITE, buffer, false);
@@ -134,7 +127,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
                 }
             }
 
-            if (enabled) {
+            if (enabled && !isDynamicTexture) {
                 if (isMouseInBounds(mouseX, mouseY)) {//Highlighted
                     renderable3.disableLighting = renderBright || ignoreGUILightingState;
                     renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
@@ -146,7 +139,10 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
                     renderable2.transform.setTranslation(position);
                     renderable2.render();
                 }
-            } else {//Disabled
+            } else {//Disabled, or dynamic texture.
+                if (isDynamicTexture) {
+                    renderable.vertices = generateOffsetBuffer(gui, textureYOffset);
+                }
                 renderable.disableLighting = renderBright || ignoreGUILightingState;
                 renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
                 renderable.transform.setTranslation(position);
@@ -158,5 +154,17 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     @Override
     public void renderText(boolean renderTextLit) {
         RenderText.drawText(text, null, textPosition, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, renderTextLit || ignoreGUILightingState);
+    }
+
+    private FloatBuffer generateOffsetBuffer(AGUIBase gui, int textureUStart) {
+        FloatBuffer buffer = FloatBuffer.allocate(3 * 8 * 6);
+        //Left border.
+        gui.addRenderToBuffer(buffer, 0, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        //Center stretched segment.
+        gui.addRenderToBuffer(buffer, DEFAULT_BUTTON_SECTION_BORDER, 0, width - 2 * DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        //Right border.
+        gui.addRenderToBuffer(buffer, width - DEFAULT_BUTTON_SECTION_BORDER, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        buffer.flip();
+        return buffer;
     }
 }

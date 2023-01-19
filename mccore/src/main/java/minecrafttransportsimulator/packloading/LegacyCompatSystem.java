@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
+import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -72,10 +73,10 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem {
 
-    public static void performLegacyCompats(AJSONItem definition) {
-        //If we are a multi-model provider without a definition, add one so we don't crash on other systems.
+    public static void performLegacyCompats(AJSONBase definition) {
         if (definition instanceof AJSONMultiModelProvider) {
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+            //If we are a multi-model provider without a definition, add one so we don't crash on other systems.
             if (provider.definitions == null) {
                 provider.definitions = new ArrayList<>();
                 JSONSubDefinition subDefinition = new JSONSubDefinition();
@@ -83,6 +84,39 @@ public final class LegacyCompatSystem {
                 subDefinition.name = provider.general.name;
                 subDefinition.subName = "";
                 provider.definitions.add(subDefinition);
+            }
+
+            //Add model name if we don't have one.
+            if (provider.general.modelName != null) {
+                for (JSONSubDefinition subDef : provider.definitions) {
+                    subDef.modelName = provider.general.modelName;
+                }
+                provider.general.modelName = null;
+            }
+
+            //Check if the model needs a model type or has extraMaterials to convert..
+            for (JSONSubDefinition subDef : provider.definitions) {
+                if (subDef.extraMaterials != null) {
+                    subDef.extraMaterialLists = new ArrayList<List<String>>();
+                    subDef.extraMaterialLists.add(subDef.extraMaterials);
+                    subDef.extraMaterials = null;
+                }
+            }
+            if (provider.rendering == null) {
+                provider.rendering = new JSONRendering();
+            }
+            if (provider.rendering.modelType == null) {
+                provider.rendering.modelType = ModelType.OBJ;
+            }
+
+            //Move constants and initial variables to the main file and out of rendering.
+            if (provider.rendering != null && provider.rendering.constants != null) {
+                provider.constants = provider.rendering.constants;
+                provider.rendering.constants = null;
+            }
+            if (provider.rendering != null && provider.rendering.initialVariables != null) {
+                provider.initialVariables = provider.rendering.initialVariables;
+                provider.rendering.initialVariables = null;
             }
         }
 
@@ -107,56 +141,26 @@ public final class LegacyCompatSystem {
             performBulletLegacyCompats((JSONBullet) definition);
         }
 
-        //This goes after we've made default definitions.
-        if (definition.general.modelName != null) {
-            AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
-            for (JSONSubDefinition subDef : provider.definitions) {
-                subDef.modelName = definition.general.modelName;
+        if (definition instanceof AJSONItem) {
+            AJSONItem item = (AJSONItem) definition;
+            //Update materials to match new format.
+            //This comes after skin compats, which change this.
+            if (item.general.materials != null) {
+                item.general.materialLists = new ArrayList<List<String>>();
+                item.general.materialLists.add(item.general.materials);
+                item.general.materials = null;
             }
-            definition.general.modelName = null;
-        }
-
-        //Update materials to match new format.
-        if (definition.general.materials != null) {
-            definition.general.materialLists = new ArrayList<List<String>>();
-            definition.general.materialLists.add(definition.general.materials);
-            definition.general.materials = null;
-        }
-        if (definition.general.repairMaterials != null) {
-            definition.general.repairMaterialLists = new ArrayList<List<String>>();
-            definition.general.repairMaterialLists.add(definition.general.repairMaterials);
-            definition.general.repairMaterials = null;
+            if (item.general.repairMaterials != null) {
+                item.general.repairMaterialLists = new ArrayList<List<String>>();
+                item.general.repairMaterialLists.add(item.general.repairMaterials);
+                item.general.repairMaterials = null;
+            }
         }
 
         if (definition instanceof AJSONMultiModelProvider) {
-            //Check if the model needs a model type or has extraMaterials to convert..
-            AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
-            for (JSONSubDefinition subDef : provider.definitions) {
-                if (subDef.extraMaterials != null) {
-                    subDef.extraMaterialLists = new ArrayList<List<String>>();
-                    subDef.extraMaterialLists.add(subDef.extraMaterials);
-                    subDef.extraMaterials = null;
-                }
-            }
-
-            if (provider.rendering == null) {
-                provider.rendering = new JSONRendering();
-            }
-            if (provider.rendering.modelType == null) {
-                provider.rendering.modelType = ModelType.OBJ;
-            }
-
-            //Move constants and initial variables to the main file and out of rendering.
-            if (provider.rendering != null && provider.rendering.constants != null) {
-                provider.constants = provider.rendering.constants;
-                provider.rendering.constants = null;
-            }
-            if (provider.rendering != null && provider.rendering.initialVariables != null) {
-                provider.initialVariables = provider.rendering.initialVariables;
-                provider.rendering.initialVariables = null;
-            }
-
             //Parse the model and do LCs on it if we need to do so.
+            //This happens after general parsing so we don't clobber anything with the model LCs.
+            AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
             if (ConfigSystem.settings != null && ConfigSystem.settings.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)) {
                 performModelLegacyCompats((AJSONMultiModelProvider) definition);
             }
@@ -278,6 +282,15 @@ public final class LegacyCompatSystem {
             } else {
                 //Probably a trailer, just use running lights.
                 definition.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+            }
+        }
+
+        //Set panel if we don't have one.
+        if (definition.motorized.panel == null) {
+            if (definition.motorized.isAircraft) {
+                definition.motorized.panel = "mts:default_plane";
+            } else {
+                definition.motorized.panel = "mts:default_car";
             }
         }
 

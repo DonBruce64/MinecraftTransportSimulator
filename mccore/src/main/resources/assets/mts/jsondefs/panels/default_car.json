@@ -1,0 +1,144 @@
+{
+	"panel" : {
+		"texture": "mts:textures/guis/panel.png",
+		"textureWidth": 512,
+		"textureHeight": 256,
+		"backgroundWidth": 400,
+		"backgroundHeight": 140,
+		"navBoxPosition" : [108, 0],
+		"components": [
+			{
+				//Lights.
+				"pos" : [15, 12, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [0, 196, 0],
+				"specialComponent" : "car_light"
+			},
+			{
+				//Turn signal.
+				"pos" : [15, 44, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [20, 176, 0],
+				"specialComponent" : "turn_signal"
+			},
+			{
+				//Cruise control.
+				"pos" : [15, 76, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [140, 216, 0],
+				"text" : "CRUISE",
+				"visibilityVariables" : [["autopilot_present"]],
+				"statusVariable" : "autopilot_active",
+				"clickAction" : {
+					"variable" : "autopilot_active",
+					"action" : "toggle"
+				}
+			},
+			{
+				//Radio nav box.
+				"pos" : [21, 108, 0],
+				"width" : 40,
+				"height" : 20,
+				"textureStart" : [340, 196, 0],
+				"specialComponent" : "beacon_box"
+			},
+			{
+				//Engine #1.
+				"pos" : [47, 12, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [80, 196, 0],
+				"specialComponent" : "engine_control"
+			},
+			{
+				//Engine 2.
+				"pos" : [47, 44, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [80, 196, 0],
+				"specialComponent" : "engine_control"
+			},
+			{
+				//Engine 3.
+				"pos" : [47, 76, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [80, 196, 0],
+				"specialComponent" : "engine_control"
+			},
+			{
+				//Reverse Thrust.
+				"pos" : [47, 76, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [120, 216, 0],
+				"text" : "REVERSE",
+				"visibilityVariables" : [["reverser_present"]],
+				"statusVariable" : "autopilot_active",
+				"clickAction" : {
+					"variable" : "reverser",
+					"action" : "toggle"
+				}
+			},
+			{
+				//Trailer 1.
+				"pos" : [79, 12, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [100, 216, 0],
+				"specialComponent" : "trailer"
+			},
+			{
+				//Trailer 2.
+				"pos" : [79, 44, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [100, 216, 0],
+				"specialComponent" : "trailer"
+			},
+			{
+				//Trailer 3.
+				"pos" : [79, 76, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [100, 216, 0],
+				"specialComponent" : "trailer"
+			},
+			{
+				//Custom Variable 1.
+				"pos" : [111, 12, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [180, 216, 0],
+				"specialComponent" : "custom_variable"
+			},
+			{
+				//Custom Variable 2.
+				"pos" : [111, 44, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [180, 216, 0],
+				"specialComponent" : "custom_variable"
+			},
+			{
+				//Custom Variable 3.
+				"pos" : [111, 76, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [180, 216, 0],
+				"specialComponent" : "custom_variable"
+			},
+			{
+				//Custom Variable 4.
+				"pos" : [111, 108, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [180, 216, 0],
+				"specialComponent" : "custom_variable"
+			}
+		]
+	}
+}
