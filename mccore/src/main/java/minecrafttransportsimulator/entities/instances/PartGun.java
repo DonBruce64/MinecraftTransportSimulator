@@ -667,7 +667,7 @@ public class PartGun extends APart {
                         if (targetPosition == null) {
                             targetPosition = new Point3D();
                         }
-                        Point3D laserStart = new Point3D(controller.getPosition().x, controller.getPosition().y, controller.getPosition().z);
+                        Point3D laserStart = controller.getPosition().copy();
                         AWrapperWorld.BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
                         if (laserHit != null) {
                             targetPosition.set(laserHit.position);
