@@ -1721,6 +1721,10 @@ public final class LegacyCompatSystem {
         if (definition.bullet.damage == 0) {
             definition.bullet.damage = definition.bullet.diameter / 5F;
         }
+        //Make guided bullets default to active guidance
+        if (definition.bullet.guidanceType == null && definition.bullet.turnRate > 0) {
+            definition.bullet.guidanceType = JSONBullet.GuidanceType.ACTIVE;
+        }
 
         //Make rendering particle section for bullets for block hitting if it doesn't exist.
         if (definition.rendering == null || definition.rendering.particles == null) {

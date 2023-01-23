@@ -17,6 +17,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("A list of types describing the bullet.  This defines how it inflicts damage on whatever it hits.")
         public List<BulletType> types;
 
+        @JSONDescription("Defines the method for how a bullet will guide to it's target.")
+        public GuidanceType guidanceType;
+
         @JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
         public boolean isHeat;
 
@@ -87,6 +90,15 @@ public class JSONBullet extends AJSONMultiModelProvider {
         WATER,
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
         ARMOR_PIERCING
+    }
+
+    public enum GuidanceType {
+        @JSONDescription("Will track whatever target that was locked prior to firing, However, It will guide to the closest target it can 'see'. Therefore, it is possible to fire without a lock and have it find it's own target with the downside of it being possible to fool.")
+        PASSIVE,
+        @JSONDescription("Tracks the locked target but if the lock is lost, guidance stops.")
+        SEMI_ACTIVE,
+        @JSONDescription("Default method. Tracks whatever target the gun was locked on to prior to firing.")
+        ACTIVE
     }
     
 }
