@@ -272,12 +272,14 @@ public class GUIPanel extends AGUIBase {
                                     engineIndex = 1;
                                 }
                                 text = "ENGINES";
-                            } else {
+                            } else if (engineIndex < vehicle.engines.size()) {
                                 engine = vehicle.engines.get(engineIndex++);
                                 if (engine == null) {
                                     break;
                                 }
                                 text = "ENGINE " + engineIndex;
+                            } else {
+                                break;
                             }
                             newComponent = new GUIPanelEngineButton(panelComponent, engine, true, true);
                         }
@@ -392,8 +394,8 @@ public class GUIPanel extends AGUIBase {
 
             //Add label if we have a component and either default text or manually requested.
             if (newComponent != null) {
-                if (newComponent.text != null) {
-                    text = newComponent.text;
+                if (panelComponent.text != null) {
+                    text = panelComponent.text;
                 }
                 if (text != null) {
                     GUIComponentLabel label = new GUIComponentLabel(newComponent.constructedX + newComponent.width / 2, newComponent.constructedY + newComponent.height + 1, ColorRGB.WHITE, text, TextAlignment.CENTERED, 0.75F).setComponent(newComponent);

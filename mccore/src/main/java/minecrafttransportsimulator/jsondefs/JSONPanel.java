@@ -10,6 +10,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 @JSONDescription("Panels are simply things that show the instruments in vehicles, and allow interacting with those instruments.  While not required, they do make standardizing vehicle instrument dispays far easier.  Panels go into the 'panels' folder located in the main pack folder.")
 public class JSONPanel extends AJSONBase {
 
+    @JSONRequired
     public JSONPanelMain panel;
 
     public static class JSONPanelMain {
