@@ -219,7 +219,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
                 if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL  || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND)) {
                     targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
-                } else if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.SOFT)) {
+                } else if (externalEntityTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.SOFT)) {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
                 } else {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
