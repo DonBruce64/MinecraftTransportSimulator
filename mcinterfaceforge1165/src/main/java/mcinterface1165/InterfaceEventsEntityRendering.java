@@ -208,12 +208,18 @@ public class InterfaceEventsEntityRendering {
                     //Set rotation points on the model.
                     if (WrapperPlayer.getWrapperFor(player).isRightHanded()) {
                         rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                        if (gunEntity.activeGun.isHandHeldGunAimed) {
-                            leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                        }
                     } else {
                         leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                        if (gunEntity.activeGun.isHandHeldGunAimed) {
+                    }
+                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.definition.gun.isTwoHanded) {
+                        heldVector = heldVector.copy();
+                        heldVector.x = 0.3125 * 2 - heldVector.x;
+                        heldVectorLength = heldVector.length();
+                        armPitchOffset = Math.toRadians(-90 + entity.xRot) - Math.asin(heldVector.y / heldVectorLength);
+                        armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
+                        if (WrapperPlayer.getWrapperFor(player).isRightHanded()) {
+                            leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
+                        } else {
                             rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
                         }
                     }

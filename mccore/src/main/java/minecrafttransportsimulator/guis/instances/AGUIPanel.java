@@ -9,7 +9,6 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
@@ -34,31 +33,12 @@ public abstract class AGUIPanel extends AGUIBase {
     protected static final int BEACON_TEXTURE_HEIGHT_OFFSET = 196;
 
     protected final EntityVehicleF_Physics vehicle;
-    protected final boolean haveReverseThrustOption;
     protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<>();
     protected int xOffset;
 
     public AGUIPanel(EntityVehicleF_Physics vehicle) {
         super();
         this.vehicle = vehicle;
-        //If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
-        if (vehicle.definition.motorized.isBlimp) {
-            haveReverseThrustOption = true;
-        } else {
-            boolean foundReversingPart = false;
-            for (APart part : vehicle.allParts) {
-                if (part instanceof PartPropeller) {
-                    if (part.definition.propeller.isDynamicPitch) {
-                        foundReversingPart = true;
-                        break;
-                    }
-                } else if (part instanceof PartEngine && part.definition.engine.jetPowerFactor > 0) {
-                    foundReversingPart = true;
-                    break;
-                }
-            }
-            haveReverseThrustOption = foundReversingPart;
-        }
     }
 
     private void setupTowingButtons(AEntityG_Towable<?> entity) {
@@ -221,17 +201,17 @@ public abstract class AGUIPanel extends AGUIBase {
         }
 
         protected void updateSelectorState(GUIComponentSelector trailerSelector) {
-            trailerSelector.selectorState = 1;
+            trailerSelector.selectorState = 0;
             if (connectionGroup.isHookup) {
                 if (vehicleOn.towedByConnection != null && vehicleOn.towedByConnection.hookupGroupIndex == connectionGroupIndex) {
-                    trailerSelector.selectorState = 0;
+                    trailerSelector.selectorState = 1;
                     return;
                 }
             }
             if (connectionGroup.isHitch) {
                 for (TowingConnection connection : vehicleOn.towingConnections) {
                     if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
-                        trailerSelector.selectorState = 0;
+                        trailerSelector.selectorState = 1;
                         return;
                     }
                 }

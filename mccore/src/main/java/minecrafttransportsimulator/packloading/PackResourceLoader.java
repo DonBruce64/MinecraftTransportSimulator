@@ -3,11 +3,13 @@ package minecrafttransportsimulator.packloading;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -73,11 +75,12 @@ public class PackResourceLoader {
         DECOR(JSONDecor.class),
         BULLET(JSONBullet.class),
         ITEM(JSONItem.class),
-        SKIN(JSONSkin.class);
+        SKIN(JSONSkin.class),
+        PANEL(JSONPanel.class);
 
-        public final Class<? extends AJSONItem> representingClass;
+        public final Class<? extends AJSONBase> representingClass;
 
-        ItemClassification(Class<? extends AJSONItem> representingClass) {
+        ItemClassification(Class<? extends AJSONBase> representingClass) {
             this.representingClass = representingClass;
         }
 

@@ -140,12 +140,12 @@ public class GUISignalController extends AGUIBase {
                 controller.intersectionCenterPoint.z = getDoubleValue();
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANCENTER.value).setBox(scanCenterXText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANCENTER.value).setComponent(scanCenterXText));
         topOffset += scanCenterXText.height + rowSpacing;
 
         //Scan distance.
         addComponent(scanDistanceText = new GUIComponentNumericTextBox(leftObjectOffset, topOffset, "25"));
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANDISTANCE.value).setBox(scanDistanceText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANDISTANCE.value).setComponent(scanDistanceText));
 
         //Found count.
         addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + controller.componentLocations.size()));
@@ -200,7 +200,7 @@ public class GUISignalController extends AGUIBase {
 
         //Lane width defaults.
         addComponent(laneWidthText = new GUIComponentNumericTextBox(middleObjectOffset + 60, topOffset, "4.0", 40));
-        addComponent(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_LANEWIDTH.value).setBox(laneWidthText));
+        addComponent(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_LANEWIDTH.value).setComponent(laneWidthText));
         topOffset += 15 + rowSpacing * 3;
 
         //Time text.  These auto-forward their values.
@@ -210,7 +210,7 @@ public class GUISignalController extends AGUIBase {
                 controller.greenMainTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENMAINTIME.value).setBox(greenMainTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENMAINTIME.value).setComponent(greenMainTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
         addComponent(greenCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.greenCrossTime / 20)) {
@@ -219,7 +219,7 @@ public class GUISignalController extends AGUIBase {
                 controller.greenCrossTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENCROSSTIME.value).setBox(greenCrossTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENCROSSTIME.value).setComponent(greenCrossTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
         addComponent(yellowMainTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowMainTime / 20)) {
@@ -228,7 +228,7 @@ public class GUISignalController extends AGUIBase {
                 controller.yellowMainTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWMAINTIME.value).setBox(yellowMainTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWMAINTIME.value).setComponent(yellowMainTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
         addComponent(yellowCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowCrossTime / 20)) {
@@ -237,7 +237,7 @@ public class GUISignalController extends AGUIBase {
                 controller.yellowCrossTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWCROSSTIME.value).setBox(yellowCrossTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWCROSSTIME.value).setComponent(yellowCrossTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
         addComponent(allRedTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.allRedTime / 20)) {
@@ -246,7 +246,7 @@ public class GUISignalController extends AGUIBase {
                 controller.allRedTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_ALLREDTIME.value).setBox(allRedTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_ALLREDTIME.value).setComponent(allRedTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT + rowSpacing * 4;
 
         //Change screen button.

@@ -364,42 +364,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     /**
-     * Returns true if any linked variables are blocking the player from
-     * accessing the passed-in part slot.
-     */
-    public boolean isVariableListTrue(List<List<String>> list) {
-        if (list != null) {
-	        for (List<String> variableList : list) {
-	            boolean listIsTrue = false;
-	            for (String variableName : variableList) {
-	                if (variableName.startsWith("!")) {
-	                    double value = getRawVariableValue(variableName.substring(1), 0);
-	                    if (value == 0 || Double.isNaN(value)) {
-	                        //Inverted variable value is 0, therefore list is true.
-	                        listIsTrue = true;
-	                        break;
-	                    }
-	                } else {
-	                    double value = getRawVariableValue(variableName, 0);
-	                    if (!Double.isNaN(value) && value > 0) {
-	                        //Normal variable value is non-zero 0, therefore list is true.
-	                        listIsTrue = true;
-	                        break;
-	                    }
-	                }
-	            }
-	            if (!listIsTrue) {
-	                //List doesn't have any true variables, therefore the value is false.
-	                return false;
-	            }
-	        }
-	        //No false lists were found for this collection, therefore the list is true.
-        }  //No lists found for this entry, therefore no variables are false.
-
-        return true;
-    }
-
-    /**
      * Called to add parts from NBT.  This cannot be done during construction, as this method adds sub-parts
      * defined in this multipart's definition.  If this was done in the constructor, and those sub parts
      * depended on some property that was present in the extended constructor of this multipart, then the
@@ -451,13 +415,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (partDef.conditionalDefaultParts != null) {
                         //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     	//the value will be set before spawning in any conditional parts.
-                        if (definition.rendering != null && definition.rendering.constants != null) {
-                            for (String variable : definition.rendering.constants) {
+                        if (definition.constants != null) {
+                            for (String variable : definition.constants) {
                                 variables.put(variable, 1D);
                             }
                         }
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
-                            if (getRawVariableValue(conditionalDef.getKey(), 0) > 0) {
+                            if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
                                 break;
                             }

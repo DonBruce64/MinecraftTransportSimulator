@@ -10,8 +10,8 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
-import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
@@ -40,6 +40,7 @@ public final class ControlSystem {
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
 
+    private static boolean throttlePressedLastCheck = false;
     private static boolean parkingBrakePressedLastCheck = false;
 
     private static EntityInteractResult interactResult = null;
@@ -353,10 +354,10 @@ public final class ControlSystem {
         //Open or close the panel.
         if (ControlsKeyboard.CAR_PANEL.isPressed()) {
             if (powered.canPlayerStartEngines(clientPlayer)) {
-                if (AGUIBase.activeInputGUI instanceof GUIPanelGround) {
+                if (AGUIBase.activeInputGUI instanceof GUIPanel) {
                     AGUIBase.activeInputGUI.close();
                 } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                    new GUIPanelGround(powered);
+                    new GUIPanel(powered);
                 }
             }
         }
@@ -412,7 +413,11 @@ public final class ControlSystem {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
                     } else if (powered.engines.get(0).currentGear >= 0) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
+                        //Send throttle over if throttle if cruise control is off, or if the throttle is pressed, or was released this check.
+                        if (powered.autopilotSetting == 0 || throttleValue > 0 || throttlePressedLastCheck) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
+                            throttlePressedLastCheck = throttleValue > 0;
+                        }
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
@@ -439,28 +444,31 @@ public final class ControlSystem {
                 //Check brake and gas and set to on or off.
                 controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
                 if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
-                    //Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
+                    //Send throttle over if throttle if cruise control is off, or if throttle is greater than the current value.
                     double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
-                    if (powered.autopilotSetting == 0 || powered.throttle < throttleLevel) {
+                    if (powered.autopilotSetting == 0 || throttleLevel > powered.throttle) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
                     }
                 } else {
                     if (ControlsKeyboardDynamic.CAR_SLOW.isPressed()) {
+                        throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
                         } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
                         }
                     } else if (ControlsKeyboard.CAR_GAS.isPressed()) {
+                        throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
                         } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
                         }
                     } else {
-                        //Send gas off packet if we don't have cruise on.
-                        if (powered.autopilotSetting == 0) {
+                        //Send gas off packet if we don't have cruise on, or if we do and we pressed the throttle last check.
+                        if (powered.autopilotSetting == 0 || throttlePressedLastCheck) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
+                            throttlePressedLastCheck = false;
                         }
                     }
                 }

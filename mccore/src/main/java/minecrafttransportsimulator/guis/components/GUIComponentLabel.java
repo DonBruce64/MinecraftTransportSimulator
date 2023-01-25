@@ -13,15 +13,14 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  * @author don_bruce
  */
 public class GUIComponentLabel extends AGUIComponent {
-    public final ColorRGB color;
+    public ColorRGB color;
     public final String fontName;
     public final TextAlignment alignment;
     public final int wrapWidth;
     public final float scale;
     public final boolean autoScale;
 
-    private GUIComponentButton button;
-    private GUIComponentTextBox box;
+    private AGUIComponent component;
 
     public GUIComponentLabel(int x, int y, ColorRGB color, String text) {
         this(x, y, color, text, TextAlignment.LEFT_ALIGNED, 1.0F, 0, null, false);
@@ -47,22 +46,12 @@ public class GUIComponentLabel extends AGUIComponent {
     }
 
     /**
-     * Sets the associated button for this class.  This will make
-     * this label render only when the button is visible.
+     * Sets the associated component for this class.  This will make
+     * this label render only when the component is visible.
      * Returns this object for ease of constructing.
      */
-    public GUIComponentLabel setButton(GUIComponentButton button) {
-        this.button = button;
-        return this;
-    }
-
-    /**
-     * Sets the associated textBox for this class.  This will make
-     * this label render only when the textBox is visible.
-     * Returns this object for ease of constructing.
-     */
-    public GUIComponentLabel setBox(GUIComponentTextBox box) {
-        this.box = box;
+    public GUIComponentLabel setComponent(AGUIComponent component) {
+        this.component = component;
         return this;
     }
 
@@ -73,7 +62,7 @@ public class GUIComponentLabel extends AGUIComponent {
 
     @Override
     public void renderText(boolean renderTextLit) {
-        if (button == null ? (box == null || box.visible) : button.visible) {
+        if (component == null || component.visible) {
             RenderText.drawText(text, fontName, textPosition, color, alignment, scale, autoScale, wrapWidth, renderTextLit || ignoreGUILightingState);
         }
     }

@@ -19,6 +19,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -91,6 +92,19 @@ public class GUIPackExporter extends AGUIBase {
                             jsonFile.mkdirs();
                             jsonFile = new File(jsonFile, packItem.definition.systemName + ".json");
                             JSONParser.exportStream(packItem.definition, Files.newOutputStream(jsonFile.toPath()));
+                            lastTimeModified = jsonFile.lastModified();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
+                            return;
+                        }
+                    }
+                    for (JSONPanel packPanel : PackParser.getAllPanelsForPack(packID)) {
+                        try {
+                            File jsonFile = new File(packDir, packPanel.classification.toDirectory() + packPanel.prefixFolders);
+                            jsonFile.mkdirs();
+                            jsonFile = new File(jsonFile, packPanel.systemName + ".json");
+                            JSONParser.exportStream(packPanel, Files.newOutputStream(jsonFile.toPath()));
                             lastTimeModified = jsonFile.lastModified();
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -223,7 +237,7 @@ public class GUIPackExporter extends AGUIBase {
         for (byte i = 0; i < 5; ++i) {
             int height = i < 2 ? 40 : 10;
             GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
-            GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setBox(dataEntryBox);
+            GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setComponent(dataEntryBox);
             dataEntryBoxes.add(dataEntryBox);
             dataEntryLabels.add(dataEntryLabel);
             addComponent(dataEntryBox);

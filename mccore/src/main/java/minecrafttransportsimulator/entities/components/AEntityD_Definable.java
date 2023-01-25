@@ -162,8 +162,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (String variableName : data.getStrings("variables")) {
             variables.put(variableName, data.getDouble(variableName));
         }
-        if (newlyCreated && definition.rendering != null && definition.rendering.initialVariables != null) {
-            for (String variable : definition.rendering.initialVariables) {
+        if (newlyCreated && definition.initialVariables != null) {
+            for (String variable : definition.initialVariables) {
                 variables.put(variable, 1D);
             }
         }
@@ -362,8 +362,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         //Add constants.
-        if (definition.rendering != null && definition.rendering.constants != null) {
-            for (String variable : definition.rendering.constants) {
+        if (definition.constants != null) {
+            for (String variable : definition.constants) {
                 variables.put(variable, 1D);
             }
         }
@@ -454,7 +454,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public void updateText(LinkedHashMap<String, String> textLines) {
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
+            String newLine = textLines.get(textEntry.getKey().fieldName);
+            if (newLine != null) {
+                textEntry.setValue(newLine);
+            }
         }
     }
 
@@ -596,8 +599,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 //Check if the sound should be playing before we try to update state.
                 //First check if we are in the right view to play.
                 AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding)) || (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
-                boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
+                AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+                boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+                boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+                boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
 
                 //Next, check the distance.
@@ -607,7 +612,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     if (soundDef.maxDistance != soundDef.minDistance) {
                         shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
                     } else {
-                        shouldSoundStartPlaying = distance < 32;
+                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
                     }
                 }
 
@@ -623,7 +628,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 if (shouldSoundStartPlaying && !soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate) {
                     shouldSoundStartPlaying = false;
                 }
-
+                
                 if (shouldSoundStartPlaying) {
                     //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
                     boolean isSoundPlaying = false;
@@ -673,15 +678,25 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
 
                         //Adjust volume based on distance.
-                        if (soundDef.minDistance == 0) {
-                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : 32;
+                        if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
+                            //Default sound distance.
+                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
                             sound.volume *= (maxDistance - distance) / (maxDistance);
+                        } else if (soundDef.middleDistance != 0) {
+                            //Middle interpolation.
+                            if (distance < soundDef.middleDistance) {
+                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.middleDistance - soundDef.minDistance) * (soundDef.middleDistanceVolume - soundDef.minDistanceVolume));
+                            } else {
+                                sound.volume *= (float) (soundDef.middleDistanceVolume + (distance - soundDef.middleDistance) / (soundDef.maxDistance - soundDef.middleDistance) * (soundDef.maxDistanceVolume - soundDef.middleDistanceVolume));
+                            }
+                        } else {
+                            //Min/max.
+                            sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
                         }
-
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                        if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
                             sound.volume *= 0.5F;
                         }
 
@@ -848,6 +863,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Like {@link #getRawVariableValue(String, float)}, but returns 0 if not found
+     * rather than NaN.  This is designed for getting variable values without animations.
+     */
+    public final double getCleanRawVariableValue(String variable, float partialTicks) {
+        double value = getRawVariableValue(variable, partialTicks);
+        return Double.isNaN(value) ? 0 : value;
+    }
+
+    /**
      * Similar to {@link #getRawVariableValue(String, float)}, but returns
      * a String for text-based parameters rather than a double.  If no match
      * is found, return null.  Otherwise, return the string.
@@ -865,8 +889,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
         double value;
         if (clock.animation.variable.startsWith("!")) {
-            value = getRawVariableValue(clock.animation.variable.substring(1), partialTicks);
-            value = (value == 0 || Double.isNaN(value)) ? 1 : 0;
+            value = getCleanRawVariableValue(clock.animation.variable.substring(1), partialTicks);
+            value = value == 0 ? 1 : 0;
         } else {
             value = getRawVariableValue(clock.animation.variable, partialTicks);
             if (Double.isNaN(value)) {
@@ -922,11 +946,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check text values first, then anmiated values.
         String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
-            double numberValue = getRawVariableValue(textDef.variableName, 0);
-            if (Double.isNaN(numberValue)) {
-                numberValue = 0;
-            }
-            return String.format(textDef.variableFormat, numberValue * textDef.variableFactor);
+            return String.format(textDef.variableFormat, getCleanRawVariableValue(textDef.variableName, 0) * textDef.variableFactor);
         } else {
             return String.format(textDef.variableFormat, value);
         }
@@ -1035,6 +1055,41 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
         return modifiedValue;
+    }
+
+    /**
+     * Returns true if any of the variables in the passed-in list are true.
+     */
+    public boolean isVariableListTrue(List<List<String>> list) {
+        if (list != null) {
+            for (List<String> variableList : list) {
+                boolean listIsTrue = false;
+                for (String variableName : variableList) {
+                    if (variableName.startsWith("!")) {
+                        double value = getCleanRawVariableValue(variableName.substring(1), 0);
+                        if (value == 0) {
+                            //Inverted variable value is 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    } else {
+                        double value = getCleanRawVariableValue(variableName, 0);
+                        if (value > 0) {
+                            //Normal variable value is non-zero 0, therefore list is true.
+                            listIsTrue = true;
+                            break;
+                        }
+                    }
+                }
+                if (!listIsTrue) {
+                    //List doesn't have any true variables, therefore the value is false.
+                    return false;
+                }
+            }
+            //No false lists were found for this collection, therefore the list is true.
+        } //No lists found for this entry, therefore no variables are false.
+
+        return true;
     }
 
     /**

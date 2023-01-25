@@ -133,7 +133,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         starterSelectors.clear();
         if (vehicle.definition.motorized.hasSingleEngineControl) {
             if (!vehicle.engines.isEmpty()) {
-                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_MAGNETO.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, "MAG", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         vehicle.engines.forEach(engine -> {
@@ -144,7 +144,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                 magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
-                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, "START", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         vehicle.engines.forEach(engine -> {
@@ -175,7 +175,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                     xOffset += 2 * SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
                 }
 
-                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS) * (engineNumber % 4), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_MAGNETO.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS) * (engineNumber % 4), SELECTOR_SIZE, SELECTOR_SIZE, "MAG", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
@@ -184,7 +184,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                 magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
-                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+                GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, "START", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         PartEngine engine = vehicle.engines.get(engineNumber);
@@ -263,7 +263,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         addComponent(rudderTrimSelector);
 
         //If we have both reverse thrust AND autopilot, render them side-by-side. Otherwise just render one in the middle
-        if (haveReverseThrustOption && vehicle.definition.motorized.hasAutopilot) {
+        if (vehicle.hasReverseThrust && vehicle.definition.motorized.hasAutopilot) {
             reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_REVERSE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
@@ -275,15 +275,11 @@ public class GUIPanelAircraft extends AGUIPanel {
             autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_AUTOPILOT.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.position.y));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(autopilotSelector);
-        } else if (haveReverseThrustOption) {
+        } else if (vehicle.hasReverseThrust) {
             reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE / 2, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_REVERSE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
@@ -295,11 +291,7 @@ public class GUIPanelAircraft extends AGUIPanel {
             autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE / 2, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_AUTOPILOT.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    if (vehicle.autopilotSetting == 0) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, vehicle.position.y));
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.AUTOPILOT_ACTIVE_VARIABLE));
                 }
             };
             addComponent(autopilotSelector);
@@ -350,7 +342,7 @@ public class GUIPanelAircraft extends AGUIPanel {
             addComponent(beaconBox);
 
             //Add beacon text box label.
-            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
+            addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width / 2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, JSONConfigLanguage.GUI_PANEL_BEACON.value, TextAlignment.CENTERED, 0.75F).setComponent(beaconBox));
         }
 
         //If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle

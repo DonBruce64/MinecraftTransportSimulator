@@ -44,6 +44,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public boolean reverseThrust;
     public boolean beingFueled;
     public boolean enginesOn;
+    public boolean enginesStarting;
     public boolean enginesRunning;
     public boolean isCreative;
     @DerivedValue
@@ -51,6 +52,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public static final double MAX_THROTTLE = 1.0D;
 
     //Internal states.
+    public boolean hasReverseThrust;
     public int gearMovementTime;
     public double electricPower;
     public double electricUsage;
@@ -136,10 +138,14 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         } else {
             //Set engine state mapping variables.
             enginesOn = false;
+            enginesStarting = false;
             enginesRunning = false;
             for (PartEngine engine : engines) {
                 if (engine.magnetoOn) {
                     enginesOn = true;
+                    if (engine.electricStarterEngaged) {
+                        enginesStarting = true;
+                    }
                     if (engine.running) {
                         enginesRunning = true;
                         break;
@@ -165,7 +171,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
 
         //Adjust gear variables.
-        if (isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)) {
+        if (isVariableActive(GEAR_VARIABLE)) {
             if (gearMovementTime < definition.motorized.gearSequenceDuration) {
                 ++gearMovementTime;
             }
@@ -222,6 +228,24 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 engines.add((PartEngine) part);
             }
         });
+
+        //Set reverse thrust.
+        hasReverseThrust = false;
+        if (definition.motorized.isBlimp) {
+            hasReverseThrust = true;
+        } else {
+            for (APart part : allParts) {
+                if (part instanceof PartPropeller) {
+                    if (part.definition.propeller.isDynamicPitch) {
+                        hasReverseThrust = true;
+                        break;
+                    }
+                } else if (part instanceof PartEngine && part.definition.engine.jetPowerFactor > 0) {
+                    hasReverseThrust = true;
+                    break;
+                }
+            }
+        }
     }
 
     public FuelTankResult checkFuelTankCompatibility(String fluid) {
@@ -268,19 +292,11 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
     @Override
     public boolean renderTextLit() {
-        if (definition.motorized.hasRunningLights && isVariableActive(RUNNINGLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasHeadlights && isVariableActive(HEADLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasNavLights && isVariableActive(NAVIGATIONLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasStrobeLights && isVariableActive(STROBELIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasTaxiLights && isVariableActive(TAXILIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        if (definition.motorized.hasLandingLights && isVariableActive(LANDINGLIGHT_VARIABLE))
-            return electricPower > 3 && super.renderTextLit();
-        return false;
+        if (super.renderTextLit() && electricPower > 3) {
+            return getCleanRawVariableValue(definition.motorized.litVariable, 0) > 0;
+        } else {
+            return false;
+        }
     }
 
     @Override

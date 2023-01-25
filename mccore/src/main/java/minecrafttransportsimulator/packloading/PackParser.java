@@ -24,6 +24,7 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
@@ -32,6 +33,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -85,6 +87,11 @@ public final class PackParser {
      * however this is an expensive operation as the sorted list is created each call.
      **/
     private static final TreeMap<String, HashMap<String, AItemPack<?>>> packItemMap = new TreeMap<>();
+
+    /**
+     * All registered panel definitions are stored in this list as they are added.
+     **/
+    private static final Map<String, Map<String, JSONPanel>> panelMap = new HashMap<>();
 
     /**
      * Comparator used for sorting pack items.
@@ -190,57 +197,61 @@ public final class PackParser {
      * when in a decompiled dev environment the items are in folders, not a jar.
      */
     public static void addDefaultItems() {
-        try {
-            JSONPack packDef = new JSONPack();
-            packDef.packID = InterfaceManager.coreModID;
-            packDef.fileStructure = 0;
-            packDef.packName = InterfaceManager.coreInterface.getModName(InterfaceManager.coreModID);
-            packDef.packItem = "wrench";
-            PackParser.packMap.put(InterfaceManager.coreModID, packDef);
+        JSONPack packDef = new JSONPack();
+        String packID = InterfaceManager.coreModID;
+        packDef.packID = packID;
+        packDef.fileStructure = 0;
+        packDef.packName = InterfaceManager.coreInterface.getModName(packID);
+        packDef.packItem = "wrench";
+        PackParser.packMap.put(packID, packDef);
 
-            Map<String, ItemClassification> defaultItems = new HashMap<>();
-            defaultItems.put("fuelhose", ItemClassification.ITEM);
-            defaultItems.put("handbook_car", ItemClassification.ITEM);
-            defaultItems.put("handbook_plane", ItemClassification.ITEM);
-            defaultItems.put("jumpercable", ItemClassification.ITEM);
-            defaultItems.put("jumperpack", ItemClassification.ITEM);
-            defaultItems.put("key", ItemClassification.ITEM);
-            defaultItems.put("paintgun", ItemClassification.ITEM);
-            defaultItems.put("partscanner", ItemClassification.ITEM);
-            defaultItems.put("ticket", ItemClassification.ITEM);
-            defaultItems.put("wrench", ItemClassification.ITEM);
-            defaultItems.put("y2kbutton", ItemClassification.ITEM);
-            defaultItems.put("jerrycan", ItemClassification.PART);
-            defaultItems.put("fuelpump", ItemClassification.DECOR);
-            defaultItems.put("charger", ItemClassification.DECOR);
-            defaultItems.put("vehiclebench", ItemClassification.DECOR);
-            defaultItems.put("enginebench", ItemClassification.DECOR);
-            defaultItems.put("propellerbench", ItemClassification.DECOR);
-            defaultItems.put("wheelbench", ItemClassification.DECOR);
-            defaultItems.put("seatbench", ItemClassification.DECOR);
-            defaultItems.put("gunbench", ItemClassification.DECOR);
-            defaultItems.put("custombench", ItemClassification.DECOR);
-            defaultItems.put("instrumentbench", ItemClassification.DECOR);
-            defaultItems.put("decorbench", ItemClassification.DECOR);
-            defaultItems.put("itembench", ItemClassification.DECOR);
-            defaultItems.put("invisible_seat", ItemClassification.PART);
-            defaultItems.put("invisible_standing", ItemClassification.PART);
-            defaultItems.put("invisible_wheel", ItemClassification.PART);
+        Map<String, ItemClassification> defaultItems = new HashMap<>();
+        defaultItems.put("fuelhose", ItemClassification.ITEM);
+        defaultItems.put("handbook_car", ItemClassification.ITEM);
+        defaultItems.put("handbook_plane", ItemClassification.ITEM);
+        defaultItems.put("jumpercable", ItemClassification.ITEM);
+        defaultItems.put("jumperpack", ItemClassification.ITEM);
+        defaultItems.put("key", ItemClassification.ITEM);
+        defaultItems.put("paintgun", ItemClassification.ITEM);
+        defaultItems.put("partscanner", ItemClassification.ITEM);
+        defaultItems.put("ticket", ItemClassification.ITEM);
+        defaultItems.put("wrench", ItemClassification.ITEM);
+        defaultItems.put("y2kbutton", ItemClassification.ITEM);
+        defaultItems.put("jerrycan", ItemClassification.PART);
+        defaultItems.put("fuelpump", ItemClassification.DECOR);
+        defaultItems.put("charger", ItemClassification.DECOR);
+        defaultItems.put("vehiclebench", ItemClassification.DECOR);
+        defaultItems.put("enginebench", ItemClassification.DECOR);
+        defaultItems.put("propellerbench", ItemClassification.DECOR);
+        defaultItems.put("wheelbench", ItemClassification.DECOR);
+        defaultItems.put("seatbench", ItemClassification.DECOR);
+        defaultItems.put("gunbench", ItemClassification.DECOR);
+        defaultItems.put("custombench", ItemClassification.DECOR);
+        defaultItems.put("instrumentbench", ItemClassification.DECOR);
+        defaultItems.put("decorbench", ItemClassification.DECOR);
+        defaultItems.put("itembench", ItemClassification.DECOR);
+        defaultItems.put("invisible_seat", ItemClassification.PART);
+        defaultItems.put("invisible_standing", ItemClassification.PART);
+        defaultItems.put("invisible_wheel", ItemClassification.PART);
+        defaultItems.put("default_car", ItemClassification.PANEL);
 
-            String prefixFolders = "/assets/" + InterfaceManager.coreModID + "/jsondefs/";
-            for (Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()) {
-                String systemName = defaultItem.getKey();
+        String prefixFolders = "/assets/" + packID + "/jsondefs/";
+        String systemName;
+        for (Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()) {
+            try {
+                systemName = defaultItem.getKey();
                 ItemClassification classification = defaultItem.getValue();
-                AJSONItem itemDef = JSONParser.parseStream(PackParser.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
-                itemDef.packID = packDef.packID;
+                AJSONBase itemDef = JSONParser.parseStream(PackParser.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
+                itemDef.packID = packID;
                 itemDef.systemName = systemName;
                 itemDef.classification = classification;
                 itemDef.prefixFolders = prefixFolders;
-                PackParser.registerItem(itemDef);
+                registerItem(itemDef);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
     }
 
     /**
@@ -408,7 +419,7 @@ public final class PackParser {
 
                                 //Create the JSON instance.
                                 String systemName = fileName.substring(0, fileName.length() - ".json".length());
-                                AJSONItem definition;
+                                AJSONBase definition;
                                 try {
                                     definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
                                 } catch (Exception e) {
@@ -440,20 +451,20 @@ public final class PackParser {
     }
 
     /**
-     * Called to add the passed-in item to the pack registry.  While this is normally called automatically by the
+     * Called to add the passed-in component to the pack registry.  While this is normally called automatically by the
      * parser as it goes over the jar files, this may be called manually if other mods (or the core mod) want
      * to manually register things that aren't in jars.  The other assets like OBJs models and PNG textures
      * must exist somewhere in a jar in the classpath, however.  This simply bypasses the requirement that the
      * JSON file exists.  For this reason, prefixFolders is able to be defined to specify where those assets are,
      * while resourceLoader is used to specify the loader to use to load those assets.
      * <br><br>
-     * Note that no matter what method you you use, {@link AJSONItem#packID}, {@link AJSONItem#systemName},
-     * {@link AJSONItem#classification}, and {@link AJSONItem#prefixFolders} MUST be set before calling this method.
+     * Note that no matter what method you you use, {@link AJSONBase#packID}, {@link AJSONBase#systemName},
+     * {@link AJSONBase#prefixFolders}, and {@link AJSONItem#classification} MUST be set before calling this method.
      * <br><br>
      * Also note that any Legacy Compatibility code and JSON validation is performed prior to registration.
      * A fault in the compatibility system or in the validation will result in the item not being registered.
      */
-    public static void registerItem(AJSONItem itemDef) {
+    public static void registerItem(AJSONBase itemDef) {
         try {
             //Do legacy compats before validating the JSON.
             //This will populate any required fields that were not in older versions.
@@ -477,7 +488,7 @@ public final class PackParser {
                     parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
                 }
             } else {
-                AItemPack<?> item;
+                AItemPack<?> item = null;
                 switch (itemDef.classification) {
                     case INSTRUMENT:
                         item = new ItemInstrument((JSONInstrument) itemDef);
@@ -485,16 +496,26 @@ public final class PackParser {
                     case ITEM:
                         item = new ItemItem((JSONItem) itemDef);
                         break;
+                    case PANEL:
+                        //Put the panel in the map in the registry.
+                        JSONPanel panelDef = (JSONPanel) itemDef;
+                        if (!panelMap.containsKey(panelDef.packID)) {
+                            panelMap.put(panelDef.packID, new HashMap<>());
+                        }
+                        panelMap.get(panelDef.packID).put(panelDef.systemName, panelDef);
+                        break;
                     default: {
                         throw new IllegalArgumentException("No corresponding classification found for asset: " + itemDef.prefixFolders + " Contact the mod author!");
                     }
                 }
 
                 //Put the item in the map in the registry.
-                if (!packItemMap.containsKey(item.definition.packID)) {
-                    packItemMap.put(item.definition.packID, new HashMap<>());
+                if(item != null) {
+                    if (!packItemMap.containsKey(item.definition.packID)) {
+                        packItemMap.put(item.definition.packID, new HashMap<>());
+                    }
+                    packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
                 }
-                packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
             }
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError(e.getMessage());
@@ -651,5 +672,24 @@ public final class PackParser {
             packItems.addAll(getAllItemsForPack(packID, false));
         }
         return packItems;
+    }
+
+    public static JSONPanel getPackPanel(String packID, String systemName) {
+        if (panelMap.containsKey(packID)) {
+            return panelMap.get(packID).get(systemName);
+        }
+        return null;
+    }
+
+    public static List<JSONPanel> getAllPanelsForPack(String packID) {
+        return panelMap.containsKey(packID) ? new ArrayList<>(panelMap.get(packID).values()) : new ArrayList<>();
+    }
+
+    public static List<JSONPanel> getAllPackPanels() {
+        List<JSONPanel> packPanels = new ArrayList<>();
+        for (Map<String, JSONPanel> panels : panelMap.values()) {
+            packPanels.addAll(panels.values());
+        }
+        return packPanels;
     }
 }

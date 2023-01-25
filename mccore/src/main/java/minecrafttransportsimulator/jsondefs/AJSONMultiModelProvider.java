@@ -14,6 +14,12 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
     @JSONDescription("A list of definitions for this content.  Each definition is simply a variant of a different texture on the same model, with potentially different names/descriptions/materials/etc.  If a component uses definitions, then you will need to specify at least one, even if the component only has one variant.  Also note that anything that has a definitions section is able to be added to dynamically via a skin.")
     public List<JSONSubDefinition> definitions;
 
+    @JSONDescription("A list of constant variable names. These variables will be added into the listing of active variables and will always return 1 if requested, no matter what. Useful for grouping parts and things internally where using custom typing would simply cause more issues than it would solve.")
+    public List<String> constants;
+
+    @JSONDescription("A list of variables that will be set during initial placement of this object.  These can be used to set initial states, such as open doors or lights.")
+    public List<String> initialVariables;
+
     @JSONDescription("A listing of variable modifiers.  These may be used to modify the vehicle's physics or other variables dynamically.  If present, these values will add-on to any defined value as the base, and will modify and keep the modification for any generic variable.")
     public List<JSONVariableModifier> variableModifiers;
 

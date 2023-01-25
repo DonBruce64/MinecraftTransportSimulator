@@ -141,9 +141,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
-    public static final LanguageEntry GUI_PANEL_START = new LanguageEntry("gui.panel.start", "START");
-    public static final LanguageEntry GUI_PANEL_MAGNETO = new LanguageEntry("gui.panel.magneto", "MAG");
-    public static final LanguageEntry GUI_PANEL_ENGINE = new LanguageEntry("gui.panel.engine", "ENGINE");
     public static final LanguageEntry GUI_PANEL_TRIM_ROLL = new LanguageEntry("gui.panel.trim_roll", "ROLL TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_PITCH = new LanguageEntry("gui.panel.trim_pitch", "PITCH TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_YAW = new LanguageEntry("gui.panel.trim_yaw", "YAW TRIM");
@@ -151,7 +148,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_PANEL_GEAR = new LanguageEntry("gui.panel.gear", "GEAR");
     public static final LanguageEntry GUI_PANEL_BEACON = new LanguageEntry("gui.panel.beacon", "BEACON");
     public static final LanguageEntry GUI_PANEL_AUTOPILOT = new LanguageEntry("gui.panel.autopilot", "AUTO");
-    public static final LanguageEntry GUI_PANEL_CRUISECONTROL = new LanguageEntry("gui.panel.cruisecontrol", "CRUISE");
 
     public static final LanguageEntry GUI_INSTRUMENTS_MAIN = new LanguageEntry("gui.instruments.main", "Main Instruments");
     public static final LanguageEntry GUI_INSTRUMENTS_PANEL = new LanguageEntry("gui.instruments.panel", "Control Panel");
