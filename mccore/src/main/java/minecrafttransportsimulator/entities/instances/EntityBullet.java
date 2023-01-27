@@ -136,7 +136,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (definition.bullet.slowdownSpeed > 0) {
                 motion.add(motion.copy().normalize().scale(-definition.bullet.slowdownSpeed));
             }
-            motion.y -= gun.definition.gun.gravitationalVelocity;
+            motion.y -= definition.bullet.gravitationalVelocity;
 
             //Check to make sure we haven't gone too many ticks.
             if (ticksExisted > definition.bullet.burnTime + despawnTime) {
