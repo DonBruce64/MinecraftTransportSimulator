@@ -132,7 +132,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Add gravity and slowdown forces, if we don't have a burning motor.
-        if (ticksExisted > definition.bullet.burnTime) {
+        if (ticksExisted > definition.bullet.burnTime || ticksExisted < definition.bullet.accelerationDelay) {
             if (definition.bullet.slowdownSpeed > 0) {
                 motion.add(motion.copy().normalize().scale(-definition.bullet.slowdownSpeed));
             }
