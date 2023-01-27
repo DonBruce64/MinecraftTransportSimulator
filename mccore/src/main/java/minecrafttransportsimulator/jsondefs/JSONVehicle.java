@@ -152,8 +152,8 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
         public String litVariable;
 
+        @JSONRequired
         @JSONDescription("The panel to use for this vehicle.  Format is packID:panelName.")
-        //@JSONRequired
         public String panel;
 
         @JSONDescription("If this is present, MTS will render this texture for the HUD rather than the default texture.  Make sure to include a _lit variant otherwise things will look weird!")

@@ -19,6 +19,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -91,6 +92,19 @@ public class GUIPackExporter extends AGUIBase {
                             jsonFile.mkdirs();
                             jsonFile = new File(jsonFile, packItem.definition.systemName + ".json");
                             JSONParser.exportStream(packItem.definition, Files.newOutputStream(jsonFile.toPath()));
+                            lastTimeModified = jsonFile.lastModified();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
+                            return;
+                        }
+                    }
+                    for (JSONPanel packPanel : PackParser.getAllPanelsForPack(packID)) {
+                        try {
+                            File jsonFile = new File(packDir, packPanel.classification.toDirectory() + packPanel.prefixFolders);
+                            jsonFile.mkdirs();
+                            jsonFile = new File(jsonFile, packPanel.systemName + ".json");
+                            JSONParser.exportStream(packPanel, Files.newOutputStream(jsonFile.toPath()));
                             lastTimeModified = jsonFile.lastModified();
                         } catch (IOException e) {
                             e.printStackTrace();

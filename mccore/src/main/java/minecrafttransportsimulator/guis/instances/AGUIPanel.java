@@ -201,17 +201,17 @@ public abstract class AGUIPanel extends AGUIBase {
         }
 
         protected void updateSelectorState(GUIComponentSelector trailerSelector) {
-            trailerSelector.selectorState = 1;
+            trailerSelector.selectorState = 0;
             if (connectionGroup.isHookup) {
                 if (vehicleOn.towedByConnection != null && vehicleOn.towedByConnection.hookupGroupIndex == connectionGroupIndex) {
-                    trailerSelector.selectorState = 0;
+                    trailerSelector.selectorState = 1;
                     return;
                 }
             }
             if (connectionGroup.isHitch) {
                 for (TowingConnection connection : vehicleOn.towingConnections) {
                     if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
-                        trailerSelector.selectorState = 0;
+                        trailerSelector.selectorState = 1;
                         return;
                     }
                 }

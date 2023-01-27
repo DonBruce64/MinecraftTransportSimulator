@@ -34,6 +34,7 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -42,6 +43,7 @@ import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -480,7 +482,7 @@ public class JSONParser {
     public static <JSONClass> JSONClass parseStream(InputStream stream, Class<JSONClass> retClass, String packID, String systemName) throws IOException {
         InputStreamReader jsonReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
         JSONClass json;
-        if (AJSONItem.class.isAssignableFrom(retClass)) {
+        if (AJSONBase.class.isAssignableFrom(retClass)) {
             json = packParser.fromJson(jsonReader, retClass);
         } else {
             json = configParser.fromJson(jsonReader, retClass);
@@ -496,7 +498,7 @@ public class JSONParser {
      */
     public static void exportStream(Object jsonObject, OutputStream stream) throws IOException {
         OutputStreamWriter jsonWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
-        if (AJSONItem.class.isAssignableFrom(jsonObject.getClass())) {
+        if (AJSONBase.class.isAssignableFrom(jsonObject.getClass())) {
             packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
         } else {
             configParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
@@ -517,9 +519,9 @@ public class JSONParser {
      * Hot-loads the passed-in JSON, replacing the passed-in JSON with this one.
      * Status message is returned, which either indicates import success, or error.
      */
-    public static String hotloadJSON(File jsonFile, AJSONItem definitionToOverride) {
+    public static String hotloadJSON(File jsonFile, AJSONBase definitionToOverride) {
         try {
-            final AJSONItem loadedDefinition;
+            final AJSONBase loadedDefinition;
             switch (definitionToOverride.classification) {
                 case VEHICLE: {
                     JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
@@ -594,29 +596,39 @@ public class JSONParser {
                     loadedDefinition = loadedItemDefinition;
                     break;
                 }
+                case PANEL: {
+                    JSONPanel panelDefinition = (JSONPanel) definitionToOverride;
+                    JSONPanel loadedPanelDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONPanel.class, panelDefinition.packID, panelDefinition.systemName);
+                    JSONParser.validateFields(loadedPanelDefinition, "/", 1);
+                    panelDefinition.panel = loadedPanelDefinition.panel;
+                    loadedDefinition = loadedPanelDefinition;
+                    break;
+                }
                 default:
                     return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
             }
 
             //Do generic loading.
-            definitionToOverride.general = loadedDefinition.general;
-            if (definitionToOverride instanceof AJSONMultiModelProvider) {
-                ((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
-                ((AJSONMultiModelProvider) definitionToOverride).variableModifiers = ((AJSONMultiModelProvider) loadedDefinition).variableModifiers;
-                ((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
+            if (definitionToOverride instanceof AJSONItem) {
+                ((AJSONItem) definitionToOverride).general = ((AJSONItem) loadedDefinition).general;
+                if (definitionToOverride instanceof AJSONMultiModelProvider) {
+                    ((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
+                    ((AJSONMultiModelProvider) definitionToOverride).variableModifiers = ((AJSONMultiModelProvider) loadedDefinition).variableModifiers;
+                    ((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
 
-                //Reload item subdefs, since it will have changed.
-                for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
-                    AItemSubTyped<?> item = (AItemSubTyped<?>) PackParser.getItem(definitionToOverride.packID, definitionToOverride.systemName, subDefinition.subName);
-                    item.subDefinition = subDefinition;
-                }
+                    //Reload item subdefs, since it will have changed.
+                    for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
+                        AItemSubTyped<?> item = (AItemSubTyped<?>) PackParser.getItem(definitionToOverride.packID, definitionToOverride.systemName, subDefinition.subName);
+                        item.subDefinition = subDefinition;
+                    }
 
-                if (definitionToOverride instanceof AJSONInteractableEntity) {
-                    ((AJSONInteractableEntity) definitionToOverride).collisionGroups = ((AJSONInteractableEntity) loadedDefinition).collisionGroups;
-                    ((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;
-                    ((AJSONInteractableEntity) definitionToOverride).instruments = ((AJSONInteractableEntity) loadedDefinition).instruments;
-                    if (definitionToOverride instanceof AJSONPartProvider) {
-                        ((AJSONPartProvider) definitionToOverride).parts = ((AJSONPartProvider) loadedDefinition).parts;
+                    if (definitionToOverride instanceof AJSONInteractableEntity) {
+                        ((AJSONInteractableEntity) definitionToOverride).collisionGroups = ((AJSONInteractableEntity) loadedDefinition).collisionGroups;
+                        ((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;
+                        ((AJSONInteractableEntity) definitionToOverride).instruments = ((AJSONInteractableEntity) loadedDefinition).instruments;
+                        if (definitionToOverride instanceof AJSONPartProvider) {
+                            ((AJSONPartProvider) definitionToOverride).parts = ((AJSONPartProvider) loadedDefinition).parts;
+                        }
                     }
                 }
             }

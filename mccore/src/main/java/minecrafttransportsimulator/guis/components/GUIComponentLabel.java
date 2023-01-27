@@ -13,7 +13,7 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  * @author don_bruce
  */
 public class GUIComponentLabel extends AGUIComponent {
-    public final ColorRGB color;
+    public ColorRGB color;
     public final String fontName;
     public final TextAlignment alignment;
     public final int wrapWidth;

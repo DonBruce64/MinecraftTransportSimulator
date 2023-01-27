@@ -177,26 +177,27 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             //Format is (hitch/hookup)_groupIndex_connectionIndex_animationType.
             TowingConnection foundConnection = null;
             String[] variableData = variable.split("_");
-            if (variableData.length == 4) {
+            if (variableData.length >= 3) {
                 boolean isHookup = false;
                 int groupIndex = Integer.parseInt(variableData[1]) - 1;
-                int connectionIndex = Integer.parseInt(variableData[2]) - 1;
+                int connectionIndex = variableData.length == 4 ? Integer.parseInt(variableData[2]) - 1 : -1;
                 if (towedByConnection != null) {
-                    if (towedByConnection.hookupGroupIndex == groupIndex && towedByConnection.hookupConnectionIndex == connectionIndex) {
+                    if (towedByConnection.hookupGroupIndex == groupIndex && (connectionIndex == -1 || towedByConnection.hookupConnectionIndex == connectionIndex)) {
                         isHookup = true;
                         foundConnection = towedByConnection;
                     }
                 }
                 if (foundConnection == null && !towingConnections.isEmpty()) {
                     for (TowingConnection towingConnection : towingConnections) {
-                        if (towingConnection.hitchGroupIndex == groupIndex && towingConnection.hitchConnectionIndex == connectionIndex) {
+                        if (towingConnection.hitchGroupIndex == groupIndex && (connectionIndex == -1 || towingConnection.hitchConnectionIndex == connectionIndex)) {
                             foundConnection = towingConnection;
                             break;
                         }
                     }
                 }
+                variable = variableData[variableData.length == 4 ? 3 : 2];
                 if (foundConnection != null) {
-                    switch (variableData[3]) {
+                    switch (variable) {
                         case ("connected"):
                             return 1;
                         case ("pitch"):
@@ -206,6 +207,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         case ("roll"):
                             return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z;
                     }
+                } else if (variable.equals("present")) {
+                    return definition.connectionGroups != null && definition.connectionGroups.size() > groupIndex ? 1 : 0;
                 }
             }
         }

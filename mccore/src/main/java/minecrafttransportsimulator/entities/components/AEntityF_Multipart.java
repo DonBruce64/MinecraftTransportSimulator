@@ -421,7 +421,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             }
                         }
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
-                            if (getRawVariableValue(conditionalDef.getKey(), 0) > 0) {
+                            if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
                                 break;
                             }

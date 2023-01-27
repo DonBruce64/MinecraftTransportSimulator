@@ -802,8 +802,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return enginesOn ? 1 : 0;
             case ("engines_running"):
                 return enginesRunning ? 1 : 0;
-            case ("engines_single_control"):
-                return definition.motorized.hasSingleEngineControl ? 1 : 0;
             case ("reverser"):
                 return reverseThrust ? 1 : 0;
             case ("reverser_present"):
