@@ -88,7 +88,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Positional target.
      **/
-    private EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
         this(position, motion, orientation, gun);
         this.targetPosition = targetPosition;
     }
@@ -153,23 +153,61 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             motion.add(motionToAddEachTick);
         }
 
-        //We have a target. Go to it, unless we are waiting for acceleration.
-        //If the target is an external entity, update target position.
-        if (targetPosition != null && !notAcceleratingYet) {
-            if (externalEntityTargeted != null) {
-                if (externalEntityTargeted.isValid()) {
-                    targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
-                } else {
-                    //Entity is dead. Don't target it anymore.
-                    externalEntityTargeted = null;
-                    targetPosition = null;
+        //Guidance code for missiles
+        //First check to see if it can move yet
+        if (definition.bullet.turnRate > 0 && !notAcceleratingYet) {
+            //First, get target positions based on guidance method.
+            switch (definition.bullet.guidanceType){
+                //Bullet will track whatever the gun was locked to, but if it can't see it,
+                //it will continue looking and track the closest thing that comes into its view cone.
+                case PASSIVE: {
+                    //can't figure how to implement this yet.
+                    break;
                 }
-            } else if (engineTargeted != null) {
-                //Don't need to update the position variable for engines, as it auto-syncs.
-                //Do need to check if the engine is still warm and valid, however.
-                if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
-                    engineTargeted = null;
-                    targetPosition = null;
+                case SEMI_ACTIVE: {
+                    //Gun must be locked to the target for the bullet to know where it is.
+                    if (externalEntityTargeted != null) {
+                        if (externalEntityTargeted.isValid()) {
+                            targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
+                        } else if (gun.entityTarget == null) {
+                            targetPosition = null;
+                        } else {
+                            //Entity is dead. Don't target it anymore.
+                            externalEntityTargeted = null;
+                            targetPosition = null;
+                        }
+                    } else if (engineTargeted != null) {
+                        if (gun.engineTarget == null) {
+                            targetPosition = null;
+                        }
+                        //Don't need to update the position variable for engines, as it auto-syncs.
+                        //Do need to check if the engine is still warm and valid, however.
+                        if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted = null;
+                            targetPosition = null;
+                        }
+                    }
+                    break;
+                }
+                case ACTIVE: {
+                    //Always knows where the target is once fired.
+                    if (externalEntityTargeted != null) {
+                        if (externalEntityTargeted.isValid()) {
+                            targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
+                        } else {
+                            //Entity is dead. Don't target it anymore.
+                            externalEntityTargeted = null;
+                            targetPosition = null;
+                        }
+                    } else if (engineTargeted != null) {
+                        //Don't need to update the position variable for engines, as it auto-syncs.
+                        //Do need to check if the engine is still warm and valid, however.
+                        if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted = null;
+                            targetPosition = null;
+                        }
+                    }
+                    break;
                 }
             }
 
