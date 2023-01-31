@@ -9,7 +9,7 @@ import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.instances.AGUIPanel;
+import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
@@ -467,8 +467,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         if (!world.isClient()) {
             savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connection));
-        } else if (AGUIBase.activeInputGUI instanceof AGUIPanel) {
-            ((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
+        } else if (AGUIBase.activeInputGUI instanceof GUIPanel) {
+            ((GUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
         }
     }
 
@@ -488,8 +488,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
-        } else if (AGUIBase.activeInputGUI instanceof AGUIPanel) {
-            ((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
+        } else if (AGUIBase.activeInputGUI instanceof GUIPanel) {
+            ((GUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
         }
     }
 

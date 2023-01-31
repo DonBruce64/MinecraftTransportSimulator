@@ -234,6 +234,7 @@ public final class PackParser {
         defaultItems.put("invisible_standing", ItemClassification.PART);
         defaultItems.put("invisible_wheel", ItemClassification.PART);
         defaultItems.put("default_car", ItemClassification.PANEL);
+        defaultItems.put("default_plane", ItemClassification.PANEL);
 
         String prefixFolders = "/assets/" + packID + "/jsondefs/";
         String systemName;
