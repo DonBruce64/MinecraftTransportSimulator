@@ -11,7 +11,6 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
-import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -228,11 +227,7 @@ public final class PartSeat extends APart {
             boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
             if (clientRiderOnVehicle) {
                 //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-                if (vehicleOn.definition.motorized.isAircraft) {
-                    AGUIBase.closeIfOpen(GUIPanelAircraft.class);
-                } else {
-                    AGUIBase.closeIfOpen(GUIPanel.class);
-                }
+                AGUIBase.closeIfOpen(GUIPanel.class);
                 AGUIBase.closeIfOpen(GUIHUD.class);
                 AGUIBase.closeIfOpen(GUIRadio.class);
 

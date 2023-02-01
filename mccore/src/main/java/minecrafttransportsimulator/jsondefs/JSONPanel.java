@@ -86,6 +86,12 @@ public class JSONPanel extends AJSONBase {
 
         @JSONDescription("The value to use in the action on the variable (if applicable).")
         public double value;
+
+        @JSONDescription("The min value for this control to set.  Only used when the action type is increment.")
+        public float clampMin;
+
+        @JSONDescription("The max value for this control to set.  Only used when the action type is increment.")
+        public float clampMax;
     }
 
     public static enum SpecialComponent {
@@ -112,7 +118,13 @@ public class JSONPanel extends AJSONBase {
         @JSONDescription("Makes this a custom variable switch, which animates based on the state of the custom variable.  The first switch present will be for the first variable, the second the second.  Will not be visible if the vehicle and all its parts have no customVariables.")
         CUSTOM_VARIABLE,
         @JSONDescription("Makes this a beacon box, which allows changing the selected beacon.  Will not be visible if hasRadioNav is false for the vehicle and allPlanesWithNav is false in the config.")
-        BEACON_BOX;
+        BEACON_BOX,
+        @JSONDescription("Makes this a roll trim button.  Clicking the left and right will adjust the trim in the limits.")
+        ROLL_TRIM,
+        @JSONDescription("Makes this a pitch trim button.  Clicking the left and right will adjust the trim in the limits.")
+        PITCH_TRIM,
+        @JSONDescription("Makes this a yaw trim button.  Clicking the left and right will adjust the trim in the limits.")
+        YAW_TRIM;
     }
 
     public static enum ActionType {
@@ -120,7 +132,7 @@ public class JSONPanel extends AJSONBase {
         TOGGLE,
         @JSONDescription("Sets the value of the variable to 'value'.")
         SET,
-        @JSONDescription("Increments the variable by 'value'.")
+        @JSONDescription("Increments the variable by 'value', subject to the bounds in clampMin and clampMax.")
         INCREMENT;
     }
 }

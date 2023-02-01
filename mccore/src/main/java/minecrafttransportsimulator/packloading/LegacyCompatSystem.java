@@ -164,6 +164,29 @@ public final class LegacyCompatSystem {
             if (ConfigSystem.settings != null && ConfigSystem.settings.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)) {
                 performModelLegacyCompats((AJSONMultiModelProvider) definition);
             }
+
+            //Check vehicle litVariable LCs, these have to run after model LCs since the model can set some of these.
+            if (provider instanceof JSONVehicle) {
+                JSONVehicle vehicleDef = (JSONVehicle) provider;
+                if (vehicleDef.motorized.litVariable == null) {
+                    if (vehicleDef.motorized.hasRunningLights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                    } else if (vehicleDef.motorized.hasHeadlights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
+                    } else if (vehicleDef.motorized.hasNavLights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+                    } else if (vehicleDef.motorized.hasStrobeLights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
+                    } else if (vehicleDef.motorized.hasTaxiLights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
+                    } else if (vehicleDef.motorized.hasLandingLights) {
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
+                    } else {
+                        //Probably a trailer, just use running lights.
+                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                    }
+                }
+            }
         }
     }
 
@@ -261,28 +284,6 @@ public final class LegacyCompatSystem {
             definition.motorized.rudderArea = definition.blimp.rudderArea;
             definition.motorized.ballastVolume = definition.blimp.ballastVolume;
             definition.blimp = null;
-        }
-
-        //Make litVariable if we don't have one.
-        if (definition.motorized.litVariable == null) {
-            if (definition.motorized.hasRunningLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
-            } else if (definition.motorized.hasHeadlights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
-            } else if (definition.motorized.hasNavLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
-            } else if (definition.motorized.hasNavLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
-            } else if (definition.motorized.hasStrobeLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
-            } else if (definition.motorized.hasTaxiLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
-            } else if (definition.motorized.hasLandingLights) {
-                definition.motorized.litVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
-            } else {
-                //Probably a trailer, just use running lights.
-                definition.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
-            }
         }
 
         //Set panel if we don't have one.
@@ -2317,41 +2318,41 @@ public final class LegacyCompatSystem {
                         String lowerCaseName = object.name.toLowerCase();
                         JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                         if (lowerCaseName.contains("brakelight")) {
-                            activeAnimation.variable = "brake";
+                            activeAnimation.variable = EntityVehicleF_Physics.BRAKE_VARIABLE;
                         } else if (lowerCaseName.contains("backuplight")) {
                             activeAnimation.variable = "engine_reversed_1";
                         } else if (lowerCaseName.contains("daytimelight")) {
                             activeAnimation.variable = "engines_on";
                         } else if (lowerCaseName.contains("navigationlight")) {
-                            activeAnimation.variable = "navigation_light";
+                            activeAnimation.variable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasNavLights = true;
                         } else if (lowerCaseName.contains("strobelight")) {
-                            activeAnimation.variable = "strobe_light";
+                            activeAnimation.variable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasStrobeLights = true;
                         } else if (lowerCaseName.contains("taxilight")) {
-                            activeAnimation.variable = "taxi_light";
+                            activeAnimation.variable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTaxiLights = true;
                         } else if (lowerCaseName.contains("landinglight")) {
-                            activeAnimation.variable = "landing_light";
+                            activeAnimation.variable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasLandingLights = true;
                         } else if (lowerCaseName.contains("runninglight")) {
-                            activeAnimation.variable = "running_light";
+                            activeAnimation.variable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasRunningLights = true;
                         } else if (lowerCaseName.contains("headlight")) {
-                            activeAnimation.variable = "headlight";
+                            activeAnimation.variable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasHeadlights = true;
                         } else if (lowerCaseName.contains("leftturnlight")) {
-                            activeAnimation.variable = "left_turn_signal";
+                            activeAnimation.variable = EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTurnSignals = true;
                         } else if (lowerCaseName.contains("rightturnlight")) {
-                            activeAnimation.variable = "right_turn_signal";
+                            activeAnimation.variable = EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE;
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTurnSignals = true;
                         } else if (lowerCaseName.contains("emergencylight")) {
