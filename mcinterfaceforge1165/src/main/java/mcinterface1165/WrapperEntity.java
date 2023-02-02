@@ -26,6 +26,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -329,7 +330,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new DamageSource(damage.language.value) {
+        DamageSource newSource = new EntityDamageSource(damage.language.value, damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
             public ITextComponent getLocalizedDeathMessage(LivingEntity player) {
                 if (damage.entityResponsible != null) {
