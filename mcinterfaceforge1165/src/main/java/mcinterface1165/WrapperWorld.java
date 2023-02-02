@@ -463,7 +463,21 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public double getHeight(Point3D position) {
-        return position.y - world.getBlockFloorHeight(new BlockPos(position.x, 0, position.z));
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.canSeeSky(pos)) {
+            return position.y - world.getBlockFloorHeight(pos);
+        } else {
+            //Need to go down till we find a block.
+            while (pos.getY() > 0) {
+                if (!world.isEmptyBlock(pos)) {
+                    //Adjust up since we need to be above the top block. 
+                    pos = pos.above();
+                    break;
+                }
+                pos = pos.below();
+            }
+            return position.y - pos.getY();
+        }
     }
 
     @Override
