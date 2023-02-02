@@ -336,40 +336,43 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     protected void getForcesAndMotions() {
         //Get engine thrust force contributions.  This happens for all vehicles, towed or not.
+        //The only exception are mounted towed vehicles, which are static.
         hasRotors = false;
         thrustForce.set(0, 0, 0);
         thrustTorque.set(0, 0, 0);
         rotorRotation.set(0, 0, 0);
         thrustForceValue = 0;
-        for (APart part : allParts) {
-            if (part instanceof PartEngine) {
-                thrustForceValue += ((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
-            } else if (part instanceof PartPropeller) {
-                PartPropeller propeller = (PartPropeller) part;
-                thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
-                if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
-                    hasRotors = true;
-                    if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
-                        rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
-                    } else {
-                        if (autopilotSetting == 0) {
-                            rotorRotation.set(-5D * elevatorAngle / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, 5D * aileronAngle / MAX_AILERON_ANGLE);
+        if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
+            for (APart part : allParts) {
+                if (part instanceof PartEngine) {
+                    thrustForceValue += ((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
+                } else if (part instanceof PartPropeller) {
+                    PartPropeller propeller = (PartPropeller) part;
+                    thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
+                    if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
+                        hasRotors = true;
+                        if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
+                            rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
                         } else {
-                            if (orientation.angles.x < -1) {
-                                rotorRotation.x = 1;
-                            } else if (orientation.angles.x > 1) {
-                                rotorRotation.x = -1;
+                            if (autopilotSetting == 0) {
+                                rotorRotation.set(-5D * elevatorAngle / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, 5D * aileronAngle / MAX_AILERON_ANGLE);
                             } else {
-                                rotorRotation.x = -orientation.angles.x;
+                                if (orientation.angles.x < -1) {
+                                    rotorRotation.x = 1;
+                                } else if (orientation.angles.x > 1) {
+                                    rotorRotation.x = -1;
+                                } else {
+                                    rotorRotation.x = -orientation.angles.x;
+                                }
+                                if (orientation.angles.z < -1) {
+                                    rotorRotation.z = 1;
+                                } else if (orientation.angles.z > 1) {
+                                    rotorRotation.z = -1;
+                                } else {
+                                    rotorRotation.z = -orientation.angles.z;
+                                }
+                                rotorRotation.y = -5D * rudderAngle / MAX_RUDDER_ANGLE;
                             }
-                            if (orientation.angles.z < -1) {
-                                rotorRotation.z = 1;
-                            } else if (orientation.angles.z > 1) {
-                                rotorRotation.z = -1;
-                            } else {
-                                rotorRotation.z = -orientation.angles.z;
-                            }
-                            rotorRotation.y = -5D * rudderAngle / MAX_RUDDER_ANGLE;
                         }
                     }
                 }

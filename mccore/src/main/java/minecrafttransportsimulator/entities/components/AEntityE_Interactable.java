@@ -18,7 +18,6 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
@@ -155,12 +154,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      **/
     public boolean forceCollisionUpdateThisTick;
 
-    /**
-     * List of disconnected connections from snap connections.  These query each second and reset if we are far enough away.
-     * This prevents the connection from being re-connected instantly.
-     **/
-    protected final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
-
     protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
     protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
     protected int lastSnapConnectionTried = 0;
@@ -209,15 +202,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                         }
                     }
                 }
-            }
-        }
-
-        //Load disabled connections.
-        int towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
-        for (int i = 0; i < towingConnectionCount; ++i) {
-            IWrapperNBT towData = data.getData("disconnectedTowingConnection" + i);
-            if (towData != null) {
-                this.disconnectedTowingConnections.add(new TowingConnection(towData));
             }
         }
     }
@@ -637,12 +621,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
             }
         }
-
-        int towingConnectionIndex = 0;
-        for (TowingConnection towingEntry : disconnectedTowingConnections) {
-            data.setData("disconnectedTowingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        }
-        data.setInteger("disconnectedTowingConnectionCount", towingConnectionIndex);
         return data;
     }
 
