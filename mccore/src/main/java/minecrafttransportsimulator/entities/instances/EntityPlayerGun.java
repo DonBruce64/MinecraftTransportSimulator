@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -182,11 +183,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
 
                 //Rotate to align with the hand orientation.                
                 position.rotate(handRotation);
-
-                //Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
-                //Sneaking lowers arm by 0.2 blocks.
-                //We adjust this by the seated offset and scale to get the actual position.
-                position.add(player.isRightHanded() ? -0.3125 : 0.3125, ((player.isSneaking() ? 1.3125 - 0.2 : 1.3125) + player.getSeatOffset()) * player.getVerticalScale(), 0);
+                
+                //Arm center is 6 pixels, or 0.375 down from eyes (Y), 0.3125 blocks away in X
+                position.add(player.getEyePosition()).subtract(player.getPosition());
+                position.add(player.isRightHanded() ? -0.3125 : 0.3125, -0.375, 0);
 
                 //Rotate to player's yaw to match facing direction.
                 handRotation.setToZero().rotateY(player.getYaw());
@@ -211,6 +211,16 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                         saveGun(false);
                     }
                 }
+
+                //Set/unset camera index if we need to.
+                if (activeGun.isHandHeldGunAimed || activeGun.definition.gun.forceHandheldCameras) {
+                    if (cameraIndex == 0 && cameras.size() > 0) {
+                        ++cameraIndex;
+                    }
+                } else if (cameraIndex != 0) {
+                    cameraIndex = 0;
+                    activeCamera = null;
+                }
             }
         } else {
             //Player is either null or not valid.  Remove us.
@@ -222,6 +232,21 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         //If we have a gun, and the player is spectating, don't allow the gun to render.
         if (activeGun != null) {
             activeGun.isInvisible = player != null && player.isSpectator();
+        }
+    }
+
+    @Override
+    public void updatePartList() {
+        super.updatePartList();
+
+        //Populate camera list.
+        for (APart part : allParts) {
+            if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
+                for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
+                    cameras.add(camera);
+                    cameraEntities.put(camera, part);
+                }
+            }
         }
     }
 

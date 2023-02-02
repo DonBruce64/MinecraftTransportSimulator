@@ -139,12 +139,6 @@ public interface IInterfaceClient {
     IWrapperPlayer getClientPlayer();
 
     /**
-     * Returns the entity that is used to set up the render camera.
-     * Normally the player, but can (may?) change.
-     */
-    IWrapperEntity getRenderViewEntity();
-
-    /**
      * Returns the current camera position.
      * The returned position may by modified without affecting the entity's actual position.
      */

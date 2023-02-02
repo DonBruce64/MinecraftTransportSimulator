@@ -181,6 +181,12 @@ public class WrapperEntity implements IWrapperEntity {
     private final Point3D mutablePosition = new Point3D();
 
     @Override
+    public Point3D getEyePosition() {
+        AEntityB_Existing riding = getEntityRiding();
+        return riding != null ? riding.riderEyePosition : getPosition().add(0, getEyeHeight() + getSeatOffset(), 0);
+    }
+
+    @Override
     public void setPosition(Point3D position, boolean onGround) {
         entity.setPosition(position.x, position.y, position.z);
         //Set fallDistance to 0 to prevent damage.

@@ -99,6 +99,12 @@ public interface IWrapperEntity {
     Point3D getPosition();
 
     /**
+     * Like {@link #getPosition()}, but for the player's eyes.  Unlike {@link #getPosition()}, the
+     * returned object MAY NOT be mutable without affecting other logic, so DO NOT change it.
+     */
+    Point3D getEyePosition();
+
+    /**
      * Sets the entity's position to the passed-in point.
      * Boolean is included to set ground state.  This should
      * be set if the entity is on another entity collision box,

@@ -17,8 +17,8 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
+import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
@@ -647,7 +647,7 @@ public class PartGun extends APart {
                         //Default gets target based on controller eyes and where they are looking.
                         //Need to get their eye position though, not their main position, for accurate targeting.
                         //Also, don't use gun max distance here, since that's only for boresight.
-                        startPoint = controller.getPosition();
+                        startPoint = controller.getEyePosition();
                         searchVector = controller.getLineOfSight(RAYTRACE_DISTANCE);
                         coneAngle = DEFAULT_CONE_ANGLE;
                         break;
@@ -786,7 +786,7 @@ public class PartGun extends APart {
             //Get vector from eyes of controller to target.
             //Target we aim for the middle, as it's more accurate.
             //We also take into account tracking for bullet speed.
-            targetVector.set(target.getPosition());
+            targetVector.set(target.getEyePosition());
             targetVector.y += target.getEyeHeight() / 2D;
 
             //Transform vector to gun's coordinate system.
