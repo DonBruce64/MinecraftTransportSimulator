@@ -284,8 +284,11 @@ public interface IInventoryProvider {
             if (item instanceof ItemBullet) {
                 ItemBullet bullet = (ItemBullet) item;
                 if (bullet.definition.bullet != null) {
-                    double blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter / 10D : bullet.definition.bullet.blastStrength;
-                    explosivePower += stack.getSize() * blastSize / 10D;
+                    double shellBlastStrength = (0.00000025 * (bullet.definition.bullet.diameter * bullet.definition.bullet.caseLength));
+                    if (bullet.definition.bullet.blastStrength > 0) {
+                        shellBlastStrength += 0.1 * bullet.definition.bullet.blastStrength;
+                    }
+                    explosivePower = 0.5 * shellBlastStrength * bullet.definition.bullet.quantity * stack.getSize();
                 }
             }
         }
