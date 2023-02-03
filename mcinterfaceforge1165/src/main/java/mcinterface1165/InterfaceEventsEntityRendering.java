@@ -260,7 +260,8 @@ public class InterfaceEventsEntityRendering {
                 riderTotalTransformation.applyScaling(entityScale);
                 riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
                 riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
+                //FIXME need to get the stack POS here to adjust transforms.
+                //InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
             }
 
             needToPopMatrix = true;

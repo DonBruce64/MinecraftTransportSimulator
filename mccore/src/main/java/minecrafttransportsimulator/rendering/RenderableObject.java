@@ -56,14 +56,33 @@ public class RenderableObject {
     public FloatBuffer vertices;
     public final boolean cacheVertices;
 
+    /**
+     * Marks the object as translucent.  This will force it to be rendered with other translucent objects.
+     * Blending will be applied depending on the alpha value.  Alpha testing will be disabled to prevent culled
+     * tris in the rendering with low alpha.
+     */
     public boolean isTranslucent;
     public int cachedVertexIndex = -1;
-    public BlendState blend = BlendState.SOLID;
     public float alpha = 1.0F;
     public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();
+    /**
+     * Completely disables or enables lighting of this object.
+     * This disables both the system lighting (OpenGL) and internal lighting (lightmap).
+     */
     public boolean disableLighting;
+    /**
+     * Enables or disables OpenGL lighting for this object.
+     * This effectively prevents OpenGL lighting calculations on textures.
+     * Do note that the normal internal lightmapping will still be applied.
+     * This essentially prevents shadow creation on models based on their face
+     * orientation relative to the main light "source".
+     */
     public boolean ignoreWorldShading;
+    /**
+     * Sets the blend state to bright.  This does special blending
+     * when blending is enabled.  Therefore, it only has an effect on translucent objects.
+     */
     public boolean enableBrightBlending;
 
     /**
@@ -280,11 +299,5 @@ public class RenderableObject {
     public void destroy() {
         vertices = null;
         InterfaceManager.renderingInterface.deleteVertices(this);
-    }
-
-    public enum BlendState {
-        SOLID,
-        TRANSLUCENT,
-        BRIGHT_BLENDED
     }
 }

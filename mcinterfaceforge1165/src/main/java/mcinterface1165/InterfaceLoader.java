@@ -19,6 +19,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -29,9 +30,8 @@ import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
@@ -43,12 +43,13 @@ import net.minecraftforge.fml.loading.FMLPaths;
  * @author don_bruce
  */
 @Mod(InterfaceLoader.MODID)
-public final class InterfaceLoader {
+public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
     public static final String MODVER = "22.6.0-BETA";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+    private final String gameDirectory;
 
     public InterfaceLoader() {
         //Add registries.
@@ -57,22 +58,11 @@ public final class InterfaceLoader {
         BuilderTileEntity.TILE_ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
         ABuilderEntityBase.ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
 
-        //Add ourselves to the boot process.
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::initClient);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::initServer);
-    }
+        //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
+        boolean isClient = FMLEnvironment.dist.isClient();
 
-    private void initClient(FMLClientSetupEvent event) {
-        initCommon(true);
-    }
-
-    private void initServer(FMLDedicatedServerSetupEvent event) {
-        initCommon(false);
-    }
-
-    private void initCommon(boolean isClient) {
         //Get game directory.
-        String gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
+        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
 
         //Init interfaces and send to the main game system.
         if (isClient) {
@@ -98,7 +88,7 @@ public final class InterfaceLoader {
 
             //Parse the packs.
             PackParser.addDefaultItems();
-            PackParser.parsePacks(packDirectories, isClient);
+            PackParser.parsePacks(packDirectories);
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
@@ -125,11 +115,11 @@ public final class InterfaceLoader {
                         itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
                     }
                     itemProperties.stacksTo(item.getStackSize());
-                    if (item instanceof IItemFood) {
+                    if (item instanceof ItemItem && ((ItemItem) item).definition.food != null) {
                         IItemFood food = (IItemFood) item;
                         itemProperties.food(new Food.Builder().nutrition(food.getHungerAmount()).saturationMod(food.getSaturationAmount()).build());
                     }
-                    new BuilderItem(new Item.Properties(), item);
+                    new BuilderItem(itemProperties, item);
                 }
             }
         }
@@ -140,9 +130,7 @@ public final class InterfaceLoader {
             BuilderItem mcItem = entry.getValue();
 
             //Register the item.
-            String name = InterfaceManager.coreModID + ":" + item.getRegistrationName();
-            mcItem.setRegistryName(name);
-            BuilderItem.ITEMS.register(name, () -> mcItem);
+            BuilderItem.ITEMS.register(item.getRegistrationName(), () -> mcItem);
 
             //If the item is for OreDict, add it.
             //Well, we would if that existed....
@@ -160,8 +148,7 @@ public final class InterfaceLoader {
                 if (!blocksRegistred.contains(itemBlockBlock)) {
                     //New block class detected.  Register it and its instance.
                     BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
-                    String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length());
-                    wrapper.setRegistryName(InterfaceManager.coreModID + ":" + name);
+                    String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase();
                     BuilderBlock.BLOCKS.register(name, () -> wrapper);
                     BuilderBlock.blockMap.put(itemBlockBlock, wrapper);
                     blocksRegistred.add(itemBlockBlock);
@@ -173,8 +160,7 @@ public final class InterfaceLoader {
         for (int i = 0; i < BlockCollision.blockInstances.size(); ++i) {
             BlockCollision collisionBlock = BlockCollision.blockInstances.get(i);
             BuilderBlock wrapper = new BuilderBlock(collisionBlock);
-            String name = collisionBlock.getClass().getSimpleName().substring("Block".length()) + i;
-            wrapper.setRegistryName(InterfaceManager.coreModID + ":" + name);
+            String name = collisionBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase() + i;
             BuilderBlock.BLOCKS.register(name, () -> wrapper);
             BuilderBlock.blockMap.put(collisionBlock, wrapper);
         }
@@ -186,26 +172,28 @@ public final class InterfaceLoader {
         List<BuilderBlock> chargerBlocks = new ArrayList<>();
 
         BuilderBlock.blockMap.values().forEach(builder -> {
-            if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
-                fluidBlocks.add(builder);
-            } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
-                inventoryBlocks.add(builder);
-            } else if (ITileEntityEnergyCharger.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
-                chargerBlocks.add(builder);
-            } else {
-                normalBlocks.add(builder);
+            if (builder.block instanceof ABlockBaseTileEntity) {
+                if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                    fluidBlocks.add(builder);
+                } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                    inventoryBlocks.add(builder);
+                } else if (ITileEntityEnergyCharger.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                    chargerBlocks.add(builder);
+                } else {
+                    normalBlocks.add(builder);
+                }
             }
         });
 
-        BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, normalBlocks.toArray(new BuilderBlock[0])).build(null)).get();
-        BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null)).get();
-        BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null)).get();
-        BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> TileEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+        BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, normalBlocks.toArray(new BuilderBlock[0])).build(null));
+        BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null));
+        BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null));
+        BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> TileEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null));
 
         //Init entities.
-        BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
-        BuilderEntityLinkedSeat.E_TYPE3 = ABuilderEntityBase.ENTITIES.register("builder_seat", () -> EntityType.Builder.<BuilderEntityLinkedSeat>of(BuilderEntityLinkedSeat::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
-        BuilderEntityRenderForwarder.E_TYPE4 = ABuilderEntityBase.ENTITIES.register("builder_rendering", () -> EntityType.Builder.<BuilderEntityRenderForwarder>of(BuilderEntityRenderForwarder::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build(null)).get();
+        BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_existing"));
+        BuilderEntityLinkedSeat.E_TYPE3 = ABuilderEntityBase.ENTITIES.register("builder_seat", () -> EntityType.Builder.<BuilderEntityLinkedSeat>of(BuilderEntityLinkedSeat::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_seat"));
+        BuilderEntityRenderForwarder.E_TYPE4 = ABuilderEntityBase.ENTITIES.register("builder_rendering", () -> EntityType.Builder.<BuilderEntityRenderForwarder>of(BuilderEntityRenderForwarder::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_rendering"));
 
         //Iterate over all pack items and find those that spawn entities.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {

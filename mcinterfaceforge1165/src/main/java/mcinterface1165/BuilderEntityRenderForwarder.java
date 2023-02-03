@@ -6,6 +6,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
@@ -17,7 +18,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
-    protected static EntityType<BuilderEntityRenderForwarder> E_TYPE4;
+    protected static RegistryObject<EntityType<BuilderEntityRenderForwarder>> E_TYPE4;
     protected static BuilderEntityRenderForwarder lastClientInstance;
 
     protected PlayerEntity playerFollowing;
@@ -30,7 +31,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     }
 
     public BuilderEntityRenderForwarder(PlayerEntity playerFollowing) {
-        this(E_TYPE4, playerFollowing.level);
+        this(E_TYPE4.get(), playerFollowing.level);
         this.playerFollowing = playerFollowing;
         Vector3d playerPos = playerFollowing.position();
         this.setPos(playerPos.x, playerPos.y, playerPos.z);

@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
@@ -20,7 +21,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
-    protected static EntityType<BuilderEntityLinkedSeat> E_TYPE3;
+    protected static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
 
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
@@ -36,7 +37,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     private boolean dismountedRider;
 
     public BuilderEntityLinkedSeat(EntityType<? extends BuilderEntityLinkedSeat> eType, World world) {
-        super(eType, world);
+        super(BuilderEntityLinkedSeat.E_TYPE3.get(), world);
     }
 
     @Override

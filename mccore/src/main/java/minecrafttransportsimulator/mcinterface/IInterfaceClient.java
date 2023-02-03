@@ -25,7 +25,8 @@ public interface IInterfaceClient {
     boolean isGamePaused();
 
     /**
-     * Returns the current language name.
+     * Returns the current language name.  Note: this may return the default if you
+     * call this method before the game has fully booted.
      */
     String getLanguageName();
 

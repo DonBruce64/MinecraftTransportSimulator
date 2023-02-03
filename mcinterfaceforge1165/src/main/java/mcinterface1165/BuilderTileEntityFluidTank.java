@@ -16,6 +16,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -24,12 +25,12 @@ import net.minecraftforge.registries.ForgeRegistries;
  * @author don_bruce
  */
 public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFluidTank, IFluidHandler {
-    protected static TileEntityType<BuilderTileEntityFluidTank> TE_TYPE2;
+    protected static RegistryObject<TileEntityType<BuilderTileEntityFluidTank>> TE_TYPE2;
 
     private EntityFluidTank tank;
 
     public BuilderTileEntityFluidTank() {
-        super(TE_TYPE2);
+        super(TE_TYPE2.get());
     }
 
     @Override

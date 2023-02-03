@@ -274,7 +274,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
-        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2, ((WrapperWorld) entity.world).world);
+        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2.get(), ((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
         builder.setPos(entity.position.x, entity.position.y, entity.position.z);
         builder.entity = entity;
@@ -930,7 +930,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (ticksSincePlayerJoin.containsKey(playerUUID)) {
                         totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
                     }
-                    if (++totalTicksWaited == 60) {
+                    if (++totalTicksWaited == 200) {
                         //Spawn gun.
                         IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
                         IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();

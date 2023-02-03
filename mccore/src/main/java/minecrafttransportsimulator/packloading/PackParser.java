@@ -142,7 +142,7 @@ public final class PackParser {
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
      * for pack definitions.  After this, they will be created and loaded into the main mod.
      */
-    public static void parsePacks(List<File> packDirectories, boolean isClient) {
+    public static void parsePacks(List<File> packDirectories) {
         //First get all pack definitions from the passed-in directories.
         for (File directory : packDirectories) {
             for (File file : directory.listFiles()) {
@@ -166,12 +166,6 @@ public final class PackParser {
             if (!ConfigSystem.settings.fuel.fuels.containsKey(fuelValues.getKey())) {
                 ConfigSystem.settings.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
             }
-        }
-
-        //Check to make sure we populated the current language file.  If we are missing entries for packs, add them.
-        //Don't parse the language on the server, as that doesn't exist there.
-        if (ConfigSystem.language != null) {
-            ConfigSystem.language.populateEntries(isClient);
         }
 
         //Also check for new packs for pack-specific speed factors and scales.
