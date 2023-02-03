@@ -92,7 +92,7 @@ public class GUIPanel extends AGUIBase {
         }
 
         //Check parts, if we have any.
-        for (APart part : entity.parts) {
+        for (APart part : entity.allParts) {
             if (part.definition.connectionGroups != null) {
                 for (JSONConnectionGroup connectionGroup : part.definition.connectionGroups) {
                     if (connectionGroup.canInitiateConnections) {
