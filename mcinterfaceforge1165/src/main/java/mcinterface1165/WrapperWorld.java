@@ -83,8 +83,6 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -109,7 +107,6 @@ public class WrapperWorld extends AWrapperWorld {
 
     protected final World world;
     private final IWrapperNBT savedData;
-    protected final Map<UUID, Entity> entitiesByUUID = new HashMap<>();
 
     /**
      * Returns a wrapper instance for the passed-in world instance.
@@ -231,7 +228,16 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperEntity getExternalEntity(UUID entityID) {
-        return WrapperEntity.getWrapperFor(entitiesByUUID.get(entityID));
+        if (world instanceof net.minecraft.world.server.ServerWorld) {
+            return WrapperEntity.getWrapperFor(((net.minecraft.world.server.ServerWorld) world).getEntity(entityID));
+        } else {
+            for (Entity entity : ((net.minecraft.client.world.ClientWorld) world).entitiesForRendering()) {
+                if (entity.getUUID().equals(entityID)) {
+                    return WrapperEntity.getWrapperFor(entity);
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -879,25 +885,6 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Checks for joined and left entities to ensure we maintain a map of them for lookups.
-     */
-    @SubscribeEvent
-    public void on(EntityJoinWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.put(event.getEntity().getUUID(), event.getEntity());
-        }
-    }
-
-    @SubscribeEvent
-    public void on(EntityLeaveWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.remove(event.getEntity().getUUID());
-        }
-    }
-
-    /**
      * Spawn "follower" entities for the player if they don't exist already.
      * This only happens 3 seconds after the player joins.
      * This delay is done to ensure all chunks are loaded before spawning any followers.
@@ -930,7 +917,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (ticksSincePlayerJoin.containsKey(playerUUID)) {
                         totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
                     }
-                    if (++totalTicksWaited == 200) {
+                    if (++totalTicksWaited == 60) {
                         //Spawn gun.
                         IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
                         IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();

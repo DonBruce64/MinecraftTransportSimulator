@@ -67,6 +67,7 @@ public class InterfaceLoader {
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
+            InterfaceEventsModelLoader.init();
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }

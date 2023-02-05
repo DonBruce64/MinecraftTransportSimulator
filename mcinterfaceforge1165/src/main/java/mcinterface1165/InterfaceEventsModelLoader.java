@@ -1,17 +1,17 @@
 package mcinterface1165;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Predicate;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -20,15 +20,16 @@ import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.FilePack;
+import net.minecraft.profiler.IProfiler;
+import net.minecraft.resources.IFutureReloadListener;
+import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourcePack;
 import net.minecraft.resources.ResourcePackType;
+import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.resource.VanillaResourceType;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -37,41 +38,23 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  *
  * @author don_bruce
  */
-@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceEventsModelLoader {
 
     /**
-     * Event that's called to register models.  We register our render wrapper
-     * classes here, as well as all item JSONs.
+     * Called during init to inject the custom resource pack loader into the files.
      */
-    @SuppressWarnings({ "unchecked" })
-    @SubscribeEvent
-    public static void registerModels(ModelRegistryEvent event) {
+    public static void init() {
 
         //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
         //FAR easier than trying to use the bloody bakery system.
-        //Normally we'd add our pack to the current loader, but this gets wiped out during reloads and unless we add our pack to the main list, it won't stick.
-        //To do this, we use reflection to get the field from the main MC class that holds the master list to add our custom ones.
-        //FIXME this isn't right, at all, but we can still boot!
-        List<IResourcePack> defaultPacks = null;
-        for (Field field : Minecraft.class.getDeclaredFields()) {
-            if (field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")) {
-                try {
-                    if (!field.isAccessible()) {
-                        field.setAccessible(true);
-                    }
-
-                    defaultPacks = (List<IResourcePack>) field.get(Minecraft.getInstance());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        //Check to make sure we have the pack list before continuing.
-        if (defaultPacks == null) {
+        //FIXME this probably wor't work for the packs, we test.
+        try {
+            //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
+            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(new PackResourcePack(InterfaceLoader.MODID));
+            ForgeHooksClient.refreshResources(Minecraft.getInstance(), VanillaResourceType.MODELS);
+        } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not get default pack list. Item icons will be disabled.");
-            return;
+            e.printStackTrace();
         }
 
         //Now that we have the custom resource pack location, add our built-in loader.
@@ -83,39 +66,29 @@ public class InterfaceEventsModelLoader {
         //This is done to allow MC/Forge to play nice with item textures.
         //FIXME we can't register item models anymore, we just need to make an inject the custom pack loader.
         /*
-        for (AItemBase item : BuilderItem.itemMap.keySet()) {
-            if (item instanceof AItemPack) {
-                AItemPack<?> packItem = (AItemPack<?>) item;
-                if (!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)) {
-                    defaultPacks.add(new PackResourcePack(packItem.definition.packID));
-                }
-                ModelLoader.setCustomModelResourceLocation(BuilderItem.itemMap.get(packItem), 0, new ModelResourceLocation(InterfaceManager.coreModID + "_packs:" + packItem.getRegistrationName(), "inventory"));
-            }
-        }
         
-        //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
-        FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
         */
     }
 
     /**
      * Custom ResourcePack class for auto-generating item JSONs.
      */
-    private static class PackResourcePack extends FilePack {
-        private static final Map<String, PackResourcePack> createdLoaders = new HashMap<>();
+    private static class PackResourcePack implements IResourcePack, IFutureReloadListener {
         private final String domain;
         private final Set<String> domains;
 
-        private PackResourcePack(String domain, File jarFile) {
-            super(jarFile);
+        private PackResourcePack(String domain) {
+            super();
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
-            createdLoaders.put(domain, this);
+            System.out.println("I M NEW");
         }
 
         @Override
         public InputStream getResource(ResourcePackType type, ResourceLocation location) throws IOException {
+            System.out.println(location);
+
             //Create stream return variable and get raw data.
             InputStream stream;
             String rawPackInfo = location.getPath();
@@ -271,11 +244,34 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public String getName() {
-            return "Internal:" + domain;
+            return domain + "_packs";
         }
 
         @Override
         public void close() {
+        }
+
+        @Override
+        public InputStream getRootResource(String pFileName) throws IOException {
+            if (!pFileName.contains("/") && !pFileName.contains("\\")) {
+                return this.getResource(ResourcePackType.CLIENT_RESOURCES, new ResourceLocation(domain, pFileName));
+            } else {
+                throw new IllegalArgumentException("Root resources can only be filenames, not paths (no / allowed!)");
+            }
+        }
+
+        @Override
+        public Collection<ResourceLocation> getResources(ResourcePackType pType, String pNamespace, String pPath, int pMaxDepth, Predicate<String> pFilter) {
+            //We shouldn't never need this, our resources are on-demand.
+            return new ArrayList<ResourceLocation>();
+        }
+
+        @Override
+        public CompletableFuture<Void> reload(IStage pStage, IResourceManager pResourceManager, IProfiler pPreparationsProfiler, IProfiler pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
+            //Re-add us to the main resource pack list, otherwise we go poof!
+            //FIXME this might not play nice with the future-tasks....
+            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(this);
+            return CompletableFuture.completedFuture(null);
         }
     }
 }

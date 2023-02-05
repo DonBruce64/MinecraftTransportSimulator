@@ -1,5 +1,5 @@
 {
     "variants": {
-        "normal": {"model": "mts:blank"}
+        "": {"model": "mts:block/blank"}
     }
 }
