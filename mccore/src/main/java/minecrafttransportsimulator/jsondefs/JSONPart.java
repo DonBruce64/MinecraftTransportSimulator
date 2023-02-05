@@ -410,9 +410,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The delay, in ticks, between the firing of bullets.")
         public float fireDelay;
 
-        @JSONDescription("How much velocity, each tick, should be added in the -Y direction.  Used to make bullets travel in arcs.")
-        public float gravitationalVelocity;
-
         @JSONDescription("How much spread the bullet will have when fired.  0 is no spread, higher values have higher spread.")
         public float bulletSpreadFactor;
 

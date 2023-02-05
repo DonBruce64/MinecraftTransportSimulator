@@ -50,6 +50,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("How much velocity, each tick, should be deducted from the bullet's velocity.")
         public float slowdownSpeed;
 
+        @JSONDescription("How much velocity, each tick, should be added in the -Y direction.  Used to make bullets travel in arcs.")
+        public float gravitationalVelocity;
+
         @JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
         public int burnTime;
 
