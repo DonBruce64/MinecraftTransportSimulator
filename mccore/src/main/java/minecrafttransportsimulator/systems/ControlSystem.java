@@ -44,6 +44,8 @@ public final class ControlSystem {
 
     private static boolean throttlePressedLastCheck = false;
     private static boolean parkingBrakePressedLastCheck = false;
+    private static boolean hornPressedLastCheck = false;
+    private static boolean hornReleasedLastCheck = false;
 
     private static EntityInteractResult interactResult = null;
 
@@ -532,10 +534,17 @@ public final class ControlSystem {
         }
 
         //Check if horn button is pressed.
-        if (ControlsKeyboard.CAR_HORN.isPressed() && !powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
-        } else if (!ControlsKeyboard.CAR_HORN.isPressed() && powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
+        if (ControlsKeyboard.CAR_HORN.isPressed() && !hornPressedLastCheck) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+            hornPressedLastCheck = true;
+        } else {
+            hornPressedLastCheck = false;
+        }
+        if (!ControlsKeyboard.CAR_HORN.isPressed() && !hornReleasedLastCheck) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+            hornReleasedLastCheck = true;
+        } else {
+            hornReleasedLastCheck = false;
         }
 
         //Check for lights.
