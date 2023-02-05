@@ -69,6 +69,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      **/
     public final Point3D riderEyePosition = new Point3D();
     public final Point3D prevRiderEyePosition = new Point3D();
+    /**Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.**/
+    public final Point3D riderHeadPosition = new Point3D();
 
     /**
      * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
@@ -209,6 +211,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 rider.setOrientation(riderTempMatrix);
                 prevRiderEyePosition.set(riderEyePosition);
                 riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+                riderHeadPosition.set(riderEyePosition);
 
                 //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
                 if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
