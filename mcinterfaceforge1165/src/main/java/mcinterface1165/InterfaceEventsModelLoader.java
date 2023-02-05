@@ -28,8 +28,7 @@ import net.minecraft.resources.ResourcePackType;
 import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.resource.VanillaResourceType;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -40,34 +39,17 @@ import net.minecraftforge.resource.VanillaResourceType;
  */
 public class InterfaceEventsModelLoader {
 
-    /**
-     * Called during init to inject the custom resource pack loader into the files.
-     */
-    public static void init() {
-
+    public static void init(ModelRegistryEvent event) {
         //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
         //FAR easier than trying to use the bloody bakery system.
         //FIXME this probably wor't work for the packs, we test.
         try {
             //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
             ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(new PackResourcePack(InterfaceLoader.MODID));
-            ForgeHooksClient.refreshResources(Minecraft.getInstance(), VanillaResourceType.MODELS);
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not get default pack list. Item icons will be disabled.");
             e.printStackTrace();
         }
-
-        //Now that we have the custom resource pack location, add our built-in loader.
-        //This one auto-generates item JSONs.
-        //defaultPacks.add(new PackResourcePack(InterfaceManager.coreModID + "_packs"));
-
-        //Now register items for the packs.
-        //When we register a pack item from an external pack, we'll need to make a resource loader for it.
-        //This is done to allow MC/Forge to play nice with item textures.
-        //FIXME we can't register item models anymore, we just need to make an inject the custom pack loader.
-        /*
-        
-        */
     }
 
     /**
@@ -82,7 +64,6 @@ public class InterfaceEventsModelLoader {
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
-            System.out.println("I M NEW");
         }
 
         @Override

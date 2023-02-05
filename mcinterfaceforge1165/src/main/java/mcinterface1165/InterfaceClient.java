@@ -39,6 +39,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -54,6 +55,11 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean changeCameraRequest;
     private static BuilderEntityRenderForwarder activeFollower;
     private static int ticksSincePlayerJoin;
+
+    @SubscribeEvent
+    public static void onModelReg(ModelRegistryEvent e) {
+        e.getClass();
+    }
 
     @Override
     public boolean isGamePaused() {
