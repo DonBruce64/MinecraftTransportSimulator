@@ -13,10 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -33,11 +30,7 @@ import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -210,7 +203,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 groundersOnRadar.clear();
             }
             for (EntityVehicleF_Physics vehicle : allVehicles) {
-                if (!vehicle.outOfHealth && vehicle != this) {
+                Point3D searchVector = new Point3D(0, 0, definition.general.radarRange).rotate(orientation);
+                Point3D LOSVector = new Point3D().set(vehicle.position).subtract(position).normalize();
+                double coneAngle = definition.general.radarWidth;
+                double angle = Math.abs(Math.toDegrees(Math.acos(searchVector.normalize().dotProduct(LOSVector, false))));
+                if (!vehicle.outOfHealth && vehicle != this && (angle < coneAngle && vehicle.position.distanceTo(position) < definition.general.radarRange)) {
                     if (vehicle.definition.motorized.isAircraft) {
                         aircraftOnRadar.add(vehicle);
                     } else {

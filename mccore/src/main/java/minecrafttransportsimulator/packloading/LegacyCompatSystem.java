@@ -201,6 +201,8 @@ public final class LegacyCompatSystem {
             definition.general.openTop = false;
             definition.motorized.emptyMass = definition.general.emptyMass;
             definition.general.emptyMass = 0;
+            definition.general.radarRange = 512;
+            definition.general.radarWidth = 180;
         }
 
         if (definition.car != null) {
