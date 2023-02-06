@@ -99,6 +99,20 @@ public interface IWrapperEntity {
     Point3D getPosition();
 
     /**
+     * Like {@link #getPosition()}, but for the player's eyes.  Unlike {@link #getPosition()}, the
+     * returned object MAY NOT be mutable without affecting other logic, so DO NOT change it.
+     */
+    Point3D getEyePosition();
+
+    /**
+     * Like {@link #getPosition()}, but for the player's head.  This is similar to {@link #getEyePosition()},
+     * except the head is considered to be the center of the eye-viewing area and does not change, no matter
+     * where the player is looking or their viewpoints or their camera settings. In first-person mode without
+     * custom cameras, the return value will be identical.  But for all other modes it may or may not differ.
+     */
+    Point3D getHeadPosition();
+
+    /**
      * Sets the entity's position to the passed-in point.
      * Boolean is included to set ground state.  This should
      * be set if the entity is on another entity collision box,

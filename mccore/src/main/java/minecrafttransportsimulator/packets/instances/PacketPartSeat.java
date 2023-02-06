@@ -13,18 +13,50 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketPartSeat extends APacketEntity<PartSeat> {
+    private final SeatAction packetType;
 
-    public PacketPartSeat(PartSeat seat) {
+    public PacketPartSeat(PartSeat seat, SeatAction packetType) {
         super(seat);
+        this.packetType = packetType;
     }
 
     public PacketPartSeat(ByteBuf buf) {
         super(buf);
+        this.packetType = SeatAction.values()[buf.readByte()];
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeByte(packetType.ordinal());
     }
 
     @Override
     public boolean handle(AWrapperWorld world, PartSeat seat) {
-        seat.setNextActiveGun();
-        return true;
+        switch (packetType) {
+            case CHANGE_GUN: {
+                seat.setNextActiveGun();
+                return true;
+            }
+            case ZOOM_IN: {
+                if (seat.zoomLevel > 0) {
+                    --seat.zoomLevel;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            case ZOOM_OUT: {
+                ++seat.zoomLevel;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public enum SeatAction {
+        CHANGE_GUN,
+        ZOOM_IN,
+        ZOOM_OUT;
     }
 }

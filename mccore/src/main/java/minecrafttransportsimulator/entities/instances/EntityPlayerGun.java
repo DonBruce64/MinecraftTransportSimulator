@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -160,8 +161,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Only change firing command on servers to prevent de-syncs.
             //Packets will get sent to clients to change them.
             if (activeGun != null) {
-                //First get the rotation transform to match the player's hand.
-                handRotation.setToZero().rotateX(player.getPitch());
+                AEntityB_Existing ridingEntity = player.getEntityRiding();
 
                 //Offset to the end of the hand with our offset and current rotation.
                 if (activeGun.isHandHeldGunAimed) {
@@ -180,28 +180,32 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                     position.x = -position.x;
                 }
 
-                //Rotate to align with the hand orientation.                
+                //Adjust position by pitch, this only affects the arm position.
+                handRotation.setToZero().rotateX(player.getPitch());
                 position.rotate(handRotation);
 
-                //Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
-                //Sneaking lowers arm by 0.2 blocks.
-                //We adjust this by the seated offset and scale to get the actual position.
-                position.add(player.isRightHanded() ? -0.3125 : 0.3125, ((player.isSneaking() ? 1.3125 - 0.2 : 1.3125) + player.getSeatOffset()) * player.getVerticalScale(), 0);
+                //Adjust position to be centered at the center of the arm.
+                //Arm center is 0.375 blocks down in Y, 0.3125 blocks away in X.
+                position.add(player.isRightHanded() ? -0.3125 : 0.3125, -0.375, 0);
 
-                //Rotate to player's yaw to match facing direction.
+                //Now account for yaw since we have our offset.
                 handRotation.setToZero().rotateY(player.getYaw());
                 position.rotate(handRotation);
 
-                //While riding an entity, the player will always be updated
-                //after this entity, as the player always updates first, and will be "lagging" in their actual position.
-                AEntityB_Existing ridingEntity = player.getEntityRiding();
+                //Account for player scaling now that we have our final vector.
+                position.scale(player.getVerticalScale());
+
+                //While riding an entity, the player will always be updated after the riding entity.
+                //However, the gun entity here expect the player to update first, since they are the first entity spawned.
+                //To account for this, we "advance" this gun entity one tick.
+                //We also adjust the position to account for the player's relative orientation.
                 if (ridingEntity != null) {
                     position.add(ridingEntity.position).subtract(ridingEntity.prevPosition);
+                    orientation.set(ridingEntity.orientation).multiply(ridingEntity.riderRelativeOrientation);
+                } else {
+                    orientation.set(player.getOrientation());
                 }
-
-                //Now do final player operations.
-                orientation.set(player.getOrientation());
-                position.add(player.getPosition());
+                position.add(player.getHeadPosition());
 
                 if (!world.isClient()) {
                     //Save gun data if we stopped firing the prior tick.
@@ -210,6 +214,16 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                     } else if (didGunFireLastTick) {
                         saveGun(false);
                     }
+                }
+
+                //Set/unset camera index if we need to.
+                if (activeGun.isHandHeldGunAimed || activeGun.definition.gun.forceHandheldCameras) {
+                    if (cameraIndex == 0 && cameras.size() > 0) {
+                        ++cameraIndex;
+                    }
+                } else if (cameraIndex != 0) {
+                    cameraIndex = 0;
+                    activeCamera = null;
                 }
             }
         } else {
@@ -222,6 +236,21 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         //If we have a gun, and the player is spectating, don't allow the gun to render.
         if (activeGun != null) {
             activeGun.isInvisible = player != null && player.isSpectator();
+        }
+    }
+
+    @Override
+    public void updatePartList() {
+        super.updatePartList();
+
+        //Populate camera list.
+        for (APart part : allParts) {
+            if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
+                for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
+                    cameras.add(camera);
+                    cameraEntities.put(camera, part);
+                }
+            }
         }
     }
 

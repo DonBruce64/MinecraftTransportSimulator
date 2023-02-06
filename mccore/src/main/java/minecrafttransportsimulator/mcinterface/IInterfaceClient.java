@@ -25,7 +25,8 @@ public interface IInterfaceClient {
     boolean isGamePaused();
 
     /**
-     * Returns the current language name.
+     * Returns the current language name.  Note: this may return the default if you
+     * call this method before the game has fully booted.
      */
     String getLanguageName();
 
@@ -137,12 +138,6 @@ public interface IInterfaceClient {
      * world hasn't been loaded yet.
      */
     IWrapperPlayer getClientPlayer();
-
-    /**
-     * Returns the entity that is used to set up the render camera.
-     * Normally the player, but can (may?) change.
-     */
-    IWrapperEntity getRenderViewEntity();
 
     /**
      * Returns the current camera position.

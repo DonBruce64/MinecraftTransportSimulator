@@ -178,6 +178,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             world.beginProfiling("GroundOperations", false);
             if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
                 performGroundOperations();
+            } else {
+                slipping = false;
             }
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
@@ -217,6 +219,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         towedVehicle.setVariable(BRAKE_VARIABLE, 0);
         towedVehicle.frontFollower = null;
         towedVehicle.rearFollower = null;
+
+        //Stop all ground devices from turning on a mounted connection.
+        towedVehicle.groundDeviceCollective.groundedGroundDevices.clear();
+        if (connection.hitchConnection.mounted) {
+            for (APart part : towedVehicle.allParts) {
+                if (part instanceof PartGroundDevice) {
+                    PartGroundDevice ground = (PartGroundDevice) part;
+                    ground.angularVelocity = 0;
+                    ground.skipAngularCalcs = false;
+                    ground.animateAsOnGround = false;
+                }
+            }
+        }
     }
 
     @Override

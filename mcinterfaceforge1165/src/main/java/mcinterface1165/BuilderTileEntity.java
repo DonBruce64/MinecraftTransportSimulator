@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -34,7 +35,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 public class BuilderTileEntity extends TileEntity implements ITickable {
     protected static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, InterfaceLoader.MODID);
-    protected static TileEntityType<BuilderTileEntity> TE_TYPE;
+    protected static RegistryObject<TileEntityType<BuilderTileEntity>> TE_TYPE;
     
     protected ATileEntityBase<?> tileEntity;
 
@@ -67,7 +68,7 @@ public class BuilderTileEntity extends TileEntity implements ITickable {
     protected final List<IWrapperPlayer> playersRequestingData = new ArrayList<>();
 
     public BuilderTileEntity() {
-        this(TE_TYPE);
+        this(TE_TYPE.get());
         //Blank constructor for MC.
     }
 

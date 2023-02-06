@@ -1,58 +1,40 @@
 package mcinterface1165;
 
-import java.awt.image.BufferedImage;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-
-import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.GIFParser;
-import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
-import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderType.State.Builder;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Matrix3f;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -69,16 +51,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  */
 @EventBusSubscriber(Dist.CLIENT)
 public class InterfaceRender implements IInterfaceRender {
-    private static final DoubleBuffer buffer = ByteBuffer.allocateDirect(16 * Double.BYTES).order(ByteOrder.nativeOrder()).asDoubleBuffer();
-    private static final Map<String, ResourceLocation> internalTextures = new HashMap<>();
-    private static final Map<String, Integer> onlineTextures = new HashMap<>();
-    private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
-    private static final Map<ParsedGIF, Map<GIFImageFrame, Integer>> animatedGIFFrames = new LinkedHashMap<>();
     private static final Map<IWrapperItemStack, Point3D> stacksToRender = new LinkedHashMap<>();
     private static int currentPackedLight;
-    private static float lastLightmapX;
-    private static float lastLightmapY;
-    private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
+    private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
+    private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
     private static float[] matrixConvertArray = new float[16];
@@ -106,117 +82,58 @@ public class InterfaceRender implements IInterfaceRender {
     
     @Override
     public void renderVertices(RenderableObject object) {
-        if (object.disableLighting) {
-            setLightingState(false);
-        }
-        if (object.ignoreWorldShading) {
-            setSystemLightingState(false);
-        }
-        if (object.enableBrightBlending) {
-            setBlendBright(true);
-        }
-        if (object.texture != null) {
-            bindTexture(object.texture);
-        } else {
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
-        }
+        matrixStack.pushPose();
+        Matrix4f matrix4f = convertMatrix4f(object.transform);
+        Matrix3f matrix3f = new Matrix3f(matrix4f);
+        MatrixStack.Entry stackEntry = matrixStack.last();
+        stackEntry.pose().multiply(matrix4f);
+        stackEntry.normal().mul(matrix3f);
 
-        GL11.glPushMatrix();
-        applyTransformOpenGL(object.transform);
-        if (object.cacheVertices) {
-            if (object.cachedVertexIndex == -1) {
-                object.cachedVertexIndex = cacheVertices(object.vertices);
-                object.vertices = null;
-            }
-            GL11.glCallList(object.cachedVertexIndex);
-        } else if (object.isLines) {
+        if (object.isLines) {
             IVertexBuilder buffer = renderBuffer.getBuffer(RenderType.lines());
-            Matrix4f matrix = convertMatrix(object.transform);
             while (object.vertices.hasRemaining()) {
-                buffer.vertex(matrix, object.vertices.get(), object.vertices.get(), object.vertices.get());
+                buffer.vertex(stackEntry.pose(), object.vertices.get(), object.vertices.get(), object.vertices.get());
                 buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
             }
             //Rewind buffer for next read.
             object.vertices.rewind();
         } else {
-            renderVertices(object.vertices);
-        }
-        GL11.glPopMatrix();
+            //Create the state, we don't care about outline.
+            Builder stateBuilder = CustomRenderType.createForObject(object);
+            RenderType renderType = RenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
+            IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
 
-        if (object.texture == null) {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            //Now populate the state we requested.
+            while (object.vertices.hasRemaining()) {
+                //Need to parse these out first since our order differs.
+                float normalX = object.vertices.get();
+                float normalY = object.vertices.get();
+                float normalZ = object.vertices.get();
+                float texU = object.vertices.get();
+                float texV = object.vertices.get();
+                float posX = object.vertices.get();
+                float posY = object.vertices.get();
+                float posZ = object.vertices.get();
+                
+                //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
+                //Blaze3d my ass, this is SLOWER than DisplayLists!
+                buffer.vertex(stackEntry.pose(), posX, posY, posZ);
+                buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+                buffer.uv(texU, texV);
+                buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
+                buffer.uv2(currentPackedLight);
+                buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
+                buffer.endVertex();
+            }
+            //Rewind buffer for next read.
+            object.vertices.rewind();
         }
-        if (object.disableLighting || object.ignoreWorldShading) {
-            setLightingState(true);
-        }
-        if (object.enableBrightBlending) {
-            setBlendBright(false);
-        }
+        matrixStack.popPose();
     }
 
     @Override
     public void deleteVertices(RenderableObject object) {
-        GL11.glDeleteLists(object.cachedVertexIndex, 1);
-    }
-
-    @Override
-    public String downloadURLTexture(String textureURL) {
-        if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
-            //Parse the texture, get the OpenGL integer that represents this texture, and save it.
-            //FAR less jank than using MC's resource system.
-            try {
-                URL url = new URL(textureURL);
-                URLConnection connection = url.openConnection();
-                try {
-                    List<String> validContentTypes = new ArrayList<>();
-                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                        validContentTypes.add("image/" + imageSuffix);
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    if (validContentTypes.contains(contentType)) {
-                        if (contentType.endsWith("gif")) {
-                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
-                            reader.setInput(stream);
-                            ParsedGIF gif = GIFParser.parseGIF(reader);
-                            if (gif != null) {
-                                animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
-                                for (GIFImageFrame frame : gif.frames.values()) {
-                                    int glTexturePointer = TextureUtil.glGenTextures();
-                                    TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
-                                    gifFrameIndexes.put(frame, glTexturePointer);
-                                }
-                                animatedGIFFrames.put(gif, gifFrameIndexes);
-                            } else {
-                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
-                            }
-                        } else {
-                            BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
-                            int glTexturePointer = TextureUtil.glGenTextures();
-                            TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-                            onlineTextures.put(textureURL, glTexturePointer);
-                        }
-                    } else {
-                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
-                        for (String validType : validContentTypes) {
-                            errorString.append(validType).append(", ");
-                        }
-                        onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                        return errorString.toString();
-                    }
-                } catch (Exception e) {
-                    onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                    e.printStackTrace();
-                    return "Could not parse images.  Error was: " + e.getMessage();
-                }
-            } catch (Exception e) {
-                onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                e.printStackTrace();
-                return "Could not open URL for processing.  Error was: " + e.getMessage();
-            }
-        }
-        return null;
+        //No-op on 1.16.5 since we can't cache vertexes.
     }
 
     @Override
@@ -230,100 +147,35 @@ public class InterfaceRender implements IInterfaceRender {
         return Minecraft.getInstance().getEntityRenderDispatcher().shouldRenderHitBoxes();
     }
 
-    /**
-     * Renders a set of raw vertices without any caching.
-     */
-    private static void renderVertices(FloatBuffer vertices, ColorRGB color) {
-
-        GL11.glBegin(GL11.GL_TRIANGLES);
-        while (vertices.hasRemaining()) {
-            GL11.glNormal3f(vertices.get(), vertices.get(), vertices.get());
-            GL11.glTexCoord2f(vertices.get(), vertices.get());
-            GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
-            GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-        }
-        GL11.glEnd();
-        //Rewind buffer for next read.
-        vertices.rewind();
+    @Override
+    public String downloadURLTexture(String textureURL) {
+        return "URL textures are not supported in this version.  Sorry.";
     }
 
     /**
-     * Caches the vertices in some form for quick rendering.  This form is version-dependent,
-     * but no matter which version is used, the returned value is assured to be unique for each
-     * call to this function.  Note that the vertex format is expected to be the same as what 
-     * is in {@link RenderableObject}
+     * Helper function to create a new texture state for the specified texture location.
      */
-    private static int cacheVertices(FloatBuffer vertices) {
-        int displayListIndex = GL11.glGenLists(1);
-        GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-        renderVertices(vertices);
-        GL11.glEndList();
-        return displayListIndex;
-    }
-
-    /**
-     * Applies an OpenGL transform to the current pipeline based on the
-     * passed-in matrix.
-     */
-    protected static void applyTransformOpenGL(TransformationMatrix matrix) {
-        buffer.clear();
-        buffer.put(matrix.m00);
-        buffer.put(matrix.m10);
-        buffer.put(matrix.m20);
-        buffer.put(matrix.m30);
-        buffer.put(matrix.m01);
-        buffer.put(matrix.m11);
-        buffer.put(matrix.m21);
-        buffer.put(matrix.m31);
-        buffer.put(matrix.m02);
-        buffer.put(matrix.m12);
-        buffer.put(matrix.m22);
-        buffer.put(matrix.m32);
-        buffer.put(matrix.m03);
-        buffer.put(matrix.m13);
-        buffer.put(matrix.m23);
-        buffer.put(matrix.m33);
-        buffer.flip();
-        GL11.glMultMatrix(buffer);
-    }
-
-    /**
-     * Binds the passed-in texture to be rendered.  The instance of the texture is
-     * cached in this class once created for later use, so feel free to not cache
-     * the string values that are passed-in.
-     */
-    private static void bindTexture(String textureLocation) {
-        if (animatedGIFs.containsKey(textureLocation)) {
-            //Special case for GIFs.
-            ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
-            GlStateManager.bindTexture(animatedGIFFrames.get(parsedGIF).get(parsedGIF.getCurrentFrame()));
-        } else if (onlineTextures.containsKey(textureLocation)) {
-            //Online texture.
-            GlStateManager.bindTexture(onlineTextures.get(textureLocation));
-        } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
+    private static RenderState.TextureState getTexture(String textureLocation) {
+        if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
-            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            return BLOCK_STATE;
         } else {
-            //Parse texture if we don't have it yet.
-            if (!internalTextures.containsKey(textureLocation)) {
-                //If the texture has a colon, it's a short-hand form that needs to be converted.
-                String formattedLocation = textureLocation;
-                if (textureLocation.contains(":")) {
-                    formattedLocation = "/assets/" + textureLocation.replace(":", "/");
-                }
-
-                //Check if the texture exists.
-                if (InterfaceRender.class.getResource(formattedLocation) != null) {
-                    //Convert the classpath-location to a domain-location path for MC.
-                    String domain = formattedLocation.substring("/assets/".length(), formattedLocation.indexOf("/", "/assets/".length()));
-                    String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
-                    internalTextures.put(textureLocation, new ResourceLocation(domain, location));
-                } else {
-                    InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
-                    internalTextures.put(textureLocation, MISSING_TEXTURE);
-                }
+            //If the texture has a colon, it's a short-hand form that needs to be converted.
+            String formattedLocation = textureLocation;
+            if (textureLocation.contains(":")) {
+                formattedLocation = "/assets/" + textureLocation.replace(":", "/");
             }
-            Minecraft.getMinecraft().getTextureManager().bindTexture(internalTextures.get(textureLocation));
+
+            //Check if the texture exists.
+            if (InterfaceRender.class.getResource(formattedLocation) != null) {
+                //Convert the classpath-location to a domain-location path for MC.
+                String domain = formattedLocation.substring("/assets/".length(), formattedLocation.indexOf("/", "/assets/".length()));
+                String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
+                return new RenderState.TextureState(new ResourceLocation(domain, location), false, false);
+            } else {
+                InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
+                return MISSING_STATE;
+            }
         }
     }
 
@@ -331,22 +183,22 @@ public class InterfaceRender implements IInterfaceRender {
      * Renders the main GUI, setting up any transforms or operations as required.
      */
     protected static void renderGUI(int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
+        //FIXME render GUIS here, this can come after entities render as we need to get those before these have a chance of working.
+        /*
         //Render GUIs, re-creating their components if needed.
         //Set Y-axis to inverted to have correct orientation.
         GL11.glScalef(1.0F, -1.0F, 1.0F);
-
-        //Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
+        
         //We don't want to enable blending though, as that's on-demand.
         //Just in case it is enabled, however, disable it.
         //This ensures the blending state is as it will be for the main rendering pass of -1.
         InterfaceRender.setBlend(false);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-
+        
         //Enable lighting.
         RenderHelper.enableStandardItemLighting();
         Minecraft.getMinecraft().entityRenderer.enableLightmap();
         setLightingState(true);
-
+        
         //Render main pass, then blended pass.
         int displayGUIIndex = 0;
         for (AGUIBase gui : AGUIBase.activeGUIs) {
@@ -362,10 +214,10 @@ public class InterfaceRender implements IInterfaceRender {
                 GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
             }
             gui.render(mouseX, mouseY, false, partialTicks);
-
+        
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
             GL11.glScalef(1.0F, -1.0F, 1.0F);
-
+        
             //FIXME we probably don't need to change lighting here anymore, if not, delete.
             //setInternalLightingState(false);
             for (Entry<IWrapperItemStack, Point3D> stackEntry : stacksToRender.entrySet()) {
@@ -379,7 +231,7 @@ public class InterfaceRender implements IInterfaceRender {
             }
             stacksToRender.clear();
             //setInternalLightingState(true);
-
+        
             GL11.glPopMatrix();
         }
         displayGUIIndex = 0;
@@ -396,115 +248,19 @@ public class InterfaceRender implements IInterfaceRender {
             gui.render(mouseX, mouseY, true, partialTicks);
             GL11.glPopMatrix();
         }
-
+        
         //Set state back to normal.
         setLightingState(false);
         Minecraft.getMinecraft().entityRenderer.disableLightmap();
         RenderHelper.disableStandardItemLighting();
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glScalef(1.0F, -1.0F, 1.0F);
-    }
-
-    /**
-     * Manually renders all entities, in case {@link BuilderEntityRenderForwarder} is not rendered.
-     */
-    protected static void doManualEntityRender(float partialTicks) {
-        //Enable lighting as pass -1 has that disabled.
-        RenderHelper.enableStandardItemLighting();
-        setLightingState(true);
-
-        //Render pass 0 and 1 here manually.
-        for (int pass = 0; pass < 2; ++pass) {
-            if (pass == 1) {
-                setBlend(true);
-                GlStateManager.depthMask(false);
-            }
-
-            if (BuilderEntityRenderForwarder.lastClientInstance != null) {
-                Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, partialTicks);
-            }
-
-            if (pass == 1) {
-                setBlend(false);
-                GlStateManager.depthMask(true);
-            }
-        }
-
-        //Turn lighting back off.
-        RenderHelper.disableStandardItemLighting();
-        setLightingState(false);
-    }
-
-    /**
-     * Helper method to completely disable or enable lighting.
-     * This disables both the system lighting and internal lighting.
-     */
-    private static void setLightingState(boolean enabled) {
-        setSystemLightingState(enabled);
-        setInternalLightingState(enabled);
-    }
-
-    /**
-     * Enables or disables OpenGL lighting for this draw sequence.
-     * This effectively prevents OpenGL lighting calculations on textures.
-     * Do note that the normal internal lightmapping will still be applied.
-     * This essentially prevents shadow creation on models based on their face
-     * orientation relative to the main light "source".
-     */
-    private static void setSystemLightingState(boolean enabled) {
-        if (enabled) {
-            GlStateManager.enableLighting();
-        } else {
-            GlStateManager.disableLighting();
-        }
-    }
-
-    /**
-     * Enables or disables internal lighting for this draw sequence.
-     * This disables the internal lightmapping, effectively making the rendered
-     * texture as bright as it would be during daytime.  Do note that the system
-     * lighting calculations for shadowing will still be applied to the model.
-     */
-    private static void setInternalLightingState(boolean enabled) {
-        if (enabled) {
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastLightmapX, lastLightmapY);
-        } else {
-            lastLightmapX = OpenGlHelper.lastBrightnessX;
-            lastLightmapY = OpenGlHelper.lastBrightnessY;
-            int lightVar = (15 << 20) | (15 << 4);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar % 65536, lightVar / 65536);
-        }
-    }
-
-    /**
-     * Manually enables and disables blending. Do NOT use this during normal model rendering, as it
-     * can seriously mess up states.  Only use this for simple things, like GUIs or screen overlays.
-     * This is not reset with resetting states, so make sure to turn it back off when you're done.
-     */
-    private static void setBlend(boolean enabled) {
-        if (enabled) {
-            GlStateManager.enableBlend();
-        } else {
-            GlStateManager.disableBlend();
-        }
-    }
-
-    /**
-     * Sets the blend state to bright.  This does special blending
-     * when blending is enabled.
-     */
-    private static void setBlendBright(boolean enabled) {
-        if (enabled) {
-            GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-        } else {
-            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        }
+        */
     }
 
     /**
      * Converts internal matrix to new external matrix.
      */
-    private static Matrix4f convertMatrix(TransformationMatrix transform) {
+    private static Matrix4f convertMatrix4f(TransformationMatrix transform) {
         matrixConvertArray[0] = (float) transform.m00;
         matrixConvertArray[1] = (float) transform.m01;
         matrixConvertArray[2] = (float) transform.m02;
@@ -531,7 +287,7 @@ public class InterfaceRender implements IInterfaceRender {
     @SubscribeEvent
     public static void registerRenderer(FMLClientSetupEvent event) {
         //Register the global entity rendering class.
-        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.E_TYPE4, manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.E_TYPE4.get(), manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
             @Override
             public ResourceLocation getTextureLocation(BuilderEntityRenderForwarder builder) {
                 return null;
@@ -553,32 +309,77 @@ public class InterfaceRender implements IInterfaceRender {
                     if (allEntities != null) {
                         matrixStack = stack;
                         renderBuffer = buffer;
-                        buffer.getBuffer(RenderType.solid());
-
-                        //Use smooth shading for model rendering.
-                        GL11.glShadeModel(GL11.GL_SMOOTH);
 
                         //Enable normal re-scaling for model rendering.
                         //This prevents bad lighting.
-                        GlStateManager.enableRescaleNormal();
+                        //FIXME we probably need this, not sure how to do it though given it's internal...
+                        //GlStateManager.enableRescaleNormal();
 
                         //Start master profiling section and run entity rendering routines.
                         for (AEntityC_Renderable entity : allEntities) {
                             world.beginProfiling("MTSRendering", true);
                             entity.render(false, partialTicks);
-                            //Disable alpha testing on blended pass as it discards transparent fragments.
-                            GlStateManager.disableAlpha();
                             entity.render(true, partialTicks);
-                            GlStateManager.enableAlpha();
                             world.endProfiling();
                         }
 
                         //Reset states.
-                        GL11.glShadeModel(GL11.GL_FLAT);
-                        GlStateManager.disableRescaleNormal();
+                        //GlStateManager.disableRescaleNormal();
                     }
                 }
             }
         });
     }
+
+    private static class CustomRenderType extends RenderType {
+        private CustomRenderType(String name, VertexFormat fmt, int glMode, int size, boolean doCrumbling, boolean depthSorting, Runnable onEnable, Runnable onDisable) {
+            super(name, fmt, glMode, size, doCrumbling, depthSorting, onEnable, onDisable);
+            throw new IllegalStateException("This class must not be instantiated, this is only here to gain access to the rendering constants.");
+        }
+
+        private static Builder createForObject(RenderableObject object) {
+            //Create the state builder.  Changed states are active, default states are commented to save processing but still show the state.
+            RenderType.State.Builder stateBuilder = RenderType.State.builder();
+
+            stateBuilder.setTextureState(getTexture(object.texture));
+            //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
+            stateBuilder.setTransparencyState(object.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (object.isTranslucent ? RenderType.TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
+            //Diffuse lighting is the ambient lighting that auto-shades models.
+            stateBuilder.setDiffuseLightingState(object.ignoreWorldShading || object.disableLighting ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
+            //Always smooth shading.
+            stateBuilder.setShadeModelState(SMOOTH_SHADE);
+            //Disable alpha testing on blended pass as it discards transparent fragments.
+            stateBuilder.setAlphaState(object.isTranslucent ? NO_ALPHA : DEFAULT_ALPHA);
+            //Depth is fine, as is cull.
+            //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
+            //stateBuilder.setCullState(CULL);
+            //Lightmap is on unless we are bright.
+            stateBuilder.setLightmapState(object.disableLighting ? NO_LIGHTMAP : LIGHTMAP);
+            //No overlays ever.
+            stateBuilder.setOverlayState(NO_OVERLAY);
+            //No fog.
+            //stateBuilder.setFogState(NO_FOG);
+            //No layering.
+            //stateBuilder.setLayeringState(NO_LAYERING);
+            //Target depends on blending.
+            stateBuilder.setOutputState(object.isTranslucent ? TRANSLUCENT_TARGET : MAIN_TARGET);
+            //Default texture is fine.
+            //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
+            //Not sure what this does, but it should be fine as-is?
+            //stateBuilder.setWriteMaskState(COLOR_DEPTH_WRITE);
+            //Don't need to poke lines, there's only one state.
+            //stateBuilder.setLineState(DEFAULT_LINE);
+
+            //Return.
+            return stateBuilder;
+        }
+    }
+
+    private static final RenderState.TransparencyState BRIGHTNESS_TRANSPARENCY = new RenderState.TransparencyState("brightness_transparency", () -> {
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
+    }, () -> {
+        RenderSystem.disableBlend();
+        RenderSystem.defaultBlendFunc();
+    });
 }

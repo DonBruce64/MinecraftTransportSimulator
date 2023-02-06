@@ -14,7 +14,6 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -25,7 +24,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
@@ -190,12 +188,6 @@ public class InterfaceClient implements IInterfaceClient {
     public WrapperPlayer getClientPlayer() {
         EntityPlayer player = Minecraft.getMinecraft().player;
         return WrapperPlayer.getWrapperFor(player);
-    }
-
-    @Override
-    public IWrapperEntity getRenderViewEntity() {
-        Entity entity = Minecraft.getMinecraft().getRenderViewEntity();
-        return WrapperEntity.getWrapperFor(entity);
     }
 
     @Override

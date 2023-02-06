@@ -2,6 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -18,12 +19,14 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
 
 /**
@@ -41,6 +44,8 @@ public final class ControlSystem {
 
     private static boolean throttlePressedLastCheck = false;
     private static boolean parkingBrakePressedLastCheck = false;
+    private static boolean hornPressedLastCheck = false;
+    private static boolean hornReleasedLastCheck = false;
 
     private static EntityInteractResult interactResult = null;
 
@@ -97,8 +102,7 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
         }
         if (clickingLeft || clickingRight) {
-            Point3D startPosition = player.getPosition();
-            startPosition.y += (player.getEyeHeight() + player.getSeatOffset()) * player.getVerticalScale();
+            Point3D startPosition = player.getEyePosition();
             Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
@@ -129,15 +133,32 @@ public final class ControlSystem {
     }
 
     private static void controlCamera(ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView) {
-        if (zoomIn.isPressed()) {
-            CameraSystem.changeCameraZoom(true);
-        }
-        if (zoomOut.isPressed()) {
-            CameraSystem.changeCameraZoom(false);
-        }
-
-        if (changeView.isPressed()) {
-            InterfaceManager.clientInterface.toggleFirstPerson();
+        AEntityB_Existing riding = clientPlayer.getEntityRiding();
+        if (riding instanceof PartSeat) {
+            PartSeat sittingSeat = (PartSeat) riding;
+            if (zoomIn.isPressed()) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartSeat(sittingSeat, SeatAction.ZOOM_IN));
+            }
+            if (zoomOut.isPressed()) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartSeat(sittingSeat, SeatAction.ZOOM_OUT));
+            }
+            if (changeView.isPressed()) {
+                InterfaceManager.clientInterface.toggleFirstPerson();
+            }
+            if (InterfaceManager.clientInterface.changedCameraState()) {
+                //If we don't have custom cameras on our seat, and we're in inverted third-person, request them.
+                //If we do have custom cameras on our seat, and we're in normal third-person, request another, and go back to first-person.
+                if (sittingSeat.cameraIndex == 0 && !InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
+                } else if (sittingSeat.cameraIndex != 0 && InterfaceManager.clientInterface.inThirdPerson()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
+                    InterfaceManager.clientInterface.toggleFirstPerson();
+                }
+            }
+            if (sittingSeat.placementDefinition.forceCameras && InterfaceManager.clientInterface.inFirstPerson()) {
+                //Make sure we don't go to first-person without a camera set if we are supposed to force it.
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
+            }
         }
     }
 
@@ -190,7 +211,6 @@ public final class ControlSystem {
 
     private static void controlGun(AEntityF_Multipart<?> multipart, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
         boolean gunSwitchPressedThisScan = gunSwitch.isPressed();
-        IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
         for (APart part : multipart.allParts) {
             if (part instanceof PartGun) {
                 PartGun gun = (PartGun) part;
@@ -200,7 +220,7 @@ public final class ControlSystem {
             } else if (part instanceof PartSeat) {
                 if (gunSwitchPressedThisScan) {
                     if (clientPlayer.equals(part.rider)) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketPartSeat((PartSeat) part));
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartSeat((PartSeat) part, SeatAction.CHANGE_GUN));
                     }
                 }
             }
@@ -514,10 +534,17 @@ public final class ControlSystem {
         }
 
         //Check if horn button is pressed.
-        if (ControlsKeyboard.CAR_HORN.isPressed() && !powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
-        } else if (!ControlsKeyboard.CAR_HORN.isPressed() && powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
+        if (ControlsKeyboard.CAR_HORN.isPressed() && !hornPressedLastCheck) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+            hornPressedLastCheck = true;
+        } else {
+            hornPressedLastCheck = false;
+        }
+        if (!ControlsKeyboard.CAR_HORN.isPressed() && !hornReleasedLastCheck) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+            hornReleasedLastCheck = true;
+        } else {
+            hornReleasedLastCheck = false;
         }
 
         //Check for lights.

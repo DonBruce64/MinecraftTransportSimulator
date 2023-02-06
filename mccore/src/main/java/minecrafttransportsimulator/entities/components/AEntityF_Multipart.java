@@ -542,6 +542,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public void updatePartList() {
         parts.forEach(APart::updatePartList);
+
+        //Clear camera list in prep for new entries from other areas.
+        cameras.clear();
+        cameraEntities.clear();
     }
 
     /**

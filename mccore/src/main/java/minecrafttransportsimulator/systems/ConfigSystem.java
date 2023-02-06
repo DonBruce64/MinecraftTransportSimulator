@@ -3,8 +3,11 @@ package minecrafttransportsimulator.systems;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -28,18 +31,22 @@ import minecrafttransportsimulator.packloading.PackParser;
  */
 public final class ConfigSystem {
     private static File settingsFile;
-    private static File languageFile;
     private static File clientFile;
     private static File craftingFile;
     public static JSONConfigSettings settings;
-    public static JSONConfigLanguage language;
     public static JSONConfigClient client;
+    private static File configDirectory;
+    private static boolean onClient;
+    private static Map<String, JSONConfigLanguage> languageFiles = new HashMap<>();
 
     /**
-     * Called to load this class from the files in the passed-in folder.
+     * Called to load the config objects from the files in the passed-in folder.
      * If a required file is not present, one will be created at the end of the loading phase.
      */
     public static void loadFromDisk(File configDirectory, boolean onClient) {
+        ConfigSystem.configDirectory = configDirectory;
+        ConfigSystem.onClient = onClient;
+
         //If we have a settings file already, parse it into Java.
         //Otherwise, make a new one.
         //After parsing the settings file, save it.  This allows new entries to be populated.
@@ -54,20 +61,6 @@ public final class ConfigSystem {
         }
         if (settings == null) {
             settings = new JSONConfigSettings();
-        }
-
-        //Do the same for the client and language file, normally only displayed on clients, but names may be used on servers for debug messages.
-        languageFile = new File(configDirectory, "mtslanguage_" + (onClient ? InterfaceManager.clientInterface.getLanguageName() : "en_us") + ".json");
-        if (languageFile.exists()) {
-            try {
-                language = JSONParser.parseStream(Files.newInputStream(languageFile.toPath()), JSONConfigLanguage.class, null, null);
-            } catch (Exception e) {
-                InterfaceManager.coreInterface.logError("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
-                InterfaceManager.coreInterface.logError(e.getMessage());
-            }
-        }
-        if (language == null) {
-            language = new JSONConfigLanguage();
         }
 
         //Now parse the client config file for clients only.
@@ -94,6 +87,36 @@ public final class ConfigSystem {
         if (oldConfigFile.exists()) {
             oldConfigFile.delete();
         }
+    }
+
+    /**
+     * Gets the language file for the specified language, if it exists, or the default, if it doesn't.
+     * This method requires that {@link #loadFromDisk(File, boolean)} has been called prior.
+     */
+    public static JSONConfigLanguage getLanguage() {
+        String currentLanguageKey = onClient ? InterfaceManager.clientInterface.getLanguageName() : "en_us";
+        JSONConfigLanguage language = languageFiles.get(currentLanguageKey);
+        if (language == null) {
+            File languageFile = new File(configDirectory, "mtslanguage_" + currentLanguageKey + ".json");
+            if (languageFile.exists()) {
+                try {
+                    language = JSONParser.parseStream(Files.newInputStream(languageFile.toPath()), JSONConfigLanguage.class, null, null);
+                } catch (Exception e) {
+                    InterfaceManager.coreInterface.logError("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
+                }
+            }
+
+            if (language == null) {
+                language = new JSONConfigLanguage();
+            }
+
+            //Check to make sure we populated the current language file.  If we are missing entries for packs, add them.
+            language.populateEntries(onClient);
+
+            languageFiles.put(currentLanguageKey, language);
+        }
+        return language;
     }
 
     /**
@@ -163,7 +186,9 @@ public final class ConfigSystem {
     public static void saveToDisk() {
         try {
             JSONParser.exportStream(settings, Files.newOutputStream(settingsFile.toPath()));
-            JSONParser.exportStream(language, Files.newOutputStream(languageFile.toPath()));
+            for (Entry<String, JSONConfigLanguage> languageEntry : languageFiles.entrySet()) {
+                JSONParser.exportStream(languageEntry.getValue(), Files.newOutputStream(new File(configDirectory, "mtslanguage_" + languageEntry.getKey() + ".json").toPath()));
+            }
             JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");

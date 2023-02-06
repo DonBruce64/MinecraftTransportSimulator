@@ -69,7 +69,9 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
 
     public BuilderItem(Item.Properties properties, AItemBase item) {
         super(properties);
-        ((BuilderCreativeTab) category).addItem(item, this);
+        if (category != null) {
+            ((BuilderCreativeTab) category).addItem(item, this);
+        }
         this.item = item;
         itemMap.put(item, this);
     }

@@ -34,6 +34,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     public final List<TowingConnection> towingConnections = new ArrayList<>();
     private TowingConnection savedTowedByConnection;
     private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
+    private final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
+    private final List<TowingConnection> savedDisconnectedTowingConnections = new ArrayList<>();
+
     public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -49,6 +52,15 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             towData = data.getData("towingConnection" + i);
             if (towData != null) {
                 this.savedTowingConnections.add(new TowingConnection(towData));
+            }
+        }
+
+        //Load disabled connections.
+        towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
+        for (int i = 0; i < towingConnectionCount; ++i) {
+            towData = data.getData("disconnectedTowingConnection" + i);
+            if (towData != null) {
+                this.savedDisconnectedTowingConnections.add(new TowingConnection(towData));
             }
         }
     }
@@ -116,6 +128,26 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     } else {
                         savedTowingConnections.clear();
                         InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                    }
+                }
+            }
+            if (!savedDisconnectedTowingConnections.isEmpty()) {
+                if (ticksExisted % 20 == 0) {
+                    if (ticksExisted <= 100) {
+                        for (int i = 0; i < savedDisconnectedTowingConnections.size(); ++i) {
+                            TowingConnection savedTowingConnection = savedDisconnectedTowingConnections.get(i);
+                            try {
+                                if (savedTowingConnection.initConnection(world)) {
+                                    disconnectedTowingConnections.add(savedTowingConnection);
+                                    --i;
+                                }
+                            } catch (Exception e) {
+                                InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                            }
+                        }
+                    } else {
+                        savedDisconnectedTowingConnections.clear();
+                        InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -519,6 +551,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
         data.setInteger("towingConnectionCount", towingConnectionIndex);
+
+        towingConnectionIndex = 0;
+        for (TowingConnection towingEntry : disconnectedTowingConnections) {
+            data.setData("disconnectedTowingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        }
+        data.setInteger("disconnectedTowingConnectionCount", towingConnectionIndex);
 
         return data;
     }

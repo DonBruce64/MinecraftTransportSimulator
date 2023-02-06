@@ -15,7 +15,6 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -63,12 +62,20 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public String getLanguageName() {
-        return Minecraft.getInstance().getLanguageManager().getSelected().getCode();
+        if (Minecraft.getInstance().getLanguageManager() != null) {
+            return Minecraft.getInstance().getLanguageManager().getSelected().getCode();
+        } else {
+            return "en_us";
+        }
     }
 
     @Override
     public boolean usingDefaultLanguage() {
-        return Minecraft.getInstance().getLanguageManager().getSelected().getCode().equals("en_us");
+        if (Minecraft.getInstance().getLanguageManager() != null) {
+            return Minecraft.getInstance().getLanguageManager().getSelected().getCode().equals("en_us");
+        } else {
+            return true;
+        }
     }
 
     @Override
@@ -194,11 +201,6 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public WrapperPlayer getClientPlayer() {
         return WrapperPlayer.getWrapperFor(Minecraft.getInstance().player);
-    }
-
-    @Override
-    public IWrapperEntity getRenderViewEntity() {
-        return WrapperEntity.getWrapperFor(Minecraft.getInstance().getCameraEntity());
     }
 
     @Override

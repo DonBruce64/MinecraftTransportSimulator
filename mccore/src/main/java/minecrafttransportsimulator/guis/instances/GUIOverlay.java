@@ -74,7 +74,7 @@ public class GUIOverlay extends AGUIBase {
         if (player.isHoldingItemType(ItemComponentType.SCANNER)) {
             if (mousedOverEntity instanceof AEntityF_Multipart) {
                 AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
-                Point3D playerEyesStartVector = player.getPosition().add(0, player.getEyeHeight(), 0);
+                Point3D playerEyesStartVector = player.getEyePosition();
                 Point3D playerEyesEndVector = playerEyesStartVector.copy().add(player.getLineOfSight(10));
 
                 BoundingBox mousedOverBox = null;

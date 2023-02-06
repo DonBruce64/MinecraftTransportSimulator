@@ -1,12 +1,16 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -14,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.CameraSystem;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -42,6 +47,32 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public IWrapperEntity rider;
 
     /**
+     * True if the running instance is the client, and the rider on this entity is the client player.
+     **/
+    public boolean riderIsClient;
+
+    /**
+     * List of all cameras available on this entity for the rider.  These get populated by other systems as applicable.
+     **/
+    public final List<JSONCameraObject> cameras = new ArrayList<>();
+    public final Map<JSONCameraObject, AEntityD_Definable<?>> cameraEntities = new LinkedHashMap<>();
+    public JSONCameraObject activeCamera;
+    public AEntityD_Definable<?> activeCameraEntity;
+    public AnimationSwitchbox activeCameraSwitchbox;
+
+    /**
+     * The position of the eyes of the rider.  This is slightly different than the return for 
+     * {@link IWrapperEntity#getPosition()}, as the former is usually where the rider is sitting, 
+     * whereas this is usually that value offset by {@link IWrapperEntity#getEyeHeight()} and
+     * {@link IWrapperEntity#getSeatOffset()}, multiplied by {@link IWrapperEntity#getVerticalScale()}.
+     * Though this may differ if the default logic is overridden.
+     **/
+    public final Point3D riderEyePosition = new Point3D();
+    public final Point3D prevRiderEyePosition = new Point3D();
+    /**Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.**/
+    public final Point3D riderHeadPosition = new Point3D();
+
+    /**
      * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
      * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
      **/
@@ -49,6 +80,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public RotationMatrix prevRiderRelativeOrientation;
     private static final Point3D riderTempPoint = new Point3D();
     private static final RotationMatrix riderTempMatrix = new RotationMatrix();
+
+    //Camera variables.
+    public int zoomLevel;
+    public int cameraIndex;
 
     //Internal sound variables.
     public final EntityRadio radio;
@@ -102,6 +137,30 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             prevMotion.set(motion);
             prevOrientation.set(orientation);
             velocity = motion.length();
+
+            //Only do camera checks if we have an active camera.
+            //Checking at other times wastes CPU cycles.
+            //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
+            if (cameraIndex != 0 && ticksExisted >= 5) {
+                //Check for valid camera, and perform operations if so.
+                activeCamera = null;
+                while (cameraIndex != 0 && activeCamera == null) {
+                    if ((cameraIndex - 1) < cameras.size()) {
+                        activeCamera = cameras.get(cameraIndex - 1);
+                        activeCameraEntity = cameraEntities.get(activeCamera);
+                        activeCameraSwitchbox = activeCameraEntity.cameraSwitchboxes.get(activeCamera);
+                        if (activeCameraSwitchbox != null && !activeCameraSwitchbox.runSwitchbox(0, false)) {
+                            //Camera is inactive, go to next.
+                            ++cameraIndex;
+                            activeCamera = null;
+                        }
+                    } else {
+                        //No active cameras found, set index to 0 to disable and go back to normal rendering.
+                        cameraIndex = 0;
+                        activeCamera = null;
+                    }
+                }
+            }
         }
         world.endProfiling();
     }
@@ -150,6 +209,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 riderRelativeOrientation.updateToAngles();
                 riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
                 rider.setOrientation(riderTempMatrix);
+                prevRiderEyePosition.set(riderEyePosition);
+                riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+                riderHeadPosition.set(riderEyePosition);
+
+                //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
+                if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
+                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomLevel : zoomLevel).rotate(rider.getOrientation());
+                    riderEyePosition.add(riderTempPoint);
+                }
             }
             return true;
         } else {
@@ -176,6 +244,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             return false;
         } else {
             rider = newRider;
+            riderIsClient = world.isClient() && rider.equals(InterfaceManager.clientInterface.getClientPlayer());
 
             //Create variables for use in other code areas.
             if (riderRelativeOrientation == null) {
@@ -213,6 +282,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
         }
         rider = null;
+        riderIsClient = false;
     }
 
     /**
@@ -268,7 +338,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     }
 
     /**
-     * Sets the interpolated orientation into the passed-in Matrix4d.
+     * Sets the interpolated orientation into the passed-in {@link RotationMatrix}.
      * The position is not interpolated with this as {@link #orientation}
      * only contains the rotational elements of this entity.
      */

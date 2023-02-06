@@ -36,13 +36,13 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 
     @Override
     public String getItemName() {
-        return ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).name;
+        return ConfigSystem.getLanguage().packs.get(definition.packID).get(getRegistrationName()).name;
     }
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         //Don't add any tooltips if we are just an empty
-        String description = ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description;
+        String description = ConfigSystem.getLanguage().packs.get(definition.packID).get(getRegistrationName()).description;
         if (description.length() > 0) {
             Collections.addAll(tooltipLines, description.split("\n"));
         }

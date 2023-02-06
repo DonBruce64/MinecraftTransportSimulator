@@ -11,6 +11,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
+import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
@@ -216,6 +217,7 @@ public abstract class APacketBase {
         //Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 
         //Entity packets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCameraChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityColorChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);

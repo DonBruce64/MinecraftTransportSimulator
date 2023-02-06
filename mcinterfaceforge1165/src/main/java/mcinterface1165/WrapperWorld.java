@@ -83,8 +83,6 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -109,7 +107,6 @@ public class WrapperWorld extends AWrapperWorld {
 
     protected final World world;
     private final IWrapperNBT savedData;
-    protected final Map<UUID, Entity> entitiesByUUID = new HashMap<>();
 
     /**
      * Returns a wrapper instance for the passed-in world instance.
@@ -231,7 +228,16 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperEntity getExternalEntity(UUID entityID) {
-        return WrapperEntity.getWrapperFor(entitiesByUUID.get(entityID));
+        if (world instanceof net.minecraft.world.server.ServerWorld) {
+            return WrapperEntity.getWrapperFor(((net.minecraft.world.server.ServerWorld) world).getEntity(entityID));
+        } else {
+            for (Entity entity : ((net.minecraft.client.world.ClientWorld) world).entitiesForRendering()) {
+                if (entity.getUUID().equals(entityID)) {
+                    return WrapperEntity.getWrapperFor(entity);
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -274,7 +280,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
-        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2, ((WrapperWorld) entity.world).world);
+        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2.get(), ((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
         builder.setPos(entity.position.x, entity.position.y, entity.position.z);
         builder.entity = entity;
@@ -463,7 +469,21 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public double getHeight(Point3D position) {
-        return position.y - world.getBlockFloorHeight(new BlockPos(position.x, 0, position.z));
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.canSeeSky(pos)) {
+            return position.y - world.getBlockFloorHeight(pos);
+        } else {
+            //Need to go down till we find a block.
+            while (pos.getY() > 0) {
+                if (!world.isEmptyBlock(pos)) {
+                    //Adjust up since we need to be above the top block. 
+                    pos = pos.above();
+                    break;
+                }
+                pos = pos.below();
+            }
+            return position.y - pos.getY();
+        }
     }
 
     @Override
@@ -862,25 +882,6 @@ public class WrapperWorld extends AWrapperWorld {
      */
     public static AxisAlignedBB convertWithOffset(BoundingBox box, double x, double y, double z) {
         return new AxisAlignedBB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
-    }
-
-    /**
-     * Checks for joined and left entities to ensure we maintain a map of them for lookups.
-     */
-    @SubscribeEvent
-    public void on(EntityJoinWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.put(event.getEntity().getUUID(), event.getEntity());
-        }
-    }
-
-    @SubscribeEvent
-    public void on(EntityLeaveWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.remove(event.getEntity().getUUID());
-        }
     }
 
     /**

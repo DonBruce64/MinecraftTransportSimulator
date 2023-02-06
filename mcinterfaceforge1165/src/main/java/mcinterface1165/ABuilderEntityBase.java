@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SSpawnObjectPacket;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -152,6 +153,6 @@ public abstract class ABuilderEntityBase extends Entity {
 
     @Override
     public IPacket<?> getAddEntityPacket() {
-        return null;
+        return new SSpawnObjectPacket(this);
     }
 }

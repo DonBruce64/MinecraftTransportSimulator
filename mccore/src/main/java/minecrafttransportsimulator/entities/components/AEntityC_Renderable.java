@@ -62,14 +62,13 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             //Get the render offset.
             //This is the interpolated movement, plus the prior position.
             if (requiresDeltaUpdates()) {
-                interpolatedPositionHolder.set(prevPosition);
-                interpolatedPositionHolder.interpolate(position, partialTicks);
+                interpolatedPositionHolder.set(prevPosition).interpolate(position, partialTicks);
             } else {
                 interpolatedPositionHolder.set(position);
             }
 
             //Subtract the entity's position by the render entity position to get the delta for translating.
-            interpolatedPositionHolder.subtract(InterfaceManager.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
+            interpolatedPositionHolder.subtract(InterfaceManager.clientInterface.getClientPlayer().getRenderedPosition(partialTicks));
 
             //Get interpolated orientation if required.
             if (requiresDeltaUpdates()) {
