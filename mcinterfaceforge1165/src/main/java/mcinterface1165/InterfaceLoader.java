@@ -28,7 +28,9 @@ import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -46,7 +48,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.6.0-BETA";
+    public static final String MODVER = "22.6.0";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
@@ -94,9 +96,6 @@ public class InterfaceLoader {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
 
-        //Create creative tabs.  Required before items since those need tabs in their constructors.
-        //FIXME do we need to do anything here?
-
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
         //which blocks we need to register.
@@ -133,7 +132,11 @@ public class InterfaceLoader {
             //Register the item.
             BuilderItem.ITEMS.register(item.getRegistrationName(), () -> mcItem);
 
-            //If the item is for OreDict, add it.
+            //If the item is for OreDict, add it...as a tag!  Cause this is the new standard.
+            if (item.definition.general.oreDict != null) {
+                ItemTags.createOptional(new ResourceLocation(MODID, item.definition.general.oreDict));
+            }
+
             //Well, we would if that existed....
             //FIXME add tags perhaps?
         }

@@ -13,7 +13,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -286,7 +285,8 @@ public class InterfaceClient implements IInterfaceClient {
                     ControlSystem.controlGlobal(player);
                     if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
                         if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            new GUIPackMissing();
+                            //FIXME enable when we get GUI rendering working.
+                            //new GUIPackMissing();
                         }
                     }
                 }

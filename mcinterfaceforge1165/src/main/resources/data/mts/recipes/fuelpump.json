@@ -1,26 +1,28 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aaa",
         "aba",
-        "cdc"
+        "cdc",
+        "eee"
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "item": "minecraft:red_dye"
         },
         "b": {
             "item": "minecraft:glass_pane"
         },
         "c": {
-            "item": "minecraft:comparator"
+            "item": "minecraft:black_dye"
         },
         "d": {
-            "item": "minecraft:quartz"
+            "tag": "forge:ingots/iron"
+        },
+        "e": {
+            "item": "minecraft:stone_slab"
         }
     },
     "result": {
-        "item": "mts:mts.itembench"
+        "item": "mts:mts.fuelpump"
     }
 }

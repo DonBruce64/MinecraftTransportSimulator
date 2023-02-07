@@ -7,15 +7,13 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "b": {
             "item": "minecraft:diamond"
         },
         "c": {
-            "item": "minecraft:anvil",
-            "data": 0
+            "item": "minecraft:anvil"
         }
     },
     "result": {

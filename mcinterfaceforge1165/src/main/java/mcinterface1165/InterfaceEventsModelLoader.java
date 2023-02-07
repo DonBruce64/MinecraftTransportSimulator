@@ -28,6 +28,7 @@ import net.minecraft.resources.ResourcePackType;
 import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Unit;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 
 /**
@@ -40,14 +41,14 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 public class InterfaceEventsModelLoader {
 
     public static void init(ModelRegistryEvent event) {
-        //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
-        //FAR easier than trying to use the bloody bakery system.
-        //FIXME this probably wor't work for the packs, we test.
+        //Add our custom resource manager to the list of managers so we can auto-generate files.
+        //FIXME this needs to get ported to packs so they can use this.
         try {
-            //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
-            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(new PackResourcePack(InterfaceLoader.MODID));
+            PackResourcePack newPack = new PackResourcePack(InterfaceLoader.MODID);
+            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(newPack);
+            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(newPack);
         } catch (Exception e) {
-            InterfaceManager.coreInterface.logError("Could not get default pack list. Item icons will be disabled.");
+            InterfaceManager.coreInterface.logError("Could not add ourselves to the resource list. Files won't load correctly!");
             e.printStackTrace();
         }
     }
@@ -250,9 +251,10 @@ public class InterfaceEventsModelLoader {
         @Override
         public CompletableFuture<Void> reload(IStage pStage, IResourceManager pResourceManager, IProfiler pPreparationsProfiler, IProfiler pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
             //Re-add us to the main resource pack list, otherwise we go poof!
-            //FIXME this might not play nice with the future-tasks....
             ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(this);
-            return CompletableFuture.completedFuture(null);
+            return pStage.wait(Unit.INSTANCE).thenRunAsync(() -> {
+                //Do nothing.  This return value is just to keep the MC reloading code from locking up.
+            }, pGameExecutor);
         }
     }
 }

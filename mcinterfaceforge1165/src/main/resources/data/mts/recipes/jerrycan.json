@@ -1,20 +1,19 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aaa",
+        "aba",
         "aba",
         "aaa"
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "b": {
-            "item": "minecraft:crafting_table"
+            "item": "minecraft:red_dye"
         }
     },
     "result": {
-        "item": "mts:mts.custombench"
+        "item": "mts:mts.jerrycan"
     }
 }

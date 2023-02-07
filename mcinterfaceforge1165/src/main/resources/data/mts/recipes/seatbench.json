@@ -7,8 +7,7 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "b": {
             "item": "minecraft:iron_axe"

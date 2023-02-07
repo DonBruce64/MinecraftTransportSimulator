@@ -13,12 +13,10 @@
             "item": "minecraft:diamond"
         },
         "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeRed"
+            "item": "minecraft:red_dye"
         },
         "d": {
-            "type": "forge:ore_dict",
-            "ore": "dyeGreen"
+            "item": "minecraft:green_dye"
         }
     },
     "result": {
