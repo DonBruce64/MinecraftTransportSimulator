@@ -25,7 +25,6 @@ import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ChatVisibility;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -38,7 +37,6 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,13 +50,6 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean actuallyThirdPerson;
     private static boolean changedCameraState;
     private static boolean changeCameraRequest;
-    private static BuilderEntityRenderForwarder activeFollower;
-    private static int ticksSincePlayerJoin;
-
-    @SubscribeEvent
-    public static void onModelReg(ModelRegistryEvent e) {
-        e.getClass();
-    }
 
     @Override
     public boolean isGamePaused() {
@@ -86,7 +77,7 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public String getFluidName(String fluidID) {
         Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidID));
-        return fluid != null ? new FluidStack(fluid, 1).getDisplayName().toString() : "INVALID";
+        return fluid != null ? new FluidStack(fluid, 1).getDisplayName().getString() : "INVALID";
     }
 
     @Override
@@ -130,7 +121,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public long getPackedDisplaySize() {
-        return (((long) Minecraft.getInstance().getWindow().getWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getHeight() & 0xffffffffL);
+        return (((long) Minecraft.getInstance().getWindow().getGuiScaledWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getGuiScaledHeight() & 0xffffffffL);
     }
 
     @Override
@@ -288,28 +279,6 @@ public class InterfaceClient implements IInterfaceClient {
                             //FIXME enable when we get GUI rendering working.
                             //new GUIPackMissing();
                         }
-                    }
-                }
-
-                if (activeFollower != null) {
-                    //Follower exists, check if world is the same and it is actually updating.
-                    //We check basic states, and then the watchdog bit that gets reset every tick.
-                    //This way if we're in the world, but not valid we will know.
-                    PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-                    if (activeFollower.level != mcPlayer.level || activeFollower.playerFollowing != mcPlayer || !mcPlayer.isAlive() || !activeFollower.isAlive() || activeFollower.idleTickCounter == 20) {
-                        //Follower is not linked.  Remove it and re-create in code below.
-                        activeFollower.remove();
-                        activeFollower = null;
-                        ticksSincePlayerJoin = 0;
-                    } else {
-                        ++activeFollower.idleTickCounter;
-                    }
-                } else {
-                    //Follower does not exist, check if player has been present for 3 seconds and spawn it.
-                    if (++ticksSincePlayerJoin == 60) {
-                        activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
-                        activeFollower.loadedFromSavedNBT = true;
-                        clientWorld.world.addFreshEntity(activeFollower);
                     }
                 }
             }

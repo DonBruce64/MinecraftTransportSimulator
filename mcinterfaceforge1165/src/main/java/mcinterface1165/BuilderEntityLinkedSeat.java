@@ -9,7 +9,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
  * Builder for an entity to sit in so they can ride another entity.  We use this rather
@@ -19,7 +18,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  *
  * @author don_bruce
  */
-@EventBusSubscriber
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     protected static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
 

@@ -132,7 +132,6 @@ class InterfacePacket implements IInterfacePacket {
                         world = getServerWorld(ctx);
                     } else {
                         world = InterfaceManager.clientInterface.getClientWorld();
-                        System.out.println(((WrapperPlayer) InterfaceManager.clientInterface.getClientPlayer()).player.getUUID());
                     }
                     if (world != null) {
                         message.packet.handle(world);

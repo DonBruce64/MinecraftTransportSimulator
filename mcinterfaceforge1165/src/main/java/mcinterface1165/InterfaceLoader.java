@@ -70,6 +70,7 @@ public class InterfaceLoader {
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceEventsModelLoader::init);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::registerRenderer);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
@@ -136,9 +137,6 @@ public class InterfaceLoader {
             if (item.definition.general.oreDict != null) {
                 ItemTags.createOptional(new ResourceLocation(MODID, item.definition.general.oreDict));
             }
-
-            //Well, we would if that existed....
-            //FIXME add tags perhaps?
         }
 
         //Register the IItemBlock blocks.  We cheat here and

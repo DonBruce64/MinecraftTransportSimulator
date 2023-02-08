@@ -2,6 +2,7 @@ package mcinterface1165;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -12,6 +13,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -19,28 +21,30 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderType.State.Builder;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix3f;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.world.LightType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
@@ -49,7 +53,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  *
  * @author don_bruce
  */
-@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<IWrapperItemStack, Point3D> stacksToRender = new LinkedHashMap<>();
     private static int currentPackedLight;
@@ -89,11 +92,13 @@ public class InterfaceRender implements IInterfaceRender {
         stackEntry.pose().multiply(matrix4f);
         stackEntry.normal().mul(matrix3f);
 
+
         if (object.isLines) {
             IVertexBuilder buffer = renderBuffer.getBuffer(RenderType.lines());
             while (object.vertices.hasRemaining()) {
                 buffer.vertex(stackEntry.pose(), object.vertices.get(), object.vertices.get(), object.vertices.get());
                 buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+                buffer.endVertex();
             }
             //Rewind buffer for next read.
             object.vertices.rewind();
@@ -104,6 +109,7 @@ public class InterfaceRender implements IInterfaceRender {
             IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
 
             //Now populate the state we requested.
+            int index = 0;
             while (object.vertices.hasRemaining()) {
                 //Need to parse these out first since our order differs.
                 float normalX = object.vertices.get();
@@ -117,13 +123,21 @@ public class InterfaceRender implements IInterfaceRender {
                 
                 //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
                 //Blaze3d my ass, this is SLOWER than DisplayLists!
-                buffer.vertex(stackEntry.pose(), posX, posY, posZ);
-                buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-                buffer.uv(texU, texV);
-                buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
-                buffer.uv2(currentPackedLight);
-                buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
-                buffer.endVertex();
+                //We also need to add the 3rd vertex twice, since the buffer wants quads rather than tris.
+                //Yes, we have to render 25% more data because Mojang doesn't wanna move to tris like literally every other game.
+                //Yes, they're stupid.
+                do {
+                    buffer.vertex(stackEntry.pose(), posX, posY, posZ);
+                    buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+                    buffer.uv(texU, texV);
+                    buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
+                    buffer.uv2(currentPackedLight);
+                    buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
+                    buffer.endVertex();
+                } while (++index == 3);
+                if (index == 4) {
+                    index = 0;
+                }
             }
             //Rewind buffer for next read.
             object.vertices.rewind();
@@ -139,7 +153,7 @@ public class InterfaceRender implements IInterfaceRender {
     @Override
     public void setLightingToPosition(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        currentPackedLight = LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.SKY, pos), Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos));
+        currentPackedLight = LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos), Minecraft.getInstance().level.getBrightness(LightType.SKY, pos));
     }
 
     @Override
@@ -182,22 +196,21 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders the main GUI, setting up any transforms or operations as required.
      */
-    protected static void renderGUI(int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
-        //FIXME render GUIS here, this can come after entities render as we need to get those before these have a chance of working.
-        /*
+    protected static void renderGUI(MatrixStack stack, int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
+        //Get the buffer for GUI rendering.
+        matrixStack = stack;
+        matrixStack.pushPose();
+        IRenderTypeBuffer.Impl guiBuffer = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
+        renderBuffer = guiBuffer;
+
         //Render GUIs, re-creating their components if needed.
         //Set Y-axis to inverted to have correct orientation.
-        GL11.glScalef(1.0F, -1.0F, 1.0F);
+        matrixStack.scale(1.0F, -1.0F, 1.0F);
         
         //We don't want to enable blending though, as that's on-demand.
         //Just in case it is enabled, however, disable it.
         //This ensures the blending state is as it will be for the main rendering pass of -1.
-        InterfaceRender.setBlend(false);
-        
-        //Enable lighting.
-        RenderHelper.enableStandardItemLighting();
-        Minecraft.getMinecraft().entityRenderer.enableLightmap();
-        setLightingState(true);
+        //InterfaceRender.setBlend(false);
         
         //Render main pass, then blended pass.
         int displayGUIIndex = 0;
@@ -205,21 +218,21 @@ public class InterfaceRender implements IInterfaceRender {
             if (updateGUIs || gui.components.isEmpty()) {
                 gui.setupComponentsInit(screenWidth, screenHeight);
             }
-            GL11.glPushMatrix();
+            matrixStack.pushPose();
             if (gui.capturesPlayer()) {
                 //Translate in front of the main GUI components.
-                GL11.glTranslated(0, 0, 250);
+                matrixStack.translate(0, 0, 250);
             } else {
                 //Translate far enough to render behind the chat window.
-                GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
+                matrixStack.translate(0, 0, -500 + 250 * displayGUIIndex++);
             }
             gui.render(mouseX, mouseY, false, partialTicks);
+            //FIXME this should work now since rendering is state-dependent...  
+            gui.render(mouseX, mouseY, true, partialTicks);
         
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
-        
-            //FIXME we probably don't need to change lighting here anymore, if not, delete.
-            //setInternalLightingState(false);
+            matrixStack.scale(1.0F, -1.0F, 1.0F);
+
             for (Entry<IWrapperItemStack, Point3D> stackEntry : stacksToRender.entrySet()) {
                 //Apply existing transform.
                 //Need to translate the z-offset to our value, which includes a -100 for the default added value.
@@ -230,11 +243,10 @@ public class InterfaceRender implements IInterfaceRender {
                 Minecraft.getInstance().getItemRenderer().blitOffset = zOffset;
             }
             stacksToRender.clear();
-            //setInternalLightingState(true);
         
-            GL11.glPopMatrix();
+            matrixStack.popPose();
         }
-        displayGUIIndex = 0;
+        /*displayGUIIndex = 0;
         setBlend(true);
         for (AGUIBase gui : AGUIBase.activeGUIs) {
             GL11.glPushMatrix();
@@ -253,8 +265,10 @@ public class InterfaceRender implements IInterfaceRender {
         setLightingState(false);
         Minecraft.getMinecraft().entityRenderer.disableLightmap();
         RenderHelper.disableStandardItemLighting();
-        GL11.glScalef(1.0F, -1.0F, 1.0F);
         */
+        //GL11.glScalef(1.0F, -1.0F, 1.0F);
+        matrixStack.popPose();//.scale(1.0F, -1.0F, 1.0F);
+        guiBuffer.endBatch();
     }
 
     /**
@@ -284,7 +298,6 @@ public class InterfaceRender implements IInterfaceRender {
      * Event that's called to setup the client.  We register our render wrapper
      * class here.
      */
-    @SubscribeEvent
     public static void registerRenderer(FMLClientSetupEvent event) {
         //Register the global entity rendering class.
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.E_TYPE4.get(), manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
@@ -310,6 +323,15 @@ public class InterfaceRender implements IInterfaceRender {
                         matrixStack = stack;
                         renderBuffer = buffer;
 
+                        //Pop the pose so we aren't relative to the forwarder and are instead relative to the player.
+                        stack.popPose();
+
+                        //Push on a new pose offset by the player's eye height to account for camera height from them.
+                        stack.pushPose();
+                        ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+                        PlayerEntity player = Minecraft.getInstance().player;
+                        stack.translate(0, MathHelper.lerp(partialTicks, player.yOld, player.getY()) - camera.getPosition().y, 0);
+
                         //Enable normal re-scaling for model rendering.
                         //This prevents bad lighting.
                         //FIXME we probably need this, not sure how to do it though given it's internal...
@@ -329,6 +351,29 @@ public class InterfaceRender implements IInterfaceRender {
                 }
             }
         });
+
+        //Register blank classes for the other builders.
+        //If we don't, the game crashes when trying to render them.
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityExisting.E_TYPE2.get(), manager -> new BlankRender<BuilderEntityExisting>(manager));
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
+    }
+
+    /** Blank render class used to bypass rendering for all other builders.**/
+    private static class BlankRender<T extends ABuilderEntityBase> extends EntityRenderer<T> {
+
+        protected BlankRender(EntityRendererManager p_i46179_1_) {
+            super(p_i46179_1_);
+        }
+
+        @Override
+        public ResourceLocation getTextureLocation(T pEntity) {
+            return null;
+        }
+
+        @Override
+        public boolean shouldRender(T builder, ClippingHelper camera, double camX, double camY, double camZ) {
+            return false;
+        }
     }
 
     private static class CustomRenderType extends RenderType {

@@ -174,10 +174,9 @@ public class InterfaceEventsEntityRendering {
             int screenHeight = (int) displaySize;
             double[] xPos = new double[1];
             double[] yPos = new double[1];
-            //FIXME this might not work if units aren't the same.
-            GLFW.glfwGetCursorPos(Minecraft.getInstance().getWindow().getWindow(), xPos, yPos);
+            GLFW.glfwGetCursorPos(event.getWindow().getWindow(), xPos, yPos);
             int mouseX = (int) (xPos[0] * screenWidth / Minecraft.getInstance().getWindow().getWidth());
-            int mouseY = (int) (screenHeight - yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight() - 1);
+            int mouseY = (int) (yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight());
 
             float partialTicks = event.getPartialTicks();
             boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
@@ -185,7 +184,8 @@ public class InterfaceEventsEntityRendering {
                 lastScreenWidth = screenWidth;
                 lastScreenHeight = screenHeight;
             }
-            InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+
+            InterfaceRender.renderGUI(event.getMatrixStack(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
         }
     }
 
