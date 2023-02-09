@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
@@ -206,7 +207,7 @@ public class RenderText {
                 fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
                 BufferedImage bufferedImage;
                 try {
-                    bufferedImage = ImageIO.read(RenderText.class.getResourceAsStream(fontLocations[i]));
+                    bufferedImage = ImageIO.read(InterfaceManager.coreInterface.getPackResource(fontLocations[i]));
                 } catch (Exception e) {
                     //Just continue, as we don't care about this file.  Not all files may be present for any given font.
                     continue;

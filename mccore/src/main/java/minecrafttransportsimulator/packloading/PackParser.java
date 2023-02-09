@@ -236,7 +236,7 @@ public final class PackParser {
             try {
                 systemName = defaultItem.getKey();
                 ItemClassification classification = defaultItem.getValue();
-                AJSONBase itemDef = JSONParser.parseStream(PackParser.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
+                AJSONBase itemDef = JSONParser.parseStream(InterfaceManager.coreInterface.getPackResource(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
                 itemDef.packID = packID;
                 itemDef.systemName = systemName;
                 itemDef.classification = classification;

@@ -13,11 +13,13 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -34,7 +36,9 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -222,8 +226,40 @@ public class InterfaceClient implements IInterfaceClient {
         List<String> tooltipText = new ArrayList<>();
         List<ITextComponent> tooltipLines = ((WrapperItemStack) stack).stack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         //Add grey formatting text to non-first line tooltips.
-        for (int i = 1; i < tooltipLines.size(); ++i) {
-            tooltipText.set(i, TextFormatting.GRAY + tooltipLines.get(i).getString());
+        for (int i = 0; i < tooltipLines.size(); ++i) {
+            ITextComponent component = tooltipLines.get(i);
+            Style style = component.getStyle();
+            String stringToAdd = "";
+            if (style.isBold()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.BOLD_FORMATTING_CHAR;
+            }
+            if (style.isItalic()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.ITALIC_FORMATTING_CHAR;
+            }
+            if (style.isUnderlined()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.UNDERLINE_FORMATTING_CHAR;
+            }
+            if (style.isStrikethrough()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.STRIKETHROUGH_FORMATTING_CHAR;
+            }
+            if (style.isObfuscated()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.RANDOM_FORMATTING_CHAR;
+            }
+            if (style.getColor() != null) {
+                TextFormatting legacyColor = null;
+                for (TextFormatting format : TextFormatting.values()) {
+                    if (format.isColor()) {
+                        if (style.getColor().equals(Color.fromLegacyFormat(format))) {
+                            legacyColor = format;
+                            break;
+                        }
+                    }
+                }
+                if (legacyColor != null) {
+                    stringToAdd += RenderText.FORMATTING_CHAR + Integer.toHexString(legacyColor.ordinal());
+                }
+            }
+            tooltipText.add(stringToAdd + tooltipLines.get(i).getString());
         }
         return tooltipText;
     }
@@ -276,8 +312,7 @@ public class InterfaceClient implements IInterfaceClient {
                     ControlSystem.controlGlobal(player);
                     if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
                         if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            //FIXME enable when we get GUI rendering working.
-                            //new GUIPackMissing();
+                            new GUIPackMissing();
                         }
                     }
                 }

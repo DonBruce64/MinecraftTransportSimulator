@@ -236,9 +236,10 @@ public class InterfaceRender implements IInterfaceRender {
             for (Entry<IWrapperItemStack, Point3D> stackEntry : stacksToRender.entrySet()) {
                 //Apply existing transform.
                 //Need to translate the z-offset to our value, which includes a -100 for the default added value.
+                //Blit starts at 200 though, plus 32 for the default item render.
                 Point3D translation = stackEntry.getValue();
                 float zOffset = Minecraft.getInstance().getItemRenderer().blitOffset;
-                Minecraft.getInstance().getItemRenderer().blitOffset = (float) translation.z - 100;
+                Minecraft.getInstance().getItemRenderer().blitOffset = (float) (200 + translation.z - 100);
                 Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) stackEntry.getKey()).stack, (int) translation.x, (int) -translation.y);
                 Minecraft.getInstance().getItemRenderer().blitOffset = zOffset;
             }
@@ -274,7 +275,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Converts internal matrix to new external matrix.
      */
-    private static Matrix4f convertMatrix4f(TransformationMatrix transform) {
+    protected static Matrix4f convertMatrix4f(TransformationMatrix transform) {
         matrixConvertArray[0] = (float) transform.m00;
         matrixConvertArray[1] = (float) transform.m01;
         matrixConvertArray[2] = (float) transform.m02;

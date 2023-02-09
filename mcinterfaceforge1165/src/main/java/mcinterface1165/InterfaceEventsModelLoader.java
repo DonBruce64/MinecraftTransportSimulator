@@ -40,13 +40,21 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
  */
 public class InterfaceEventsModelLoader {
 
+    /**
+     * Called to init the custom model loader.  Fired when Forge is ready to register models.
+     * This allows injecting our custom resource manager into MC's systems to have it use it.
+     * We also register it as a reload listener, as on a resource reload MC will purge the list
+     * of packs and will re-query from disk.  But we aren't on disk, and so we will need to be
+     * ready when that call comes and will re-add ourselves.
+     */
     public static void init(ModelRegistryEvent event) {
-        //Add our custom resource manager to the list of managers so we can auto-generate files.
-        //FIXME this needs to get ported to packs so they can use this.
         try {
-            PackResourcePack newPack = new PackResourcePack(InterfaceLoader.MODID);
-            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(newPack);
-            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(newPack);
+            SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager();
+            for (String packID : PackParser.getAllPackIDs()) {
+                PackResourcePack newPack = new PackResourcePack(packID);
+                manager.add(newPack);
+                manager.registerReloadListener(newPack);
+            }
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not add ourselves to the resource list. Files won't load correctly!");
             e.printStackTrace();
@@ -65,6 +73,7 @@ public class InterfaceEventsModelLoader {
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
+            System.out.println("Created asset loader for " + domain);
         }
 
         @Override
@@ -84,7 +93,7 @@ public class InterfaceEventsModelLoader {
                 String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
                 if (!strippedSuffix.contains(".")) {
                     //JSON reference.  Get the specified file.
-                    stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
+                    stream = InterfaceManager.coreInterface.getPackResource("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
                         if (ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
@@ -107,7 +116,7 @@ public class InterfaceEventsModelLoader {
                         resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 
                         //Try to load the item JSON, or create it if it doesn't exist.
-                        stream = getClass().getResourceAsStream(resourcePath);
+                        stream = InterfaceManager.coreInterface.getPackResource(resourcePath);
                         if (stream == null) {
                             //Get the actual texture path.
                             itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
@@ -155,14 +164,14 @@ public class InterfaceEventsModelLoader {
                     if (packItem != null) {
                         //Get the actual resource path for this resource and return its stream.
                         String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
 
                         if (stream == null) {
                             if (isItemPNG) {
                                 //We might not have this file, but we also might have a JSON-defined item here.
                                 //Try the JSON standards before throwing an error.
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
-                                stream = getClass().getResourceAsStream(streamJSONLocation);
+                                stream = InterfaceManager.coreInterface.getPackResource(streamJSONLocation);
                                 if (stream == null) {
                                     if (ConfigSystem.settings.general.devMode.value) {
                                         if (streamLocation != null) {
@@ -184,7 +193,7 @@ public class InterfaceEventsModelLoader {
                         //No pack item for this texture.  Must be an internal texture for other things.
                         //In this case, we just get the stream exact location.
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
                         if (stream == null) {
                             if (ConfigSystem.settings.general.devMode.value) {
                                 InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
@@ -226,7 +235,7 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public String getName() {
-            return domain + "_packs";
+            return domain + "_pack";
         }
 
         @Override

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -205,7 +204,7 @@ public class InterfaceEventsEntityRendering {
         AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
         //This may be null if MC sets this player as riding before the actual entity has time to load NBT.
         if (ridingEntity != null) {
-            GL11.glPushMatrix();
+            event.getMatrixStack().pushPose();
             //Get orientation and scale for entity.
             //Head is relative to the body.
             ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
@@ -260,8 +259,8 @@ public class InterfaceEventsEntityRendering {
                 riderTotalTransformation.applyScaling(entityScale);
                 riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
                 riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                //FIXME need to get the stack POS here to adjust transforms.
-                //InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
+                //FIXME Does this transform work as-is?
+                event.getMatrixStack().last().pose().multiply(InterfaceRender.convertMatrix4f(riderTotalTransformation));
             }
 
             needToPopMatrix = true;
@@ -372,7 +371,7 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
-            GL11.glPopMatrix();
+            event.getMatrixStack().popPose();
         }
         if (heldStackHolder != null) {
             PlayerEntity player = (PlayerEntity) event.getEntity();

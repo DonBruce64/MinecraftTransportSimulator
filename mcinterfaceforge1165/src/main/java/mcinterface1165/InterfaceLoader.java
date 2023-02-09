@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -32,6 +33,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -53,7 +55,19 @@ public class InterfaceLoader {
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
 
+
     public InterfaceLoader() {
+        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
+    }
+
+    /**Need to defer init until post-mod construction, as in this version
+     * {@link IInterfaceCore#getModName(String)} requires a constructor pack-mod
+     * instance to query the classloader for a resource, and we need that for pack
+     * init in the boot calls.
+     * 
+     */
+    public void init(FMLConstructModEvent event) {
         //Add registries.
         BuilderItem.ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderBlock.BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
@@ -63,19 +77,16 @@ public class InterfaceLoader {
         //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
         boolean isClient = FMLEnvironment.dist.isClient();
 
-        //Get game directory.
-        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
-
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceEventsModelLoader::init);
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::registerRenderer);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceEventsModelLoader::init);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION: " + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
