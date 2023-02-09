@@ -47,7 +47,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final BoundingBox proxBounds;
 
     //States
-    private int impactDesapawnTimer = -1;
+    private int impactDespawnTimer = -1;
     private Point3D targetPosition;
     public double targetDistance;
     private double distanceTraveled;
@@ -121,12 +121,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
-        if (impactDesapawnTimer >= 0) {
-            if (impactDesapawnTimer-- == 0) {
+        if (impactDespawnTimer >= 0) {
+            if (blockToBreakPos != null) {
+                world.destroyBlock(blockToBreakPos, true);
+            }
+            if (impactDespawnTimer-- == 0) {
                 remove();
-                if (blockToBreakPos != null) {
-                    world.destroyBlock(blockToBreakPos, true);
-                }
             }
             return;
         }
@@ -530,7 +530,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter / 10F : definition.bullet.blastStrength;
             world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
         }
-        impactDesapawnTimer = definition.bullet.impactDespawnTime;
+        impactDespawnTimer = definition.bullet.impactDespawnTime;
         gun.currentBullet = null;
         if (engineTargeted != null) {
             engineTargeted.vehicleOn.missilesIncoming.remove(this);
