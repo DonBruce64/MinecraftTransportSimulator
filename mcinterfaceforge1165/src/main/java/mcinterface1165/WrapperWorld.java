@@ -499,7 +499,7 @@ public class WrapperWorld extends AWrapperWorld {
                     BlockPos pos = new BlockPos(i, j, k);
                     if (!world.isEmptyBlock(pos)) {
                         BlockState state = world.getBlockState(pos);
-                        VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                        VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
                         if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
                             mutableCollidingAABBs.addAll(collisionShape.toAabbs());
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
@@ -572,7 +572,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (!knownAirBlocks.contains(pos)) {
                         if (world.isLoaded(pos)) {
                             BlockState state = world.getBlockState(pos);
-                            VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                            VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
                             if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
                                 return true;
                             } else {

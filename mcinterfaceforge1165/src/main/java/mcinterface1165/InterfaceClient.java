@@ -23,10 +23,10 @@ import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -95,7 +95,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public boolean isChatOpen() {
-        return Minecraft.getInstance().options.chatVisibility != ChatVisibility.HIDDEN;
+        return Minecraft.getInstance().screen instanceof ChatScreen;
     }
 
     @Override

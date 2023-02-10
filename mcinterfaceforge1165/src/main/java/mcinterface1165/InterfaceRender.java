@@ -1,8 +1,7 @@
 package mcinterface1165;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -14,9 +13,9 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
@@ -54,7 +53,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  * @author don_bruce
  */
 public class InterfaceRender implements IInterfaceRender {
-    private static final Map<IWrapperItemStack, Point3D> stacksToRender = new LinkedHashMap<>();
+    private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
     private static int currentPackedLight;
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
     private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
@@ -79,8 +78,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void renderItemModel(IWrapperItemStack stack, Point3D translation) {
-        stacksToRender.put(stack, translation);
+    public void renderItemModel(GUIComponentItem component) {
+        stacksToRender.add(component);
     }
     
     @Override
@@ -196,6 +195,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders the main GUI, setting up any transforms or operations as required.
      */
+    @SuppressWarnings("deprecation")
     protected static void renderGUI(MatrixStack stack, int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
         //Get the buffer for GUI rendering.
         matrixStack = stack;
@@ -227,49 +227,35 @@ public class InterfaceRender implements IInterfaceRender {
                 matrixStack.translate(0, 0, -500 + 250 * displayGUIIndex++);
             }
             gui.render(mouseX, mouseY, false, partialTicks);
-            //FIXME this should work now since rendering is state-dependent...  
+            guiBuffer.endBatch();
             gui.render(mouseX, mouseY, true, partialTicks);
+            guiBuffer.endBatch();
         
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
             matrixStack.scale(1.0F, -1.0F, 1.0F);
 
-            for (Entry<IWrapperItemStack, Point3D> stackEntry : stacksToRender.entrySet()) {
+            for (GUIComponentItem component : stacksToRender) {
                 //Apply existing transform.
                 //Need to translate the z-offset to our value, which includes a -100 for the default added value.
                 //Blit starts at 200 though, plus 32 for the default item render.
-                Point3D translation = stackEntry.getValue();
                 float zOffset = Minecraft.getInstance().getItemRenderer().blitOffset;
-                Minecraft.getInstance().getItemRenderer().blitOffset = (float) (200 + translation.z - 100);
-                Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) stackEntry.getKey()).stack, (int) translation.x, (int) -translation.y);
+                Minecraft.getInstance().getItemRenderer().blitOffset = (float) (200 + component.translation.z - 100);
+                if (component.scale != 1.0) {
+                    //Need to use RenderSystem here, since we can't access the stack directly for rendering scaling.
+                    RenderSystem.pushMatrix();
+                    RenderSystem.scalef(component.scale, component.scale, 1.0F);
+                    Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) (component.translation.x / component.scale), (int) (-component.translation.y / component.scale) + 1);
+                    RenderSystem.popMatrix();
+                } else {
+                    Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) component.translation.x, (int) -component.translation.y);
+                }
                 Minecraft.getInstance().getItemRenderer().blitOffset = zOffset;
             }
             stacksToRender.clear();
         
             matrixStack.popPose();
         }
-        /*displayGUIIndex = 0;
-        setBlend(true);
-        for (AGUIBase gui : AGUIBase.activeGUIs) {
-            GL11.glPushMatrix();
-            if (gui.capturesPlayer()) {
-                //Translate in front of the main GUI components.
-                GL11.glTranslated(0, 0, 250);
-            } else {
-                //Translate far enough to render behind the chat window.
-                GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-            }
-            gui.render(mouseX, mouseY, true, partialTicks);
-            GL11.glPopMatrix();
-        }
-        
-        //Set state back to normal.
-        setLightingState(false);
-        Minecraft.getMinecraft().entityRenderer.disableLightmap();
-        RenderHelper.disableStandardItemLighting();
-        */
-        //GL11.glScalef(1.0F, -1.0F, 1.0F);
-        matrixStack.popPose();//.scale(1.0F, -1.0F, 1.0F);
-        guiBuffer.endBatch();
+        matrixStack.popPose();
     }
 
     /**
@@ -339,12 +325,14 @@ public class InterfaceRender implements IInterfaceRender {
                         //GlStateManager.enableRescaleNormal();
 
                         //Start master profiling section and run entity rendering routines.
+                        //Need to run the solid pass first, then the transparent.  MC wont handle
+                        //z-buffering right if we don't, even with the modern pipeline.
+                        world.beginProfiling("MTSRendering", true);
                         for (AEntityC_Renderable entity : allEntities) {
-                            world.beginProfiling("MTSRendering", true);
                             entity.render(false, partialTicks);
                             entity.render(true, partialTicks);
-                            world.endProfiling();
                         }
+                        world.endProfiling();
 
                         //Reset states.
                         //GlStateManager.disableRescaleNormal();
@@ -398,7 +386,7 @@ public class InterfaceRender implements IInterfaceRender {
             stateBuilder.setAlphaState(object.isTranslucent ? NO_ALPHA : DEFAULT_ALPHA);
             //Depth is fine, as is cull.
             //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
-            //stateBuilder.setCullState(CULL);
+            //stateBuilder.setCullState(NO_CULL);
             //Lightmap is on unless we are bright.
             stateBuilder.setLightmapState(object.disableLighting ? NO_LIGHTMAP : LIGHTMAP);
             //No overlays ever.

@@ -26,8 +26,8 @@ public class GUIComponentItem extends AGUIComponent {
     public final float scale;
     public IWrapperItemStack stack;
     public List<IWrapperItemStack> stacks;
-    private IWrapperItemStack stackToRender;
-    private final Point3D translation = new Point3D();
+    public IWrapperItemStack stackToRender;
+    public final Point3D translation = new Point3D();
 
     /**
      * Default item constructor.
@@ -64,8 +64,8 @@ public class GUIComponentItem extends AGUIComponent {
         }
 
         if (stackToRender != null) {
-            translation.set(position).scale(scale);
-            InterfaceManager.renderingInterface.renderItemModel(stackToRender, translation);
+            translation.set(position);
+            InterfaceManager.renderingInterface.renderItemModel(this);
 
             if (stackToRender.getSize() > 1) {
                 text = RenderText.FORMATTING_CHAR + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + stackToRender.getSize();
