@@ -82,25 +82,29 @@ public class InterfaceEventsEntityRendering {
                 playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
 
                 //Need to transpose the rotation so it applies opposite.
-                double temp;
+                //FIXME this won't work, render info don't work either as we need to translate after rotation, not before.
+                //That's done in GameRender#renderLevel line 615, or right after net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup (this event).
+                //After this, set the event value to 0 since we've done stack multiplcation.
+                //So get stack, apply cameraAdjustedOrientation, apply cameraAdjustedPosition, profit.
+                //Might need to rotate the orientation by 180, might not.
+                /*double temp;
                 temp = cameraAdjustedOrientation.m01;
                 cameraAdjustedOrientation.m01 = cameraAdjustedOrientation.m10;
                 cameraAdjustedOrientation.m10 = temp;
-
+                
                 temp = cameraAdjustedOrientation.m02;
                 cameraAdjustedOrientation.m02 = cameraAdjustedOrientation.m20;
                 cameraAdjustedOrientation.m20 = temp;
-
+                
                 temp = cameraAdjustedOrientation.m12;
                 cameraAdjustedOrientation.m12 = cameraAdjustedOrientation.m21;
                 cameraAdjustedOrientation.m21 = temp;
-
-                //Rotate by 180 to get the forwards-facing orientation.
-                //Operations are done here with the camera facing the player.
+                
                 cameraAdjustments.resetTransforms();
                 cameraAdjustments.rotateY(180);
                 cameraAdjustments.multiply(cameraAdjustedOrientation);
                 cameraAdjustments.convertToAngles();
+                */
 
                 //Set the player's position to the calculated camera position, setup the render info, then set it back.
                 //This tricks MC into rendering where we want it to during the subsequent steps.
@@ -117,29 +121,11 @@ public class InterfaceEventsEntityRendering {
                 mcPlayer.yo = playerPrevPosition.y;
                 mcPlayer.zo = playerPrevPosition.z;
 
-                System.out.println(cameraAdjustments.angles.y);
-                event.setYaw((float) cameraAdjustments.angles.y);
-                event.setPitch((float) cameraAdjustments.angles.x);
-                event.setRoll((float) cameraAdjustments.angles.z);
-
-                //FIXME this won't work, try the render info?
-
-                /*GL11.glRotatef(180F, 0, 1, 0);
-                
-                //Set matrix and apply.
-                cameraAdjustments.setRotation(cameraAdjustedOrientation);
-                InterfaceRender.applyTransformOpenGL(cameraAdjustments);
-                
-                //Set and apply translation.  We need the inverse here as well.
-                cameraAdjustedPosition.subtract(playerPositionHelper).invert();
-                //System.out.println(cameraAdjustedPosition);
-                GL11.glTranslated(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
-                
-                //Set event to 0 to block its transforms since they'll be at the wrong origin.
-                event.setYaw(0);
-                event.setPitch(0);
-                event.setRoll(0);
-                */
+                //Now apply the orientation changes.
+                cameraAdjustedOrientation.convertToAngles();
+                event.setYaw((float) -cameraAdjustedOrientation.angles.y);
+                event.setPitch((float) cameraAdjustedOrientation.angles.x);
+                event.setRoll((float) cameraAdjustedOrientation.angles.z);
             }
         }
     }
@@ -256,12 +242,12 @@ public class InterfaceEventsEntityRendering {
 
                 //Apply translations and rotations to move entity to correct position relative to the camera entity.
                 riderTotalTransformation.resetTransforms();
-                riderTotalTransformation.setTranslation(deltaDistance);
+                //riderTotalTransformation.setTranslation(deltaDistance);
                 riderTotalTransformation.applyRotation(riderBodyOrientation);
                 riderTotalTransformation.applyScaling(entityScale);
-                riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-                riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                //FIXME Does this transform work as-is?
+                //riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+                //riderTotalTransformation.applyInvertedTranslation(deltaDistance);
+                //FIXME Doesn't work, but won't know till third person rendering works on vehicles.
                 event.getMatrixStack().last().pose().multiply(InterfaceRender.convertMatrix4f(riderTotalTransformation));
             }
 
