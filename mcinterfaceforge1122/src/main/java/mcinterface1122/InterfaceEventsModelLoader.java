@@ -32,6 +32,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -79,7 +80,8 @@ public class InterfaceEventsModelLoader {
                 //Get all entities in the world, and render them manually for this one builder.
                 //Only do this if the player the builder is following is the client player.
                 WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
-                if (Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
+                EntityPlayer player = Minecraft.getMinecraft().player;
+                if (player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
                     if (allEntities != null) {
                         boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
@@ -94,12 +96,18 @@ public class InterfaceEventsModelLoader {
                         //This prevents bad lighting.
                         GlStateManager.enableRescaleNormal();
 
+                        //Rendering system expects coordinates to be at 0,0,0 when called, translate us so that's the case.
+                        GL11.glPushMatrix();
+                        GL11.glTranslated(-(player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks), -(player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks), -(player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks));
+
                         //Start master profiling section.
                         for (AEntityC_Renderable entity : allEntities) {
                             world.beginProfiling("MTSRendering", true);
                             entity.render(blendingEnabled, partialTicks);
                             world.endProfiling();
                         }
+
+                        GL11.glPopMatrix();
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);

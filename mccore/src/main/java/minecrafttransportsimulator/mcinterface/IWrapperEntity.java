@@ -243,13 +243,6 @@ public interface IWrapperEntity {
     void attack(Damage damage);
 
     /**
-     * Returns the rendered position based on the passed-in partial ticks.
-     * The returned position may by modified without affecting the actual rendered position.
-     * However, the object itself may be re-used on the next call, so do not keep reference to it.
-     */
-    Point3D getRenderedPosition(float partialTicks);
-
-    /**
      * Adds the potion effect with the specified name to the entity.  Only valid for living entities that
      * are effected by potions.
      */

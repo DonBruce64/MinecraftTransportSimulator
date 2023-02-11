@@ -20,7 +20,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderState;
@@ -35,7 +34,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -162,6 +160,21 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public String downloadURLTexture(String textureURL) {
+        //FIXME implement with this code:
+
+        /*
+         val pngImage ==  PNG bytes from wherever ;
+        val image = NativeImage.read(NativeImage.Format.RGB, pngImage.inputStream())
+        val texture = DynamicTexture(image)
+        val textureLocation = Minecraft.getInstance().textureManager.register("mymod/custom_texture"  dynamic texture id. set to something unique , texture)
+        
+        // Then use it how you would with any other texture, example:
+        RenderSystem.setShaderTexture(0, textureLocation)
+        GuiComponent.blit(poseStack  not defined here , 0, 0, 64, 64, 0.0F, 0.0F, 1, 1, 1, 1)
+        
+        // And you can unload the texture later using release:
+        Minecraft.getInstance().textureManager.release(textureLocation)
+         */
         return "URL textures are not supported in this version.  Sorry.";
     }
 
@@ -310,19 +323,13 @@ public class InterfaceRender implements IInterfaceRender {
                         matrixStack = stack;
                         renderBuffer = buffer;
 
-                        //Pop the pose so we aren't relative to the forwarder and are instead relative to the player.
-                        stack.popPose();
-
-                        //Push on a new pose offset by the player's eye height to account for camera height from them.
+                        //Push on a new pose offset by the forwarder's position to the origin to set the translation to the world center.
+                        //Rendering of internal entities expects origin center.
                         stack.pushPose();
-                        ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-                        PlayerEntity player = Minecraft.getInstance().player;
-                        stack.translate(0, MathHelper.lerp(partialTicks, player.yOld, player.getY()) - camera.getPosition().y, 0);
-
-                        //Enable normal re-scaling for model rendering.
-                        //This prevents bad lighting.
-                        //FIXME we probably need this, not sure how to do it though given it's internal...
-                        //GlStateManager.enableRescaleNormal();
+                        double d0 = MathHelper.lerp(partialTicks, builder.xOld, builder.getX());
+                        double d1 = MathHelper.lerp(partialTicks, builder.yOld, builder.getY());
+                        double d2 = MathHelper.lerp(partialTicks, builder.zOld, builder.getZ());
+                        stack.translate(-d0, -d1, -d2);
 
                         //Start master profiling section and run entity rendering routines.
                         //Need to run the solid pass first, then the transparent.  MC wont handle
@@ -333,9 +340,7 @@ public class InterfaceRender implements IInterfaceRender {
                             entity.render(true, partialTicks);
                         }
                         world.endProfiling();
-
-                        //Reset states.
-                        //GlStateManager.disableRescaleNormal();
+                        stack.popPose();
                     }
                 }
             }

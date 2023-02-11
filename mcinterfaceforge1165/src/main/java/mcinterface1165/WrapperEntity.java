@@ -375,16 +375,6 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
-    public Point3D getRenderedPosition(float partialTicks) {
-        mutableRenderPosition.x = entity.xOld + (entity.position().x - entity.xOld) * partialTicks;
-        mutableRenderPosition.y = entity.yOld + (entity.position().y - entity.yOld) * partialTicks;
-        mutableRenderPosition.z = entity.zOld + (entity.position().z - entity.zOld) * partialTicks;
-        return mutableRenderPosition;
-    }
-
-    private final Point3D mutableRenderPosition = new Point3D();
-
-    @Override
     public void addPotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
             Potion potion = Potion.byName(effect.name);

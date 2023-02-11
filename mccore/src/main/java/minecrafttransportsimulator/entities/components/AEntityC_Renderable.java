@@ -67,9 +67,6 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
                 interpolatedPositionHolder.set(position);
             }
 
-            //Subtract the entity's position by the render entity position to get the delta for translating.
-            interpolatedPositionHolder.subtract(InterfaceManager.clientInterface.getClientPlayer().getRenderedPosition(partialTicks));
-
             //Get interpolated orientation if required.
             if (requiresDeltaUpdates()) {
                 getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);

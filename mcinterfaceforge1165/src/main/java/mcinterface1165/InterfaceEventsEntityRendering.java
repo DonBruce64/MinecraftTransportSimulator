@@ -99,6 +99,7 @@ public class InterfaceEventsEntityRendering {
                 //Operations are done here with the camera facing the player.
                 cameraAdjustments.resetTransforms();
                 cameraAdjustments.rotateY(180);
+                cameraAdjustments.multiply(cameraAdjustedOrientation);
                 cameraAdjustments.convertToAngles();
 
                 //Set the player's position to the calculated camera position, setup the render info, then set it back.
@@ -116,6 +117,7 @@ public class InterfaceEventsEntityRendering {
                 mcPlayer.yo = playerPrevPosition.y;
                 mcPlayer.zo = playerPrevPosition.z;
 
+                System.out.println(cameraAdjustments.angles.y);
                 event.setYaw((float) cameraAdjustments.angles.y);
                 event.setPitch((float) cameraAdjustments.angles.x);
                 event.setRoll((float) cameraAdjustments.angles.z);
