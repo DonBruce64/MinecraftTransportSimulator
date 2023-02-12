@@ -1,8 +1,21 @@
 package mcinterface1165;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -17,6 +30,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.GIFParser;
+import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
+import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
@@ -30,6 +46,8 @@ import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -51,6 +69,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  * @author don_bruce
  */
 public class InterfaceRender implements IInterfaceRender {
+    private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
+    private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
+    private static final Map<ParsedGIF, Map<GIFImageFrame, ResourceLocation>> animatedGIFFrames = new LinkedHashMap<>();
+
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
     private static int currentPackedLight;
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
@@ -160,29 +182,83 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public String downloadURLTexture(String textureURL) {
-        //FIXME implement with this code:
+        if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
+            //Parse the texture, get the OpenGL integer that represents this texture, and save it.
+            //FAR less jank than using MC's resource system.
+            try {
+                URL url = new URL(textureURL);
+                URLConnection connection = url.openConnection();
+                try {
+                    List<String> validContentTypes = new ArrayList<>();
+                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
+                        validContentTypes.add("image/" + imageSuffix);
+                    }
+                    String contentType = connection.getHeaderField("Content-Type");
+                    if (validContentTypes.contains(contentType)) {
+                        if (contentType.endsWith("gif")) {
+                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
+                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
+                            reader.setInput(stream);
+                            ParsedGIF gif = GIFParser.parseGIF(reader);
+                            if (gif != null) {
+                                animatedGIFs.put(textureURL, gif);
+                                Map<GIFImageFrame, ResourceLocation> gifFrameIndexes = new HashMap<>();
+                                for (GIFImageFrame frame : gif.frames.values()) {
+                                    BufferedImage frameBuffer = frame.getImage();
+                                    ByteArrayOutputStream frameArrayStream = new ByteArrayOutputStream();
+                                    ImageIO.write(frameBuffer, "gif", frameArrayStream);
+                                    InputStream frameStream = new ByteArrayInputStream(frameArrayStream.toByteArray());
 
-        /*
-         val pngImage ==  PNG bytes from wherever ;
-        val image = NativeImage.read(NativeImage.Format.RGB, pngImage.inputStream())
-        val texture = DynamicTexture(image)
-        val textureLocation = Minecraft.getInstance().textureManager.register("mymod/custom_texture"  dynamic texture id. set to something unique , texture)
-        
-        // Then use it how you would with any other texture, example:
-        RenderSystem.setShaderTexture(0, textureLocation)
-        GuiComponent.blit(poseStack  not defined here , 0, 0, 64, 64, 0.0F, 0.0F, 1, 1, 1, 1)
-        
-        // And you can unload the texture later using release:
-        Minecraft.getInstance().textureManager.release(textureLocation)
-         */
-        return "URL textures are not supported in this version.  Sorry.";
+                                    NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, frameStream);
+                                    DynamicTexture texture = new DynamicTexture(image);
+                                    ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-gif", texture);
+                                    gifFrameIndexes.put(frame, textureLocation);
+                                }
+                                animatedGIFFrames.put(gif, gifFrameIndexes);
+                            } else {
+                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
+                            }
+                        } else {
+                            NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, url.openStream());
+                            DynamicTexture texture = new DynamicTexture(image);
+                            ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-url", texture);
+                            onlineTextures.put(textureURL, textureLocation);
+                        }
+                    } else {
+                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
+                        for (String validType : validContentTypes) {
+                            errorString.append(validType).append(", ");
+                        }
+                        onlineTextures.put(textureURL, null);
+                        return errorString.toString();
+                    }
+                } catch (Exception e) {
+                    onlineTextures.put(textureURL, null);
+                    e.printStackTrace();
+                    return "Could not parse images.  Error was: " + e.getMessage();
+                }
+            } catch (Exception e) {
+                onlineTextures.put(textureURL, null);
+                e.printStackTrace();
+                return "Could not open URL for processing.  Error was: " + e.getMessage();
+            }
+        }
+        return null;
     }
 
     /**
      * Helper function to create a new texture state for the specified texture location.
      */
     private static RenderState.TextureState getTexture(String textureLocation) {
-        if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
+        if (animatedGIFs.containsKey(textureLocation)) {
+            //Special case for GIFs.
+            ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
+            return new RenderState.TextureState(animatedGIFFrames.get(parsedGIF).get(parsedGIF.getCurrentFrame()), false, false);
+        } else if (onlineTextures.containsKey(textureLocation)) {
+            //Online texture.
+            ResourceLocation onlineTexture = onlineTextures.get(textureLocation);
+            return onlineTexture != null ? new RenderState.TextureState(onlineTextures.get(textureLocation), false, false) : MISSING_STATE;
+        } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
             return BLOCK_STATE;
         } else {
