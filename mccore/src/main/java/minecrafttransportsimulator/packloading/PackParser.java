@@ -142,7 +142,7 @@ public final class PackParser {
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
      * for pack definitions.  After this, they will be created and loaded into the main mod.
      */
-    public static void parsePacks(List<File> packDirectories, boolean isClient) {
+    public static void parsePacks(List<File> packDirectories) {
         //First get all pack definitions from the passed-in directories.
         for (File directory : packDirectories) {
             for (File file : directory.listFiles()) {
@@ -166,12 +166,6 @@ public final class PackParser {
             if (!ConfigSystem.settings.fuel.fuels.containsKey(fuelValues.getKey())) {
                 ConfigSystem.settings.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
             }
-        }
-
-        //Check to make sure we populated the current language file.  If we are missing entries for packs, add them.
-        //Don't parse the language on the server, as that doesn't exist there.
-        if (ConfigSystem.language != null) {
-            ConfigSystem.language.populateEntries(isClient);
         }
 
         //Also check for new packs for pack-specific speed factors and scales.
@@ -234,6 +228,7 @@ public final class PackParser {
         defaultItems.put("invisible_standing", ItemClassification.PART);
         defaultItems.put("invisible_wheel", ItemClassification.PART);
         defaultItems.put("default_car", ItemClassification.PANEL);
+        defaultItems.put("default_plane", ItemClassification.PANEL);
 
         String prefixFolders = "/assets/" + packID + "/jsondefs/";
         String systemName;
@@ -241,7 +236,7 @@ public final class PackParser {
             try {
                 systemName = defaultItem.getKey();
                 ItemClassification classification = defaultItem.getValue();
-                AJSONBase itemDef = JSONParser.parseStream(PackParser.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
+                AJSONBase itemDef = JSONParser.parseStream(InterfaceManager.coreInterface.getPackResource(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
                 itemDef.packID = packID;
                 itemDef.systemName = systemName;
                 itemDef.classification = classification;

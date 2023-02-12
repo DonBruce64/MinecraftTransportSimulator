@@ -21,6 +21,7 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelClickAction;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelComponent;
+import minecrafttransportsimulator.jsondefs.JSONPanel.SpecialComponent;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -32,8 +33,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * A GUI/control system hybrid, this takes the place of the HUD when called up.
- * This class is abstract and contains the base code for rendering things common to
- * all vehicles, such as lights and engines.  Other things may be added as needed.
+ * This class is contains the base code for rendering things common to all vehicles, 
+ * specifics are added in the JSON as applicable.
  *
  * @author don_bruce
  */
@@ -53,21 +54,22 @@ public class GUIPanel extends AGUIBase {
     public GUIPanel(EntityVehicleF_Physics vehicle) {
         super();
         this.vehicle = vehicle;
+        this.definition = getDefinitionFor(vehicle);
+    }
 
-        JSONPanel testDef;
+    public static JSONPanel getDefinitionFor(EntityVehicleF_Physics vehicle) {
         try {
             String packID = vehicle.definition.motorized.panel.substring(0, vehicle.definition.motorized.panel.indexOf(':'));
             String systemName = vehicle.definition.motorized.panel.substring(packID.length() + 1);
-            testDef = PackParser.getPackPanel(packID, systemName);
+            return PackParser.getPackPanel(packID, systemName);
         } catch (Exception e) {
             InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
             if (vehicle.definition.motorized.isAircraft) {
-                testDef = PackParser.getPackPanel(InterfaceManager.coreModID, "default_plane");
+                return PackParser.getPackPanel(InterfaceManager.coreModID, "default_plane");
             } else {
-                testDef = PackParser.getPackPanel(InterfaceManager.coreModID, "default_car");
+                return PackParser.getPackPanel(InterfaceManager.coreModID, "default_car");
             }
         }
-        this.definition = testDef;
     }
 
     private void setupTowingButtons(AEntityG_Towable<?> entity) {
@@ -90,7 +92,7 @@ public class GUIPanel extends AGUIBase {
         }
 
         //Check parts, if we have any.
-        for (APart part : entity.parts) {
+        for (APart part : entity.allParts) {
             if (part.definition.connectionGroups != null) {
                 for (JSONConnectionGroup connectionGroup : part.definition.connectionGroups) {
                     if (connectionGroup.canInitiateConnections) {
@@ -148,7 +150,9 @@ public class GUIPanel extends AGUIBase {
         componentButtons.clear();
         labels.clear();
 
-        int engineIndex = 0;
+        int engineControlIndex = 0;
+        int engineMagIndex = 0;
+        int engineStarterIndex = 0;
         int trailerIndex = 0;
         int customVariableIndex = 0;
         for (JSONPanelComponent panelComponent : definition.panel.components) {
@@ -167,11 +171,6 @@ public class GUIPanel extends AGUIBase {
                         if (panelComponent.clickActionRight != null && !leftSide) {
                             handleClickAction(panelComponent.clickActionRight);
                         }
-                    }
-
-                    @Override
-                    public int getState() {
-                        return panelComponent.statusVariable != null && vehicle.isVariableActive(panelComponent.statusVariable) ? 1 : 0;
                     }
                 };
                 text = panelComponent.text;
@@ -241,47 +240,51 @@ public class GUIPanel extends AGUIBase {
                         break;
                     }
                     case NAVIGATION_LIGHT: {
-                        buttonVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
-                        text = "NAV";
+                        if (vehicle.definition.motorized.hasNavLights) {
+                            buttonVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+                            text = "NAV";
+                        }
                         break;
                     }
                     case STROBE_LIGHT: {
-                        buttonVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
-                        text = "STROBE";
+                        if (vehicle.definition.motorized.hasStrobeLights) {
+                            buttonVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
+                            text = "STROBE";
+                        }
                         break;
                     }
                     case TAXI_LIGHT: {
-                        buttonVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
-                        text = "TAXI";
+                        if (vehicle.definition.motorized.hasTaxiLights) {
+                            buttonVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
+                            text = "TAXI";
+                        }
                         break;
                     }
                     case LANDING_LIGHT: {
-                        buttonVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
-                        text = "LAND";
+                        if (vehicle.definition.motorized.hasLandingLights) {
+                            buttonVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
+                            text = "LAND";
+                        }
                         break;
                     }
                     case ENGINE_CONTROL: {
                         if (!vehicle.engines.isEmpty()) {
                             PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineIndex == 1) {
+                                if (engineControlIndex == 1) {
                                     //Don't make more than one single-engine switch.
                                     break;
                                 } else {
                                     engine = null;
-                                    engineIndex = 1;
+                                    engineControlIndex = 1;
                                 }
-                                text = "ENGINES";
-                            } else if (engineIndex < vehicle.engines.size()) {
-                                engine = vehicle.engines.get(engineIndex++);
-                                if (engine == null) {
-                                    break;
-                                }
-                                text = "ENGINE " + engineIndex;
+                            } else if (engineControlIndex < vehicle.engines.size()) {
+                                engine = vehicle.engines.get(engineControlIndex++);
                             } else {
                                 break;
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine, true, true);
+                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                            text = "ENGINE";
                         }
                         break;
                     }
@@ -289,22 +292,20 @@ public class GUIPanel extends AGUIBase {
                         if (!vehicle.engines.isEmpty()) {
                             PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineIndex == 1) {
+                                if (engineMagIndex == 1) {
                                     //Don't make more than one single-engine switch.
                                     break;
                                 } else {
                                     engine = null;
-                                    engineIndex = 1;
+                                    engineMagIndex = 1;
                                 }
-                                text = "MAG";
+                            } else if (vehicle.engines.size() > engineMagIndex) {
+                                engine = vehicle.engines.get(engineMagIndex++);
                             } else {
-                                engine = vehicle.engines.get(engineIndex++);
-                                if (engine == null) {
-                                    break;
-                                }
-                                text = "MAG " + engineIndex;
+                                break;
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine, true, false);
+                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                            text = "MAG";
                         }
                         break;
                     }
@@ -312,22 +313,20 @@ public class GUIPanel extends AGUIBase {
                         if (!vehicle.engines.isEmpty()) {
                             PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineIndex == 1) {
+                                if (engineStarterIndex == 1) {
                                     //Don't make more than one single-engine switch.
                                     break;
                                 } else {
                                     engine = null;
-                                    engineIndex = 1;
+                                    engineStarterIndex = 1;
                                 }
-                                text = "START";
+                            } else if (vehicle.engines.size() > engineStarterIndex) {
+                                engine = vehicle.engines.get(engineStarterIndex++);
                             } else {
-                                engine = vehicle.engines.get(engineIndex++);
-                                if (engine == null) {
-                                    break;
-                                }
-                                text = "START " + engineIndex;
+                                break;
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine, false, true);
+                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                            text = "START";
                         }
                         break;
                     }
@@ -371,6 +370,21 @@ public class GUIPanel extends AGUIBase {
                             newComponent = beaconBox;
                             text = "BEACON";
                         }
+                        break;
+                    }
+                    case ROLL_TRIM: {
+                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
+                        text = "ROLL TRIM";
+                        break;
+                    }
+                    case PITCH_TRIM: {
+                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE, 0.1, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM);
+                        text = "PITCH TRIM";
+                        break;
+                    }
+                    case YAW_TRIM: {
+                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_RUDDER_TRIM);
+                        text = "YAW TRIM";
                         break;
                     }
                 }
@@ -431,7 +445,9 @@ public class GUIPanel extends AGUIBase {
             if (visibilityVariables != null) {
                 button.visible = vehicle.isVariableListTrue(visibilityVariables);
             }
-            button.textureYOffset = (int) button.component.textureStart.y + button.component.height * button.getState();
+            if(button.visible) {
+                button.textureYOffset = (int) button.component.textureStart.y + button.component.height * button.getState();
+            }
         }
 
         //Set the beaconBox text color depending on if we have an active beacon.
@@ -484,7 +500,10 @@ public class GUIPanel extends AGUIBase {
     private void handleClickAction(JSONPanelClickAction action) {
         switch (action.action) {
             case INCREMENT: {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, action.variable, action.value));
+                double value = vehicle.getCleanRawVariableValue(action.variable, 0);
+                if (value + action.value >= action.clampMin && value + action.value <= action.clampMax) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, action.variable, action.value));
+                }
                 break;
             }
             case SET: {
@@ -499,7 +518,7 @@ public class GUIPanel extends AGUIBase {
     }
 
     private abstract class GUIPanelButton extends GUIComponentButton {
-        private final JSONPanelComponent component;
+        protected final JSONPanelComponent component;
 
         private GUIPanelButton(JSONPanelComponent component) {
             super(guiLeft + (int) component.pos.x, guiTop + (int) component.pos.y, component.width, component.height, (int) component.textureStart.x, (int) component.textureStart.y, component.width, component.height);
@@ -512,52 +531,69 @@ public class GUIPanel extends AGUIBase {
         }
 
         public int getState() {
-            return component.statusVariable != null ? (int) vehicle.getCleanRawVariableValue(component.statusVariable, 0) : 0;
+            return component.statusVariable != null && vehicle.getCleanRawVariableValue(component.statusVariable, 0) > 0 ? 1 : 0;
         }
     }
 
     private class GUIPanelEngineButton extends GUIPanelButton {
         private final PartEngine engine;
-        private final boolean allowMagneto;
-        private final boolean allowStarter;
 
-        private GUIPanelEngineButton(JSONPanelComponent component, PartEngine engine, boolean allowMagneto, boolean allowStarter) {
+        private GUIPanelEngineButton(JSONPanelComponent component, PartEngine engine) {
             super(component);
             this.engine = engine;
-            this.allowMagneto = allowMagneto;
-            this.allowStarter = allowStarter;
         }
 
         @Override
         public void onClicked(boolean leftSide) {
-            if ((allowMagneto && !allowStarter) || (allowMagneto && leftSide)) {
-                //Left side on multi clicked or any side on single switch.
-                //Turn magneto off, if we haven't already.
+            if (component.specialComponent == SpecialComponent.ENGINE_ON) {
+                //Only one side, toggle magneto state.
                 if (engine != null) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 0));
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                 } else {
                     for (PartEngine engine : vehicle.engines) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 0));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, vehicle.enginesOn ? 0 : 1));
                     }
                 }
-            } else if ((allowStarter && !allowMagneto) || (allowStarter && !leftSide)) {
-                //Right side on multi clicked or any side on single switch.
-                //Either turn magneto on, or engage electric stater.
-                if (engine != null) {
-                    if (!engine.magnetoOn && allowMagneto) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 1));
-                    } else if (!engine.definition.engine.disableAutomaticStarter && allowStarter) {
+            } else if (component.specialComponent == SpecialComponent.ENGINE_START) {
+                //Only one side, engage starter, but only if the magneto is on.
+                if (engine != null ? engine.magnetoOn : vehicle.enginesOn) {
+                    if (engine != null) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.ELECTRIC_STARTER_VARIABLE, 1));
+                    } else {
+                        for (PartEngine engine : vehicle.engines) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.ELECTRIC_STARTER_VARIABLE, 1));
+                        }
+                    }
+                }
+            } else {
+                //Multi-control switch, check which side we clicked first.
+                if (leftSide) {
+                    //Left side.  Turn off magneto.
+                    if (engine != null) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 0));
+                    } else {
+                        for (PartEngine engine : vehicle.engines) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 0));
+                        }
                     }
                 } else {
-                    if (!vehicle.enginesOn && allowMagneto) {
-                        for (PartEngine engine : vehicle.engines) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 1));
-                        }
-                    } else if (vehicle.enginesOn && allowStarter) {
-                        for (PartEngine engine : vehicle.engines) {
-                            if (!engine.definition.engine.disableAutomaticStarter) {
+                    //Right side.  Either turn on magneto, or engage starter.
+                    if (engine != null ? engine.magnetoOn : vehicle.enginesOn) {
+                        //Magneto is on, engage starter.
+                        if (engine != null) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.ELECTRIC_STARTER_VARIABLE, 1));
+                        } else {
+                            for (PartEngine engine : vehicle.engines) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.ELECTRIC_STARTER_VARIABLE, 1));
+                            }
+                        }
+                    } else {
+                        //Magneto is off, turn on.
+                        if (engine != null) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 1));
+                        } else {
+                            for (PartEngine engine : vehicle.engines) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.MAGNETO_VARIABLE, 1));
                             }
                         }
                     }
@@ -567,7 +603,7 @@ public class GUIPanel extends AGUIBase {
 
         @Override
         public void onReleased() {
-            if (allowStarter) {
+            if (component.specialComponent == SpecialComponent.ENGINE_CONTROL || component.specialComponent == SpecialComponent.ENGINE_START) {
                 //Disengage electric starter if possible.
                 if (engine != null) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.ELECTRIC_STARTER_VARIABLE, 0));
@@ -581,10 +617,14 @@ public class GUIPanel extends AGUIBase {
 
         @Override
         public int getState() {
-            if (allowMagneto && !allowStarter) {
+            if (component.specialComponent == SpecialComponent.ENGINE_ON) {
                 return (engine != null ? engine.magnetoOn : vehicle.enginesOn) ? 1 : 0;
-            } else if (!allowMagneto && allowStarter) {
-                return (engine != null ? engine.electricStarterEngaged : vehicle.enginesStarting) ? 1 : 0;
+            } else if (component.specialComponent == SpecialComponent.ENGINE_START) {
+                if (engine != null) {
+                    return engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
+                } else {
+                    return vehicle.enginesOn ? (vehicle.enginesStarting ? 2 : 1) : 0;
+                }
             } else {
                 if (engine != null) {
                     return engine.electricStarterEngaged ? 2 : (engine.magnetoOn ? 1 : 0);
@@ -592,6 +632,50 @@ public class GUIPanel extends AGUIBase {
                     return vehicle.enginesStarting ? 2 : (vehicle.enginesOn ? 1 : 0);
                 }
             }
+        }
+    }
+
+    private class GUIPanelTrimButton extends GUIPanelButton {
+        private final String trimVariable;
+        private final double leftIncrement;
+        private final double bounds;
+        private double trimIncrement;
+        private boolean appliedTrimThisRender;
+        private boolean trimCycleVar;
+
+        private GUIPanelTrimButton(JSONPanelComponent component, String trimVariable, double leftIncrement, double bounds) {
+            super(component);
+            this.trimVariable = trimVariable;
+            this.leftIncrement = leftIncrement;
+            this.bounds = bounds;
+        }
+
+        @Override
+        public void onClicked(boolean leftSide) {
+            trimIncrement = leftSide ? leftIncrement : -leftIncrement;
+        }
+
+        @Override
+        public void onReleased() {
+            trimIncrement = 0;
+        }
+
+        @Override
+        public int getState() {
+            //Trim is sneaky and updates each frame the dial is held to allow for hold-action action.
+            if (trimIncrement != 0 && inClockPeriod(3, 1)) {
+                if (!appliedTrimThisRender) {
+                    double currentTrim = vehicle.getVariable(trimVariable);
+                    if (currentTrim + trimIncrement > -bounds && currentTrim + trimIncrement < bounds) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, trimVariable, trimIncrement, -bounds, bounds));
+                        trimCycleVar = !trimCycleVar;
+                    }
+                    appliedTrimThisRender = true;
+                }
+            } else {
+                appliedTrimThisRender = false;
+            }
+            return trimCycleVar ? 1 : 0;
         }
     }
 

@@ -83,8 +83,6 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -103,13 +101,13 @@ public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
+    private static Map<UUID, BuilderEntityRenderForwarder> playerFollowers = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
     private final Set<BlockPos> knownAirBlocks = new HashSet<>();
 
 
     protected final World world;
     private final IWrapperNBT savedData;
-    protected final Map<UUID, Entity> entitiesByUUID = new HashMap<>();
 
     /**
      * Returns a wrapper instance for the passed-in world instance.
@@ -231,7 +229,16 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperEntity getExternalEntity(UUID entityID) {
-        return WrapperEntity.getWrapperFor(entitiesByUUID.get(entityID));
+        if (world instanceof net.minecraft.world.server.ServerWorld) {
+            return WrapperEntity.getWrapperFor(((net.minecraft.world.server.ServerWorld) world).getEntity(entityID));
+        } else {
+            for (Entity entity : ((net.minecraft.client.world.ClientWorld) world).entitiesForRendering()) {
+                if (entity.getUUID().equals(entityID)) {
+                    return WrapperEntity.getWrapperFor(entity);
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -274,7 +281,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
-        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2, ((WrapperWorld) entity.world).world);
+        BuilderEntityExisting builder = new BuilderEntityExisting(BuilderEntityExisting.E_TYPE2.get(), ((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
         builder.setPos(entity.position.x, entity.position.y, entity.position.z);
         builder.entity = entity;
@@ -463,7 +470,21 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public double getHeight(Point3D position) {
-        return position.y - world.getBlockFloorHeight(new BlockPos(position.x, 0, position.z));
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.canSeeSky(pos)) {
+            return position.y - world.getBlockFloorHeight(pos);
+        } else {
+            //Need to go down till we find a block.
+            while (pos.getY() > 0) {
+                if (!world.isEmptyBlock(pos)) {
+                    //Adjust up since we need to be above the top block. 
+                    pos = pos.above();
+                    break;
+                }
+                pos = pos.below();
+            }
+            return position.y - pos.getY();
+        }
     }
 
     @Override
@@ -478,7 +499,7 @@ public class WrapperWorld extends AWrapperWorld {
                     BlockPos pos = new BlockPos(i, j, k);
                     if (!world.isEmptyBlock(pos)) {
                         BlockState state = world.getBlockState(pos);
-                        VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                        VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
                         if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
                             mutableCollidingAABBs.addAll(collisionShape.toAabbs());
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
@@ -551,7 +572,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (!knownAirBlocks.contains(pos)) {
                         if (world.isLoaded(pos)) {
                             BlockState state = world.getBlockState(pos);
-                            VoxelShape collisionShape = state.getCollisionShape(world, pos);
+                            VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
                             if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
                                 return true;
                             } else {
@@ -676,7 +697,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void setToFire(BlockHitResult hitResult) {
         BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
-        if (isAir(hitResult.position)) {
+        if (isAir(hitResult.position)&&ConfigSystem.settings.general.blockBreakage.value) {
             world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
         }
     }
@@ -845,7 +866,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
+        world.explode(null, location.x, location.y, location.z, (float) strength, flames&&ConfigSystem.settings.general.blockBreakage.value, ConfigSystem.settings.general.blockBreakage.value ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
     }
 
     /**
@@ -865,25 +886,6 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Checks for joined and left entities to ensure we maintain a map of them for lookups.
-     */
-    @SubscribeEvent
-    public void on(EntityJoinWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.put(event.getEntity().getUUID(), event.getEntity());
-        }
-    }
-
-    @SubscribeEvent
-    public void on(EntityLeaveWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            entitiesByUUID.remove(event.getEntity().getUUID());
-        }
-    }
-
-    /**
      * Spawn "follower" entities for the player if they don't exist already.
      * This only happens 3 seconds after the player joins.
      * This delay is done to ensure all chunks are loaded before spawning any followers.
@@ -895,14 +897,15 @@ public class WrapperWorld extends AWrapperWorld {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isClientSide && event.world.equals(world) && event.phase.equals(Phase.END)) {
-            for (PlayerEntity player : event.world.players()) {
-                UUID playerUUID = player.getUUID();
+            for (PlayerEntity mcPlayer : event.world.players()) {
+                UUID playerUUID = mcPlayer.getUUID();
+
                 BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
                 if (gunBuilder != null) {
                     //Gun exists, check if world is the same and it is actually updating.
                     //We check basic states, and then the watchdog bit that gets reset every tick.
                     //This way if we're in the world, but not valid we will know.
-                    if (gunBuilder.level != player.level || !player.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
+                    if (gunBuilder.level != mcPlayer.level || !mcPlayer.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
                         //Follower is not linked.  Remove it and re-create in code below.
                         gunBuilder.remove();
                         playerServerGunBuilders.remove(playerUUID);
@@ -910,21 +913,50 @@ public class WrapperWorld extends AWrapperWorld {
                     } else {
                         ++gunBuilder.idleTickCounter;
                     }
-                } else if (player.isAlive()) {
-                    //Gun does not exist, check if player has been present for 3 seconds and spawn it.
+                }
+
+                BuilderEntityRenderForwarder followerBuilder = playerFollowers.get(playerUUID);
+                if (followerBuilder != null) {
+                    //Follower exists, check if world is the same and it is actually updating.
+                    //We check basic states, and then the watchdog bit that gets reset every tick.
+                    //This way if we're in the world, but not valid we will know.
+                    if (followerBuilder.level != mcPlayer.level || followerBuilder.playerFollowing != mcPlayer || !mcPlayer.isAlive() || !followerBuilder.isAlive() || followerBuilder.idleTickCounter == 20) {
+                        //Follower is not linked.  Remove it and re-create in code below.
+                        followerBuilder.remove();
+                        playerFollowers.remove(playerUUID);
+                        ticksSincePlayerJoin.remove(playerUUID);
+                        followerBuilder = null;
+                    } else {
+                        ++followerBuilder.idleTickCounter;
+                    }
+                }
+
+                if (mcPlayer.isAlive() && (gunBuilder == null || followerBuilder == null)) {
+                    //Some follower doesn't exist.  Check if player has been present for 3 seconds and spawn it.
                     int totalTicksWaited = 0;
                     if (ticksSincePlayerJoin.containsKey(playerUUID)) {
                         totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
                     }
                     if (++totalTicksWaited == 60) {
-                        //Spawn gun.
-                        IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+                        IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
                         IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                        EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
-                        playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                        entity.addPartsPostAddition(playerWrapper, newData);
 
-                        //If the player is new, also add handbooks.
+                        //Spawn gun.
+                        if (gunBuilder == null) {
+                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                            playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                            entity.addPartsPostAddition(playerWrapper, newData);
+                        }
+
+                        //Spawn follower.
+                        if (followerBuilder == null) {
+                            followerBuilder = new BuilderEntityRenderForwarder(mcPlayer);
+                            followerBuilder.loadedFromSavedNBT = true;
+                            playerFollowers.put(playerUUID, followerBuilder);
+                            world.addFreshEntity(followerBuilder);
+                        }
+
+                        //If the player is new, add handbooks.
                         if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));

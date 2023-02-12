@@ -26,6 +26,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
@@ -181,6 +182,18 @@ public class WrapperEntity implements IWrapperEntity {
     private final Point3D mutablePosition = new Point3D();
 
     @Override
+    public Point3D getEyePosition() {
+        AEntityB_Existing riding = getEntityRiding();
+        return riding != null ? riding.riderEyePosition : getPosition().add(0, getEyeHeight() + getSeatOffset(), 0);
+    }
+
+    @Override
+    public Point3D getHeadPosition() {
+        AEntityB_Existing riding = getEntityRiding();
+        return riding != null ? riding.riderHeadPosition : getPosition().add(0, getEyeHeight() + getSeatOffset(), 0);
+    }
+
+    @Override
     public void setPosition(Point3D position, boolean onGround) {
         entity.setPosition(position.x, position.y, position.z);
         //Set fallDistance to 0 to prevent damage.
@@ -327,7 +340,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new DamageSource(damage.language.value) {
+        DamageSource newSource = new EntityDamageSource(damage.language.value, damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
             public ITextComponent getDeathMessage(EntityLivingBase player) {
                 if (damage.entityResponsible != null) {
@@ -371,16 +384,6 @@ public class WrapperEntity implements IWrapperEntity {
             }
         }
     }
-
-    @Override
-    public Point3D getRenderedPosition(float partialTicks) {
-        mutableRenderPosition.x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
-        mutableRenderPosition.y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
-        mutableRenderPosition.z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
-        return mutableRenderPosition;
-    }
-
-    private final Point3D mutableRenderPosition = new Point3D();
 
     @Override
     public void addPotionEffect(JSONPotionEffect effect) {

@@ -33,10 +33,20 @@ public class InterfaceInterface {
     }
 
     public static BuilderEntityExisting toExternal(AEntityB_Existing entity) {
-        for (Entity mcEntity : ((WrapperWorld) entity.world).entitiesByUUID.values()) {
-            if (mcEntity instanceof BuilderEntityExisting) {
-                if (entity.equals(((BuilderEntityExisting) mcEntity).entity)) {
-                    return (BuilderEntityExisting) mcEntity;
+        if (((WrapperWorld) entity.world).world instanceof net.minecraft.world.server.ServerWorld) {
+            for (Entity mcEntity : ((net.minecraft.world.server.ServerWorld) ((WrapperWorld) entity.world).world).getAllEntities()) {
+                if (mcEntity instanceof BuilderEntityExisting) {
+                    if (entity.equals(((BuilderEntityExisting) mcEntity).entity)) {
+                        return (BuilderEntityExisting) mcEntity;
+                    }
+                }
+            }
+        } else {
+            for (Entity mcEntity : ((net.minecraft.client.world.ClientWorld) ((WrapperWorld) entity.world).world).entitiesForRendering()) {
+                if (mcEntity instanceof BuilderEntityExisting) {
+                    if (entity.equals(((BuilderEntityExisting) mcEntity).entity)) {
+                        return (BuilderEntityExisting) mcEntity;
+                    }
                 }
             }
         }

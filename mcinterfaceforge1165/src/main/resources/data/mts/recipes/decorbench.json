@@ -16,8 +16,7 @@
             "item": "minecraft:comparator"
         },
         "d": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         }
     },
     "result": {

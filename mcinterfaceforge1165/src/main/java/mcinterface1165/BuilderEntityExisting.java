@@ -31,6 +31,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
@@ -46,7 +47,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase {
-    protected static EntityType<BuilderEntityExisting> E_TYPE2;
+    protected static RegistryObject<EntityType<BuilderEntityExisting>> E_TYPE2;
     private EntitySize mutableDims = new EntitySize(1.0F, 1.0F, false);
 
     /**

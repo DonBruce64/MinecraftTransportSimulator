@@ -11,9 +11,9 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
-import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -27,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -44,6 +45,8 @@ public final class PartSeat extends APart {
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
         this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
+        this.zoomLevel = data.getInteger("zoomLevel");
+        this.cameraIndex = data.getInteger("cameraIndex");
     }
 
     @Override
@@ -91,7 +94,7 @@ public final class PartSeat extends APart {
                             if (activeGunItem == null) {
                                 if (!placementDefinition.canDisableGun) {
                                     setNextActiveGun();
-                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this));
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this, SeatAction.CHANGE_GUN));
                                 }
                             }
                         }
@@ -118,7 +121,7 @@ public final class PartSeat extends APart {
 
         //Don't have any interaction boxes if we are on a client and the player is sitting in us.
         //This keeps us from clicking our own seat when we want to click other things.
-        if (world.isClient() && rider != null && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+        if (riderIsClient) {
             allInteractionBoxes.clear();
         }
     }
@@ -156,6 +159,23 @@ public final class PartSeat extends APart {
 
         //Reset active index so that we don't risk going out of range.
         gunGroupIndex = 0;
+
+        //Populate camera list.
+        if (masterEntity.definition.rendering != null && masterEntity.definition.rendering.cameraObjects != null) {
+            for (JSONCameraObject camera : masterEntity.definition.rendering.cameraObjects) {
+                cameras.add(camera);
+                cameraEntities.put(camera, masterEntity);
+            }
+        } else {
+            for (APart part : masterEntity.allParts) {
+                if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
+                    for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
+                        cameras.add(camera);
+                        cameraEntities.put(camera, part);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -170,8 +190,7 @@ public final class PartSeat extends APart {
                 }
             }
 
-            boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
-            if (clientRiderOnVehicle) {
+            if (riderIsClient && vehicleOn != null) {
                 //Open the HUD.  This will have been closed in the remove call.
                 new GUIHUD(vehicleOn, this);
 
@@ -225,14 +244,9 @@ public final class PartSeat extends APart {
                 --vehicleOn.controllerCount;
             }
 
-            boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
-            if (clientRiderOnVehicle) {
+            if (riderIsClient && vehicleOn != null) {
                 //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-                if (vehicleOn.definition.motorized.isAircraft) {
-                    AGUIBase.closeIfOpen(GUIPanelAircraft.class);
-                } else {
-                    AGUIBase.closeIfOpen(GUIPanel.class);
-                }
+                AGUIBase.closeIfOpen(GUIPanel.class);
                 AGUIBase.closeIfOpen(GUIHUD.class);
                 AGUIBase.closeIfOpen(GUIRadio.class);
 
@@ -314,7 +328,7 @@ public final class PartSeat extends APart {
             //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
-            if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
+            if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && riderIsClient) {
                 ControlSystem.controlMultipart(masterEntity, placementDefinition.isController);
             }
             return true;
@@ -417,7 +431,7 @@ public final class PartSeat extends APart {
             case ("seat_occupied"):
                 return rider != null ? 1 : 0;
             case ("seat_occupied_client"):
-                return InterfaceManager.clientInterface.getClientPlayer().equals(rider) ? 1 : 0;
+                return riderIsClient ? 1 : 0;
             case ("seat_rider_yaw"):
                 return rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.y + (riderRelativeOrientation.angles.y - prevRiderRelativeOrientation.angles.y) * partialTicks : riderRelativeOrientation.angles.y) : 0;
             case ("seat_rider_pitch"):
@@ -435,6 +449,8 @@ public final class PartSeat extends APart {
             data.setString("activeGunSystemName", activeGunItem.definition.systemName);
             data.setString("activeGunSubName", activeGunItem.subDefinition.subName);
         }
+        data.setInteger("zoomLevel", zoomLevel);
+        data.setInteger("cameraIndex", cameraIndex);
         return data;
     }
 }

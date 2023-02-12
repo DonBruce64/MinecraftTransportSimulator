@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.6.0-BETA";
+    public static final String MODVER = "22.6.0";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 	
 	@EventHandler
@@ -68,7 +68,7 @@ public final class InterfaceLoader {
 
             //Parse the packs.
             PackParser.addDefaultItems();
-            PackParser.parsePacks(packDirectories, event.getSide().isClient());
+            PackParser.parsePacks(packDirectories);
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }

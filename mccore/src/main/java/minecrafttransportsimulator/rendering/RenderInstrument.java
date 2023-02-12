@@ -78,6 +78,7 @@ public final class RenderInstrument {
                 } else {
                     //Init variables.
                     renderObject = entity.instrumentRenderables.get(slot).get(i);
+                    renderObject.isTranslucent = component.overlayTexture;
                     renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
                     renderObject.transform.set(transform);
                     renderObject.transform.applyTranslation(0.0, 0.0, i * 0.0001);

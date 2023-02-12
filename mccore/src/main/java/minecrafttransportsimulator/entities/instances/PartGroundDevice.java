@@ -52,7 +52,7 @@ public class PartGroundDevice extends APart {
     //Internal states for control and physics.
     public boolean isFlat;
     public boolean contactThisTick = false;
-    private boolean animateAsOnGround;
+    public boolean animateAsOnGround;
     private int ticksCalcsSkipped = 0;
     private double prevAngularVelocity;
     private boolean prevActive = true;

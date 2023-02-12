@@ -6,10 +6,16 @@ import java.util.List;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.client.network.play.IClientPlayNetHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketThreadUtil;
+import net.minecraft.network.play.server.SSpawnObjectPacket;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -20,6 +26,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * @author don_bruce
  */
+//Need to extend LivingEntity since spawn syncing packets don't work with the base Entity class.
 public abstract class ABuilderEntityBase extends Entity {
     protected static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, InterfaceLoader.MODID);
     protected static EntityType<ABuilderEntityBase> E_TYPE;
@@ -96,7 +103,7 @@ public abstract class ABuilderEntityBase extends Entity {
             if (!playersRequestingData.isEmpty()) {
                 for (IWrapperPlayer player : playersRequestingData) {
                     IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                    addAdditionalSaveData(((WrapperNBT) data).tag);
+                    saveWithoutId(((WrapperNBT) data).tag);
                     player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
                 }
                 playersRequestingData.clear();
@@ -130,28 +137,71 @@ public abstract class ABuilderEntityBase extends Entity {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundNBT tag) {
+    public void load(CompoundNBT tag) {
         //Save the NBT for loading in the next update call.
         lastLoadedNBT = tag;
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundNBT tag) {
+    public CompoundNBT saveWithoutId(CompoundNBT tag) {
         //Need to have this here as some mods will load us from NBT and then save us back
         //without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
         //If we did tick, then the last loaded will be null and this doesn't apply.
         if (lastLoadedNBT != null) {
             tag.merge(lastLoadedNBT);
         }
+        return tag;
     }
 
     //Junk methods.
+    @Override
+    protected void addAdditionalSaveData(CompoundNBT pCompound) {
+    }
+
+    @Override
+    protected void readAdditionalSaveData(CompoundNBT pCompound) {
+    }
+
     @Override
     protected void defineSynchedData() {
     }
 
     @Override
     public IPacket<?> getAddEntityPacket() {
-        return null;
+        //Don't let the default handler code run, this will not work since it doesn't allow for generic entities.
+        return new CustomSpawnPacket(this);
+    }
+
+    private static class CustomSpawnPacket extends SSpawnObjectPacket {
+
+        private CustomSpawnPacket(ABuilderEntityBase builder) {
+            super(builder);
+        }
+
+        @SuppressWarnings("deprecation")
+        @Override
+        public void handle(IClientPlayNetHandler pHandler) {
+            ClientPlayNetHandler handler = (ClientPlayNetHandler) pHandler;
+            Minecraft minecraft = Minecraft.getInstance();
+            PacketThreadUtil.ensureRunningOnSameThread(this, handler, minecraft);
+
+            Entity entity = EntityType.create(Registry.ENTITY_TYPE.getId(getType()), minecraft.level);
+            if (entity != null) {
+                int i = getId();
+                double d0 = getX();
+                double d1 = getY();
+                double d2 = getZ();
+
+                entity.setPacketCoordinates(d0, d1, d2);
+                entity.moveTo(d0, d1, d2);
+                entity.xRot = getxRot() * 360 / 256.0F;
+                entity.yRot = getyRot() * 360 / 256.0F;
+                entity.setId(i);
+                entity.setUUID(getUUID());
+                handler.getLevel().putNonPlayerEntity(i, entity);
+            } else {
+                LOGGER.warn("Skipping Entity of type {}", getType());
+            }
+        }
     }
 }

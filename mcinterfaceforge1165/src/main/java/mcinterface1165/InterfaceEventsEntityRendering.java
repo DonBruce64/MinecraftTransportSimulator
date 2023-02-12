@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -19,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
@@ -28,6 +28,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
@@ -56,8 +57,78 @@ public class InterfaceEventsEntityRendering {
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
+    private static final Point3D playerPosition = new Point3D();
+    private static final Point3D playerPrevPosition = new Point3D();
+    private static final Point3D cameraAdjustedPosition = new Point3D();
+    private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
     private static int lastScreenWidth;
     private static int lastScreenHeight;
+
+    /**
+     * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
+     */
+    @SubscribeEvent
+    public static void on(CameraSetup event) {
+        ActiveRenderInfo info = event.getInfo();
+        if (info.getEntity() instanceof PlayerEntity) {
+            IWrapperPlayer player = WrapperPlayer.getWrapperFor((PlayerEntity) info.getEntity());
+            cameraAdjustedPosition.set(0, 0, 0);
+            cameraAdjustedOrientation.setToZero();
+            if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
+                //Set helper to the current camera position.
+                PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
+                playerPosition.set(mcPlayer.position().x, mcPlayer.position().y, mcPlayer.position().z);
+                playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
+
+                //Need to transpose the rotation so it applies opposite.
+                //FIXME this won't work, render info don't work either as we need to translate after rotation, not before.
+                //That's done in GameRender#renderLevel line 615, or right after net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup (this event).
+                //After this, set the event value to 0 since we've done stack multiplcation.
+                //So get stack, apply cameraAdjustedOrientation, apply cameraAdjustedPosition, profit.
+                //Might need to rotate the orientation by 180, might not.
+                /*double temp;
+                temp = cameraAdjustedOrientation.m01;
+                cameraAdjustedOrientation.m01 = cameraAdjustedOrientation.m10;
+                cameraAdjustedOrientation.m10 = temp;
+                
+                temp = cameraAdjustedOrientation.m02;
+                cameraAdjustedOrientation.m02 = cameraAdjustedOrientation.m20;
+                cameraAdjustedOrientation.m20 = temp;
+                
+                temp = cameraAdjustedOrientation.m12;
+                cameraAdjustedOrientation.m12 = cameraAdjustedOrientation.m21;
+                cameraAdjustedOrientation.m21 = temp;
+                
+                cameraAdjustments.resetTransforms();
+                cameraAdjustments.rotateY(180);
+                cameraAdjustments.multiply(cameraAdjustedOrientation);
+                cameraAdjustments.convertToAngles();
+                */
+
+                //Set the player's position to the calculated camera position, setup the render info, then set it back.
+                //This tricks MC into rendering where we want it to during the subsequent steps.
+                mcPlayer.setPos(cameraAdjustedPosition.x, cameraAdjustedPosition.y - player.getEyeHeight(), cameraAdjustedPosition.z);
+                mcPlayer.xo = mcPlayer.position().x;
+                mcPlayer.yo = mcPlayer.position().y;
+                mcPlayer.zo = mcPlayer.position().z;
+
+                Minecraft minecraft = Minecraft.getInstance();
+                info.setup(Minecraft.getInstance().level, mcPlayer, !minecraft.options.getCameraType().isFirstPerson(), minecraft.options.getCameraType().isMirrored(), (float) event.getRenderPartialTicks());
+
+                mcPlayer.setPos(playerPosition.x, playerPosition.y, playerPosition.z);
+                mcPlayer.xo = playerPrevPosition.x;
+                mcPlayer.yo = playerPrevPosition.y;
+                mcPlayer.zo = playerPrevPosition.z;
+
+                //Now apply the orientation changes.
+                cameraAdjustedOrientation.convertToAngles();
+                event.setYaw((float) -cameraAdjustedOrientation.angles.y);
+                event.setPitch((float) cameraAdjustedOrientation.angles.x);
+                event.setRoll((float) cameraAdjustedOrientation.angles.z);
+            }
+        }
+    }
 
     /**
      * Renders all overlay things.  This is essentially anything that's a 2D render, such as the main overlay,
@@ -90,10 +161,9 @@ public class InterfaceEventsEntityRendering {
             int screenHeight = (int) displaySize;
             double[] xPos = new double[1];
             double[] yPos = new double[1];
-            //FIXME this might not work if units aren't the same.
-            GLFW.glfwGetCursorPos(Minecraft.getInstance().getWindow().getWindow(), xPos, yPos);
+            GLFW.glfwGetCursorPos(event.getWindow().getWindow(), xPos, yPos);
             int mouseX = (int) (xPos[0] * screenWidth / Minecraft.getInstance().getWindow().getWidth());
-            int mouseY = (int) (screenHeight - yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight() - 1);
+            int mouseY = (int) (yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight());
 
             float partialTicks = event.getPartialTicks();
             boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
@@ -101,7 +171,8 @@ public class InterfaceEventsEntityRendering {
                 lastScreenWidth = screenWidth;
                 lastScreenHeight = screenHeight;
             }
-            InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+
+            InterfaceRender.renderGUI(event.getMatrixStack(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
         }
     }
 
@@ -121,7 +192,7 @@ public class InterfaceEventsEntityRendering {
         AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
         //This may be null if MC sets this player as riding before the actual entity has time to load NBT.
         if (ridingEntity != null) {
-            GL11.glPushMatrix();
+            event.getMatrixStack().pushPose();
             //Get orientation and scale for entity.
             //Head is relative to the body.
             ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
@@ -162,7 +233,7 @@ public class InterfaceEventsEntityRendering {
             entity.yBodyRotO = 0;
 
             //Translate the rider to the camera so it rotates on the proper coordinate system.
-            PlayerEntity cameraEntity = InterfaceEventsCamera.fakeCameraPlayerEntity;
+            PlayerEntity cameraEntity = Minecraft.getInstance().player;
             if (cameraEntity != null) {
                 //Get delta between camera and rendered entity.
                 Vector3d cameraEntityPos = cameraEntity.position();
@@ -171,12 +242,13 @@ public class InterfaceEventsEntityRendering {
 
                 //Apply translations and rotations to move entity to correct position relative to the camera entity.
                 riderTotalTransformation.resetTransforms();
-                riderTotalTransformation.setTranslation(deltaDistance);
+                //riderTotalTransformation.setTranslation(deltaDistance);
                 riderTotalTransformation.applyRotation(riderBodyOrientation);
                 riderTotalTransformation.applyScaling(entityScale);
-                riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-                riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
+                //riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+                //riderTotalTransformation.applyInvertedTranslation(deltaDistance);
+                //FIXME Doesn't work, but won't know till third person rendering works on vehicles.
+                event.getMatrixStack().last().pose().multiply(InterfaceRender.convertMatrix4f(riderTotalTransformation));
             }
 
             needToPopMatrix = true;
@@ -287,7 +359,7 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
-            GL11.glPopMatrix();
+            event.getMatrixStack().popPose();
         }
         if (heldStackHolder != null) {
             PlayerEntity player = (PlayerEntity) event.getEntity();

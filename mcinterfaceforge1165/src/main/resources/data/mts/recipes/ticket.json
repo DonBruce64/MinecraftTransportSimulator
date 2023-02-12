@@ -10,12 +10,10 @@
             "item": "minecraft:paper"
         },
         "b": {
-            "type": "forge:ore_dict",
-            "ore": "dyeBlack"
+            "item": "minecraft:black_dye"
         },
         "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeYellow"
+            "item": "minecraft:yellow_dye"
         }
     },
     "result": {

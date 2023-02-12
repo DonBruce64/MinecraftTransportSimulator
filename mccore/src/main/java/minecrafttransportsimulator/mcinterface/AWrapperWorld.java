@@ -205,7 +205,8 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract boolean isBlockAboveTopSlab(Point3D position);
 
     /**
-     * Returns the distance from the passed-in position to the top block in the world, at the position's X/Z coords.
+     * Returns the distance from the passed-in position to highest block below this position in the world, at the position's X/Z coords.
+     * This may or may not be the highest block in the column depending on block layout.
      */
     public abstract double getHeight(Point3D position);
 

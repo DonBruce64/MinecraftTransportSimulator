@@ -132,16 +132,20 @@ public class InterfaceJEI implements IModPlugin {
 
         @Override
         public void setIngredients(PackRecipeWrapper recipe, IIngredients ingredients) {
-            List<List<ItemStack>> inputs = new ArrayList<>();
-            for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair)) {
-                List<ItemStack> stacks = new ArrayList<>();
-                for (IWrapperItemStack stack : component.possibleItems) {
-                    stacks.add(((WrapperItemStack) stack).stack);
+            //FIXME make sure this works when we have working crafting recipes.
+            List<PackMaterialComponent> components = PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair);
+            if (components != null) {
+                List<List<ItemStack>> inputs = new ArrayList<>();
+                for (PackMaterialComponent component : components) {
+                    List<ItemStack> stacks = new ArrayList<>();
+                    for (IWrapperItemStack stack : component.possibleItems) {
+                        stacks.add(((WrapperItemStack) stack).stack);
+                    }
+                    inputs.add(stacks);
                 }
-                inputs.add(stacks);
+                ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+                ingredients.setOutput(VanillaTypes.ITEM, ((WrapperItemStack) recipe.packItem.getNewStack(null)).stack);
             }
-            ingredients.setInputLists(VanillaTypes.ITEM, inputs);
-            ingredients.setOutput(VanillaTypes.ITEM, ((WrapperItemStack) recipe.packItem.getNewStack(null)).stack);
         }
 
         @Override

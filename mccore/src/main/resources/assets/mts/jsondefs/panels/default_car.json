@@ -77,7 +77,7 @@
 				"textureStart" : [120, 216, 0],
 				"text" : "REVERSE",
 				"visibilityVariables" : [["reverser_present"]],
-				"statusVariable" : "autopilot_active",
+				"statusVariable" : "reverser",
 				"clickAction" : {
 					"variable" : "reverser",
 					"action" : "toggle"

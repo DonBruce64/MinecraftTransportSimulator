@@ -785,6 +785,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             case ("light_total"):
                 return world.getLightBrightness(position, true);
             case ("terrain_distance"):
+
+                System.out.println(definition.systemName);
                 return world.getHeight(position);
             case ("inliquid"):
                 return world.isBlockLiquid(position) ? 1 : 0;
@@ -838,7 +840,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         case ("distance"):
                             return contact.position.distanceTo(position);
                         case ("direction"):
-                            return Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+                            double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+                        while (delta < -180)
+                            delta += 360;
+                        while (delta > 180)
+                            delta -= 360;
+                        return delta;
                         case ("speed"):
                             return contact.velocity;
                         case ("altitude"):

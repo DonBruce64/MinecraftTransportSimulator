@@ -28,7 +28,7 @@ public final class ModelParserOBJ extends AModelParser {
         List<RenderableObject> objectList = new ArrayList<>();
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
+            reader = new BufferedReader(new InputStreamReader(InterfaceManager.coreInterface.getPackResource(modelLocation)));
         } catch (Exception e) {
             throw new NullPointerException("Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
         }

@@ -21,9 +21,10 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
-import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -32,7 +33,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
-    private static boolean repeatEnabled = false;
     private static int lastScrollValue;
 
     //Joystick variables.
@@ -174,17 +174,30 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public String getNameForKeyCode(int keyCode) {
-        return GLFW.glfwGetKeyName(keyCode, GLFW.glfwGetKeyScancode(keyCode));
+        return InputMappings.getKey(keyCode, 0).getDisplayName().getString();
     }
 
     @Override
     public int getKeyCodeForName(String name) {
-        for (int i = 0; i < GLFW.GLFW_KEY_LAST; ++i) {
-            if (name.equals(GLFW.glfwGetKeyName(i, 0))) {
-                return i;
+        //Convert input to new control system prior to checking.
+        //We only need to convert defaults.
+        switch (name) {
+            case "RSHIFT":
+                return InputMappings.getKey("key.keyboard.right.shift").getValue();
+            case "PRIOR":
+                return InputMappings.getKey("key.keyboard.page.up").getValue();
+            case "NEXT":
+                return InputMappings.getKey("key.keyboard.page.down").getValue();
+            case "SCROLL":
+                return InputMappings.getKey("key.keyboard.scroll.lock").getValue();
+            default: {
+                if (name.contains("NUMPAD")) {
+                    return InputMappings.getKey("key.keyboard.keypad." + name.substring(name.length() - 1)).getValue();
+                } else {
+                    return InputMappings.getKey("key.keyboard." + name.toLowerCase()).getValue();
+                }
             }
         }
-        return GLFW.GLFW_KEY_UNKNOWN;
     }
 
     @Override
@@ -194,7 +207,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public void setKeyboardRepeat(boolean enabled) {
-        repeatEnabled = enabled;
+        //Nothing to do as these are always enabled it would seem.
     }
 
     @Override
@@ -308,7 +321,9 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public int getTrackedMouseWheel() {
-        return lastScrollValue;
+        int returnValue = lastScrollValue;
+        lastScrollValue = 0;
+        return returnValue;
     }
 
     @Override
@@ -349,36 +364,10 @@ public class InterfaceInput implements IInterfaceInput {
      * Gets mouse scroll data, since we have to register a listner, and MC already does this for us.
      */
     @SubscribeEvent
-    public static void on(MouseScrollEvent event) {
-        lastScrollValue = (int) event.getScrollDelta();
-    }
-
-    /**
-     * Custom MouseHelper class that can have movemgent checks inhibited based on
-     * settings in this class.  Allows us to prevent player movement.
-     */
-    /*private static class InhibitableMouseHelper extends MouseHelper {
-        private int deltaXForced;
-        private int deltaYForced;
-    
-        @Override
-        public void mouseXYChange() {
-            //If the mouse is disabled, capture the deltas and prevent MC from seeing them.
-            //Don't capture high deltas, as this is likely due to the game pausing.
-            super.mouseXYChange();
-            if (!enableMouse) {
-                deltaXForced = deltaX;
-                if (deltaXForced > 100) {
-                    deltaXForced = 0;
-                }
-                deltaYForced = deltaY;
-                if (deltaYForced > 100) {
-                    deltaYForced = 0;
-                }
-                deltaX = 0;
-                deltaY = 0;
-            }
+    public static void on(GuiScreenEvent.MouseScrollEvent.Post event) {
+        if (InterfaceManager.clientInterface.isGUIOpen()) {
+            lastScrollValue = (int) event.getScrollDelta();
+            event.setCanceled(true);
         }
-    }*/
-
+    }
 }

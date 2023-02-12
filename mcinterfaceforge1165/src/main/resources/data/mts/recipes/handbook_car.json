@@ -13,8 +13,7 @@
             "item": "minecraft:book"
         },
         "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeBlack"
+						"item": "minecraft:black_dye"
         },
         "d": {
             "item": "minecraft:paper"

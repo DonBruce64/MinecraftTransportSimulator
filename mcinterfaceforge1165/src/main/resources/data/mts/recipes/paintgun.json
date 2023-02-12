@@ -13,8 +13,7 @@
             "item": "minecraft:dispenser"
         },
         "c": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "d": {
             "item": "minecraft:stick"

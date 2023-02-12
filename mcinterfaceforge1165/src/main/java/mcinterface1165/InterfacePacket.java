@@ -144,6 +144,7 @@ class InterfacePacket implements IInterfacePacket {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }
             }
+            ctx.get().setPacketHandled(true);
         }
     }
 }

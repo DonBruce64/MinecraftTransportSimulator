@@ -240,7 +240,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Update orientation to always face the player.
         if (!definition.axisAligned) {
-            orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceManager.clientInterface.getCameraPosition()).subtract(position), true);
+            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
         }
 
         //Check if we need to change textures.

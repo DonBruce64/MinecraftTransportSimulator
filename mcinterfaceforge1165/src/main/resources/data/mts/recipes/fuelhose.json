@@ -7,12 +7,10 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "dyeBlack"
+            "item": "minecraft:black_dye"
         },
         "b": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "c": {
             "item": "minecraft:leather"

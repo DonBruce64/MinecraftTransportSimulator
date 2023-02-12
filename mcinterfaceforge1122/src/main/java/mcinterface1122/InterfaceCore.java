@@ -1,5 +1,6 @@
 package mcinterface1122;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,11 @@ class InterfaceCore implements IInterfaceCore {
         return Loader.instance().getIndexedModList().get(modID).getName();
     }
     
+    @Override
+    public InputStream getPackResource(String resource) {
+        return InterfaceCore.class.getResourceAsStream(resource);
+    }
+
     @Override
     public void logError(String message) {
     	InterfaceLoader.LOGGER.error(message);

@@ -20,6 +20,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
@@ -28,7 +29,7 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**
  * A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
- * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does
+ * to {@link GUIHUD} and {@link GUIPanel} that uses the textures from those GUIs, but does
  * custom rendering over them rather than the usual rendering routines.  This prevents players
  * from messing with the panel while adding instruments, as well as easier tracking of the
  * spots where blank instruments are located (normally those aren't saved in variables).
@@ -39,6 +40,7 @@ public class GUIInstruments extends AGUIBase {
 
     //GUIs components created at opening.
     private final EntityVehicleF_Physics vehicle;
+    private final JSONPanel panelDef;
     private final IWrapperPlayer player;
     private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<>();
 
@@ -63,6 +65,7 @@ public class GUIInstruments extends AGUIBase {
     public GUIInstruments(EntityVehicleF_Physics vehicle) {
         super();
         this.vehicle = vehicle;
+        this.panelDef = GUIPanel.getDefinitionFor(vehicle);
         this.player = InterfaceManager.clientInterface.getClientPlayer();
     }
 
@@ -245,12 +248,12 @@ public class GUIInstruments extends AGUIBase {
 
     @Override
     public int getWidth() {
-        return AGUIPanel.PANEL_WIDTH;
+        return panelDef.panel.backgroundWidth;
     }
 
     @Override
     public int getHeight() {
-        return AGUIPanel.PANEL_HEIGHT;
+        return panelDef.panel.backgroundHeight;
     }
 
     @Override

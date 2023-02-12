@@ -96,11 +96,9 @@ public final class PartInteractable extends APart {
         double explosivePower = getExplosiveContribution();
         if (explosivePower > 0 && isValid) {
             super.destroy(box);
-            if (definition.interactable.hasBlowoutPanels) {
-                world.spawnExplosion(position, 0.25, false);
-            } else {
-                world.spawnExplosion(position, explosivePower, true);
+            if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
+                world.spawnExplosion(position, explosivePower, true);
             }
         } else {
             super.destroy(box);

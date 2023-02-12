@@ -15,19 +15,18 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ChatVisibility;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -37,7 +36,9 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -53,8 +54,6 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean actuallyThirdPerson;
     private static boolean changedCameraState;
     private static boolean changeCameraRequest;
-    private static BuilderEntityRenderForwarder activeFollower;
-    private static int ticksSincePlayerJoin;
 
     @Override
     public boolean isGamePaused() {
@@ -63,18 +62,26 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public String getLanguageName() {
-        return Minecraft.getInstance().getLanguageManager().getSelected().getCode();
+        if (Minecraft.getInstance().getLanguageManager() != null) {
+            return Minecraft.getInstance().getLanguageManager().getSelected().getCode();
+        } else {
+            return "en_us";
+        }
     }
 
     @Override
     public boolean usingDefaultLanguage() {
-        return Minecraft.getInstance().getLanguageManager().getSelected().getCode().equals("en_us");
+        if (Minecraft.getInstance().getLanguageManager() != null) {
+            return Minecraft.getInstance().getLanguageManager().getSelected().getCode().equals("en_us");
+        } else {
+            return true;
+        }
     }
 
     @Override
     public String getFluidName(String fluidID) {
         Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidID));
-        return fluid != null ? new FluidStack(fluid, 1).getDisplayName().toString() : "INVALID";
+        return fluid != null ? new FluidStack(fluid, 1).getDisplayName().getString() : "INVALID";
     }
 
     @Override
@@ -88,7 +95,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public boolean isChatOpen() {
-        return Minecraft.getInstance().options.chatVisibility != ChatVisibility.HIDDEN;
+        return Minecraft.getInstance().screen instanceof ChatScreen;
     }
 
     @Override
@@ -118,7 +125,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public long getPackedDisplaySize() {
-        return (((long) Minecraft.getInstance().getWindow().getWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getHeight() & 0xffffffffL);
+        return (((long) Minecraft.getInstance().getWindow().getGuiScaledWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getGuiScaledHeight() & 0xffffffffL);
     }
 
     @Override
@@ -197,11 +204,6 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public IWrapperEntity getRenderViewEntity() {
-        return WrapperEntity.getWrapperFor(Minecraft.getInstance().getCameraEntity());
-    }
-
-    @Override
     public Point3D getCameraPosition() {
         Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         mutablePosition.set(position.x, position.y, position.z);
@@ -224,8 +226,40 @@ public class InterfaceClient implements IInterfaceClient {
         List<String> tooltipText = new ArrayList<>();
         List<ITextComponent> tooltipLines = ((WrapperItemStack) stack).stack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         //Add grey formatting text to non-first line tooltips.
-        for (int i = 1; i < tooltipLines.size(); ++i) {
-            tooltipText.set(i, TextFormatting.GRAY + tooltipLines.get(i).getString());
+        for (int i = 0; i < tooltipLines.size(); ++i) {
+            ITextComponent component = tooltipLines.get(i);
+            Style style = component.getStyle();
+            String stringToAdd = "";
+            if (style.isBold()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.BOLD_FORMATTING_CHAR;
+            }
+            if (style.isItalic()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.ITALIC_FORMATTING_CHAR;
+            }
+            if (style.isUnderlined()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.UNDERLINE_FORMATTING_CHAR;
+            }
+            if (style.isStrikethrough()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.STRIKETHROUGH_FORMATTING_CHAR;
+            }
+            if (style.isObfuscated()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.RANDOM_FORMATTING_CHAR;
+            }
+            if (style.getColor() != null) {
+                TextFormatting legacyColor = null;
+                for (TextFormatting format : TextFormatting.values()) {
+                    if (format.isColor()) {
+                        if (style.getColor().equals(Color.fromLegacyFormat(format))) {
+                            legacyColor = format;
+                            break;
+                        }
+                    }
+                }
+                if (legacyColor != null) {
+                    stringToAdd += RenderText.FORMATTING_CHAR + Integer.toHexString(legacyColor.ordinal());
+                }
+            }
+            tooltipText.add(stringToAdd + tooltipLines.get(i).getString());
         }
         return tooltipText;
     }
@@ -280,28 +314,6 @@ public class InterfaceClient implements IInterfaceClient {
                         if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
                             new GUIPackMissing();
                         }
-                    }
-                }
-
-                if (activeFollower != null) {
-                    //Follower exists, check if world is the same and it is actually updating.
-                    //We check basic states, and then the watchdog bit that gets reset every tick.
-                    //This way if we're in the world, but not valid we will know.
-                    PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-                    if (activeFollower.level != mcPlayer.level || activeFollower.playerFollowing != mcPlayer || !mcPlayer.isAlive() || !activeFollower.isAlive() || activeFollower.idleTickCounter == 20) {
-                        //Follower is not linked.  Remove it and re-create in code below.
-                        activeFollower.remove();
-                        activeFollower = null;
-                        ticksSincePlayerJoin = 0;
-                    } else {
-                        ++activeFollower.idleTickCounter;
-                    }
-                } else {
-                    //Follower does not exist, check if player has been present for 3 seconds and spawn it.
-                    if (++ticksSincePlayerJoin == 60) {
-                        activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
-                        activeFollower.loadedFromSavedNBT = true;
-                        clientWorld.world.addFreshEntity(activeFollower);
                     }
                 }
             }

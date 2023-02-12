@@ -7,12 +7,10 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "plankWood"
+            "tag": "minecraft:planks"
         },
         "b": {
-            "type": "forge:ore_dict",
-            "ore": "fenceWood"
+            "tag": "minecraft:wooden_fences"
         },
         "c": {
             "item": "minecraft:glass_pane"

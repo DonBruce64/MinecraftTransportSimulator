@@ -10,6 +10,7 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -20,12 +21,12 @@ import net.minecraftforge.items.ItemHandlerHelper;
  * @author don_bruce
  */
 public class BuilderTileEntityInventoryContainer extends BuilderTileEntity implements IInventory, IItemHandler {
-    protected static TileEntityType<BuilderTileEntityInventoryContainer> TE_TYPE2;
+    protected static RegistryObject<TileEntityType<BuilderTileEntityInventoryContainer>> TE_TYPE2;
 
     private EntityInventoryContainer inventory;
 
     public BuilderTileEntityInventoryContainer() {
-        super(TE_TYPE2);
+        super(TE_TYPE2.get());
     }
 
     @Override

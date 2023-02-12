@@ -47,7 +47,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final BoundingBox proxBounds;
 
     //States
-    private int impactDesapawnTimer = -1;
+    private int impactDespawnTimer = -1;
     private Point3D targetPosition;
     public double targetDistance;
     private double distanceTraveled;
@@ -121,22 +121,22 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
-        if (impactDesapawnTimer >= 0) {
-            if (impactDesapawnTimer-- == 0) {
+        if (impactDespawnTimer >= 0) {
+            if (blockToBreakPos != null) {
+                world.destroyBlock(blockToBreakPos, true);
+            }
+            if (impactDespawnTimer-- == 0) {
                 remove();
-                if (blockToBreakPos != null) {
-                    world.destroyBlock(blockToBreakPos, true);
-                }
             }
             return;
         }
 
         //Add gravity and slowdown forces, if we don't have a burning motor.
-        if (ticksExisted > definition.bullet.burnTime) {
+        if (ticksExisted > definition.bullet.burnTime || ticksExisted < definition.bullet.accelerationDelay) {
             if (definition.bullet.slowdownSpeed > 0) {
                 motion.add(motion.copy().normalize().scale(-definition.bullet.slowdownSpeed));
             }
-            motion.y -= gun.definition.gun.gravitationalVelocity;
+            motion.y -= definition.bullet.gravitationalVelocity;
 
             //Check to make sure we haven't gone too many ticks.
             if (ticksExisted > definition.bullet.burnTime + despawnTime) {
@@ -210,20 +210,21 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     break;
                 }
             }
+
             if (targetPosition != null) {
                 //Get the angular delta between us and our target, in our local orientation coordinates.
                 if (targetVector == null) {
                     targetVector = new Point3D();
                 }
-                //Lead the target. Otherwise, just turn to face it
                 double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D / 10D);
-                if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL  || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND)) {
+                if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND)) {
                     targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
-                } else if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.SOFT)) {
-                    targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
+                } else if (externalEntityTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.SOFT)) {
+                    targetVector.set(targetPosition).addScaled(externalEntityTargeted.getVelocity(), (externalEntityTargeted.getVelocity().length() / 20D / 10D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
                 } else {
                     targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
                 }
+
                 //Clamp angular delta to match turn rate and apply.
                 if (targetVector.y > definition.bullet.turnRate) {
                     targetVector.y = definition.bullet.turnRate;
@@ -529,7 +530,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter / 10F : definition.bullet.blastStrength;
             world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
         }
-        impactDesapawnTimer = definition.bullet.impactDespawnTime;
+        impactDespawnTimer = definition.bullet.impactDespawnTime;
         gun.currentBullet = null;
         if (engineTargeted != null) {
             engineTargeted.vehicleOn.missilesIncoming.remove(this);

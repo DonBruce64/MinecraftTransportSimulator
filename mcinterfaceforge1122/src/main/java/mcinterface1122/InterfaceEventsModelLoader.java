@@ -32,6 +32,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -79,7 +80,8 @@ public class InterfaceEventsModelLoader {
                 //Get all entities in the world, and render them manually for this one builder.
                 //Only do this if the player the builder is following is the client player.
                 WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
-                if (Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
+                EntityPlayer player = Minecraft.getMinecraft().player;
+                if (player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
                     if (allEntities != null) {
                         boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
@@ -94,12 +96,18 @@ public class InterfaceEventsModelLoader {
                         //This prevents bad lighting.
                         GlStateManager.enableRescaleNormal();
 
+                        //Rendering system expects coordinates to be at 0,0,0 when called, translate us so that's the case.
+                        GL11.glPushMatrix();
+                        GL11.glTranslated(-(player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks), -(player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks), -(player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks));
+
                         //Start master profiling section.
                         for (AEntityC_Renderable entity : allEntities) {
                             world.beginProfiling("MTSRendering", true);
                             entity.render(blendingEnabled, partialTicks);
                             world.endProfiling();
                         }
+
+                        GL11.glPopMatrix();
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);
@@ -189,7 +197,7 @@ public class InterfaceEventsModelLoader {
                 String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
                 if (!strippedSuffix.contains(".")) {
                     //JSON reference.  Get the specified file.
-                    stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
+                    stream = InterfaceManager.coreInterface.getPackResource("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
                         if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
@@ -212,7 +220,7 @@ public class InterfaceEventsModelLoader {
                         resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 
                         //Try to load the item JSON, or create it if it doesn't exist.
-                        stream = getClass().getResourceAsStream(resourcePath);
+                        stream = InterfaceManager.coreInterface.getPackResource(resourcePath);
                         if (stream == null) {
                             //Get the actual texture path.
                             itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
@@ -260,14 +268,14 @@ public class InterfaceEventsModelLoader {
                     if (packItem != null) {
                         //Get the actual resource path for this resource and return its stream.
                         String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
 
                         if (stream == null) {
                             if (isItemPNG) {
                                 //We might not have this file, but we also might have a JSON-defined item here.
                                 //Try the JSON standards before throwing an error.
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
-                                stream = getClass().getResourceAsStream(streamJSONLocation);
+                                stream = InterfaceManager.coreInterface.getPackResource(streamJSONLocation);
                                 if (stream == null) {
                                     if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                                         if (streamLocation != null) {
@@ -289,7 +297,7 @@ public class InterfaceEventsModelLoader {
                         //No pack item for this texture.  Must be an internal texture for other things.
                         //In this case, we just get the stream exact location.
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
                         if (stream == null) {
                             if (enableDebug && ConfigSystem.settings.general.devMode.value) {
                                 InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
