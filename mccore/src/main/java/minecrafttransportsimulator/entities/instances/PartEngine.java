@@ -794,10 +794,14 @@ public class PartEngine extends APart {
                 return currentMaxSafeRPM;
             case ("engine_rpm_max"):
                 return currentMaxRPM;
+            case ("engine_rpm_revlimit"):
+                return currentRevlimitRPM;
             case ("engine_rpm_percent"):
                 return rpm / currentMaxRPM;
             case ("engine_rpm_percent_safe"):
                 return rpm / currentMaxSafeRPM;
+            case ("engine_rpm_percent_revlimit"):
+                return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
             case ("engine_rpm_target"):
             	return engineTargetRPM;
             case ("engine_fuel_flow"):
