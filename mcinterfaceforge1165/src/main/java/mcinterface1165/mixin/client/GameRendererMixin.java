@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class GameRendererMixin {
     @Inject(at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraftforge/client/ForgeHooksClient;onCameraSetup(Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/ActiveRenderInfo;F)Lnet/minecraftforge/client/event/EntityViewRenderEvent$CameraSetup;"), method = "renderLevel")
     private void renderLevelInject(float partialTicks, long finishTime, MatrixStack matrixStack, CallbackInfo ci) {
-
+        System.out.println("I HAS CODE");
     }
 }

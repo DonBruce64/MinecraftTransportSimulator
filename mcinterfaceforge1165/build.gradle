@@ -2,17 +2,20 @@ buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net" }
         maven { url = "https://maven.parchmentmc.org" }
+        maven { url = "https://repo.spongepowered.org/maven" }
         mavenCentral()
     }
     dependencies {
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
-        classpath "org.parchmentmc:librarian:1.+"
+        classpath group: "org.parchmentmc", name: "librarian", version: "1.+"
+        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7.+"
     }
 }
 
 //Apply plugins
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "org.parchmentmc.librarian.forgegradle"
+apply plugin: "org.spongepowered.mixin"
 apply plugin: "eclipse"
 
 //Set file name.
@@ -40,10 +43,23 @@ minecraft {
     runs {
         client {
             workingDirectory project.file("run")
+            arg "-mixin.config=mts.mixins.json"
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
         }
 
         server {
             workingDirectory project.file("runServer")
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
         }
     }
 }
@@ -63,6 +79,8 @@ configurations {
 dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:1.16.5-36.2.23"
+    //Make mixin annotations actually do something
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
 
     //Core to use.
     embed(project(":mccore"))
@@ -71,6 +89,11 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152:api")
     //At runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152")
+}
+
+mixin {
+    add sourceSets.main, "mts.refmap.json"
+    config "mts.mixins.json"
 }
 
 //Here is where we zip up all embeds and add them to our jar.
