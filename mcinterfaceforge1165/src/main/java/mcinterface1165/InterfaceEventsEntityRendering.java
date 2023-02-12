@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -59,9 +61,13 @@ public class InterfaceEventsEntityRendering {
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
     private static final Point3D playerPosition = new Point3D();
     private static final Point3D playerPrevPosition = new Point3D();
+    private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
+    private static boolean cameraNeedsAdjustment;
+    private static PlayerEntity mcPlayer;
+
     private static int lastScreenWidth;
     private static int lastScreenHeight;
 
@@ -72,61 +78,49 @@ public class InterfaceEventsEntityRendering {
     public static void on(CameraSetup event) {
         ActiveRenderInfo info = event.getInfo();
         if (info.getEntity() instanceof PlayerEntity) {
-            IWrapperPlayer player = WrapperPlayer.getWrapperFor((PlayerEntity) info.getEntity());
+            mcPlayer = (PlayerEntity) info.getEntity();
+            IWrapperPlayer player = WrapperPlayer.getWrapperFor(mcPlayer);
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
-                //Set helper to the current camera position.
-                PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-                playerPosition.set(mcPlayer.position().x, mcPlayer.position().y, mcPlayer.position().z);
-                playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
-
-                //Need to transpose the rotation so it applies opposite.
-                //FIXME this won't work, render info don't work either as we need to translate after rotation, not before.
-                //That's done in GameRender#renderLevel line 615, or right after net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup (this event).
-                //After this, set the event value to 0 since we've done stack multiplcation.
-                //So get stack, apply cameraAdjustedOrientation, apply cameraAdjustedPosition, profit.
-                //Might need to rotate the orientation by 180, might not.
-                /*double temp;
-                temp = cameraAdjustedOrientation.m01;
-                cameraAdjustedOrientation.m01 = cameraAdjustedOrientation.m10;
-                cameraAdjustedOrientation.m10 = temp;
-                
-                temp = cameraAdjustedOrientation.m02;
-                cameraAdjustedOrientation.m02 = cameraAdjustedOrientation.m20;
-                cameraAdjustedOrientation.m20 = temp;
-                
-                temp = cameraAdjustedOrientation.m12;
-                cameraAdjustedOrientation.m12 = cameraAdjustedOrientation.m21;
-                cameraAdjustedOrientation.m21 = temp;
-                
-                cameraAdjustments.resetTransforms();
-                cameraAdjustments.rotateY(180);
-                cameraAdjustments.multiply(cameraAdjustedOrientation);
-                cameraAdjustments.convertToAngles();
-                */
-
-                //Set the player's position to the calculated camera position, setup the render info, then set it back.
-                //This tricks MC into rendering where we want it to during the subsequent steps.
-                mcPlayer.setPos(cameraAdjustedPosition.x, cameraAdjustedPosition.y - player.getEyeHeight(), cameraAdjustedPosition.z);
-                mcPlayer.xo = mcPlayer.position().x;
-                mcPlayer.yo = mcPlayer.position().y;
-                mcPlayer.zo = mcPlayer.position().z;
-
-                Minecraft minecraft = Minecraft.getInstance();
-                info.setup(Minecraft.getInstance().level, mcPlayer, !minecraft.options.getCameraType().isFirstPerson(), minecraft.options.getCameraType().isMirrored(), (float) event.getRenderPartialTicks());
-
-                mcPlayer.setPos(playerPosition.x, playerPosition.y, playerPosition.z);
-                mcPlayer.xo = playerPrevPosition.x;
-                mcPlayer.yo = playerPrevPosition.y;
-                mcPlayer.zo = playerPrevPosition.z;
-
-                //Now apply the orientation changes.
-                cameraAdjustedOrientation.convertToAngles();
-                event.setYaw((float) -cameraAdjustedOrientation.angles.y);
-                event.setPitch((float) cameraAdjustedOrientation.angles.x);
-                event.setRoll((float) cameraAdjustedOrientation.angles.z);
+                cameraNeedsAdjustment = true;
+                //Set to 180 to cancel out the default 180 offset.
+                event.setYaw(0);
+                event.setPitch(0);
+                event.setRoll(0);
+            } else {
+                cameraNeedsAdjustment = false;
             }
+        }
+    }
+
+    public static void adjustCamera(MatrixStack matrixStack, float partialTicks) {
+        if (cameraNeedsAdjustment) {
+            //Camera adjustments occur backwards here.  Reverse order in the matrix.
+            //Also need to reverse sign of Y, since that's backwards in MC.
+            cameraAdjustedOrientation.convertToAngles();
+            Point3D copiedAngles = cameraAdjustedOrientation.angles.copy();
+            cameraAdjustedOrientation.setToZero();
+            if (!InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
+                //Inverted third-person needs roll and pich flipped due to the opposite perspective.
+                //It also needs the camera rotated 180 in the Y to face the other direction.
+                cameraAdjustedOrientation.rotateZ(-copiedAngles.z).rotateX(-copiedAngles.x).rotateY(-copiedAngles.y + 180);
+            } else {
+                cameraAdjustedOrientation.rotateZ(copiedAngles.z).rotateX(copiedAngles.x).rotateY(-copiedAngles.y);
+            }
+            cameraAdjustments.resetTransforms();
+            cameraAdjustments.multiply(cameraAdjustedOrientation);
+            //FIXME still issues with third-person here, it's stuttery.
+            matrixStack.last().pose().multiply(InterfaceRender.convertMatrix4f(cameraAdjustments));
+
+            //Set and apply translation.  We need to invert the Y-axis here for some reason?
+            //This comes after rotation since order of operations are backwards for cameras.
+            playerPosition.set(mcPlayer.position().x, mcPlayer.position().y, mcPlayer.position().z);
+            playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
+            playerPositionHelper.set(playerPrevPosition).interpolate(playerPosition, partialTicks);
+            playerPositionHelper.y += mcPlayer.getEyeHeight();
+            cameraAdjustedPosition.subtract(playerPositionHelper);
+            matrixStack.translate(cameraAdjustedPosition.x, -cameraAdjustedPosition.y, cameraAdjustedPosition.z);
         }
     }
 
@@ -179,7 +173,7 @@ public class InterfaceEventsEntityRendering {
     /**
      * Pre-post methods for adjusting entity angles while seated.
      */
-    @SubscribeEvent
+    //@SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         needPlayerTweaks = false;
         needToPopMatrix = false;
@@ -356,7 +350,7 @@ public class InterfaceEventsEntityRendering {
     /**
      * Pre-post methods for adjusting entity angles while seated.
      */
-    @SubscribeEvent
+    //@SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             event.getMatrixStack().popPose();

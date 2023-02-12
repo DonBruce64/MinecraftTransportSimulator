@@ -8,10 +8,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
@@ -83,22 +81,12 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         //If our entity isn't null, update it and our position.
         if (entity != null) {
             //Check if we are still valid, or need to be set dead.
+            //FIXME we don't reload these from the world?
             if (!entity.isValid) {
                 remove();
             } else {
-                //Start master profiling section.
+                //Set the new position. 
                 entity.world.beginProfiling("MTSEntity_" + getUUID(), true);
-                entity.world.beginProfiling("Main_Execution", true);
-
-                //Forward the update call.
-                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                    entity.update();
-                    if (entity instanceof AEntityD_Definable) {
-                        ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
-                    }
-                }
-
-                //Set the new position.
                 entity.world.beginProfiling("MovementOverhead", false);
                 setPos(entity.position.x, entity.position.y, entity.position.z);
 

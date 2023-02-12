@@ -26,6 +26,12 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     }
 
     @Override
+    public boolean shouldAutomaticallyUpdate() {
+        //Furnaces don't need to tick.
+        return false;
+    }
+
+    @Override
     public double getMass() {
         return getInventoryMass();
     }

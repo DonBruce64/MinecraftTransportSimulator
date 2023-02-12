@@ -10,10 +10,9 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -271,6 +270,25 @@ public class InterfaceClient implements IInterfaceClient {
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
+        if (event.phase.equals(Phase.START)) {
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+            if (world != null) {
+                world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                world.tickAll();
+            }
+
+            //Open pack missing screen if we don't have packs.
+            IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+            if (player != null && !player.isSpectator()) {
+                ControlSystem.controlGlobal(player);
+                if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
+                    if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                        new GUIPackMissing();
+                    }
+                }
+            }
+        }
+
         if (!InterfaceManager.clientInterface.isGamePaused() && event.phase.equals(Phase.END)) {
             changedCameraState = false;
             if (actuallyFirstPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON) {
@@ -292,30 +310,6 @@ public class InterfaceClient implements IInterfaceClient {
                     actuallyThirdPerson = false;
                 }
                 changeCameraRequest = false;
-            }
-
-            WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getInstance().level);
-            if (clientWorld != null) {
-                clientWorld.beginProfiling("MTS_BulletUpdates", true);
-                for (EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)) {
-                    bullet.update();
-                }
-
-                clientWorld.beginProfiling("MTS_ParticleUpdates", false);
-                for (EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)) {
-                    particle.update();
-                }
-                clientWorld.endProfiling();
-
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                if (player != null && !player.isSpectator()) {
-                    ControlSystem.controlGlobal(player);
-                    if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            new GUIPackMissing();
-                        }
-                    }
-                }
             }
         }
     }

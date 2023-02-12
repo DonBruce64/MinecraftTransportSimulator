@@ -132,7 +132,6 @@ public class InterfaceJEI implements IModPlugin {
 
         @Override
         public void setIngredients(PackRecipeWrapper recipe, IIngredients ingredients) {
-            //FIXME make sure this works when we have working crafting recipes.
             List<PackMaterialComponent> components = PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair);
             if (components != null) {
                 List<List<ItemStack>> inputs = new ArrayList<>();

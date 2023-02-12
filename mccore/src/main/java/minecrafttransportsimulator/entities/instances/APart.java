@@ -239,6 +239,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public boolean shouldAutomaticallyUpdate() {
+        //Parts are always updated by their parent, not the main update calls.
+        return false;
+    }
+
+    @Override
     public boolean requiresDeltaUpdates() {
         return super.requiresDeltaUpdates() || entityOn.requiresDeltaUpdates() || isMoveable;
     }

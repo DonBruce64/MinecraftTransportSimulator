@@ -31,6 +31,12 @@ public class EntityFluidTank extends AEntityA_Base {
     }
 
     @Override
+    public boolean shouldAutomaticallyUpdate() {
+        //Tanks don't need to tick.
+        return false;
+    }
+
+    @Override
     public double getMass() {
         return fluidLevel / 50D;
     }

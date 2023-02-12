@@ -70,6 +70,15 @@ public abstract class AEntityA_Base {
     }
 
     /**
+     * Returns true if this entity should be ticked in the main update calls.
+     * Note that this does not block one from calling {@link #update()} manually; this
+     * just blocks the auto-ticking code.
+     */
+    public boolean shouldAutomaticallyUpdate() {
+        return true;
+    }
+
+    /**
      * Normally, all entities sync across clients and servers via their {@link #uniqueUUID}.
      * However, some entities may be client-side, server-side only, or both sides but spawned so frequently
      * syncing isn't desirable.  These entities should return false here to prevent corrupting the lookup mappings.  

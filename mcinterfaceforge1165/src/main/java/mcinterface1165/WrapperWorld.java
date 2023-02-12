@@ -23,7 +23,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -97,6 +96,7 @@ import net.minecraftforge.items.IItemHandler;
  *
  * @author don_bruce
  */
+
 public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
@@ -896,7 +896,10 @@ public class WrapperWorld extends AWrapperWorld {
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
-        if (!event.world.isClientSide && event.world.equals(world) && event.phase.equals(Phase.END)) {
+        if (!event.world.isClientSide && event.world.equals(world) && event.phase.equals(Phase.START)) {
+            beginProfiling("MTS_ServerVehicleUpdates", true);
+            tickAll();
+
             for (PlayerEntity mcPlayer : event.world.players()) {
                 UUID playerUUID = mcPlayer.getUUID();
 
@@ -967,12 +970,6 @@ public class WrapperWorld extends AWrapperWorld {
                         ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                     }
                 }
-            }
-
-            //Update bullets.
-            beginProfiling("MTS_BulletUpdates", true);
-            for (EntityBullet bullet : getEntitiesOfType(EntityBullet.class)) {
-                bullet.update();
             }
         }
     }
