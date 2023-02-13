@@ -81,7 +81,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         //If our entity isn't null, update it and our position.
         if (entity != null) {
             //Check if we are still valid, or need to be set dead.
-            //FIXME we don't reload these from the world?
             if (!entity.isValid) {
                 remove();
             } else {

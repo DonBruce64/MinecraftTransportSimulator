@@ -75,6 +75,7 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
     private static int currentPackedLight;
+    private static Map<String, RenderType> renderTypes = new HashMap<>();
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
     private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
     private static MatrixStack matrixStack;
@@ -122,9 +123,14 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             object.vertices.rewind();
         } else {
-            //Create the state, we don't care about outline.
-            Builder stateBuilder = CustomRenderType.createForObject(object);
-            RenderType renderType = RenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
+            //Create the state if we don't have it..
+            String typeID = object.texture + object.isTranslucent + object.enableBrightBlending + object.ignoreWorldShading + object.disableLighting;
+            RenderType renderType = renderTypes.get(typeID);
+            if (renderType == null) {
+                Builder stateBuilder = CustomRenderType.createForObject(object);
+                renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
+                renderTypes.put(typeID, renderType);
+            }
             IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
 
             //Now populate the state we requested.
@@ -269,7 +275,7 @@ public class InterfaceRender implements IInterfaceRender {
             }
 
             //Check if the texture exists.
-            if (InterfaceRender.class.getResource(formattedLocation) != null) {
+            if (InterfaceManager.coreInterface.getPackResource(formattedLocation) != null) {
                 //Convert the classpath-location to a domain-location path for MC.
                 String domain = formattedLocation.substring("/assets/".length(), formattedLocation.indexOf("/", "/assets/".length()));
                 String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
@@ -411,10 +417,8 @@ public class InterfaceRender implements IInterfaceRender {
                         //Need to run the solid pass first, then the transparent.  MC wont handle
                         //z-buffering right if we don't, even with the modern pipeline.
                         world.beginProfiling("MTSRendering", true);
-                        for (AEntityC_Renderable entity : allEntities) {
-                            entity.render(false, partialTicks);
-                            entity.render(true, partialTicks);
-                        }
+                        allEntities.forEach(entity -> entity.render(false, partialTicks));
+                        allEntities.forEach(entity -> entity.render(true, partialTicks));
                         world.endProfiling();
                         stack.popPose();
                     }

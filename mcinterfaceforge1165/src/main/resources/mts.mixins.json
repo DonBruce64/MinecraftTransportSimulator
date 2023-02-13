@@ -4,7 +4,8 @@
     "package": "mcinterface1165.mixin",
     "compatibilityLevel": "JAVA_8",
     "client": [
-        "client.GameRendererMixin"
+        "client.GameRendererMixin",
+				"client.RenderInfoInvokerMixin"
     ],
     "injectors": {
         "defaultRequire": 1

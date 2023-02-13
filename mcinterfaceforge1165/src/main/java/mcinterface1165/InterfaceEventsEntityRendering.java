@@ -7,8 +7,7 @@ import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
+import mcinterface1165.mixin.client.RenderInfoInvokerMixin;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -59,13 +58,8 @@ public class InterfaceEventsEntityRendering {
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
-    private static final Point3D playerPosition = new Point3D();
-    private static final Point3D playerPrevPosition = new Point3D();
-    private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
-    private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
-    private static boolean cameraNeedsAdjustment;
     private static PlayerEntity mcPlayer;
 
     private static int lastScreenWidth;
@@ -82,45 +76,28 @@ public class InterfaceEventsEntityRendering {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor(mcPlayer);
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
-            if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
-                cameraNeedsAdjustment = true;
-                //Set to 180 to cancel out the default 180 offset.
-                event.setYaw(0);
-                event.setPitch(0);
-                event.setRoll(0);
-            } else {
-                cameraNeedsAdjustment = false;
-            }
-        }
-    }
+            float partialTicks = (float) event.getRenderPartialTicks();
+            if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, partialTicks)) {
+                //Camera adjustments occur backwards here.  Reverse order in the matrix.
+                //Also need to reverse sign of Y, since that's backwards in MC.
+                cameraAdjustedOrientation.convertToAngles();
+                if (!InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
+                    //Inverted third-person needs roll and pich flipped due to the opposite perspective.
+                    //It also needs the camera rotated 180 in the Y to face the other direction.
+                    event.setRoll((float) -cameraAdjustedOrientation.angles.z);
+                    event.setPitch((float) -cameraAdjustedOrientation.angles.x);
+                    event.setYaw((float) (-cameraAdjustedOrientation.angles.y + 180));
+                } else {
+                    event.setRoll((float) cameraAdjustedOrientation.angles.z);
+                    event.setPitch((float) cameraAdjustedOrientation.angles.x);
+                    event.setYaw((float) -cameraAdjustedOrientation.angles.y);
+                }
 
-    public static void adjustCamera(MatrixStack matrixStack, float partialTicks) {
-        if (cameraNeedsAdjustment) {
-            //Camera adjustments occur backwards here.  Reverse order in the matrix.
-            //Also need to reverse sign of Y, since that's backwards in MC.
-            cameraAdjustedOrientation.convertToAngles();
-            Point3D copiedAngles = cameraAdjustedOrientation.angles.copy();
-            cameraAdjustedOrientation.setToZero();
-            if (!InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
-                //Inverted third-person needs roll and pich flipped due to the opposite perspective.
-                //It also needs the camera rotated 180 in the Y to face the other direction.
-                cameraAdjustedOrientation.rotateZ(-copiedAngles.z).rotateX(-copiedAngles.x).rotateY(-copiedAngles.y + 180);
-            } else {
-                cameraAdjustedOrientation.rotateZ(copiedAngles.z).rotateX(copiedAngles.x).rotateY(-copiedAngles.y);
+                //Move the info's setup to the set position of the camera.
+                //This will offset the player's eye position to match the camera.
+                //We do this in first-person mode since third-person adds zoom stuff.
+                ((RenderInfoInvokerMixin) info).invoke_setPosition(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
             }
-            cameraAdjustments.resetTransforms();
-            cameraAdjustments.multiply(cameraAdjustedOrientation);
-            //FIXME still issues with third-person here, it's stuttery.
-            matrixStack.last().pose().multiply(InterfaceRender.convertMatrix4f(cameraAdjustments));
-
-            //Set and apply translation.  We need to invert the Y-axis here for some reason?
-            //This comes after rotation since order of operations are backwards for cameras.
-            playerPosition.set(mcPlayer.position().x, mcPlayer.position().y, mcPlayer.position().z);
-            playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
-            playerPositionHelper.set(playerPrevPosition).interpolate(playerPosition, partialTicks);
-            playerPositionHelper.y += mcPlayer.getEyeHeight();
-            cameraAdjustedPosition.subtract(playerPositionHelper);
-            matrixStack.translate(cameraAdjustedPosition.x, -cameraAdjustedPosition.y, cameraAdjustedPosition.z);
         }
     }
 
@@ -173,7 +150,7 @@ public class InterfaceEventsEntityRendering {
     /**
      * Pre-post methods for adjusting entity angles while seated.
      */
-    //@SubscribeEvent
+    @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         needPlayerTweaks = false;
         needToPopMatrix = false;
@@ -232,16 +209,13 @@ public class InterfaceEventsEntityRendering {
                 //Get delta between camera and rendered entity.
                 Vector3d cameraEntityPos = cameraEntity.position();
                 Vector3d entityPos = entity.position();
-                Point3D deltaDistance = new Point3D(entity.xo - cameraEntity.xo + (entityPos.x - entity.xo - (cameraEntityPos.x - cameraEntity.xo)) * event.getPartialRenderTick(), entity.yo - cameraEntity.yo + (entityPos.y - entity.yo - (cameraEntityPos.y - cameraEntity.yo)) * event.getPartialRenderTick(), entity.zo - cameraEntity.zo + (entityPos.z - entity.zo - (cameraEntityPos.z - cameraEntity.zo)) * event.getPartialRenderTick());
+                new Point3D(entity.xo - cameraEntity.xo + (entityPos.x - entity.xo - (cameraEntityPos.x - cameraEntity.xo)) * event.getPartialRenderTick(), entity.yo - cameraEntity.yo + (entityPos.y - entity.yo - (cameraEntityPos.y - cameraEntity.yo)) * event.getPartialRenderTick(), entity.zo - cameraEntity.zo + (entityPos.z - entity.zo - (cameraEntityPos.z - cameraEntity.zo)) * event.getPartialRenderTick());
 
                 //Apply translations and rotations to move entity to correct position relative to the camera entity.
                 riderTotalTransformation.resetTransforms();
-                //riderTotalTransformation.setTranslation(deltaDistance);
                 riderTotalTransformation.applyRotation(riderBodyOrientation);
                 riderTotalTransformation.applyScaling(entityScale);
-                //riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-                //riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                //FIXME Doesn't work, but won't know till third person rendering works on vehicles.
+                riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
                 event.getMatrixStack().last().pose().multiply(InterfaceRender.convertMatrix4f(riderTotalTransformation));
             }
 
@@ -350,7 +324,7 @@ public class InterfaceEventsEntityRendering {
     /**
      * Pre-post methods for adjusting entity angles while seated.
      */
-    //@SubscribeEvent
+    @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             event.getMatrixStack().popPose();
@@ -375,31 +349,31 @@ public class InterfaceEventsEntityRendering {
             super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             if (needPlayerTweaks) {
                 if (renderCurrentRiderSitting) {
-                    this.leftLeg.x = (float) Math.toRadians(-90);
-                    this.leftLeg.y = 0;
-                    this.leftLeg.z = 0;
+                    this.leftLeg.xRot = (float) Math.toRadians(-90);
+                    this.leftLeg.yRot = 0;
+                    this.leftLeg.zRot = 0;
                     this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.x = (float) Math.toRadians(-90);
-                    this.rightLeg.y = 0;
-                    this.rightLeg.z = 0;
+                    this.rightLeg.xRot = (float) Math.toRadians(-90);
+                    this.rightLeg.yRot = 0;
+                    this.rightLeg.zRot = 0;
                     this.rightPants.copyFrom(this.rightLeg);
                 } else if (renderCurrentRiderStanding) {
-                    this.leftLeg.x = 0;
-                    this.leftLeg.y = 0;
-                    this.leftLeg.z = 0;
+                    this.leftLeg.xRot = 0;
+                    this.leftLeg.yRot = 0;
+                    this.leftLeg.zRot = 0;
                     this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.x = 0;
-                    this.rightLeg.y = 0;
-                    this.rightLeg.z = 0;
+                    this.rightLeg.xRot = 0;
+                    this.rightLeg.yRot = 0;
+                    this.rightLeg.zRot = 0;
                     this.rightPants.copyFrom(this.rightLeg);
                 }
-                this.leftArm.x = (float) leftArmAngles.x;
-                this.leftArm.y = (float) leftArmAngles.y;
-                this.leftArm.z = (float) leftArmAngles.z;
+                this.leftArm.xRot = (float) leftArmAngles.x;
+                this.leftArm.yRot = (float) leftArmAngles.y;
+                this.leftArm.zRot = (float) leftArmAngles.z;
                 this.leftSleeve.copyFrom(this.leftArm);
-                this.rightArm.x = (float) rightArmAngles.x;
-                this.rightArm.y = (float) rightArmAngles.y;
-                this.rightArm.z = (float) rightArmAngles.z;
+                this.rightArm.xRot = (float) rightArmAngles.x;
+                this.rightArm.yRot = (float) rightArmAngles.y;
+                this.rightArm.zRot = (float) rightArmAngles.z;
                 this.rightSleeve.copyFrom(this.rightArm);
             }
         }

@@ -227,19 +227,21 @@ public class InterfaceClient implements IInterfaceClient {
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
         if (event.phase.equals(Phase.START)) {
-            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
-            if (world != null) {
-                world.beginProfiling("MTS_ClientVehicleUpdates", true);
-                world.tickAll();
-            }
+            if (!InterfaceManager.clientInterface.isGamePaused()) {
+                AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+                if (world != null) {
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
+                }
 
-            //Open pack missing screen if we don't have packs.
-            IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-            if (player != null && !player.isSpectator()) {
-                ControlSystem.controlGlobal(player);
-                if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
-                    if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                        new GUIPackMissing();
+                //Open pack missing screen if we don't have packs.
+                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                if (player != null && !player.isSpectator()) {
+                    ControlSystem.controlGlobal(player);
+                    if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
+                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                            new GUIPackMissing();
+                        }
                     }
                 }
             }

@@ -138,12 +138,14 @@ public abstract class ABuilderEntityBase extends Entity {
 
     @Override
     public void load(CompoundNBT tag) {
+        super.load(tag);
         //Save the NBT for loading in the next update call.
         lastLoadedNBT = tag;
     }
 
     @Override
     public CompoundNBT saveWithoutId(CompoundNBT tag) {
+        super.saveWithoutId(tag);
         //Need to have this here as some mods will load us from NBT and then save us back
         //without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
         //If we did tick, then the last loaded will be null and this doesn't apply.

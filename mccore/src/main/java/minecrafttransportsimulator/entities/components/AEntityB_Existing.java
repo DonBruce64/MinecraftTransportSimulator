@@ -215,7 +215,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
 
                 //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
                 if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
-                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomLevel : zoomLevel).rotate(rider.getOrientation());
+                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomLevel - 4 : zoomLevel + 4).rotate(rider.getOrientation());
                     riderEyePosition.add(riderTempPoint);
                 }
             }

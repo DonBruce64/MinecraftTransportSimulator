@@ -2,7 +2,6 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -25,7 +24,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
  */
 public class EntityManager {
     public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
-    public final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
@@ -84,13 +83,11 @@ public class EntityManager {
      * are not parts, since parts are ticked by their parents.
      */
     public void tickAll() {
-        for (Entry<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entry : entitiesByClass.entrySet()) {
-            for (AEntityA_Base entity : entry.getValue()) {
-                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                    entity.update();
-                    if (entity instanceof AEntityD_Definable) {
-                        ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
-                    }
+        for (AEntityA_Base entity : allTickableEntities) {
+            if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                entity.update();
+                if (entity instanceof AEntityD_Definable) {
+                    ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
                 }
             }
         }
