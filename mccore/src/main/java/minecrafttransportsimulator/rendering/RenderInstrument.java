@@ -20,6 +20,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument {
+    private static final float COMPONENT_OFFSET = 0.005F;
     private static int partNumber = 0;
     private static RenderableObject renderObject = null;
     private static final TransformationMatrix textTransform = new TransformationMatrix();
@@ -62,7 +63,7 @@ public final class RenderInstrument {
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
                     textTransform.set(transform);
-                    textTransform.applyTranslation(0, 0, i * 0.0001F);
+                    textTransform.applyTranslation(0, 0, i * COMPONENT_OFFSET);
                     double totalScaling = slotScale * component.scale;
                     textTransform.applyScaling(totalScaling, totalScaling, totalScaling);
                     int variablePartNumber = AEntityD_Definable.getVariableNumber(component.textObject.variableName);
@@ -81,7 +82,7 @@ public final class RenderInstrument {
                     renderObject.isTranslucent = component.overlayTexture;
                     renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
                     renderObject.transform.set(transform);
-                    renderObject.transform.applyTranslation(0.0, 0.0, i * 0.0001);
+                    renderObject.transform.applyTranslation(0.0, 0.0, i * COMPONENT_OFFSET);
                     renderObject.transform.applyScaling(slotScale, slotScale, slotScale);
                     bottomLeft.set(-component.textureWidth / 2D, component.textureHeight / 2D, 0);
                     topLeft.set(-component.textureWidth / 2D, -component.textureHeight / 2D, 0);
