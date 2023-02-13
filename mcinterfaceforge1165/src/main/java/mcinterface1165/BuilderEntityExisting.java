@@ -207,10 +207,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
 
     @Override
     public AxisAlignedBB getBoundingBox() {
-        //Override this to make interaction checks work with the multiple collision points.
-        //We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
-        return interactionBoxes != null ? interactionBoxes : super.getBoundingBox();
-        //FIXME need to swap these out for collision boxes or something, to prevent excess collisions with entities.
+        //Override this to make collision checks work with the multiple collision points.
+        //We return the collision boxes as a wrapper here as we need a bounding box large enough to encompass both.
+        return collisionBoxes != null ? collisionBoxes : super.getBoundingBox();
     }
 
     @Override

@@ -30,7 +30,9 @@ class WrapperAABBCollective extends AxisAlignedBB {
         return this;
     }
 
-    //FIXME this got moved to entities, we need to intercept that call...somehow.
+    //FIXME this got moved to entities, we need to intercept that call, see below.
+    ///public static Vector3d collideBoundingBoxHeuristically on line 718 is the main entry point.
+    //Perhaps we can see if the box is our wrapper, then do collisions ourselves?
     //It's a VoxelShape though, so we can't really do anything except change our AABB on the entity
     //to be the last-collided AABB, that should trick MC into using the right box...hopefully.
     /*
