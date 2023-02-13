@@ -5,11 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -25,15 +21,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
@@ -145,41 +136,6 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public void setMouseSensitivity(float setting) {
         Minecraft.getInstance().options.sensitivity = setting;
-    }
-
-    @Override
-    public AEntityB_Existing getMousedOverEntity() {
-        //See what we are hitting.
-        RayTraceResult lastHit = Minecraft.getInstance().hitResult;
-        if (lastHit != null) {
-            Point3D mousedOverPoint = new Point3D(lastHit.getLocation().x, lastHit.getLocation().y, lastHit.getLocation().z);
-            if (lastHit.getType() == RayTraceResult.Type.ENTITY) {
-                Entity entityHit = ((EntityRayTraceResult) lastHit).getEntity();
-                if (entityHit instanceof BuilderEntityExisting) {
-                    AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) entityHit).entity;
-                    if (mousedOverEntity instanceof AEntityF_Multipart) {
-                        AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
-                        for (BoundingBox box : multipart.allInteractionBoxes) {
-                            if (box.isPointInside(mousedOverPoint)) {
-                                APart part = multipart.getPartWithBox(box);
-                                if (part != null) {
-                                    return part;
-                                }
-                            }
-                        }
-                    }
-                    return mousedOverEntity;
-                }
-            } else if (lastHit.getType() != RayTraceResult.Type.MISS) {
-                BlockPos posHit = ((BlockRayTraceResult) lastHit).getBlockPos();
-                TileEntity mcTile = getClientWorld().world.getBlockEntity(posHit);
-                if (mcTile instanceof BuilderTileEntityFluidTank) {
-                    BuilderTileEntityFluidTank builder = (BuilderTileEntityFluidTank) mcTile;
-                    return builder.tileEntity;
-                }
-            }
-        }
-        return null;
     }
 
     @Override

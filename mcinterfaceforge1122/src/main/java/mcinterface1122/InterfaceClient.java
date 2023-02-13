@@ -4,11 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -25,10 +21,8 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.Fluid;
@@ -134,39 +128,6 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public void setFOV(float setting) {
         Minecraft.getMinecraft().gameSettings.fovSetting = setting;
-    }
-
-    @Override
-    public AEntityB_Existing getMousedOverEntity() {
-        //See what we are hitting.
-        RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-        if (lastHit != null) {
-            Point3D mousedOverPoint = new Point3D(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
-            if (lastHit.entityHit != null) {
-                if (lastHit.entityHit instanceof BuilderEntityExisting) {
-                    AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
-                    if (mousedOverEntity instanceof AEntityF_Multipart) {
-                        AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
-                        for (BoundingBox box : multipart.allInteractionBoxes) {
-                            if (box.isPointInside(mousedOverPoint)) {
-                                APart part = multipart.getPartWithBox(box);
-                                if (part != null) {
-                                    return part;
-                                }
-                            }
-                        }
-                    }
-                    return mousedOverEntity;
-                }
-            } else {
-                TileEntity mcTile = getClientWorld().world.getTileEntity(lastHit.getBlockPos());
-                if (mcTile instanceof BuilderTileEntityFluidTank) {
-                    BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
-                    return builder.tileEntity;
-                }
-            }
-        }
-        return null;
     }
 
     @Override
