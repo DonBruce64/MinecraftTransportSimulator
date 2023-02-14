@@ -37,7 +37,7 @@ minecraft {
     // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
     //mappings channel: "official", version: "1.16.5"
-		mappings channel: project.mappings_channel, version: project.mappings_version
+    mappings channel: project.mappings_channel, version: "${project.mappings_version}-${project.mc_version}"
 
     //Run configurations.
     runs {
@@ -72,13 +72,13 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    compileOnly.extendsFrom(embed)
+    implementation.extendsFrom(embed)
 }
 
 //Specify dependencies.
 dependencies {
     //Minecraft to use.
-		minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
     //Make mixin annotations actually do something
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
 
@@ -92,8 +92,8 @@ dependencies {
 }
 
 mixin {
-    add sourceSets.main, "mts.refmap.json"
-    config "mts.mixins.json"
+    add sourceSets.main, project.mixin_refmap
+    config project.mixin_config
 }
 
 //Here is where we zip up all embeds and add them to our jar.
@@ -104,10 +104,10 @@ jar {
 
     manifest {
         attributes([
-                "TweakClass"    : "org.spongepowere.dasm.launch.MixinTweaker",
+                "TweakClass"    : project.mixin_tweaker,
                 "TweakOrder"    : "0",
-                "MixinConfigs"  : "mts.mixins.json",
-                "MixinConnector": "mcinterface1165.mixin.MixinConnector"
+                "MixinConfigs"  : project.mixin_config,
+                "MixinConnector": project.mixin_connector
         ])
     }
 }
