@@ -19,9 +19,9 @@ apply plugin: "org.spongepowered.mixin"
 apply plugin: "eclipse"
 
 //Set file name.
-version = "1.12.2-22.1.0"
-group = "minecrafttransportsimulator"
-archivesBaseName = "Immersive Vehicles"
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+archivesBaseName = project.archive_name
 
 //Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = "1.8"
@@ -37,7 +37,7 @@ minecraft {
     // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
     //mappings channel: "official", version: "1.16.5"
-    mappings channel: "parchment", version: "2022.03.06-1.16.5"
+		mappings channel: project.mappings_channel, version: project.mappings_version
 
     //Run configurations.
     runs {
@@ -78,7 +78,7 @@ configurations {
 //Specify dependencies.
 dependencies {
     //Minecraft to use.
-    minecraft "net.minecraftforge:forge:1.16.5-36.2.23"
+		minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
     //Make mixin annotations actually do something
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
 
