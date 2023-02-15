@@ -1446,8 +1446,7 @@ public final class LegacyCompatSystem {
         }
 
         //Create a animation set for core poles if they don't have one and use the old auto-render systems.
-        if (definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering == null) {
-            definition.rendering = new JSONRendering();
+        if (definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering.animatedObjects == null) {
             definition.rendering.animatedObjects = new ArrayList<>();
             for (Axis axis : Axis.values()) {
                 if (!axis.equals(Axis.NONE)) {
