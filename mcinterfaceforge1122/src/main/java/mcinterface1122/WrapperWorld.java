@@ -932,6 +932,13 @@ public class WrapperWorld extends AWrapperWorld {
             for (EntityBullet bullet : getEntitiesOfType(EntityBullet.class)) {
                 bullet.update();
             }
+
+            //Update player guns.
+            beginProfiling("MTS_PlayerGunUpdates", false);
+            for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
+                gun.update();
+                gun.doPostUpdateLogic();
+            }
         }
     }
 

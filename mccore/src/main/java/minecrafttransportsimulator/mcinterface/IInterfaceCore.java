@@ -16,11 +16,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
 public interface IInterfaceCore {
 
     /**
-     * Returns the game version for this current instance.
-     */
-    String getGameVersion();
-
-    /**
      * Returns true if the mod with the passed-in modID is present.
      */
     boolean isModPresent(String modID);

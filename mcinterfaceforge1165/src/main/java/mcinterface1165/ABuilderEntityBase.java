@@ -6,16 +6,12 @@ import java.util.List;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.client.network.play.IClientPlayNetHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.server.SSpawnObjectPacket;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -174,36 +170,15 @@ public abstract class ABuilderEntityBase extends Entity {
         return new CustomSpawnPacket(this);
     }
 
-    private static class CustomSpawnPacket extends SSpawnObjectPacket {
+    protected static class CustomSpawnPacket extends SSpawnObjectPacket {
 
         private CustomSpawnPacket(ABuilderEntityBase builder) {
             super(builder);
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         public void handle(IClientPlayNetHandler pHandler) {
-            ClientPlayNetHandler handler = (ClientPlayNetHandler) pHandler;
-            Minecraft minecraft = Minecraft.getInstance();
-            PacketThreadUtil.ensureRunningOnSameThread(this, handler, minecraft);
-
-            Entity entity = EntityType.create(Registry.ENTITY_TYPE.getId(getType()), minecraft.level);
-            if (entity != null) {
-                int i = getId();
-                double d0 = getX();
-                double d1 = getY();
-                double d2 = getZ();
-
-                entity.setPacketCoordinates(d0, d1, d2);
-                entity.moveTo(d0, d1, d2);
-                entity.xRot = getxRot() * 360 / 256.0F;
-                entity.yRot = getyRot() * 360 / 256.0F;
-                entity.setId(i);
-                entity.setUUID(getUUID());
-                handler.getLevel().putNonPlayerEntity(i, entity);
-            } else {
-                LOGGER.warn("Skipping Entity of type {}", getType());
-            }
+            InterfaceClient.handleCustomSpawnPacket(this, pHandler);
         }
     }
 }

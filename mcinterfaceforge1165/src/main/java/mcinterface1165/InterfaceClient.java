@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mcinterface1165.ABuilderEntityBase.CustomSpawnPacket;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -19,13 +21,19 @@ import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.client.network.play.IClientPlayNetHandler;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
@@ -220,28 +228,69 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     /**
+     * Custom method for handling our custom packet.  Needed to allow the packet to be constructed
+     * on the server since we won't be able to do so if we have these client classes in there.
+     */
+    protected static void handleCustomSpawnPacket(CustomSpawnPacket packet, IClientPlayNetHandler pHandler) {
+        ClientPlayNetHandler handler = (ClientPlayNetHandler) pHandler;
+        Minecraft minecraft = Minecraft.getInstance();
+        PacketThreadUtil.ensureRunningOnSameThread(packet, handler, minecraft);
+
+        @SuppressWarnings("deprecation")
+        Entity entity = EntityType.create(Registry.ENTITY_TYPE.getId(packet.getType()), minecraft.level);
+        if (entity != null) {
+            int i = packet.getId();
+            double d0 = packet.getX();
+            double d1 = packet.getY();
+            double d2 = packet.getZ();
+
+            entity.setPacketCoordinates(d0, d1, d2);
+            entity.moveTo(d0, d1, d2);
+            entity.xRot = packet.getxRot() * 360 / 256.0F;
+            entity.yRot = packet.getyRot() * 360 / 256.0F;
+            entity.setId(i);
+            entity.setUUID(packet.getUUID());
+            handler.getLevel().putNonPlayerEntity(i, entity);
+        } else {
+            InterfaceManager.coreInterface.logError("Custom MC-Spawn packet failed to find entity!");
+        }
+    }
+
+    /**
      * Tick client-side entities like bullets and particles.
      * These don't get ticked normally due to the world tick event
      * not being called on clients.
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
-        if (event.phase.equals(Phase.START)) {
-            if (!InterfaceManager.clientInterface.isGamePaused()) {
-                AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
-                if (world != null) {
-                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
-                    world.tickAll();
-                }
+        if (!InterfaceManager.clientInterface.isGamePaused()) {
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+            if (world != null) {
+                if (event.phase.equals(Phase.START)) {
+                    if (world != null) {
+                        world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                        world.tickAll();
+                    }
 
-                //Open pack missing screen if we don't have packs.
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                if (player != null && !player.isSpectator()) {
-                    ControlSystem.controlGlobal(player);
-                    if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            new GUIPackMissing();
+                    //Need to update world brightness since sky darken isn't calculated normally on clients.
+                    ((WrapperWorld) world).world.updateSkyBrightness();
+
+                    //Open pack missing screen if we don't have packs.
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null && !player.isSpectator()) {
+                        ControlSystem.controlGlobal(player);
+                        if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
+                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                                new GUIPackMissing();
+                            }
                         }
+                    }
+                } else {
+                    //Update player guns.  These happen at the end since they need the player to update first.
+                    world.beginProfiling("MTS_PlayerGunUpdates", true);
+                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
+                        gun.update();
+                        gun.doPostUpdateLogic();
                     }
                 }
             }

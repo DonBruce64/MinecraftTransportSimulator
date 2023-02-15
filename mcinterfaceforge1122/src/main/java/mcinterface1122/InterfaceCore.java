@@ -18,11 +18,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 class InterfaceCore implements IInterfaceCore {
     @Override
-    public String getGameVersion() {
-        return Loader.instance().getMCVersionString().substring("Minecraft ".length());
-    }
-
-    @Override
     public boolean isModPresent(String modID) {
         return Loader.isModLoaded(modID);
     }

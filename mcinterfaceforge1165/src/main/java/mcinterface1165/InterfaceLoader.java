@@ -50,7 +50,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.6.0";
+    public static final String MODVER = "22.6.0-BETA";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
@@ -95,12 +95,6 @@ public class InterfaceLoader {
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
 
-            //Also add version-specific directory.
-            File versionedModDirectory = new File(modDirectory, InterfaceManager.coreInterface.getGameVersion());
-            if (versionedModDirectory.exists()) {
-                packDirectories.add(versionedModDirectory);
-            }
-
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
@@ -122,7 +116,8 @@ public class InterfaceLoader {
                         String tabID = item.getCreativeTabID();
                         if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                             JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
-                            BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, BuilderItem.itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
+                            AItemPack<?> tabItem = packConfiguration.packItem != null ? PackParser.getItem(packConfiguration.packID, packConfiguration.packItem) : null;
+                            BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, tabItem));
                         }
                         itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
                     }

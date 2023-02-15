@@ -58,8 +58,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix3f;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
@@ -68,6 +73,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  *
  * @author don_bruce
  */
+@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
     private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
@@ -396,33 +402,19 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
-                //Get all entities in the world, and render them manually for this one builder.
-                //Only do this if the player the builder is following is the client player.
-                WrapperWorld world = WrapperWorld.getWrapperFor(builder.level);
-                if (Minecraft.getInstance().player.equals(builder.playerFollowing)) {
-                    ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-                    if (allEntities != null) {
-                        matrixStack = stack;
-                        renderBuffer = buffer;
+                //Push on a new pose offset by the forwarder's position to the origin to set the translation to the world center.
+                //Rendering of internal entities expects origin center.
+                stack.pushPose();
+                double d0 = MathHelper.lerp(partialTicks, builder.xOld, builder.getX());
+                double d1 = MathHelper.lerp(partialTicks, builder.yOld, builder.getY());
+                double d2 = MathHelper.lerp(partialTicks, builder.zOld, builder.getZ());
+                stack.translate(-d0, -d1, -d2);
 
-                        //Push on a new pose offset by the forwarder's position to the origin to set the translation to the world center.
-                        //Rendering of internal entities expects origin center.
-                        stack.pushPose();
-                        double d0 = MathHelper.lerp(partialTicks, builder.xOld, builder.getX());
-                        double d1 = MathHelper.lerp(partialTicks, builder.yOld, builder.getY());
-                        double d2 = MathHelper.lerp(partialTicks, builder.zOld, builder.getZ());
-                        stack.translate(-d0, -d1, -d2);
-
-                        //Start master profiling section and run entity rendering routines.
-                        //Need to run the solid pass first, then the transparent.  MC wont handle
-                        //z-buffering right if we don't, even with the modern pipeline.
-                        world.beginProfiling("MTSRendering", true);
-                        allEntities.forEach(entity -> entity.render(false, partialTicks));
-                        allEntities.forEach(entity -> entity.render(true, partialTicks));
-                        world.endProfiling();
-                        stack.popPose();
-                    }
-                }
+                //Set the stack variables and render.
+                matrixStack = stack;
+                renderBuffer = buffer;
+                doRenderCall(false, partialTicks);
+                stack.popPose();
             }
         });
 
@@ -431,6 +423,39 @@ public class InterfaceRender implements IInterfaceRender {
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityExisting.E_TYPE2.get(), manager -> new BlankRender<BuilderEntityExisting>(manager));
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
     }
+    
+    @SubscribeEvent
+    public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
+        //If the buffer is null, bail, it should be set before-hand from the normal render, but might not be.
+        //This can happen if the follower hasn't been rendered yet.
+        MatrixStack stack = event.getMatrixStack();
+        float partialTicks = event.getPartialTicks();
+        if (renderBuffer != null) {
+            //Render translucent bits since those need to blend.
+            //We need to apply the correct offset here to the render info position, since that's expected.
+            Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+            stack.pushPose();
+            stack.translate(-position.x, -position.y, -position.z);
+            
+            ///Set the stack variables and render.
+            matrixStack = stack;
+            doRenderCall(true, partialTicks);
+            stack.popPose();
+        }
+    }
+
+    private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
+        AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+        ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
+        if (allEntities != null) {
+            world.beginProfiling("MTSRendering", true);
+            allEntities.forEach(entity -> entity.render(blendingEnabled, partialTicks));
+            //Need to tell the buffer it's done rendering, else it'll hold onto the data and crash other systems.
+            ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
+            world.endProfiling();
+        }
+    }
+    
 
     /** Blank render class used to bypass rendering for all other builders.**/
     private static class BlankRender<T extends ABuilderEntityBase> extends EntityRenderer<T> {
@@ -462,15 +487,16 @@ public class InterfaceRender implements IInterfaceRender {
 
             stateBuilder.setTextureState(getTexture(object.texture));
             //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
-            stateBuilder.setTransparencyState(object.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (object.isTranslucent ? RenderType.TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
+            stateBuilder.setTransparencyState(object.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (object.isTranslucent ? PROPER_TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
             //Diffuse lighting is the ambient lighting that auto-shades models.
             stateBuilder.setDiffuseLightingState(object.ignoreWorldShading || object.disableLighting ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
             //Always smooth shading.
             stateBuilder.setShadeModelState(SMOOTH_SHADE);
-            //Disable alpha testing on blended pass as it discards transparent fragments.
-            stateBuilder.setAlphaState(object.isTranslucent ? NO_ALPHA : DEFAULT_ALPHA);
-            //Depth is fine, as is cull.
+            //Use default alpha to remove alpha fragments in cut-out textures.
+            stateBuilder.setAlphaState(DEFAULT_ALPHA);
+            //Depth test is fine, it ensures translucent things don't render in front of everything.
             //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
+            //Cull is fine.  Not sure what this does, actually...
             //stateBuilder.setCullState(NO_CULL);
             //Lightmap is on unless we are bright.
             stateBuilder.setLightmapState(object.disableLighting ? NO_LIGHTMAP : LIGHTMAP);
@@ -494,11 +520,33 @@ public class InterfaceRender implements IInterfaceRender {
         }
     }
 
+    /**
+     * Proper translucent transparency.  MC's one has the wrong blending function, and
+     * we need to disable writing to the depth buffer to prevent culling of other translucent
+     * objects, since we don't sort them and we could render behind an already-rendered transparent
+     * fragment.  Say if we have two headlight flares.
+     */
+    private static final RenderState.TransparencyState PROPER_TRANSLUCENT_TRANSPARENCY = new RenderState.TransparencyState("proper_translucent_transparency", () -> {
+        RenderSystem.enableBlend();
+        RenderSystem.depthMask(false);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+    }, () -> {
+        RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.defaultBlendFunc();
+    });
+
+    /**
+     * Brightness transparency.  Does a special blending operation to make things behind
+     * the object brighter based on the object's alpha value.  More alpha means more bright.
+     */
     private static final RenderState.TransparencyState BRIGHTNESS_TRANSPARENCY = new RenderState.TransparencyState("brightness_transparency", () -> {
         RenderSystem.enableBlend();
+        RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.DST_COLOR, GlStateManager.DestFactor.SRC_ALPHA);
     }, () -> {
         RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
     });
 }

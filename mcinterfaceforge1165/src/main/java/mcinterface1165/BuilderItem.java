@@ -40,6 +40,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -102,12 +103,13 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> tooltipLines, ITooltipFlag flagIn) {
         List<String> textLines = new ArrayList<>();
-        tooltipLines.forEach(line -> textLines.add(line.getString()));
+        //tooltipLines.forEach(line -> textLines.add(line.getString()));
         if (stack.hasTag()) {
             item.addTooltipLines(textLines, new WrapperNBT(stack.getTag()));
         } else {
             item.addTooltipLines(textLines, InterfaceManager.coreInterface.getNewNBTWrapper());
         }
+        textLines.forEach(line -> tooltipLines.add(new StringTextComponent(line)));
     }
 
     /**

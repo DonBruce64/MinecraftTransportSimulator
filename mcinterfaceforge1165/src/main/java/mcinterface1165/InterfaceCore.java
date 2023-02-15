@@ -10,7 +10,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.ItemTags;
@@ -21,11 +20,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
-    @Override
-    public String getGameVersion() {
-        return Minecraft.getInstance().getLaunchedVersion();
-    }
-
     @Override
     public boolean isModPresent(String modID) {
         return ModList.get().isLoaded(modID);

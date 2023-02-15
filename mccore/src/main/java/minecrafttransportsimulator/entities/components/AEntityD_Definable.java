@@ -785,8 +785,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             case ("light_total"):
                 return world.getLightBrightness(position, true);
             case ("terrain_distance"):
-
-                System.out.println(definition.systemName);
                 return world.getHeight(position);
             case ("inliquid"):
                 return world.isBlockLiquid(position) ? 1 : 0;

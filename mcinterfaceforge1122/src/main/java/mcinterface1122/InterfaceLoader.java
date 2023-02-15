@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.6.0";
+    public static final String MODVER = "22.6.0-BETA";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 	
 	@EventHandler
@@ -61,7 +61,7 @@ public final class InterfaceLoader {
             packDirectories.add(modDirectory);
 
             //Also add version-specific directory.
-            File versionedModDirectory = new File(modDirectory, InterfaceManager.coreInterface.getGameVersion());
+            File versionedModDirectory = new File(modDirectory, "1.12.2");
             if (versionedModDirectory.exists()) {
                 packDirectories.add(versionedModDirectory);
             }

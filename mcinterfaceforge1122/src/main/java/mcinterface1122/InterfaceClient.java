@@ -7,6 +7,7 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -214,6 +215,12 @@ public class InterfaceClient implements IInterfaceClient {
                 clientWorld.beginProfiling("MTS_BulletUpdates", true);
                 for (EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)) {
                     bullet.update();
+                }
+
+                clientWorld.beginProfiling("MTS_PlayerGunUpdates", false);
+                for (EntityPlayerGun gun : clientWorld.getEntitiesOfType(EntityPlayerGun.class)) {
+                    gun.update();
+                    gun.doPostUpdateLogic();
                 }
 
                 clientWorld.beginProfiling("MTS_ParticleUpdates", false);

@@ -78,8 +78,6 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public InputStream getResource(ResourcePackType type, ResourceLocation location) throws IOException {
-            System.out.println(location);
-
             //Create stream return variable and get raw data.
             InputStream stream;
             String rawPackInfo = location.getPath();

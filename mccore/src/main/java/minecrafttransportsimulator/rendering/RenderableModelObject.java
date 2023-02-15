@@ -425,6 +425,7 @@ public class RenderableModelObject {
 
                 //Render all flares.
                 if (flareObject != null) {
+                    flareObject.isTranslucent = true;
                     flareObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     flareObject.color.setTo(color);
                     flareObject.alpha = blendableBrightness;
@@ -434,6 +435,7 @@ public class RenderableModelObject {
 
                 //Render all beams.
                 if (beamObject != null && entity.shouldRenderBeams()) {
+                    flareObject.isTranslucent = true;
                     beamObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     beamObject.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
                     beamObject.color.setTo(color);
