@@ -161,6 +161,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public String getName() {
+        //FIXME this crashes things since effects are client-side.
         return world.dimensionType().effectsLocation().getPath();
     }
 

@@ -28,7 +28,7 @@ displayName="Immersive Vehicles (formerly MTS)" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 displayURL="https://www.curseforge.com/minecraft/mc-mods/minecraft-transport-simulator" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="logo.png" #optional
+logoFile="vingette.png" #optional
 # A text field displayed in the mod UI
 credits="Don Bruce & The Modeling Crew." #optional
 # A text field displayed in the mod UI

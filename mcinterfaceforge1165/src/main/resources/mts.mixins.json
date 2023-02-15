@@ -4,10 +4,8 @@
     "package": "mcinterface1165.mixin",
     "compatibilityLevel": "JAVA_8",
     "client": [
-        "client.RenderInfoInvokerMixin"
-    ],
-    "mixins": [
-        "common.VoxelShapesMixin"
+        "client.RenderInfoInvokerMixin",
+				"client.ClientPlayNetHandlerMixin"
     ],
     "injectors": {
         "defaultRequire": 1

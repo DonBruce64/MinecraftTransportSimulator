@@ -73,7 +73,6 @@ public class InterfaceEventsModelLoader {
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
-            System.out.println("Created asset loader for " + domain);
         }
 
         @Override

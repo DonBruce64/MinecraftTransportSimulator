@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
-    protected static RegistryObject<EntityType<BuilderEntityRenderForwarder>> E_TYPE4;
+    public static RegistryObject<EntityType<BuilderEntityRenderForwarder>> E_TYPE4;
 
     protected PlayerEntity playerFollowing;
 

@@ -19,7 +19,7 @@ import net.minecraftforge.fml.RegistryObject;
  * @author don_bruce
  */
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
-    protected static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
+    public static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
 
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.

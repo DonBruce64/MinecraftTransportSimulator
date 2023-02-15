@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.client.network.play.IClientPlayNetHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
@@ -166,19 +165,7 @@ public abstract class ABuilderEntityBase extends Entity {
 
     @Override
     public IPacket<?> getAddEntityPacket() {
-        //Don't let the default handler code run, this will not work since it doesn't allow for generic entities.
-        return new CustomSpawnPacket(this);
-    }
-
-    protected static class CustomSpawnPacket extends SSpawnObjectPacket {
-
-        private CustomSpawnPacket(ABuilderEntityBase builder) {
-            super(builder);
-        }
-
-        @Override
-        public void handle(IClientPlayNetHandler pHandler) {
-            InterfaceClient.handleCustomSpawnPacket(this, pHandler);
-        }
+        //Spawn object, we have a mixin override this code on the client though since it doesn't know to handle us.
+        return new SSpawnObjectPacket(this);
     }
 }

@@ -45,7 +45,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase {
-    protected static RegistryObject<EntityType<BuilderEntityExisting>> E_TYPE2;
+    public static RegistryObject<EntityType<BuilderEntityExisting>> E_TYPE2;
     private EntitySize mutableDims = new EntitySize(1.0F, 1.0F, false);
 
     /**
