@@ -265,7 +265,7 @@ public class PartEngine extends APart {
                 if (starterLevel == 0) {
                     if (vehicleOn.electricPower > 1) {
                         starterLevel += 4;
-                    } else {
+                    } else if (!world.isClient()) {
                         setVariable(ELECTRIC_STARTER_VARIABLE, 0);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
                     }
@@ -279,7 +279,7 @@ public class PartEngine extends APart {
                     }
                 }
                 if (autoStarterEngaged) {
-                    if (running) {
+                    if (!world.isClient() && running) {
                         setVariable(ELECTRIC_STARTER_VARIABLE, 0);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
                     }
