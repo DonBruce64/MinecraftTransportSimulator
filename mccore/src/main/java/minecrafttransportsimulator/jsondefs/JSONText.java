@@ -25,7 +25,7 @@ public class JSONText {
     @JSONDescription("If this is present, then this text field will be set to the value of this variable and will not be editable.  Mainly useful for instruments, but may be used on 3D models if desired.")
     public String variableName;
 
-    @JSONDescription("The factor to apply to the variable before formatting.  Not used if the variable is text-based.")
+    @JSONDescription("The factor to apply to the variable before formatting.  Not used if the variable is text-based. If this is used, variableName and variableFormat MUST be used as well or it will have no effect.")
     public float variableFactor;
 
     @JSONRequired(dependentField = "variableName")

@@ -948,7 +948,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * text definition.
      */
     public final String getAnimatedTextVariableValue(JSONText textDef, float partialTicks) {
-        //Check text values first, then anmiated values.
+        //Check text values first, then animated values.
         String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
             return String.format(textDef.variableFormat, getCleanRawVariableValue(textDef.variableName, 0) * textDef.variableFactor);
