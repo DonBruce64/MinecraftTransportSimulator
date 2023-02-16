@@ -566,10 +566,10 @@ public class PartGun extends APart {
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
-                    case "gunYaw":
+                    case "gun_yaw":
                         internalOrientation.angles.y = adjustVariable(modifier, (float) internalOrientation.angles.y);
                         break;
-                    case "gunPitch":
+                    case "gun_pitch":
                         internalOrientation.angles.x = adjustVariable(modifier, (float) internalOrientation.angles.x);
                         break;
                     default:

@@ -1623,7 +1623,7 @@ public final class LegacyCompatSystem {
             }
         }
 
-        //If we are a beaon with no text, add it as it's required.
+        //If we are a beacon with no text, add it as it's required.
         if (definition.decor.type.equals(DecorComponentType.BEACON)) {
             if (definition.rendering == null) {
                 definition.rendering = new JSONRendering();
