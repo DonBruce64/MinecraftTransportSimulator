@@ -57,6 +57,8 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
+    private static float riderStoredHeadRot;
+    private static float riderStoredHeadRotO;
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
@@ -153,7 +155,6 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         needPlayerTweaks = false;
-        needToPopMatrix = false;
         renderCurrentRiderSitting = false;
         renderCurrentRiderStanding = false;
         leftArmAngles.set(0, 0, 0);
@@ -195,6 +196,9 @@ public class InterfaceEventsEntityRendering {
 
             //Set the entity's head yaw to the delta between their yaw and their angled yaw.
             //This needs to be relative as we're going to render relative to the body here, not the world.
+            //Need to store these though, since they get used in other areas not during rendering and this will foul them.
+            riderStoredHeadRot = entity.yHeadRot;
+            riderStoredHeadRotO = entity.yHeadRotO;
             entity.yHeadRot = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
             entity.yHeadRotO = entity.yHeadRot;
 
@@ -328,6 +332,10 @@ public class InterfaceEventsEntityRendering {
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             event.getMatrixStack().popPose();
+            LivingEntity entity = event.getEntity();
+            entity.yHeadRot = riderStoredHeadRot;
+            entity.yHeadRotO = riderStoredHeadRotO;
+            needToPopMatrix = false;
         }
         if (heldStackHolder != null) {
             PlayerEntity player = (PlayerEntity) event.getEntity();

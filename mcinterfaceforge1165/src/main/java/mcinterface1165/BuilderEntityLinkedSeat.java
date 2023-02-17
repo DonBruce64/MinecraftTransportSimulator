@@ -24,7 +24,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
-    protected AEntityB_Existing entity;
+    public AEntityB_Existing entity;
     /**
      * Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
