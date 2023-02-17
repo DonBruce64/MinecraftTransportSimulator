@@ -231,10 +231,8 @@ public class InterfaceClient implements IInterfaceClient {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    if (world != null) {
-                        world.beginProfiling("MTS_ClientVehicleUpdates", true);
-                        world.tickAll();
-                    }
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
 
                     //Need to update world brightness since sky darken isn't calculated normally on clients.
                     ((WrapperWorld) world).world.updateSkyBrightness();
@@ -256,31 +254,29 @@ public class InterfaceClient implements IInterfaceClient {
                         gun.update();
                         gun.doPostUpdateLogic();
                     }
-                }
-            }
-        }
 
-        if (!InterfaceManager.clientInterface.isGamePaused() && event.phase.equals(Phase.END)) {
-            changedCameraState = false;
-            if (actuallyFirstPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON) {
-                changedCameraState = true;
-                actuallyFirstPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON;
-            }
-            if (actuallyThirdPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK) {
-                changedCameraState = true;
-                actuallyThirdPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK;
-            }
-            if (changeCameraRequest) {
-                if (actuallyFirstPerson) {
-                    Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
-                    actuallyFirstPerson = false;
-                    actuallyThirdPerson = true;
-                } else {
-                    Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
-                    actuallyFirstPerson = true;
-                    actuallyThirdPerson = false;
+                    changedCameraState = false;
+                    if (actuallyFirstPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON) {
+                        changedCameraState = true;
+                        actuallyFirstPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON;
+                    }
+                    if (actuallyThirdPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK) {
+                        changedCameraState = true;
+                        actuallyThirdPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK;
+                    }
+                    if (changeCameraRequest) {
+                        if (actuallyFirstPerson) {
+                            Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
+                            actuallyFirstPerson = false;
+                            actuallyThirdPerson = true;
+                        } else {
+                            Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
+                            actuallyFirstPerson = true;
+                            actuallyThirdPerson = false;
+                        }
+                        changeCameraRequest = false;
+                    }
                 }
-                changeCameraRequest = false;
             }
         }
     }

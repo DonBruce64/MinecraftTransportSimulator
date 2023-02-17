@@ -161,8 +161,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public String getName() {
-        //FIXME this crashes things since effects are client-side.
-        return world.dimensionType().effectsLocation().getPath();
+        return world.dimension().getRegistryName().getPath();
     }
 
     @Override
@@ -502,12 +501,12 @@ public class WrapperWorld extends AWrapperWorld {
                     if (!world.isEmptyBlock(pos)) {
                         BlockState state = world.getBlockState(pos);
                         VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
-                        if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
+                        if (!collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
                             mutableCollidingAABBs.addAll(collisionShape.toAabbs());
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
                         }
                         if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                            mutableCollidingAABBs.add(collisionShape.bounds().move(pos));
+                            mutableCollidingAABBs.add(VoxelShapes.block().bounds().move(pos));
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
                         }
                     }

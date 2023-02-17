@@ -9,10 +9,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -85,20 +83,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             if (!entity.isValid) {
                 setDead();
             } else {
-                //Start master profiling section.
+                //Start master profiling section and new position..
                 entity.world.beginProfiling("MTSEntity_" + getEntityId(), true);
-                entity.world.beginProfiling("Main_Execution", true);
-
-                //Forward the update call.
-                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                    entity.update();
-                    if (entity instanceof AEntityD_Definable) {
-                        ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
-                    }
-                }
-
-                //Set the new position.
-                entity.world.beginProfiling("MovementOverhead", false);
+                entity.world.beginProfiling("MovementOverhead", true);
                 setPosition(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.

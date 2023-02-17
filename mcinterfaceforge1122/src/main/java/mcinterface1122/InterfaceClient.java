@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
@@ -187,77 +185,74 @@ public class InterfaceClient implements IInterfaceClient {
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
-        if (!InterfaceManager.clientInterface.isGamePaused() && event.phase.equals(Phase.END)) {
-            changedCameraState = false;
-            if (actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-                changedCameraState = true;
-                actuallyFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
-            }
-            if (actuallyThirdPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 1) {
-                changedCameraState = true;
-                actuallyThirdPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
-            }
-            if (changeCameraRequest) {
-                if (actuallyFirstPerson) {
-                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-                    actuallyFirstPerson = false;
-                    actuallyThirdPerson = true;
-                } else {
-                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-                    actuallyFirstPerson = true;
-                    actuallyThirdPerson = false;
-                }
-                changeCameraRequest = false;
-            }
+        if (!InterfaceManager.clientInterface.isGamePaused()) {
+            WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+            if (world != null) {
+                if (event.phase.equals(Phase.START)) {
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
 
-            WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
-            if (clientWorld != null) {
-                clientWorld.beginProfiling("MTS_BulletUpdates", true);
-                for (EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)) {
-                    bullet.update();
-                }
-
-                clientWorld.beginProfiling("MTS_PlayerGunUpdates", false);
-                for (EntityPlayerGun gun : clientWorld.getEntitiesOfType(EntityPlayerGun.class)) {
-                    gun.update();
-                    gun.doPostUpdateLogic();
-                }
-
-                clientWorld.beginProfiling("MTS_ParticleUpdates", false);
-                for (EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)) {
-                    particle.update();
-                }
-                clientWorld.endProfiling();
-
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                if (player != null && !player.isSpectator()) {
-                    ControlSystem.controlGlobal(player);
-                    if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            new GUIPackMissing();
+                    //Open pack missing screen if we don't have packs.
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null && !player.isSpectator()) {
+                        ControlSystem.controlGlobal(player);
+                        if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
+                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                                new GUIPackMissing();
+                            }
                         }
                     }
-                }
 
-                if (activeFollower != null) {
-                    //Follower exists, check if world is the same and it is actually updating.
-                    //We check basic states, and then the watchdog bit that gets reset every tick.
-                    //This way if we're in the world, but not valid we will know.
-                    EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
-                    if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
-                        //Follower is not linked.  Remove it and re-create in code below.
-                        activeFollower.setDead();
-                        activeFollower = null;
-                        ticksSincePlayerJoin = 0;
+                    //Check follower.
+                    if (activeFollower != null) {
+                        //Follower exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
+                        if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            activeFollower.setDead();
+                            activeFollower = null;
+                            ticksSincePlayerJoin = 0;
+                        } else {
+                            ++activeFollower.idleTickCounter;
+                        }
                     } else {
-                        ++activeFollower.idleTickCounter;
+                        //Follower does not exist, check if player has been present for 3 seconds and spawn it.
+                        if (++ticksSincePlayerJoin == 60) {
+                            activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
+                            activeFollower.loadedFromSavedNBT = true;
+                            world.world.spawnEntity(activeFollower);
+                        }
                     }
                 } else {
-                    //Follower does not exist, check if player has been present for 3 seconds and spawn it.
-                    if (++ticksSincePlayerJoin == 60) {
-                        activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
-                        activeFollower.loadedFromSavedNBT = true;
-                        clientWorld.world.spawnEntity(activeFollower);
+                    //Update player guns.  These happen at the end since they need the player to update first.
+                    world.beginProfiling("MTS_PlayerGunUpdates", true);
+                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
+                        gun.update();
+                        gun.doPostUpdateLogic();
+                    }
+
+                    changedCameraState = false;
+                    if (actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+                        changedCameraState = true;
+                        actuallyFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+                    }
+                    if (actuallyThirdPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 1) {
+                        changedCameraState = true;
+                        actuallyThirdPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+                    }
+                    if (changeCameraRequest) {
+                        if (actuallyFirstPerson) {
+                            Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+                            actuallyFirstPerson = false;
+                            actuallyThirdPerson = true;
+                        } else {
+                            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+                            actuallyFirstPerson = true;
+                            actuallyThirdPerson = false;
+                        }
+                        changeCameraRequest = false;
                     }
                 }
             }

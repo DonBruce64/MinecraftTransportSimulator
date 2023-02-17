@@ -22,7 +22,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -884,60 +883,59 @@ public class WrapperWorld extends AWrapperWorld {
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
-        if (!event.world.isRemote && event.world.equals(world) && event.phase.equals(Phase.END)) {
-            for (EntityPlayer player : event.world.playerEntities) {
-                UUID playerUUID = player.getUniqueID();
-                BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
-                if (gunBuilder != null) {
-                    //Gun exists, check if world is the same and it is actually updating.
-                    //We check basic states, and then the watchdog bit that gets reset every tick.
-                    //This way if we're in the world, but not valid we will know.
-                    if (gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
-                        //Follower is not linked.  Remove it and re-create in code below.
-                        gunBuilder.setDead();
-                        playerServerGunBuilders.remove(playerUUID);
-                        ticksSincePlayerJoin.remove(playerUUID);
-                    } else {
-                        ++gunBuilder.idleTickCounter;
-                    }
-                } else if (!player.isDead) {
-                    //Gun does not exist, check if player has been present for 3 seconds and spawn it.
-                    int totalTicksWaited = 0;
-                    if (ticksSincePlayerJoin.containsKey(playerUUID)) {
-                        totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
-                    }
-                    if (++totalTicksWaited == 60) {
-                        //Spawn gun.
-                        IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-                        IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                        EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
-                        playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                        entity.addPartsPostAddition(playerWrapper, newData);
+        if (!event.world.isRemote && event.world.equals(world)) {
+            if (event.phase.equals(Phase.START)) {
+                beginProfiling("MTS_ServerVehicleUpdates", true);
+                tickAll();
 
-                        //If the player is new, also add handbooks.
-                        if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
-                            playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
-                            playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
-                            ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
-                            ConfigSystem.saveToDisk();
+                for (EntityPlayer player : event.world.playerEntities) {
+                    UUID playerUUID = player.getUniqueID();
+                    BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
+                    if (gunBuilder != null) {
+                        //Gun exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        if (gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            gunBuilder.setDead();
+                            playerServerGunBuilders.remove(playerUUID);
+                            ticksSincePlayerJoin.remove(playerUUID);
+                        } else {
+                            ++gunBuilder.idleTickCounter;
                         }
-                    } else {
-                        ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
+                    } else if (!player.isDead) {
+                        //Gun does not exist, check if player has been present for 3 seconds and spawn it.
+                        int totalTicksWaited = 0;
+                        if (ticksSincePlayerJoin.containsKey(playerUUID)) {
+                            totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
+                        }
+                        if (++totalTicksWaited == 60) {
+                            //Spawn gun.
+                            IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                            playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                            entity.addPartsPostAddition(playerWrapper, newData);
+
+                            //If the player is new, also add handbooks.
+                            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
+                                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
+                                ConfigSystem.saveToDisk();
+                            }
+                        } else {
+                            ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
+                        }
                     }
                 }
-            }
-
-            //Update bullets.
-            beginProfiling("MTS_BulletUpdates", true);
-            for (EntityBullet bullet : getEntitiesOfType(EntityBullet.class)) {
-                bullet.update();
-            }
-
-            //Update player guns.
-            beginProfiling("MTS_PlayerGunUpdates", false);
-            for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                gun.update();
-                gun.doPostUpdateLogic();
+            } else {
+                //Update player guns.  These happen at the end since they need the player to update first.
+                beginProfiling("MTS_PlayerGunUpdates", true);
+                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
+                    gun.update();
+                    gun.doPostUpdateLogic();
+                }
             }
         }
     }
