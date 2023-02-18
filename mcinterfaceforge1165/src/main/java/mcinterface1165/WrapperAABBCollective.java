@@ -71,11 +71,10 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         }
     }
 
-    //FIXME this got moved to entities, we need to intercept that call, see below.
-    ///public static Vector3d collideBoundingBoxHeuristically on line 718 is the main entry point.
-    //Perhaps we can see if the box is our wrapper, then do collisions ourselves?
-    //It's a VoxelShape though, so we can't really do anything except change our AABB on the entity
-    //to be the last-collided AABB, that should trick MC into using the right box...hopefully.
+    /**
+     * Helper method that's akin to MC's older collision methods in 1.12.2, just here rather than
+     * in a VoxelShape.
+     */
     public Vector3d getCollision(Vector3d movement, AxisAlignedBB testBox) {
         double x = movement.x != 0 ? calculateXOffset(testBox, movement.x) : 0;
         double y = movement.y != 0 ? calculateYOffset(testBox, movement.y) : 0;

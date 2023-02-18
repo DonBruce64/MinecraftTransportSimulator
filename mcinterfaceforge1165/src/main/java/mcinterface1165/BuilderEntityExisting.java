@@ -68,7 +68,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     /**
      * Collective for collision boxes.  These are used by this entity to make things collide with it.
      **/
-    private WrapperAABBCollective collisionBoxes;
+    public WrapperAABBCollective collisionBoxes;
 
     public BuilderEntityExisting(EntityType<? extends BuilderEntityExisting> eType, World world) {
         super(eType, world);

@@ -19,7 +19,7 @@ import net.minecraft.network.play.server.SSpawnObjectPacket;
 import net.minecraft.util.registry.Registry;
 
 @Mixin(ClientPlayNetHandler.class)
-public class ClientPlayNetHandlerMixin {
+public abstract class ClientPlayNetHandlerMixin {
     @Shadow
     private Minecraft minecraft;
     @Shadow
