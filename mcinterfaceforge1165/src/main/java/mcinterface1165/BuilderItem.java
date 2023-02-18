@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableMultimap.Builder;
 import com.google.common.collect.Multimap;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -68,6 +70,9 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      **/
     private final AItemBase item;
 
+    /** Modifiers applied when the item is in the mainhand of a user. */
+    private final Multimap<Attribute, AttributeModifier> defaultModifiers;
+
     public BuilderItem(Item.Properties properties, AItemBase item) {
         super(properties);
         if (category != null) {
@@ -75,6 +80,18 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         }
         this.item = item;
         itemMap.put(item, this);
+
+        Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
+        if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null) {
+            ItemItem weapon = (ItemItem) item;
+            if (weapon.definition.weapon.attackDamage != 0) {
+                builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, AttributeModifier.Operation.ADDITION));
+            }
+            if (weapon.definition.weapon.attackCooldown != 0) {
+                builder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", 20D / weapon.definition.weapon.attackCooldown - 4.0, AttributeModifier.Operation.ADDITION));
+            }
+        }
+        this.defaultModifiers = builder.build();
     }
 
     @Override
@@ -136,19 +153,10 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         return UseAction.NONE;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType slot, ItemStack stack) {
-        Multimap<Attribute, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
-        if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null && slot.equals(EquipmentSlotType.MAINHAND)) {
-            ItemItem weapon = (ItemItem) item;
-            if (weapon.definition.weapon.attackDamage != 0) {
-                multimap.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, AttributeModifier.Operation.ADDITION));
-            }
-            if (weapon.definition.weapon.attackCooldown != 0) {
-                multimap.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", 20D / weapon.definition.weapon.attackCooldown - 4.0, AttributeModifier.Operation.ADDITION));
-            }
-        }
-        return multimap;
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlotType slot) {
+        return slot == EquipmentSlotType.MAINHAND ? this.defaultModifiers : super.getDefaultAttributeModifiers(slot);
     }
 
     /**
