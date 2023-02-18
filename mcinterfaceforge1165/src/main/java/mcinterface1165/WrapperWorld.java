@@ -342,7 +342,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion == null || mcEntityCollided.getBoundingBox().clip(start, end) != null) {
+                if (motion == null || mcEntityCollided.getBoundingBox().clip(start, end).isPresent()) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
