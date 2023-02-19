@@ -698,7 +698,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void setToFire(BlockHitResult hitResult) {
         BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
-        if (isAir(hitResult.position)&&ConfigSystem.settings.general.blockBreakage.value) {
+        if (world.isEmptyBlock(blockpos) && ConfigSystem.settings.general.blockBreakage.value) {
             world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
         }
     }
