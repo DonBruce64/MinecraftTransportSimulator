@@ -255,6 +255,7 @@ public class InterfaceClient implements IInterfaceClient {
                         changeCameraRequest = false;
                     }
                 }
+                world.endProfiling();
             }
         }
     }

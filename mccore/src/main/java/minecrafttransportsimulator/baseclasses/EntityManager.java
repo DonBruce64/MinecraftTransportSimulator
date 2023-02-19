@@ -85,10 +85,12 @@ public class EntityManager {
     public void tickAll() {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
                 entity.update();
                 if (entity instanceof AEntityD_Definable) {
                     ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
                 }
+                entity.world.endProfiling();
             }
         }
     }

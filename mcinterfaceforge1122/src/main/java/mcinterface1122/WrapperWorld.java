@@ -937,6 +937,7 @@ public class WrapperWorld extends AWrapperWorld {
                     gun.doPostUpdateLogic();
                 }
             }
+            endProfiling();
         }
     }
 

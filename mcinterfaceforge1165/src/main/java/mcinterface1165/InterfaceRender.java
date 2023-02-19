@@ -11,11 +11,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+
+import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -36,6 +39,7 @@ import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderState;
@@ -51,12 +55,12 @@ import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Matrix3f;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
@@ -81,7 +85,11 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
     private static int currentPackedLight;
+
     private static Map<String, RenderType> renderTypes = new HashMap<>();
+    private static Map<RenderableObject, VertexBuffer> cachedBuffers = new HashMap<>();
+    private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
     private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
     private static MatrixStack matrixStack;
@@ -113,11 +121,8 @@ public class InterfaceRender implements IInterfaceRender {
     public void renderVertices(RenderableObject object) {
         matrixStack.pushPose();
         Matrix4f matrix4f = convertMatrix4f(object.transform);
-        Matrix3f matrix3f = new Matrix3f(matrix4f);
         MatrixStack.Entry stackEntry = matrixStack.last();
         stackEntry.pose().multiply(matrix4f);
-        stackEntry.normal().mul(matrix3f);
-
 
         if (object.isLines) {
             IVertexBuilder buffer = renderBuffer.getBuffer(RenderType.lines());
@@ -129,56 +134,112 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             object.vertices.rewind();
         } else {
-            //Create the state if we don't have it..
             String typeID = object.texture + object.isTranslucent + object.enableBrightBlending + object.ignoreWorldShading + object.disableLighting;
             RenderType renderType = renderTypes.get(typeID);
-            if (renderType == null) {
-                Builder stateBuilder = CustomRenderType.createForObject(object);
-                renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
-                renderTypes.put(typeID, renderType);
-            }
-            IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
-
-            //Now populate the state we requested.
-            int index = 0;
-            while (object.vertices.hasRemaining()) {
-                //Need to parse these out first since our order differs.
-                float normalX = object.vertices.get();
-                float normalY = object.vertices.get();
-                float normalZ = object.vertices.get();
-                float texU = object.vertices.get();
-                float texV = object.vertices.get();
-                float posX = object.vertices.get();
-                float posY = object.vertices.get();
-                float posZ = object.vertices.get();
-                
-                //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
-                //Blaze3d my ass, this is SLOWER than DisplayLists!
-                //We also need to add the 3rd vertex twice, since the buffer wants quads rather than tris.
-                //Yes, we have to render 25% more data because Mojang doesn't wanna move to tris like literally every other game.
-                //Yes, they're stupid.
-                do {
-                    buffer.vertex(stackEntry.pose(), posX, posY, posZ);
-                    buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-                    buffer.uv(texU, texV);
-                    buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
-                    buffer.uv2(currentPackedLight);
-                    buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
-                    buffer.endVertex();
-                } while (++index == 3);
-                if (index == 4) {
-                    index = 0;
+            if (object.cacheVertices) {
+                if (renderType == null) {
+                    Builder stateBuilder = CustomRenderType.createForObject(object);
+                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, object.isTranslucent, stateBuilder.createCompositeState(false));
+                    renderTypes.put(typeID, renderType);
                 }
+
+                VertexBuffer buffer = cachedBuffers.get(object);
+                if (buffer == null) {
+                    int vertices = object.vertices.limit() / 8;
+                    //Convert verts to faces, then back to quad-verts for MC rendering.
+                    //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
+                    vertices = ((vertices / 3) + 1) * 4;
+                    BufferBuilder builder = new BufferBuilder(renderType.format().getIntegerSize() * vertices);
+                    builder.begin(GL11.GL_QUADS, renderType.format());
+                    int index = 0;
+                    while (object.vertices.hasRemaining()) {
+                        //Need to parse these out first since our order differs.
+                        float normalX = object.vertices.get();
+                        float normalY = object.vertices.get();
+                        float normalZ = object.vertices.get();
+                        float texU = object.vertices.get();
+                        float texV = object.vertices.get();
+                        float posX = object.vertices.get();
+                        float posY = object.vertices.get();
+                        float posZ = object.vertices.get();
+
+                        //Add the vertex format bits.
+                        do {
+                            builder.vertex(posX, posY, posZ, object.color.red, object.color.green, object.color.blue, object.alpha, texU, texV, OverlayTexture.NO_OVERLAY, currentPackedLight, normalX, normalY, normalZ);
+                        } while (++index == 3);
+                        if (index == 4) {
+                            index = 0;
+                        }
+                    }
+                    builder.end();
+                    object.vertices.rewind();
+
+                    //Now create and bind built buffer to actual buffer.
+                    buffer = new VertexBuffer(renderType.format());
+                    buffer.upload(builder);
+                    cachedBuffers.put(object, buffer);
+                }
+
+                //Add this buffer to the list to render later.
+                List<RenderData> renders = queuedRenders.get(renderType);
+                if (renders == null) {
+                    renders = new ArrayList<>();
+                    queuedRenders.put(renderType, renders);
+                }
+                renders.add(new RenderData(stackEntry.pose(), buffer));
+            } else {
+                if (renderType == null) {
+                    Builder stateBuilder = CustomRenderType.createForObject(object);
+                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
+                    renderTypes.put(typeID, renderType);
+                }
+                IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
+                
+                //Now populate the state we requested.
+                int index = 0;
+                while (object.vertices.hasRemaining()) {
+                    //Need to parse these out first since our order differs.
+                    float normalX = object.vertices.get();
+                    float normalY = object.vertices.get();
+                    float normalZ = object.vertices.get();
+                    float texU = object.vertices.get();
+                    float texV = object.vertices.get();
+                    float posX = object.vertices.get();
+                    float posY = object.vertices.get();
+                    float posZ = object.vertices.get();
+
+                    //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
+                    //Blaze3d my ass, this is SLOWER than DisplayLists!
+                    //We also need to add the 3rd vertex twice, since the buffer wants quads rather than tris.
+                    //Yes, we have to render 25% more data because Mojang doesn't wanna move to tris like literally every other game.
+                    //Yes, they're stupid.
+                    do {
+                        buffer.vertex(stackEntry.pose(), posX, posY, posZ);
+                        buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+                        buffer.uv(texU, texV);
+                        buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
+                        buffer.uv2(currentPackedLight);
+                        buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
+                        buffer.endVertex();
+                    } while (++index == 3);
+                    if (index == 4) {
+                        index = 0;
+                    }
+                }
+                //Rewind buffer for next read.
+                object.vertices.rewind();
             }
-            //Rewind buffer for next read.
-            object.vertices.rewind();
         }
         matrixStack.popPose();
     }
 
     @Override
     public void deleteVertices(RenderableObject object) {
-        //No-op on 1.16.5 since we can't cache vertexes.
+        VertexBuffer buffer = cachedBuffers.get(object);
+        if (buffer != null) {
+            buffer.close();
+            cachedBuffers.remove(object);
+        }
     }
 
     @Override
@@ -307,11 +368,6 @@ public class InterfaceRender implements IInterfaceRender {
         //Render GUIs, re-creating their components if needed.
         //Set Y-axis to inverted to have correct orientation.
         matrixStack.scale(1.0F, -1.0F, 1.0F);
-        
-        //We don't want to enable blending though, as that's on-demand.
-        //Just in case it is enabled, however, disable it.
-        //This ensures the blending state is as it will be for the main rendering pass of -1.
-        //InterfaceRender.setBlend(false);
         
         //Render main pass, then blended pass.
         int displayGUIIndex = 0;
@@ -448,10 +504,27 @@ public class InterfaceRender implements IInterfaceRender {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
-            world.beginProfiling("MTSRendering", true);
+            world.beginProfiling("MTSRendering_Setup", true);
             allEntities.forEach(entity -> entity.render(blendingEnabled, partialTicks));
-            //Need to tell the buffer it's done rendering, else it'll hold onto the data and crash other systems.
+            //Need to tell the immediate buffer  it's done rendering, else it'll hold onto the data and crash other systems.
             ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
+
+            //Now iterate though cached renders and render them.
+            //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
+            world.beginProfiling("MTSRendering_Execution", false);
+            for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
+                RenderType renderType = renderEntry.getKey();
+                renderType.setupRenderState();
+                for (RenderData data : renderEntry.getValue()) {
+                    data.buffer.bind();
+                    renderType.format().setupBufferState(0L);
+                    data.buffer.draw(data.matrix, GL11.GL_QUADS);
+                }
+                renderType.format().clearBufferState();
+                renderType.clearRenderState();
+            }
+            queuedRenders.clear();
+            VertexBuffer.unbind();
             world.endProfiling();
         }
     }
@@ -517,6 +590,16 @@ public class InterfaceRender implements IInterfaceRender {
 
             //Return.
             return stateBuilder;
+        }
+    }
+
+    public static class RenderData {
+        public final Matrix4f matrix;
+        public final VertexBuffer buffer;
+
+        private RenderData(Matrix4f matrix, VertexBuffer buffer) {
+            this.matrix = new Matrix4f(matrix);
+            this.buffer = buffer;
         }
     }
 

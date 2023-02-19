@@ -83,9 +83,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             if (!entity.isValid) {
                 setDead();
             } else {
-                //Start master profiling section and new position..
-                entity.world.beginProfiling("MTSEntity_" + getEntityId(), true);
-                entity.world.beginProfiling("MovementOverhead", true);
+                //Set the new position. 
                 setPosition(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.
@@ -114,9 +112,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                             World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
                         }
                     }
+                    entity.world.endProfiling();
                 }
-                entity.world.endProfiling();
-                entity.world.endProfiling();
             }
         } else {
             //If we have NBT, and haven't loaded it, do so now.

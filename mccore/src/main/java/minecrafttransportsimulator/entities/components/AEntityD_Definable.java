@@ -1139,14 +1139,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         updateLightBrightness(partialTicks);
 
         //Parse model if it hasn't been already.
-        world.beginProfiling("ParsingMainModel", false);
+        world.beginProfiling("MainModel", false);
         String modelLocation = definition.getModelLocation(subDefinition);
         if (!objectLists.containsKey(modelLocation)) {
             objectLists.put(modelLocation, AModelParser.generateRenderables(this));
         }
 
         //Render model object individually.
-        world.beginProfiling("RenderingMainModel", false);
         for (RenderableModelObject modelObject : objectLists.get(modelLocation)) {
             modelObject.render(this, transform, blendingEnabled, partialTicks);
         }

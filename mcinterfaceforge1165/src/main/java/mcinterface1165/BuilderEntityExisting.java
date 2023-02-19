@@ -85,15 +85,11 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 remove();
             } else {
                 //Set the new position. 
-                entity.world.beginProfiling("MTSEntity_" + getUUID(), true);
-                entity.world.beginProfiling("MovementOverhead", false);
                 setPos(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.
                 if (!level.isClientSide && position().y < 0 && World.isOutsideBuildHeight(blockPosition())) {
                     remove();
-                    entity.world.endProfiling();
-                    entity.world.endProfiling();
                     return;
                 }
 
@@ -105,7 +101,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Only do this after the first tick of the entity, as we might have some states that need updating
                     //on that first tick that would cause bad maths.
                     //We also do this only every second, as it prevents excess checks.
-                    entity.world.beginProfiling("CollisionOverhead", false);
+                    entity.world.beginProfiling("CollisionOverhead", true);
                     interactionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getInteractionBoxes());
                     collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
                     if (interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
@@ -116,9 +112,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                             level.increaseMaxEntityRadius(Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius));
                         }
                     }
+                    entity.world.endProfiling();
                 }
-                entity.world.endProfiling();
-                entity.world.endProfiling();
             }
         } else {
             //If we have NBT, and haven't loaded it, do so now.
