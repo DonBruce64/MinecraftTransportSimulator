@@ -196,28 +196,26 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public boolean updateRider() {
         //Update entity position, motion, and orientation.
         if (rider.isValid()) {
-            if (requiresDeltaUpdates()) {
-                rider.setPosition(position, false);
-                rider.setVelocity(motion);
-                prevRiderRelativeOrientation.set(riderRelativeOrientation);
-                riderRelativeOrientation.angles.y += rider.getYawDelta();
-                //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
-                float pitchDelta = rider.getPitchDelta();
-                if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
-                    riderRelativeOrientation.angles.x += pitchDelta;
-                }
-                riderRelativeOrientation.updateToAngles();
-                riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
-                rider.setOrientation(riderTempMatrix);
-                prevRiderEyePosition.set(riderEyePosition);
-                riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
-                riderHeadPosition.set(riderEyePosition);
+            rider.setPosition(position, false);
+            rider.setVelocity(motion);
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            riderRelativeOrientation.angles.y += rider.getYawDelta();
+            //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
+            float pitchDelta = rider.getPitchDelta();
+            if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
+                riderRelativeOrientation.angles.x += pitchDelta;
+            }
+            riderRelativeOrientation.updateToAngles();
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
+            prevRiderEyePosition.set(riderEyePosition);
+            riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+            riderHeadPosition.set(riderEyePosition);
 
-                //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
-                if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
-                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomLevel - 4 : zoomLevel + 4).rotate(rider.getOrientation());
-                    riderEyePosition.add(riderTempPoint);
-                }
+            //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
+            if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
+                riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomLevel - 4 : zoomLevel + 4).rotate(rider.getOrientation());
+                riderEyePosition.add(riderTempPoint);
             }
             return true;
         } else {
