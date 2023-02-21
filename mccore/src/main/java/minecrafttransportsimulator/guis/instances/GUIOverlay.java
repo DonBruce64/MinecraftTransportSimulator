@@ -6,12 +6,9 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -69,20 +66,20 @@ public class GUIOverlay extends AGUIBase {
         scannerItem.stack = null;
         tooltipText.clear();
 
-        AEntityB_Existing mousedOverEntity = InterfaceManager.clientInterface.getMousedOverEntity();
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (player.isHoldingItemType(ItemComponentType.SCANNER)) {
-            if (mousedOverEntity instanceof AEntityF_Multipart) {
-                AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
-                Point3D playerEyesStartVector = player.getEyePosition();
-                Point3D playerEyesEndVector = playerEyesStartVector.copy().add(player.getLineOfSight(10));
+            Point3D startPosition = player.getEyePosition();
+            Point3D endPosition = player.getLineOfSight(10).add(startPosition);
+            EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+            if (interactResult != null && interactResult.entity instanceof AEntityF_Multipart) {
+                AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) interactResult.entity;
 
                 BoundingBox mousedOverBox = null;
                 JSONPartDefinition packVehicleDef = null;
                 for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activePartSlotBoxes.entrySet()) {
                     BoundingBox box = boxEntry.getKey();
-                    if (box.getIntersectionPoint(playerEyesStartVector, playerEyesEndVector) != null) {
-                        if (mousedOverBox == null || (box.globalCenter.distanceTo(playerEyesStartVector) < mousedOverBox.globalCenter.distanceTo(playerEyesStartVector))) {
+                    if (box.getIntersectionPoint(startPosition, endPosition) != null) {
+                        if (mousedOverBox == null || (box.globalCenter.distanceTo(startPosition) < mousedOverBox.globalCenter.distanceTo(startPosition))) {
                             mousedOverBox = box;
                             packVehicleDef = boxEntry.getValue();
                         }
@@ -123,18 +120,6 @@ public class GUIOverlay extends AGUIBase {
                             InterfaceManager.soundInterface.playQuickSound(new SoundInstance(multipart, InterfaceManager.coreModID + ":scanner_beep"));
                         }
                     }
-                }
-            }
-        } else {
-            if (mousedOverEntity instanceof PartInteractable) {
-                EntityFluidTank tank = ((PartInteractable) mousedOverEntity).tank;
-                if (tank != null) {
-                    mouseoverLabel.text = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-                }
-            } else if (mousedOverEntity instanceof TileEntityFluidLoader) {
-                EntityFluidTank tank = ((TileEntityFluidLoader) mousedOverEntity).getTank();
-                if (tank != null) {
-                    mouseoverLabel.text = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
                 }
             }
         }

@@ -194,20 +194,28 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case TICKET: {
                 if (!entity.world.isClient() && rightClick) {
-                    if (player.isSneaking()) {
-                        if (entity instanceof PartSeat) {
+
+                    if (entity instanceof PartSeat) {
+                        if (player.isSneaking()) {
                             if (entity.rider != null) {
                                 entity.removeRider();
                             }
-                        } else if (entity instanceof AEntityF_Multipart) {
-                            for (APart otherPart : ((AEntityF_Multipart<?>) entity).allParts) {
+                        } else {
+                            if (entity.rider == null) {
+                                entity.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), entity);
+                            }
+                        }
+                    } else if (entity instanceof APart) {
+                        AEntityF_Multipart<?> master = ((APart) entity).masterEntity;
+                        if (player.isSneaking()) {
+                            for (APart otherPart : master.allParts) {
                                 if (otherPart.rider != null) {
                                     otherPart.removeRider();
                                 }
                             }
+                        } else {
+                            master.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), master);
                         }
-                    } else {
-                        entity.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), entity);
                     }
                 }
                 return CallbackType.NONE;

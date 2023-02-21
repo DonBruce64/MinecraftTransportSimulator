@@ -42,7 +42,6 @@ public class BuilderGUI extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        //FIXME make sure that doubles are same units as ints as before.
         for (AGUIComponent component : gui.components) {
             if (component instanceof GUIComponentButton) {
                 GUIComponentButton button = (GUIComponentButton) component;
@@ -116,6 +115,8 @@ public class BuilderGUI extends Screen {
                     }
                 }
             }
+        } else {
+            return true;
         }
         return false;
     }
@@ -126,7 +127,6 @@ public class BuilderGUI extends Screen {
      */
     @Override
     public boolean charTyped(char key, int modifiers) {
-        //FIXME does this run after the prior method?  If so, okay, if not, we need to change something.
         if (!super.charTyped(key, modifiers)) {
             for (AGUIComponent component : gui.components) {
                 if (component instanceof GUIComponentTextBox) {
@@ -137,15 +137,17 @@ public class BuilderGUI extends Screen {
                     }
                 }
             }
+        } else {
+            return true;
         }
         return false;
     }
 
     @Override
     public void onClose() {
-        super.onClose();
         //Forward close event as this comes from an ESC key that we don't see.
         //Need to check if GUI is active in case we get multiple events.
+        //This lets us close our GUI, and the builder in one clean sweep.
         if (AGUIBase.activeGUIs.contains(gui)) {
             gui.close();
         }

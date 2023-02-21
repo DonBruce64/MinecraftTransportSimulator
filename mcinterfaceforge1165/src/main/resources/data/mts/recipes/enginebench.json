@@ -7,15 +7,13 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "tag": "forge:ingots/iron"
         },
         "b": {
             "item": "minecraft:iron_bars"
         },
         "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeRed"
+            "item": "minecraft:red_dye"
         },
         "d": {
             "item": "minecraft:iron_block"

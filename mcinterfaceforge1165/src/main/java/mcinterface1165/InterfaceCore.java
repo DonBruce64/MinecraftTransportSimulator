@@ -1,28 +1,25 @@
 package mcinterface1165;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
+import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
-    @Override
-    public String getGameVersion() {
-        return Minecraft.getInstance().getLaunchedVersion();
-    }
-
     @Override
     public boolean isModPresent(String modID) {
         return ModList.get().isLoaded(modID);
@@ -38,6 +35,19 @@ class InterfaceCore implements IInterfaceCore {
         return ModList.get().getModContainerById(modID).get().getModInfo().getDisplayName();
     }
     
+    @Override
+    public InputStream getPackResource(String resource) {
+        int assetsIndexEnd = resource.indexOf("assets/") + "assets/".length();
+        int modIDEnd = resource.indexOf("/", assetsIndexEnd + 1);
+        String modID = resource.substring(assetsIndexEnd, modIDEnd);
+        Optional<? extends ModContainer> optional = ModList.get().getModContainerById(modID);
+        if (optional.isPresent()) {
+            return optional.get().getMod().getClass().getResourceAsStream(resource);
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public void logError(String message) {
     	InterfaceLoader.LOGGER.error(message);

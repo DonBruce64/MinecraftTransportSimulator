@@ -1448,8 +1448,7 @@ public final class LegacyCompatSystem {
         }
 
         //Create a animation set for core poles if they don't have one and use the old auto-render systems.
-        if (definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering == null) {
-            definition.rendering = new JSONRendering();
+        if (definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering.animatedObjects == null) {
             definition.rendering.animatedObjects = new ArrayList<>();
             for (Axis axis : Axis.values()) {
                 if (!axis.equals(Axis.NONE)) {
@@ -1626,37 +1625,37 @@ public final class LegacyCompatSystem {
             }
         }
 
-        //If we are a beaon with no text, add it as it's required.
+        //If we are a beacon with no text, add it as it's required.
         if (definition.decor.type.equals(DecorComponentType.BEACON)) {
             if (definition.rendering == null) {
                 definition.rendering = new JSONRendering();
-                if (definition.rendering.textObjects == null) {
-                    definition.rendering.textObjects = new ArrayList<>();
+            }
+            if (definition.rendering.textObjects == null) {
+                definition.rendering.textObjects = new ArrayList<>();
 
-                    JSONText nameTextObject = new JSONText();
-                    nameTextObject.pos = new Point3D(0, -500, 0);
-                    nameTextObject.fieldName = "Beacon Name";
-                    nameTextObject.defaultText = "NONE";
-                    nameTextObject.maxLength = 5;
-                    nameTextObject.color = ColorRGB.WHITE;
-                    definition.rendering.textObjects.add(nameTextObject);
+                JSONText nameTextObject = new JSONText();
+                nameTextObject.pos = new Point3D(0, -500, 0);
+                nameTextObject.fieldName = "Beacon Name";
+                nameTextObject.defaultText = "NONE";
+                nameTextObject.maxLength = 5;
+                nameTextObject.color = ColorRGB.WHITE;
+                definition.rendering.textObjects.add(nameTextObject);
 
-                    JSONText glideslopeTextObject = new JSONText();
-                    glideslopeTextObject.pos = new Point3D(0, -500, 0);
-                    glideslopeTextObject.fieldName = "Glide Slope (Deg)";
-                    glideslopeTextObject.defaultText = "10.0";
-                    glideslopeTextObject.maxLength = 5;
-                    glideslopeTextObject.color = ColorRGB.WHITE;
-                    definition.rendering.textObjects.add(glideslopeTextObject);
+                JSONText glideslopeTextObject = new JSONText();
+                glideslopeTextObject.pos = new Point3D(0, -500, 0);
+                glideslopeTextObject.fieldName = "Glide Slope (Deg)";
+                glideslopeTextObject.defaultText = "10.0";
+                glideslopeTextObject.maxLength = 5;
+                glideslopeTextObject.color = ColorRGB.WHITE;
+                definition.rendering.textObjects.add(glideslopeTextObject);
 
-                    JSONText bearingTextObject = new JSONText();
-                    bearingTextObject.pos = new Point3D(0, -500, 0);
-                    bearingTextObject.fieldName = "Bearing (Deg)";
-                    bearingTextObject.defaultText = "0.0";
-                    bearingTextObject.maxLength = 5;
-                    bearingTextObject.color = ColorRGB.WHITE;
-                    definition.rendering.textObjects.add(bearingTextObject);
-                }
+                JSONText bearingTextObject = new JSONText();
+                bearingTextObject.pos = new Point3D(0, -500, 0);
+                bearingTextObject.fieldName = "Bearing (Deg)";
+                bearingTextObject.defaultText = "0.0";
+                bearingTextObject.maxLength = 5;
+                bearingTextObject.color = ColorRGB.WHITE;
+                definition.rendering.textObjects.add(bearingTextObject);
             }
         }
     }

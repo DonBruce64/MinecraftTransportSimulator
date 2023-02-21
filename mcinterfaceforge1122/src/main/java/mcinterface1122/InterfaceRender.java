@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -23,9 +22,9 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
@@ -59,7 +58,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, Integer> onlineTextures = new HashMap<>();
     private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
     private static final Map<ParsedGIF, Map<GIFImageFrame, Integer>> animatedGIFFrames = new LinkedHashMap<>();
-    private static final Map<IWrapperItemStack, Point3D> stacksToRender = new LinkedHashMap<>();
+    private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
@@ -79,8 +78,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void renderItemModel(IWrapperItemStack stack, Point3D translation) {
-        stacksToRender.put(stack, translation);
+    public void renderItemModel(GUIComponentItem component) {
+        stacksToRender.add(component);
     }
 
     @Override
@@ -354,13 +353,19 @@ public class InterfaceRender implements IInterfaceRender {
 
             //Need to disable internal lighting due to it messing up stack shading.
             setInternalLightingState(false);
-            for (Entry<IWrapperItemStack, Point3D> stackEntry : stacksToRender.entrySet()) {
+            for (GUIComponentItem component : stacksToRender) {
                 //Apply existing transform.
                 //Need to translate the z-offset to our value, which includes a -100 for the default added value.
-                Point3D translation = stackEntry.getValue();
                 float zOffset = Minecraft.getMinecraft().getRenderItem().zLevel;
-                Minecraft.getMinecraft().getRenderItem().zLevel = (float) translation.z - 100;
-                Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) stackEntry.getKey()).stack, (int) translation.x, (int) -translation.y);
+                Minecraft.getMinecraft().getRenderItem().zLevel = (float) component.translation.z - 100;
+                if (component.scale != 1.0) {
+                    GL11.glPushMatrix();
+                    GL11.glScalef(component.scale, component.scale, 1.0F);
+                    Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) (component.translation.x / component.scale), (int) -(component.translation.y / component.scale) + 1);
+                    GL11.glPopMatrix();
+                } else {
+                    Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) component.translation.x, (int) -component.translation.y);
+                }
                 Minecraft.getMinecraft().getRenderItem().zLevel = zOffset;
             }
             stacksToRender.clear();

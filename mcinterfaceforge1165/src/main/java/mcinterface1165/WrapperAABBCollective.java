@@ -16,7 +16,7 @@ import net.minecraft.util.math.vector.Vector3d;
  *
  * @author don_bruce
  */
-class WrapperAABBCollective extends AxisAlignedBB {
+public class WrapperAABBCollective extends AxisAlignedBB {
     protected final Collection<BoundingBox> boxes;
     protected BoundingBox lastBoxRayTraced;
 
@@ -29,76 +29,6 @@ class WrapperAABBCollective extends AxisAlignedBB {
     public WrapperAABBCollective inflate(double value) {
         return this;
     }
-
-    //FIXME this got moved to entities, we need to intercept that call...somehow.
-    //It's a VoxelShape though, so we can't really do anything except change our AABB on the entity
-    //to be the last-collided AABB, that should trick MC into using the right box...hopefully.
-    /*
-    @Override
-    public double calculateXOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
-            if (box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
-                if (offset > 0.0D) {
-                    //Positive offset, box.maxX <= this.minX.
-                    double collisionDepth = testBox.globalCenter.x - testBox.widthRadius - box.maxX;
-                    if (collisionDepth >= 0 && collisionDepth < offset) {
-                        offset = collisionDepth;
-                    }
-                } else if (offset < 0.0D) {
-                    //Negative offset, box.minX >= this.maxX.
-                    double collisionDepth = testBox.globalCenter.x + testBox.widthRadius - box.minX;
-                    if (collisionDepth <= 0 && collisionDepth > offset) {
-                        offset = collisionDepth;
-                    }
-                }
-            }
-        }
-        return offset;
-    }
-    
-    @Override
-    public double calculateYOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
-            if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
-                if (offset > 0.0D) {
-                    //Positive offset, box.maxX <= this.minX.
-                    double collisionDepth = testBox.globalCenter.y - testBox.heightRadius - box.maxY;
-                    if (collisionDepth >= 0 && collisionDepth < offset) {
-                        offset = collisionDepth;
-                    }
-                } else if (offset < 0.0D) {
-                    //Negative offset, box.minX >= this.maxX.
-                    double collisionDepth = testBox.globalCenter.y + testBox.heightRadius - box.minY;
-                    if (collisionDepth <= 0 && collisionDepth > offset) {
-                        offset = collisionDepth;
-                    }
-                }
-            }
-        }
-        return offset;
-    }
-    
-    @Override
-    public double calculateZOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
-            if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius) {
-                if (offset > 0.0D) {
-                    //Positive offset, box.maxX <= this.minX.
-                    double collisionDepth = testBox.globalCenter.z - testBox.depthRadius - box.maxZ;
-                    if (collisionDepth >= 0 && collisionDepth < offset) {
-                        offset = collisionDepth;
-                    }
-                } else if (offset < 0.0D) {
-                    //Negative offset, box.minX >= this.maxX.
-                    double collisionDepth = testBox.globalCenter.z + testBox.depthRadius - box.minZ;
-                    if (collisionDepth <= 0 && collisionDepth > offset) {
-                        offset = collisionDepth;
-                    }
-                }
-            }
-        }
-        return offset;
-    }*/
 
     @Override
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
@@ -139,5 +69,79 @@ class WrapperAABBCollective extends AxisAlignedBB {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Helper method that's akin to MC's older collision methods in 1.12.2, just here rather than
+     * in a VoxelShape.
+     */
+    public Vector3d getCollision(Vector3d movement, AxisAlignedBB testBox) {
+        double x = movement.x != 0 ? calculateXOffset(testBox, movement.x) : 0;
+        double y = movement.y != 0 ? calculateYOffset(testBox, movement.y) : 0;
+        double z = movement.z != 0 ? calculateZOffset(testBox, movement.z) : 0;
+        return new Vector3d(x, y, z);
+    }
+
+    private double calculateXOffset(AxisAlignedBB box, double offset) {
+        for (BoundingBox testBox : boxes) {
+            if (box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
+                if (offset > 0.0D) {
+                    //Positive offset, box.maxX <= this.minX.
+                    double collisionDepth = testBox.globalCenter.x - testBox.widthRadius - box.maxX;
+                    if (collisionDepth >= 0 && collisionDepth < offset) {
+                        offset = collisionDepth;
+                    }
+                } else if (offset < 0.0D) {
+                    //Negative offset, box.minX >= this.maxX.
+                    double collisionDepth = testBox.globalCenter.x + testBox.widthRadius - box.minX;
+                    if (collisionDepth <= 0 && collisionDepth > offset) {
+                        offset = collisionDepth;
+                    }
+                }
+            }
+        }
+        return offset;
+    }
+    
+    private double calculateYOffset(AxisAlignedBB box, double offset) {
+        for (BoundingBox testBox : boxes) {
+            if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
+                if (offset > 0.0D) {
+                    //Positive offset, box.maxX <= this.minX.
+                    double collisionDepth = testBox.globalCenter.y - testBox.heightRadius - box.maxY;
+                    if (collisionDepth >= 0 && collisionDepth < offset) {
+                        offset = collisionDepth;
+                    }
+                } else if (offset < 0.0D) {
+                    //Negative offset, box.minX >= this.maxX.
+                    double collisionDepth = testBox.globalCenter.y + testBox.heightRadius - box.minY;
+                    if (collisionDepth <= 0 && collisionDepth > offset) {
+                        offset = collisionDepth;
+                    }
+                }
+            }
+        }
+        return offset;
+    }
+    
+    private double calculateZOffset(AxisAlignedBB box, double offset) {
+        for (BoundingBox testBox : boxes) {
+            if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius) {
+                if (offset > 0.0D) {
+                    //Positive offset, box.maxX <= this.minX.
+                    double collisionDepth = testBox.globalCenter.z - testBox.depthRadius - box.maxZ;
+                    if (collisionDepth >= 0 && collisionDepth < offset) {
+                        offset = collisionDepth;
+                    }
+                } else if (offset < 0.0D) {
+                    //Negative offset, box.minX >= this.maxX.
+                    double collisionDepth = testBox.globalCenter.z + testBox.depthRadius - box.minZ;
+                    if (collisionDepth <= 0 && collisionDepth > offset) {
+                        offset = collisionDepth;
+                    }
+                }
+            }
+        }
+        return offset;
     }
 }

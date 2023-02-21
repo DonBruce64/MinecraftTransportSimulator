@@ -286,7 +286,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     @Override
     public boolean requiresDeltaUpdates() {
-        return super.requiresDeltaUpdates() || forceCollisionUpdateThisTick;
+        return !collisionSwitchboxes.isEmpty() || forceCollisionUpdateThisTick;
     }
 
     @Override
@@ -322,7 +322,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     return;
                 }
                 if (groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health) {
-                    AnimationSwitchbox switchBox = this.collisionSwitchboxes.get(groupDef);
+                    AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
                             for (BoundingBox box : collisionBoxes) {

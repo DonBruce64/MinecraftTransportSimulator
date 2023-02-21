@@ -60,6 +60,7 @@ public class GUIComponentCutout extends AGUIComponent {
             renderable.vertices.flip();
         }
         renderable.transform.setTranslation(position);
+        renderable.ignoreWorldShading = true;
         renderable.disableLighting = renderBright || ignoreGUILightingState;
         renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
         renderable.render();

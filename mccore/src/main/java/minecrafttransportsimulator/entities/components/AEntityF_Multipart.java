@@ -386,22 +386,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     IWrapperNBT partData = data.getData("part_" + i);
                     if (partData != null) {
                         AItemPart partItem = PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
-
-                        //TODO remove this a few versions down the line.
-                        int partSlot = i;
-                        Point3D partOffset = partData.getPoint3d("offset");
-                        if (!partOffset.isZero()) {
-                            for (int j = 0; j < definition.parts.size(); ++j) {
-                                JSONPartDefinition partDef = definition.parts.get(j);
-                                if (partDef.pos.equals(partOffset)) {
-                                    partSlot = j;
-                                    break;
-                                }
-                            }
-                        }
-                        //End todo
-
-                        addPartFromItem(partItem, placingPlayer, partData, partSlot);
+                        addPartFromItem(partItem, placingPlayer, partData, i);
                     }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");

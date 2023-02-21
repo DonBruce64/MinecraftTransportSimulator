@@ -21,6 +21,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * @author don_bruce
  */
+//Need to extend LivingEntity since spawn syncing packets don't work with the base Entity class.
 public abstract class ABuilderEntityBase extends Entity {
     protected static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, InterfaceLoader.MODID);
     protected static EntityType<ABuilderEntityBase> E_TYPE;
@@ -97,7 +98,7 @@ public abstract class ABuilderEntityBase extends Entity {
             if (!playersRequestingData.isEmpty()) {
                 for (IWrapperPlayer player : playersRequestingData) {
                     IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                    addAdditionalSaveData(((WrapperNBT) data).tag);
+                    saveWithoutId(((WrapperNBT) data).tag);
                     player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
                 }
                 playersRequestingData.clear();
@@ -131,28 +132,40 @@ public abstract class ABuilderEntityBase extends Entity {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundNBT tag) {
+    public void load(CompoundNBT tag) {
+        super.load(tag);
         //Save the NBT for loading in the next update call.
         lastLoadedNBT = tag;
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundNBT tag) {
+    public CompoundNBT saveWithoutId(CompoundNBT tag) {
+        super.saveWithoutId(tag);
         //Need to have this here as some mods will load us from NBT and then save us back
         //without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
         //If we did tick, then the last loaded will be null and this doesn't apply.
         if (lastLoadedNBT != null) {
             tag.merge(lastLoadedNBT);
         }
+        return tag;
     }
 
     //Junk methods.
+    @Override
+    protected void addAdditionalSaveData(CompoundNBT pCompound) {
+    }
+
+    @Override
+    protected void readAdditionalSaveData(CompoundNBT pCompound) {
+    }
+
     @Override
     protected void defineSynchedData() {
     }
 
     @Override
     public IPacket<?> getAddEntityPacket() {
+        //Spawn object, we have a mixin override this code on the client though since it doesn't know to handle us.
         return new SSpawnObjectPacket(this);
     }
 }

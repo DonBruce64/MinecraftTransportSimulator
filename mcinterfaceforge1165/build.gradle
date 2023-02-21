@@ -1,24 +1,27 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net" }
-				maven { url = "https://maven.parchmentmc.org" }
+        maven { url = "https://maven.parchmentmc.org" }
+        maven { url = "https://repo.spongepowered.org/maven" }
         mavenCentral()
     }
     dependencies {
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
-				classpath "org.parchmentmc:librarian:1.+"
+        classpath group: "org.parchmentmc", name: "librarian", version: "1.+"
+        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7.+"
     }
 }
 
 //Apply plugins
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "org.parchmentmc.librarian.forgegradle"
+apply plugin: "org.spongepowered.mixin"
 apply plugin: "eclipse"
 
 //Set file name.
-version = "1.12.2-22.1.0"
-group = "minecrafttransportsimulator"
-archivesBaseName = "Immersive Vehicles"
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+archivesBaseName = project.archive_name
 
 //Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = "1.8"
@@ -34,16 +37,29 @@ minecraft {
     // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
     //mappings channel: "official", version: "1.16.5"
-		mappings channel: "parchment", version: "2022.03.06-1.16.5"
+    mappings channel: project.mappings_channel, version: "${project.mappings_version}-${project.mc_version}"
 
     //Run configurations.
     runs {
         client {
             workingDirectory project.file("run")
+            arg "-mixin.config=mts.mixins.json"
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
         }
 
         server {
             workingDirectory project.file("runServer")
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
         }
     }
 }
@@ -56,30 +72,43 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    compileOnly.extendsFrom(embed)
+    implementation.extendsFrom(embed)
 }
 
 //Specify dependencies.
 dependencies {
     //Minecraft to use.
-    minecraft "net.minecraftforge:forge:1.16.5-36.2.23"
-    
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+    //Make mixin annotations actually do something
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
     //Core to use.
     embed(project(":mccore"))
 
     //Compile against the JEI API but do not include it at runtime
-		//JEI API changed, no JEI support for now
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152:api")
     //At runtime, use the full JEI jar
-    //Disabled as Access Transformers don"t work on FG higher than 2.3 despite them saying they do.
-    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152")
+}
+
+mixin {
+    add sourceSets.main, project.mixin_refmap
+    config project.mixin_config
 }
 
 //Here is where we zip up all embeds and add them to our jar.
 jar {
     from {
         configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    manifest {
+        attributes([
+                "TweakClass"    : project.mixin_tweaker,
+                "TweakOrder"    : "0",
+                "MixinConfigs"  : project.mixin_config,
+                "MixinConnector": project.mixin_connector
+        ])
     }
 }
 

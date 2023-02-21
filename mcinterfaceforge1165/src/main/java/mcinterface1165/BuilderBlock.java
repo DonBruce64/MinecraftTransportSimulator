@@ -212,13 +212,8 @@ public class BuilderBlock extends Block {
         } else if (block instanceof BlockCollision) {
             return VoxelShapes.create(WrapperWorld.convert(((BlockCollision) block).blockBounds));
         }
-        return VoxelShapes.block();
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public VoxelShape getBlockSupportShape(BlockState state, IBlockReader world, BlockPos pos) {
-        //If this is SOLID, we can attach things to this block (e.g. torches).  We don't want that for any of our blocks.
+        //Return empty here, since we don't every want to be considered a full block as it does bad lighting.
+        //When we get our TE data, then we can use that for the actual collision.
         return VoxelShapes.empty();
     }
 

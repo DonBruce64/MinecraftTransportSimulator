@@ -265,7 +265,7 @@ public class PartEngine extends APart {
                 if (starterLevel == 0) {
                     if (vehicleOn.electricPower > 1) {
                         starterLevel += 4;
-                    } else {
+                    } else if (!world.isClient()) {
                         setVariable(ELECTRIC_STARTER_VARIABLE, 0);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
                     }
@@ -279,7 +279,7 @@ public class PartEngine extends APart {
                     }
                 }
                 if (autoStarterEngaged) {
-                    if (running) {
+                    if (!world.isClient() && running) {
                         setVariable(ELECTRIC_STARTER_VARIABLE, 0);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
                     }
@@ -794,10 +794,14 @@ public class PartEngine extends APart {
                 return currentMaxSafeRPM;
             case ("engine_rpm_max"):
                 return currentMaxRPM;
+            case ("engine_rpm_revlimit"):
+                return currentRevlimitRPM;
             case ("engine_rpm_percent"):
                 return rpm / currentMaxRPM;
             case ("engine_rpm_percent_safe"):
                 return rpm / currentMaxSafeRPM;
+            case ("engine_rpm_percent_revlimit"):
+                return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
             case ("engine_rpm_target"):
             	return engineTargetRPM;
             case ("engine_fuel_flow"):

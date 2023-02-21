@@ -66,7 +66,7 @@ public final class ControlSystem {
             ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
         }
         for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            if (control.config.keyCode == 0) {
+            if (control.config.keyCode <= 0) {
                 control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
             }
         }
@@ -163,7 +163,7 @@ public final class ControlSystem {
     }
 
     private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA) {
-        //FIXME this causes yaw de-syncs.
+        //TODO this causes yaw de-syncs.
         if (lookR.isPressed()) {
             clientPlayer.setYaw(clientPlayer.getYaw() - 3);
         }

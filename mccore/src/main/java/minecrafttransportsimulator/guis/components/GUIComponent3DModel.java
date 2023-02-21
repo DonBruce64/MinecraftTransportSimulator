@@ -114,6 +114,7 @@ public class GUIComponent3DModel extends AGUIComponent {
             double totalScale = scale * scaleFactor;
             object.transform.applyScaling(totalScale, totalScale, totalScale);
             object.texture = textureLocation;
+            object.ignoreWorldShading = true;
             object.disableLighting = renderBright;
             object.render();
         }

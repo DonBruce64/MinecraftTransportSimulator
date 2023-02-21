@@ -1,0 +1,17 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "mcinterface1165.mixin",
+    "compatibilityLevel": "JAVA_8",
+		"mixins": [
+				"common.EntityMixin"
+		],
+    "client": [
+        "client.RenderInfoInvokerMixin",
+				"client.ClientPlayNetHandlerMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "refmap": "mts.refmap.json"
+}

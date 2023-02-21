@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -30,13 +31,14 @@ public class BuilderCreativeTab extends ItemGroup {
     protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<>();
 
     private final String label;
-    private final Item itemIcon;
+    private final AItemPack<?> tabItem;
     private final List<Item> items = new ArrayList<>();
 
-    BuilderCreativeTab(String name, BuilderItem mcItem) {
+    BuilderCreativeTab(String name, AItemPack<?> tabItem) {
         super(name);
         this.label = name;
-        this.itemIcon = mcItem;
+        //Need to delay turning this into a MC item since we may not yet have created a builder.
+        this.tabItem = tabItem;
     }
 
     /**
@@ -55,13 +57,13 @@ public class BuilderCreativeTab extends ItemGroup {
     @Override
     @OnlyIn(Dist.CLIENT)
     public ItemStack makeIcon() {
-        return itemIcon != null ? new ItemStack(itemIcon) : null;
+        return tabItem != null ? new ItemStack(BuilderItem.itemMap.get(tabItem)) : null;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public ItemStack getIconItem() {
-        if (itemIcon != null) {
+        if (tabItem != null) {
             return super.getIconItem();
         } else {
             return new ItemStack(items.get((int) (System.currentTimeMillis() / 1000 % items.size())));

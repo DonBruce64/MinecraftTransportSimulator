@@ -10,8 +10,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
@@ -33,7 +33,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * @author don_bruce
  */
-public class BuilderTileEntity extends TileEntity implements ITickable {
+public class BuilderTileEntity extends TileEntity implements ITickableTileEntity {
     protected static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, InterfaceLoader.MODID);
     protected static RegistryObject<TileEntityType<BuilderTileEntity>> TE_TYPE;
     

@@ -18,16 +18,12 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
-    protected static RegistryObject<EntityType<BuilderEntityRenderForwarder>> E_TYPE4;
-    protected static BuilderEntityRenderForwarder lastClientInstance;
+    public static RegistryObject<EntityType<BuilderEntityRenderForwarder>> E_TYPE4;
 
     protected PlayerEntity playerFollowing;
 
     public BuilderEntityRenderForwarder(EntityType<? extends BuilderEntityRenderForwarder> eType, World world) {
         super(eType, world);
-        if (world.isClientSide) {
-            lastClientInstance = this;
-        }
     }
 
     public BuilderEntityRenderForwarder(PlayerEntity playerFollowing) {

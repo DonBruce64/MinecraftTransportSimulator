@@ -61,7 +61,7 @@ public final class InterfaceLoader {
             packDirectories.add(modDirectory);
 
             //Also add version-specific directory.
-            File versionedModDirectory = new File(modDirectory, InterfaceManager.coreInterface.getGameVersion());
+            File versionedModDirectory = new File(modDirectory, "1.12.2");
             if (versionedModDirectory.exists()) {
                 packDirectories.add(versionedModDirectory);
             }

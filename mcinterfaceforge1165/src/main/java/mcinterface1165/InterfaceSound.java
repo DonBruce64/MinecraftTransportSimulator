@@ -364,7 +364,7 @@ public class InterfaceSound implements IInterfaceSound {
             //Need to parse the data.  Do so now.
             String soundDomain = soundName.substring(0, soundName.indexOf(':'));
             String soundPath = soundName.substring(soundDomain.length() + 1);
-            InputStream soundStream = InterfaceSound.class.getResourceAsStream("/assets/" + soundDomain + "/sounds/" + soundPath + ".ogg");
+            InputStream soundStream = InterfaceManager.coreInterface.getPackResource("/assets/" + soundDomain + "/sounds/" + soundPath + ".ogg");
             if (soundStream != null) {
                 //Create decoder and decode whole file.
                 OGGDecoder decoder = new OGGDecoder(soundStream);

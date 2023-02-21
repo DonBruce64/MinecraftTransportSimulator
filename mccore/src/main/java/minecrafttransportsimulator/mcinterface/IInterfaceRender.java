@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**
@@ -22,10 +23,10 @@ public interface IInterfaceRender {
     float[] getDefaultBlockTexture(String name);
 
     /**
-     * Renders the item model for the passed-in stack.  Only
+     * Renders the item model for the passed-in component.  Only
      * renders the item model: does not render text for counts.
      */
-    void renderItemModel(IWrapperItemStack stack, Point3D translation);
+    void renderItemModel(GUIComponentItem component);
 
     /**
      * Renders the vertices stored in the passed-in {@link RenderableObject}.

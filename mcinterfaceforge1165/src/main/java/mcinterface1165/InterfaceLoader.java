@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -28,8 +29,11 @@ import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -51,7 +55,19 @@ public class InterfaceLoader {
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
 
+
     public InterfaceLoader() {
+        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
+    }
+
+    /**Need to defer init until post-mod construction, as in this version
+     * {@link IInterfaceCore#getModName(String)} requires a constructor pack-mod
+     * instance to query the classloader for a resource, and we need that for pack
+     * init in the boot calls.
+     * 
+     */
+    public void init(FMLConstructModEvent event) {
         //Add registries.
         BuilderItem.ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderBlock.BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
@@ -61,18 +77,16 @@ public class InterfaceLoader {
         //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
         boolean isClient = FMLEnvironment.dist.isClient();
 
-        //Get game directory.
-        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
-
         //Init interfaces and send to the main game system.
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
-            InterfaceEventsModelLoader.init();
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::registerRenderer);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceEventsModelLoader::init);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION: " + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
@@ -81,21 +95,12 @@ public class InterfaceLoader {
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
 
-            //Also add version-specific directory.
-            File versionedModDirectory = new File(modDirectory, InterfaceManager.coreInterface.getGameVersion());
-            if (versionedModDirectory.exists()) {
-                packDirectories.add(versionedModDirectory);
-            }
-
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
-
-        //Create creative tabs.  Required before items since those need tabs in their constructors.
-        //FIXME do we need to do anything here?
 
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
@@ -111,7 +116,8 @@ public class InterfaceLoader {
                         String tabID = item.getCreativeTabID();
                         if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                             JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
-                            BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, BuilderItem.itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
+                            AItemPack<?> tabItem = packConfiguration.packItem != null ? PackParser.getItem(packConfiguration.packID, packConfiguration.packItem) : null;
+                            BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, tabItem));
                         }
                         itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
                     }
@@ -133,9 +139,10 @@ public class InterfaceLoader {
             //Register the item.
             BuilderItem.ITEMS.register(item.getRegistrationName(), () -> mcItem);
 
-            //If the item is for OreDict, add it.
-            //Well, we would if that existed....
-            //FIXME add tags perhaps?
+            //If the item is for OreDict, add it...as a tag!  Cause this is the new standard.
+            if (item.definition.general.oreDict != null) {
+                ItemTags.createOptional(new ResourceLocation(MODID, item.definition.general.oreDict));
+            }
         }
 
         //Register the IItemBlock blocks.  We cheat here and

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
+import mcinterface1165.mixin.client.RenderInfoInvokerMixin;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -57,12 +57,13 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
+    private static float riderStoredHeadRot;
+    private static float riderStoredHeadRotO;
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
-    private static final Point3D playerPosition = new Point3D();
-    private static final Point3D playerPrevPosition = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
-    private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
+    private static PlayerEntity mcPlayer;
+
     private static int lastScreenWidth;
     private static int lastScreenHeight;
 
@@ -73,72 +74,31 @@ public class InterfaceEventsEntityRendering {
     public static void on(CameraSetup event) {
         ActiveRenderInfo info = event.getInfo();
         if (info.getEntity() instanceof PlayerEntity) {
-            IWrapperPlayer player = WrapperPlayer.getWrapperFor((PlayerEntity) info.getEntity());
+            mcPlayer = (PlayerEntity) info.getEntity();
+            IWrapperPlayer player = WrapperPlayer.getWrapperFor(mcPlayer);
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
-            if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
-                //Set helper to the current camera position.
-                PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-                playerPosition.set(mcPlayer.position().x, mcPlayer.position().y, mcPlayer.position().z);
-                playerPrevPosition.set(mcPlayer.xo, mcPlayer.yo, mcPlayer.zo);
+            float partialTicks = (float) event.getRenderPartialTicks();
+            if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, partialTicks)) {
+                //Camera adjustments occur backwards here.  Reverse order in the matrix.
+                //Also need to reverse sign of Y, since that's backwards in MC.
+                cameraAdjustedOrientation.convertToAngles();
+                if (!InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
+                    //Inverted third-person needs roll and pich flipped due to the opposite perspective.
+                    //It also needs the camera rotated 180 in the Y to face the other direction.
+                    event.setRoll((float) -cameraAdjustedOrientation.angles.z);
+                    event.setPitch((float) -cameraAdjustedOrientation.angles.x);
+                    event.setYaw((float) (-cameraAdjustedOrientation.angles.y + 180));
+                } else {
+                    event.setRoll((float) cameraAdjustedOrientation.angles.z);
+                    event.setPitch((float) cameraAdjustedOrientation.angles.x);
+                    event.setYaw((float) -cameraAdjustedOrientation.angles.y);
+                }
 
-                //Need to transpose the rotation so it applies opposite.
-                double temp;
-                temp = cameraAdjustedOrientation.m01;
-                cameraAdjustedOrientation.m01 = cameraAdjustedOrientation.m10;
-                cameraAdjustedOrientation.m10 = temp;
-
-                temp = cameraAdjustedOrientation.m02;
-                cameraAdjustedOrientation.m02 = cameraAdjustedOrientation.m20;
-                cameraAdjustedOrientation.m20 = temp;
-
-                temp = cameraAdjustedOrientation.m12;
-                cameraAdjustedOrientation.m12 = cameraAdjustedOrientation.m21;
-                cameraAdjustedOrientation.m21 = temp;
-
-                //Rotate by 180 to get the forwards-facing orientation.
-                //Operations are done here with the camera facing the player.
-                cameraAdjustments.resetTransforms();
-                cameraAdjustments.rotateY(180);
-                cameraAdjustments.convertToAngles();
-
-                //Set the player's position to the calculated camera position, setup the render info, then set it back.
-                //This tricks MC into rendering where we want it to during the subsequent steps.
-                mcPlayer.setPos(cameraAdjustedPosition.x, cameraAdjustedPosition.y - player.getEyeHeight(), cameraAdjustedPosition.z);
-                mcPlayer.xo = mcPlayer.position().x;
-                mcPlayer.yo = mcPlayer.position().y;
-                mcPlayer.zo = mcPlayer.position().z;
-
-                Minecraft minecraft = Minecraft.getInstance();
-                info.setup(Minecraft.getInstance().level, mcPlayer, !minecraft.options.getCameraType().isFirstPerson(), minecraft.options.getCameraType().isMirrored(), (float) event.getRenderPartialTicks());
-
-                mcPlayer.setPos(playerPosition.x, playerPosition.y, playerPosition.z);
-                mcPlayer.xo = playerPrevPosition.x;
-                mcPlayer.yo = playerPrevPosition.y;
-                mcPlayer.zo = playerPrevPosition.z;
-
-                event.setYaw((float) cameraAdjustments.angles.y);
-                event.setPitch((float) cameraAdjustments.angles.x);
-                event.setRoll((float) cameraAdjustments.angles.z);
-
-                //FIXME this won't work, try the render info?
-
-                /*GL11.glRotatef(180F, 0, 1, 0);
-                
-                //Set matrix and apply.
-                cameraAdjustments.setRotation(cameraAdjustedOrientation);
-                InterfaceRender.applyTransformOpenGL(cameraAdjustments);
-                
-                //Set and apply translation.  We need the inverse here as well.
-                cameraAdjustedPosition.subtract(playerPositionHelper).invert();
-                //System.out.println(cameraAdjustedPosition);
-                GL11.glTranslated(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
-                
-                //Set event to 0 to block its transforms since they'll be at the wrong origin.
-                event.setYaw(0);
-                event.setPitch(0);
-                event.setRoll(0);
-                */
+                //Move the info's setup to the set position of the camera.
+                //This will offset the player's eye position to match the camera.
+                //We do this in first-person mode since third-person adds zoom stuff.
+                ((RenderInfoInvokerMixin) info).invoke_setPosition(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
             }
         }
     }
@@ -174,10 +134,9 @@ public class InterfaceEventsEntityRendering {
             int screenHeight = (int) displaySize;
             double[] xPos = new double[1];
             double[] yPos = new double[1];
-            //FIXME this might not work if units aren't the same.
-            GLFW.glfwGetCursorPos(Minecraft.getInstance().getWindow().getWindow(), xPos, yPos);
+            GLFW.glfwGetCursorPos(event.getWindow().getWindow(), xPos, yPos);
             int mouseX = (int) (xPos[0] * screenWidth / Minecraft.getInstance().getWindow().getWidth());
-            int mouseY = (int) (screenHeight - yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight() - 1);
+            int mouseY = (int) (yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight());
 
             float partialTicks = event.getPartialTicks();
             boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
@@ -185,7 +144,8 @@ public class InterfaceEventsEntityRendering {
                 lastScreenWidth = screenWidth;
                 lastScreenHeight = screenHeight;
             }
-            InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+
+            InterfaceRender.renderGUI(event.getMatrixStack(), mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
         }
     }
 
@@ -195,7 +155,6 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         needPlayerTweaks = false;
-        needToPopMatrix = false;
         renderCurrentRiderSitting = false;
         renderCurrentRiderStanding = false;
         leftArmAngles.set(0, 0, 0);
@@ -205,7 +164,7 @@ public class InterfaceEventsEntityRendering {
         AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
         //This may be null if MC sets this player as riding before the actual entity has time to load NBT.
         if (ridingEntity != null) {
-            GL11.glPushMatrix();
+            event.getMatrixStack().pushPose();
             //Get orientation and scale for entity.
             //Head is relative to the body.
             ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
@@ -237,6 +196,9 @@ public class InterfaceEventsEntityRendering {
 
             //Set the entity's head yaw to the delta between their yaw and their angled yaw.
             //This needs to be relative as we're going to render relative to the body here, not the world.
+            //Need to store these though, since they get used in other areas not during rendering and this will foul them.
+            riderStoredHeadRot = entity.yHeadRot;
+            riderStoredHeadRotO = entity.yHeadRotO;
             entity.yHeadRot = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
             entity.yHeadRotO = entity.yHeadRot;
 
@@ -251,17 +213,14 @@ public class InterfaceEventsEntityRendering {
                 //Get delta between camera and rendered entity.
                 Vector3d cameraEntityPos = cameraEntity.position();
                 Vector3d entityPos = entity.position();
-                Point3D deltaDistance = new Point3D(entity.xo - cameraEntity.xo + (entityPos.x - entity.xo - (cameraEntityPos.x - cameraEntity.xo)) * event.getPartialRenderTick(), entity.yo - cameraEntity.yo + (entityPos.y - entity.yo - (cameraEntityPos.y - cameraEntity.yo)) * event.getPartialRenderTick(), entity.zo - cameraEntity.zo + (entityPos.z - entity.zo - (cameraEntityPos.z - cameraEntity.zo)) * event.getPartialRenderTick());
+                new Point3D(entity.xo - cameraEntity.xo + (entityPos.x - entity.xo - (cameraEntityPos.x - cameraEntity.xo)) * event.getPartialRenderTick(), entity.yo - cameraEntity.yo + (entityPos.y - entity.yo - (cameraEntityPos.y - cameraEntity.yo)) * event.getPartialRenderTick(), entity.zo - cameraEntity.zo + (entityPos.z - entity.zo - (cameraEntityPos.z - cameraEntity.zo)) * event.getPartialRenderTick());
 
                 //Apply translations and rotations to move entity to correct position relative to the camera entity.
                 riderTotalTransformation.resetTransforms();
-                riderTotalTransformation.setTranslation(deltaDistance);
                 riderTotalTransformation.applyRotation(riderBodyOrientation);
                 riderTotalTransformation.applyScaling(entityScale);
                 riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-                riderTotalTransformation.applyInvertedTranslation(deltaDistance);
-                //FIXME need to get the stack POS here to adjust transforms.
-                //InterfaceRender.applyTransformOpenGL(riderTotalTransformation);
+                event.getMatrixStack().last().pose().multiply(InterfaceRender.convertMatrix4f(riderTotalTransformation));
             }
 
             needToPopMatrix = true;
@@ -372,7 +331,11 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
-            GL11.glPopMatrix();
+            event.getMatrixStack().popPose();
+            LivingEntity entity = event.getEntity();
+            entity.yHeadRot = riderStoredHeadRot;
+            entity.yHeadRotO = riderStoredHeadRotO;
+            needToPopMatrix = false;
         }
         if (heldStackHolder != null) {
             PlayerEntity player = (PlayerEntity) event.getEntity();
@@ -394,31 +357,31 @@ public class InterfaceEventsEntityRendering {
             super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             if (needPlayerTweaks) {
                 if (renderCurrentRiderSitting) {
-                    this.leftLeg.x = (float) Math.toRadians(-90);
-                    this.leftLeg.y = 0;
-                    this.leftLeg.z = 0;
+                    this.leftLeg.xRot = (float) Math.toRadians(-90);
+                    this.leftLeg.yRot = 0;
+                    this.leftLeg.zRot = 0;
                     this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.x = (float) Math.toRadians(-90);
-                    this.rightLeg.y = 0;
-                    this.rightLeg.z = 0;
+                    this.rightLeg.xRot = (float) Math.toRadians(-90);
+                    this.rightLeg.yRot = 0;
+                    this.rightLeg.zRot = 0;
                     this.rightPants.copyFrom(this.rightLeg);
                 } else if (renderCurrentRiderStanding) {
-                    this.leftLeg.x = 0;
-                    this.leftLeg.y = 0;
-                    this.leftLeg.z = 0;
+                    this.leftLeg.xRot = 0;
+                    this.leftLeg.yRot = 0;
+                    this.leftLeg.zRot = 0;
                     this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.x = 0;
-                    this.rightLeg.y = 0;
-                    this.rightLeg.z = 0;
+                    this.rightLeg.xRot = 0;
+                    this.rightLeg.yRot = 0;
+                    this.rightLeg.zRot = 0;
                     this.rightPants.copyFrom(this.rightLeg);
                 }
-                this.leftArm.x = (float) leftArmAngles.x;
-                this.leftArm.y = (float) leftArmAngles.y;
-                this.leftArm.z = (float) leftArmAngles.z;
+                this.leftArm.xRot = (float) leftArmAngles.x;
+                this.leftArm.yRot = (float) leftArmAngles.y;
+                this.leftArm.zRot = (float) leftArmAngles.z;
                 this.leftSleeve.copyFrom(this.leftArm);
-                this.rightArm.x = (float) rightArmAngles.x;
-                this.rightArm.y = (float) rightArmAngles.y;
-                this.rightArm.z = (float) rightArmAngles.z;
+                this.rightArm.xRot = (float) rightArmAngles.x;
+                this.rightArm.yRot = (float) rightArmAngles.y;
+                this.rightArm.zRot = (float) rightArmAngles.z;
                 this.rightSleeve.copyFrom(this.rightArm);
             }
         }

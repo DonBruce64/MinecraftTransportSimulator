@@ -16,7 +16,9 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemDecor;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -130,17 +132,19 @@ public class InterfaceJEI implements IModPlugin {
 
         @Override
         public void setIngredients(PackRecipeWrapper recipe, IIngredients ingredients) {
-            List<List<ItemStack>> inputs = new ArrayList<>();
-            //FIXME disabled for now since it spams the logs.
-            /*for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair)) {
-                List<ItemStack> stacks = new ArrayList<>();
-                for (IWrapperItemStack stack : component.possibleItems) {
-                    stacks.add(((WrapperItemStack) stack).stack);
+            List<PackMaterialComponent> components = PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair);
+            if (components != null) {
+                List<List<ItemStack>> inputs = new ArrayList<>();
+                for (PackMaterialComponent component : components) {
+                    List<ItemStack> stacks = new ArrayList<>();
+                    for (IWrapperItemStack stack : component.possibleItems) {
+                        stacks.add(((WrapperItemStack) stack).stack);
+                    }
+                    inputs.add(stacks);
                 }
-                inputs.add(stacks);
-            }*/
-            ingredients.setInputLists(VanillaTypes.ITEM, inputs);
-            ingredients.setOutput(VanillaTypes.ITEM, ((WrapperItemStack) recipe.packItem.getNewStack(null)).stack);
+                ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+                ingredients.setOutput(VanillaTypes.ITEM, ((WrapperItemStack) recipe.packItem.getNewStack(null)).stack);
+            }
         }
 
         @Override

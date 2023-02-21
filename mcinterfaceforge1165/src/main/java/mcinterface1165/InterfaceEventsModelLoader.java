@@ -28,8 +28,8 @@ import net.minecraft.resources.ResourcePackType;
 import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.resource.VanillaResourceType;
+import net.minecraft.util.Unit;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -41,33 +41,24 @@ import net.minecraftforge.resource.VanillaResourceType;
 public class InterfaceEventsModelLoader {
 
     /**
-     * Called during init to inject the custom resource pack loader into the files.
+     * Called to init the custom model loader.  Fired when Forge is ready to register models.
+     * This allows injecting our custom resource manager into MC's systems to have it use it.
+     * We also register it as a reload listener, as on a resource reload MC will purge the list
+     * of packs and will re-query from disk.  But we aren't on disk, and so we will need to be
+     * ready when that call comes and will re-add ourselves.
      */
-    public static void init() {
-
-        //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
-        //FAR easier than trying to use the bloody bakery system.
-        //FIXME this probably wor't work for the packs, we test.
+    public static void init(ModelRegistryEvent event) {
         try {
-            //Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
-            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(new PackResourcePack(InterfaceLoader.MODID));
-            ForgeHooksClient.refreshResources(Minecraft.getInstance(), VanillaResourceType.MODELS);
+            SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager();
+            for (String packID : PackParser.getAllPackIDs()) {
+                PackResourcePack newPack = new PackResourcePack(packID);
+                manager.add(newPack);
+                manager.registerReloadListener(newPack);
+            }
         } catch (Exception e) {
-            InterfaceManager.coreInterface.logError("Could not get default pack list. Item icons will be disabled.");
+            InterfaceManager.coreInterface.logError("Could not add ourselves to the resource list. Files won't load correctly!");
             e.printStackTrace();
         }
-
-        //Now that we have the custom resource pack location, add our built-in loader.
-        //This one auto-generates item JSONs.
-        //defaultPacks.add(new PackResourcePack(InterfaceManager.coreModID + "_packs"));
-
-        //Now register items for the packs.
-        //When we register a pack item from an external pack, we'll need to make a resource loader for it.
-        //This is done to allow MC/Forge to play nice with item textures.
-        //FIXME we can't register item models anymore, we just need to make an inject the custom pack loader.
-        /*
-        
-        */
     }
 
     /**
@@ -82,13 +73,10 @@ public class InterfaceEventsModelLoader {
             this.domain = domain;
             domains = new HashSet<>();
             domains.add(domain);
-            System.out.println("I M NEW");
         }
 
         @Override
         public InputStream getResource(ResourcePackType type, ResourceLocation location) throws IOException {
-            System.out.println(location);
-
             //Create stream return variable and get raw data.
             InputStream stream;
             String rawPackInfo = location.getPath();
@@ -102,7 +90,7 @@ public class InterfaceEventsModelLoader {
                 String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
                 if (!strippedSuffix.contains(".")) {
                     //JSON reference.  Get the specified file.
-                    stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
+                    stream = InterfaceManager.coreInterface.getPackResource("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
                         if (ConfigSystem.settings.general.devMode.value) {
                             InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
@@ -125,7 +113,7 @@ public class InterfaceEventsModelLoader {
                         resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 
                         //Try to load the item JSON, or create it if it doesn't exist.
-                        stream = getClass().getResourceAsStream(resourcePath);
+                        stream = InterfaceManager.coreInterface.getPackResource(resourcePath);
                         if (stream == null) {
                             //Get the actual texture path.
                             itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
@@ -173,14 +161,14 @@ public class InterfaceEventsModelLoader {
                     if (packItem != null) {
                         //Get the actual resource path for this resource and return its stream.
                         String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
 
                         if (stream == null) {
                             if (isItemPNG) {
                                 //We might not have this file, but we also might have a JSON-defined item here.
                                 //Try the JSON standards before throwing an error.
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
-                                stream = getClass().getResourceAsStream(streamJSONLocation);
+                                stream = InterfaceManager.coreInterface.getPackResource(streamJSONLocation);
                                 if (stream == null) {
                                     if (ConfigSystem.settings.general.devMode.value) {
                                         if (streamLocation != null) {
@@ -202,7 +190,7 @@ public class InterfaceEventsModelLoader {
                         //No pack item for this texture.  Must be an internal texture for other things.
                         //In this case, we just get the stream exact location.
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
-                        stream = getClass().getResourceAsStream(streamLocation);
+                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
                         if (stream == null) {
                             if (ConfigSystem.settings.general.devMode.value) {
                                 InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
@@ -244,7 +232,7 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public String getName() {
-            return domain + "_packs";
+            return domain + "_pack";
         }
 
         @Override
@@ -269,9 +257,10 @@ public class InterfaceEventsModelLoader {
         @Override
         public CompletableFuture<Void> reload(IStage pStage, IResourceManager pResourceManager, IProfiler pPreparationsProfiler, IProfiler pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
             //Re-add us to the main resource pack list, otherwise we go poof!
-            //FIXME this might not play nice with the future-tasks....
             ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(this);
-            return CompletableFuture.completedFuture(null);
+            return pStage.wait(Unit.INSTANCE).thenRunAsync(() -> {
+                //Do nothing.  This return value is just to keep the MC reloading code from locking up.
+            }, pGameExecutor);
         }
     }
 }

@@ -4,13 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -25,10 +20,8 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.Fluid;
@@ -137,39 +130,6 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public AEntityB_Existing getMousedOverEntity() {
-        //See what we are hitting.
-        RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-        if (lastHit != null) {
-            Point3D mousedOverPoint = new Point3D(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
-            if (lastHit.entityHit != null) {
-                if (lastHit.entityHit instanceof BuilderEntityExisting) {
-                    AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
-                    if (mousedOverEntity instanceof AEntityF_Multipart) {
-                        AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
-                        for (BoundingBox box : multipart.allInteractionBoxes) {
-                            if (box.isPointInside(mousedOverPoint)) {
-                                APart part = multipart.getPartWithBox(box);
-                                if (part != null) {
-                                    return part;
-                                }
-                            }
-                        }
-                    }
-                    return mousedOverEntity;
-                }
-            } else {
-                TileEntity mcTile = getClientWorld().world.getTileEntity(lastHit.getBlockPos());
-                if (mcTile instanceof BuilderTileEntityFluidTank) {
-                    BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
-                    return builder.tileEntity;
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
     public void closeGUI() {
         Minecraft.getMinecraft().displayGuiScreen(null);
     }
@@ -225,73 +185,77 @@ public class InterfaceClient implements IInterfaceClient {
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
-        if (!InterfaceManager.clientInterface.isGamePaused() && event.phase.equals(Phase.END)) {
-            changedCameraState = false;
-            if (actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-                changedCameraState = true;
-                actuallyFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
-            }
-            if (actuallyThirdPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 1) {
-                changedCameraState = true;
-                actuallyThirdPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
-            }
-            if (changeCameraRequest) {
-                if (actuallyFirstPerson) {
-                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-                    actuallyFirstPerson = false;
-                    actuallyThirdPerson = true;
-                } else {
-                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-                    actuallyFirstPerson = true;
-                    actuallyThirdPerson = false;
-                }
-                changeCameraRequest = false;
-            }
+        if (!InterfaceManager.clientInterface.isGamePaused()) {
+            WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+            if (world != null) {
+                if (event.phase.equals(Phase.START)) {
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
 
-            WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
-            if (clientWorld != null) {
-                clientWorld.beginProfiling("MTS_BulletUpdates", true);
-                for (EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)) {
-                    bullet.update();
-                }
-
-                clientWorld.beginProfiling("MTS_ParticleUpdates", false);
-                for (EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)) {
-                    particle.update();
-                }
-                clientWorld.endProfiling();
-
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                if (player != null && !player.isSpectator()) {
-                    ControlSystem.controlGlobal(player);
-                    if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                            new GUIPackMissing();
+                    //Open pack missing screen if we don't have packs.
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null && !player.isSpectator()) {
+                        ControlSystem.controlGlobal(player);
+                        if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
+                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                                new GUIPackMissing();
+                            }
                         }
                     }
-                }
 
-                if (activeFollower != null) {
-                    //Follower exists, check if world is the same and it is actually updating.
-                    //We check basic states, and then the watchdog bit that gets reset every tick.
-                    //This way if we're in the world, but not valid we will know.
-                    EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
-                    if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
-                        //Follower is not linked.  Remove it and re-create in code below.
-                        activeFollower.setDead();
-                        activeFollower = null;
-                        ticksSincePlayerJoin = 0;
+                    //Check follower.
+                    if (activeFollower != null) {
+                        //Follower exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
+                        if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            activeFollower.setDead();
+                            activeFollower = null;
+                            ticksSincePlayerJoin = 0;
+                        } else {
+                            ++activeFollower.idleTickCounter;
+                        }
                     } else {
-                        ++activeFollower.idleTickCounter;
+                        //Follower does not exist, check if player has been present for 3 seconds and spawn it.
+                        if (++ticksSincePlayerJoin == 60) {
+                            activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
+                            activeFollower.loadedFromSavedNBT = true;
+                            world.world.spawnEntity(activeFollower);
+                        }
                     }
                 } else {
-                    //Follower does not exist, check if player has been present for 3 seconds and spawn it.
-                    if (++ticksSincePlayerJoin == 60) {
-                        activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
-                        activeFollower.loadedFromSavedNBT = true;
-                        clientWorld.world.spawnEntity(activeFollower);
+                    //Update player guns.  These happen at the end since they need the player to update first.
+                    world.beginProfiling("MTS_PlayerGunUpdates", true);
+                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
+                        gun.update();
+                        gun.doPostUpdateLogic();
+                    }
+
+                    changedCameraState = false;
+                    if (actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+                        changedCameraState = true;
+                        actuallyFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+                    }
+                    if (actuallyThirdPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 1) {
+                        changedCameraState = true;
+                        actuallyThirdPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+                    }
+                    if (changeCameraRequest) {
+                        if (actuallyFirstPerson) {
+                            Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+                            actuallyFirstPerson = false;
+                            actuallyThirdPerson = true;
+                        } else {
+                            Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+                            actuallyFirstPerson = true;
+                            actuallyThirdPerson = false;
+                        }
+                        changeCameraRequest = false;
                     }
                 }
+                world.endProfiling();
             }
         }
     }

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.InputStream;
 import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -13,11 +14,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
  * @author don_bruce
  */
 public interface IInterfaceCore {
-
-    /**
-     * Returns the game version for this current instance.
-     */
-    String getGameVersion();
 
     /**
      * Returns true if the mod with the passed-in modID is present.
@@ -34,6 +30,14 @@ public interface IInterfaceCore {
      */
     String getModName(String modID);
     
+    /**
+     * Returns the resource for the specified pack.  This is required as higher Forge
+     * versions don't add not-mods to the classpath and we can't load their resources
+     * from the core mod since they have their own classloader.
+     * The resource to be requested is a fully-qualified path, not any short-hand. 
+     */
+    InputStream getPackResource(String resource);
+
     /**
      * Logs an error to the logging system.
      */

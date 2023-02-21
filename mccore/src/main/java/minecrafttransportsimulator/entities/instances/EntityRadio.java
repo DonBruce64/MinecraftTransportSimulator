@@ -70,6 +70,12 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     @Override
+    public boolean shouldAutomaticallyUpdate() {
+        //Radios get ticked from their parents post-update.
+        return false;
+    }
+
+    @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.RADIO));
         return true;

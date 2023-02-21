@@ -9,10 +9,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -85,20 +83,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             if (!entity.isValid) {
                 setDead();
             } else {
-                //Start master profiling section.
-                entity.world.beginProfiling("MTSEntity_" + getEntityId(), true);
-                entity.world.beginProfiling("Main_Execution", true);
-
-                //Forward the update call.
-                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                    entity.update();
-                    if (entity instanceof AEntityD_Definable) {
-                        ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
-                    }
-                }
-
-                //Set the new position.
-                entity.world.beginProfiling("MovementOverhead", false);
+                //Set the new position. 
                 setPosition(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.
@@ -127,9 +112,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                             World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
                         }
                     }
+                    entity.world.endProfiling();
                 }
-                entity.world.endProfiling();
-                entity.world.endProfiling();
             }
         } else {
             //If we have NBT, and haven't loaded it, do so now.

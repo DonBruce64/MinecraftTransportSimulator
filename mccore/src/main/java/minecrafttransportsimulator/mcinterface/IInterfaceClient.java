@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 
 /**
@@ -107,11 +106,6 @@ public interface IInterfaceClient {
      * Sets the current mouse sensitivity.
      */
     void setMouseSensitivity(float setting);
-
-    /**
-     * Returns the entity we are moused over.  This includes Tile Entities.
-     */
-    AEntityB_Existing getMousedOverEntity();
 
     /**
      * Closes the currently-opened GUI, returning back to the main game.

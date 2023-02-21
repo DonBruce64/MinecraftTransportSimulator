@@ -28,7 +28,7 @@ public final class ModelParserLT extends AModelParser {
         List<RenderableObject> objectList = new ArrayList<>();
         InputStream stream;
         try {
-            stream = ModelParserLT.class.getResourceAsStream(modelLocation);
+            stream = InterfaceManager.coreInterface.getPackResource(modelLocation);
         } catch (Exception e) {
             throw new NullPointerException("Attempted to parse the Little Tiles model at: " + modelLocation + " but could not find it.  Check the path and try again.");
         }
