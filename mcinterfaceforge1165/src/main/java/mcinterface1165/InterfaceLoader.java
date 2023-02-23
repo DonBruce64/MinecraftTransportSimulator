@@ -81,7 +81,6 @@ public class InterfaceLoader {
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::registerRenderer);
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceEventsModelLoader::init);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
@@ -171,6 +170,11 @@ public class InterfaceLoader {
             String name = collisionBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase() + i;
             BuilderBlock.BLOCKS.register(name, () -> wrapper);
             BuilderBlock.blockMap.put(collisionBlock, wrapper);
+        }
+
+        //If we are on the client, create models.
+        if (isClient) {
+            InterfaceEventsModelLoader.init();
         }
 
         //Register the TEs.  Has to be done last to ensure block maps are populated.

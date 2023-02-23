@@ -29,7 +29,6 @@ import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Unit;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -41,19 +40,17 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 public class InterfaceEventsModelLoader {
 
     /**
-     * Called to init the custom model loader.  Fired when Forge is ready to register models.
+     * Called to init the custom model loader.  Should be done before any other things.
      * This allows injecting our custom resource manager into MC's systems to have it use it.
-     * We also register it as a reload listener, as on a resource reload MC will purge the list
+     * We do this by registering it as a reload listener, as on a resource reload (and boot) MC will purge the list
      * of packs and will re-query from disk.  But we aren't on disk, and so we will need to be
      * ready when that call comes and will re-add ourselves.
      */
-    public static void init(ModelRegistryEvent event) {
+    public static void init() {
         try {
             SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager();
             for (String packID : PackParser.getAllPackIDs()) {
-                PackResourcePack newPack = new PackResourcePack(packID);
-                manager.add(newPack);
-                manager.registerReloadListener(newPack);
+                manager.registerReloadListener(new PackResourcePack(packID));
             }
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not add ourselves to the resource list. Files won't load correctly!");

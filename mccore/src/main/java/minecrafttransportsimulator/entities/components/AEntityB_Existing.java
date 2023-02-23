@@ -200,6 +200,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderRelativeOrientation.angles.y += rider.getYawDelta();
+            //Need to clamp between +/- 180 to ensure that we don't confuse things.
+            if (riderRelativeOrientation.angles.y > 180) {
+                riderRelativeOrientation.angles.y -= 360;
+                prevRiderRelativeOrientation.angles.y -= 360;
+            } else if (riderRelativeOrientation.angles.y < -180) {
+                riderRelativeOrientation.angles.y += 360;
+                prevRiderRelativeOrientation.angles.y += 360;
+            }
+
             //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
             float pitchDelta = rider.getPitchDelta();
             if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
