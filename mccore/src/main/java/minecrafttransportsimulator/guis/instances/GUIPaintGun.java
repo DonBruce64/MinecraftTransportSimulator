@@ -67,6 +67,7 @@ public class GUIPaintGun extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevSubItem;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -74,6 +75,7 @@ public class GUIPaintGun extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextSubItem;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -180,7 +182,6 @@ public class GUIPaintGun extends AGUIBase {
 
         //Parse crafting items and set icon items.
         //Check all possible recipes, since some might be for other mods or versions.
-        int requestedRecipe = recipeIndex;
         String errorMessage = "";
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false);
@@ -196,7 +197,7 @@ public class GUIPaintGun extends AGUIBase {
                     recipeIndex = 0;
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
-                if (recipeIndex == requestedRecipe) {
+                if (recipeIndex == 0) {
                     InterfaceManager.coreInterface.logError(errorMessage);
                     break;
                 }

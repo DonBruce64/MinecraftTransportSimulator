@@ -124,6 +124,7 @@ public class GUIPartBench extends AGUIBase {
                 currentPack = prevPack;
                 viewingRepair = false;
                 currentItem = null;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -133,6 +134,7 @@ public class GUIPartBench extends AGUIBase {
                 currentPack = nextPack;
                 viewingRepair = false;
                 currentItem = null;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -145,6 +147,7 @@ public class GUIPartBench extends AGUIBase {
             public void onClicked(boolean leftSide) {
                 currentItem = prevItem;
                 viewingRepair = false;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -153,6 +156,7 @@ public class GUIPartBench extends AGUIBase {
             public void onClicked(boolean leftSide) {
                 currentItem = nextItem;
                 viewingRepair = false;
+                recipeIndex = 0;
                 updateNames();
             }
         });
@@ -460,7 +464,6 @@ public class GUIPartBench extends AGUIBase {
         }
 
         //Parse crafting items and set icon items.
-        int requestedRecipe = recipeIndex;
         String errorMessage = "";
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair);
@@ -476,7 +479,7 @@ public class GUIPartBench extends AGUIBase {
                     recipeIndex = 0;
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
-                if (recipeIndex == requestedRecipe) {
+                if (recipeIndex == 0) {
                     partInfo.text = errorMessage;
                     break;
                 }
