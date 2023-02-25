@@ -1003,6 +1003,46 @@ public class PartGun extends APart {
         }
     }
 
+    public double getLockedOnDirection(){
+        double direction = 0;
+        if (engineTarget != null) {
+            direction = Math.toDegrees(Math.atan2(-engineTarget.position.z + position.z, -engineTarget.position.x + position.x)) + 90 + orientation.angles.y;
+        } else if (entityTarget != null) {
+            direction = Math.toDegrees(Math.atan2(-entityTarget.getPosition().z + position.z, -entityTarget.getPosition().x + position.x)) + 90 + orientation.angles.y;
+        }
+        while (direction < -180)
+            direction += 360;
+        while (direction > 180)
+            direction -= 360;
+        return direction;
+    }
+
+    public Point3D getLockedOnLeadPoint(){
+        Point3D leadPoint = new Point3D();
+        double ticksToTarget = 0;
+        if (engineTarget != null) {
+            ticksToTarget = engineTarget.position.distanceTo(position) / (definition.gun.muzzleVelocity / 20D / 10D);
+            leadPoint.set(engineTarget.position).addScaled(engineTarget.vehicleOn.motion, (engineTarget.vehicleOn.speedFactor / 20D / 10D) * ticksToTarget);
+        } else if (entityTarget != null) {
+            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (definition.gun.muzzleVelocity / 20D / 10D);
+            leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), 20D / 10D * ticksToTarget);
+        }
+        return leadPoint;
+    }
+    public double getLeadPointDirection(){
+        double direction = 0;
+        if (engineTarget != null || entityTarget != null) {
+            direction = Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x)) + 90 + orientation.angles.y;
+        }
+        while (direction < -180)
+            direction += 360;
+        while (direction > 180)
+            direction -= 360;
+        return direction;
+    }
+
+
+
     @Override
     public double getRawVariableValue(String variable, float partialTicks) {
         switch (variable) {
@@ -1030,6 +1070,16 @@ public class PartGun extends APart {
                 return entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0);
             case ("gun_lockedon_z"):
                 return entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0);
+            case ("gun_lockedon_direction"):
+                return entityTarget != null ? getLockedOnDirection() : (engineTarget != null ? getLockedOnDirection() : 0);
+            case ("gun_lockedon_angle"):
+                return entityTarget != null ? (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + position.y,Math.hypot(-entityTarget.getPosition().z + position.z,-entityTarget.getPosition().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-engineTarget.position.y + position.y,Math.hypot(-engineTarget.position.z + position.z,-engineTarget.position.x + position.x))) + orientation.angles.x) : 0);
+            case ("gun_lockedon_leadpoint_direction"):
+                return entityTarget != null ? getLeadPointDirection() : (engineTarget != null ? getLeadPointDirection() : 0);
+            case ("gun_lockedon_leadpoint_angle"):
+                return entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0);
+            case ("gun_lockedon_distance"):
+                return entityTarget != null ? entityTarget.getPosition().distanceTo(position) : (engineTarget != null ? engineTarget.position.distanceTo(position) : 0);
             case ("gun_pitch"):
                 return partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x;
             case ("gun_yaw"):
