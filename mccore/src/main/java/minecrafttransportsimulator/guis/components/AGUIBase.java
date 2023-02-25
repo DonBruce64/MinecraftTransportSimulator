@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.guis.instances.GUIOverlay;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
@@ -34,6 +34,7 @@ public abstract class AGUIBase {
     public static final ConcurrentLinkedQueue<AGUIBase> activeGUIs = new ConcurrentLinkedQueue<>();
     public static AGUIBase activeInputGUI;
 
+    protected int worldLightValue;
     protected int screenWidth;
     protected int screenHeight;
     protected int guiLeft;
@@ -162,7 +163,7 @@ public abstract class AGUIBase {
         //If we are light-sensitive, set lighting to our position.
         boolean ignoreLightState = getGUILightMode().equals(GUILightingMode.NONE);
         if (!ignoreLightState) {
-            InterfaceManager.renderingInterface.setLightingToPosition(getGUILightSource().position);
+            worldLightValue = getGUILightSource().worldLightValue;
         }
 
         //Render main components once, but only based on translucent state.
@@ -192,7 +193,7 @@ public abstract class AGUIBase {
             boolean isTextLit = !getGUILightMode().equals(GUILightingMode.DARK);
             for (AGUIComponent component : components) {
                 if (component.visible && component.text != null) {
-                    component.renderText(isTextLit);
+                    component.renderText(isTextLit, worldLightValue);
                 }
             }
         }
@@ -278,7 +279,7 @@ public abstract class AGUIBase {
      * Returns the source of where to calculate the light for this GUI.  This is required
      * if {@link #getGUILightMode()} is any value other than {@link GUILightingMode#NONE}.
      */
-    protected AEntityB_Existing getGUILightSource() {
+    protected AEntityC_Renderable getGUILightSource() {
         return null;
     }
 

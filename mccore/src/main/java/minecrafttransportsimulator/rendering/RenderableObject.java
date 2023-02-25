@@ -56,13 +56,9 @@ public class RenderableObject {
     public FloatBuffer vertices;
     public final boolean cacheVertices;
 
-    /**
-     * Marks the object as translucent.  This will force it to be rendered with other translucent objects.
-     * Blending will be applied depending on the alpha value.  Alpha testing will be disabled to prevent culled
-     * tris in the rendering with low alpha.
-     */
     public boolean isTranslucent;
     public int cachedVertexIndex = -1;
+    public int worldLightValue;
     public float alpha = 1.0F;
     public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();

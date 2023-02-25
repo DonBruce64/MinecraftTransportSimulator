@@ -89,7 +89,7 @@ public abstract class AGUIComponent {
      * Note that this method is not called if {@link #text} is null, but will render if it is empty since some systems
      * may consider empty text valid for triggering animations versus it just not existing whatsoever.
      */
-    public void renderText(boolean renderTextLit) {
+    public void renderText(boolean renderTextLit, int worldLightValue) {
     }
 
     /**
@@ -174,7 +174,7 @@ public abstract class AGUIComponent {
 
             //Need to move tooltip text by -y to account for inverted coords.
             mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);
-            RenderText.drawText(tooltipCombinedText.toString(), null, mutableTooltipPosition, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, true);
+            RenderText.drawText(tooltipCombinedText.toString(), null, mutableTooltipPosition, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, true, gui.worldLightValue);
         }
     }
 

@@ -31,6 +31,8 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
      */
     public final Point3D prevScale = new Point3D(1, 1, 1);
 
+    public int worldLightValue;
+
     /**
      * Constructor for synced entities
      **/
@@ -49,6 +51,17 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     public void update() {
         super.update();
         prevScale.set(scale);
+        if (world.isClient()) {
+            worldLightValue = getWorldLightValue();
+        }
+    }
+
+    /**
+     * Called to return the integer representing the world light value.  Is normally
+     * the light at the position of the entity, but can be other values as required. 
+     */
+    public int getWorldLightValue() {
+        return InterfaceManager.renderingInterface.getLightingAtPosition(position);
     }
 
     /**
@@ -73,9 +86,6 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             } else {
                 interpolatedOrientationHolder.set(orientation);
             }
-
-            //Set up lighting.
-            InterfaceManager.renderingInterface.setLightingToPosition(position);
 
             //Set up matrixes.
             translatedMatrix.resetTransforms();

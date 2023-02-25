@@ -130,12 +130,14 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
             if (enabled && !isDynamicTexture) {
                 if (isMouseInBounds(mouseX, mouseY)) {//Highlighted
                     renderable3.ignoreWorldShading = true;
+                    renderable3.worldLightValue = gui.worldLightValue;
                     renderable3.disableLighting = renderBright || ignoreGUILightingState;
                     renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
                     renderable3.transform.setTranslation(position);
                     renderable3.render();
                 } else {//Normal
                     renderable2.ignoreWorldShading = true;
+                    renderable2.worldLightValue = gui.worldLightValue;
                     renderable2.disableLighting = renderBright || ignoreGUILightingState;
                     renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
                     renderable2.transform.setTranslation(position);
@@ -146,6 +148,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
                     renderable.vertices = generateOffsetBuffer(gui, textureYOffset);
                 }
                 renderable.ignoreWorldShading = true;
+                renderable.worldLightValue = gui.worldLightValue;
                 renderable.disableLighting = renderBright || ignoreGUILightingState;
                 renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
                 renderable.transform.setTranslation(position);
@@ -155,8 +158,8 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     }
 
     @Override
-    public void renderText(boolean renderTextLit) {
-        RenderText.drawText(text, null, textPosition, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, renderTextLit || ignoreGUILightingState);
+    public void renderText(boolean renderTextLit, int worldLightValue) {
+        RenderText.drawText(text, null, textPosition, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, renderTextLit || ignoreGUILightingState, worldLightValue);
     }
 
     private FloatBuffer generateOffsetBuffer(AGUIBase gui, int textureUStart) {

@@ -108,6 +108,7 @@ public class RenderableModelObject {
                 }
 
                 float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
+                object.worldLightValue = entity.worldLightValue;
                 object.transform.set(transform);
 
                 //Apply switchbox transform, if we have one.
@@ -186,6 +187,7 @@ public class RenderableModelObject {
                         }
                         object.render();
                         if (interiorWindowObject != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
+                            interiorWindowObject.worldLightValue = object.worldLightValue;
                             interiorWindowObject.transform.set(object.transform);
                             interiorWindowObject.render();
                         }
@@ -390,6 +392,7 @@ public class RenderableModelObject {
                 }
             }
 
+            colorObject.worldLightValue = object.worldLightValue;
             colorObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
             colorObject.color.setTo(color);
             colorObject.alpha = lightLevel;
@@ -426,6 +429,7 @@ public class RenderableModelObject {
                 //Render all flares.
                 if (flareObject != null) {
                     flareObject.isTranslucent = true;
+                    flareObject.worldLightValue = object.worldLightValue;
                     flareObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     flareObject.color.setTo(color);
                     flareObject.alpha = blendableBrightness;
@@ -436,6 +440,7 @@ public class RenderableModelObject {
                 //Render all beams.
                 if (beamObject != null && entity.shouldRenderBeams()) {
                     beamObject.isTranslucent = true;
+                    beamObject.worldLightValue = object.worldLightValue;
                     beamObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     beamObject.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
                     beamObject.color.setTo(color);
@@ -456,6 +461,7 @@ public class RenderableModelObject {
                 }
             }
 
+            coverObject.worldLightValue = object.worldLightValue;
             coverObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0;
             coverObject.transform.set(object.transform);
             coverObject.render();

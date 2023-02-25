@@ -112,6 +112,7 @@ public class GUIComponent3DModel extends AGUIComponent {
                 scale = modelScalingFactors.get(modelLocation);
             }
             double totalScale = scale * scaleFactor;
+            object.worldLightValue = gui.worldLightValue;
             object.transform.applyScaling(totalScale, totalScale, totalScale);
             object.texture = textureLocation;
             object.ignoreWorldShading = true;

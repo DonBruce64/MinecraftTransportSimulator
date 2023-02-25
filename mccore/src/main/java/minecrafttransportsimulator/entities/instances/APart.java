@@ -565,6 +565,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public int getWorldLightValue() {
+        //Use master for lighting consistency.
+        return masterEntity.worldLightValue;
+    }
+
+    @Override
     public boolean disableRendering(float partialTicks) {
         return super.disableRendering(partialTicks) || isFake() || isInvisible;
     }
