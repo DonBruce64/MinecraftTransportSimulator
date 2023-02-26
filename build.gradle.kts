@@ -20,7 +20,9 @@ subprojects {
     apply(plugin = "java")
 }
 
-var modVersion: String = "22.6.0-BETA"
+var modVersion: String = project.property("global_version").toString()
+
+//var modVersion: String = providers.gradleProperty("global_version")
 
 var mcCore = project(":mccore")
 var mcInterfaceForge1122 = project(":mcinterfaceforge1122")
@@ -35,18 +37,16 @@ tasks.register("buildCore") {
 
 tasks.register("buildForge1.12.2") {
     doFirst { preBuild() }
-    dependsOn(mcInterfaceForge1122.tasks.build)
     doLast {
         moveToOut(mcInterfaceForge1122, "1.12.2")
-        moveToOut(mcCore, "core")
     }
+    dependsOn(mcInterfaceForge1122.tasks.build)
 }
 
 tasks.register("buildForge1.16.5") {
     doFirst { preBuild() }
     doLast {
         moveToOut(mcInterfaceForge1165, "1.16.5")
-        moveToOut(mcCore, "core")
     }
     dependsOn(mcInterfaceForge1165.tasks.build)
 }
