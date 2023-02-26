@@ -225,7 +225,7 @@ public class BuilderBlock extends Block {
     }
 
     @Override
-    public int getLightBlock(BlockState state, IBlockReader world, BlockPos pos) {
+    public int getLightValue(BlockState state, IBlockReader world, BlockPos pos) {
         if (block instanceof ABlockBaseTileEntity) {
             TileEntity tile = world.getBlockEntity(pos);
             if (tile instanceof BuilderTileEntity) {

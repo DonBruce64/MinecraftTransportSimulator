@@ -99,6 +99,9 @@ public class InterfaceRender implements IInterfaceRender {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
         GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+        if (!object.disableLighting) {
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, object.worldLightValue % 65536, object.worldLightValue / 65536);
+        }
 
         GL11.glPushMatrix();
         applyTransformOpenGL(object.transform);
@@ -192,9 +195,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void setLightingToPosition(Point3D position) {
-        int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar % 65536, lightVar / 65536);
+    public int getLightingAtPosition(Point3D position) {
+        return Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
     }
 
     @Override

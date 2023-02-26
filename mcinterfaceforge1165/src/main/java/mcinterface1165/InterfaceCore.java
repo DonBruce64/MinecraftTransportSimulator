@@ -10,6 +10,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.ItemTags;
@@ -42,15 +43,18 @@ class InterfaceCore implements IInterfaceCore {
         String modID = resource.substring(assetsIndexEnd, modIDEnd);
         Optional<? extends ModContainer> optional = ModList.get().getModContainerById(modID);
         if (optional.isPresent()) {
-            return optional.get().getMod().getClass().getResourceAsStream(resource);
-        } else {
-            return null;
+            InputStream stream = optional.get().getMod().getClass().getResourceAsStream(resource);
+            if (stream != null) {
+                return stream;
+            }
         }
+        //Try to get a Minecraft texture, we use the classloader of the block class, since it's common to servers and clients.
+        return Blocks.AIR.getClass().getResourceAsStream(resource);
     }
 
     @Override
     public void logError(String message) {
-    	InterfaceLoader.LOGGER.error(message);
+        InterfaceLoader.LOGGER.error("MTSERROR: " + message);
     }
 
     @Override

@@ -162,17 +162,17 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     @Override
-    public void renderText(boolean renderTextLit) {
+    public void renderText(boolean renderTextLit, int worldLightValue) {
         //If this box is less than 20px high, center the text.
         //Otherwise, render it at the top aligned.
         if (enabled) {
             if (focused && AGUIBase.inClockPeriod(20, 10)) {
-                RenderText.drawText(flashText, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
+                RenderText.drawText(flashText, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState, worldLightValue);
             } else {
-                RenderText.drawText(text, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
+                RenderText.drawText(text, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState, worldLightValue);
             }
         } else {
-            RenderText.drawText(text, null, textPosition, ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
+            RenderText.drawText(text, null, textPosition, ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState, worldLightValue);
         }
     }
 

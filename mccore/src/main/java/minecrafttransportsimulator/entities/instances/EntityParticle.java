@@ -298,6 +298,7 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.transform.set(transform);
             double totalScale = getSize() * getScale(partialTicks);
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
+            renderable.worldLightValue = worldLightValue;
             renderable.render();
         }
     }

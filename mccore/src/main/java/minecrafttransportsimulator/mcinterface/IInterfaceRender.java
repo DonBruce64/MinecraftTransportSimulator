@@ -54,10 +54,10 @@ public interface IInterfaceRender {
     String downloadURLTexture(String textureURL);
 
     /**
-     * Updates the internal lightmap to be consistent with the light at the
-     * passed-in position.
+     * Returns an integer that represents the lighting state at the position.
+     * This value is version-dependent, and should be stored in {@link RenderableObject#worldLightValue}
      */
-    void setLightingToPosition(Point3D position);
+    int getLightingAtPosition(Point3D position);
 
     /**
      * Returns true if bounding boxes should be rendered.

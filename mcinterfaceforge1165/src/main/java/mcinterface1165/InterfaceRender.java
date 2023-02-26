@@ -84,10 +84,12 @@ public class InterfaceRender implements IInterfaceRender {
     private static final Map<ParsedGIF, Map<GIFImageFrame, ResourceLocation>> animatedGIFFrames = new LinkedHashMap<>();
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
-    private static int currentPackedLight;
 
     private static Map<String, RenderType> renderTypes = new HashMap<>();
-    private static Map<RenderableObject, VertexBuffer> cachedBuffers = new HashMap<>();
+    private static final BufferData testData = new BufferData();
+    private static boolean onBufferSet2 = false;
+    private static Map<RenderableObject, List<BufferData>> bufferSet1 = new HashMap<>();
+    private static Map<RenderableObject, List<BufferData>> bufferSet2 = new HashMap<>();
     private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
 
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
@@ -143,15 +145,54 @@ public class InterfaceRender implements IInterfaceRender {
                     renderTypes.put(typeID, renderType);
                 }
 
-                VertexBuffer buffer = cachedBuffers.get(object);
-                if (buffer == null) {
-                    int vertices = object.vertices.limit() / 8;
-                    //Convert verts to faces, then back to quad-verts for MC rendering.
-                    //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
-                    vertices = ((vertices / 3) + 1) * 4;
-                    BufferBuilder builder = new BufferBuilder(renderType.format().getIntegerSize() * vertices);
-                    builder.begin(GL11.GL_QUADS, renderType.format());
-                    int index = 0;
+                //Get the active buffer set.  We flip-flop each render.
+                List<BufferData> availableBuffers;
+                List<BufferData> usedBuffers;
+                if (onBufferSet2) {
+                    availableBuffers = bufferSet2.get(object);
+                    if (availableBuffers == null) {
+                        availableBuffers = new ArrayList<>();
+                        bufferSet2.put(object, availableBuffers);
+                    }
+                    usedBuffers = bufferSet1.get(object);
+                    if (usedBuffers == null) {
+                        usedBuffers = new ArrayList<>();
+                        bufferSet1.put(object, usedBuffers);
+                    }
+                } else {
+                    availableBuffers = bufferSet1.get(object);
+                    if (availableBuffers == null) {
+                        availableBuffers = new ArrayList<>();
+                        bufferSet1.put(object, availableBuffers);
+                    }
+                    usedBuffers = bufferSet2.get(object);
+                    if (usedBuffers == null) {
+                        usedBuffers = new ArrayList<>();
+                        bufferSet2.put(object, usedBuffers);
+                    }
+                }
+
+                //Try to get a already-created buffer rather than make a new one.
+                testData.setTo(object);
+                int index = availableBuffers.indexOf(testData);
+                BufferData data;
+                if (index != -1) {
+                    //Matching data, use it.
+                    data = availableBuffers.remove(index);
+                } else if (!availableBuffers.isEmpty()) {
+                    //Get last data, since it's least likely to be static.
+                    data = availableBuffers.remove(availableBuffers.size() - 1);
+                    data.setTo(object);
+                } else {
+                    //No data available, need to make it.
+                    data = new BufferData(renderType, object);
+                }
+                usedBuffers.add(data);
+
+                //Make sure data is ready, if not, init it.
+                if (!data.isReady) {
+                    index = 0;
+                    data.builder.begin(GL11.GL_QUADS, renderType.format());
                     while (object.vertices.hasRemaining()) {
                         //Need to parse these out first since our order differs.
                         float normalX = object.vertices.get();
@@ -165,19 +206,16 @@ public class InterfaceRender implements IInterfaceRender {
 
                         //Add the vertex format bits.
                         do {
-                            builder.vertex(posX, posY, posZ, object.color.red, object.color.green, object.color.blue, object.alpha, texU, texV, OverlayTexture.NO_OVERLAY, currentPackedLight, normalX, normalY, normalZ);
+                            data.builder.vertex(posX, posY, posZ, object.color.red, object.color.green, object.color.blue, object.alpha, texU, texV, OverlayTexture.NO_OVERLAY, object.worldLightValue, normalX, normalY, normalZ);
                         } while (++index == 3);
                         if (index == 4) {
                             index = 0;
                         }
                     }
-                    builder.end();
+                    data.isReady = true;
+                    data.builder.end();
+                    data.buffer.upload(data.builder);
                     object.vertices.rewind();
-
-                    //Now create and bind built buffer to actual buffer.
-                    buffer = new VertexBuffer(renderType.format());
-                    buffer.upload(builder);
-                    cachedBuffers.put(object, buffer);
                 }
 
                 //Add this buffer to the list to render later.
@@ -186,7 +224,7 @@ public class InterfaceRender implements IInterfaceRender {
                     renders = new ArrayList<>();
                     queuedRenders.put(renderType, renders);
                 }
-                renders.add(new RenderData(stackEntry.pose(), buffer));
+                renders.add(new RenderData(stackEntry.pose(), data.buffer));
             } else {
                 if (renderType == null) {
                     Builder stateBuilder = CustomRenderType.createForObject(object);
@@ -218,7 +256,7 @@ public class InterfaceRender implements IInterfaceRender {
                         buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
                         buffer.uv(texU, texV);
                         buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
-                        buffer.uv2(currentPackedLight);
+                        buffer.uv2(object.worldLightValue);
                         buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
                         buffer.endVertex();
                     } while (++index == 3);
@@ -235,17 +273,20 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void deleteVertices(RenderableObject object) {
-        VertexBuffer buffer = cachedBuffers.get(object);
-        if (buffer != null) {
-            buffer.close();
-            cachedBuffers.remove(object);
+        List<BufferData> dataSet = bufferSet1.remove(object);
+        if (dataSet != null) {
+            dataSet.forEach(data -> data.buffer.close());
+        }
+        dataSet = bufferSet2.remove(object);
+        if (dataSet != null) {
+            dataSet.forEach(data -> data.buffer.close());
         }
     }
 
     @Override
-    public void setLightingToPosition(Point3D position) {
+    public int getLightingAtPosition(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        currentPackedLight = LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos), Minecraft.getInstance().level.getBrightness(LightType.SKY, pos));
+        return LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos), Minecraft.getInstance().level.getBrightness(LightType.SKY, pos));
     }
 
     @Override
@@ -466,6 +507,9 @@ public class InterfaceRender implements IInterfaceRender {
                 double d2 = MathHelper.lerp(partialTicks, builder.zOld, builder.getZ());
                 stack.translate(-d0, -d1, -d2);
 
+                //Flip the buffer set to the next one prior to rendering.
+                onBufferSet2 = !onBufferSet2;
+
                 //Set the stack variables and render.
                 matrixStack = stack;
                 renderBuffer = buffer;
@@ -505,6 +549,8 @@ public class InterfaceRender implements IInterfaceRender {
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
+            //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
+            //not occur one after another.  Sanitize your inputs!
             allEntities.forEach(entity -> entity.render(blendingEnabled, partialTicks));
             //Need to tell the immediate buffer  it's done rendering, else it'll hold onto the data and crash other systems.
             ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
@@ -514,16 +560,19 @@ public class InterfaceRender implements IInterfaceRender {
             world.beginProfiling("MTSRendering_Execution", false);
             for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
                 RenderType renderType = renderEntry.getKey();
-                renderType.setupRenderState();
-                for (RenderData data : renderEntry.getValue()) {
-                    data.buffer.bind();
-                    renderType.format().setupBufferState(0L);
-                    data.buffer.draw(data.matrix, GL11.GL_QUADS);
+                List<RenderData> datas = renderEntry.getValue();
+                if (!datas.isEmpty()) {
+                    renderType.setupRenderState();
+                    for (RenderData data : datas) {
+                        data.buffer.bind();
+                        renderType.format().setupBufferState(0L);
+                        data.buffer.draw(data.matrix, GL11.GL_QUADS);
+                    }
+                    renderType.format().clearBufferState();
+                    renderType.clearRenderState();
+                    datas.clear();
                 }
-                renderType.format().clearBufferState();
-                renderType.clearRenderState();
             }
-            queuedRenders.clear();
             VertexBuffer.unbind();
             world.endProfiling();
         }
@@ -593,13 +642,61 @@ public class InterfaceRender implements IInterfaceRender {
         }
     }
 
-    public static class RenderData {
-        public final Matrix4f matrix;
-        public final VertexBuffer buffer;
+    private static class RenderData {
+        final Matrix4f matrix;
+        final VertexBuffer buffer;
 
         private RenderData(Matrix4f matrix, VertexBuffer buffer) {
             this.matrix = new Matrix4f(matrix);
             this.buffer = buffer;
+        }
+    }
+
+    private static class BufferData {
+        final BufferBuilder builder;
+        final VertexBuffer buffer;
+        float red;
+        float green;
+        float blue;
+        float alpha;
+        int lightIndex;
+        boolean isReady;
+
+        private BufferData() {
+            builder = null;
+            buffer = null;
+        }
+
+        private BufferData(RenderType type, RenderableObject object) {
+            int vertices = object.vertices.limit() / 8;
+            //Convert verts to faces, then back to quad-verts for MC rendering.
+            //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
+            vertices = ((vertices / 3) + 1) * 4;
+            this.builder = new BufferBuilder(type.format().getIntegerSize() * vertices);
+            this.buffer = new VertexBuffer(type.format());
+            setTo(object);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof BufferData) {
+                BufferData data = (BufferData) other;
+                return data.lightIndex == lightIndex && data.alpha == alpha && data.blue == blue && data.green == green && data.red == red;
+            } else {
+                return false;
+            }
+        }
+
+        private void setTo(RenderableObject object) {
+            this.red = object.color.red;
+            this.green = object.color.green;
+            this.blue = object.color.blue;
+            this.alpha = object.alpha;
+            this.lightIndex = object.worldLightValue;
+            this.isReady = false;
+            if (builder != null) {
+                builder.discard();
+            }
         }
     }
 

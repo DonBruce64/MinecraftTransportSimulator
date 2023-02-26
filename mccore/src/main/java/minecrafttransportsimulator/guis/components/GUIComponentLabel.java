@@ -61,9 +61,9 @@ public class GUIComponentLabel extends AGUIComponent {
     }
 
     @Override
-    public void renderText(boolean renderTextLit) {
+    public void renderText(boolean renderTextLit, int worldLightValue) {
         if (component == null || component.visible) {
-            RenderText.drawText(text, fontName, textPosition, color, alignment, scale, autoScale, wrapWidth, renderTextLit || ignoreGUILightingState);
+            RenderText.drawText(text, fontName, textPosition, color, alignment, scale, autoScale, wrapWidth, renderTextLit || ignoreGUILightingState, worldLightValue);
         }
     }
 }

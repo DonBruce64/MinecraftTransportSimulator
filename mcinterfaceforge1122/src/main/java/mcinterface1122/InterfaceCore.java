@@ -39,7 +39,7 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public void logError(String message) {
-    	InterfaceLoader.LOGGER.error(message);
+        InterfaceLoader.LOGGER.error("MTSERROR: " + message);
     }
 
     @Override

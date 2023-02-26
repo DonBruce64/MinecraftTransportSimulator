@@ -51,11 +51,11 @@ public class RenderText {
      * Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
      * This allows for proper normal calculations to prevent needing to re-normalize the text.
      */
-    public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit) {
+    public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit, int worldLightValue) {
         if (!text.isEmpty()) {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(position);
-            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit);
+            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue);
         }
     }
 
@@ -71,7 +71,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit(), entity.worldLightValue);
         }
     }
 
@@ -262,7 +262,7 @@ public class RenderText {
             }
         }
 
-        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit) {
+        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue) {
             //Clear out the active object list as it was set last pass.
             for (RenderableObject object : activeRenderObjects) {
                 object.vertices.clear();
@@ -603,6 +603,7 @@ public class RenderText {
 
             //All points obtained, render.
             for (RenderableObject object : activeRenderObjects) {
+                object.worldLightValue = worldLightValue;
                 object.disableLighting = renderLit;
                 object.transform.set(transform);
                 if (rotation != null) {

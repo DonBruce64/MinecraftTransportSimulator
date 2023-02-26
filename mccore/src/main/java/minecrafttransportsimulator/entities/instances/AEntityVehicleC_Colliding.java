@@ -15,6 +15,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -174,5 +175,14 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
     @Override
     public double getMass() {
         return super.getMass() + definition.motorized.emptyMass;
+    }
+
+    @Override
+    public int getWorldLightValue() {
+        //Offset position by 1 to prevent super darkness while being in the ground.
+        ++position.y;
+        int higherLight = InterfaceManager.renderingInterface.getLightingAtPosition(position);
+        --position.y;
+        return higherLight;
     }
 }
