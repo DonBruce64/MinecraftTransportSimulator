@@ -209,7 +209,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 LOSVector.set(vehicle.position).subtract(position).normalize();
                 double coneAngle = definition.general.radarWidth;
                 double angle = Math.abs(Math.toDegrees(Math.acos(searchVector.normalize().dotProduct(LOSVector, false))));
-                if (!vehicle.outOfHealth && vehicle != this && (angle < coneAngle && vehicle.position.distanceTo(position) < definition.general.radarRange)) {
+                if (!vehicle.outOfHealth && vehicle != this && (angle < coneAngle && vehicle.position.isDistanceToCloserThan(position, definition.general.radarRange))) {
                     if (vehicle.definition.motorized.isAircraft) {
                         aircraftOnRadar.add(vehicle);
                     } else {
