@@ -802,7 +802,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("engines_on"):
                 return enginesOn ? 1 : 0;
             case ("engines_starting"):
-                return enginesOn ? 1 : 0;
+                return enginesStarting ? 1 : 0;
             case ("engines_running"):
                 return enginesRunning ? 1 : 0;
             case ("reverser"):
