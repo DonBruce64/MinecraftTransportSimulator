@@ -1025,7 +1025,7 @@ public class PartGun extends APart {
             leadPoint.set(engineTarget.vehicleOn.position).addScaled(engineTarget.vehicleOn.motion, (engineTarget.vehicleOn.speedFactor) * ticksToTarget);
         } else if (entityTarget != null) {
             ticksToTarget = entityTarget.getPosition().distanceTo(position) / (definition.gun.muzzleVelocity / 20D / 10D);
-            leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), (20D / 10D) * ticksToTarget);
+            leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), ticksToTarget);
         }
         return leadPoint;
     }
