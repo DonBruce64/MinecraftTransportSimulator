@@ -10,21 +10,39 @@
 From the folks that brought you Minecraft Flight Simulator comes the all-new Immersive Vehicles mod!\
 This mod is the result of over a year's worth of work and is the continuation and future of Minecraft Flight Simulator.
 
-## Building From Source or Contributing
-To build from the source, you will need to do a few things.  These instructions assume you are on Windows.  If you are on Linux, you should be able to tell where your instructions differ and how to handle such differences.
+## Building From Source
+These instructions assume you are using Windows.   If you are using a flavor of Linux, you should be able to tell where your instructions differ and how to handle such differences.
+### Requirements
+- [Git Bash](https://gitforwindows.org/)
+- A JDK (Java Development Kit) of 8 or 17, such as Oracle's [JDK 8](https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html)/[JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) or [Eclipse Temurin's OpenJDK](https://adoptium.net/temurin/releases/).   This is **NOT** the same as the JRE (Java Runtime Environment) you likely already have installed.\
+Note: A 17 JDK will eventually be **required** when the Gradle version the mod uses is updated
+- The `JAVA_HOME` environment variable should be set to your JDK make the entire process easier.   If you don't know what that is or how to change it, see steps one through three [here](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html).\
+You should replace the `JAVA_HOME` variable with the path to your previously/newly installed JDK if it isn't already the same.   If it doesn't exit, use the "New" button and make it.   `JAVA_HOME` should be set to `C:\Program Files\Java\someJDKVersion\` if you have an Oracle JDK or `C:\Program Files\Eclipse Adoptium\someJDKVersion\` if you have a Temurin JDK.
+### Getting it on Your Machine
+Now that you have a JDK and Git Bash setup, you can clone the repository for the mod.
+1. Open the folder that you want this repository's folder to be in
+2. Right click anywhere in the folder in File Explorer (not on a file or any of the toolbars)
+3. Click "Git Bash Here", copy `git clone https://github.com/DonBruce64/MinecraftTransportSimulator.git` then paste it into the git bash terminal using Left Shift + Insert to paste, then hit enter.   When it is finished, set up the development environment according to the instructions for your IDE.
+   - **CONTRIBUTORS, READ ME!**\
+   If you plan on contributing, make a fork using the fork button in the top right on <https://github.com/DonBruce64/MinecraftTransportSimulator>, then clone you the forked repository you are redirected to in the form of `https://github.com/yourGitHubUsername/MinecraftTransportSimulator` instead of the main repository.   You will not be able to push changes to the main repository and will need to make a pull request with changes from your fork.
+### IDEs
+#### Eclipse
+1. Using the same Git Bash terminal from before, run `cd ./MinecraftTransportSimulator` to get into the folder that was created, `./gradlew eclipse` and `./gradlew genEclipseRuns`\
+Note: May need updating, not sure if this is still accurate
+2. Make a folder called `eclipse` in the cloned folder and open Eclipse.   When it asks you for a "Workspace Location", select the `eclipse` folder that you just created.
+3. Go to the menu and click "Import Gradle Project".   Choose the folder that was created after you ran `git clone` before, it should be called "MinecraftTransportSimulator".
+4. To test changes you make to the code, you can click the little bug icon and then go to Debug Configurations -> Java Application-runClient.   Select this, go to the Environment tab, and set the `MC_VERSION` entry to the game version.
+5. When you're ready to build the mod, run `./gradlew buildForge1.12.2` or `./gradlew buildForge1.16.5` for 1.12.2 and 1.16.5 respectively.
+#### IntelliJ IDEA
+1. Right-click the folder that was created when you ran `git clone` and click "Open Folder as IntelliJ yourEdition Edition IDEA Project".   If you don't have the option, start IDEA and click File -> Open then navigate to the directory and choose the folder.
+2. Wait for IDEA to finish setting up the Gradle script then use the "Gradle" tab on the right side of your screen to run Gradle tasks.   Run `genIntelliJRuns` in the project for the Forge version and game version you want, e.g. `mcinterfaceforge1122` for Forge for 1.12.2.
+3. When you want to test your changes on the client or server, use the `runClient` or `runServer` configurations.   Click the dropdown then "Edit Configurations..." and change the `MC_VERSION` environment variable to the game version.   If the run configuration has a red x, change the project module to `Immersive_Vehicles.forgeInterfaceVersion.main` in the same menu.
+4. When you're ready to build the mod, run `./gradlew buildForge1.12.2` or `./gradlew  buildForge1.16.5` (`buildForge1.12.2` and `buildForge1.16.5` in the Gradle tab) for 1.12.2 and 1.16.5 respectively.
 
-<ol>
-<li>Create a fork of this repository.  Git has tons of tutorials for this.</li>
-<li>Ensure you have Git Bash installed.  While you can make updates and commits through the web interface, this is a Bad Idea and will lead to pain down the road.  Command line programs are your friend when coding.</li>
-<li>Open Git Bash in the folder where you want to keep your code via the right-click option `Git Bash Here`.  Then do a `git clone URL`, where the URL is the one for your forked repository.  Git will download all your code and files locally to allow you to start programming.</li>
-<li>Ensure you have the Java 8 JDK installed.  This is NOT the same as the Java 8 JRE program that you use to run most Java applications.  You will specifically need to install the JDK.  Check your program files if you are unsure.</li>
-<li>If you have just installed the JDK, you will need to update your `path`.  This is a System Environment Variable on Windows that tells it where to look for things.  You want to add the directory where the Java 8 JDK was installed (likely `C:\Program Files\Java\SomeJDKVersion\bin`.  If you already have Java 8 JRE installed then you will see it in this list.  Just remove that entry and replace it with the Java 8 JDK entry (the location should match except for one folder).  You know you have done this correctly if you can open your command prompt and type `javac` and get a result besides "command not found".  (Note, you will have to close and open Command Prompt to reflect any PATH changes.</li>
-<li>Now that you have your Java set up, you can use the same Git Bash prompt inside the folder you just cloned to set up your workspace:</li>
-<ul>
-<li>If you are running Eclipse, run `./gradlew eclipse` and then `./gradlew genEclipseRuns`.  Then open your Eclipse program.  When it asks you for a "workspace location" do NOT pick any folder to do with code.  Just pick a folder somewhere where Eclipse can throw things and you can forget about them.  Once this is done, you need to go into the menu and "Import Gradle Project".  Pick the folder where all your code was copied and the files should show up in the editor.  To test them, you can click the little bug icon and then go to Debug Configurations->Java Application-runClient. Select this, go to the Environment tab, and delete the MC_VERSION entry.  Apply, close, and then select it for debugging and you're off to test your code!</li>
-<li>If you are using IDEA, import the build script (`build.gradle`) with IDEA then run the `genIntellijRuns` Gradle task when it finishes importing.</li>
-<li>If you are running VSCode, run `./gradlew genVSCodeRuns`.  Then bug TurboDefender on Discord to fill this section out.</li>
-<li>If you aren't using any of these three, START DOING SO.  Notepad is not meant for coding.  Do you want a Bad Time?  I didn't think so.</li>
-</ul>
-<li>After making your code changes, use Git Bash to do a `git add -u` to add all modified files.  Then you can do a `git commit -m "Message for what you committed"`. This marks the changes and the reason for them.  Finally, do a `git push` to push the changes back up to Git.  From there, you can create a Pull Request and have your code be part of the mod!</li>
-</ol>
+Need more help with IDEA? Ask Elephant_1214#3698 in the Discord server.
+#### VSCode
+Bug TurboDefender on Discord about how to set this up in VSCode
+#### Other
+You're on your own unless someone else in the Discord server uses it.   Keep in mind that Notepad, Notepad++, vi, vim, nano, etc, are **not** meant for Java development, and you will not receive help with issues unrelated to the mod that arise while using them.
+### Contributing
+Once you have made the changes you want to commit, open Git Bash in the project folder (the one named `MinecraftTransportSimulator`) and run `git add -u` then `git commit -m "Your commit message here"`.   Finally, run `git push` to push the changes to your fork on GitHub which you should see your commit added to within a few seconds.   After that, all you need to do is make a pull request to get your changes reviewed and added to the mod!
