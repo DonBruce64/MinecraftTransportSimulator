@@ -436,7 +436,7 @@ public class PartEngine extends APart {
                             if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-                            } else if (!vehicleOn.isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                            } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
                             } else if (rpm < definition.engine.stallRPM) {
@@ -457,7 +457,7 @@ public class PartEngine extends APart {
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
                         if (rpm >= definition.engine.startRPM && !world.isClient() && !vehicleOn.outOfHealth) {
-                            if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                            if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (!isInLiquid() && magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
@@ -496,7 +496,7 @@ public class PartEngine extends APart {
 
                         //Check if we need to stall the engine for various conditions.
                         if (!world.isClient()) {
-                            if (!vehicleOn.isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                            if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
                             }
@@ -504,7 +504,7 @@ public class PartEngine extends APart {
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
-                            if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                            if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
@@ -922,7 +922,7 @@ public class PartEngine extends APart {
 
     public void autoStartEngine() {
         //Only engage auto-starter if we aren't running and we have the right fuel.
-        if (!running && (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+        if (!running && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
             setVariable(MAGNETO_VARIABLE, 1);
             if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                 autoStarterEngaged = true;
