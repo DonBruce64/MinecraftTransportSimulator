@@ -55,6 +55,11 @@ public class InterfaceInput implements IInterfaceInput {
     private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<>();
 
     @Override
+    public int getKeysetID() {
+        return 1;
+    }
+
+    @Override
     public void initConfigKey() {
         configKey = new KeyBinding(JSONConfigLanguage.GUI_MASTERCONFIG.value, GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(configKey);

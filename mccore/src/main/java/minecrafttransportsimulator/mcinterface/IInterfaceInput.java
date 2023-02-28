@@ -18,6 +18,13 @@ import minecrafttransportsimulator.systems.ControlSystem;
 public interface IInterfaceInput {
 
     /**
+     * Returns a unique ID for the keyset keybinding.  Different versions of the game have different
+     * sets, and if we need to make sure to wipe the config if the sets are different, otherwise we
+     * could send obsolete or incorrect keycodes to the input system.
+     */
+    int getKeysetID();
+
+    /**
      * Called to set the master config key.  This is used by MC to allow us to use MC-controls to open
      * the config menu.  Done here as players should at least see something in the controls menu to
      * cause them to open the config menu for the actual control configuration.

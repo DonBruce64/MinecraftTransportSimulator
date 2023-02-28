@@ -61,6 +61,7 @@ public class JSONConfigClient {
     }
 
     public static class JSONControls {
+        public int keysetID;
         public Map<String, ConfigKeyboard> keyboard = new HashMap<>();
         public Map<String, ConfigJoystick> joystick = new HashMap<>();
     }

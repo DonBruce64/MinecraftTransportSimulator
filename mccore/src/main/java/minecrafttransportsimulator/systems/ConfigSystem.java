@@ -77,6 +77,11 @@ public final class ConfigSystem {
             if (client == null) {
                 client = new JSONConfigClient();
             }
+            //Check to make sure we have the right keyset.  If not, reset the binds.
+            if (client.controls.keysetID != InterfaceManager.inputInterface.getKeysetID()) {
+                client.controls = new JSONConfigClient.JSONControls();
+                client.controls.keysetID = InterfaceManager.inputInterface.getKeysetID();
+            }
         }
 
         //Get crafting overrides file location.  This is used later when packs are parsed.
