@@ -1,41 +1,30 @@
 name: Build
-
 on:
-  push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
-
-permissions:
-  contents: read
+  push:
+    branches:
+      - "master"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.commits[0].message, '[ci-skip]')"
     steps:
-      - name: "Checkout"
+      - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Setup JDK 8
+        uses: actions/setup-java@v1
         with:
-          fetch-depth: 0
-      - run: |
-          git checkout ${{ github.event.inputs.ref }}
-      - name: Remove junks
+          java-version: 8
+      - name: Configure Git
+        run: git config --global user.email "no-reply@github.com" && git config --global user.name "Github Actions"
+      - name: Build For Forge 1.12.2
         run: |
-          # Microsoft is always messing things up behind your back. Clean them up. 
-          sudo apt update ; DEBIAN_FRONTEND=noninteractive sudo apt remove -y adoptopenjdk-11-hotspot adoptopenjdk-8-hotspot temurin-11-jdk temurin-17-jdk temurin-8-jdk openjdk-11-jre-headless
-          # Idiot microsoft don't know how to design a pipeline at all. Why not learn from gitlab? 
-###################### Real pipeline BEGIN ####################
-      - name: Do actual things
-        run: |
-          sudo apt update ; DEBIAN_FRONTEND=noninteractive sudo apt install -y openjdk-8-jdk
-          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           chmod +x ./gradlew
-          PULL_DEPS=1 ./gradlew buildForge1.12.2 --stacktrace
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          path: out/1.12.2/*.jar
-          name: Build_Result
-###################### Real pipeline END ######################
-
-
+          ./gradlew buildForge1.12.2 --stacktrace
+      - name: Build For Forge 1.16.5
+        run: |
+          chmod +x ./gradlew
+          ./gradlew buildForge1.16.5 --stacktrace

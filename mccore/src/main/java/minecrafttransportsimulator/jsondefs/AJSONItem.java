@@ -43,6 +43,12 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("An optional oreDict name for this item.  This will make the item be part of the specified oreDict.  Note that you may use custom oreDict names if you want multiple items to be the same ingredient.")
         public String oreDict;
 
+        @JSONDescription("Radius of scan for the radar in degrees. A value of 60 here means a total coverage of 120 degrees.")
+        public double radarWidth;
+
+        @JSONDescription("How far away this radar can detect things, in blocks.")
+        public double radarRange;
+
         //Moved from multiple locations.
         //Vehicle was deprecated for vehicle type.
         //Part was for part type, and went to generic.
