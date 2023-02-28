@@ -91,11 +91,13 @@ public class InterfaceRender implements IInterfaceRender {
     private static Map<RenderableObject, List<BufferData>> bufferSet1 = new HashMap<>();
     private static Map<RenderableObject, List<BufferData>> bufferSet2 = new HashMap<>();
     private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
     private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
     private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
+    private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
 
     @Override
@@ -138,7 +140,7 @@ public class InterfaceRender implements IInterfaceRender {
         } else {
             String typeID = object.texture + object.isTranslucent + object.enableBrightBlending + object.ignoreWorldShading + object.disableLighting;
             RenderType renderType = renderTypes.get(typeID);
-            if (object.cacheVertices) {
+            if (object.cacheVertices && !renderingGUI) {
                 if (renderType == null) {
                     Builder stateBuilder = CustomRenderType.createForObject(object);
                     renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, object.isTranslucent, stateBuilder.createCompositeState(false));
@@ -273,13 +275,14 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void deleteVertices(RenderableObject object) {
+        //Add to removed render list, we should only remove renders AFTER they are rendered.
         List<BufferData> dataSet = bufferSet1.remove(object);
         if (dataSet != null) {
-            dataSet.forEach(data -> data.buffer.close());
+            removedRenders.addAll(dataSet);
         }
         dataSet = bufferSet2.remove(object);
         if (dataSet != null) {
-            dataSet.forEach(data -> data.buffer.close());
+            removedRenders.addAll(dataSet);
         }
     }
 
@@ -403,6 +406,7 @@ public class InterfaceRender implements IInterfaceRender {
         //Get the buffer for GUI rendering.
         matrixStack = stack;
         matrixStack.pushPose();
+        renderingGUI = true;
         IRenderTypeBuffer.Impl guiBuffer = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
         renderBuffer = guiBuffer;
 
@@ -426,8 +430,11 @@ public class InterfaceRender implements IInterfaceRender {
             }
             gui.render(mouseX, mouseY, false, partialTicks);
             guiBuffer.endBatch();
+            //Not needed, since we can't draw to custom buffers with GUIs.
+            //renderBuffers();
             gui.render(mouseX, mouseY, true, partialTicks);
             guiBuffer.endBatch();
+            //renderBuffers();
         
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
             matrixStack.scale(1.0F, -1.0F, 1.0F);
@@ -454,6 +461,7 @@ public class InterfaceRender implements IInterfaceRender {
             matrixStack.popPose();
         }
         matrixStack.popPose();
+        renderingGUI = false;
     }
 
     /**
@@ -555,26 +563,34 @@ public class InterfaceRender implements IInterfaceRender {
             //Need to tell the immediate buffer  it's done rendering, else it'll hold onto the data and crash other systems.
             ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
 
-            //Now iterate though cached renders and render them.
-            //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
+            //Now do the actual render.
             world.beginProfiling("MTSRendering_Execution", false);
-            for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
-                RenderType renderType = renderEntry.getKey();
-                List<RenderData> datas = renderEntry.getValue();
-                if (!datas.isEmpty()) {
-                    renderType.setupRenderState();
-                    for (RenderData data : datas) {
-                        data.buffer.bind();
-                        renderType.format().setupBufferState(0L);
-                        data.buffer.draw(data.matrix, GL11.GL_QUADS);
-                    }
-                    renderType.format().clearBufferState();
-                    renderType.clearRenderState();
-                    datas.clear();
-                }
-            }
-            VertexBuffer.unbind();
+            renderBuffers();
             world.endProfiling();
+        }
+    }
+
+    private static void renderBuffers() {
+        //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
+        for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
+            RenderType renderType = renderEntry.getKey();
+            List<RenderData> datas = renderEntry.getValue();
+            if (!datas.isEmpty()) {
+                renderType.setupRenderState();
+                for (RenderData data : datas) {
+                    data.buffer.bind();
+                    renderType.format().setupBufferState(0L);
+                    data.buffer.draw(data.matrix, GL11.GL_QUADS);
+                }
+                renderType.format().clearBufferState();
+                renderType.clearRenderState();
+                datas.clear();
+            }
+        }
+        VertexBuffer.unbind();
+        if (!removedRenders.isEmpty()) {
+            removedRenders.forEach(render -> render.buffer.close());
+            removedRenders.clear();
         }
     }
     
