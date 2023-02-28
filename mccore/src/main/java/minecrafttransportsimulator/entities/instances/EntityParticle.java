@@ -290,13 +290,14 @@ public class EntityParticle extends AEntityC_Renderable {
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (blendingEnabled) {
             if (staticColor == null) {
-                renderable.color.red = startColor.red + (endColor.red - startColor.red) * (ticksExisted + partialTicks) / maxAge;
-                renderable.color.green = startColor.green + (endColor.green - startColor.green) * (ticksExisted + partialTicks) / maxAge;
-                renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue) * (ticksExisted + partialTicks) / maxAge;
+                renderable.color.red = interpolate(startColor.red, endColor.red, partialTicks);
+                renderable.color.green = interpolate(startColor.green, endColor.green, partialTicks);
+                renderable.color.blue = interpolate(startColor.blue, endColor.blue, partialTicks);
             }
-            renderable.alpha = getAlpha(partialTicks);
+            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, partialTicks);
             renderable.transform.set(transform);
-            double totalScale = getSize() * getScale(partialTicks);
+            float scale = definition.type == ParticleType.FLAME ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, partialTicks);
+            double totalScale = getSize() * scale;
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
             renderable.render();
@@ -336,40 +337,16 @@ public class EntityParticle extends AEntityC_Renderable {
         return definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
     }
 
-    /**
-     * Gets the current alpha value of the particle.  This parameter
-     * is used to make the particle translucent.
-     */
-    private float getAlpha(float partialTicks) {
-        if (definition.transparency != 0) {
-            if (definition.toTransparency != 0) {
-                return definition.transparency + (definition.toTransparency - definition.transparency) * (ticksExisted + partialTicks) / maxAge;
+    private float interpolate(float start, float end, float partialTicks) {
+        if (start != 0) {
+            if (end != 0) {
+                float value = start + (end - start) * (ticksExisted + partialTicks) / maxAge;
+                return value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value);
             } else {
-                return definition.transparency;
+                return start;
             }
         } else {
             return 1.0F;
-        }
-    }
-
-    /**
-     * Gets the current scale of the particle.
-     * This is for rendering only; it does not affect collision.
-     */
-    private float getScale(float partialTicks) {
-        if (definition.scale != 0) {
-            if (definition.toScale != 0) {
-                return definition.scale + (definition.toScale - definition.scale) * (ticksExisted + partialTicks) / maxAge;
-            } else {
-                return definition.scale;
-            }
-        } else {
-            switch (definition.type) {
-                case FLAME:
-                    return (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F);
-                default:
-                    return 1.0F;
-            }
         }
     }
 
