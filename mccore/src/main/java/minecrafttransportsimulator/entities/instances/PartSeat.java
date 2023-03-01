@@ -280,8 +280,8 @@ public final class PartSeat extends APart {
             }
         }
 
-        //If we are on the server, and we aren't changing seats to another of the same vehicle, handle things.
-        if (!world.isClient() && !riderChangingSeats) {
+        //If we, and we aren't changing seats to another of the same vehicle, handle things.
+        if (!riderChangingSeats) {
             //Set the rider dismount position.
             //If we have a dismount position in the JSON.  Use it.
             //Otherwise, put us to the right or left of the seat depending on x-offset.
@@ -303,7 +303,7 @@ public final class PartSeat extends APart {
             rider.setOrientation(orientation);
     
             //Auto-open doors for the rider in this seat, if such doors exist.
-            if (placementDefinition.interactableVariables != null) {
+            if (!world.isClient() && placementDefinition.interactableVariables != null) {
                 placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> {
                     entityOn.setVariable(variable, 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entityOn, variable, 1));
