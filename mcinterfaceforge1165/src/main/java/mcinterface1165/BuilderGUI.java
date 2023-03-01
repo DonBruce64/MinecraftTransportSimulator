@@ -4,7 +4,6 @@ import org.lwjgl.glfw.GLFW;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import net.minecraft.client.audio.SimpleSound;
@@ -21,7 +20,6 @@ import net.minecraft.util.text.StringTextComponent;
  * @author don_bruce
  */
 public class BuilderGUI extends Screen {
-    private GUIComponentButton lastButtonClicked;
     private int lastKeycodePresed;
 
     /**
@@ -42,23 +40,12 @@ public class BuilderGUI extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        for (AGUIComponent component : gui.components) {
-            if (component instanceof GUIComponentButton) {
-                GUIComponentButton button = (GUIComponentButton) component;
-                if (button.canClick((int) mouseX, (int) mouseY)) {
-                    minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                    button.onClicked(mouseX <= button.constructedX + button.width / 2);
-                    lastButtonClicked = button;
-                    return true;
-                }
-            }
+        if (gui.onClick((int) mouseX, (int) mouseY)) {
+            minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            return true;
+        } else {
+            return false;
         }
-        for (AGUIComponent component : gui.components) {
-            if (component instanceof GUIComponentTextBox) {
-                ((GUIComponentTextBox) component).updateFocus((int) mouseX, (int) mouseY);
-            }
-        }
-        return false;
     }
 
     /**
@@ -69,10 +56,7 @@ public class BuilderGUI extends Screen {
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (lastButtonClicked != null) {
-            lastButtonClicked.onReleased();
-            lastButtonClicked = null;
-        }
+        gui.onRelease();
         return true;
     }
 

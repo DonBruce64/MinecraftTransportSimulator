@@ -227,6 +227,18 @@ public final class ControlSystem {
         }
     }
 
+    private static void controlPanel(EntityVehicleF_Physics vehicle, ControlsKeyboard panel) {
+        if (panel.isPressed()) {
+            if (vehicle.canPlayerStartEngines(clientPlayer)) {
+                if (AGUIBase.activeInputGUI instanceof GUIPanel && !AGUIBase.activeInputGUI.editingText) {
+                    AGUIBase.activeInputGUI.close();
+                } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
+                    new GUIPanel(vehicle);
+                }
+            }
+        }
+    }
+
     private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio) {
         if (radio.isPressed()) {
             if (AGUIBase.activeInputGUI instanceof GUIRadio) {
@@ -290,15 +302,7 @@ public final class ControlSystem {
             return;
         }
         //Open or close the panel.
-        if (ControlsKeyboard.AIRCRAFT_PANEL.isPressed()) {
-            if (aircraft.canPlayerStartEngines(clientPlayer)) {
-                if (AGUIBase.activeInputGUI instanceof GUIPanel) {
-                    AGUIBase.activeInputGUI.close();
-                } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                    new GUIPanel(aircraft);
-                }
-            }
-        }
+        controlPanel(aircraft, ControlsKeyboard.AIRCRAFT_PANEL);
 
         //Check brake status.
         controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE, ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL, ControlsJoystick.AIRCRAFT_PARK);
@@ -371,15 +375,7 @@ public final class ControlSystem {
             return;
         }
         //Open or close the panel.
-        if (ControlsKeyboard.CAR_PANEL.isPressed()) {
-            if (powered.canPlayerStartEngines(clientPlayer)) {
-                if (AGUIBase.activeInputGUI instanceof GUIPanel) {
-                    AGUIBase.activeInputGUI.close();
-                } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                    new GUIPanel(powered);
-                }
-            }
-        }
+        controlPanel(powered, ControlsKeyboard.CAR_PANEL);
 
         //Check brake and gas.  Depends on how the controls are configured.
         if (powered.definition.motorized.hasIncrementalThrottle) {

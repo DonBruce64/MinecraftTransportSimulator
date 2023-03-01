@@ -6,7 +6,6 @@ import org.lwjgl.input.Keyboard;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -21,7 +20,6 @@ import net.minecraft.init.SoundEvents;
  * @author don_bruce
  */
 public class BuilderGUI extends GuiScreen {
-    private GUIComponentButton lastButtonClicked;
 
     /**
      * Current gui we are built around.
@@ -40,21 +38,8 @@ public class BuilderGUI extends GuiScreen {
      */
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        for (AGUIComponent component : gui.components) {
-            if (component instanceof GUIComponentButton) {
-                GUIComponentButton button = (GUIComponentButton) component;
-                if (button.canClick(mouseX, mouseY)) {
-                    mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                    button.onClicked(mouseX <= button.constructedX + button.width / 2);
-                    lastButtonClicked = button;
-                    return;
-                }
-            }
-        }
-        for (AGUIComponent component : gui.components) {
-            if (component instanceof GUIComponentTextBox) {
-                ((GUIComponentTextBox) component).updateFocus(mouseX, mouseY);
-            }
+        if (gui.onClick(mouseX, mouseY)) {
+            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }
     }
 
@@ -66,10 +51,7 @@ public class BuilderGUI extends GuiScreen {
      */
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int actionType) {
-        if (lastButtonClicked != null) {
-            lastButtonClicked.onReleased();
-            lastButtonClicked = null;
-        }
+        gui.onRelease();
     }
 
     /**

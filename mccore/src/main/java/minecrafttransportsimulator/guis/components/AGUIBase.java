@@ -39,6 +39,8 @@ public abstract class AGUIBase {
     protected int screenHeight;
     protected int guiLeft;
     protected int guiTop;
+    protected GUIComponentButton lastButtonClicked;
+    public boolean editingText;
 
     static {
         //Add the overlay GUI to the GUI listing and keep it there forever.
@@ -147,6 +149,46 @@ public abstract class AGUIBase {
      */
     public void setStates() {
         background.visible = renderBackground();
+    }
+
+    /**
+     * Called when this GUI is clicked.  Return true if we clicked something, false if not.
+     * In general, the return call will just make a sound, though it might do other things
+     * depending on the specific version implementation.
+     */
+    public boolean onClick(int mouseX, int mouseY) {
+        for (AGUIComponent component : components) {
+            if (component instanceof GUIComponentButton) {
+                GUIComponentButton button = (GUIComponentButton) component;
+                if (button.canClick(mouseX, mouseY)) {
+                    button.onClicked(mouseX <= button.constructedX + button.width / 2);
+                    lastButtonClicked = button;
+                    return true;
+                }
+            }
+        }
+        editingText = false;
+        for (AGUIComponent component : components) {
+            if (component instanceof GUIComponentTextBox) {
+                GUIComponentTextBox box = (GUIComponentTextBox) component;
+                box.updateFocus(mouseX, mouseY);
+                if (box.focused) {
+                    editingText = true;
+                }
+
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Called when the click in the prior call is released..
+     */
+    public void onRelease() {
+        if (lastButtonClicked != null) {
+            lastButtonClicked.onReleased();
+            lastButtonClicked = null;
+        }
     }
 
     /**
