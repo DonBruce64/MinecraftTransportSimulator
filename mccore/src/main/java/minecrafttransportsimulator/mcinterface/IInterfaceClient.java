@@ -82,6 +82,12 @@ public interface IInterfaceClient {
     void toggleFirstPerson();
 
     /**
+     * Returns the camera-zero default zoom distance.  This can vary from 0 to 4 depending on
+     * how the interface handles camera transforms.
+     */
+    int getCameraDefaultZoom();
+
+    /**
      * Returns the screen width and height as a long comprised of two ints.  The
      * first half being the width, and the second half being the height.
      */

@@ -115,6 +115,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public int getCameraDefaultZoom() {
+        return 0;
+    }
+
+    @Override
     public long getPackedDisplaySize() {
         return (((long) Minecraft.getInstance().getWindow().getGuiScaledWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getGuiScaledHeight() & 0xffffffffL);
     }

@@ -104,6 +104,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public int getCameraDefaultZoom() {
+        return 4;
+    }
+
+    @Override
     public long getPackedDisplaySize() {
         ScaledResolution screenResolution = new ScaledResolution(Minecraft.getMinecraft());
         return (((long) screenResolution.getScaledWidth()) << Integer.SIZE) | (screenResolution.getScaledHeight() & 0xffffffffL);
