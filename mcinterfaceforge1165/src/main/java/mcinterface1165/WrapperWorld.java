@@ -380,6 +380,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public boolean chunkLoaded(Point3D position) {
+        return world.isLoaded(new BlockPos(position.x, position.y, position.z));
+    }
+
+    @Override
     public ABlockBase getBlock(Point3D position) {
         Block block = world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock();
         return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;

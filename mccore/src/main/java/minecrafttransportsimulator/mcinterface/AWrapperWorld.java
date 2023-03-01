@@ -145,6 +145,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad);
 
     /**
+     * Returns true if the chunk that contains the position is loaded.
+     */
+    public abstract boolean chunkLoaded(Point3D position);
+
+    /**
      * Returns the block at the passed-in position, or null if it doesn't exist in the world.
      * Only valid for blocks of type {@link ABlockBase} others will return null.
      */

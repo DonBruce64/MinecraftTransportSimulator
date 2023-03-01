@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -85,12 +86,14 @@ public class EntityManager {
     public void tickAll() {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
-                entity.update();
-                if (entity instanceof AEntityD_Definable) {
-                    ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
+                if (!(entity instanceof AEntityB_Existing) || entity.world.chunkLoaded(((AEntityB_Existing) entity).position)) {
+                    entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
+                    entity.update();
+                    if (entity instanceof AEntityD_Definable) {
+                        ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
+                    }
+                    entity.world.endProfiling();
                 }
-                entity.world.endProfiling();
             }
         }
     }
