@@ -63,6 +63,7 @@ public class GUIComponentCutout extends AGUIComponent {
         renderable.ignoreWorldShading = true;
         renderable.worldLightValue = gui.worldLightValue;
         renderable.disableLighting = renderBright || ignoreGUILightingState;
+        renderable.isTranslucent = blendingEnabled;
         renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
         renderable.render();
     }

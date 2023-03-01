@@ -432,9 +432,13 @@ public class InterfaceRender implements IInterfaceRender {
             guiBuffer.endBatch();
             //Not needed, since we can't draw to custom buffers with GUIs.
             //renderBuffers();
+
+            //Need to use RenderSystem here, since this is a direct buffer.
+            RenderSystem.enableBlend();
             gui.render(mouseX, mouseY, true, partialTicks);
             guiBuffer.endBatch();
             //renderBuffers();
+            RenderSystem.disableBlend();
         
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
             matrixStack.scale(1.0F, -1.0F, 1.0F);
