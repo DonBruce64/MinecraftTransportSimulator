@@ -373,15 +373,8 @@ public class WrapperEntity implements IWrapperEntity {
         }
         entity.attackEntityFrom(newSource, (float) damage.amount);
 
-        if (damage.effects != null && entity instanceof EntityLivingBase) {
-            for (JSONPotionEffect effect : damage.effects) {
-                Potion potion = Potion.getPotionFromResourceLocation(effect.name);
-                if (potion != null) {
-                    ((EntityLivingBase) entity).addPotionEffect(new PotionEffect(potion, effect.duration, effect.amplifier, false, true));
-                } else {
-                    throw new NullPointerException("Potion " + effect.name + " does not exist.");
-                }
-            }
+        if (damage.effects != null) {
+            damage.effects.forEach(effect -> addPotionEffect(effect));
         }
     }
 

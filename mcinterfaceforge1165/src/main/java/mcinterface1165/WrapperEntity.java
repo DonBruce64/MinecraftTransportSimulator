@@ -369,7 +369,7 @@ public class WrapperEntity implements IWrapperEntity {
         }
         entity.hurt(newSource, (float) damage.amount);
 
-        if (damage.effects != null && entity instanceof LivingEntity) {
+        if (damage.effects != null) {
             damage.effects.forEach(effect -> addPotionEffect(effect));
         }
     }
@@ -380,7 +380,7 @@ public class WrapperEntity implements IWrapperEntity {
             Potion potion = Potion.byName(effect.name);
             if (potion != null) {
                 potion.getEffects().forEach(mcEffect -> {
-                    ((LivingEntity) entity).addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, true));
+                    ((LivingEntity) entity).addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, false));
                 });
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
