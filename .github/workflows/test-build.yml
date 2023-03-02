@@ -20,11 +20,7 @@ jobs:
           java-version: 8
       - name: Configure Git
         run: git config --global user.email "no-reply@github.com" && git config --global user.name "Github Actions"
-      - name: Build For Forge 1.12.2
+      - name: Build For Forge
         run: |
           chmod +x ./gradlew
-          ./gradlew buildForge1.12.2 --stacktrace
-      - name: Build For Forge 1.16.5
-        run: |
-          chmod +x ./gradlew
-          ./gradlew buildForge1.16.5 --stacktrace
+          ./gradlew buildForgeAll --stacktrace
