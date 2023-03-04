@@ -401,7 +401,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     partList.add(partClass.cast(partAtIndex));
                 }
                 if (partAtIndex != null) {
-                    partAtIndex.addMatchingPartsToList(partList, partClass);
+                    for (APart part : partAtIndex.allParts) {
+                        if (partClass.isInstance(part)) {
+                            partList.add(partClass.cast(part));
+                        }
+                    }
                 }
             }
         }
@@ -416,7 +420,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                             partList.add(partClass.cast(part));
                         } else {
                             //Index matches, but not class, add all sub-parts that match (probably a generic part).
-                            part.addMatchingPartsToList(partList, partClass);
+                            for (APart part2 : part.allParts) {
+                                if (partClass.isInstance(part2)) {
+                                    partList.add(partClass.cast(part2));
+                                }
+                            }
                         }
                     }
                 }
@@ -432,18 +440,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 if (partClass.isInstance(part)) {
                     partList.add(partClass.cast(part));
                 }
-            }
-        }
-    }
-
-    public <PartClass extends APart> void addMatchingPartsToList(List<PartClass> partList, Class<PartClass> partClass) {
-        for (APart part : parts) {
-            if (partClass.isInstance(part)) {
-                //Class matches list, add it.
-                partList.add(partClass.cast(part));
-            } else if (part != null) {
-                //Class doesn't match list, see if it's holding something that matches.
-                part.addMatchingPartsToList(partList, partClass);
             }
         }
     }
