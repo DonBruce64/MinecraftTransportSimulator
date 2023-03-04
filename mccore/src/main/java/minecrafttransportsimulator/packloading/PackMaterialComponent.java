@@ -65,12 +65,13 @@ public class PackMaterialComponent {
 
             //Get subType materials, if required.
             if (includeSub && item instanceof AItemSubTyped) {
-                currentSubName = ((AItemSubTyped<?>) item).subDefinition.subName;
-                if (((AItemSubTyped<?>) item).subDefinition.extraMaterialLists.size() != item.definition.general.materialLists.size()) {
-                    lastErrorMessage = "This item has a mis-matched number of normal materialLists (" + item.definition.general.materialLists.size() + ") and extraMaterialLists (" + ((AItemSubTyped<?>) item).subDefinition.extraMaterialLists.size() + ") for " + item.definition.packID + ":" + item.definition.systemName + currentSubName + ".  Crafting will be disabled in survival mode.  Report this to the pack author!";
+                AItemSubTyped<?> subItem = (AItemSubTyped<?>) item;
+                currentSubName = subItem.subDefinition.subName;
+                if (subItem.subDefinition.extraMaterialLists.size() != item.definition.general.materialLists.size()) {
+                    lastErrorMessage = "This item has a mis-matched number of normal materialLists (" + item.definition.general.materialLists.size() + ") and extraMaterialLists (" + subItem.subDefinition.extraMaterialLists.size() + ") for " + item.definition.packID + ":" + item.definition.systemName + currentSubName + ".  Crafting will be disabled in survival mode.  Report this to the pack author!";
                     return null;
                 }
-                itemTexts.addAll(((AItemSubTyped<?>) item).subDefinition.extraMaterialLists.get(recipeIndex));
+                itemTexts.addAll(subItem.subDefinition.extraMaterialLists.get(recipeIndex));
             }
         }
 
