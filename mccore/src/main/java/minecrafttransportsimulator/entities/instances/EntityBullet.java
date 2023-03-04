@@ -122,9 +122,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
         if (impactDespawnTimer >= 0) {
-            if (blockToBreakPos != null) {
-                world.destroyBlock(blockToBreakPos, true);
-            }
             if (impactDespawnTimer-- == 0) {
                 remove();
             }
@@ -529,6 +526,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!world.isClient() && definition.bullet.types.contains(BulletType.EXPLOSIVE) && lastHit != null) {
             float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter / 10F : definition.bullet.blastStrength;
             world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
+        }
+        if (blockToBreakPos != null) {
+            world.destroyBlock(blockToBreakPos, true);
         }
         impactDespawnTimer = definition.bullet.impactDespawnTime;
         gun.currentBullet = null;
