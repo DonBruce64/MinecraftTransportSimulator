@@ -290,13 +290,13 @@ public class EntityParticle extends AEntityC_Renderable {
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (blendingEnabled) {
             if (staticColor == null) {
-                renderable.color.red = interpolate(startColor.red, endColor.red, partialTicks);
-                renderable.color.green = interpolate(startColor.green, endColor.green, partialTicks);
-                renderable.color.blue = interpolate(startColor.blue, endColor.blue, partialTicks);
+                renderable.color.red = interpolate(startColor.red, endColor.red, true, partialTicks);
+                renderable.color.green = interpolate(startColor.green, endColor.green, true, partialTicks);
+                renderable.color.blue = interpolate(startColor.blue, endColor.blue, true, partialTicks);
             }
-            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, partialTicks);
+            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
             renderable.transform.set(transform);
-            float scale = definition.type == ParticleType.FLAME ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, partialTicks);
+            float scale = definition.type == ParticleType.FLAME ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, false, partialTicks);
             double totalScale = getSize() * scale;
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
@@ -337,11 +337,11 @@ public class EntityParticle extends AEntityC_Renderable {
         return definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
     }
 
-    private float interpolate(float start, float end, float partialTicks) {
+    private float interpolate(float start, float end, boolean clamp, float partialTicks) {
         if (start != 0) {
             if (end != 0) {
                 float value = start + (end - start) * (ticksExisted + partialTicks) / maxAge;
-                return value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value);
+                return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
             } else {
                 return start;
             }
