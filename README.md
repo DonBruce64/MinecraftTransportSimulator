@@ -32,12 +32,12 @@ Note: May need updating, not sure if this is still accurate
 2. Make a folder called `eclipse` in the cloned folder and open Eclipse.   When it asks you for a "Workspace Location", select the `eclipse` folder that you just created.
 3. Go to the menu and click "Import Gradle Project".   Choose the folder that was created after you ran `git clone` before, it should be called "MinecraftTransportSimulator".
 4. To test changes you make to the code, you can click the little bug icon and then go to Debug Configurations -> Java Application-runClient.   Select this, go to the Environment tab, and set the `MC_VERSION` entry to the game version.
-5. When you're ready to build the mod, run `./gradlew buildForge1.12.2` or `./gradlew buildForge1.16.5` for 1.12.2 and 1.16.5 respectively.
+5. When you're ready to build the mod, run `./gradlew buildForge1122` or `./gradlew buildForge1165` for 1.12.2 and 1.16.5 respectively.
 #### IntelliJ IDEA
 1. Right-click the folder that was created when you ran `git clone` and click "Open Folder as IntelliJ yourEdition Edition IDEA Project".   If you don't have the option, start IDEA and click File -> Open then navigate to the directory and choose the folder.
 2. Wait for IDEA to finish setting up the Gradle script then use the "Gradle" tab on the right side of your screen to run Gradle tasks.   Run `genIntelliJRuns` in the project for the Forge version and game version you want, e.g. `mcinterfaceforge1122` for Forge for 1.12.2.
 3. When you want to test your changes on the client or server, use the `runClient` or `runServer` configurations.   Click the dropdown then "Edit Configurations..." and change the `MC_VERSION` environment variable to the game version.   If the run configuration has a red x, change the project module to `Immersive_Vehicles.forgeInterfaceVersion.main` in the same menu.
-4. When you're ready to build the mod, run `./gradlew buildForge1.12.2` or `./gradlew  buildForge1.16.5` (`buildForge1.12.2` and `buildForge1.16.5` in the Gradle tab) for 1.12.2 and 1.16.5 respectively.
+4. When you're ready to build the mod, run `./gradlew buildForge1122` or `./gradlew  buildForge1165` (`buildForge1122` and `buildForge1165` in the Gradle tab) for 1.12.2 and 1.16.5 respectively.
 
 Need more help with IDEA? Ask Elephant_1214#3698 in the Discord server.
 #### VSCode

@@ -35,7 +35,7 @@ tasks.register("buildCore") {
     }
 }
 
-tasks.register("buildForge1.12.2") {
+tasks.register("buildForge1122") {
     doFirst { preBuild() }
     doLast {
         moveToOut(mcInterfaceForge1122, "1.12.2")
@@ -43,12 +43,17 @@ tasks.register("buildForge1.12.2") {
     dependsOn(mcInterfaceForge1122.tasks.build)
 }
 
-tasks.register("buildForge1.16.5") {
+tasks.register("buildForge1165") {
     doFirst { preBuild() }
     doLast {
         moveToOut(mcInterfaceForge1165, "1.16.5")
     }
     dependsOn(mcInterfaceForge1165.tasks.build)
+}
+
+tasks.register("buildForgeAll") {
+    dependsOn(tasks.getByName("buildForge1122"))
+    dependsOn(tasks.getByName("buildForge1165"))
 }
 
 @OptIn(ExperimentalPathApi::class)
