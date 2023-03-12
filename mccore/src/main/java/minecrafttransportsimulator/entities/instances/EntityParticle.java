@@ -296,7 +296,7 @@ public class EntityParticle extends AEntityC_Renderable {
             }
             renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
             renderable.transform.set(transform);
-            float scale = definition.type == ParticleType.FLAME ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, false, partialTicks);
+            float scale = (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, false, partialTicks);
             double totalScale = getSize() * scale;
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
