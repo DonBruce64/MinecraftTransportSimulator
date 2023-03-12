@@ -31,6 +31,7 @@ import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -72,7 +73,7 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public String getFluidName(String fluidID) {
         Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidID));
-        return fluid != null ? new FluidStack(fluid, 1).getDisplayName().getString() : "INVALID";
+        return fluid != null ? (new TranslationTextComponent(fluid.getAttributes().getTranslationKey())).getString() : "INVALID";
     }
 
     @Override
