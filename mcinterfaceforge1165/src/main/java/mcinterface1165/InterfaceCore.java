@@ -2,7 +2,6 @@ package mcinterface1165;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,14 +86,7 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public boolean isOredictMatch(IWrapperItemStack stackA, IWrapperItemStack stackB) {
-        Collection<ResourceLocation> aTags = ItemTags.getAllTags().getMatchingTags(((WrapperItemStack) stackA).stack.getItem());
-        Collection<ResourceLocation> bTags = ItemTags.getAllTags().getMatchingTags(((WrapperItemStack) stackB).stack.getItem());
-        for (ResourceLocation aTag : aTags) {
-            if (bTags.contains(aTag)) {
-                return true;
-            }
-        }
-        return false;
+        return ((WrapperItemStack) stackA).stack.sameItem(((WrapperItemStack) stackB).stack);
     }
 
     @Override
