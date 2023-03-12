@@ -64,11 +64,6 @@ public class BuilderBlock extends Block {
      * Current block we are built around.
      **/
     protected final ABlockBase block;
-    /**
-     * Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops
-     * created during the drop checks here to ensure they actually drop when the block is broken.
-     **/
-    private static final Map<TileEntity, List<ItemStack>> dropMap = new HashMap<>();
 
     BuilderBlock(ABlockBase block) {
         super(AbstractBlock.Properties.of(Material.STONE, MaterialColor.STONE).strength(block.hardness, block.blastResistance).noOcclusion());
@@ -163,12 +158,15 @@ public class BuilderBlock extends Block {
         //If this is a TE, drop TE drops.  Otherwise, drop normal drops.
         TileEntity tile = builder.getOptionalParameter(LootParameters.BLOCK_ENTITY);
         if (tile instanceof BuilderTileEntity) {
-            List<ItemStack> positionDrops = dropMap.get(tile);
-            dropMap.remove(tile);
-            return positionDrops;
-        } else {
-            return super.getDrops(state, builder);
+            if (((BuilderTileEntity) tile).tileEntity != null) {
+                List<IWrapperItemStack> drops = new ArrayList<>();
+                ((BuilderTileEntity) tile).tileEntity.addDropsToList(drops);
+                List<ItemStack> convertedDrops = new ArrayList<>();
+                drops.forEach(drop -> convertedDrops.add(((WrapperItemStack) drop).stack));
+                return convertedDrops;
+            }
         }
+        return super.getDrops(state, builder);
     }
 
     @SuppressWarnings("deprecation")
@@ -176,21 +174,6 @@ public class BuilderBlock extends Block {
     public void spawnAfterBreak(BlockState state, ServerWorld world, BlockPos pos, ItemStack stack) {
         //Forward the breaking call to the block to allow for breaking logic.
         block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
-        //This gets called before the block is broken to do logic.  Save drops to static map to be
-        //spawned during the getDrops method.  Also notify the block that it's been broken in case
-        //it needs to do operations.
-        if (block instanceof ABlockBaseTileEntity) {
-            TileEntity tile = world.getBlockEntity(pos);
-            if (tile instanceof BuilderTileEntity) {
-                if (((BuilderTileEntity) tile).tileEntity != null) {
-                    List<IWrapperItemStack> drops = new ArrayList<>();
-                    ((BuilderTileEntity) tile).tileEntity.addDropsToList(drops);
-                    List<ItemStack> convertedDrops = new ArrayList<>();
-                    drops.forEach(drop -> convertedDrops.add(((WrapperItemStack) drop).stack));
-                    dropMap.put(tile, convertedDrops);
-                }
-            }
-        }
         super.spawnAfterBreak(state, world, pos, stack);
     }
 
