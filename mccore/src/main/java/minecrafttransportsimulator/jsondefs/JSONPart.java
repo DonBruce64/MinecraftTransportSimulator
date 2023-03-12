@@ -108,6 +108,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, then when this part runs out of health it will be destroyed and removed rather than just become inoperable.")
         public boolean destroyable;
 
+        @JSONDescription("If true, this part will link to all parts that it could possibly link to, no matter if they are specified in their linkedParts.")
+        public boolean forceAllLinks;
+
         @JSONDescription("The width of the part.")
         public float width;
 

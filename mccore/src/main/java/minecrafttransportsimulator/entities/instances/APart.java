@@ -410,24 +410,42 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
         }
 
+        //If we are defined to always link to anything, get our master entity and all its parts and link them.
+        if (definition.generic.forceAllLinks) {
+            for (APart part : masterEntity.allParts) {
+                if (part != this && partClass.isInstance(part) && !partList.contains(part)) {
+                    partList.add(partClass.cast(part));
+                }
+            }
+        }
+
         //Now check for parts linked to us.
         for (APart part : entityOn.parts) {
-            if (part != this && part.placementDefinition.linkedParts != null) {
-                for (int partIndex : part.placementDefinition.linkedParts) {
-                    if (partIndex - 1 == this.placementSlot) {
-                        if (partClass.isInstance(part)) {
-                            //Part class matches, add it as linked.
-                            partList.add(partClass.cast(part));
-                        } else {
-                            //Index matches, but not class, add all sub-parts that match (probably a generic part).
-                            for (APart part2 : part.allParts) {
-                                if (partClass.isInstance(part2)) {
-                                    partList.add(partClass.cast(part2));
+            if (part != this) {
+                if (part.placementDefinition.linkedParts != null) {
+                    for (int partIndex : part.placementDefinition.linkedParts) {
+                        if (partIndex - 1 == this.placementSlot) {
+                            if (partClass.isInstance(part)) {
+                                //Part class matches, add it as linked.
+                                partList.add(partClass.cast(part));
+                            } else {
+                                //Index matches, but not class, add all sub-parts that match (probably a generic part).
+                                for (APart part2 : part.allParts) {
+                                    if (partClass.isInstance(part2)) {
+                                        partList.add(partClass.cast(part2));
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+
+        //If any part is defined to always link to anything, and it could link to us, link it.
+        for (APart part : masterEntity.allParts) {
+            if (part != this && part.definition.generic.forceAllLinks && partClass.isInstance(part) && !partList.contains(part)) {
+                partList.add(partClass.cast(part));
             }
         }
 
