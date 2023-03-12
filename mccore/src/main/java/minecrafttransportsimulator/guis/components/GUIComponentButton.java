@@ -31,7 +31,9 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     public boolean isDynamicTexture;
     public final ColorRGB textColor;
     protected RenderableObject renderable2;
+    protected RenderableObject renderable2L;
     protected RenderableObject renderable3;
+    protected RenderableObject renderable3L;
 
     /**
      * A Simple button with a rendered string in grey and center-aligned.
@@ -119,40 +121,37 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
 
                     if (i == 0) {
                         renderable = new RenderableObject("gui_button_disabled", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+                        renderableL = new RenderableObject("gui_button_disabled", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
                     } else if (i == 1) {
                         renderable2 = new RenderableObject("gui_button_normal", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+                        renderable2L = new RenderableObject("gui_button_normal", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
                     } else {
                         renderable3 = new RenderableObject("gui_button_highlight", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+                        renderable3L = new RenderableObject("gui_button_highlight", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
                     }
                 }
             }
 
+            RenderableObject currentRenderable;
             if (enabled && !isDynamicTexture) {
                 if (isMouseInBounds(mouseX, mouseY)) {//Highlighted
-                    renderable3.ignoreWorldShading = true;
-                    renderable3.worldLightValue = gui.worldLightValue;
-                    renderable3.disableLighting = renderBright || ignoreGUILightingState;
-                    renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-                    renderable3.transform.setTranslation(position);
-                    renderable3.render();
+                    currentRenderable = renderLitTexture ? renderable3L : renderable3;
                 } else {//Normal
-                    renderable2.ignoreWorldShading = true;
-                    renderable2.worldLightValue = gui.worldLightValue;
-                    renderable2.disableLighting = renderBright || ignoreGUILightingState;
-                    renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-                    renderable2.transform.setTranslation(position);
-                    renderable2.render();
+                    currentRenderable = renderLitTexture ? renderable2L : renderable2;
                 }
             } else {//Disabled, or dynamic texture.
+                currentRenderable = renderLitTexture ? renderableL : renderable;
                 if (isDynamicTexture) {
-                    renderable.vertices = generateOffsetBuffer(gui, textureYOffset);
+                    currentRenderable.vertices = generateOffsetBuffer(gui, textureYOffset);
                 }
-                renderable.ignoreWorldShading = true;
-                renderable.worldLightValue = gui.worldLightValue;
-                renderable.disableLighting = renderBright || ignoreGUILightingState;
-                renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-                renderable.transform.setTranslation(position);
-                renderable.render();
+            }
+
+            if (currentRenderable.isTranslucent == blendingEnabled) {
+                currentRenderable.ignoreWorldShading = true;
+                currentRenderable.worldLightValue = gui.worldLightValue;
+                currentRenderable.disableLighting = renderBright || ignoreGUILightingState;
+                currentRenderable.transform.setTranslation(position);
+                currentRenderable.render();
             }
         }
     }

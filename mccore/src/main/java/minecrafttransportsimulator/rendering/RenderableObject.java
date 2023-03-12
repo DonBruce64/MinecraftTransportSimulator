@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
@@ -127,7 +128,7 @@ public class RenderableObject {
         this.texture = texture;
         this.color = color;
         this.cacheVertices = cacheVertices;
-        this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
+        this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || (texture != null && texture.endsWith(GUIComponentCutout.LIT_SUFFIX));
         this.vertices = vertices;
         transform.resetTransforms();
     }

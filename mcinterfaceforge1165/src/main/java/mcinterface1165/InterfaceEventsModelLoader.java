@@ -8,9 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.function.Predicate;
 
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -19,16 +18,10 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.client.Minecraft;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IFutureReloadListener;
-import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourcePack;
 import net.minecraft.resources.ResourcePackType;
-import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Unit;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -38,6 +31,7 @@ import net.minecraft.util.Unit;
  * @author don_bruce
  */
 public class InterfaceEventsModelLoader {
+    public static List<PackResourcePack> packPacks = new ArrayList<>();
 
     /**
      * Called to init the custom model loader.  Should be done before any other things.
@@ -47,21 +41,13 @@ public class InterfaceEventsModelLoader {
      * ready when that call comes and will re-add ourselves.
      */
     public static void init() {
-        try {
-            SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager();
-            for (String packID : PackParser.getAllPackIDs()) {
-                manager.registerReloadListener(new PackResourcePack(packID));
-            }
-        } catch (Exception e) {
-            InterfaceManager.coreInterface.logError("Could not add ourselves to the resource list. Files won't load correctly!");
-            e.printStackTrace();
-        }
+        PackParser.getAllPackIDs().forEach(packID -> packPacks.add(new PackResourcePack(packID)));
     }
 
     /**
      * Custom ResourcePack class for auto-generating item JSONs.
      */
-    private static class PackResourcePack implements IResourcePack, IFutureReloadListener {
+    public static class PackResourcePack implements IResourcePack {
         private final String domain;
         private final Set<String> domains;
 
@@ -249,15 +235,6 @@ public class InterfaceEventsModelLoader {
         public Collection<ResourceLocation> getResources(ResourcePackType pType, String pNamespace, String pPath, int pMaxDepth, Predicate<String> pFilter) {
             //We shouldn't never need this, our resources are on-demand.
             return new ArrayList<ResourceLocation>();
-        }
-
-        @Override
-        public CompletableFuture<Void> reload(IStage pStage, IResourceManager pResourceManager, IProfiler pPreparationsProfiler, IProfiler pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
-            //Re-add us to the main resource pack list, otherwise we go poof!
-            ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).add(this);
-            return pStage.wait(Unit.INSTANCE).thenRunAsync(() -> {
-                //Do nothing.  This return value is just to keep the MC reloading code from locking up.
-            }, pGameExecutor);
         }
     }
 }

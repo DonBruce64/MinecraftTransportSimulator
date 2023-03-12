@@ -8,7 +8,8 @@
 		],
     "client": [
         "client.RenderInfoInvokerMixin",
-				"client.ClientPlayNetHandlerMixin"
+				"client.ClientPlayNetHandlerMixin",
+				"client.SimpleReloadableResourceManagerMixin",
     ],
     "injectors": {
         "defaultRequire": 1

@@ -208,30 +208,27 @@ public abstract class AGUIBase {
             worldLightValue = getGUILightSource().worldLightValue;
         }
 
-        //Render main components once, but only based on translucent state.
-        //While instruments might get rendered on both passes, normal components
-        //only get rendered on one or the other.
-        if (renderTranslucent() == blendingEnabled) {
-            //Render textured components except instruments.  These choose if they render or not depending on visibility.
+        //Render main components once for sure on the main pass, but only on translucent if we are that type of GUI.
+        for (AGUIComponent component : components) {
+            if (component.visible && !(component instanceof GUIComponentInstrument)) {
+                component.render(this, mouseX, mouseY, ignoreLightState, false, blendingEnabled, partialTicks);
+            }
+        }
+
+        //If we are light-sensitive, and this GUI is said to be lit up, render the lit components here.
+        //This requires a re-render of all the components to ensure the lit texture portions of said components render.
+        if (blendingEnabled && getGUILightMode().equals(GUILightingMode.LIT)) {
             for (AGUIComponent component : components) {
-                if (component.visible && !(component instanceof GUIComponentInstrument)) {
-                    component.render(this, mouseX, mouseY, ignoreLightState, false, blendingEnabled, partialTicks);
+                if (component.visible && !(component instanceof GUIComponentInstrument) && !(component instanceof GUIComponentItem)) {
+                    component.render(this, mouseX, mouseY, true, true, blendingEnabled, partialTicks);
                 }
             }
+        }
 
-            //If we are light-sensitive, and this GUI is said to be lit up, render the lit components here.
-            //This requires a re-render of all the components to ensure the lit texture portions of said components render.
-            if (getGUILightMode().equals(GUILightingMode.LIT)) {
-                for (AGUIComponent component : components) {
-                    if (component.visible && !(component instanceof GUIComponentInstrument) && !(component instanceof GUIComponentItem)) {
-                        component.render(this, mouseX, mouseY, true, true, true, partialTicks);
-                    }
-                }
-            }
-
-            //Now that all main rendering is done, render text.
-            //This includes labels, button text, and text boxes.
-            //We only need to do this once, even if we are lit, as we just change the text lighting.
+        //Now that all main rendering is done, render text.
+        //This includes labels, button text, and text boxes.
+        //We only need to do this once, even if we are lit, as we just change the text lighting.
+        if (!blendingEnabled) {
             boolean isTextLit = !getGUILightMode().equals(GUILightingMode.DARK);
             for (AGUIComponent component : components) {
                 if (component.visible && component.text != null) {
@@ -240,7 +237,7 @@ public abstract class AGUIBase {
             }
         }
 
-        //Render instruments.  These need both normal and blended passes.
+        //Render instruments.  These handle the rendering internally, so we call no matter what.
         for (AGUIComponent component : components) {
             if (component.visible && component instanceof GUIComponentInstrument) {
                 component.render(this, mouseX, mouseY, false, false, blendingEnabled, partialTicks);

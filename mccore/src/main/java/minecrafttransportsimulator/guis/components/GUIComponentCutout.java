@@ -12,8 +12,11 @@ import minecrafttransportsimulator.rendering.RenderableObject;
  * @author don_bruce
  */
 public class GUIComponentCutout extends AGUIComponent {
+    public static final String NORMAL_SUFFIX = ".png";
+    public static final String LIT_SUFFIX = "_lit.png";
 
     //Texture variables.
+    protected RenderableObject renderableL;
     private boolean renderFullScreen;
     public int textureXOffset;
     public int textureYOffset;
@@ -50,21 +53,23 @@ public class GUIComponentCutout extends AGUIComponent {
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         if (renderable == null || !renderable.texture.equals(gui.getTexture())) {
             renderable = new RenderableObject("gui_cutout", gui.getTexture(), ColorRGB.WHITE, FloatBuffer.allocate(8 * 6), false);
+            renderableL = new RenderableObject("gui_cutout", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, FloatBuffer.allocate(8 * 6), false);
         }
-        if (renderable.vertices.position() == 0) {
-            if (renderFullScreen) {
-                gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, 0, 0, width, height, width, height);
-            } else {
-                gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        RenderableObject currentRenderable = renderLitTexture ? renderableL : renderable;
+        if (currentRenderable.isTranslucent == blendingEnabled) {
+            if (currentRenderable.vertices.position() == 0) {
+                if (renderFullScreen) {
+                    gui.addRenderToBuffer(currentRenderable.vertices, 0, 0, width, height, 0, 0, width, height, width, height);
+                } else {
+                    gui.addRenderToBuffer(currentRenderable.vertices, 0, 0, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+                }
+                currentRenderable.vertices.flip();
             }
-            renderable.vertices.flip();
+            currentRenderable.transform.setTranslation(position);
+            currentRenderable.ignoreWorldShading = true;
+            currentRenderable.worldLightValue = gui.worldLightValue;
+            currentRenderable.disableLighting = renderBright || ignoreGUILightingState;
+            currentRenderable.render();
         }
-        renderable.transform.setTranslation(position);
-        renderable.ignoreWorldShading = true;
-        renderable.worldLightValue = gui.worldLightValue;
-        renderable.disableLighting = renderBright || ignoreGUILightingState;
-        renderable.isTranslucent = blendingEnabled;
-        renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-        renderable.render();
     }
 }

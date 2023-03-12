@@ -33,8 +33,8 @@ public class BoundingBox {
     public final Point3D globalCenter;
     public final Point3D currentCollisionDepth;
     public final List<Point3D> collidingBlockPositions = new ArrayList<>();
-    private final RenderableObject wireframeRenderable;
-    private final RenderableObject holographicRenderable;
+    private RenderableObject wireframeRenderable;
+    private RenderableObject holographicRenderable;
     private final Point3D tempGlobalCenter;
 
     public double widthRadius;
@@ -100,28 +100,6 @@ public class BoundingBox {
         this.collidesWithLiquids = collidesWithLiquids;
         this.groupDef = groupDef;
         this.definition = definition;
-
-        final ColorRGB boxColor;
-        if (definition != null) {
-            if (definition.variableName != null) {
-                //Green for boxes that activate variables..
-                boxColor = ColorRGB.GREEN;
-            } else if (groupDef != null && groupDef.isForBullets) {
-                //Orange for bullet collisions.
-                boxColor = ColorRGB.ORANGE;
-            } else if (groupDef != null && !groupDef.isInterior) {
-                //Red for block collisions.
-                boxColor = ColorRGB.RED;
-            } else {
-                //Black for general collisions.
-                boxColor = ColorRGB.BLACK;
-            }
-        } else {
-            //Not a defined collision box.  Must be an interaction box.  Yellow.
-            boxColor = ColorRGB.YELLOW;
-        }
-        this.wireframeRenderable = new RenderableObject(new ColorRGB(boxColor.rgbInt), false);
-        this.holographicRenderable = new RenderableObject(new ColorRGB(), true);
     }
 
     @Override
@@ -310,6 +288,28 @@ public class BoundingBox {
      * the passed-in offset from global center if it is set.
      */
     public void renderWireframe(AEntityC_Renderable entity, TransformationMatrix transform, Point3D offset, ColorRGB color) {
+        if (wireframeRenderable == null) {
+            final ColorRGB boxColor;
+            if (definition != null) {
+                if (definition.variableName != null) {
+                    //Green for boxes that activate variables.
+                    boxColor = ColorRGB.GREEN;
+                } else if (groupDef != null && groupDef.isForBullets) {
+                    //Orange for bullet collisions.
+                    boxColor = ColorRGB.ORANGE;
+                } else if (groupDef != null && !groupDef.isInterior) {
+                    //Red for block collisions.
+                    boxColor = ColorRGB.RED;
+                } else {
+                    //Black for general collisions.
+                    boxColor = ColorRGB.BLACK;
+                }
+            } else {
+                //Not a defined collision box.  Must be an interaction box.  Yellow.
+                boxColor = ColorRGB.YELLOW;
+            }
+            this.wireframeRenderable = new RenderableObject(new ColorRGB(boxColor.rgbInt), false);
+        }
         wireframeRenderable.transform.set(transform);
         helperPoint.set(globalCenter);
         if (offset != null) {
@@ -319,6 +319,7 @@ public class BoundingBox {
         }
         wireframeRenderable.transform.applyTranslation(helperPoint);
         if (color != null) {
+            //Override default color with set color.
             wireframeRenderable.color.setTo(color);
         }
         wireframeRenderable.setWireframeBoundingBox(this);
@@ -331,6 +332,9 @@ public class BoundingBox {
      * nicely with the current matrix sate.
      */
     public void renderHolographic(TransformationMatrix transform, Point3D offset, ColorRGB color) {
+        if (holographicRenderable == null) {
+            holographicRenderable = new RenderableObject(new ColorRGB(), true);
+        }
         holographicRenderable.transform.set(transform);
         if (offset != null) {
             holographicRenderable.transform.applyTranslation(offset);
