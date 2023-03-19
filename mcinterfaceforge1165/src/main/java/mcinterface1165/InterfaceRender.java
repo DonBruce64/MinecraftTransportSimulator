@@ -444,21 +444,24 @@ public class InterfaceRender implements IInterfaceRender {
             matrixStack.scale(1.0F, -1.0F, 1.0F);
 
             for (GUIComponentItem component : stacksToRender) {
-                //Apply existing transform.
-                //Need to translate the z-offset to our value, which includes a -100 for the default added value.
-                //Blit starts at 200 though, plus 32 for the default item render.
-                float zOffset = Minecraft.getInstance().getItemRenderer().blitOffset;
-                Minecraft.getInstance().getItemRenderer().blitOffset = (float) (200 + component.translation.z - 100);
-                if (component.scale != 1.0) {
-                    //Need to use RenderSystem here, since we can't access the stack directly for rendering scaling.
-                    RenderSystem.pushMatrix();
-                    RenderSystem.scalef(component.scale, component.scale, 1.0F);
-                    Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) (component.translation.x / component.scale), (int) (-component.translation.y / component.scale) + 1);
-                    RenderSystem.popMatrix();
-                } else {
-                    Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) component.translation.x, (int) -component.translation.y);
+                //Double-check the stack is still present, it might have been un-set since this call.
+                if ((WrapperItemStack) component.stackToRender != null) {
+                    //Apply existing transform.
+                    //Need to translate the z-offset to our value, which includes a -100 for the default added value.
+                    //Blit starts at 200 though, plus 32 for the default item render.
+                    float zOffset = Minecraft.getInstance().getItemRenderer().blitOffset;
+                    Minecraft.getInstance().getItemRenderer().blitOffset = (float) (200 + component.translation.z - 100);
+                    if (component.scale != 1.0) {
+                        //Need to use RenderSystem here, since we can't access the stack directly for rendering scaling.
+                        RenderSystem.pushMatrix();
+                        RenderSystem.scalef(component.scale, component.scale, 1.0F);
+                        Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) (component.translation.x / component.scale), (int) (-component.translation.y / component.scale) + 1);
+                        RenderSystem.popMatrix();
+                    } else {
+                        Minecraft.getInstance().getItemRenderer().renderGuiItem(((WrapperItemStack) component.stackToRender).stack, (int) component.translation.x, (int) -component.translation.y);
+                    }
+                    Minecraft.getInstance().getItemRenderer().blitOffset = zOffset;
                 }
-                Minecraft.getInstance().getItemRenderer().blitOffset = zOffset;
             }
             stacksToRender.clear();
         
@@ -540,9 +543,10 @@ public class InterfaceRender implements IInterfaceRender {
     public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
         //If the buffer is null, bail, it should be set before-hand from the normal render, but might not be.
         //This can happen if the follower hasn't been rendered yet.
-        MatrixStack stack = event.getMatrixStack();
-        float partialTicks = event.getPartialTicks();
         if (renderBuffer != null) {
+            MatrixStack stack = event.getMatrixStack();
+            float partialTicks = event.getPartialTicks();
+
             //Render translucent bits since those need to blend.
             //We need to apply the correct offset here to the render info position, since that's expected.
             Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
@@ -559,7 +563,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-        if (allEntities != null) {
+        if (allEntities != null && renderBuffer instanceof IRenderTypeBuffer.Impl) {
             world.beginProfiling("MTSRendering_Setup", true);
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!

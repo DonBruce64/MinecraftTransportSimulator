@@ -356,19 +356,22 @@ public class InterfaceRender implements IInterfaceRender {
             //Need to disable internal lighting due to it messing up stack shading.
             setInternalLightingState(false);
             for (GUIComponentItem component : stacksToRender) {
-                //Apply existing transform.
-                //Need to translate the z-offset to our value, which includes a -100 for the default added value.
-                float zOffset = Minecraft.getMinecraft().getRenderItem().zLevel;
-                Minecraft.getMinecraft().getRenderItem().zLevel = (float) component.translation.z - 100;
-                if (component.scale != 1.0) {
-                    GL11.glPushMatrix();
-                    GL11.glScalef(component.scale, component.scale, 1.0F);
-                    Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) (component.translation.x / component.scale), (int) -(component.translation.y / component.scale) + 1);
-                    GL11.glPopMatrix();
-                } else {
-                    Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) component.translation.x, (int) -component.translation.y);
+                //Double-check the stack is still present, it might have been un-set since this call.
+                if ((WrapperItemStack) component.stackToRender != null) {
+                    //Apply existing transform.
+                    //Need to translate the z-offset to our value, which includes a -100 for the default added value.
+                    float zOffset = Minecraft.getMinecraft().getRenderItem().zLevel;
+                    Minecraft.getMinecraft().getRenderItem().zLevel = (float) component.translation.z - 100;
+                    if (component.scale != 1.0) {
+                        GL11.glPushMatrix();
+                        GL11.glScalef(component.scale, component.scale, 1.0F);
+                        Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) (component.translation.x / component.scale), (int) -(component.translation.y / component.scale) + 1);
+                        GL11.glPopMatrix();
+                    } else {
+                        Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) component.translation.x, (int) -component.translation.y);
+                    }
+                    Minecraft.getMinecraft().getRenderItem().zLevel = zOffset;
                 }
-                Minecraft.getMinecraft().getRenderItem().zLevel = zOffset;
             }
             stacksToRender.clear();
             setInternalLightingState(true);
