@@ -49,9 +49,9 @@ public class RenderableModelObject {
     private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<>();
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
-    private static final float COLOR_OFFSET = 0.0001F;
-    private static final float FLARE_OFFSET = 0.0002F;
-    private static final float COVER_OFFSET = 0.0003F;
+    private static final float COLOR_OFFSET = RenderableObject.Z_BUFFER_OFFSET;
+    private static final float FLARE_OFFSET = COLOR_OFFSET + RenderableObject.Z_BUFFER_OFFSET;
+    private static final float COVER_OFFSET = FLARE_OFFSET + RenderableObject.Z_BUFFER_OFFSET;
     private static final float BEAM_OFFSET = -0.15F;
     private static final int BEAM_SEGMENTS = 40;
 
@@ -472,6 +472,7 @@ public class RenderableModelObject {
         //Make a duplicate set of vertices with an offset for the color rendering.
         RenderableObject offsetObject = new RenderableObject("color", "mts:textures/rendering/light.png", new ColorRGB(), FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
         float[] vertexData = new float[8];
+
         while (parsedObject.vertices.hasRemaining()) {
             parsedObject.vertices.get(vertexData);
             offsetObject.vertices.put(vertexData, 0, 5);
@@ -479,6 +480,7 @@ public class RenderableModelObject {
             offsetObject.vertices.put(vertexData[6] + vertexData[1] * COLOR_OFFSET);
             offsetObject.vertices.put(vertexData[7] + vertexData[2] * COLOR_OFFSET);
         }
+
         parsedObject.vertices.rewind();
         offsetObject.normalizeUVs();
         offsetObject.vertices.flip();
