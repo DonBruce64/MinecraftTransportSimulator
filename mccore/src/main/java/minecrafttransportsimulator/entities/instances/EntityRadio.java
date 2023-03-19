@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
@@ -67,6 +68,10 @@ public class EntityRadio extends AEntityB_Existing {
     public void update() {
         super.update();
         position.set(provider.position);
+        if (world.isClient() && currentSound != null) {
+            double distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+            currentSound.volume = (float) (volume / 10F * (distance < SoundInstance.DEFAULT_MAX_DISTANCE ? (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE) : 0));
+        }
     }
 
     @Override
@@ -84,11 +89,12 @@ public class EntityRadio extends AEntityB_Existing {
     /**
      * Starts radio playback, making a new sound instance to do so.
      * This command comes from the currently-selected radio station when
-     * it has connected and is ready to play sound.
+     * it has connected and is ready to play sound.  Start volume at 0.
+     * The {@link #update()} function will set the volume on the next call.
      */
     public void start() {
         currentSound = new SoundInstance(this, "Radio_" + uniqueUUID, null, this);
-        currentSound.volume = volume / 10F;
+        currentSound.volume = 0;
     }
 
     /**
@@ -135,13 +141,10 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     /**
-     * Changes the volume of this radio, and sets the currentSound's volume to that volume.
+     * Changes the volume of this radio.
      */
     public void changeVolume(int setVolume) {
         this.volume = setVolume == 0 ? 10 : setVolume;
-        if (currentSound != null) {
-            currentSound.volume = setVolume / 10F;
-        }
     }
 
     /**
