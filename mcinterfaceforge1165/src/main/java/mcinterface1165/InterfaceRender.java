@@ -563,13 +563,16 @@ public class InterfaceRender implements IInterfaceRender {
     private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-        if (allEntities != null && renderBuffer instanceof IRenderTypeBuffer.Impl) {
+        if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
             allEntities.forEach(entity -> entity.render(blendingEnabled, partialTicks));
+
             //Need to tell the immediate buffer  it's done rendering, else it'll hold onto the data and crash other systems.
-            ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
+            if (renderBuffer instanceof IRenderTypeBuffer.Impl) {
+                ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
+            }
 
             //Now do the actual render.
             world.beginProfiling("MTSRendering_Execution", false);
