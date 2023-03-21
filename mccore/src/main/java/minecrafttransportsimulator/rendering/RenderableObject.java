@@ -129,7 +129,7 @@ public class RenderableObject {
         this.texture = texture;
         this.color = color;
         this.cacheVertices = cacheVertices;
-        this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || (texture != null && texture.endsWith(GUIComponentCutout.LIT_SUFFIX));
+        this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || (texture != null && (texture.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || texture.endsWith(GUIComponentCutout.LIT_SUFFIX)));
         this.vertices = vertices;
         transform.resetTransforms();
     }
