@@ -86,7 +86,7 @@ public class EntityManager {
     public void tickAll() {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                if (!(entity instanceof AEntityB_Existing) || entity.world.chunkLoaded(((AEntityB_Existing) entity).position)) {
+                if (!(entity instanceof EntityVehicleF_Physics) || entity.world.chunkLoaded(((AEntityB_Existing) entity).position)) {
                     entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
                     entity.update();
                     if (entity instanceof AEntityD_Definable) {
