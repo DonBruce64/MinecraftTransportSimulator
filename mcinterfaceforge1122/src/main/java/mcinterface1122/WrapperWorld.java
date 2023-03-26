@@ -646,7 +646,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        float sunLight = world.getSunBrightness(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;
+        float sunLight = world.getSunBrightnessFactor(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;
         float blockLight = calculateBlock ? world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos) / 15F : 0.0F;
         return Math.max(sunLight, blockLight);
     }
