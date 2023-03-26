@@ -180,6 +180,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         //Don't need to update the position variable for engines, as it auto-syncs.
                         //Do need to check if the engine is still warm and valid, however.
                         if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted.vehicleOn.missilesIncoming.remove(this);
                             engineTargeted = null;
                             targetPosition = null;
                         }
@@ -200,6 +201,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         //Don't need to update the position variable for engines, as it auto-syncs.
                         //Do need to check if the engine is still warm and valid, however.
                         if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            engineTargeted.vehicleOn.missilesIncoming.remove(this);
                             engineTargeted = null;
                             targetPosition = null;
                         }
