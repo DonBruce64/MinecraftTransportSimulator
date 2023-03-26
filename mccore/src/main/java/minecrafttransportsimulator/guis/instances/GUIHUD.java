@@ -38,7 +38,7 @@ public class GUIHUD extends AGUIBase {
         super();
         this.vehicle = vehicle;
         this.seat = seat;
-        this.halfHUDActive = InterfaceManager.clientInterface.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value;
+        this.halfHUDActive = vehicle.definition.motorized.halfHUDOnly || (!vehicle.definition.motorized.fullHUDOnly && (InterfaceManager.clientInterface.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class GUIHUD extends AGUIBase {
     public void setStates() {
         //Check to see if HUD setting changed.  If so, we need to re-create our components.
         //Do this before doing anything else.
-        if (halfHUDActive ^ (InterfaceManager.clientInterface.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value)) {
+        if (halfHUDActive ^ (vehicle.definition.motorized.halfHUDOnly || (!vehicle.definition.motorized.fullHUDOnly && (InterfaceManager.clientInterface.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value)))) {
             halfHUDActive = !halfHUDActive;
             setupComponents();
         }

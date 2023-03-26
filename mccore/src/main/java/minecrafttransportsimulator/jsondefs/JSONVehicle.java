@@ -70,6 +70,12 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
         public boolean hasLandingLights;
 
+        @JSONDescription("If this is true, the HUD will be always rendered as a half HUD.  Useful if you have a smaller HUD with nothing below the half-height.")
+        public boolean halfHUDOnly;
+
+        @JSONDescription("If this is true, the HUD will be always rendered as a full HUD.  Useful if you have specific large instruments.")
+        public boolean fullHUDOnly;
+
         @JSONDescription("The mass of this vehicle, when empty, in kg.  Note that fuel, cargo, players, and player inventories all count as weight, so this mass will not be the mass of the vehicle during normal operation.  Not too important in cars, but in aircraft this value should be as close to the real-life value as possible to avoid physics issues.")
         public int emptyMass;
 
