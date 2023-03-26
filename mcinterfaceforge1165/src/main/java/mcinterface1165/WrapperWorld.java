@@ -581,7 +581,7 @@ public class WrapperWorld extends AWrapperWorld {
                                 knownAirBlocks.add(pos);
                             }
                             if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                                if (mcBox.intersects(collisionShape.bounds().move(pos))) {
+                                if (mcBox.intersects(VoxelShapes.block().bounds().move(pos))) {
                                     return true;
                                 }
                             }
