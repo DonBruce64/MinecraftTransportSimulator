@@ -210,6 +210,7 @@ public final class LegacyCompatSystem {
             definition.motorized.hasCruiseControl = definition.car.hasCruiseControl;
             definition.motorized.axleRatio = definition.car.axleRatio;
             definition.motorized.dragCoefficient = definition.car.dragCoefficient;
+            definition.motorized.hornSound = definition.car.hornSound;
             definition.car = null;
         }
 
@@ -325,6 +326,11 @@ public final class LegacyCompatSystem {
         //Check if we didn't specify a braking force.
         if (definition.motorized.brakingFactor == 0) {
             definition.motorized.brakingFactor = 1.0F;
+        }
+
+        //Check if we didn't specity an axleRatio.
+        if (definition.motorized.axleRatio == 0) {
+            definition.motorized.axleRatio = 3.55F;
         }
 
         //Move cruiseControl to autopilot.
