@@ -26,6 +26,12 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
+    public boolean shouldAutomaticallyUpdate() {
+        //Our poles update us all at once so their states are correct.
+        return false;
+    }
+
+    @Override
     public boolean shouldLinkBoundsToPosition() {
         return false;
     }

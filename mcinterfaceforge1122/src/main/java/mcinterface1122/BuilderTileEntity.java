@@ -68,13 +68,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     public void update() {
         //World and pos might be null on first few scans.
         if (world != null && pos != null) {
-            if (tileEntity != null) {
-                tileEntity.update();
-                tileEntity.doPostUpdateLogic();
-                if (tileEntity.rider != null) {
-                    tileEntity.updateRider();
-                }
-            } else if (!loadedFromSavedNBT) {
+            if (tileEntity == null && !loadedFromSavedNBT) {
                 //If we are on the server, set the NBT flag.
                 if (lastLoadedNBT != null && !world.isRemote) {
                     loadFromSavedNBT = true;
