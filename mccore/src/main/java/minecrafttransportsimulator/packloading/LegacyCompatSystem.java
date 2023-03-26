@@ -213,34 +213,6 @@ public final class LegacyCompatSystem {
             definition.car = null;
         }
 
-        //Remove FWD and RWD parameters and replace with engine linking.
-        if (definition.motorized.isFrontWheelDrive || definition.motorized.isRearWheelDrive) {
-            for (JSONPartDefinition partDef : definition.parts) {
-                for (String partDefType : partDef.types) {
-                    if (partDefType.startsWith("engine")) {
-                        //Link all slots with wheels, or generic, to this engine.
-                        if (partDef.linkedParts == null) {
-                            partDef.linkedParts = new ArrayList<>();
-                        }
-                        for (JSONPartDefinition partDef2 : definition.parts) {
-                            if ((definition.motorized.isFrontWheelDrive && partDef2.pos.z > 0) || definition.motorized.isRearWheelDrive && partDef2.pos.z <= 0) {
-                                for (String partDefType2 : partDef2.types) {
-                                    if (partDefType2.startsWith("ground") || partDefType2.startsWith("generic")) {
-                                        if (!partDef.linkedParts.contains(definition.parts.indexOf(partDef2) + 1)) {
-                                            partDef.linkedParts.add(definition.parts.indexOf(partDef2) + 1);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            definition.motorized.isFrontWheelDrive = false;
-            definition.motorized.isRearWheelDrive = false;
-        }
-
         //If we still have the old type parameter and are an aircraft, set the flag to true.
         if (definition.general.type != null) {
             if (definition.general.type.equals("plane") || definition.general.type.equals("blimp") || definition.general.type.equals("helicopter")) {
@@ -379,6 +351,7 @@ public final class LegacyCompatSystem {
             definition.motorized.hookupVariables.add("emergencylight");
         }
 
+        //Update part defs.
         for (JSONPartDefinition partDef : definition.parts) {
             try {
                 performVehiclePartDefLegacyCompats(partDef);
@@ -390,8 +363,35 @@ public final class LegacyCompatSystem {
         if (definition.parts != null) {
             performPartSlotListingLegacyCompats(definition.parts, definition.motorized.isFrontWheelDrive, definition.motorized.isRearWheelDrive);
         }
-        definition.motorized.isFrontWheelDrive = false;
-        definition.motorized.isRearWheelDrive = false;
+
+        //Remove FWD and RWD parameters and replace with engine linking.
+        //Need to do this after we do part def and slot compats since those change the type-names.
+        if (definition.motorized.isFrontWheelDrive || definition.motorized.isRearWheelDrive) {
+            for (JSONPartDefinition partDef : definition.parts) {
+                for (String partDefType : partDef.types) {
+                    if (partDefType.startsWith("engine")) {
+                        //Link all slots with wheels, or generic, to this engine.
+                        if (partDef.linkedParts == null) {
+                            partDef.linkedParts = new ArrayList<>();
+                        }
+                        for (JSONPartDefinition partDef2 : definition.parts) {
+                            if ((definition.motorized.isFrontWheelDrive && partDef2.pos.z > 0) || definition.motorized.isRearWheelDrive && partDef2.pos.z <= 0) {
+                                for (String partDefType2 : partDef2.types) {
+                                    if (partDefType2.startsWith("ground") || partDefType2.startsWith("generic")) {
+                                        if (!partDef.linkedParts.contains(definition.parts.indexOf(partDef2) + 1)) {
+                                            partDef.linkedParts.add(definition.parts.indexOf(partDef2) + 1);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            definition.motorized.isFrontWheelDrive = false;
+            definition.motorized.isRearWheelDrive = false;
+        }
 
         performVehicleConnectionLegacyCompats(definition);
         performVehicleCollisionLegacyCompats(definition);
@@ -1992,6 +1992,8 @@ public final class LegacyCompatSystem {
                     partDef.types.set(i, "generic");
                     break;
             }
+            //Re-get the part name in case it changed.
+            partName = partDef.types.get(i);
 
             //If we have ground devices that are wheels, but no animations, add those automatically.
             //Also check if we do have animations, but it's a rotation at the part's position.
