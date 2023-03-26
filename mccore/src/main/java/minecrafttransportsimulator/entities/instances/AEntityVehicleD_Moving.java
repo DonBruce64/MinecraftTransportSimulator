@@ -735,7 +735,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     }
                     groundDeviceCollective.updateCollisions();
                 }
-                if (fallingDown || towedByConnection != null) {
+                if (!groundDeviceCollective.isBlockedVertically() && (fallingDown || towedByConnection != null)) {
                     world.beginProfiling("GroundHandlingPitch", false);
                     groundDeviceCollective.performPitchCorrection(groundMotion);
                     //Don't do roll correction if we don't have roll.

@@ -22,12 +22,14 @@ public class VehicleGroundDeviceBox {
     private final EntityVehicleF_Physics vehicle;
     private final boolean isFront;
     private final boolean isLeft;
+    private float climbHeight;
     private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false);
     private final BoundingBox liquidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, true);
     private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<>();
     private final List<PartGroundDevice> groundDevices = new ArrayList<>();
     private final List<PartGroundDevice> liquidDevices = new ArrayList<>();
 
+    public boolean isBlockedVertically;
     public boolean canRollOnGround;
     public boolean contactedEntity;
     public boolean isAirborne;
@@ -43,6 +45,7 @@ public class VehicleGroundDeviceBox {
      **/
     public final Point3D contactPoint = new Point3D();
 
+    private static final Point3D testOffset = new Point3D();
     private static final double MAX_DELTA_FROM_ZERO = 0.00001;
 
     public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft) {
@@ -93,6 +96,7 @@ public class VehicleGroundDeviceBox {
         groundDevices.clear();
         liquidDevices.clear();
         canRollOnGround = false;
+        float totalClimbHeight = 0;
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
                 if (!part.isSpare) {
@@ -100,6 +104,7 @@ public class VehicleGroundDeviceBox {
                     if (isFront && ground.wheelbasePoint.z > 0) {
                         if (isLeft && ground.wheelbasePoint.x >= 0) {
                             groundDevices.add(ground);
+                            totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
@@ -108,6 +113,7 @@ public class VehicleGroundDeviceBox {
                             }
                         } else if (!isLeft && ground.wheelbasePoint.x <= 0) {
                             groundDevices.add(ground);
+                            totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
@@ -118,6 +124,7 @@ public class VehicleGroundDeviceBox {
                     } else if (!isFront && ground.wheelbasePoint.z <= 0) {
                         if (isLeft && ground.wheelbasePoint.x >= 0) {
                             groundDevices.add(ground);
+                            totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
@@ -126,6 +133,7 @@ public class VehicleGroundDeviceBox {
                             }
                         } else if (!isLeft && ground.wheelbasePoint.x <= 0) {
                             groundDevices.add(ground);
+                            totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
                                 canRollOnGround = true;
                             }
@@ -137,6 +145,7 @@ public class VehicleGroundDeviceBox {
                 }
             }
         }
+        this.climbHeight = !groundDevices.isEmpty() ? totalClimbHeight / groundDevices.size() : 0;
     }
 
     /**
@@ -196,6 +205,7 @@ public class VehicleGroundDeviceBox {
      */
     public void updateCollisionStatuses(Set<PartGroundDevice> groundedGroundDevices) {
         //Initialize all values.
+        isBlockedVertically = false;
         isAirborne = true;
         isCollided = false;
         isGrounded = false;
@@ -225,6 +235,25 @@ public class VehicleGroundDeviceBox {
             if (isCollided) {
                 isGrounded = true;
                 isAirborne = false;
+                isBlockedVertically = true;
+
+                //We search top-down, since it's more efficient with situations where we are within climb height bounds.
+                final float offsetDelta = (float) (solidBox.heightRadius * 2);
+                float offset = (float) (climbHeight + solidBox.heightRadius) + offsetDelta;
+                do {
+                    offset -= offsetDelta;
+                    if (offset < offsetDelta) {
+                        offset = offsetDelta;
+                    }
+                    testOffset.y = offset;
+                    if (!vehicle.world.checkForCollisions(solidBox, testOffset, false)) {
+                        isBlockedVertically = false;
+                        break;
+                    }
+                } while (offset != offsetDelta);
+                if (isBlockedVertically) {
+                    vehicle.allBlockCollisionBoxes.add(solidBox);
+                }
             } else {
                 solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
                 vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);

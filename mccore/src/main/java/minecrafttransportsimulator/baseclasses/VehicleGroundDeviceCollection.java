@@ -67,17 +67,21 @@ public class VehicleGroundDeviceCollection {
     }
 
     /**
-     * Gets the max collision depth for all boxes.
+     * Gets the max collision depth for all boxes.  This method ignores any boxes that are blocked vertically.
+     * This is designed to prevent collision depth checks from always returning true on walls.
      */
     public double getMaxCollisionDepth() {
-        double maxDepth = frontLeftGDB.collisionDepth;
-        if (frontRightGDB.collisionDepth > maxDepth) {
+        double maxDepth = 0;
+        if (!frontLeftGDB.isBlockedVertically && frontLeftGDB.collisionDepth > maxDepth) {
+            maxDepth = frontLeftGDB.collisionDepth;
+        }
+        if (!frontRightGDB.isBlockedVertically && frontRightGDB.collisionDepth > maxDepth) {
             maxDepth = frontRightGDB.collisionDepth;
         }
-        if (rearLeftGDB.collisionDepth > maxDepth) {
+        if (!rearLeftGDB.isBlockedVertically && rearLeftGDB.collisionDepth > maxDepth) {
             maxDepth = rearLeftGDB.collisionDepth;
         }
-        if (rearRightGDB.collisionDepth > maxDepth) {
+        if (!rearRightGDB.isBlockedVertically && rearRightGDB.collisionDepth > maxDepth) {
             maxDepth = rearRightGDB.collisionDepth;
         }
         return maxDepth;
@@ -194,6 +198,14 @@ public class VehicleGroundDeviceCollection {
             }
         }
         return haveFrontPoint && haveRearPoint && haveCenterPoint;
+    }
+
+    /**
+     * Returns true if any devices are blocked vertically.  This implies they are in a wall, and we shouldn't do operations
+     * since the result will be incorrect.
+     */
+    public boolean isBlockedVertically() {
+        return frontLeftGDB.isBlockedVertically || frontRightGDB.isBlockedVertically || rearLeftGDB.isBlockedVertically || rearRightGDB.isBlockedVertically;
     }
 
     /**

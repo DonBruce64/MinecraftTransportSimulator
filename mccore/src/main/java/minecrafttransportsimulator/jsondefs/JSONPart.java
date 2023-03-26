@@ -308,6 +308,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If set, then this part can go 'flat', and the height of the part will be set to this.  This also reduces the friction it provides.")
         public float flatHeight;
 
+        @JSONDescription("If set, defines how many blocks this wheel can climb. Can be a decimal value. Defaults to 1.5 when not set.")
+        public float climbHeight;
+
         @ModifiableValue
         @JSONDescription("How much friction this part has for forwards movement. Used in cars to determine how much grip wheels have with the ground and if they should spin out, and used with all vehicles when brakes are applied to determine how much force they should be able to apply.")
         public float motiveFriction;

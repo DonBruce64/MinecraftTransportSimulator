@@ -754,6 +754,10 @@ public final class LegacyCompatSystem {
                 definition.ground.flatHeight = definition.ground.height / 2F;
                 definition.ground.canGoFlat = false;
             }
+            //Set climb height if it's not set.
+            if (definition.ground.climbHeight == 0) {
+                definition.ground.climbHeight = 1.5F;
+            }
             //Set friction modifiers.
             if (definition.ground.frictionModifiers == null) {
                 definition.ground.frictionModifiers = new LinkedHashMap<>();
