@@ -229,5 +229,6 @@ public class JSONVehicle extends AJSONPartProvider {
         public boolean hasCruiseControl;
         public float axleRatio;
         public float dragCoefficient;
+        public String hornSound;
     }
 }
