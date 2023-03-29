@@ -67,7 +67,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         if (intersection != null) {
             return Optional.of(new Vector3d(intersection.x, intersection.y, intersection.z));
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 
