@@ -76,6 +76,11 @@ public interface IWrapperItemStack {
     int add(int qty);
 
     /**
+     * Duplicates this stack, returning the duplicate.
+     */
+    IWrapperItemStack copy();
+
+    /**
      * Splits this stack into two.  The second with qty amount
      * of items in it, and the same data.
      */

@@ -95,6 +95,11 @@ public class WrapperItemStack implements IWrapperItemStack {
     }
 
     @Override
+    public IWrapperItemStack copy() {
+        return new WrapperItemStack(stack.copy());
+    }
+
+    @Override
     public IWrapperItemStack split(int qty) {
         return new WrapperItemStack(stack.split(qty));
     }

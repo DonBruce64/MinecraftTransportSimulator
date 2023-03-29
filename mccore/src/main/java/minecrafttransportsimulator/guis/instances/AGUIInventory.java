@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public abstract class AGUIInventory extends AGUIBase {
+    public static final int MAX_ITEMS_PER_SCREEN = 54;
 
     private final String texture;
     protected final IWrapperPlayer player;

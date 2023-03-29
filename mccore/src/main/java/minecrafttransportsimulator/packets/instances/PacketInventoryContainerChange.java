@@ -46,6 +46,6 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
     @Override
     public boolean handle(AWrapperWorld world, EntityInventoryContainer inventory) {
         inventory.setStack(stackToChangeTo, index);
-        return true;
+        return false;
     }
 }

@@ -257,14 +257,16 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
 
         //Fuel type can be taken by vehicle, check to make sure engines can take it.
+        boolean foundEngine = false;
         for (APart part : allParts) {
             if (part instanceof PartEngine) {
+                foundEngine = true;
                 if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluid)) {
                     return FuelTankResult.VALID;
                 }
             }
         }
-        return FuelTankResult.INVALID;
+        return foundEngine ? FuelTankResult.INVALID : FuelTankResult.NOENGINE;
     }
 
     public boolean canPlayerStartEngines(IWrapperPlayer player) {
@@ -309,6 +311,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     }
 
     public enum FuelTankResult {
+        NOENGINE,
         VALID,
         INVALID,
         MISMATCH;

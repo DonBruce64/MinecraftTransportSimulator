@@ -21,14 +21,6 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
     }
 
     @Override
-    public void connectToPart(PartInteractable part) {
-        super.connectToPart(part);
-        if (part != null) {
-            tank.resetAmountDispensed();
-        }
-    }
-
-    @Override
     public boolean isUnloader() {
         return definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER);
     }

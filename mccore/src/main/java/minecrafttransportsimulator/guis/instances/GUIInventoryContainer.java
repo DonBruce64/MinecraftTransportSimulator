@@ -16,7 +16,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
  * @author don_bruce
  */
 public class GUIInventoryContainer extends AGUIInventory {
-    private static final int MAX_ITEMS_PER_SCREEN = 54;
 
     //GUIs components created at opening.
     private GUIComponentButton priorRowButton;

@@ -27,49 +27,28 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
         this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity) {
             @Override
             public double fill(String fluid, double maxAmount, boolean doFill) {
+                double amountFilled = maxAmount;
                 if (!isCreative) {
-                    //We are a pump with a set cost, ensure we have purchased fuel.
-                    //Make sure to add a small amount to ensure that the pump displays the name of the fluid in it.
-                    if (fuelPurchasedRemaining == 0 && connectedVehicle == null && getFluidLevel() == 0) {
-                        maxAmount = 1;
-                    } else if (maxAmount > fuelPurchasedRemaining) {
-                        maxAmount = fuelPurchasedRemaining;
+                    double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase;
+                    if (maxAmount > amountPurchasedRemaining) {
+                        maxAmount = amountPurchasedRemaining;
                     }
-                    double amountFilled = super.fill(fluid, maxAmount, doFill);
-                    if (doFill && fuelPurchasedRemaining > 0) {
-                        fuelPurchasedRemaining -= amountFilled;
-                    }
-                    return amountFilled;
                 }
-                return super.fill(fluid, maxAmount, doFill);
+                amountFilled = super.fill(fluid, maxAmount, doFill);
+                if (doFill) {
+                    fuelDispensedThisPurchase += amountFilled;
+                }
+                return amountFilled;
+            }
+
+            @Override
+            public double drain(String fluid, double maxAmount, boolean doDrain) {
+                double drained = super.drain(fluid, maxAmount, doDrain);
+                fuelDispensedThisConnection += drained;
+                return drained;
             }
         };
         world.addEntity(tank);
-    }
-
-    @Override
-    public void update() {
-        super.update();
-
-        //Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
-        if (connectedVehicle != null && !world.isClient()) {
-            //If we have room for fuel, try to add it to the vehicle.
-            if (isCreative ? tank.getFluidLevel() > 0 : (fuelPurchasedRemaining > 0 || tank.getFluidLevel() > 1)) {
-                double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpRate, false);
-                if (amountToFill > 0) {
-                    double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
-                    connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
-                    tank.drain(tank.getFluid(), amountToDrain, true);
-                }
-            } else {
-                //No more fuel in tank or purchased.  Disconnect vehicle.
-                setConnection(null);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
-                }
-            }
-        }
     }
 
     @Override
@@ -102,15 +81,36 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
+    protected boolean hasFuel() {
+        return tank.getFluidLevel() > 0;
+    }
+
+    @Override
     protected FuelTankResult checkPump(EntityVehicleF_Physics vehicle) {
         return vehicle.checkFuelTankCompatibility(tank.getFluid());
     }
 
     @Override
-    public void setConnection(EntityVehicleF_Physics newVehicle) {
-        super.setConnection(newVehicle);
-        if (newVehicle != null) {
-            tank.resetAmountDispensed();
+    public void fuelVehicle(double amount) {
+        //Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
+        if (!world.isClient()) {
+            //If we have room for fuel, try to add it to the vehicle.
+            if (amount > 0 && tank.getFluidLevel() > 0) {
+                double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), amount, false);
+                if (amountToFill > 0) {
+                    //Keep fluid reference since if we drain the tank fully it won't persist to fill the vehicle tank.
+                    String fluid = tank.getFluid();
+                    double amountToDrain = tank.drain(tank.getFluid(), amountToFill, true);
+                    connectedVehicle.fuelTank.fill(fluid, amountToDrain, true);
+                }
+            } else {
+                //No more fuel in tank or purchased.  Disconnect vehicle.
+                setConnection(null);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
+                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
+                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
+                }
+            }
         }
     }
 
@@ -127,11 +127,11 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
             case ("fuelpump_stored"):
                 return tank.getFluidLevel();
             case ("fuelpump_dispensed"):
-                return tank.getAmountDispensed();
+                return fuelDispensedThisConnection;
             case ("fuelpump_free"):
                 return isCreative ? 1 : 0;
             case ("fuelpump_purchased"):
-                return fuelPurchasedRemaining;
+                return fuelPurchased;
         }
 
         return super.getRawVariableValue(variable, partialTicks);

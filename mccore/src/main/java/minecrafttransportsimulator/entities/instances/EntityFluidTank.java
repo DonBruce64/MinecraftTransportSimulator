@@ -20,14 +20,12 @@ public class EntityFluidTank extends AEntityA_Base {
     private final int maxLevel;
     private String currentFluid;
     private double fluidLevel;
-    private double fluidDispensed;
 
     public EntityFluidTank(AWrapperWorld world, IWrapperNBT data, int maxLevel) {
         super(world, data);
         this.maxLevel = maxLevel;
         this.currentFluid = data.getString("currentFluid");
         this.fluidLevel = data.getDouble("fluidLevel");
-        this.fluidDispensed = data.getDouble("fluidDispensed");
     }
 
     @Override
@@ -53,20 +51,6 @@ public class EntityFluidTank extends AEntityA_Base {
      */
     public int getMaxLevel() {
         return maxLevel;
-    }
-
-    /**
-     * Gets the amount of fluid dispensed since the last call to {@link #resetAmountDispensed()}
-     */
-    public double getAmountDispensed() {
-        return fluidDispensed;
-    }
-
-    /**
-     * Resets the total fluid dispensed counter.
-     */
-    public void resetAmountDispensed() {
-        fluidDispensed = 0;
     }
 
     /**
@@ -132,7 +116,6 @@ public class EntityFluidTank extends AEntityA_Base {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
                 }
                 fluidLevel -= maxAmount;
-                fluidDispensed += maxAmount;
                 if (fluidLevel == 0) {
                     currentFluid = "";
                 }
@@ -165,7 +148,6 @@ public class EntityFluidTank extends AEntityA_Base {
         super.save(data);
         data.setString("currentFluid", currentFluid);
         data.setDouble("fluidLevel", fluidLevel);
-        data.setDouble("fluidDispensed", fluidDispensed);
         return data;
     }
 }

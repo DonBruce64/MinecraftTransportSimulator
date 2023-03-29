@@ -14,19 +14,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntityEnergyCharger {
 
-    private double amountInVehicleWhenConnected;
-    private double amountDispensed;
+    private int internalBuffer;
 
     public TileEntityCharger(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
     }
 
     @Override
-    public void update() {
-        super.update();
-        if (connectedVehicle != null) {
-            amountDispensed = connectedVehicle.fuelTank.getFluidLevel() - amountInVehicleWhenConnected;
-        }
+    protected boolean hasFuel() {
+        return internalBuffer > 0;
     }
 
     @Override
@@ -43,26 +39,33 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
     }
 
     @Override
-    public void setConnection(EntityVehicleF_Physics newVehicle) {
-        super.setConnection(newVehicle);
-        if (newVehicle != null) {
-            amountInVehicleWhenConnected = connectedVehicle.fuelTank.getFluidLevel();
-            amountDispensed = 0;
+    public void fuelVehicle(double amount) {
+        int bufferToUse = (int) (amount / ConfigSystem.settings.general.rfToElectricityFactor.value);
+        if (bufferToUse > internalBuffer) {
+            bufferToUse = internalBuffer;
         }
+        amount = bufferToUse * ConfigSystem.settings.general.rfToElectricityFactor.value;
+        internalBuffer -= bufferToUse;
+        double amountFilled = connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount, true);
+        fuelDispensedThisConnection += amountFilled;
     }
 
     @Override
     public int getChargeAmount() {
-        double amount = connectedVehicle != null ? connectedVehicle.fuelTank.getMaxLevel() - connectedVehicle.fuelTank.getFluidLevel() : 0;
-        if (amount > definition.decor.pumpRate) {
-            amount = definition.decor.pumpRate;
+        int maxAmount = 200;
+        if (!isCreative) {
+            double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase;
+            if (maxAmount > amountPurchasedRemaining) {
+                maxAmount = (int) amountPurchasedRemaining;
+            }
         }
-        return (int) (amount / ConfigSystem.settings.general.rfToElectricityFactor.value);
+        return maxAmount - internalBuffer;
     }
 
     @Override
     public void chargeEnergy(int amount) {
-        connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount * ConfigSystem.settings.general.rfToElectricityFactor.value, true);
+        internalBuffer += amount;
+        fuelDispensedThisPurchase += amount;
     }
 
     @Override
@@ -71,11 +74,11 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
             case ("charger_active"):
                 return connectedVehicle != null ? 1 : 0;
             case ("charger_dispensed"):
-                return amountDispensed;
+                return fuelDispensedThisConnection;
             case ("charger_free"):
                 return isCreative ? 1 : 0;
             case ("charger_purchased"):
-                return fuelPurchasedRemaining;
+                return fuelPurchased;
             case ("charger_vehicle_percentage"):
                 return connectedVehicle != null ? connectedVehicle.fuelTank.getFluidLevel() / connectedVehicle.fuelTank.getMaxLevel() : 0;
         }

@@ -22,19 +22,25 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpCon
 public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public EntityVehicleF_Physics connectedVehicle;
     public final EntityInventoryContainer fuelItems;
+    public final EntityInventoryContainer paymentItems;
     public final List<Integer> fuelAmounts = new ArrayList<>();
-    public int fuelPurchasedRemaining;
+    public int fuelPurchased;
+    public double fuelDispensedThisPurchase;
+    public double fuelDispensedThisConnection;
     public boolean isCreative;
     public UUID placingPlayerID;
 
     public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data); 
-        this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 10);
+        this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 6);
+        this.paymentItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory2"), 18);
         world.addEntity(fuelItems);
+        world.addEntity(paymentItems);
         for (int i = 0; i < fuelItems.getSize(); ++i) {
             this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
         }
-        this.fuelPurchasedRemaining = data.getInteger("fuelPurchasedRemaining");
+        this.fuelPurchased = data.getInteger("fuelPurchased");
+        this.fuelDispensedThisPurchase = data.getDouble("fuelDispensedThisPurchase");
         this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
     }
 
@@ -75,7 +81,15 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
                     player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
                 }
+                return;
             }
+
+            //All checks pass, fuel vehicle.
+            double amountToDispenseThisTick = connectedVehicle.fuelTank.getMaxLevel() - connectedVehicle.fuelTank.getFluidLevel();
+            if (amountToDispenseThisTick > definition.decor.pumpRate) {
+                amountToDispenseThisTick = definition.decor.pumpRate;
+            }
+            fuelVehicle(amountToDispenseThisTick);
         }
     }
 
@@ -87,9 +101,26 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             return true;
         }
 
-        //If we aren't a creative pump, and we don't have fuel, bring up the GUI so the player can buy some.
-        if (!isCreative && fuelPurchasedRemaining == 0) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
+        //If we are ready for a purchase, bring up the GUI so the player can buy some.
+        if (!isCreative && !hasFuel()) {
+            boolean haveEmptySlot = false;
+            for (int i = 0; i < paymentItems.getSize(); ++i) {
+                if (paymentItems.getStack(i).isEmpty()) {
+                    haveEmptySlot = true;
+                    break;
+                }
+            }
+            if (haveEmptySlot) {
+                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
+            } else {
+                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_FULLITEMS));
+            }
+            return true;
+        }
+
+        //If we don't have anything in our buffer, don't try and connect anything.
+        if (!hasFuel()) {
+            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOFUEL));
             return true;
         }
 
@@ -109,6 +140,10 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             //Have a vehicle, try to connect to it.
             if (nearestVehicle != null) {
                 switch (checkPump(nearestVehicle)) {
+                    case NOENGINE: {
+                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOENGINE));
+                        return true;
+                    }
                     case VALID: {
                         setConnection(nearestVehicle);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, nearestVehicle));
@@ -117,7 +152,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                     }
                     case INVALID: {
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGENGINES));
-                        break;
+                        return true;
                     }
                     case MISMATCH: {
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE));
@@ -143,18 +178,25 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             connectedVehicle.beingFueled = false;
         }
         connectedVehicle = newVehicle;
+        fuelDispensedThisConnection = 0;
     }
 
+    protected abstract boolean hasFuel();
+
     protected abstract FuelTankResult checkPump(EntityVehicleF_Physics vehicle);
+
+    protected abstract void fuelVehicle(double amount);
 
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setData("inventory", fuelItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        data.setData("inventory2", paymentItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         for (int i = 0; i < fuelItems.getSize(); ++i) {
             data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
         }
-        data.setInteger("fuelPurchasedRemaining", fuelPurchasedRemaining);
+        data.setInteger("fuelPurchased", fuelPurchased);
+        data.setDouble("fuelDispensedThisPurchase", fuelDispensedThisPurchase);
         if (placingPlayerID != null) {
             data.setUUID("placingPlayerID", placingPlayerID);
         }
