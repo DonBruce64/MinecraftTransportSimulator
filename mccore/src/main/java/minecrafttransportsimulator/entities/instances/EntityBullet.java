@@ -502,6 +502,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        if (engineTargeted != null) {
+            engineTargeted.vehicleOn.missilesIncoming.remove(this);
+        }
+    }
+
+    @Override
     public boolean requiresDeltaUpdates() {
         return true;
     }
@@ -534,9 +542,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
         impactDespawnTimer = definition.bullet.impactDespawnTime;
         gun.currentBullet = null;
-        if (engineTargeted != null) {
-            engineTargeted.vehicleOn.missilesIncoming.remove(this);
-        }
     }
 
     private void displayDebugMessage(String message) {
