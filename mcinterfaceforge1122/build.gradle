@@ -4,7 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
+		    //Leave FG5 at this version.  Newer versions do fucky stuff with 1.12.2 builds that result in odd Gradle errors.
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.60", changing: true
     }
 }
 
