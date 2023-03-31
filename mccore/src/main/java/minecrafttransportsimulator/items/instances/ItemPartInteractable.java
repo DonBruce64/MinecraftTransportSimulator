@@ -137,6 +137,10 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                     player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
                                     break;
                                 }
+                                case NOENGINE: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_NOENGINE));
+                                    break;
+                                }
                             }
                         }
                     } else {

@@ -214,6 +214,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_JERRYCAN_EMPTY = new LanguageEntry("interact.jerrycan.empty", "This jerrycan is empty and cannot fuel this vehicle.");
     public static final LanguageEntry INTERACT_JERRYCAN_WRONGTYPE = new LanguageEntry("interact.jerrycan.wrongtype", "This jerrycan does not contain the same liquid as what is in the vehicle.");
     public static final LanguageEntry INTERACT_JERRYCAN_WRONGENGINES = new LanguageEntry("interact.jerrycan.wrongengines", "The contents in this jerrycan is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
+    public static final LanguageEntry INTERACT_JERRYCAN_NOENGINE = new LanguageEntry("interact.jerrycan.noengine", "There is no engine in this vehicle.  Removing engines from vehicles resets their fuel tank, so fueling this vehicle would do nothing!");
     public static final LanguageEntry INTERACT_JERRYCAN_TOOFULL = new LanguageEntry("interact.jerrycan.toofull", "This vehicle is already full of fuel.  You cannot add any more.");
     public static final LanguageEntry INTERACT_JERRYCAN_SUCCESS = new LanguageEntry("interact.jerrycan.success", "Added 1000mb of fluid to this vehicle.");
 
