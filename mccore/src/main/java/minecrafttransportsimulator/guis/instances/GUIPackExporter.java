@@ -18,8 +18,7 @@ import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.JSONPanel;
+import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -86,25 +85,17 @@ public class GUIPackExporter extends AGUIBase {
                             return;
                         }
                     }
-                    for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, false)) {
+
+                    List<AJSONBase> jsons = new ArrayList<>();
+                    PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
+                    jsons.addAll(PackParser.getAllPanelsForPack(packID));
+
+                    for (AJSONBase definition : jsons) {
                         try {
-                            File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders);
+                            File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders);
                             jsonFile.mkdirs();
-                            jsonFile = new File(jsonFile, packItem.definition.systemName + ".json");
-                            JSONParser.exportStream(packItem.definition, Files.newOutputStream(jsonFile.toPath()));
-                            lastTimeModified = jsonFile.lastModified();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
-                            return;
-                        }
-                    }
-                    for (JSONPanel packPanel : PackParser.getAllPanelsForPack(packID)) {
-                        try {
-                            File jsonFile = new File(packDir, packPanel.classification.toDirectory() + packPanel.prefixFolders);
-                            jsonFile.mkdirs();
-                            jsonFile = new File(jsonFile, packPanel.systemName + ".json");
-                            JSONParser.exportStream(packPanel, Files.newOutputStream(jsonFile.toPath()));
+                            jsonFile = new File(jsonFile, definition.systemName + ".json");
+                            JSONParser.exportStream(definition, Files.newOutputStream(jsonFile.toPath()));
                             lastTimeModified = jsonFile.lastModified();
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -150,11 +141,15 @@ public class GUIPackExporter extends AGUIBase {
                         for (String packID : PackParser.getAllPackIDs()) {
                             File packDir = new File(jsonDir, packID);
                             if (packDir.exists()) {
-                                for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, false)) {
-                                    File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders + packItem.definition.systemName + ".json");
+                                List<AJSONBase> jsons = new ArrayList<>();
+                                PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
+                                jsons.addAll(PackParser.getAllPanelsForPack(packID));
+
+                                for (AJSONBase definition : jsons) {
+                                    File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders + definition.systemName + ".json");
                                     if (!parsedFiles.contains(jsonFile)) {
                                         if (jsonFile.lastModified() > lastTimeModified) {
-                                            debug.setText(debug.getText() + JSONParser.hotloadJSON(jsonFile, packItem.definition));
+                                            debug.setText(debug.getText() + JSONParser.hotloadJSON(jsonFile, definition));
                                         }
                                         parsedFiles.add(jsonFile);
                                     }
