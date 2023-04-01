@@ -86,9 +86,9 @@ dependencies {
     embed(project(":mccore"))
 
     //Compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152:api")
+    compileOnly fg.deobf("mezz.jei:jei-${project.jei_version}:api")
     //At runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152")
+    runtimeOnly fg.deobf("mezz.jei:jei-${project.jei_version}")
 }
 
 mixin {
