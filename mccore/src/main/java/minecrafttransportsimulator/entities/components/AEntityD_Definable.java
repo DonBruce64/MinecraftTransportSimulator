@@ -368,10 +368,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         //Add constants.
-        if (definition.constants != null) {
-            for (String variable : definition.constants) {
-                variables.put(variable, 1D);
-            }
+        if (definition.constantValues != null) {
+            variables.putAll(definition.constantValues);
         }
     }
 

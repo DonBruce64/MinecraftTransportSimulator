@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -117,6 +118,11 @@ public final class LegacyCompatSystem {
             if (provider.rendering != null && provider.rendering.initialVariables != null) {
                 provider.initialVariables = provider.rendering.initialVariables;
                 provider.rendering.initialVariables = null;
+            }
+            if (provider.constants != null) {
+                provider.constantValues = new HashMap<>();
+                provider.constants.forEach(key -> provider.constantValues.put(key, 1D));
+                provider.constants = null;
             }
         }
 

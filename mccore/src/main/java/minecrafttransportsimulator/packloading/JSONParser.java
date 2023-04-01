@@ -615,6 +615,7 @@ public class JSONParser {
                     ((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
                     ((AJSONMultiModelProvider) definitionToOverride).variableModifiers = ((AJSONMultiModelProvider) loadedDefinition).variableModifiers;
                     ((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
+                    ((AJSONMultiModelProvider) definitionToOverride).constantValues = ((AJSONMultiModelProvider) loadedDefinition).constantValues;
 
                     //Reload item subdefs, since it will have changed.
                     for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
