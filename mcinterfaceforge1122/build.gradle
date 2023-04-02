@@ -65,12 +65,13 @@ dependencies {
 		//Core to use.
     embed(project(":mccore"))
 
+
     //Compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei_${project.jei_version}:api")
+    compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
     //At runtime, use the full JEI jar
     //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
     //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
-    //runtimeOnly fg.deobf("mezz.jei:jei_${project.jei_version}")
+    //runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
 }
 
 jar {
