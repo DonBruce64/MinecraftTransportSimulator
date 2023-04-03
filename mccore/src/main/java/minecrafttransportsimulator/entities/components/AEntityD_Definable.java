@@ -922,14 +922,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
-     * with a scale of 1.0 and offset of 0.0.
-     */
-    public final double getAnimatedVariableValue(DurationDelayClock clock, float partialTicks) {
-        return getAnimatedVariableValue(clock, 1.0, 0.0, partialTicks);
-    }
-
-    /**
      * Helper method to clamp and scale the passed-in variable value based on the passed-in animation,
      * returning it in the proper form.
      */
@@ -958,20 +950,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             return String.format(textDef.variableFormat, getCleanRawVariableValue(textDef.variableName, 0) * textDef.variableFactor);
         } else {
             return String.format(textDef.variableFormat, value);
-        }
-    }
-
-    /**
-     * Helper method to get the index of the passed-in variable.  Indexes are defined by
-     * variable names ending in _xx, where xx is a number.  The defined number is assumed
-     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
-     * define a number, then -1 is returned.
-     */
-    public static int getVariableNumber(String variable) {
-        if (variable.matches("^.*_\\d+$")) {
-            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
-        } else {
-            return -1;
         }
     }
 

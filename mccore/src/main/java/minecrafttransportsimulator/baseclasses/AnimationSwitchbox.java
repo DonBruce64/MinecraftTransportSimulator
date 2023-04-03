@@ -94,7 +94,7 @@ public class AnimationSwitchbox {
                     case VISIBILITY: {
                         if (!inhibitAnimations) {
                             lastVisibilityClock = clock;
-                            lastVisibilityValue = entity.getAnimatedVariableValue(clock, partialTicks);
+                            lastVisibilityValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (!anyClockMovedThisUpdate) {
                                 anyClockMovedThisUpdate = clock.movedThisUpdate;
                             }
@@ -107,7 +107,7 @@ public class AnimationSwitchbox {
                     }
                     case INHIBITOR: {
                         if (!inhibitAnimations) {
-                            double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+                            double variableValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
                                 inhibitAnimations = true;
                             }
@@ -116,7 +116,7 @@ public class AnimationSwitchbox {
                     }
                     case ACTIVATOR: {
                         if (inhibitAnimations) {
-                            double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+                            double variableValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
                                 inhibitAnimations = false;
                             }

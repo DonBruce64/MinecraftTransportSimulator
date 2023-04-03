@@ -356,6 +356,20 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     /**
+     * Helper method to get the index of the passed-in variable.  Indexes are defined by
+     * variable names ending in _xx, where xx is a number.  The defined number is assumed
+     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
+     * define a number, then -1 is returned.
+     */
+    public static int getVariableNumber(String variable) {
+        if (variable.matches("^.*_\\d+$")) {
+            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
      * Returns true if this entity can be clicked.  Normally true, but can be false to block
      * click-able hitboxes from showing up.
      */
