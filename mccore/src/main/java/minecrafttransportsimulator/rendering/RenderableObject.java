@@ -50,7 +50,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public class RenderableObject {
-    public static final float Z_BUFFER_OFFSET = 0.005F;
+    public static final float Z_BUFFER_OFFSET = 0.0002F;
 
     public final String name;
     public String texture;

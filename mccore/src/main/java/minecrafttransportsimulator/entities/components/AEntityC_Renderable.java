@@ -72,13 +72,6 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
         //If we need to render, do so now.
         world.beginProfiling("RenderSetup", true);
         if (!disableRendering(partialTicks)) {
-            //Get the render offset.
-            //This is the interpolated movement, plus the prior position.
-            if (requiresDeltaUpdates()) {
-                interpolatedPositionHolder.set(prevPosition).interpolate(position, partialTicks);
-            } else {
-                interpolatedPositionHolder.set(position);
-            }
 
             //Get interpolated orientation if required.
             if (requiresDeltaUpdates()) {
@@ -89,7 +82,10 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
 
             //Set up matrixes.
             translatedMatrix.resetTransforms();
-            translatedMatrix.setTranslation(interpolatedPositionHolder);
+            if (requiresDeltaUpdates()) {
+                interpolatedPositionHolder.set(prevPosition).interpolate(position, partialTicks).subtract(position);
+                translatedMatrix.setTranslation(interpolatedPositionHolder);
+            }
             rotatedMatrix.set(translatedMatrix);
             rotatedMatrix.applyRotation(interpolatedOrientationHolder);
             interpolatedScaleHolder.set(scale).subtract(prevScale).scale(partialTicks).add(prevScale);

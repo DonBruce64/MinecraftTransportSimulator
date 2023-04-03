@@ -96,18 +96,16 @@ public class InterfaceEventsModelLoader {
                         //This prevents bad lighting.
                         GlStateManager.enableRescaleNormal();
 
-                        //Rendering system expects coordinates to be at 0,0,0 when called, translate us so that's the case.
-                        GL11.glPushMatrix();
-                        GL11.glTranslated(-(player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks), -(player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks), -(player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks));
-
                         //Start master profiling section.
                         for (AEntityC_Renderable entity : allEntities) {
+                            //Rendering system expects coordinates to be at center of entity when called, translate us so that's the case.
                             world.beginProfiling("MTSRendering", true);
+                            GL11.glPushMatrix();
+                            GL11.glTranslated(entity.position.x - (player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks), entity.position.y - (player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks), entity.position.z - (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks));
                             entity.render(blendingEnabled, partialTicks);
+                            GL11.glPopMatrix();
                             world.endProfiling();
                         }
-
-                        GL11.glPopMatrix();
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);
