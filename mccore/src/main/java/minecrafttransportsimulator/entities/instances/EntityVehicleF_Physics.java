@@ -545,7 +545,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             //If we are a trailer that is mounted, just orient the vehicle to the exact position of the trailer connection.
             //Otherwise, do is relative to the vehicle orientations.
             if (towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted) {
-                rotation.set(towedByConnection.towingEntity.orientation).multiply(towedByConnection.hitchConnection.rot);
+                rotation.set(towedByConnection.towingEntity.orientation);
+                if (towedByConnection.hitchConnection.rot != null) {
+                    rotation.multiply(towedByConnection.hitchConnection.rot);
+                }
+                if (towedByConnection.hookupConnection.rot != null) {
+                    rotation.multiply(towedByConnection.hookupConnection.rot);
+                }
                 if (towedByConnection.hitchConnection.restricted) {
                     rotation.angles.x = orientation.angles.x;
                     rotation.angles.z = orientation.angles.z;
