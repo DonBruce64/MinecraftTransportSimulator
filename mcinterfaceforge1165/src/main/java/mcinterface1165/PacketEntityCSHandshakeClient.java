@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -51,10 +50,10 @@ public class PacketEntityCSHandshakeClient extends APacketPlayer {
                 tile.playersRequestingData.add(player);
             }
         } else {
-            Entity entity = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID)).entity;
+            WrapperEntity entity = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID));
             if (entity != null) {
                 //Queue up the builder to send the player data back next update.
-                ((ABuilderEntityBase) entity).playersRequestingData.add(player);
+                ((ABuilderEntityBase) entity.entity).playersRequestingData.add(player);
             }
         }
     }
