@@ -28,6 +28,8 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCondition;
+import minecrafttransportsimulator.jsondefs.JSONConditionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
@@ -42,6 +44,8 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
+import minecrafttransportsimulator.jsondefs.JSONPanel;
+import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelComponent;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
@@ -57,6 +61,7 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONValueModifier;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.AModelParser;
@@ -145,6 +150,8 @@ public final class LegacyCompatSystem {
             performSkinLegacyCompats((JSONSkin) definition);
         } else if (definition instanceof JSONBullet) {
             performBulletLegacyCompats((JSONBullet) definition);
+        } else if (definition instanceof JSONPanel) {
+            performPanelLegacyCompats((JSONPanel) definition);
         }
 
         if (definition instanceof AJSONItem) {
@@ -190,6 +197,53 @@ public final class LegacyCompatSystem {
                     } else {
                         //Probably a trailer, just use running lights.
                         vehicleDef.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                    }
+                }
+            }
+            
+            if(provider.rendering.particles != null) {
+                for(JSONParticle particle : provider.rendering.particles) {
+                    //Move particle activeAnimations to conditionals.
+                    if(particle.activeAnimations != null) {
+                        particle.activeConditions = convertConditionAnimations(particle.activeAnimations);
+                        particle.activeAnimations = null;
+                    }
+                }
+            }
+
+            if (provider.rendering.sounds != null) {
+                for (JSONSound sound : provider.rendering.sounds) {
+                    //Move sound activeAnimations to conditionals.
+                    if (sound.activeAnimations != null) {
+                        sound.activeConditions = convertConditionAnimations(sound.activeAnimations);
+                        sound.activeAnimations = null;
+                    }
+
+                    //Move sound volumeAnimations to modifiers.
+                    if (sound.volumeAnimations != null) {
+                        sound.volumeValueModifiers = convertSoundValueModifiers(sound.volumeAnimations);
+                        sound.volumeAnimations = null;
+                    }
+
+                    //Move sound pitchAnimations to modifiers.
+                    if (sound.pitchAnimations != null) {
+                        sound.pitchValueModifiers = convertSoundValueModifiers(sound.pitchAnimations);
+                        sound.pitchAnimations = null;
+                    }
+                }
+            }
+
+            if (provider.rendering.lightObjects != null) {
+                for (JSONLight light : provider.rendering.lightObjects) {
+                    //Convert light animations to conditions and modifiers.
+                    if (light.brightnessAnimations != null) {
+                        for (JSONAnimationDefinition animation : light.brightnessAnimations) {
+                            switch (animation.animationType) {
+                                case VISIBILITY: {
+
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -560,6 +614,12 @@ public final class LegacyCompatSystem {
         if (definition.subParts != null) {
             definition.parts = definition.subParts;
             definition.subParts = null;
+        }
+
+        //Change old activeAnimations.
+        if (definition.generic.activeAnimations != null) {
+            definition.generic.activeConditions = convertConditionAnimations(definition.generic.activeAnimations);
+            definition.generic.activeAnimations = null;
         }
 
         //Check for old ground devices, crates, barrels, effectors, and customs.
@@ -1182,44 +1242,6 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMax = 999F;
                 particleDef.activeAnimations.add(activeAnimation);
                 definition.rendering.particles.add(particleDef);
-
-                //Oil drip.
-                particleDef = new JSONParticle();
-                particleDef.type = ParticleType.DRIP;
-                particleDef.color = ColorRGB.BLACK;
-                particleDef.activeAnimations = new ArrayList<>();
-                activeAnimation = new JSONAnimationDefinition();
-                activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-                activeAnimation.variable = "engine_oilleak";
-                activeAnimation.clampMin = 1.0F;
-                activeAnimation.clampMax = 1.0F;
-                particleDef.activeAnimations.add(activeAnimation);
-                activeAnimation = new JSONAnimationDefinition();
-                activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-                activeAnimation.variable = "cycle_10_20";
-                activeAnimation.clampMin = 1.0F;
-                activeAnimation.clampMax = 1.0F;
-                particleDef.activeAnimations.add(activeAnimation);
-                definition.rendering.particles.add(particleDef);
-
-                //Fuel drip.
-                particleDef = new JSONParticle();
-                particleDef.type = ParticleType.DRIP;
-                particleDef.color = ColorRGB.RED;
-                particleDef.activeAnimations = new ArrayList<>();
-                activeAnimation = new JSONAnimationDefinition();
-                activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-                activeAnimation.variable = "engine_fuelleak";
-                activeAnimation.clampMin = 1.0F;
-                activeAnimation.clampMax = 1.0F;
-                particleDef.activeAnimations.add(activeAnimation);
-                activeAnimation = new JSONAnimationDefinition();
-                activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-                activeAnimation.variable = "cycle_10_20";
-                activeAnimation.clampMin = 1.0F;
-                activeAnimation.clampMax = 1.0F;
-                particleDef.activeAnimations.add(activeAnimation);
-                definition.rendering.particles.add(particleDef);
             } else if (definition.ground != null) {
                 //Contact smoke.
                 JSONParticle particleDef = new JSONParticle();
@@ -1235,15 +1257,6 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMin = 1.0F;
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
-
-                particleDef.spawningAnimations = new ArrayList<>();
-                JSONAnimationDefinition spawningAnimation = new JSONAnimationDefinition();
-                spawningAnimation.animationType = AnimationComponentType.ROTATION;
-                spawningAnimation.variable = "ground_rotation";
-                spawningAnimation.centerPoint = new Point3D();
-                spawningAnimation.axis = new Point3D(-1, 0, 0);
-                particleDef.spawningAnimations.add(spawningAnimation);
-
                 definition.rendering.particles.add(particleDef);
 
                 //Burnout smoke.
@@ -1262,15 +1275,6 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMin = 1.0F;
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
-
-                particleDef.spawningAnimations = new ArrayList<>();
-                spawningAnimation = new JSONAnimationDefinition();
-                spawningAnimation.animationType = AnimationComponentType.ROTATION;
-                spawningAnimation.variable = "ground_rotation";
-                spawningAnimation.centerPoint = new Point3D();
-                spawningAnimation.axis = new Point3D(-1, 0, 0);
-                particleDef.spawningAnimations.add(spawningAnimation);
-
                 definition.rendering.particles.add(particleDef);
 
                 //Wheel dirt for skidding (burnouts).
@@ -1290,15 +1294,6 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMin = 1.0F;
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
-
-                particleDef.spawningAnimations = new ArrayList<>();
-                spawningAnimation = new JSONAnimationDefinition();
-                spawningAnimation.animationType = AnimationComponentType.ROTATION;
-                spawningAnimation.variable = "ground_rotation";
-                spawningAnimation.centerPoint = new Point3D();
-                spawningAnimation.axis = new Point3D(-1, 0, 0);
-                particleDef.spawningAnimations.add(spawningAnimation);
-
                 definition.rendering.particles.add(particleDef);
 
                 //Wheel dirt for slipping (turning too fast).
@@ -1318,15 +1313,6 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMin = 1.0F;
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
-
-                particleDef.spawningAnimations = new ArrayList<>();
-                spawningAnimation = new JSONAnimationDefinition();
-                spawningAnimation.animationType = AnimationComponentType.ROTATION;
-                spawningAnimation.variable = "ground_rotation";
-                spawningAnimation.centerPoint = new Point3D();
-                spawningAnimation.axis = new Point3D(-1, 0, 0);
-                particleDef.spawningAnimations.add(spawningAnimation);
-
                 definition.rendering.particles.add(particleDef);
             }
         }
@@ -1770,6 +1756,16 @@ public final class LegacyCompatSystem {
         }
     }
 
+    private static void performPanelLegacyCompats(JSONPanel definition) {
+        //Change old visibilityVariables.
+        for (JSONPanelComponent component : definition.panel.components) {
+            if (component.visibilityVariables != null) {
+                component.visibilityConditions = convertConditionVariables(component.visibilityVariables);
+                component.visibilityVariables = null;
+            }
+        }
+    }
+
     private static void performPartSlotListingLegacyCompats(List<JSONPartDefinition> partDefs, boolean linkFrontWheels, boolean linkRearWheels) {
         //First move all additional parts into regular part slots.
         //We will need to apply LCs to block their placement unless the part is placed.
@@ -2061,6 +2057,21 @@ public final class LegacyCompatSystem {
                 break;
             }
         }
+        //Change old activeAnimations.
+        if (partDef.activeAnimations != null) {
+            partDef.activeConditions = convertConditionAnimations(partDef.activeAnimations);
+            partDef.activeAnimations = null;
+        }
+        //Change old interactableVariables.
+        if (partDef.interactableVariables != null) {
+            partDef.interactableConditions = convertConditionVariables(partDef.interactableVariables);
+            partDef.interactableVariables = null;
+        }
+        //Change old lockingVariables.
+        if (partDef.lockingVariables != null) {
+            partDef.lockingConditions = convertConditionVariables(partDef.lockingVariables);
+            partDef.lockingVariables = null;
+        }
     }
 
     private static void performVehicleConnectionLegacyCompats(AJSONInteractableEntity interactableDef) {
@@ -2203,6 +2214,129 @@ public final class LegacyCompatSystem {
                 }
             }
         }
+    }
+
+    private static JSONConditionGroup convertConditionAnimations(List<JSONAnimationDefinition> animations) {
+        JSONConditionGroup conditionGroup = new JSONConditionGroup();
+        conditionGroup.conditions = new ArrayList<>();
+        for (JSONAnimationDefinition animation : animations) {
+            JSONCondition condition = new JSONCondition();
+            switch (animation.animationType) {
+                case INHIBITOR: {
+                    condition.invert = true;
+                    //Fall down to visibility transform, inhibitors are ANDed instructions, but inverted.
+                }
+                case VISIBILITY: {
+                    if (animation.variable.startsWith("!")) {
+                        condition.invert = !condition.invert;
+                        condition.input = animation.variable.substring(1);
+                    } else {
+                        condition.input = animation.variable;
+                    }
+                    if (animation.clampMin == animation.clampMax) {
+                        condition.type = JSONCondition.Type.MATCH;
+                        condition.parameter1 = animation.clampMin;
+                    } else {
+                        condition.type = JSONCondition.Type.BOUNDS;
+                        condition.parameter1 = animation.clampMin;
+                        condition.parameter2 = animation.clampMax;
+                    }
+                    if (animation.forwardsDelay != 0) {
+                        conditionGroup.onDelay = animation.forwardsDelay;
+                    }
+                    if (animation.reverseDelay != 0) {
+                        if (condition.type == JSONCondition.Type.MATCH && condition.parameter1 == 0) {
+                            conditionGroup.onDelay = animation.reverseDelay;
+                        } else {
+                            conditionGroup.offDelay = animation.reverseDelay;
+                        }
+                    }
+                    conditionGroup.conditions.add(condition);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        return conditionGroup;
+    }
+
+    private static List<JSONValueModifier> convertSoundValueModifiers(List<JSONAnimationDefinition> animations) {
+        List<JSONValueModifier> modifiers = new ArrayList<>();
+        for (JSONAnimationDefinition animation : animations) {
+            switch (animation.animationType) {
+                case TRANSLATION: {
+                    JSONValueModifier modifier = new JSONValueModifier();
+                    modifier.type = JSONValueModifier.Type.LINEAR;
+                    modifier.input = animation.variable;
+                    modifier.parameter1 = (float) animation.axis.y;
+                    modifier.parameter2 = animation.offset;
+                    modifiers.add(modifier);
+
+                    if (animation.clampMax != 0) {
+                        modifier = new JSONValueModifier();
+                        modifier.type = JSONValueModifier.Type.CLAMP;
+                        modifier.parameter1 = animation.clampMin;
+                        modifier.parameter2 = animation.clampMax;
+                        modifiers.add(modifier);
+                    }
+
+                    break;
+                }
+                case ROTATION: {
+                    JSONValueModifier modifier = new JSONValueModifier();
+                    modifier.type = JSONValueModifier.Type.PARABOLIC;
+                    modifier.input = animation.variable;
+                    modifier.parameter1 = (float) animation.axis.x;
+                    modifier.parameter2 = (float) animation.axis.y;
+                    modifier.parameter3 = (float) animation.axis.z;
+                    modifier.parameter4 = animation.offset;
+                    modifiers.add(modifier);
+
+                    if (animation.clampMax != 0) {
+                        modifier = new JSONValueModifier();
+                        modifier.type = JSONValueModifier.Type.CLAMP;
+                        modifier.parameter1 = animation.clampMin;
+                        modifier.parameter2 = animation.clampMax;
+                        modifiers.add(modifier);
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        return modifiers;
+    }
+
+    private static JSONConditionGroup convertConditionVariables(List<List<String>> variableLists) {
+        JSONConditionGroup conditionGroup = new JSONConditionGroup();
+        conditionGroup.conditions = new ArrayList<>();
+        for (List<String> variableList : variableLists) {
+            if (variableList.size() == 1) {
+                conditionGroup.conditions.add(convertConditionVariable(variableList.get(0)));
+            } else {
+                JSONCondition condition = new JSONCondition();
+                condition.type = JSONCondition.Type.CONDITIONS;
+                condition.conditions = new ArrayList<>();
+                for (String variable : variableList) {
+                    condition.conditions.add(convertConditionVariable(variable));
+                }
+            }
+        }
+        return conditionGroup;
+    }
+
+    private static JSONCondition convertConditionVariable(String variable) {
+        JSONCondition condition = new JSONCondition();
+        condition.type = JSONCondition.Type.ACTIVE;
+        condition.input = variable;
+        if (condition.input.startsWith("!")) {
+            condition.input = condition.input.substring(1);
+            condition.invert = true;
+        }
+        return condition;
     }
 
     private static void performAnimationLegacyCompats(JSONRendering rendering) {

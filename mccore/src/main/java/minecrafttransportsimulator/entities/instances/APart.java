@@ -66,6 +66,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public boolean isInvisible = false;
     public boolean isActive = true;
+    public boolean isInteractable = true;
     public boolean isPermanent = false;
     public boolean isMoveable;
     public final boolean turnsWithSteer;
@@ -80,8 +81,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final RotationMatrix zeroReferenceOrientation;
     public final RotationMatrix prevZeroReferenceOrientation;
     public final Point3D externalAnglesRotated = new Point3D();
-    private AnimationSwitchbox placementActiveSwitchbox;
-    private AnimationSwitchbox internalActiveSwitchbox;
     private AnimationSwitchbox placementMovementSwitchbox;
     private AnimationSwitchbox internalMovementSwitchbox;
     private static boolean checkingLinkedParts;
@@ -138,12 +137,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
             isMoveable = true;
         }
-        if (placementDefinition.activeAnimations != null) {
-            placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
-        }
-        if (definition.generic.activeAnimations != null) {
-            internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
-        }
     }
 
     @Override
@@ -153,11 +146,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Update active state.
         isActive = partOn != null ? partOn.isActive : true;
-        if (isActive && placementActiveSwitchbox != null) {
-            isActive = placementActiveSwitchbox.runSwitchbox(0, false);
+        if (isActive) {
+            isActive = checkConditions(placementDefinition.activeConditions, 0);
         }
-        if (isActive && internalActiveSwitchbox != null) {
-            isActive = internalActiveSwitchbox.runSwitchbox(0, false);
+        if (isActive) {
+            isActive = checkConditions(definition.generic.activeConditions, 0);
         }
         if (!isActive && rider != null) {
             //Kick out rider from inactive seat.
@@ -170,8 +163,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         orientation.set(entityOn.orientation);
         localOffset.set(placementDefinition.pos);
         
+        //Update interactable state.
+        isInteractable = (partOn == null || partOn.isInteractable) && entityOn.checkConditions(placementDefinition.interactableConditions, 0);
+
         //Update permanent-ness
-        isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
+        isPermanent = placementDefinition.isPermanent || (placementDefinition.lockingConditions != null && entityOn.checkConditions(placementDefinition.lockingConditions, 0));
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
@@ -354,7 +350,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public boolean canBeClicked() {
-        return entityOn.isVariableListTrue(placementDefinition.interactableVariables) && entityOn.canBeClicked();
+        return isInteractable;
     }
 
     /**

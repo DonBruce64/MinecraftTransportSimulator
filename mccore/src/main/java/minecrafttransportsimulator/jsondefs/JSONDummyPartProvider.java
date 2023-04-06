@@ -25,6 +25,8 @@ public class JSONDummyPartProvider extends AJSONPartProvider {
         definition.definitions = new ArrayList<>();
         definition.definitions.add(subDef);
 
+        definition.rendering = new JSONRendering();
+
         return definition;
     }
 }

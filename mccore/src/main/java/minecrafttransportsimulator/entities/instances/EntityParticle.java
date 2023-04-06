@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -48,7 +47,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private int textureDelayIndex;
     private List<String> textureList;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
         if (definition.axisAligned) {
@@ -58,9 +57,6 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         helperTransform.resetTransforms().set(entitySpawning.orientation);
-        if (switchbox != null) {
-            helperTransform.multiply(switchbox.netMatrix);
-        }
         if (definition.pos != null) {
             helperOffset.set(definition.pos).multiply(entitySpawning.scale);
         } else {
@@ -271,7 +267,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.subParticles != null) {
             for (JSONSubParticle subDef : definition.subParticles) {
                 if (subDef.particle.spawnEveryTick ? subDef.time >= ticksExisted : subDef.time == ticksExisted) {
-                    world.addEntity(new EntityParticle(this, subDef.particle, null));
+                    world.addEntity(new EntityParticle(this, subDef.particle));
                 }
             }
         }

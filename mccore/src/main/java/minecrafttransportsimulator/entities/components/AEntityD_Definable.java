@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -26,12 +28,15 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONCondition;
+import minecrafttransportsimulator.jsondefs.JSONConditionGroup;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONValueModifier;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -83,14 +88,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      **/
     protected final Map<String, Double> variables = new HashMap<>();
 
-    private final List<JSONSound> allSoundDefs = new ArrayList<>();
-    private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
-    private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
-    private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<>();
-    private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
+    private final Map<JSONConditionGroup, Long> conditionGroupTrueTick = new HashMap<>();
+    private final Map<JSONConditionGroup, Long> conditionGroupFalseTick = new HashMap<>();
+    private final Set<JSONSound> activeSounds = new HashSet<>();
+    private final Set<JSONParticle> activeParticles = new HashSet<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
 
     /**
@@ -110,19 +111,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
 
     /**
-     * Maps light definitions to their current brightness.  This is updated every frame prior to rendering.
+     * Maps light objects  to their current states.  This is updated every frame prior to rendering.
      **/
-    public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<>();
-
-    /**
-     * Maps light definitions to their current color.  This is updated every frame prior to rendering.
-     **/
-    public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<>();
-
-    /**
-     * Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.
-     **/
-    public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
+    public final Map<String, LightState> lightStates = new HashMap<>();
 
     /**
      * Object lists for models parsed in for this class.  Maps are keyed by the model name.
@@ -277,53 +268,38 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Update subdef, in case this was modified.
         updateSubDefinition(subDefinition.subName);
 
-        if (definition.rendering != null && definition.rendering.sounds != null) {
-            allSoundDefs.clear();
-            soundActiveSwitchboxes.clear();
-            soundVolumeSwitchboxes.clear();
-            soundPitchSwitchboxes.clear();
+        if (definition.rendering.sounds != null) {
+            //Stop all sounds, in case we orphan one due to removal of its def.
+            sounds.forEach(sound -> sound.stopSound = true);
+            sounds.clear();
+            activeSounds.clear();
+
+            //Add all non-looping sounds as active.  This makes us not trigger them on first spawn.
+            //Looping sounds we will need to start since they should be running.
+            //We also need to set the true and false tick delays to their offsets, so those don't cause a trigger.
             for (JSONSound soundDef : definition.rendering.sounds) {
-                allSoundDefs.add(soundDef);
-                soundActiveSwitchboxes.put(soundDef, new AnimationSwitchbox(this, soundDef.activeAnimations, null));
-
-                if (soundDef.volumeAnimations != null) {
-                    soundVolumeSwitchboxes.put(soundDef, new SoundSwitchbox(this, soundDef.volumeAnimations));
-                }
-
-                if (soundDef.pitchAnimations != null) {
-                    soundPitchSwitchboxes.put(soundDef, new SoundSwitchbox(this, soundDef.pitchAnimations));
+                if (!soundDef.looping) {
+                    activeSounds.add(soundDef);
+                    if (soundDef.activeConditions.onDelay != 0) {
+                        conditionGroupTrueTick.put(soundDef.activeConditions, ticksExisted - soundDef.activeConditions.onDelay);
+                    }
+                    if (soundDef.activeConditions.offDelay != 0) {
+                        conditionGroupFalseTick.put(soundDef.activeConditions, ticksExisted - soundDef.activeConditions.offDelay);
+                    }
                 }
             }
         }
 
-        if (definition.rendering != null && definition.rendering.lightObjects != null) {
-            lightBrightnessSwitchboxes.clear();
-            lightBrightnessValues.clear();
-            lightColorValues.clear();
-            lightObjectDefinitions.clear();
+        if (definition.rendering.lightObjects != null) {
+            lightStates.clear();
             for (JSONLight lightDef : definition.rendering.lightObjects) {
-                lightObjectDefinitions.put(lightDef.objectName, lightDef);
-                if (lightDef.brightnessAnimations != null) {
-                    lightBrightnessSwitchboxes.put(lightDef, new LightSwitchbox(this, lightDef.brightnessAnimations));
-                }
-                lightBrightnessValues.put(lightDef, 0F);
-                lightColorValues.put(lightDef, new ColorRGB());
+                lightStates.put(lightDef.objectName, new LightState(lightDef));
             }
         }
 
-        if (definition.rendering != null && definition.rendering.particles != null) {
-            particleActiveSwitchboxes.clear();
-            particleSpawningSwitchboxes.clear();
-            for (JSONParticle particleDef : definition.rendering.particles) {
-                particleActiveSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.activeAnimations, null));
-                if (particleDef.spawningAnimations != null) {
-                    particleSpawningSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.spawningAnimations, null));
-                }
-                lastTickParticleSpawned.put(particleDef, ticksExisted);
-            }
-        }
+        activeParticles.clear();
 
-        if (definition.rendering != null && definition.rendering.animatedObjects != null) {
+        if (definition.rendering.animatedObjects != null) {
             animatedObjectDefinitions.clear();
             animatedObjectSwitchboxes.clear();
             for (JSONAnimatedObject animatedDef : definition.rendering.animatedObjects) {
@@ -334,7 +310,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
 
-        if (definition.rendering != null && definition.rendering.cameraObjects != null) {
+        if (definition.rendering.cameraObjects != null) {
             cameraSwitchboxes.clear();
             for (JSONCameraObject cameraDef : definition.rendering.cameraObjects) {
                 if (cameraDef.animations != null) {
@@ -344,9 +320,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         //Store text data if we have it, then reset it.
-        List<String> oldTextValues = new ArrayList<>(text.values());
-        text.clear();
-        if (definition.rendering != null && definition.rendering.textObjects != null) {
+        if (definition.rendering.textObjects != null) {
+            List<String> oldTextValues = new ArrayList<>(text.values());
+            text.clear();
+
             for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                 if (i < oldTextValues.size()) {
                     text.put(definition.rendering.textObjects.get(i), oldTextValues.get(i));
@@ -473,21 +450,28 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public void spawnParticles(float partialTicks) {
         //Check all particle defs and update the existing particles accordingly.
-        for (Entry<JSONParticle, AnimationSwitchbox> particleEntry : particleActiveSwitchboxes.entrySet()) {
-            //Check if the particle should be spawned this tick.
-            JSONParticle particleDef = particleEntry.getKey();
-            AnimationSwitchbox switchbox = particleEntry.getValue();
-            boolean shouldParticleSpawn = switchbox.runSwitchbox(partialTicks, false);
+        if (definition.rendering.particles != null) {
+            for (JSONParticle particleDef : definition.rendering.particles) {
+                boolean shouldSpawn = checkConditions(particleDef.activeConditions, partialTicks);
 
-            //Make the particle spawn if able.
-            if (shouldParticleSpawn && (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))) {
-                lastTickParticleSpawned.put(particleDef, ticksExisted);
-                for (int i = 0; i < particleDef.quantity; ++i) {
-                    AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                    if (spawningSwitchbox != null) {
-                        spawningSwitchbox.runSwitchbox(partialTicks, false);
+                //Do supplemental checks to make sure we didn't already spawn this particle.
+                if (!particleDef.spawnEveryTick) {
+                    if (shouldSpawn) {
+                        if (activeParticles.contains(particleDef)) {
+                            shouldSpawn = false;
+                        } else {
+                            activeParticles.add(particleDef);
+                        }
+                    } else {
+                        activeParticles.remove(particleDef);
                     }
-                    world.addEntity(new EntityParticle(this, particleDef, spawningSwitchbox));
+                }
+
+                //If we truly should spawn, do so now.
+                if (shouldSpawn) {
+                    for (int i = 0; i < particleDef.quantity; ++i) {
+                        world.addEntity(new EntityParticle(this, particleDef));
+                    }
                 }
             }
         }
@@ -500,35 +484,48 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * An example of this is a light with a bean and flare component.
      */
     public void updateLightBrightness(float partialTicks) {
-        if (definition.rendering != null && definition.rendering.lightObjects != null) {
-            for (JSONLight lightDef : definition.rendering.lightObjects) {
-                float lightBrightness = 1;
-                ColorRGB lightColor = null;
-                LightSwitchbox switchbox = lightBrightnessSwitchboxes.get(lightDef);
-                if (switchbox != null) {
-                    if (!switchbox.runLight(partialTicks)) {
-                        lightBrightness = 0;
-                    } else if (switchbox.definedBrightness) {
-                        lightBrightness = switchbox.brightness;
-                    }
-                    if (lightBrightness < 0) {
-                        lightBrightness = 0;
-                    }
-                    lightBrightnessValues.put(lightDef, lightBrightness);
-                    lightColor = switchbox.color;
-                } else {
-                    lightBrightnessValues.put(lightDef, 1.0F);
+        for (LightState lightState : lightStates.values()) {
+            /*
+            float lightBrightness = 1;
+            ColorRGB lightColor = null;
+            LightSwitchbox switchbox = lightBrightnessSwitchboxes.get(lightDef);
+            if (switchbox != null) {
+                if (!switchbox.runLight(partialTicks)) {
+                    lightBrightness = 0;
+                } else if (switchbox.definedBrightness) {
+                    lightBrightness = switchbox.brightness;
                 }
-
-                //Set color level.
-                if (lightColor != null) {
-                    lightColorValues.put(lightDef, lightColor);
-                } else if (lightDef.color != null) {
-                    lightColorValues.put(lightDef, lightDef.color);
-                } else {
-                    lightColorValues.put(lightDef, ColorRGB.WHITE);
+                if (lightBrightness < 0) {
+                    lightBrightness = 0;
+                }
+                lightBrightnessValues.put(lightDef, lightBrightness);
+                lightColor = switchbox.color;
+            } else {
+                lightBrightnessValues.put(lightDef, 1.0F);
+            }
+            
+            
+            if (lightState != null) {
+                lightLevel = lightState.brightness;
+                if (lightState.definition.isElectric && entity instanceof EntityVehicleF_Physics) {
+                    //Light start dimming at 10V, then go dark at 3V.
+                    double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
+                    if (electricPower < 3) {
+                        lightLevel = 0;
+                    } else if (electricPower < 10) {
+                        lightLevel *= (electricPower - 3) / 7D;
+                    }
                 }
             }
+            
+            //Set color level.
+            if (lightColor != null) {
+                lightColorValues.put(lightDef, lightColor);
+            } else if (lightDef.color != null) {
+                lightColorValues.put(lightDef, lightDef.color);
+            } else {
+                lightColorValues.put(lightDef, ColorRGB.WHITE);
+            }*/
         }
     }
 
@@ -597,125 +594,106 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     public void updateSounds(float partialTicks) {
         super.updateSounds(partialTicks);
+
         //Check all sound defs and update the existing sounds accordingly.
-        for (JSONSound soundDef : allSoundDefs) {
-            if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
-                //Check if the sound should be playing before we try to update state.
-                //First check if we are in the right view to play.
-                AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
-                boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
-                boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
-                boolean anyClockMovedThisUpdate = false;
+        if (definition.rendering.sounds != null) {
+            for (JSONSound soundDef : definition.rendering.sounds) {
+                //Only check sounds on the proper tick-timeline for them.
+                if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
+                    //Check if we are in the right view to play.
+                    AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
+                    AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+                    boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+                    boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+                    boolean shouldSoundPlay = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
 
-                //Next, check the distance.
-                double distance = 0;
-                if (shouldSoundStartPlaying) {
-                    distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                    if (soundDef.maxDistance != soundDef.minDistance) {
-                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
-                    } else {
-                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
-                    }
-                }
-
-                //Next, check animations.
-                if (shouldSoundStartPlaying) {
-                    AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-                    shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
-                    anyClockMovedThisUpdate = activeSwitchbox.anyClockMovedThisUpdate;
-                }
-
-                //If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
-                //If we didn't, then we shouldn't play, even if all states are true.
-                if (shouldSoundStartPlaying && !soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate) {
-                    shouldSoundStartPlaying = false;
-                }
-                
-                if (shouldSoundStartPlaying) {
-                    //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
-                    boolean isSoundPlaying = false;
-                    if (soundDef.looping) {
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundName.equals(soundDef.name)) {
-                                isSoundPlaying = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!isSoundPlaying) {
-                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
-                    }
-                } else {
-                    if (soundDef.looping) {
-                        //If sound is playing, stop it.
-                        //Non-looping sounds are trigger-based and will stop on their own.
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundName.equals(soundDef.name)) {
-                                sound.stopSound = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
-                    continue;
-                }
-
-                //Sound should be playing.  If it's part of the sound list, update properties.
-                //Sounds may not be in the list if they have just been queued and haven't started yet.
-                for (SoundInstance sound : sounds) {
-                    if (sound != null && sound.soundName.equals(soundDef.name)) {
-                        //Adjust volume.
-                        SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
-                        boolean definedVolume = false;
-                        if (volumeSwitchbox != null) {
-                            volumeSwitchbox.runSound(partialTicks);
-                            sound.volume = volumeSwitchbox.value;
-                            definedVolume = volumeSwitchbox.definedValue;
-                        }
-                        if (!definedVolume) {
-                            sound.volume = 1;
-                        } else if (sound.volume < 0) {
-                            sound.volume = 0;
-                        }
-
-                        //Adjust volume based on distance.
-                        if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
-                            //Default sound distance.
-                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
-                            sound.volume *= (maxDistance - distance) / (maxDistance);
-                        } else if (soundDef.middleDistance != 0) {
-                            //Middle interpolation.
-                            if (distance < soundDef.middleDistance) {
-                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.middleDistance - soundDef.minDistance) * (soundDef.middleDistanceVolume - soundDef.minDistanceVolume));
-                            } else {
-                                sound.volume *= (float) (soundDef.middleDistanceVolume + (distance - soundDef.middleDistance) / (soundDef.maxDistance - soundDef.middleDistance) * (soundDef.maxDistanceVolume - soundDef.middleDistanceVolume));
-                            }
+                    //Next, check the distance.
+                    double distance = 0;
+                    if (shouldSoundPlay) {
+                        distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        if (soundDef.maxDistance != soundDef.minDistance) {
+                            shouldSoundPlay = distance < soundDef.maxDistance && distance > soundDef.minDistance;
                         } else {
-                            //Min/max.
-                            sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
+                            shouldSoundPlay = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
+                        }
+                    }
+
+                    //Next, check conditions.
+                    if (shouldSoundPlay) {
+                        shouldSoundPlay = checkConditions(soundDef.activeConditions, partialTicks);
+                    }
+
+                    if (shouldSoundPlay) {
+                        //Need to start a new sound, do so now.
+                        SoundInstance sound = null;
+                        if (soundDef.forceSound || !activeSounds.contains(soundDef)) {
+                            sound = new SoundInstance(this, soundDef);
+                            if (!InterfaceManager.soundInterface.playQuickSound(sound)) {
+                                //Sound failed to start, go to next sound instead of messing with this one.
+                                continue;
+                            }
+                            activeSounds.add(soundDef);
+                        } else {
+                            //Get existing sound.
+                            for (SoundInstance testSound : sounds) {
+                                if (testSound.soundName.equals(soundDef.name)) {
+                                    sound = testSound;
+                                    break;
+                                }
+                            }
                         }
 
-                        //If the player is in a closed-top vehicle that isn't this one, dampen the sound
-                        //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
-                            sound.volume *= 0.5F;
-                        }
+                        //If we have a valid sound running, do logic on it.
+                        if (sound != null) {
+                            //Adjust volume for modifiers, if they exist.
+                            sound.volume = soundDef.volumeValueModifiers != null ? (float) calculateModifiers(soundDef.volumeValueModifiers, 0, partialTicks) : 1.0F;
+                            if (sound.volume < 0) {
+                                sound.volume = 0;
+                            } else if (sound.volume > 1) {
+                                sound.volume = 1;
+                            }
 
-                        //Adjust pitch.
-                        SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
-                        boolean definedPitch = false;
-                        if (pitchSwitchbox != null) {
-                            pitchSwitchbox.runSound(partialTicks);
-                            sound.pitch = pitchSwitchbox.value;
-                            definedPitch = pitchSwitchbox.definedValue;
+                            //Adjust volume based on distance.
+                            if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
+                                //Default sound distance.
+                                double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
+                                sound.volume *= (maxDistance - distance) / (maxDistance);
+                            } else if (soundDef.middleDistance != 0) {
+                                //Middle interpolation.
+                                if (distance < soundDef.middleDistance) {
+                                    sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.middleDistance - soundDef.minDistance) * (soundDef.middleDistanceVolume - soundDef.minDistanceVolume));
+                                } else {
+                                    sound.volume *= (float) (soundDef.middleDistanceVolume + (distance - soundDef.middleDistance) / (soundDef.maxDistance - soundDef.middleDistance) * (soundDef.maxDistanceVolume - soundDef.middleDistanceVolume));
+                                }
+                            } else {
+                                //Min/max.
+                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
+                            }
+
+                            //If the player is in a closed-top vehicle that isn't this one, dampen the sound
+                            //Unless it's a radio, in which case don't do so.
+                            if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                                sound.volume *= 0.5F;
+                            }
+
+                            //Adjust pitch.
+                            sound.pitch = soundDef.pitchValueModifiers != null ? (float) calculateModifiers(soundDef.pitchValueModifiers, 0, partialTicks) : 1.0F;
+                            if (sound.pitch < 0) {
+                                sound.pitch = 0;
+                            }
                         }
-                        if (!definedPitch) {
-                            sound.pitch = 1;
-                        } else if (sound.volume < 0) {
-                            sound.pitch = 0;
+                    } else {
+                        if (activeSounds.remove(soundDef)) {
+                            //If sound is playing, stop it.
+                            //Non-looping sounds are trigger-based and will stop on their own.
+                            for (SoundInstance sound : sounds) {
+                                if (sound.soundName.equals(soundDef.name)) {
+                                    if (soundDef.looping) {
+                                        sound.stopSound = true;
+                                    }
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -724,35 +702,163 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Custom sound switchbox class.
+     * Returns the status of the conditions.
      */
-    private static class SoundSwitchbox extends AnimationSwitchbox {
-        private boolean definedValue = false;
-        private float value = 0;
+    public final boolean checkConditions(JSONConditionGroup conditionGroup, float partialTicks) {
+        if (conditionGroup != null) {
+            //Get result.
+            boolean result = true;
+            for (JSONCondition condition : conditionGroup.conditions) {
+                if (!checkCondition(condition, partialTicks)) {
+                    result = false;
+                }
+            }
 
-        private SoundSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
-            super(entity, animations, null);
+            //Apply condition delays.
+            if (conditionGroup.onDelay != 0) {
+                if (result) {
+                    Long tickOn = conditionGroupTrueTick.get(conditionGroup);
+                    if (tickOn == null) {
+                        tickOn = ticksExisted;
+                        conditionGroupTrueTick.put(conditionGroup, ticksExisted);
+                    }
+                    if (ticksExisted - tickOn < conditionGroup.onDelay) {
+                        result = false;
+                    }
+                } else {
+                    conditionGroupTrueTick.remove(conditionGroup);
+                }
+            } else if (conditionGroup.offDelay != 0) {
+                if (result) {
+                    conditionGroupFalseTick.remove(conditionGroup);
+                } else {
+                    Long tickOff = conditionGroupFalseTick.get(conditionGroup);
+                    if (tickOff == null) {
+                        tickOff = ticksExisted;
+                        conditionGroupFalseTick.put(conditionGroup, ticksExisted);
+                    }
+                    if (ticksExisted - tickOff < conditionGroup.offDelay) {
+                        result = true;
+                    }
+                }
+            }
+            return result;
         }
+        return true;
+    }
 
-        public boolean runSound(float partialTicks) {
-            value = 0;
-            definedValue = false;
-            return runSwitchbox(partialTicks, true);
+    private boolean checkCondition(JSONCondition condition, float partialTicks) {
+        boolean result = false;
+        switch (condition.type) {
+            case ACTIVE: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) > 0;
+                break;
+            }
+            case MATCH: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) == condition.parameter1;
+                break;
+            }
+            case MATCH_VAR: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) == getCleanRawVariableValue(condition.variable1, partialTicks);
+                break;
+            }
+            case GREATER: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) > condition.parameter1;
+                break;
+            }
+            case GREATER_VAR: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) > getCleanRawVariableValue(condition.variable1, partialTicks);
+                break;
+            }
+            case LESS: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) < condition.parameter1;
+                break;
+            }
+            case LESS_VAR: {
+                result = getCleanRawVariableValue(condition.input, partialTicks) < getCleanRawVariableValue(condition.variable1, partialTicks);
+                break;
+            }
+            case BOUNDS: {
+                double value = getCleanRawVariableValue(condition.input, partialTicks);
+                result = value >= condition.parameter1 && value <= condition.parameter2;
+                break;
+            }
+            case BOUNDS_VAR: {
+                double value = getCleanRawVariableValue(condition.input, partialTicks);
+                result = value >= getCleanRawVariableValue(condition.variable1, partialTicks) && value <= getCleanRawVariableValue(condition.variable2, partialTicks);
+                break;
+            }
+            case CONDITIONS: {
+                for (JSONCondition condition2 : condition.conditions) {
+                    if (checkCondition(condition2, partialTicks)) {
+                        result = true;
+                        break;
+                    }
+                }
+                break;
+            }
         }
+        return condition.invert ? !result : result;
+    }
 
-        @Override
-        public void runTranslation(DurationDelayClock clock, float partialTicks) {
-            definedValue = true;
-            value += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+    /**
+     * Returns the calculation of the modifier.
+     */
+    public double calculateModifiers(List<JSONValueModifier> modifiers, double finalValue, float partialTicks) {
+        for (JSONValueModifier modifier : modifiers) {
+            if(modifier.type == JSONValueModifier.Type.CONDITIONS){
+                if (checkConditions(modifier.conditions, partialTicks)) {
+                    if(modifier.trueCode != null) {
+                        finalValue = calculateModifiers(modifier.trueCode, finalValue, partialTicks);
+                    }
+                }else {
+                    if(modifier.falseCode != null) {
+                        finalValue = calculateModifiers(modifier.falseCode, finalValue, partialTicks);
+                    }
+                }
+            }else {
+                switch(modifier.type) {
+                    case SET : {
+                        finalValue = getCleanRawVariableValue(modifier.input, partialTicks);
+                        break;
+                    }
+                    case ADD : {
+                        finalValue += getCleanRawVariableValue(modifier.input, partialTicks);
+                        break;
+                    }
+                    case SUBTRACT : {
+                        finalValue -= getCleanRawVariableValue(modifier.input, partialTicks);
+                        break;
+                    }
+                    case MULTIPLY : {
+                        finalValue *= getCleanRawVariableValue(modifier.input, partialTicks);
+                        break;
+                    }
+                    case DIVIDE : {
+                        finalValue /= getCleanRawVariableValue(modifier.input, partialTicks);
+                        break;
+                    }
+                    case LINEAR : {
+                        finalValue = getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter1 + modifier.parameter2;
+                        break;
+                    }
+                    case PARABOLIC: {
+                        finalValue = modifier.parameter1 * Math.pow(getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter2 - modifier.parameter3, 2) + modifier.parameter4;
+                        break;
+                    }
+                    case CLAMP: {
+                        if (finalValue < modifier.parameter1) {
+                            finalValue = modifier.parameter1;
+                        } else if (finalValue > modifier.parameter2) {
+                            finalValue = modifier.parameter2;
+                        }
+                        break;
+                    }
+                    case CONDITIONS: //We'll never get this one.
+                }
+            }
         }
-
-        @Override
-        public void runRotation(DurationDelayClock clock, float partialTicks) {
-            definedValue = true;
-            //Parobola is defined with parameter A being x, and H being z.
-            double parabolaValue = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
-            value += clock.animation.axis.x * Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
-        }
+        return finalValue;
     }
 
     /**
@@ -874,10 +980,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Like {@link #getRawVariableValue(String, float)}, but returns 0 if not found
      * rather than NaN.  This is designed for getting variable values without animations.
+     * This also allows for constant-values to be used by prefixing the variable with a #.
      */
     public final double getCleanRawVariableValue(String variable, float partialTicks) {
-        double value = getRawVariableValue(variable, partialTicks);
-        return Double.isNaN(value) ? 0 : value;
+        if (variable.startsWith("#")) {
+            return Double.parseDouble(variable.substring(1));
+        } else {
+            double value = getRawVariableValue(variable, partialTicks);
+            return Double.isNaN(value) ? 0 : value;
+        }
     }
 
     /**
@@ -1045,41 +1156,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns true if any of the variables in the passed-in list are true.
-     */
-    public boolean isVariableListTrue(List<List<String>> list) {
-        if (list != null) {
-            for (List<String> variableList : list) {
-                boolean listIsTrue = false;
-                for (String variableName : variableList) {
-                    if (variableName.startsWith("!")) {
-                        double value = getCleanRawVariableValue(variableName.substring(1), 0);
-                        if (value == 0) {
-                            //Inverted variable value is 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
-                    } else {
-                        double value = getCleanRawVariableValue(variableName, 0);
-                        if (value > 0) {
-                            //Normal variable value is non-zero 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
-                    }
-                }
-                if (!listIsTrue) {
-                    //List doesn't have any true variables, therefore the value is false.
-                    return false;
-                }
-            }
-            //No false lists were found for this collection, therefore the list is true.
-        } //No lists found for this entry, therefore no variables are false.
-
-        return true;
-    }
-
-    /**
      * Custom variable modifier switchbox class.
      */
     private static class VariableModifierSwitchbox extends AnimationSwitchbox {
@@ -1186,6 +1262,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             data.setDouble(variableName, variables.get(variableName));
         }
         return data;
+    }
+
+    public static class LightState {
+        public final JSONLight definition;
+        public float brightness;
+        public final ColorRGB color = new ColorRGB();
+
+        public LightState(JSONLight definition) {
+            this.definition = definition;
+        }
     }
 
     /**

@@ -181,17 +181,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (heldItem instanceof AItemPart) {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
                         AItemPart heldPart = (AItemPart) heldItem;
+                        JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
                         //Does the part held match this packPart?
-                        if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subDefinition, false)) {
-                            //Are there any doors blocking us from clicking this part?
-                            if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
+                        if (heldPart.isPartValidForPackDef(slotDef, subDefinition, false)) {
+                            //Are there any variables blocking us from clicking this part?
+                            if (checkConditions(slotDef.interactableConditions, 0)) {
                                 //Part matches.  Add the box.  Set the box bounds to the generic box, or the
                                 //special bounds of the generic part if we're holding one.
                                 BoundingBox box = partSlotBoxEntry.getKey();
                                 box.widthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width / 2D : PART_SLOT_HITBOX_WIDTH / 2D) * scale.x;
                                 box.heightRadius = (heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height / 2D : PART_SLOT_HITBOX_HEIGHT / 2D) * scale.y;
                                 box.depthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width / 2D : PART_SLOT_HITBOX_WIDTH / 2D) * scale.z;
-                                activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+                                activePartSlotBoxes.put(box, slotDef);
                                 forceCollisionUpdateThisTick = true;
                                 if(this instanceof APart) {
                                     ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
@@ -202,8 +203,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 } else if (heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER) {
                     //Don't check held parts, just check if we can actually place anything in a slot.
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
-                        if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
-                            activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+                        JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
+                        if (checkConditions(slotDef.interactableConditions, 0)) {
+                            activePartSlotBoxes.put(partSlotBoxEntry.getKey(), slotDef);
                             forceCollisionUpdateThisTick = true;
                         }
                     }

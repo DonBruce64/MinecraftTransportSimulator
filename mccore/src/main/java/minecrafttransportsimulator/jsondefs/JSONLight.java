@@ -28,8 +28,8 @@ public class JSONLight {
     @JSONDescription("A hexadecimal color code.  This tells MTS what color this light should be.  Required for emissive lights and lights with blendableComponents.")
     public ColorRGB color;
 
-    @JSONDescription(" A listing of animations for determining the light brightness (and potentially color).  Leaving this blank or not having any active translation transforms will make for a light that is always on at 100% brightness, which you probably don't want.  Visibility transforms will turn the light on or off.  Translation transforms using the using the y-axis will add the variable value to the light brightness.  Translation transforms with the x-axis will multiply the light by the current light value.  Translation transforms with the z-axis will set the light brightness to that value, overriding any prior transform operations.  Rotation transforms will set the color with the RGB value corresponding to the XYZ parameters, overriding the color paramter.  Note that for all cases, the light brightness calculation starts at 0, so a set of animations that only multiply will just result in multiplying by 0 and a light that doesn't show up.  Not having any translation transforms will make the light 100% bright.  Inhibitor and activator transforms may be used in conjunction with these for advanced brightness logic.")
-    public List<JSONAnimationDefinition> brightnessAnimations;
+    @JSONDescription("A listing of value modifiers for the brightness (default is full brightness, or 1.0).\\nBrightness is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
+    public List<JSONAnimationDefinition> brightnessValueModifiers;
 
     @JSONDescription("A listing of blendable components for this light.  Used to allow for multiple flares or beams for a single light object.")
     public List<JSONLightBlendableComponent> blendableComponents;
@@ -53,4 +53,7 @@ public class JSONLight {
         @JSONDescription("The length of the beam to render.")
         public float beamLength;
     }
+
+    @Deprecated
+    public List<JSONAnimationDefinition> brightnessAnimations;
 }

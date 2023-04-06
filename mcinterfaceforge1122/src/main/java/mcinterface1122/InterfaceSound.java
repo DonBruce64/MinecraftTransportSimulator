@@ -210,7 +210,7 @@ public class InterfaceSound implements IInterfaceSound {
     }
 
     @Override
-    public void playQuickSound(SoundInstance sound) {
+    public boolean playQuickSound(SoundInstance sound) {
         if (AL.isCreated() && sourceGetFailures < 10) {
             //First get the IntBuffer pointer to where this sound data is stored.
             Integer dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
@@ -243,7 +243,7 @@ public class InterfaceSound implements IInterfaceSound {
                             playingSounds.remove(furthestSound);
                         }
                     }
-                    return;
+                    return false;
                 }
                 sound.sourceIndex = sourceBuffer.get(0);
 
@@ -256,8 +256,10 @@ public class InterfaceSound implements IInterfaceSound {
                 //Done setting up buffer.  Queue sound to start playing.
                 queuedSounds.add(sound);
                 sound.entity.sounds.add(sound);
+                return true;
             }
         }
+        return false;
     }
 
     @Override

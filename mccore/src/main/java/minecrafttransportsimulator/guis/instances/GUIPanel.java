@@ -441,10 +441,7 @@ public class GUIPanel extends AGUIBase {
     @Override
     public void setStates() {
         for (GUIPanelButton button : componentButtons) {
-            List<List<String>> visibilityVariables = button.component.visibilityVariables;
-            if (visibilityVariables != null) {
-                button.visible = vehicle.isVariableListTrue(visibilityVariables);
-            }
+            button.visible = vehicle.checkConditions(button.component.visibilityConditions, 0);
             if(button.visible) {
                 button.textureYOffset = (int) button.component.textureStart.y + button.component.height * button.getState();
             }

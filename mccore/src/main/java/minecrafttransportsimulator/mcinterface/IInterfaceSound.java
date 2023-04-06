@@ -21,9 +21,11 @@ public interface IInterfaceSound {
      * Plays a sound file located in a jar without buffering.
      * Useful for quick sounds like gunshots or button presses.
      * If the sound is able to be played, it is added to its provider's sound list,
-     * though it may not be playing yet due to update cycles.
+     * though it may not be playing yet due to update cycles.  Returns true, unless
+     * the sound instance couldn't be started due to an audio issue (missing file,
+     * lack of buffers, audio system not ready, etc.)
      */
-    void playQuickSound(SoundInstance sound);
+    boolean playQuickSound(SoundInstance sound);
 
     /**
      * Adds a station to be queued for updates.  This should only be done once upon station construction.

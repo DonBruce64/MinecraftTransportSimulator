@@ -13,8 +13,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable.LightState;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
@@ -97,8 +97,8 @@ public class RenderableModelObject {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
         JSONAnimatedObject objectDef = entity.animatedObjectDefinitions.get(object.name);
-        JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
-        if (shouldRender(entity, objectDef, lightDef, blendingEnabled, partialTicks)) {
+        LightState lightState = entity.lightStates.get(object.name);
+        if (shouldRender(entity, objectDef, lightState, blendingEnabled, partialTicks)) {
             AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(object.name);
             if (objectDef == null || objectDef.blendedAnimations || switchbox == null || switchbox.runSwitchbox(partialTicks, false)) {
                 //If we are a blended animation object, run the switchbox.
@@ -107,7 +107,6 @@ public class RenderableModelObject {
                     switchbox.runSwitchbox(partialTicks, false);
                 }
 
-                float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
                 object.worldLightValue = entity.worldLightValue;
                 object.transform.set(transform);
 
@@ -142,21 +141,6 @@ public class RenderableModelObject {
                     }
                 }
 
-                //If we are a light, get the actual light level as calculated.
-                //We do this here as there's no reason to calculate this if we're not gonna render.
-                if (lightDef != null) {
-                    lightLevel = entity.lightBrightnessValues.get(lightDef);
-                    if (lightDef.isElectric && entity instanceof EntityVehicleF_Physics) {
-                        //Light start dimming at 10V, then go dark at 3V.
-                        double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
-                        if (electricPower < 3) {
-                            lightLevel = 0;
-                        } else if (electricPower < 10) {
-                            lightLevel *= (electricPower - 3) / 7D;
-                        }
-                    }
-                }
-
                 if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
                     //Active tread.  Do tread-path rendering instead of normal model.
                     if (!blendingEnabled) {
@@ -164,16 +148,16 @@ public class RenderableModelObject {
                     }
                 } else {
                     //Set object states and render.
-                    if (blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()) {
+                    if (blendingEnabled && lightState != null && lightState.brightness > 0 && lightState.definition.isBeam && entity.shouldRenderBeams()) {
                         //Model that's actually a beam, render it with beam lighting/blending. 
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                         object.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
-                        object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+                        object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightState.brightness, 1);
                         object.render();
                     } else if (blendingEnabled == object.isTranslucent) {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
                         //Need to disable light-mapping from daylight if we are a light-up texture.
-                        object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+                        object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightState != null && lightState.brightness > 0 && !lightState.definition.emissive && !lightState.definition.isBeam;
                         //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
                         if (blendingEnabled && objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
                             if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
@@ -194,8 +178,8 @@ public class RenderableModelObject {
                     }
 
                     //Check if we are a light that's not a beam.  If so, do light-specific rendering.
-                    if (lightDef != null && !lightDef.isBeam) {
-                        doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
+                    if (lightState != null && !lightState.definition.isBeam) {
+                        doLightRendering(entity, lightState, blendingEnabled);
                     }
 
                     //Render text on this object.  Only do this on the solid pass.
@@ -221,7 +205,7 @@ public class RenderableModelObject {
         treadPoints.remove(modelLocation);
     }
 
-    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, JSONLight lightDef, boolean blendingEnabled, float partialTicks) {
+    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, LightState lightState, boolean blendingEnabled, float partialTicks) {
         //Translucent only renders on blended pass.
         if (object.isTranslucent && !blendingEnabled) {
             return false;
@@ -242,7 +226,7 @@ public class RenderableModelObject {
             }
         }
         //If the light only has solid components, and we aren't translucent, don't render on the blending pass.
-        if (lightDef != null && blendingEnabled && !object.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
+        if (lightState != null && blendingEnabled && !object.isTranslucent && !lightState.definition.emissive && !lightState.definition.isBeam && (lightState.definition.blendableComponents == null || lightState.definition.blendableComponents.isEmpty())) {
             return false;
         }
         //If we have an applyAfter, and that object isn't being rendered, don't render us either.
@@ -380,8 +364,8 @@ public class RenderableModelObject {
         }
     }
 
-    private void doLightRendering(AEntityD_Definable<?> entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled) {
-        if (blendingEnabled && lightLevel > 0 && lightDef.emissive) {
+    private void doLightRendering(AEntityD_Definable<?> entity, LightState lightState, boolean blendingEnabled) {
+        if (blendingEnabled && lightState.brightness > 0 && lightState.definition.emissive) {
             //Light color detected on blended render pass.
             if (colorObject == null) {
                 for (RenderableObject testObject : AModelParser.parseModel(modelLocation)) {
@@ -394,23 +378,23 @@ public class RenderableModelObject {
 
             colorObject.worldLightValue = object.worldLightValue;
             colorObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
-            colorObject.color.setTo(color);
-            colorObject.alpha = lightLevel;
+            colorObject.color.setTo(lightState.color);
+            colorObject.alpha = lightState.brightness;
             colorObject.transform.set(object.transform);
             colorObject.render();
 
         }
-        if (blendingEnabled && lightLevel > 0 && lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
+        if (blendingEnabled && lightState.brightness > 0 && lightState.definition.blendableComponents != null && !lightState.definition.blendableComponents.isEmpty()) {
             //Light flares or beams detected on blended render pass.
             //First render all flares, then render all beams.
-            float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+            float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightState.brightness, 1);
             if (blendableBrightness > 0) {
-                RenderableObject flareObject = flareObjects.get(lightDef);
-                RenderableObject beamObject = beamObjects.get(lightDef);
+                RenderableObject flareObject = flareObjects.get(lightState.definition);
+                RenderableObject beamObject = beamObjects.get(lightState.definition);
                 if (flareObject == null && beamObject == null) {
                     List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
                     List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
-                    for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
+                    for (JSONLightBlendableComponent component : lightState.definition.blendableComponents) {
                         if (component.flareHeight > 0) {
                             flareDefs.add(component);
                         }
@@ -419,10 +403,10 @@ public class RenderableModelObject {
                         }
                     }
                     if (!flareDefs.isEmpty()) {
-                        flareObjects.put(lightDef, flareObject = generateFlares(flareDefs));
+                        flareObjects.put(lightState.definition, flareObject = generateFlares(flareDefs));
                     }
                     if (!beamDefs.isEmpty()) {
-                        beamObjects.put(lightDef, beamObject = generateBeams(beamDefs));
+                        beamObjects.put(lightState.definition, beamObject = generateBeams(beamDefs));
                     }
                 }
 
@@ -431,7 +415,7 @@ public class RenderableModelObject {
                     flareObject.isTranslucent = true;
                     flareObject.worldLightValue = object.worldLightValue;
                     flareObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
-                    flareObject.color.setTo(color);
+                    flareObject.color.setTo(lightState.color);
                     flareObject.alpha = blendableBrightness;
                     flareObject.transform.set(object.transform);
                     flareObject.render();
@@ -443,14 +427,14 @@ public class RenderableModelObject {
                     beamObject.worldLightValue = object.worldLightValue;
                     beamObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     beamObject.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
-                    beamObject.color.setTo(color);
+                    beamObject.color.setTo(lightState.color);
                     beamObject.alpha = blendableBrightness;
                     beamObject.transform.set(object.transform);
                     beamObject.render();
                 }
             }
         }
-        if (!blendingEnabled && lightDef.covered) {
+        if (!blendingEnabled && lightState.definition.covered) {
             //Light cover detected on solid render pass.
             if (coverObject == null) {
                 for (RenderableObject testObject : AModelParser.parseModel(modelLocation)) {
@@ -462,7 +446,7 @@ public class RenderableModelObject {
             }
 
             coverObject.worldLightValue = object.worldLightValue;
-            coverObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0;
+            coverObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightState.brightness > 0;
             coverObject.transform.set(object.transform);
             coverObject.render();
         }

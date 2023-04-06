@@ -129,7 +129,10 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. This movement applies before the movement defined in the part slot.  This is primarially used to move the part based on properties of sub-parts, mostly for guns, but may be used for other things.")
         public List<JSONAnimationDefinition> movementAnimations;
 
-        @JSONDescription("A listing of animation objects for determining if this part is active.  Leaving this blank will make for a part that is always active.  Visibility transforms will turn the part on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.")
+        @JSONDescription("A group of conditions for determining if this part is active.  Leaving this blank will make for a part that is always active.  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.")
+        public JSONConditionGroup activeConditions;
+
+        @Deprecated
         public List<JSONAnimationDefinition> activeAnimations;
     }
 

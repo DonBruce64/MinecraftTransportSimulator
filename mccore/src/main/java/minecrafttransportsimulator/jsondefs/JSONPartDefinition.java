@@ -118,11 +118,9 @@ public class JSONPartDefinition {
     @JSONDescription("A list of objects on the model that define the path of the tread placed in this part slot.  The tread will start on the bottom of the first roller, and will follow the rollers as defined in this path, eventually going back to the first roller.")
     public List<String> treadPath;
 
-    @JSONDescription("A double-nested list of variables.  If this is set, then this part will not be interactable with unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
-    public List<List<String>> interactableVariables;
 
-    @JSONDescription("A double-nested list of variables.  If this is set, then this part will be unlocked (not permanent) unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).  Additionally, should the part not exist, it will not be able to be placed.")
-    public List<List<String>> lockingVariables;
+
+
 
     @JSONDescription("A list of indexes for parts that are linked to this one.  Normally not used, but is required to link wheels to engines, propellers to engines, guns to seats that control them, guns to ammo crates for them to pull from, and effectors to crates they can pull supplies from and feed drops into.  The linking is bi-directional: you can link an engine to a wheel, or a wheel to an engine.  Also, linking is recursive.  So if you link an engine to an axle custom part, any wheels on that part when placed will be linked as if they were in that slot.  Similar logic applies for seats to hardmount points that might hold guns.")
     public List<Integer> linkedParts;
@@ -133,12 +131,24 @@ public class JSONPartDefinition {
     @JSONDescription("If this is set, then the animations on this part slot will first use the animations for this object (not the part) from the rendering section instead of the animations defined here.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
     public String applyAfter;
 
-    @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  However, since these objects actually move the part rather than change how it looks, there are some caveats and quirks that aren't normally present for all other animations.  They are as follows:\naddPriorOffset has no function with part movement animations.  This is because that relies of vector-based clamping, which part movement does not support.\nAs part rotation is angle-based rather than vector-based, the axis parameter is actually the angles the part will move in, not the axis the part will move around.  For simple rotations that only are applied in one axis, this has no effect on the JSON.  However, for multiple animations it may cause issues.  In particular, the order the animations are applied is key to proper function.  This is because as an animation is applied, it changes the axis for following animations.  So if you have an animation that rotates the part 90 degrees on the Y-axis, and then want to rotate it on the +X axis, you'd actually have to put in +Z rotation as the part has been rotated to a different orientation.")
+    @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  ")
     public List<JSONAnimationDefinition> animations;
 
-    @JSONDescription("A listing of animation objects for determining if this part is active.  Leaving this blank will make for a part that is always active.  Visibility transforms will turn the part on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.  Note that this does NOT block the placement of the part or interaction.  That logic is for the linkedVariables.")
-    public List<JSONAnimationDefinition> activeAnimations;
+    @JSONDescription("A group of conditions for determining if this part is active (default is always active).  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.  Note that this does NOT block the placement of the part or interaction.  That logic is for the interactableConditions.")
+    public JSONConditionGroup activeConditions;
 
+    @JSONDescription("A group of conditions for determining if this part can be interacted with (default is always interactable).  If this is set, then all conditions must be true for the part to be interactable.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
+    public JSONConditionGroup interactableConditions;
+
+    @JSONDescription("A group of conditions for determining if this part is locked (default is unlocked).  Locked parts cannot be removed nor placed.")
+    public JSONConditionGroup lockingConditions;
+
+    @Deprecated
+    public List<JSONAnimationDefinition> activeAnimations;
+    @Deprecated
+    public List<List<String>> interactableVariables;
+    @Deprecated
+    public List<List<String>> lockingVariables;
     @Deprecated
     public JSONPartDefinition additionalPart;
     @Deprecated

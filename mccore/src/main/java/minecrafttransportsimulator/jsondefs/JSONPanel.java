@@ -60,8 +60,8 @@ public class JSONPanel extends AJSONBase {
         @JSONDescription("The variable used to choose the texture state.  May be omitted if this component doesn't change textures.")
         public String statusVariable;
 
-        @JSONDescription("A double-nested list of variables.  If this is set, then this component will not be visible unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).")
-        public List<List<String>> visibilityVariables;
+        @JSONDescription("A group of conditions that determines if this component is visibile (default is visible).")
+        public JSONConditionGroup visibilityConditions;
 
         @JSONDescription("The special component to make this component.  May be null.  If set, special logic will be applied that is per-component.")
         public SpecialComponent specialComponent;
@@ -74,6 +74,9 @@ public class JSONPanel extends AJSONBase {
 
         @JSONDescription("The action to perform when this control is clicked on the right side.")
         public JSONPanelClickAction clickActionRight;
+
+        @Deprecated
+        public List<List<String>> visibilityVariables;
     }
 
     public static class JSONPanelClickAction {
