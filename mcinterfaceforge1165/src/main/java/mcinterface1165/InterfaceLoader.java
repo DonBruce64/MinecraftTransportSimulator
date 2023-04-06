@@ -20,7 +20,9 @@ import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -97,6 +99,37 @@ public class InterfaceLoader {
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
+            
+            //For each item in each pack's crafting def, convert it to 1.16.5 MC format if it isn't already.
+            for(AItemPack<?> item : PackParser.getAllPackItems()) {
+                for (List<String> materialList : item.definition.general.materialLists) {
+                    for (int i = 0; i < materialList.size(); ++i) {
+                        String[] components = materialList.get(i).split(":");
+                        //Format must be domain, item, meta, qty, convert.
+                        if (components.length == 4) {
+                            materialList.set(i, getNewItemName(components));
+                        } else if (components[0].equals("oredict")) {
+                            materialList.set(i, getNewOredictName(components));
+                        }
+                    }
+                }
+                if (item.definition instanceof AJSONMultiModelProvider) {
+                    AJSONMultiModelProvider provider = (AJSONMultiModelProvider) item.definition;
+                    for (JSONSubDefinition definition : provider.definitions) {
+                        for (List<String> materialList : definition.extraMaterialLists) {
+                            for (int i = 0; i < materialList.size(); ++i) {
+                                String[] components = materialList.get(i).split(":");
+                                //Format must be domain, item, meta, qty, convert.
+                                if (components.length == 4) {
+                                    materialList.set(i, getNewItemName(components));
+                                } else if (components[0].equals("oredict")) {
+                                    materialList.set(i, getNewOredictName(components));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
@@ -232,5 +265,201 @@ public class InterfaceLoader {
             //Save modified config.
             ConfigSystem.saveToDisk();
         }
+    }
+    
+    private static String getNewItemName(String[] components) {
+        switch(components[1] + ":" + components[2]) {
+            case ("stone:1"):
+                return components[0] + ":granite:" + components[3];
+            case ("stone:2"):
+                return components[0] + ":polished_granite:" + components[3];
+            case ("stone:3"):
+                return components[0] + ":diorite:" + components[3];
+            case ("stone:4"):
+                return components[0] + ":polished_diorite:" + components[3];
+            case ("stone:5"):
+                return components[0] + ":andesite:" + components[3];
+            case ("stone:6"):
+                return components[0] + ":polished_andesite:" + components[3];
+            case ("grass:0"):
+                return components[0] + ":grass_block:" + components[3];
+            case ("dirt:1"):
+                return components[0] + ":coarse_dirt:" + components[3];
+            case ("dirt:2"):
+                return components[0] + ":podzol:" + components[3];
+            case ("planks:0"):
+                return components[0] + ":oak_planks:" + components[3];
+            case ("planks:1"):
+                return components[0] + ":spruce_planks:" + components[3];
+            case ("planks:2"):
+                return components[0] + ":birch_planks:" + components[3];
+            case ("planks:3"):
+                return components[0] + ":jungle_planks:" + components[3];
+            case ("planks:4"):
+                return components[0] + ":acacia_planks:" + components[3];
+            case ("planks:5"):
+                return components[0] + ":dark_oak_planks:" + components[3];
+            case ("sapling:0"):
+                return components[0] + ":oak_sapling:" + components[3];
+            case ("sapling:1"):
+                return components[0] + ":spruce_sapling:" + components[3];
+            case ("sapling:2"):
+                return components[0] + ":birch_sapling:" + components[3];
+            case ("sapling:3"):
+                return components[0] + ":jungle_sapling:" + components[3];
+            case ("sapling:4"):
+                return components[0] + ":acacia_sapling:" + components[3];
+            case ("sapling:5"):
+                return components[0] + ":dark_oak_sapling:" + components[3];
+            case ("sand:1"):
+                return components[0] + ":red_sand:" + components[3];
+            case ("log:0"):
+                return components[0] + ":oak_log:" + components[3];
+            case ("log:1"):
+                return components[0] + ":spruce_log:" + components[3];
+            case ("log:2"):
+                return components[0] + ":birch_log:" + components[3];
+            case ("log:3"):
+                return components[0] + ":jungle_log:" + components[3];
+            case ("log:4"):
+                return components[0] + ":acacia_log:" + components[3];
+            case ("log:5"):
+                return components[0] + ":dark_oak_log:" + components[3];
+            case ("leaves:0"):
+                return components[0] + ":oak_leaves:" + components[3];
+            case ("leaves:1"):
+                return components[0] + ":spruce_leaves:" + components[3];
+            case ("leaves:2"):
+                return components[0] + ":birch_leaves:" + components[3];
+            case ("leaves:3"):
+                return components[0] + ":jungle_leaves:" + components[3];
+            case ("leaves:4"):
+                return components[0] + ":acacia_leaves:" + components[3];
+            case ("leaves:5"):
+                return components[0] + ":dark_oak_leaves:" + components[3];
+            case ("sponge:1"):
+                return components[0] + ":wet_sponge:" + components[3];
+            case ("sandstone:1"):
+                return components[0] + ":chiseled_sandstone:" + components[3];
+            case ("sandstone:2"):
+                return components[0] + ":cut_sandstone:" + components[3];
+            case ("golden_rail:0"):
+                return components[0] + ":powered_rail:" + components[3];
+            case ("tallgrass:2"):
+                return components[0] + ":fern:" + components[3];
+            case ("deadbush:0"):
+                return components[0] + ":dead_bush:" + components[3];
+            case ("wool:0"):
+                return components[0] + ":white_wool:" + components[3];
+            case ("wool:1"):
+                return components[0] + ":orange_wool:" + components[3];
+            case ("wool:2"):
+                return components[0] + ":magenta_wool:" + components[3];
+            case ("wool:3"):
+                return components[0] + ":light_blue_wool:" + components[3];
+            case ("wool:4"):
+                return components[0] + ":yellow_wool:" + components[3];
+            case ("wool:5"):
+                return components[0] + ":lime_wool:" + components[3];
+            case ("wool:6"):
+                return components[0] + ":pink_wool:" + components[3];
+            case ("wool:7"):
+                return components[0] + ":gray_wool:" + components[3];
+            case ("wool:8"):
+                return components[0] + ":light_gray_wool:" + components[3];
+            case ("wool:9"):
+                return components[0] + ":cyan_wool:" + components[3];
+            case ("wool:10"):
+                return components[0] + ":purple_wool:" + components[3];
+            case ("wool:11"):
+                return components[0] + ":blue_wool:" + components[3];
+            case ("wool:12"):
+                return components[0] + ":brown_wool:" + components[3];
+            case ("wool:13"):
+                return components[0] + ":green_wool:" + components[3];
+            case ("wool:14"):
+                return components[0] + ":red_wool:" + components[3];
+            case ("wool:15"):
+                return components[0] + ":black_wool:" + components[3];
+            case ("yellow_flower:0"):
+                return components[0] + ":dandelion:" + components[3];
+            case ("red_flower:0"):
+                return components[0] + ":poppy:" + components[3];
+            case ("red_flower:1"):
+                return components[0] + ":blue_orchid:" + components[3];
+            case ("red_flower:2"):
+                return components[0] + ":allium:" + components[3];
+            case ("red_flower:3"):
+                return components[0] + ":azure_bluet:" + components[3];
+            case ("red_flower:4"):
+                return components[0] + ":red_tulip:" + components[3];
+            case ("red_flower:5"):
+                return components[0] + ":orange_tulip:" + components[3];
+            case ("red_flower:6"):
+                return components[0] + ":white_tulip:" + components[3];
+            case ("red_flower:7"):
+                return components[0] + ":pink_tulip:" + components[3];
+            case ("red_flower:8"):
+                return components[0] + ":oxeye_daisy:" + components[3];
+            case ("wooden_slab:0"):
+                return components[0] + ":oak_slab:" + components[3];
+            case ("wooden_slab:1"):
+                return components[0] + ":spruce_slab:" + components[3];
+            case ("wooden_slab:2"):
+                return components[0] + ":birch_slab:" + components[3];
+            case ("wooden_slab:3"):
+                return components[0] + ":jungle_slab:" + components[3];
+            case ("wooden_slab:4"):
+                return components[0] + ":acacia_slab:" + components[3];
+            case ("wooden_slab:5"):
+                return components[0] + ":dark_oak_slab:" + components[3];
+            case ("stone_slab:1"):
+                return components[0] + ":sandstone_slab:" + components[3];
+            case ("stone_slab:3"):
+                return components[0] + ":cobblestone_slab:" + components[3];
+            case ("stone_slab:4"):
+                return components[0] + ":brick_slab:" + components[3];
+            case ("stone_slab:5"):
+                return components[0] + ":stone_brick_slab:" + components[3];
+            case ("stone_slab:6"):
+                return components[0] + ":nether_brick_slab:" + components[3];
+            case ("stone_slab:7"):
+                return components[0] + ":quartz_slab:" + components[3];
+            case ("double_stone_slab:7"):
+                return components[0] + ":smooth_quartz:" + components[3];
+            case ("double_stone_slab:8"):
+                return components[0] + ":smooth_stone:" + components[3];
+            case ("brick_block:8"):
+                return components[0] + ":bricks:" + components[3];
+            case ("wooden_pressure_plate:0"):
+                return components[0] + ":oak_pressure_plate:" + components[3];
+            case ("snow_layer:0"):
+                return components[0] + ":snow:" + components[3];
+            case ("snow:0"):
+                return components[0] + ":snow_block:" + components[3];
+            case ("fence:0"):
+                return components[0] + ":oak_fence:" + components[3];
+            case ("lit_pumpkin:0"):
+                return components[0] + ":jack_o_lantern:" + components[3];
+            case ("trapdoor:0"):
+                return components[0] + ":oak_trapdoor:" + components[3];
+        }
+        return components[0] + ":" + components[1] + ":" + components[3];
+    }
+
+    private static String getNewOredictName(String[] components) {
+        //Old oredict uses camelCase, if we have it, we need to convert.
+        if (!components[1].toLowerCase().equals(components[1])) {
+            if (components[1].startsWith("ingot")) {
+                return components[0] + ":ingots/" + components[1].substring("ingot".length()).toLowerCase() + ":" + components[2];
+            } else if (components[1].startsWith("dye")) {
+                return components[0] + ":dyes/" + components[1].substring("dye".length()).toLowerCase().replace("light", "light_") + ":" + components[2];
+            } else if (components[1].startsWith("dust")) {
+                return components[0] + ":dusts/" + components[1].substring("dust".length()).toLowerCase() + ":" + components[2];
+            } else if (components[1].equals("plankWood")) {
+                return components[0] + ":planks" + ":" + components[2];
+            }
+        }
+        return components[0] + ":" + components[1] + ":" + components[2];
     }
 }

@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
@@ -92,7 +93,11 @@ class InterfaceCore implements IInterfaceCore {
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize) {
         List<IWrapperItemStack> stacks = new ArrayList<>();
-        ItemTags.getAllTags().getTag(new ResourceLocation(oreName)).getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
+        ITag<Item> tag = ItemTags.getAllTags().getTag(new ResourceLocation("minecraft", oreName));
+        if (tag == null) {
+            tag = ItemTags.getAllTags().getTag(new ResourceLocation("forge", oreName));
+        }
+        tag.getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
         return stacks;
     }
 }
