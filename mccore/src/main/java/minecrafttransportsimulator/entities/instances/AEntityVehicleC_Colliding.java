@@ -153,8 +153,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, null, JSONConfigLanguage.DEATH_CRASH_NULL);
         LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
         Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, controller, language);
+
+        //Damage riders.
         for (APart part : allParts) {
-            //Damage riders.
             if (part.rider != null) {
                 if (part.rider == controller) {
                     part.rider.attack(controllerCrashDamage);
@@ -162,9 +163,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
                     part.rider.attack(passengerCrashDamage);
                 }
             }
+        }
 
-            //Add drops.
-            part.addDropsToList(drops);
+        //Drop our parts as items.
+        for (APart part : parts) {
+            if (!part.isPermanent) {
+                part.addDropsToList(drops);
+            }
         }
 
         //Now call super and spawn drops.
