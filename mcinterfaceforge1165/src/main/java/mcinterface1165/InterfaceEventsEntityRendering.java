@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -129,14 +130,15 @@ public class InterfaceEventsEntityRendering {
         //This renders them over the main hotbar, but doesn't block the chat window.
         if (event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)) {
             //Set up variables.
+            MainWindow window = Minecraft.getInstance().getWindow();
             long displaySize = InterfaceManager.clientInterface.getPackedDisplaySize();
             int screenWidth = (int) (displaySize >> Integer.SIZE);
             int screenHeight = (int) displaySize;
             double[] xPos = new double[1];
             double[] yPos = new double[1];
-            GLFW.glfwGetCursorPos(event.getWindow().getWindow(), xPos, yPos);
-            int mouseX = (int) (xPos[0] * screenWidth / Minecraft.getInstance().getWindow().getWidth());
-            int mouseY = (int) (yPos[0] * screenHeight / Minecraft.getInstance().getWindow().getHeight());
+            GLFW.glfwGetCursorPos(window.getWindow(), xPos, yPos);
+            int mouseX = (int) (xPos[0] * screenWidth / window.getScreenWidth());
+            int mouseY = (int) (yPos[0] * screenHeight / window.getScreenHeight());
 
             float partialTicks = event.getPartialTicks();
             boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
