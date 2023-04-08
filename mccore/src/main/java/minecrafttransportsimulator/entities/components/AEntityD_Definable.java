@@ -488,6 +488,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public void updateLightBrightness(float partialTicks) {
         for (LightState lightState : lightStates.values()) {
+            lightState.brightness = 1.0F;
+            if (lightState.definition.redColorValueModifiers != null) {
+                lightState.color.red = (float) calculateModifiers(lightState.definition.redColorValueModifiers, 0, partialTicks);
+            }
+            if (lightState.definition.greenColorValueModifiers != null) {
+                lightState.color.green = (float) calculateModifiers(lightState.definition.greenColorValueModifiers, 0, partialTicks);
+            }
+            if (lightState.definition.blueColorValueModifiers != null) {
+                lightState.color.blue = (float) calculateModifiers(lightState.definition.blueColorValueModifiers, 0, partialTicks);
+            }
+
             /*
             float lightBrightness = 1;
             ColorRGB lightColor = null;
@@ -807,69 +818,69 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Returns the calculation of the modifier.
      */
-    public double calculateModifiers(List<JSONValueModifier> modifiers, double finalValue, float partialTicks) {
+    public double calculateModifiers(List<JSONValueModifier> modifiers, double rollingValue, float partialTicks) {
         for (JSONValueModifier modifier : modifiers) {
             if(modifier.type == JSONValueModifier.Type.CONDITIONS){
                 if (checkConditions(modifier.conditions, partialTicks)) {
                     if(modifier.trueCode != null) {
-                        finalValue = calculateModifiers(modifier.trueCode, finalValue, partialTicks);
+                        rollingValue = calculateModifiers(modifier.trueCode, rollingValue, partialTicks);
                     }
                 }else {
                     if(modifier.falseCode != null) {
-                        finalValue = calculateModifiers(modifier.falseCode, finalValue, partialTicks);
+                        rollingValue = calculateModifiers(modifier.falseCode, rollingValue, partialTicks);
                     }
                 }
             }else {
                 switch(modifier.type) {
                     case SET : {
-                        finalValue = modifier.parameter1;
+                        rollingValue = modifier.parameter1;
                         break;
                     }
                     case SET_VAR: {
                         if (modifier.factor != 0) {
-                            finalValue = getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                            rollingValue = getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
                         } else {
-                            finalValue = getCleanRawVariableValue(modifier.input, partialTicks);
+                            rollingValue = getCleanRawVariableValue(modifier.input, partialTicks);
                         }
                         break;
                     }
                     case ADD : {
-                        finalValue += modifier.parameter1;
+                        rollingValue += modifier.parameter1;
                         break;
                     }
                     case ADD_VAR: {
                         if (modifier.factor != 0) {
-                            finalValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                            rollingValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
                         } else {
-                            finalValue += getCleanRawVariableValue(modifier.input, partialTicks);
+                            rollingValue += getCleanRawVariableValue(modifier.input, partialTicks);
                         }
                         break;
                     }
                     case MULTIPLY : {
-                        finalValue *= modifier.parameter1;
+                        rollingValue *= modifier.parameter1;
                         break;
                     }
                     case MULTIPLY_VAR: {
                         if (modifier.factor != 0) {
-                            finalValue *= getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                            rollingValue *= getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
                         } else {
-                            finalValue *= getCleanRawVariableValue(modifier.input, partialTicks);
+                            rollingValue *= getCleanRawVariableValue(modifier.input, partialTicks);
                         }
                         break;
                     }
                     case LINEAR : {
-                        finalValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter1 + modifier.parameter2;
+                        rollingValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter1 + modifier.parameter2;
                         break;
                     }
                     case PARABOLIC: {
-                        finalValue += modifier.parameter1 * Math.pow(getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter2 - modifier.parameter3, 2) + modifier.parameter4;
+                        rollingValue += modifier.parameter1 * Math.pow(getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter2 - modifier.parameter3, 2) + modifier.parameter4;
                         break;
                     }
                     case CLAMP: {
-                        if (finalValue < modifier.parameter1) {
-                            finalValue = modifier.parameter1;
-                        } else if (finalValue > modifier.parameter2) {
-                            finalValue = modifier.parameter2;
+                        if (rollingValue < modifier.parameter1) {
+                            rollingValue = modifier.parameter1;
+                        } else if (rollingValue > modifier.parameter2) {
+                            rollingValue = modifier.parameter2;
                         }
                         break;
                     }
@@ -877,7 +888,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
         }
-        return finalValue;
+        return rollingValue;
     }
 
     /**

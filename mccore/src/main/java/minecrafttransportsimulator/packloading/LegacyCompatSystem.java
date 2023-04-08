@@ -242,6 +242,38 @@ public final class LegacyCompatSystem {
                                 case VISIBILITY: {
 
                                 }
+                                case ROTATION: {
+                                    if (animation.axis.x != 0) {
+                                        if (light.redColorValueModifiers == null) {
+                                            light.redColorValueModifiers = new ArrayList<JSONValueModifier>();
+                                        }
+                                        JSONValueModifier modifier = new JSONValueModifier();
+                                        modifier.type = JSONValueModifier.Type.ADD_VAR;
+                                        modifier.input = animation.variable;
+                                        modifier.factor = (float) animation.axis.x;
+                                        light.redColorValueModifiers.add(modifier);
+                                    }
+                                    if (animation.axis.y != 0) {
+                                        if (light.blueColorValueModifiers == null) {
+                                            light.blueColorValueModifiers = new ArrayList<JSONValueModifier>();
+                                        }
+                                        JSONValueModifier modifier = new JSONValueModifier();
+                                        modifier.type = JSONValueModifier.Type.ADD_VAR;
+                                        modifier.input = animation.variable;
+                                        modifier.factor = (float) animation.axis.y;
+                                        light.blueColorValueModifiers.add(modifier);
+                                    }
+                                    if (animation.axis.z != 0) {
+                                        if (light.greenColorValueModifiers == null) {
+                                            light.greenColorValueModifiers = new ArrayList<JSONValueModifier>();
+                                        }
+                                        JSONValueModifier modifier = new JSONValueModifier();
+                                        modifier.type = JSONValueModifier.Type.ADD_VAR;
+                                        modifier.input = animation.variable;
+                                        modifier.factor = (float) animation.axis.z;
+                                        light.greenColorValueModifiers.add(modifier);
+                                    }
+                                }
                             }
                         }
                     }
