@@ -16,6 +16,12 @@ import minecrafttransportsimulator.items.components.AItemBase;
 public interface IInterfaceCore {
 
     /**
+     * Returns true if we are running in a "flattened" environment.
+     * This means no metadata on items.
+     */
+    boolean isGameFlattened();
+
+    /**
      * Returns true if the mod with the passed-in modID is present.
      */
     boolean isModPresent(String modID);

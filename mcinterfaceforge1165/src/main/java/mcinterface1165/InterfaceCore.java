@@ -22,6 +22,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
     @Override
+    public boolean isGameFlattened() {
+        return true;
+    }
+
+    @Override
     public boolean isModPresent(String modID) {
         return ModList.get().isLoaded(modID);
     }

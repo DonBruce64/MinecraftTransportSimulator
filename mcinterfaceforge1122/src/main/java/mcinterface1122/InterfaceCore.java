@@ -18,6 +18,11 @@ import net.minecraftforge.oredict.OreDictionary;
 
 class InterfaceCore implements IInterfaceCore {
     @Override
+    public boolean isGameFlattened() {
+        return false;
+    }
+
+    @Override
     public boolean isModPresent(String modID) {
         return Loader.isModLoaded(modID);
     }
