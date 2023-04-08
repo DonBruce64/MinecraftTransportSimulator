@@ -22,6 +22,9 @@ public class JSONParticle {
     @JSONDescription("Normally, particles align themselves to face the player.  Set this to true if you want them to not do this and just be aligned as spawned.")
     public boolean axisAligned;
 
+    @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
+    public boolean randomTexture;
+
     @JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
     public int quantity;
 
@@ -52,10 +55,9 @@ public class JSONParticle {
     @JSONDescription("Normally particles use built-in textures.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
 
-    @JSONDescription("If you want your particle to have multiple textures, you can specify the texture PNG files to use here.  The delay between each texture segment is goverend by the textureDelay variable.  If you delay past the last texture, the cycle repeats.")
+    @JSONDescription("If you want your particle to have multiple textures, you can specify the texture PNG files to use here.  The delay between each texture segment is goverend by the textureDelay variable, if it is set.  If you delay past the last texture, the cycle repeats.")
     public List<String> textureList;
 
-    @JSONRequired(dependentField = "textureList")
     @JSONDescription("A list of delays between cycling to the next texture.  If the end of this list is reached, the delay sequence will repeat from the start of the list.")
     public List<Integer> textureDelays;
 

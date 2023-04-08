@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -121,9 +122,14 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = RenderableObject.GLOBAL_TEXTURE_NAME;
         } else if (definition.textureList != null) {
             //Set initial texture delay and texture.
-            this.timeOfNextTexture = definition.textureDelays.get(textureDelayIndex);
-            texture = definition.textureList.get(textureIndex);
+            if (definition.randomTexture) {
+                textureIndex = new Random().nextInt(definition.textureList.size());
+            }
             textureList = definition.textureList;
+            texture = textureList.get(textureIndex);
+            if (definition.textureDelays != null) {
+                timeOfNextTexture = definition.textureDelays.get(textureDelayIndex);
+            }
         } else {
             if (definition.type == ParticleType.SMOKE) {
                 textureList = new ArrayList<String>();
@@ -245,7 +251,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Check if we need to change textures.
-        if (textureList != null && timeOfNextTexture <= ticksExisted) {
+        if (definition.textureDelays != null && timeOfNextTexture <= ticksExisted) {
             if (++textureIndex == textureList.size()) {
                 textureIndex = 0;
             }
