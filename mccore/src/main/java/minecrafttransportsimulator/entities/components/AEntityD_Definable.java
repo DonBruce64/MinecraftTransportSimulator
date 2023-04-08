@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
@@ -62,6 +63,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Renderable {
+    private static final Random random = new Random();
+
     /**
      * The pack definition for this entity.  May contain extra sections if the super-classes
      * have them in their respective JSONs.
@@ -819,31 +822,47 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }else {
                 switch(modifier.type) {
                     case SET : {
-                        finalValue = getCleanRawVariableValue(modifier.input, partialTicks);
+                        finalValue = modifier.parameter1;
+                        break;
+                    }
+                    case SET_VAR: {
+                        if (modifier.factor != 0) {
+                            finalValue = getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                        } else {
+                            finalValue = getCleanRawVariableValue(modifier.input, partialTicks);
+                        }
                         break;
                     }
                     case ADD : {
-                        finalValue += getCleanRawVariableValue(modifier.input, partialTicks);
+                        finalValue += modifier.parameter1;
                         break;
                     }
-                    case SUBTRACT : {
-                        finalValue -= getCleanRawVariableValue(modifier.input, partialTicks);
+                    case ADD_VAR: {
+                        if (modifier.factor != 0) {
+                            finalValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                        } else {
+                            finalValue += getCleanRawVariableValue(modifier.input, partialTicks);
+                        }
                         break;
                     }
                     case MULTIPLY : {
-                        finalValue *= getCleanRawVariableValue(modifier.input, partialTicks);
+                        finalValue *= modifier.parameter1;
                         break;
                     }
-                    case DIVIDE : {
-                        finalValue /= getCleanRawVariableValue(modifier.input, partialTicks);
+                    case MULTIPLY_VAR: {
+                        if (modifier.factor != 0) {
+                            finalValue *= getCleanRawVariableValue(modifier.input, partialTicks) * modifier.factor;
+                        } else {
+                            finalValue *= getCleanRawVariableValue(modifier.input, partialTicks);
+                        }
                         break;
                     }
                     case LINEAR : {
-                        finalValue = getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter1 + modifier.parameter2;
+                        finalValue += getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter1 + modifier.parameter2;
                         break;
                     }
                     case PARABOLIC: {
-                        finalValue = modifier.parameter1 * Math.pow(getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter2 - modifier.parameter3, 2) + modifier.parameter4;
+                        finalValue += modifier.parameter1 * Math.pow(getCleanRawVariableValue(modifier.input, partialTicks) * modifier.parameter2 - modifier.parameter3, 2) + modifier.parameter4;
                         break;
                     }
                     case CLAMP: {
@@ -980,15 +999,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Like {@link #getRawVariableValue(String, float)}, but returns 0 if not found
      * rather than NaN.  This is designed for getting variable values without animations.
-     * This also allows for constant-values to be used by prefixing the variable with a #.
      */
     public final double getCleanRawVariableValue(String variable, float partialTicks) {
-        if (variable.startsWith("#")) {
-            return Double.parseDouble(variable.substring(1));
-        } else {
-            double value = getRawVariableValue(variable, partialTicks);
-            return Double.isNaN(value) ? 0 : value;
-        }
+        double value = getRawVariableValue(variable, partialTicks);
+        return Double.isNaN(value) ? 0 : value;
     }
 
     /**

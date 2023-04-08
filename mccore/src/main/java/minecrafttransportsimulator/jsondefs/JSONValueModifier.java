@@ -11,8 +11,12 @@ public class JSONValueModifier {
     @JSONDescription("The blockType for this code.  The type defines the logic to be performed.")
     public Type type;
 
-    @JSONDescription("Input variable.  May be a number prefixed with a # to indicate a constant.")
+    @JSONRequired(dependentField = "type", dependentValues = { "SET_VAR", "ADD_VAR", "MULTIPLY_VAR", "LINEAR", "PARABOLIC" })
+    @JSONDescription("")
     public String input;
+    
+    @JSONDescription("The factor to apply to this operation (if used).  Can be left out to not do any factoring (defaults to 1).")
+    public float factor;
 
     @JSONDescription("")
     public float parameter1;
@@ -37,16 +41,18 @@ public class JSONValueModifier {
     public List<JSONValueModifier> falseCode;
 
     public static enum Type {
-        @JSONDescription("value = input")
+        @JSONDescription("value = parameter1")
         SET,
-        @JSONDescription("value = value + input")
+        @JSONDescription("value = input*factor")
+        SET_VAR,
+        @JSONDescription("value = value + parameter1")
         ADD,
-        @JSONDescription("value = value - input")
-        SUBTRACT,
-        @JSONDescription("value = value * input")
+        @JSONDescription("value = value + input*factor")
+        ADD_VAR,
+        @JSONDescription("value = value * parameter1")
         MULTIPLY,
-        @JSONDescription("value = value * input")
-        DIVIDE,
+        @JSONDescription("value = value * input*factor")
+        MULTIPLY_VAR,
         @JSONDescription("value = input * parameter1 + paramter2")
         LINEAR,
         @JSONDescription("value = parameter1 * (input * paramter2 - paramter3)^2 + parameter4.")
