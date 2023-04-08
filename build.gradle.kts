@@ -58,7 +58,6 @@ tasks.register("buildForgeAll") {
 
 @OptIn(ExperimentalPathApi::class)
 fun moveToOut(subProject: Project, versionStr: String) {
-    mkdir("out/$versionStr")
     val jarName = "Immersive Vehicles-${subProject.version}.jar"
     Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
         .moveTo(Paths.get("${project.projectDir.canonicalPath}/out/$jarName"), true)
