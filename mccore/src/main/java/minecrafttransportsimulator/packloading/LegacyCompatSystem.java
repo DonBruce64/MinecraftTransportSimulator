@@ -2348,14 +2348,17 @@ public final class LegacyCompatSystem {
         conditionGroup.conditions = new ArrayList<>();
         for (List<String> variableList : variableLists) {
             if (variableList.size() == 1) {
+                //Single variable, no need to make a sub-list for ORing.
                 conditionGroup.conditions.add(convertConditionVariable(variableList.get(0)));
             } else {
+                //Multiple variables in OR configuration, add to sub-listing.
                 JSONCondition condition = new JSONCondition();
                 condition.type = JSONCondition.Type.CONDITIONS;
                 condition.conditions = new ArrayList<>();
                 for (String variable : variableList) {
                     condition.conditions.add(convertConditionVariable(variable));
                 }
+                conditionGroup.conditions.add(condition);
             }
         }
         return conditionGroup;

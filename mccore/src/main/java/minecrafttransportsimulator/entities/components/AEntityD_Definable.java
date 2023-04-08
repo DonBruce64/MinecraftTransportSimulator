@@ -489,6 +489,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void updateLightBrightness(float partialTicks) {
         for (LightState lightState : lightStates.values()) {
             lightState.brightness = 1.0F;
+            if (lightState.definition.color != null) {
+                lightState.color.setTo(lightState.definition.color);
+            }
             if (lightState.definition.redColorValueModifiers != null) {
                 lightState.color.red = (float) calculateModifiers(lightState.definition.redColorValueModifiers, 0, partialTicks);
             }
