@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -23,7 +24,7 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
@@ -72,8 +73,12 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public String getFluidName(String fluidID) {
-        Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidID));
-        return fluid != null ? (new TranslationTextComponent(fluid.getAttributes().getTranslationKey())).getString() : "INVALID";
+        for (Entry<RegistryKey<Fluid>, Fluid> fluidEntry : ForgeRegistries.FLUIDS.getEntries()) {
+            if (fluidEntry.getKey().location().getPath().equals(fluidID)) {
+                return new TranslationTextComponent(fluidEntry.getValue().getAttributes().getTranslationKey()).getString();
+            }
+        }
+        return "INVALID";
     }
 
     @Override
