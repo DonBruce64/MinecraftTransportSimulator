@@ -240,7 +240,7 @@ public final class LegacyCompatSystem {
                         for (JSONAnimationDefinition animation : light.brightnessAnimations) {
                             switch (animation.animationType) {
                                 case VISIBILITY: {
-
+                                    break;
                                 }
                                 case ROTATION: {
                                     if (animation.axis.x != 0) {
@@ -273,6 +273,7 @@ public final class LegacyCompatSystem {
                                         modifier.factor = (float) animation.axis.z;
                                         light.greenColorValueModifiers.add(modifier);
                                     }
+                                    break;
                                 }
                             }
                         }
