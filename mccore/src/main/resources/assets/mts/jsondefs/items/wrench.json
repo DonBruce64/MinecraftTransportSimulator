@@ -1,7 +1,6 @@
 {
     "general": {
         "name": "Wrench",
-        "description": "Attack a vehicle part to remove it.\nSneak-attack a vehicle to remove entire vehicle.\nUse on vehicle to change instruments.\nSneak-use on vehicle to change text.\nUse on pole components to remove them.\nUse on fuel pumps you placed to change prices.",
         "materials": [],
         "type": "wrench"
     }

@@ -58,6 +58,54 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     }
 
     @Override
+    public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
+        super.addTooltipLines(tooltipLines, data);
+        switch (definition.item.type) {
+            case SCANNER: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_SCANNER.value);
+                break;
+            }
+            case WRENCH: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_WRENCH.value);
+                break;
+            }
+            case SCREWDRIVER: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_SCREWDRIVER.value);
+                break;
+            }
+            case PAINT_GUN: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_PAINTGUN.value);
+                break;
+            }
+            case KEY: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_KEY.value);
+                break;
+            }
+            case TICKET: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_TICKET.value);
+                break;
+            }
+            case FUEL_HOSE: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_FUELHOSE.value);
+                break;
+            }
+            case JUMPER_CABLES: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JUMPERCABLES.value);
+                break;
+            }
+            case JUMPER_PACK: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JUMPERPACK.value);
+                break;
+            }
+            case Y2K_BUTTON: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_Y2KBUTTON.value);
+                break;
+            }
+            default: //Do nothing.
+        }
+    }
+
+    @Override
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
         switch (definition.item.type) {
 	    	case WRENCH: 
@@ -335,7 +383,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 
     @Override
     public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
-        if (definition.item.type.equals(ItemComponentType.PAINT_GUN)) {
+        if (definition.item.type == ItemComponentType.PAINT_GUN) {
             if (!world.isClient()) {
                 ATileEntityBase<?> tile = world.getTileEntity(position);
                 if (tile instanceof TileEntityDecor) {

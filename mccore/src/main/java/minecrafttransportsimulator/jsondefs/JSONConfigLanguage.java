@@ -252,6 +252,17 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_TRAILER_ALREADYTOWED = new LanguageEntry("interact.trailer.alreadytowed", "The only nearby vehicle is already being towed.");
     public static final LanguageEntry INTERACT_TRAILER_FEEDBACKLOOP = new LanguageEntry("interact.trailer.feedbackloop", "The only nearby vehicles are being towed by this vehicle, towing would result in an infinite towing loop.");
 
+    public static final LanguageEntry ITEMINFO_SCANNER = new LanguageEntry("iteminfo.scanner", "Hover over a part box to see what can be placed at that slot.\nSneak while using to cycle slower.");
+    public static final LanguageEntry ITEMINFO_WRENCH = new LanguageEntry("iteminfo.wrench", "Attack a vehicle part to remove it.\nSneak-attack a vehicle to remove entire vehicle.\nUse on vehicle to change instruments.\nSneak-use on vehicle or blocks to change text.\nUse on pole components to remove them.\nUse on fuel pumps you placed to change prices.");
+    public static final LanguageEntry ITEMINFO_SCREWDRIVER = new LanguageEntry("iteminfo.screwdriver", "Like a wrench, but used only to remove specific parts that wrenches cannot.  Does not interact with blocks or other things.");
+    public static final LanguageEntry ITEMINFO_PAINTGUN = new LanguageEntry("iteminfo.paintgun", "Use on a vehicle, a part, decor, or sign to change its color.\nNote: Not all things you can click will have multiple colors.");
+    public static final LanguageEntry ITEMINFO_KEY = new LanguageEntry("iteminfo.key", "Sneak-use on cars to take ownership, right-click to lock/unlock.");
+    public static final LanguageEntry ITEMINFO_TICKET = new LanguageEntry("iteminfo.ticket", "Right-click on a vehicle to load nearby entities.\nRight-click on a seat to load just that seat.\nSneak-click on a vehicle to unload all entities.\nNote: Will not unload players.");
+    public static final LanguageEntry ITEMINFO_FUELHOSE = new LanguageEntry("iteminfo.fuelhose", "Use on a vehicle tank to select.\nUse on second tank or vehicle to link.\nHose will transfer liquids from tank 1 to selected.\nHose will stop when tank 1 is empty, selected is full or if tank 1 and selected are too far away.");
+    public static final LanguageEntry ITEMINFO_JUMPERCABLES = new LanguageEntry("iteminfo.jumpercables", "Use on an engine to select.\nUse on second engine to link.\nLinked engines will exchange power.\nEngines will un-link when power is even or if they get too far away.");
+    public static final LanguageEntry ITEMINFO_JUMPERPACK = new LanguageEntry("iteminfo.jumperpack", "Use on a vehicle to charge battery to max level.");
+    public static final LanguageEntry ITEMINFO_Y2KBUTTON = new LanguageEntry("iteminfo.y2kbutton", "Use in a world to turn off all vehicle engines, engage their parking brakes, and turn off their lights.\nOnly usable by admins.");
+
     public static final LanguageEntry ITEMINFO_ENGINE_AUTOMATIC = new LanguageEntry("iteminfo.engine.automatic", "Transmission: Automatic");
     public static final LanguageEntry ITEMINFO_ENGINE_MANUAL = new LanguageEntry("iteminfo.engine.manual", "Transmission: Manual");
     public static final LanguageEntry ITEMINFO_ENGINE_GEARRATIOS = new LanguageEntry("iteminfo.engine.gearratios", "Gear Ratios: ");
