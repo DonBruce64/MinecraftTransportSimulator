@@ -98,7 +98,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
         AItemBase heldItem = heldStack.getItem();
         ATileEntityPole_Component clickedComponent = components.get(axis);
         if (!ConfigSystem.settings.general.opSignEditingOnly.value || player.isOP()) {
-            if (player.isHoldingItemType(ItemComponentType.WRENCH)) {
+            if (player.isHoldingItemType(ItemComponentType.WRENCH) && !player.isSneaking()) {
                 //Holding a wrench, try to remove the component.
                 //Need to check if it will fit in the player's inventory.
                 if (components.containsKey(axis)) {
@@ -109,11 +109,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                     }
                     return true;
                 }
-            } else if (clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null) {
+            } else if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking() && clickedComponent.definition.rendering.textObjects != null) {
                 //Player clicked a sign with text.  Open the GUI to edit it.
                 player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
                 return true;
-            } else if (heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !components.containsKey(axis)) {
+            } else if (heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.pole.type != PoleComponentType.CORE && !components.containsKey(axis)) {
                 //Player is holding component that could be added.  Try and do so.
                 ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
                 IWrapperNBT stackData = heldStack.getData();

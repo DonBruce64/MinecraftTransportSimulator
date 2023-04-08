@@ -35,6 +35,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -155,7 +156,20 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (hand.equals(EnumHand.MAIN_HAND)) {
-            return item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+            EnumActionResult result = item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+            if (result == EnumActionResult.FAIL && player.isSneaking()) {
+                //Forward sneak click too, since blocks don't get these.
+                if (!world.isRemote) {
+                    TileEntity tile = world.getTileEntity(pos);
+                    if (tile instanceof BuilderTileEntity) {
+                        if (((BuilderTileEntity<?>) tile).tileEntity != null) {
+                            return ((BuilderTileEntity<?>) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(player)) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+                        }
+                    }
+                }
+                return EnumActionResult.FAIL;
+            }
+            return result;
         } else {
             return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
         }

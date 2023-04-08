@@ -10,7 +10,6 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 /**
  * Beacon tile entity.  Contains code for handling interfacing with
@@ -43,12 +42,6 @@ public class TileEntityBeacon extends TileEntityDecor {
         if (currentBeacon != null) {
             NavBeacon.removeFromWorld(world, currentBeacon.name);
         }
-    }
-
-    @Override
-    public boolean interact(IWrapperPlayer player) {
-        player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
-        return true;
     }
 
     @Override

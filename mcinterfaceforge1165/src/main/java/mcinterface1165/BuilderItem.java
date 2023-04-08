@@ -35,6 +35,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.UseAction;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -166,7 +167,20 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         if (context.getHand() == Hand.MAIN_HAND) {
-            return item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
+            ActionResultType result = item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
+            if (result == ActionResultType.FAIL && context.getPlayer().isCrouching()) {
+                //Forward sneak click too, since blocks don't get these.
+                if (!context.getLevel().isClientSide) {
+                    TileEntity tile = context.getLevel().getBlockEntity(context.getClickedPos());
+                    if (tile instanceof BuilderTileEntity) {
+                        if (((BuilderTileEntity) tile).tileEntity != null) {
+                            return ((BuilderTileEntity) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(context.getPlayer())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
+                        }
+                    }
+                }
+                return ActionResultType.FAIL;
+            }
+            return result;
         } else {
             return super.useOn(context);
         }

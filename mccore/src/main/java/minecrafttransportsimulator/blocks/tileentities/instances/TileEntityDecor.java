@@ -78,7 +78,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         } else if (definition.decor.crafting != null) {
             player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
         } else if (!text.isEmpty()) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+            if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking()) {
+                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+            }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
         } else {
