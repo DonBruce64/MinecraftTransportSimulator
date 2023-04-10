@@ -321,6 +321,13 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract void extinguish(BlockHitResult hitResult);
 
     /**
+     * Tries to place the item as a block at the passed-in position.
+     * Only allows placing of the block in air.
+     * Returns true if the block was placed, false if not.
+     */
+    public abstract boolean placeBlock(Point3D position, IWrapperItemStack stack);
+
+    /**
      * Tries to fertilize the block at the passed-in position with the passed-in stack.
      * Returns true if the block was fertilized.
      */

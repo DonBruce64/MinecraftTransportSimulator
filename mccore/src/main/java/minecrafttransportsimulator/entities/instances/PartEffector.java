@@ -30,6 +30,9 @@ public class PartEffector extends APart {
     private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<>();
     private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<>();
 
+    //Variables used for placers.
+    private int placerDelay;
+
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
         this.blocksBroken = data.getInteger("blocksBroken");
@@ -38,7 +41,7 @@ public class PartEffector extends APart {
     @Override
     public void update() {
         super.update();
-        //If we are active, do effector things.
+        //If we are active, do effector things.  Only do these on the server, clients get packets.
         if (isActive && !world.isClient() && !outOfHealth) {
             drops.clear();
             blockFlooredPositionsBrokeThisTick.clear();
@@ -131,6 +134,28 @@ public class PartEffector extends APart {
                         }
                         boxTimeSpentAtPosition.put(box, 0);
                         break;
+                    }
+                    case PLACER: {
+                        if (placerDelay == definition.effector.placerDelay) {
+                            if (world.isAir(box.globalCenter)) {
+                                //Search all inventories for blocks  and try to place them.
+                                for (APart part : linkedParts) {
+                                    if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE && part.isActive && part.definition.interactable.feedsVehicles) {
+                                        EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+                                        for (int i = 0; i < inventory.getSize(); ++i) {
+                                            IWrapperItemStack stack = inventory.getStack(i);
+                                            if (world.placeBlock(box.globalCenter, stack)) {
+                                                inventory.removeFromSlot(i, 1);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            placerDelay = 0;
+                        } else {
+                            ++placerDelay;
+                        }
                     }
                 }
 

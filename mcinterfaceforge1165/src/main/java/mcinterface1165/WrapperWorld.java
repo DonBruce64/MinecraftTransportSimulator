@@ -57,12 +57,15 @@ import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.state.properties.SlabType;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -710,6 +713,18 @@ public class WrapperWorld extends AWrapperWorld {
         if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
             world.removeBlock(blockpos, false);
         }
+    }
+
+    @Override
+    public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.isEmptyBlock(pos)) {
+            ItemStack mcStack = ((WrapperItemStack) stack).stack;
+            if (mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vector3d(position.x, position.y, position.z), Direction.DOWN, pos, true))) == ActionResultType.CONSUME) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

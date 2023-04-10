@@ -572,6 +572,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
+
+        @JSONDescription("The delay, in ticks, between placer placing operations.  Used to cut down on placement spam for some applications.")
+        public int placerDelay;
     }
 
     public enum EffectorComponentType {
@@ -586,7 +589,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Removes snow from the world when touched.")
         SNOWPLOW,
         @JSONDescription("Removes blocks matching the parameters from the world when touched.")
-        DRILL
+        DRILL,
+        @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
+        PLACER;
     }
 
     @Deprecated

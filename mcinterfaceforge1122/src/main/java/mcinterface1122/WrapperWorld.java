@@ -692,6 +692,23 @@ public class WrapperWorld extends AWrapperWorld {
         world.extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z), EnumFacing.valueOf(hitResult.side.name()));
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.isAirBlock(pos)) {
+            ItemStack mcStack = ((WrapperItemStack) stack).stack;
+            Block block = Block.getBlockFromItem(mcStack.getItem());
+            if (block != Blocks.AIR) {
+                IBlockState newState = block.getStateFromMeta(mcStack.getMetadata());
+                if (world.setBlockState(pos, newState, 11)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean fertilizeBlock(Point3D position, IWrapperItemStack stack) {
         //Check if the item can fertilize things and we are on the server.
