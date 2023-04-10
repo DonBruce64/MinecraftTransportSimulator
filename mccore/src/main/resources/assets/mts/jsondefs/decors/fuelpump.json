@@ -1,42 +1,117 @@
 {
     "general": {
         "name": "Fuel Pump",
-        "materials": []
+        "description": "Something about its shape is... off."
+        "materials": ["mts:mts.fuelhose:1", "minecraft:glass_pane:8", "tags:ingots/iron:5", "tags:ingots/gold:2"]
     },
     "decor": {
         "type": "fuel_pump",
-        "width": 1.0,
+        "width": 0.9,
         "height": 1.0,
-        "depth": 1.0,
+        "depth": 0.6,
         "fuelCapacity": 15000,
         "pumpRate": 10
     },
     "rendering": {
         "textObjects": [
             {
-                "pos": [0.0, 1.078125, 0.251],
+                "pos": [0.0, 1.328125, 0.265625],
                 "rot": [0.0, 0.0, 0.0],
-                "scale": 0.125,
+                "scale": 0.09375,
                 "fieldName": "FluidName",
                 "color": "0xFFC800",
                 "lightsUp": true
             },
             {
-                "pos": [0.0, 1.0, 0.251],
+                "pos": [0.0, 1.21875, 0.265625],
                 "rot": [0.0, 0.0, 0.0],
-                "scale": 0.125,
+                "scale": 0.09375,
                 "fieldName": "FluidLevel",
                 "color": "0xFFC800",
                 "lightsUp": true
             },
             {
-                "pos": [0.0, 0.921875, 0.251],
+                "pos": [0.0, 1.125, 0.265625],
                 "rot": [0.0, 0.0, 0.0],
-                "scale": 0.125,
+                "scale": 0.09375,
                 "fieldName": "FluidDispensed",
                 "color": "0xFFC800",
                 "lightsUp": true
             }
+        ],
+        "animatedObjects": [
+      {
+		"objectName" : "$ho",
+        "animations": [
+          {
+            "animationType": "visibility",
+            "variable": "fuelpump_active",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
         ]
+			},
+      {
+        "objectName": "$pistol",
+        "animations": [
+          {
+            "animationType": "visibility",
+            "variable": "fuelpump_active",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ]
+      } 
+    ],
+        "sounds": [
+        {
+        "name": "mts:pump_loop",
+        "forwardsDelay": 20,
+        "looping": true,
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "fuelpump_active",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:pump_start",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "fuelpump_active",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      
+      },
+      	{
+        "name": "mts:pump_stop",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "fuelpump_active",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      }
+      ]
     }
 }
