@@ -1,7 +1,7 @@
 {
     "general": {
         "name": "Fuel Pump",
-        "description": "Something about its shape is... off."
+        "description": "Something about its shape is... off.",
         "materials": []
     },
     "decor": {
