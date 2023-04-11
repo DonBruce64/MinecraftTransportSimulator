@@ -396,7 +396,11 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public float getBlockHardness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        return world.getBlockState(pos).getDestroySpeed(world, pos);
+        float hardness = world.getBlockState(pos).getDestroySpeed(world, pos);
+        if (hardness < 0) {
+            hardness = Float.MAX_VALUE;
+        }
+        return hardness;
     }
 
     @Override
