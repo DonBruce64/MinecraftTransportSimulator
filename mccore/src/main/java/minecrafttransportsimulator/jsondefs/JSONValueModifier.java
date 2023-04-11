@@ -53,11 +53,11 @@ public class JSONValueModifier {
         MULTIPLY,
         @JSONDescription("value = value * input*factor")
         MULTIPLY_VAR,
-        @JSONDescription("value = input * parameter1 + paramter2")
+        @JSONDescription("value = input * parameter1 + parameter2")
         LINEAR,
-        @JSONDescription("value = parameter1 * (input * paramter2 - paramter3)^2 + parameter4.")
+        @JSONDescription("value = parameter1 * (input * parameter2 - parameter3)^2 + parameter4.")
         PARABOLIC,
-        @JSONDescription("If value < parameter1, then value = parameter1, eise if value > parameter2 then value = parameter2.")
+        @JSONDescription("If value < parameter1, then value = parameter1, else if value > parameter2 then value = parameter2.")
         CLAMP,
         @JSONDescription("If all conditions are true, then trueCode, else falseCode.")
         CONDITIONS;

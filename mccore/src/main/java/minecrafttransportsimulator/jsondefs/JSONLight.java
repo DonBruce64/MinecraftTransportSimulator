@@ -37,10 +37,10 @@ public class JSONLight {
     @JSONDescription("A listing of value modifiers for the red component of the RGB color of the light (default is 1.0, or full red).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
     public List<JSONValueModifier> redColorValueModifiers;
 
-    @JSONDescription("A listing of value modifiers for the red component of the RGB color of the light (default is 1.0, or full red).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
+    @JSONDescription("A listing of value modifiers for the green component of the RGB color of the light (default is 1.0, or full green).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
     public List<JSONValueModifier> greenColorValueModifiers;
 
-    @JSONDescription("A listing of value modifiers for the red component of the RGB color of the light (default is 1.0, or full red).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
+    @JSONDescription("A listing of value modifiers for the blue component of the RGB color of the light (default is 1.0, or full blue).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
     public List<JSONValueModifier> blueColorValueModifiers;
 
     @JSONDescription("A listing of value modifiers for the hue component of HSV color of the light (default is 1.0 or 360 degs hue)")
