@@ -60,8 +60,8 @@ public class JSONPanel extends AJSONBase {
         @JSONDescription("The variable used to choose the texture state.  May be omitted if this component doesn't change textures.")
         public String statusVariable;
 
-        @JSONDescription("A group of conditions that determines if this component is visibile (default is visible).")
-        public JSONConditionGroup visibilityConditions;
+        @JSONDescription("A list of conditions that determines if this component is visibile (default is visible).")
+        public List<JSONCondition> visibilityConditions;
 
         @JSONDescription("The special component to make this component.  May be null.  If set, special logic will be applied that is per-component.")
         public SpecialComponent specialComponent;

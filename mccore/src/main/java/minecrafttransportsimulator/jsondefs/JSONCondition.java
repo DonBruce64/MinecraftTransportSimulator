@@ -6,6 +6,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONCondition {
+    public transient int delay;
 
     @JSONRequired
     @JSONDescription("The type for this condition.")
@@ -33,6 +34,12 @@ public class JSONCondition {
 
     @JSONDescription("If true, inverts the logic of this conditional.")
     public boolean invert;
+
+    @JSONDescription("The delay, in ticks, that this condition must be true for the result to change from false to true.")
+    public int onDelay;
+
+    @JSONDescription("The delay, in ticks, that this condition must be false for the result to change from true to false.")
+    public int offDelay;
 
     public static enum Type {
         @JSONDescription("input > 0")

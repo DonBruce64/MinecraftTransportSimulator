@@ -32,7 +32,7 @@ public class JSONValueModifier {
 
     @JSONRequired(dependentField = "type", dependentValues = { "CONDITIONS" })
     @JSONDescription("The conditions to use for the conditions type.")
-    public JSONConditionGroup conditions;
+    public List<JSONCondition> conditions;
 
     @JSONDescription("The code to run if the block is a conditional, and is true.")
     public List<JSONValueModifier> trueCode;

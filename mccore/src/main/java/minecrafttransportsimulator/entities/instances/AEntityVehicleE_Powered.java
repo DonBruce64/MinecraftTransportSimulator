@@ -187,6 +187,21 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     }
 
     @Override
+    public void updateLightBrightness(float partialTicks) {
+        super.updateLightBrightness(partialTicks);
+        for (LightState lightState : lightStates.values()) {
+            if (lightState.definition.isElectric) {
+                //Light start dimming at 10V, then go dark at 3V.
+                if (electricPower < 3) {
+                    lightState.brightness = 0;
+                } else if (electricPower < 10) {
+                    lightState.brightness *= (electricPower - 3) / 7D;
+                }
+            }
+        }
+    }
+
+    @Override
     public void destroy(BoundingBox box) {
         //Spawn instruments in the world.
         for (ItemInstrument instrument : instruments) {

@@ -15,8 +15,8 @@ public class JSONSound {
     public List<String> soundVariations;
 
     @JSONRequired
-    @JSONDescription("A required condition group for determining if this sound is active.")
-    public JSONConditionGroup activeConditions;
+    @JSONDescription("A required condition list for determining if this sound is active.")
+    public List<JSONCondition> activeConditions;
 
     @JSONDescription("A listing of value modifiers for the volume (default is full volume).\nVolume is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
     public List<JSONValueModifier> volumeValueModifiers;

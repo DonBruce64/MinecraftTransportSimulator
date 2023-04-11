@@ -134,14 +134,14 @@ public class JSONPartDefinition {
     @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  ")
     public List<JSONAnimationDefinition> animations;
 
-    @JSONDescription("A group of conditions for determining if this part is active (default is always active).  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.  Note that this does NOT block the placement of the part or interaction.  That logic is for the interactableConditions.")
-    public JSONConditionGroup activeConditions;
+    @JSONDescription("A list of conditions for determining if this part is active (default is always active).  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.  Note that this does NOT block the placement of the part or interaction.  That logic is for the interactableConditions.")
+    public List<JSONCondition> activeConditions;
 
-    @JSONDescription("A group of conditions for determining if this part can be interacted with (default is always interactable).  If this is set, then all conditions must be true for the part to be interactable.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
-    public JSONConditionGroup interactableConditions;
+    @JSONDescription("A list of conditions for determining if this part can be interacted with (default is always interactable).  If this is set, then all conditions must be true for the part to be interactable.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
+    public List<JSONCondition> interactableConditions;
 
-    @JSONDescription("A group of conditions for determining if this part is locked (default is unlocked).  Locked parts cannot be removed nor placed.")
-    public JSONConditionGroup lockingConditions;
+    @JSONDescription("A list of conditions for determining if this part is locked (default is unlocked).  Locked parts cannot be removed nor placed.")
+    public List<JSONCondition> lockingConditions;
 
     @Deprecated
     public List<JSONAnimationDefinition> activeAnimations;

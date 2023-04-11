@@ -29,7 +29,6 @@ import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCondition;
-import minecrafttransportsimulator.jsondefs.JSONConditionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
@@ -237,9 +236,27 @@ public final class LegacyCompatSystem {
                 for (JSONLight light : provider.rendering.lightObjects) {
                     //Convert light animations to conditions and modifiers.
                     if (light.brightnessAnimations != null) {
+                        light.activeConditions = convertConditionAnimations(light.brightnessAnimations);
+
                         for (JSONAnimationDefinition animation : light.brightnessAnimations) {
                             switch (animation.animationType) {
-                                case VISIBILITY: {
+                                case TRANSLATION: {
+                                    if (light.brightnessValueModifiers == null) {
+                                        light.brightnessValueModifiers = new ArrayList<JSONValueModifier>();
+                                    }
+                                    JSONValueModifier modifier = new JSONValueModifier();
+                                    modifier.input = animation.variable;
+                                    if (animation.axis.x != 0) {
+                                        modifier.type = JSONValueModifier.Type.MULTIPLY_VAR;
+                                        modifier.factor = (float) animation.axis.x;
+                                    } else if (animation.axis.y != 0) {
+                                        modifier.type = JSONValueModifier.Type.ADD_VAR;
+                                        modifier.factor = (float) animation.axis.y;
+                                    } else {
+                                        modifier.type = JSONValueModifier.Type.SET_VAR;
+                                        modifier.factor = (float) animation.axis.z;
+                                    }
+                                    light.brightnessValueModifiers.add(modifier);
                                     break;
                                 }
                                 case ROTATION: {
@@ -275,6 +292,8 @@ public final class LegacyCompatSystem {
                                     }
                                     break;
                                 }
+                                default:
+                                    break;
                             }
                         }
                     }
@@ -593,6 +612,7 @@ public final class LegacyCompatSystem {
                         exhaustDef.activeAnimations = new ArrayList<>();
                         exhaustDef.initialVelocity = exhaustDef.velocityVector;
                         exhaustDef.velocityVector = null;
+                        exhaustDef.checkEveryFrame = true;
                         JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                         activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                         activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
@@ -2249,9 +2269,8 @@ public final class LegacyCompatSystem {
         }
     }
 
-    private static JSONConditionGroup convertConditionAnimations(List<JSONAnimationDefinition> animations) {
-        JSONConditionGroup conditionGroup = new JSONConditionGroup();
-        conditionGroup.conditions = new ArrayList<>();
+    private static List<JSONCondition> convertConditionAnimations(List<JSONAnimationDefinition> animations) {
+        List<JSONCondition> conditions = new ArrayList<>();
         for (JSONAnimationDefinition animation : animations) {
             JSONCondition condition = new JSONCondition();
             switch (animation.animationType) {
@@ -2274,24 +2293,22 @@ public final class LegacyCompatSystem {
                         condition.parameter1 = animation.clampMin;
                         condition.parameter2 = animation.clampMax;
                     }
-                    if (animation.forwardsDelay != 0) {
-                        conditionGroup.onDelay = animation.forwardsDelay;
-                    }
+                    condition.onDelay = animation.forwardsDelay;
                     if (animation.reverseDelay != 0) {
                         if (condition.type == JSONCondition.Type.MATCH && condition.parameter1 == 0) {
-                            conditionGroup.onDelay = animation.reverseDelay;
+                            condition.onDelay = animation.reverseDelay;
                         } else {
-                            conditionGroup.offDelay = animation.reverseDelay;
+                            condition.offDelay = animation.reverseDelay;
                         }
                     }
-                    conditionGroup.conditions.add(condition);
+                    conditions.add(condition);
                     break;
                 }
                 default:
                     break;
             }
         }
-        return conditionGroup;
+        return conditions;
     }
 
     private static List<JSONValueModifier> convertSoundValueModifiers(List<JSONAnimationDefinition> animations) {
@@ -2343,13 +2360,12 @@ public final class LegacyCompatSystem {
         return modifiers;
     }
 
-    private static JSONConditionGroup convertConditionVariables(List<List<String>> variableLists) {
-        JSONConditionGroup conditionGroup = new JSONConditionGroup();
-        conditionGroup.conditions = new ArrayList<>();
+    private static List<JSONCondition> convertConditionVariables(List<List<String>> variableLists) {
+        List<JSONCondition> conditions = new ArrayList<>();
         for (List<String> variableList : variableLists) {
             if (variableList.size() == 1) {
                 //Single variable, no need to make a sub-list for ORing.
-                conditionGroup.conditions.add(convertConditionVariable(variableList.get(0)));
+                conditions.add(convertConditionVariable(variableList.get(0)));
             } else {
                 //Multiple variables in OR configuration, add to sub-listing.
                 JSONCondition condition = new JSONCondition();
@@ -2358,10 +2374,10 @@ public final class LegacyCompatSystem {
                 for (String variable : variableList) {
                     condition.conditions.add(convertConditionVariable(variable));
                 }
-                conditionGroup.conditions.add(condition);
+                conditions.add(condition);
             }
         }
-        return conditionGroup;
+        return conditions;
     }
 
     private static JSONCondition convertConditionVariable(String variable) {

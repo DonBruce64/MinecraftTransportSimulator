@@ -13,8 +13,14 @@ public class JSONParticle {
     @JSONDescription("Which type of particle to use.")
     public ParticleType type;
 
-    @JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
+    @JSONDescription("Forces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
     public boolean spawnEveryTick;
+
+    @JSONDescription("Checks every fram for this particle to spawn.  Particles normally check every tick, though some require frame checks if their timings are small (like engine_pistion).")
+    public boolean checkEveryFrame;
+
+    @JSONDescription("Foces this particle to spawn every frame it is active.  Useful for high-speed things, like missiles.")
+    public boolean spawnEveryFrame;
 
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
@@ -84,8 +90,8 @@ public class JSONParticle {
     public Point3D terminalVelocity;
 
     @JSONRequired
-    @JSONDescription("A condition group that determines if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
-    public JSONConditionGroup activeConditions;
+    @JSONDescription("A list of conditions that determines if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
+    public List<JSONCondition> activeConditions;
 
     @JSONDescription("A list of sub-particles this particle can spawn.  They will be spawned when their conditions are met.  Note that sub-particles do not reference spawningAnimations or activeAnimations.")
     public List<JSONSubParticle> subParticles;
