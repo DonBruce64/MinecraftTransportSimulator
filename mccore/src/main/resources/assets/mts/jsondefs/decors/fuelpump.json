@@ -2,7 +2,7 @@
     "general": {
         "name": "Fuel Pump",
         "description": "Something about its shape is... off."
-        "materials": ["mts:mts.fuelhose:1", "minecraft:glass_pane:8", "tags:ingots/iron:5", "tags:ingots/gold:2"]
+        "materials": []
     },
     "decor": {
         "type": "fuel_pump",
