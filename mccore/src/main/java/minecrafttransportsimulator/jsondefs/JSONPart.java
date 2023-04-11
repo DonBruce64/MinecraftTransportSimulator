@@ -99,7 +99,7 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this part will forward damage onto the vehicle it is on when hit by a bullet.  This will also cause the bullet to stop when it hits this part.  Engines ignore this behavior and always forward damage.")
         public boolean forwardsDamage;
 
-        @JSONDescription("The amount to multiply forwarded damage by, for more or less sensitive parts. Defaults to a whopping 1x multiplier if not defined.")
+        @JSONDescription("The multiplier for forwarded damage.")
         public double forwardsDamageMultiplier;
 
         @JSONDescription("If true, this part can be placed on the ground.  It will be placed axis-aligned when placed.")
