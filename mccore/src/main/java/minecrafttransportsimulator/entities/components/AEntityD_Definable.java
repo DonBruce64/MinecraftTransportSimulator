@@ -491,6 +491,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     lightState.brightness = 1.0F;
                 }
 
+                //RGB valueModifiers
                 if (lightState.definition.color != null) {
                     lightState.color.setTo(lightState.definition.color);
                 }
@@ -502,6 +503,35 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
                 if (lightState.definition.blueColorValueModifiers != null) {
                     lightState.color.blue = (float) calculateModifiers(lightState.definition.blueColorValueModifiers, 0, partialTicks);
+                }
+
+                //HSV valueModifiers
+                if (lightState.definition.hueColorValueModifiers != null) {
+                    int[] currentColorHSV = lightState.color.hsv;
+                    float hue = (float) calculateModifiers(lightState.definition.hueColorValueModifiers, currentColorHSV[0], partialTicks);
+                    float saturation = currentColorHSV[1];
+                    float value = currentColorHSV[2];
+                    
+                    ColorRGB newColorRGB = new ColorRGB(hue, saturation, value, true);
+                    lightState.color.setTo(newColorRGB);
+                }
+                if (lightState.definition.saturationColorValueModifiers != null) {
+                    int[] currentColorHSV = lightState.color.hsv;
+                    float hue = currentColorHSV[0];
+                    float saturation = (float) calculateModifiers(lightState.definition.saturationColorValueModifiers, currentColorHSV[1], partialTicks);
+                    float value = currentColorHSV[2];
+                    
+                    ColorRGB newColorRGB = new ColorRGB(hue, saturation, value, true);
+                    lightState.color.setTo(newColorRGB);
+                }
+                if (lightState.definition.valueColorValueModifiers != null) {
+                    int[] currentColorHSV = lightState.color.hsv;
+                    float hue = currentColorHSV[0];
+                    float saturation = currentColorHSV[1];
+                    float value = (float) calculateModifiers(lightState.definition.valueColorValueModifiers, currentColorHSV[2], partialTicks);
+                    
+                    ColorRGB newColorRGB = new ColorRGB(hue, saturation, value, true);
+                    lightState.color.setTo(newColorRGB);
                 }
             } else {
                 lightState.brightness = 0.0F;

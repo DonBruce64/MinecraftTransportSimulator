@@ -43,6 +43,15 @@ public class JSONLight {
     @JSONDescription("A listing of value modifiers for the red component of the RGB color of the light (default is 1.0, or full red).\nColor is internally clamped from 0.0 to 1.0; you do not need to worry about clamping here.")
     public List<JSONValueModifier> blueColorValueModifiers;
 
+    @JSONDescription("A listing of value modifiers for the hue component of HSV color of the light (default is 1.0 or 360 degs hue)")
+    public List<JSONValueModifier> hueColorValueModifiers;
+    
+    @JSONDescription("A listing of value modifiers for the saturation component of HSV color of the light (default is 1.0 or 100% saturation)")
+    public List<JSONValueModifier> saturationColorValueModifiers;
+    
+    @JSONDescription("A listing of value modifiers for the value component of HSV color of the light (default is 1.0 or 100% color brightness)")
+    public List<JSONValueModifier> valueColorValueModifiers;
+
     @JSONDescription("A listing of blendable components for this light.  Used to allow for multiple flares or beams for a single light object.")
     public List<JSONLightBlendableComponent> blendableComponents;
 
