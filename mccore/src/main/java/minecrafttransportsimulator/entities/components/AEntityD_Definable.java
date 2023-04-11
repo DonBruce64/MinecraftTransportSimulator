@@ -496,13 +496,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     lightState.color.setTo(lightState.definition.color);
                 }
                 if (lightState.definition.redColorValueModifiers != null) {
-                    lightState.color.red = (float) calculateModifiers(lightState.definition.redColorValueModifiers, 0, partialTicks);
+                    lightState.color.red = (float) calculateModifiers(lightState.definition.redColorValueModifiers, lightState.color.red, partialTicks);
                 }
                 if (lightState.definition.greenColorValueModifiers != null) {
-                    lightState.color.green = (float) calculateModifiers(lightState.definition.greenColorValueModifiers, 0, partialTicks);
+                    lightState.color.green = (float) calculateModifiers(lightState.definition.greenColorValueModifiers, lightState.color.green, partialTicks);
                 }
                 if (lightState.definition.blueColorValueModifiers != null) {
-                    lightState.color.blue = (float) calculateModifiers(lightState.definition.blueColorValueModifiers, 0, partialTicks);
+                    lightState.color.blue = (float) calculateModifiers(lightState.definition.blueColorValueModifiers, lightState.color.blue, partialTicks);
                 }
 
                 //HSV valueModifiers
