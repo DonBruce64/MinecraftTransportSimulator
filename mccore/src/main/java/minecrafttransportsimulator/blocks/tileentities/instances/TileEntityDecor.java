@@ -82,10 +82,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
             }
             else {
-           			setVariable(CLICKED_VARIABLE, 1);
+            		setVariable(CLICKED_VARIABLE, 1);
             		toggleVariable(ACTIVATED_VARIABLE);
             		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-           			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
+            		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
             	 }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
