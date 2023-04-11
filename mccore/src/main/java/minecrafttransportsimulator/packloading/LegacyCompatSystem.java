@@ -558,7 +558,7 @@ public final class LegacyCompatSystem {
         
         //While we're here in generic, check if we have forwardsDamageMultiplier defined and if not, lemon-grenade it until it's defined.
         if (definition.generic.forwardsDamageMultiplier == 0) {
-                definition.generic.forwardsDamageMultiplier = definition.generic.type.contains("engine") ? 4 : 1;//If this part is an engine, deal more damage to the vehicle by default (unless that FDM was defined, of course)
+                definition.generic.forwardsDamageMultiplier = 1;
             }
         
         //Move subParts to parts if we have them there.
