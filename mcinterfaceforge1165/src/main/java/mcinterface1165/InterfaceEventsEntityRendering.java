@@ -173,7 +173,7 @@ public class InterfaceEventsEntityRendering {
             riderBodyOrientation.convertToAngles();
             if (ridingEntity instanceof PartSeat) {
                 PartSeat seat = (PartSeat) ridingEntity;
-                entityScale.set(seat.scale);
+                entityScale.set(seat.riderScale);
                 if (seat.definition.seat.playerScale != null) {
                     entityScale.multiply(seat.definition.seat.playerScale);
                 }

@@ -36,6 +36,7 @@ import minecrafttransportsimulator.systems.ControlSystem;
 public final class PartSeat extends APart {
     public boolean canControlGuns;
     private boolean riderChangingSeats;
+    public final Point3D riderScale = new Point3D();
     public ItemPartGun activeGunItem;
     public int gunSequenceCooldown;
     public int gunGroupIndex;
@@ -317,6 +318,13 @@ public final class PartSeat extends APart {
     @Override
     public boolean updateRider() {
         if (super.updateRider()) {
+            //Update scale, need to not include main vehicle scaling since that doesn't affect player scale.
+            if (vehicleOn != null) {
+                riderScale.set(scale.x / vehicleOn.scale.x, scale.y / vehicleOn.scale.y, scale.z / vehicleOn.scale.z);
+            } else {
+                riderScale.set(scale);
+            }
+
             //Add all seat-specific effects to the rider
             if (placementDefinition.seatEffects != null) {
                 for (JSONPotionEffect effect : placementDefinition.seatEffects) {
