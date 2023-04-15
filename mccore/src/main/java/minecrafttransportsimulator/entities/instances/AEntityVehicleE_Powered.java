@@ -2,7 +2,6 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
@@ -274,8 +273,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             return true;
         } else {
             if (player.isHoldingItemType(ItemComponentType.KEY)) {
-                String uniqueUUIDString = player.getHeldStack().getData().getString("vehicle");
-                if (!uniqueUUIDString.isEmpty() && uniqueUUID.equals(UUID.fromString(uniqueUUIDString))) {
+                if (uniqueUUID.equals(player.getHeldStack().getData().getUUID("vehicle"))) {
                     return true;
                 }
             }
