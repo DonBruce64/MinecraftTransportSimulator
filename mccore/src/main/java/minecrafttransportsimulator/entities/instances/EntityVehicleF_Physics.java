@@ -357,7 +357,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
                     if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
                         hasRotors = true;
-                        if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
+                        if (autopilotSetting == 0 && getVariable(AUTOLEVEL_VARIABLE) != 0) {
                             rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
                         } else {
                             if (autopilotSetting == 0) {
