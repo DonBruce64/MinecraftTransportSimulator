@@ -157,6 +157,10 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("How big the ballast volume is for this vehicle.  An average value is 1/1000 of the empty weight.  Set higher or lower to your liking.  This will let your vehicle vertically ascend without power.  Used for blimps and janky elevators.")
         public float ballastVolume;
 
+        @ModifiableValue
+        @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
+        public float waterBallastFactor;
+
         @JSONRequired
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
         public String litVariable;

@@ -116,6 +116,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @ModifiedValue
     public float currentBallastVolume;
     @ModifiedValue
+    public float currentWaterBallastFactor;
+    @ModifiedValue
     public float currentAxleRatio;
 
     //Coefficients.
@@ -261,6 +263,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentRudderArea = definition.motorized.rudderArea;
         currentDragCoefficient = definition.motorized.dragCoefficient;
         currentBallastVolume = definition.motorized.ballastVolume;
+        currentWaterBallastFactor = definition.motorized.waterBallastFactor;
         currentDownForce = definition.motorized.downForce;
         currentBrakingFactor = definition.motorized.brakingFactor;
         currentOverSteer = definition.motorized.overSteer;
@@ -297,6 +300,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         break;
                     case "ballastVolume":
                         currentBallastVolume = adjustVariable(modifier, currentBallastVolume);
+                        break;
+                    case "waterBallastFactor":
+                        currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
                     case "downForce":
                         currentDownForce = adjustVariable(modifier, currentDownForce);
@@ -522,6 +528,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Finally, get gravity.
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
+            if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
+                gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+            }
             if (!definition.motorized.isAircraft) {
                 gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
