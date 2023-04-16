@@ -323,19 +323,14 @@ public class InterfaceRender implements IInterfaceRender {
         GL11.glScalef(1.0F, -1.0F, 1.0F);
 
         //Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
-        //We don't want to enable blending though, as that's on-demand.
-        //Just in case it is enabled, however, disable it.
-        //This ensures the blending state is as it will be for the main rendering pass of -1.
-        InterfaceRender.setBlend(false);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
 
         //Enable lighting.
         RenderHelper.enableStandardItemLighting();
         Minecraft.getMinecraft().entityRenderer.enableLightmap();
         setLightingState(true);
 
-        //Render main pass, then blended pass.
+        //Render main pass, then blended pass, for each GUI.
         int displayGUIIndex = 0;
         for (AGUIBase gui : AGUIBase.activeGUIs) {
             if (updateGUIs || gui.components.isEmpty()) {
@@ -349,48 +344,48 @@ public class InterfaceRender implements IInterfaceRender {
                 //Translate far enough to render behind the chat window.
                 GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
             }
+
+            //Disable blending for main render.
+            InterfaceRender.setBlend(false);
             gui.render(mouseX, mouseY, false, partialTicks);
 
-            //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
-            GL11.glScalef(1.0F, -1.0F, 1.0F);
-
-            //Need to disable internal lighting due to it messing up stack shading.
-            setInternalLightingState(false);
-            for (GUIComponentItem component : stacksToRender) {
-                //Double-check the stack is still present, it might have been un-set since this call.
-                if ((WrapperItemStack) component.stackToRender != null) {
-                    //Apply existing transform.
-                    //Need to translate the z-offset to our value, which includes a -100 for the default added value.
-                    float zOffset = Minecraft.getMinecraft().getRenderItem().zLevel;
-                    Minecraft.getMinecraft().getRenderItem().zLevel = (float) component.translation.z - 100;
-                    if (component.scale != 1.0) {
-                        GL11.glPushMatrix();
-                        GL11.glScalef(component.scale, component.scale, 1.0F);
-                        Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) (component.translation.x / component.scale), (int) -(component.translation.y / component.scale) + 1);
-                        GL11.glPopMatrix();
-                    } else {
-                        Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) component.translation.x, (int) -component.translation.y);
-                    }
-                    Minecraft.getMinecraft().getRenderItem().zLevel = zOffset;
-                }
-            }
-            stacksToRender.clear();
-            setInternalLightingState(true);
-
-            GL11.glPopMatrix();
-        }
-        displayGUIIndex = 0;
-        setBlend(true);
-        for (AGUIBase gui : AGUIBase.activeGUIs) {
-            GL11.glPushMatrix();
-            if (gui.capturesPlayer()) {
-                //Translate in front of the main GUI components.
-                GL11.glTranslated(0, 0, 250);
-            } else {
-                //Translate far enough to render behind the chat window.
-                GL11.glTranslated(0, 0, -500 + 250 * displayGUIIndex++);
-            }
+            //Now render blended pass.  Needs to happen after normal GUI rendering, but before others, otherwise buffers get fouled.
+            //Need to re-enable blending now.
+            setBlend(true);
             gui.render(mouseX, mouseY, true, partialTicks);
+
+            if (!stacksToRender.isEmpty()) {
+                //Blending needs to be off for this.
+                setBlend(false);
+
+                //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
+                GL11.glScalef(1.0F, -1.0F, 1.0F);
+
+                //Need to disable internal lighting due to it messing up stack shading.
+                setInternalLightingState(false);
+                for (GUIComponentItem component : stacksToRender) {
+                    //Double-check the stack is still present, it might have been un-set since this call.
+                    if ((WrapperItemStack) component.stackToRender != null) {
+                        //Apply existing transform.
+                        //Need to translate the z-offset to our value, which includes a -100 for the default added value.
+                        float zOffset = Minecraft.getMinecraft().getRenderItem().zLevel;
+                        Minecraft.getMinecraft().getRenderItem().zLevel = (float) component.translation.z - 100;
+                        if (component.scale != 1.0) {
+                            GL11.glPushMatrix();
+                            GL11.glScalef(component.scale, component.scale, 1.0F);
+                            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) (component.translation.x / component.scale), (int) -(component.translation.y / component.scale) + 1);
+                            GL11.glPopMatrix();
+                        } else {
+                            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(((WrapperItemStack) (component.stackToRender)).stack, (int) component.translation.x, (int) -component.translation.y);
+                        }
+                        Minecraft.getMinecraft().getRenderItem().zLevel = zOffset;
+                    }
+                }
+                stacksToRender.clear();
+                //Put states back to where they were before stack rendering.
+                setInternalLightingState(true);
+                setBlend(true);
+            }
             GL11.glPopMatrix();
         }
 
@@ -398,7 +393,6 @@ public class InterfaceRender implements IInterfaceRender {
         setLightingState(false);
         Minecraft.getMinecraft().entityRenderer.disableLightmap();
         RenderHelper.disableStandardItemLighting();
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glScalef(1.0F, -1.0F, 1.0F);
     }
 
