@@ -224,11 +224,6 @@ public class InterfaceLoader {
             //Also put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
-            //Also disable playerTweaks if some known-problematic mods are present.
-            if (InterfaceManager.coreInterface.isModPresent("tails") || InterfaceManager.coreInterface.isModPresent("obfuscate") || InterfaceManager.coreInterface.isModPresent("mobends")) {
-                ConfigSystem.client.renderingSettings.playerTweaks.value = false;
-            }
-
             //Save modified config.
             ConfigSystem.saveToDisk();
         }

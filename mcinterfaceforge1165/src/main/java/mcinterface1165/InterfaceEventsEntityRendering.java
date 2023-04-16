@@ -1,10 +1,5 @@
 package mcinterface1165;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.lwjgl.glfw.GLFW;
 
 import mcinterface1165.mixin.client.RenderInfoInvokerMixin;
@@ -21,10 +16,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.LivingRenderer;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
-import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -47,14 +38,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  */
 @EventBusSubscriber(Dist.CLIENT)
 public class InterfaceEventsEntityRendering {
-    public static boolean renderCurrentRiderSitting;
-    public static boolean renderCurrentRiderStanding;
-    private static boolean overwrotePlayerModel = false;
-    private static boolean needPlayerTweaks = false;
     private static boolean needToPopMatrix = false;
     private static ItemStack heldStackHolder = null;
-    private static final Point3D leftArmAngles = new Point3D();
-    private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
     private static final Point3D riderHeadAngles = new Point3D();
@@ -156,11 +141,6 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
-        needPlayerTweaks = false;
-        renderCurrentRiderSitting = false;
-        renderCurrentRiderStanding = false;
-        leftArmAngles.set(0, 0, 0);
-        rightArmAngles.set(0, 0, 0);
         LivingEntity entity = event.getEntity();
         WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
         AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
@@ -180,19 +160,7 @@ public class InterfaceEventsEntityRendering {
                 if (seat.placementDefinition.playerScale != null) {
                     entityScale.multiply(seat.placementDefinition.playerScale);
                 }
-                if (seat.definition.seat.standing) {
-                    renderCurrentRiderStanding = true;
-                } else {
-                    renderCurrentRiderSitting = true;
-                }
-
-                if (seat.vehicleOn != null && seat.placementDefinition.isController) {
-                    double turningAngle = seat.vehicleOn.rudderInput / 2D;
-                    rightArmAngles.set(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
-                    leftArmAngles.set(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
-                }
             } else {
-                renderCurrentRiderSitting = true;
                 entityScale.set(1, 1, 1);
             }
 
@@ -226,103 +194,19 @@ public class InterfaceEventsEntityRendering {
             }
 
             needToPopMatrix = true;
-            if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-                needPlayerTweaks = true;
-            }
         }
 
         //Check for player model tweaks and changes.
         if (entity instanceof PlayerEntity) {
             //Check if we are holding a gun.  This is the only other time
             //we apply player tweaks besides riding in a vehicle.
-            if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-                EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUUID());
-                if (gunEntity != null && gunEntity.activeGun != null) {
-                    PlayerEntity player = (PlayerEntity) entity;
+            EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUUID());
+            if (gunEntity != null && gunEntity.activeGun != null) {
+                PlayerEntity player = (PlayerEntity) entity;
 
-                    //Get arm rotations.
-                    Point3D heldVector;
-                    if (gunEntity.activeGun.isHandHeldGunAimed) {
-                        heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
-                    } else {
-                        heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
-                    }
-                    double heldVectorLength = heldVector.length();
-                    double armPitchOffset = Math.toRadians(-90 + entity.xRot) - Math.asin(heldVector.y / heldVectorLength);
-                    double armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
-
-                    //Set rotation points on the model.
-                    if (WrapperPlayer.getWrapperFor(player).isRightHanded()) {
-                        rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                    } else {
-                        leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                    }
-                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.definition.gun.isTwoHanded) {
-                        heldVector = heldVector.copy();
-                        heldVector.x = 0.3125 * 2 - heldVector.x;
-                        heldVectorLength = heldVector.length();
-                        armPitchOffset = Math.toRadians(-90 + entity.xRot) - Math.asin(heldVector.y / heldVectorLength);
-                        armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
-                        if (WrapperPlayer.getWrapperFor(player).isRightHanded()) {
-                            leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                        } else {
-                            rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.yHeadRot - entity.yBodyRot), 0);
-                        }
-                    }
-
-                    //Remove the held item from the enitty's hand
-                    heldStackHolder = player.getMainHandItem();
-                    player.inventory.setItem(player.inventory.selected, ItemStack.EMPTY);
-
-                    //Flag us for player tweaks in the render.
-                    needPlayerTweaks = true;
-                }
-            }
-
-            //Check if we modified the player model to allow us to change angles.
-            boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
-            boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
-            if (setModelToCustom || setModelToDefault) {
-                for (Field renderManagerField : EntityRendererManager.class.getDeclaredFields()) {
-                    if (renderManagerField.getName().equals("playerRenderers") || renderManagerField.getName().equals("field_178636_l")) {
-                        try {
-                            if (!renderManagerField.isAccessible()) {
-                                renderManagerField.setAccessible(true);
-                            }
-
-                            @SuppressWarnings("unchecked")
-                            Map<String, PlayerRenderer> skinMap = (Map<String, PlayerRenderer>) renderManagerField.get(Minecraft.getInstance().getEntityRenderDispatcher());
-                            List<String> skinTypes = new ArrayList<>(skinMap.keySet());
-
-                            for (String skinType : skinTypes) {
-                                PlayerRenderer render = skinMap.get(skinType);
-                                for (Field field : LivingRenderer.class.getDeclaredFields()) {
-                                    if (field.getName().equals("model") || field.getName().equals("field_77045_g")) {
-                                        try {
-                                            if (!field.isAccessible()) {
-                                                field.setAccessible(true);
-                                            }
-
-                                            if (setModelToCustom) {
-                                                overwrotePlayerModel = true;
-                                                field.set(render, new ModelPlayerCustom<>((PlayerModel<?>) field.get(render), skinType.equals("slim")));
-                                            } else {
-                                                overwrotePlayerModel = false;
-                                                field.set(render, ((ModelPlayerCustom<?>) field.get(render)).base);
-                                            }
-                                        } catch (Exception e) {
-                                            ConfigSystem.client.renderingSettings.playerTweaks.value = false;
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            ConfigSystem.client.renderingSettings.playerTweaks.value = false;
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                //Remove the held item from the enitty's hand
+                heldStackHolder = player.getMainHandItem();
+                player.inventory.setItem(player.inventory.selected, ItemStack.EMPTY);
             }
         }
     }
@@ -343,49 +227,6 @@ public class InterfaceEventsEntityRendering {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             player.inventory.setItem(player.inventory.selected, heldStackHolder);
             heldStackHolder = null;
-        }
-    }
-
-    private static class ModelPlayerCustom<T extends LivingEntity> extends PlayerModel<T> {
-        private final PlayerModel<T> base;
-
-        private ModelPlayerCustom(PlayerModel<T> base, boolean smallArms) {
-            super(0.0F, smallArms);
-            this.base = base;
-        }
-
-        @Override
-        public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-            super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-            if (needPlayerTweaks) {
-                if (renderCurrentRiderSitting) {
-                    this.leftLeg.xRot = (float) Math.toRadians(-90);
-                    this.leftLeg.yRot = 0;
-                    this.leftLeg.zRot = 0;
-                    this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.xRot = (float) Math.toRadians(-90);
-                    this.rightLeg.yRot = 0;
-                    this.rightLeg.zRot = 0;
-                    this.rightPants.copyFrom(this.rightLeg);
-                } else if (renderCurrentRiderStanding) {
-                    this.leftLeg.xRot = 0;
-                    this.leftLeg.yRot = 0;
-                    this.leftLeg.zRot = 0;
-                    this.leftPants.copyFrom(this.leftLeg);
-                    this.rightLeg.xRot = 0;
-                    this.rightLeg.yRot = 0;
-                    this.rightLeg.zRot = 0;
-                    this.rightPants.copyFrom(this.rightLeg);
-                }
-                this.leftArm.xRot = (float) leftArmAngles.x;
-                this.leftArm.yRot = (float) leftArmAngles.y;
-                this.leftArm.zRot = (float) leftArmAngles.z;
-                this.leftSleeve.copyFrom(this.leftArm);
-                this.rightArm.xRot = (float) rightArmAngles.x;
-                this.rightArm.yRot = (float) rightArmAngles.y;
-                this.rightArm.zRot = (float) rightArmAngles.z;
-                this.rightSleeve.copyFrom(this.rightArm);
-            }
         }
     }
 

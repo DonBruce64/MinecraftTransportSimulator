@@ -10,6 +10,8 @@
         "client.RenderInfoInvokerMixin",
 				"client.ClientPlayNetHandlerMixin",
 				"client.SimpleReloadableResourceManagerMixin",
+				"client.BipedModelMixin",
+				"client.VillagerModelMixin"
     ],
     "injectors": {
         "defaultRequire": 1

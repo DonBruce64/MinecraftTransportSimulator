@@ -3,6 +3,7 @@ package mcinterface1165;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -125,7 +126,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
 
     @Override
     public boolean shouldRiderSit() {
-        return entity != null ? InterfaceEventsEntityRendering.renderCurrentRiderSitting : super.shouldRiderSit();
+        return entity instanceof PartSeat ? !((PartSeat) entity).definition.seat.standing : super.shouldRiderSit();
     }
 
     @Override

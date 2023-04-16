@@ -19,6 +19,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.LeadItem;
@@ -163,7 +164,11 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public double getSeatOffset() {
-        return 0D;
+        if (entity instanceof VillagerEntity) {
+            return -12D / 16D;
+        } else {
+            return 0D;
+        }
     }
 
     @Override
