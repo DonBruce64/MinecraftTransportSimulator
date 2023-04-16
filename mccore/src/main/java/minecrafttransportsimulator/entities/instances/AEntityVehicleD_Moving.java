@@ -427,7 +427,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private double getTurningForce() {
         double steeringAngle = getSteeringAngle() * 45;
-        skidSteerActive = false;
+
+        //Check for permanent skid-steer if we have it.
+        skidSteerActive = definition.motorized.hasPermanentSkidSteer;
+        if (skidSteerActive) {
+            return steeringAngle / 20D;
+        }
         if (steeringAngle != 0) {
             double furthestFrontPoint = 0;
             double furthestRearPoint = 0;
