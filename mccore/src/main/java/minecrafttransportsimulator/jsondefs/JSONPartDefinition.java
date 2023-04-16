@@ -102,6 +102,9 @@ public class JSONPartDefinition {
     @JSONDescription("Normally vehicles come bare-bones, but in the case you want to have the part in this position come with the vehicle, you can set this.  If a part name is put here, MTS will automatically add said part when the vehicle is spawned for the first time.  Note that MTS won't check if the part actually exists, so either keep things in-house, or require packs you use as a dependency.  Note that putting this on an additionalPart without the parent part having a defaultPart WILL crash the game!")
     public String defaultPart;
 
+    @JSONDescription("This variable can be used to request parts transfer into and out of this slot.  Setting to true without a part will make it try to grab a part from the world, setting it true with a part will make it drop the part into the world, preferably into a part slot on something.  Only works with part that can be placed on the ground, and will be set to false after the operation completes.")
+    public String transferVariable;
+
     @JSONDescription("Like defaultPart, but this is a map of variable values associated with individual parts.  If the variable is true, then that default part will be used.  If multiple possible parts are present, the first valid one is used.")
     public LinkedHashMap<String, String> conditionalDefaultParts;
 

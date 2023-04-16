@@ -79,6 +79,23 @@ public class EntityManager {
     }
 
     /**
+     * Returns a new, mutable list, with all entities that are an instanceof the passed-in class.
+     * Different than {@link #getEntitiesOfType(Class)}, which must MATCH the passed-in class.
+     * It is preferred to use the former since it doesn't require looping lookups and is therefore
+     * more efficient.
+     */
+    @SuppressWarnings("unchecked")
+    public <EntityType extends AEntityA_Base> List<EntityType> getEntitiesExtendingType(Class<EntityType> entityClass) {
+        List<EntityType> list = new ArrayList<>();
+        allEntities.forEach(entity -> {
+            if (entityClass.isAssignableFrom(entity.getClass())) {
+                list.add((EntityType) entity);
+            }
+        });
+        return list;
+    }
+
+    /**
      * Ticks all entities that exist and need ticking.  These are any entities that
      * are not parts, since parts are ticked by their parents.
      */

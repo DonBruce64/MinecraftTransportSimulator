@@ -16,6 +16,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -29,6 +30,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -225,6 +227,73 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     box.updateToEntity(this, null);
                 }
             });
+        }
+
+        //Check for part slot variable changes and do logic.
+        if (!world.isClient() && definition.parts != null) {
+            for (int i = 0; i < definition.parts.size(); ++i) {
+                JSONPartDefinition partDef = definition.parts.get(i);
+                if (partDef.transferVariable != null) {
+                    if (isVariableActive(partDef.transferVariable)) {
+                        APart currentPart = partsInSlots.get(i);
+                        AEntityF_Multipart<?> masterEntity = this instanceof APart ? ((APart) this).masterEntity : this;
+
+                        if (currentPart == null) {
+                            //False->True change, try to grab a part.
+                            for (Entry<BoundingBox, JSONPartDefinition> entry : partSlotBoxes.entrySet()) {
+                                if (entry.getValue() == partDef) {
+                                    for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
+                                        if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(entry.getKey().globalCenter, 2)) {
+                                            if (addPartFromItem(partToTransfer.getItem(), null, partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper()), i) != null) {
+                                                partToTransfer.entityOn.removePart(partToTransfer, null);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        } else {
+                            //True-False change, place part in nearby slot or drop.
+                            //Double-check the part can be dropped, in case someone manually put a part in the slot.
+                            if (currentPart.definition.generic.canBePlacedOnGround) {
+                                for (EntityVehicleF_Physics vehicle : world.getEntitiesExtendingType(EntityVehicleF_Physics.class)) {
+                                    //Check if part is anywhere near vehicle before checking slots.
+                                    if ((this instanceof APart ? ((APart) this).vehicleOn != vehicle : this != vehicle) && vehicle.encompassingBox.isPointInside(currentPart.position)) {
+                                        for (Entry<BoundingBox, JSONPartDefinition> entry : vehicle.allPartSlotBoxes.entrySet()) {
+                                            BoundingBox box = entry.getKey();
+                                            if (box.globalCenter.isDistanceToCloserThan(currentPart.position, 2)) {
+                                                APart part2 = vehicle.getPartWithBox(box);
+                                                AEntityF_Multipart<?> entityToPlaceOn = part2 != null ? part2 : vehicle;
+                                                int slotIndex = entityToPlaceOn.definition.parts.indexOf(entityToPlaceOn.partSlotBoxes.get(box));
+                                                if (entityToPlaceOn.addPartFromItem(currentPart.getItem(), null, currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper()), slotIndex) != null) {
+                                                    removePart(currentPart, null);
+                                                    currentPart = null;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (currentPart != null) {
+                                    //No vehicle found, just place part on the ground.
+                                    AItemPart partItem = currentPart.getItem();
+                                    Point3D partPosition = currentPart.position.copy();
+                                    partPosition.x = Math.floor(partPosition.x) + 0.5;
+                                    partPosition.y = Math.floor(partPosition.y);
+                                    partPosition.z = Math.floor(partPosition.z) + 0.5;
+                                    double yRotation = Math.round((currentPart.orientation.convertToAngles().y + 180) / 90) * 90 % 360;
+                                    partItem.placeOnGround(world, null, partPosition, yRotation, currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                                    removePart(currentPart, null);
+                                }
+                            }
+                        }
+                        toggleVariable(partDef.transferVariable);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, partDef.transferVariable));
+                    }
+                }
+            }
         }
 
         world.endProfiling();
@@ -438,10 +507,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     /**
      * Adds the passed-part to this entity.  This method will check at the passed-in point
      * if the item-based part can go to this entity.  If so, it is constructed and added,
-     * and a packet is sent to all clients to inform them of this change.  Returns true
-     * if all operations completed, false if the part was not able to be added.
-     * If the part is being added during construction, set doingConstruction to true to
-     * prevent calling the lists, maps, and other systems that aren't set up yet.
+     * and a packet is sent to all clients to inform them of this change.
      * This method returns the part if it was added, null if it wasn't.
      */
     public APart addPartFromItem(AItemPart partItem, IWrapperPlayer playerAdding, IWrapperNBT partData, int slotIndex) {
@@ -616,6 +682,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     protected void updateEncompassingBox() {
         super.updateEncompassingBox();
+        //Only add active slots on clients, but all slots on servers.
+        //Different clients may have different boxes active, but the server will always have them all.
+        if (world.isClient()) {
+            interactionBoxes.addAll(activePartSlotBoxes.keySet());
+        } else {
+            interactionBoxes.addAll(partSlotBoxes.keySet());
+        }
+
         //Set active collision box, door box, and interaction box lists to current boxes.
         allEntityCollisionBoxes.clear();
         allEntityCollisionBoxes.addAll(entityCollisionBoxes);
@@ -627,14 +701,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         allBulletCollisionBoxes.addAll(bulletCollisionBoxes);
         allPartSlotBoxes.clear();
         allPartSlotBoxes.putAll(partSlotBoxes);
-
-        //Only add active slots on clients, but all slots on servers.
-        //Different clients may have different boxes active, but the server will always have them all.
-        if (world.isClient()) {
-            allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
-        } else {
-            allInteractionBoxes.addAll(partSlotBoxes.keySet());
-        }
 
         //Add all part boxes.
         for (APart part : parts) {

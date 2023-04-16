@@ -32,23 +32,11 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
     public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
         if (definition.generic.canBePlacedOnGround) {
             if (!world.isClient()) {
-
-                //Construct the class, add ourselves as a part, and spawn.
-                IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                EntityPlacedPart entity = new EntityPlacedPart(world, player, placerData);
-                entity.addPartsPostAddition(player, placerData);
+                position.add(0.5, 0, 0.5).add(axis.xOffset, axis.yOffset, axis.zOffset);
+                double yRotation = Math.round((player.getYaw() + 180) / 90) * 90 % 360;
                 IWrapperItemStack heldStack = player.getHeldStack();
                 IWrapperNBT data = heldStack.getData();
-                populateDefaultData(data);
-                entity.addPartFromItem(this, player, data, 0);
-
-                //Set position to the spot that was clicked by the player.
-                //Set orientation to that to face the player.
-                entity.position.set(position).add(0.5, 0, 0.5).add(axis.xOffset, axis.yOffset, axis.zOffset);
-                entity.prevPosition.set(position);
-                entity.orientation.setToAngles(new Point3D(0, Math.round((player.getYaw() + 180) / 90) * 90 % 360, 0));
-                entity.prevOrientation.set(entity.orientation);
-                entity.world.spawnEntity(entity);
+                placeOnGround(world, player, position, yRotation, data);
 
                 //Decrement stack if we are not in creative.
                 if (!player.isCreative()) {
@@ -64,6 +52,24 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
     @Override
     public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
         entityMap.put(EntityPlacedPart.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlacedPart(world, placingPlayer, data));
+    }
+
+    /**
+     * Helper method to place the part in the world, used by both player-placing and entity-placing logic.
+     */
+    public void placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
+        //Construct the class, add ourselves as a part, and spawn.
+        IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
+        EntityPlacedPart entity = new EntityPlacedPart(world, player, placerData);
+        entity.addPartsPostAddition(player, placerData);
+        populateDefaultData(data);
+        entity.addPartFromItem(this, player, data, 0);
+
+        entity.position.set(position);
+        entity.prevPosition.set(position);
+        entity.orientation.setToAngles(new Point3D(0, yRotation, 0));
+        entity.prevOrientation.set(entity.orientation);
+        entity.world.spawnEntity(entity);
     }
 
     /**
