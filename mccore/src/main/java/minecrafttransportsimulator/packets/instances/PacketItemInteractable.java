@@ -25,6 +25,7 @@ public class PacketItemInteractable extends APacketPlayer {
     private final UUID uniqueUUID;
     private final IWrapperNBT data;
     private final int units;
+    private final int stackSize;
     private final String texture;
 
     public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture) {
@@ -32,6 +33,7 @@ public class PacketItemInteractable extends APacketPlayer {
         this.uniqueUUID = inventory.uniqueUUID;
         this.data = inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper());
         this.units = inventory.getSize();
+        this.stackSize = inventory.getStackSize();
         this.texture = texture;
     }
 
@@ -40,6 +42,7 @@ public class PacketItemInteractable extends APacketPlayer {
         this.uniqueUUID = uniqueUUID;
         this.data = null;
         this.units = 0;
+        this.stackSize = 0;
         this.texture = null;
     }
 
@@ -49,6 +52,7 @@ public class PacketItemInteractable extends APacketPlayer {
         if (buf.readBoolean()) {
             this.data = readDataFromBuffer(buf);
             this.units = buf.readInt();
+            this.stackSize = buf.readInt();
             if (buf.readBoolean()) {
                 this.texture = readStringFromBuffer(buf);
             } else {
@@ -57,6 +61,7 @@ public class PacketItemInteractable extends APacketPlayer {
         } else {
             this.data = null;
             this.units = 0;
+            this.stackSize = 0;
             this.texture = null;
         }
     }
@@ -71,6 +76,7 @@ public class PacketItemInteractable extends APacketPlayer {
             buf.writeBoolean(true);
             writeDataToBuffer(data, buf);
             buf.writeInt(units);
+            buf.writeInt(stackSize);
             if (texture != null) {
                 buf.writeBoolean(true);
                 writeStringToBuffer(texture, buf);
@@ -85,7 +91,7 @@ public class PacketItemInteractable extends APacketPlayer {
         if (world.isClient()) {
             //Create new inventory container ad-hoc to match server's data.
             //We then delete this container, and the one on the server, when the GUI is closed.
-            EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units);
+            EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units, stackSize);
             new GUIInventoryContainer(inventory, texture, true) {
                 @Override
                 public void close() {

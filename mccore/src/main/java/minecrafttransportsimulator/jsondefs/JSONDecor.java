@@ -39,6 +39,9 @@ public class JSONDecor extends AJSONMultiModelProvider {
         @JSONDescription("An optional number of inventory units for this decor.  If set, it will make this decor act like a chest and hold items.  This is how many rows (of 9 slots) the inventory has.  Also used in item loaders/unloaders to configure their internal buffers.")
         public float inventoryUnits;
 
+        @JSONDescription("An optional max stack size for each inventory slot.  Defaults to 64 if not set.")
+        public int inventoryStackSize;
+
         @JSONDescription("The texture for the GUI if the decor has an inventory.  Only used if this decor has an inventory.  If not set, the default is used.")
         public String inventoryTexture;
 

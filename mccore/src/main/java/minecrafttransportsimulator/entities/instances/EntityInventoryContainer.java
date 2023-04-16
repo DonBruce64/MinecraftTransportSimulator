@@ -19,10 +19,16 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
  */
 public class EntityInventoryContainer extends AEntityA_Base implements IInventoryProvider {
     private final List<IWrapperItemStack> inventory;
+    private final int stackSize;
 
     public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots) {
+        this(world, data, maxSlots, 64);
+    }
+
+    public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots, int stackSize) {
         super(world, data);
         this.inventory = data.getStacks(maxSlots);
+        this.stackSize = stackSize;
     }
 
     @Override
@@ -39,6 +45,11 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     @Override
     public int getSize() {
         return inventory.size();
+    }
+
+    @Override
+    public int getStackSize() {
+        return stackSize;
     }
 
     @Override

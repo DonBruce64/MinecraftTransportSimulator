@@ -48,6 +48,14 @@ public interface IInventoryProvider {
     int getSize();
 
     /**
+     * Gets the max stack size of any stack this inventory can contain.
+     * This is for this inventory, and does not take into account item limits.
+     */
+    default int getStackSize() {
+        return 64;
+    }
+
+    /**
      * Gets the number of items currently in this container.
      */
     default int getCount() {
@@ -93,22 +101,31 @@ public interface IInventoryProvider {
         for (int i = 0; i < getSize(); ++i) {
             if (isStackValid(stackToAdd, i)) {
                 IWrapperItemStack stack = getStack(i);
+                int amountToAdd = 0;
                 if (stack.isEmpty()) {
-                    if (doAdd) {
-                        setStack(stackToAdd.split(qty), i);
+                    amountToAdd = getStackSize();
+                    if (amountToAdd > qty) {
+                        amountToAdd = qty;
                     }
-                    return true;
+                    qty -= amountToAdd;
+
+                    if (doAdd) {
+                        setStack(stackToAdd.split(amountToAdd), i);
+                    }
                 } else if (stackToAdd.isCompleteMatch(stack)) {
-                    int amountToAdd = Math.min(stack.getMaxSize() - stack.getSize(), qty);
+                    amountToAdd = getStackSize() - stack.getSize();
+                    //Checks both for full stacks, and over-full stacks to avoid negatives.
                     if (amountToAdd > 0) {
+                        if (amountToAdd > qty) {
+                            amountToAdd = qty;
+                        }
+                        qty -= amountToAdd;
+
                         if (doAdd) {
                             stack.add(amountToAdd);
                             //This will flag updates if needed.
                             setStack(stack, i);
                             stackToAdd.add(-amountToAdd);
-                            qty -= amountToAdd;
-                        } else {
-                            return true;
                         }
                     }
                 }

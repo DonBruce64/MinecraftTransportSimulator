@@ -157,7 +157,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
         if (definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && player.isSneaking()) {
             if (!world.isClient()) {
-                EntityInventoryContainer inventory = new EntityInventoryContainer(world, player.getHeldStack().getData().getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F));
+                EntityInventoryContainer inventory = new EntityInventoryContainer(world, player.getHeldStack().getData().getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 world.addEntity(inventory);
                 player.sendPacket(new PacketItemInteractable(player, inventory, definition.interactable.inventoryTexture));
             }

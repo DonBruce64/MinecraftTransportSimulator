@@ -38,7 +38,7 @@ public final class PartInteractable extends APart {
         } else {
             this.furnace = null;
             if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
-                this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F));
+                this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 world.addEntity(inventory);
             } else {
                 this.inventory = null;

@@ -528,6 +528,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If this part is a crate or barrel, this defines the size of its inventory. This is also what is used for min/max value calculations on vehicles.  For crates, this is how many rows (of 9 slots) the inventory has.  For barrels, this is how many buckets the barrel can store x10.  The idea being that 1 unit for crates holds a bit less than 1 unit of barrels, as with barrels you're storing the raw material, and not the container.")
         public float inventoryUnits;
 
+        @JSONDescription("An optional max stack size for each inventory slot.  Defaults to 64 if not set.")
+        public int inventoryStackSize;
+
         @JSONDescription("The texture for the GUI for this interactable part.  Only used if this part has a GUI.  If not set, the default is used.")
         public String inventoryTexture;
 

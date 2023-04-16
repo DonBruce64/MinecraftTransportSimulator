@@ -19,7 +19,7 @@ public class TileEntityChest extends TileEntityDecor {
 
     public TileEntityChest(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
-        this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits * 9F));
+        this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits * 9F), definition.decor.inventoryStackSize > 0 ? definition.decor.inventoryStackSize : 64);
         world.addEntity(inventory);
     }
 
