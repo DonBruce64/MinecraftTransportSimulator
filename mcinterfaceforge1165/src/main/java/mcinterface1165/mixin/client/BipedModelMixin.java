@@ -91,7 +91,7 @@ public abstract class BipedModelMixin<T extends LivingEntity> {
                 }
 
                 //If needed, set rotation on off-hand.
-                if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.definition.gun.isTwoHanded) {
+                if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.currentIsTwoHandedness != 0) {
                     heldVector = heldVector.copy();
                     heldVector.x = 0.3125 * 2 - heldVector.x;
                     heldVectorLength = heldVector.length();

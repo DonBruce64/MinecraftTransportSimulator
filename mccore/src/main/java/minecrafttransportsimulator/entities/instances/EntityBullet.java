@@ -357,7 +357,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 if (hitPart.definition.generic.forwardsDamage || hitPart instanceof PartEngine) {
                                     if (!world.isClient()) {
                                         //Need to re-create damage object to use box on vehicle.  Otherwise, we'll attack the part.
-                                        damage = new Damage(damage.amount, null, gun, null, null);
+                                        damage = new Damage((hitPart.definition.generic.forwardsDamageMultiplier*damage.amount), null, gun, null, null);
                                         damage.setBullet(getItem());
                                         hitVehicle.attack(damage);
                                     }

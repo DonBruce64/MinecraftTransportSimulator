@@ -59,6 +59,14 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
+    //Variables that can be modified using VMs
+    @ModifiedValue
+    private float currentFireDelay;
+    @ModifiedValue
+    private float currentBulletSpreadFactor;
+    @ModifiedValue
+    public float currentIsTwoHandedness;
+
     private final boolean resetPosition;
 
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
@@ -338,7 +346,7 @@ public class PartGun extends APart {
                             int thisGunIndex = gunGroup.indexOf(this);
                             if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
                                 if (gunGroup.size() > 1) {
-                                    camOffset = ((int) definition.gun.fireDelay) / gunGroup.size();
+                                    camOffset = ((int) currentFireDelay) / gunGroup.size();
                                 } else {
                                     camOffset = 0;
                                 }
@@ -398,7 +406,7 @@ public class PartGun extends APart {
                             }
 
                             //Update states.
-                            cooldownTimeRemaining = (int) definition.gun.fireDelay;
+                            cooldownTimeRemaining = (int) currentFireDelay;
                             firedThisRequest = true;
                             firedThisCheck = true;
                             cycledGun = true;
@@ -561,11 +569,23 @@ public class PartGun extends APart {
 
     @Override
     protected void updateVariableModifiers() {
+        currentFireDelay = definition.gun.fireDelay;
+        currentBulletSpreadFactor = definition.gun.bulletSpreadFactor;
+        currentIsTwoHandedness = definition.gun.isTwoHanded ? 1 : 0;
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
+                    case "fireDelay":
+                        currentFireDelay = adjustVariable(modifier, currentFireDelay);
+                        break;
+                    case "bulletSpreadFactor":
+                        currentBulletSpreadFactor = adjustVariable(modifier, currentBulletSpreadFactor);
+                        break;
+                    case "isTwoHanded":
+                    	currentIsTwoHandedness = adjustVariable(modifier, currentIsTwoHandedness);
+                        break;
                     case "gun_yaw":
                         internalOrientation.angles.y = adjustVariable(modifier, (float) internalOrientation.angles.y);
                         break;
@@ -956,13 +976,13 @@ public class PartGun extends APart {
             //Randomize the spread for normal bullet and pellets
             if (addSpread) {
                 if (loadedBullet == null) {
-                    if (definition.gun.bulletSpreadFactor > 0) {
-                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * definition.gun.bulletSpreadFactor, (randomGenerator.nextFloat() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
+                    if (currentBulletSpreadFactor > 0) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * currentBulletSpreadFactor, (randomGenerator.nextFloat() - 0.5F) * currentBulletSpreadFactor, 0D);
                         bulletVelocity.rotate(firingSpreadRotation);
                     }
                 } else {
-                    if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (randomGenerator.nextFloat() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
+                    if (currentBulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * (currentBulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (randomGenerator.nextFloat() - 0.5F) * (currentBulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                         bulletVelocity.rotate(firingSpreadRotation);
                     }
                 }
