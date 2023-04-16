@@ -426,11 +426,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * A 0 value indicates no yaw change.
      */
     private double getTurningForce() {
+        skidSteerActive = false;
         double steeringAngle = getSteeringAngle() * 45;
 
         //Check for permanent skid-steer if we have it.
-        skidSteerActive = definition.motorized.hasPermanentSkidSteer;
-        if (skidSteerActive) {
+        if (definition.motorized.hasPermanentSkidSteer) {
             return steeringAngle / 20D;
         }
         if (steeringAngle != 0) {
