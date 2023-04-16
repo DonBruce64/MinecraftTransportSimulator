@@ -555,7 +555,12 @@ public final class LegacyCompatSystem {
             definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
             definition.general.useVehicleTexture = false;
         }
-
+        
+        //While we're here in generic, check if we have forwardsDamageMultiplier defined and if not, lemon-grenade it until it's defined.
+        if (definition.generic.forwardsDamageMultiplier == 0) {
+                definition.generic.forwardsDamageMultiplier = 1;
+            }
+        
         //Move subParts to parts if we have them there.
         if (definition.subParts != null) {
             definition.parts = definition.subParts;
