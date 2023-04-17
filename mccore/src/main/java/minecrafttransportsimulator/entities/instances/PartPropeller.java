@@ -162,7 +162,7 @@ public class PartPropeller extends APart {
 
 
         //Get the linear velocity of the air around the propeller, based on our axial velocity.
-        airstreamLinearVelocity = 20D * vehicleOn.motion.dotProduct(propellerAxisVector, false);
+        airstreamLinearVelocity = 20D * masterEntity.motion.dotProduct(propellerAxisVector, false);
         //Get the desired linear velocity of the propeller, based on the current RPM and pitch.
         //We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
         //is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances
