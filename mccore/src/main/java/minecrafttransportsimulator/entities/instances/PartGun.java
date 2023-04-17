@@ -712,14 +712,17 @@ public class PartGun extends APart {
                         for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                             //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
                             if (vehicle != vehicleOn && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
-                                double entityDistance = vehicle.position.distanceTo(startPoint);
-                                if (entityDistance < smallestDistance) {
-                                    //Potential match by distance, check if the entity is inside the cone.
-                                    normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                    if (targetAngle < coneAngle) {
-                                        smallestDistance = entityDistance;
-                                        vehicleTarget = vehicle;
+                                targetVector.set(vehicle.position).subtract(startPoint);
+                                if (world.getBlockHit(startPoint, targetVector) == null) {
+                                    double entityDistance = vehicle.position.distanceTo(startPoint);
+                                    if (entityDistance < smallestDistance) {
+                                        //Potential match by distance, check if the entity is inside the cone.
+                                        normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
+                                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                        if (targetAngle < coneAngle) {
+                                            smallestDistance = entityDistance;
+                                            vehicleTarget = vehicle;
+                                        }
                                     }
                                 }
                             }
@@ -743,14 +746,17 @@ public class PartGun extends APart {
                         BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
                         for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
                             if (entity.isValid() && entity != controller) {
-                                double entityDistance = entity.getPosition().distanceTo(startPoint);
-                                if (entityDistance < smallestDistance) {
-                                    //Potential match by distance, check if the entity is inside the cone.
-                                    normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                    if (targetAngle < coneAngle) {
-                                        smallestDistance = entityDistance;
-                                        entityTarget = entity;
+                                targetVector.set(entity.getPosition()).subtract(startPoint);
+                                if (world.getBlockHit(startPoint, targetVector) == null) {
+                                    double entityDistance = entity.getPosition().distanceTo(startPoint);
+                                    if (entityDistance < smallestDistance) {
+                                        //Potential match by distance, check if the entity is inside the cone.
+                                        normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
+                                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                                        if (targetAngle < coneAngle) {
+                                            smallestDistance = entityDistance;
+                                            entityTarget = entity;
+                                        }
                                     }
                                 }
                             }
