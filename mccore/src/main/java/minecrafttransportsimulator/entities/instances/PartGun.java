@@ -2,8 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -94,6 +96,7 @@ public class PartGun extends APart {
     public PartEngine engineTarget;
     public Point3D targetPosition;
     public EntityBullet currentBullet;
+    public final Set<EntityBullet> activeManualBullets = new HashSet<>();
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
     private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -373,6 +376,7 @@ public class PartGun extends APart {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
                                         } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
+                                            activeManualBullets.add(newBullet);
                                         } else {
                                             //No entity found, just fire missile off in direction facing.
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
@@ -664,15 +668,10 @@ public class PartGun extends APart {
                         break;
                     }
                     case MANUAL: {
+                        //Don't do anything, we do this further on down in the code for all manual bullets.
+                        //All we really need to do is make sure the target var is ready for operation.
                         if (targetPosition == null) {
                             targetPosition = new Point3D();
-                        }
-                        Point3D laserStart = controller.getPosition().copy();
-                        AWrapperWorld.BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
-                        if (laserHit != null) {
-                            targetPosition.set(laserHit.position);
-                        } else {
-                            targetPosition.set(laserStart).add(controller.getLineOfSight(1024));
                         }
                         break;
                     }
@@ -737,6 +736,17 @@ public class PartGun extends APart {
                             }
                         }
                     }
+                }
+            }
+
+            //If we have any manual bullets, do tracking for them.
+            if (!activeManualBullets.isEmpty()) {
+                Point3D laserStart = controller.getPosition().copy();
+                AWrapperWorld.BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
+                if (laserHit != null) {
+                    targetPosition.set(laserHit.position);
+                } else {
+                    targetPosition.set(laserStart).add(controller.getLineOfSight(1024));
                 }
             }
 

@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -504,6 +505,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     @Override
     public void remove() {
         super.remove();
+        if (gun.definition.gun.lockOnType == LockOnType.MANUAL) {
+            gun.activeManualBullets.remove(this);
+        }
         if (engineTargeted != null) {
             engineTargeted.vehicleOn.missilesIncoming.remove(this);
         }
