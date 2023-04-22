@@ -285,6 +285,63 @@ public class PackMaterialComponent {
 
         map.put("plankWood", "planks");
         map.put("logWood", "logs");
+
+        //Immersive Engineering stuff.
+        map.put("metal:0", "ingot_copper");
+        map.put("metal:1", "ingot_aluminum");
+        map.put("metal:2", "ingot_lead");
+        map.put("metal:3", "ingot_silver");
+        map.put("metal:4", "ingot_nickel");
+        map.put("metal:5", "ingot_uranium");
+        map.put("metal:6", "ingot_constantan");
+        map.put("metal:7", "ingot_electrum");
+        map.put("metal:8", "ingot_steel");
+
+        map.put("metal:20", "nugget_copper");
+        map.put("metal:21", "nugget_aluminum");
+        map.put("metal:22", "nugget_lead");
+        map.put("metal:23", "nugget_silver");
+        map.put("metal:24", "nugget_nickel");
+        map.put("metal:25", "nugget_uranium");
+        map.put("metal:26", "nugget_constantan");
+        map.put("metal:27", "nugget_electrum");
+        map.put("metal:28", "nugget_steel");
+
+        map.put("metal:30", "plate_copper");
+        map.put("metal:31", "plate_aluminum");
+        map.put("metal:32", "plate_lead");
+        map.put("metal:33", "plate_silver");
+        map.put("metal:34", "plate_nickel");
+        map.put("metal:35", "plate_uranium");
+        map.put("metal:36", "plate_constantan");
+        map.put("metal:37", "plate_electrum");
+        map.put("metal:38", "plate_steel");
+        map.put("metal:39", "plate_iron");
+        map.put("metal:40", "plate_gold");
+
+        map.put("material:1", "stick_iron");
+        map.put("material:2", "stick_steel");
+        map.put("material:3", "stick_aluminum");
+
+        map.put("material:8", "component_iron");
+        map.put("material:9", "component_steel");
+        map.put("material:26", "electron_tube");
+        map.put("material:27", "logic_circuit");
+
+        map.put("material:20", "wire_copper");
+        map.put("material:21", "wire_electrum");
+        map.put("material:22", "wire_aluminum");
+        map.put("material:23", "wire_steel");
+
+        map.put("storage:0", "storage_copper");
+        map.put("storage:1", "storage_aluminum");
+        map.put("storage:2", "storage_lead");
+        map.put("storage:3", "storage_silver");
+        map.put("storage:4", "storage_nickel");
+        map.put("storage:5", "storage_uranium");
+        map.put("storage:6", "storage_constantan");
+        map.put("storage:7", "storage_electrum");
+        map.put("storage:8", "storage_steel");
         return map;
     }
     

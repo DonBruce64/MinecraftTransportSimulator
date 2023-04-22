@@ -2,7 +2,9 @@ package mcinterface1165;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -21,6 +23,8 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
+    protected static final Map<String, List<BuilderItem>> taggedItems = new HashMap<>();
+
     @Override
     public boolean isGameFlattened() {
         return true;
@@ -97,12 +101,22 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize) {
+        //Convert to lowercase in case we are camelCase from oreDict systems.
+        String lowerCaseOre = oreName.toLowerCase();
         List<IWrapperItemStack> stacks = new ArrayList<>();
-        ITag<Item> tag = ItemTags.getAllTags().getTag(new ResourceLocation("minecraft", oreName));
+        ITag<Item> tag = ItemTags.getAllTags().getTag(new ResourceLocation("minecraft", lowerCaseOre));
         if (tag == null) {
-            tag = ItemTags.getAllTags().getTag(new ResourceLocation("forge", oreName));
+            tag = ItemTags.getAllTags().getTag(new ResourceLocation("forge", lowerCaseOre));
         }
-        tag.getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
+        if (tag == null) {
+            List<BuilderItem> items = taggedItems.get(lowerCaseOre);
+            if (items != null) {
+                items.forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
+            }
+        } else {
+            tag.getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
+        }
+
         return stacks;
     }
 }

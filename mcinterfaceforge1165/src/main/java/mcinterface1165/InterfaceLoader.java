@@ -29,9 +29,7 @@ import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -138,9 +136,16 @@ public class InterfaceLoader {
             //Register the item.
             BuilderItem.ITEMS.register(item.getRegistrationName(), () -> mcItem);
 
-            //If the item is for OreDict, add it...as a tag!  Cause this is the new standard.
+            //If the item is for OreDict, make it a fake tag, since we are forced to use JSON otherwise.
+            //Stupid JSON everything without code hooks.
             if (item.definition.general.oreDict != null) {
-                ItemTags.createOptional(new ResourceLocation(MODID, item.definition.general.oreDict));
+                String lowerCaseOre = item.definition.general.oreDict.toLowerCase();
+                List<BuilderItem> items = InterfaceCore.taggedItems.get(lowerCaseOre);
+                if (items == null) {
+                    items = new ArrayList<>();
+                    InterfaceCore.taggedItems.put(lowerCaseOre, items);
+                }
+                items.add(mcItem);
             }
         }
 
