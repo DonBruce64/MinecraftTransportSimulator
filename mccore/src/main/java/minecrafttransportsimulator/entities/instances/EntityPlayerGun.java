@@ -162,6 +162,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Packets will get sent to clients to change them.
             if (activeGun != null) {
                 AEntityB_Existing ridingEntity = player.getEntityRiding();
+                RotationMatrix playerRotation = ridingEntity != null ? ridingEntity.riderRelativeOrientation : player.getOrientation();
 
                 //Offset to the end of the hand with our offset and current rotation.
                 if (activeGun.isHandHeldGunAimed) {
@@ -181,7 +182,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 }
 
                 //Adjust position by pitch, this only affects the arm position.
-                handRotation.setToZero().rotateX(player.getPitch());
+                handRotation.setToZero().rotateX(playerRotation.angles.x);
                 position.rotate(handRotation);
 
                 //Adjust position to be centered at the center of the arm.
@@ -189,21 +190,18 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 position.add(player.isRightHanded() ? -0.3125 : 0.3125, -0.375, 0);
 
                 //Now account for yaw since we have our offset.
-                handRotation.setToZero().rotateY(player.getYaw());
+                handRotation.setToZero().rotateY(playerRotation.angles.y);
                 position.rotate(handRotation);
 
                 //Account for player scaling now that we have our final vector.
                 position.scale(player.getVerticalScale());
 
-                //While riding an entity, the player will always be updated after the riding entity.
-                //However, the gun entity here expect the player to update first, since they are the first entity spawned.
-                //To account for this, we "advance" this gun entity one tick.
-                //We also adjust the position to account for the player's relative orientation.
+                //While riding an entity, we will need to orient ourselves to the player's relative orientation, not global.
                 if (ridingEntity != null) {
-                    position.add(ridingEntity.position).subtract(ridingEntity.prevPosition);
-                    orientation.set(ridingEntity.orientation).multiply(ridingEntity.riderRelativeOrientation);
+                    position.rotate(ridingEntity.orientation);
+                    orientation.set(ridingEntity.orientation).multiply(playerRotation);
                 } else {
-                    orientation.set(player.getOrientation());
+                    orientation.set(playerRotation);
                 }
                 position.add(player.getHeadPosition());
 
