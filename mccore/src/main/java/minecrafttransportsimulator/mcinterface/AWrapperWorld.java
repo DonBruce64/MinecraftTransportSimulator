@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -16,8 +18,11 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * IWrapper to a world instance.  This contains many common methods that
@@ -31,6 +36,36 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
  * @author don_bruce
  */
 public abstract class AWrapperWorld extends EntityManager {
+    private final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
+
+    /**
+     * Handles things that happen after the player joins this world.
+     */
+    public void onPlayerJoin(IWrapperPlayer player) {
+        if (!isClient()) {
+            UUID playerUUID = player.getID();
+
+            //Remove old gun in case we already spawned it.
+            EntityPlayerGun gun = playerServerGuns.get(playerUUID);
+            if (gun != null) {
+                gun.remove();
+            }
+
+            //Spawn gun.
+            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+            gun = new EntityPlayerGun(this, player, newData);
+            gun.addPartsPostAddition(player, newData);
+            playerServerGuns.put(playerUUID, gun);
+
+            //If the player is new, also add handbooks.
+            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                player.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
+                player.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
+                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
+                ConfigSystem.saveToDisk();
+            }
+        }
+    }
 
     /**
      * Returns true if this is a client world, false if we're on the server.

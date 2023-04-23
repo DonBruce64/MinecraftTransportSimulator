@@ -938,10 +938,10 @@ public class WrapperWorld extends AWrapperWorld {
                         if (++totalTicksWaited == 60) {
                             //Spawn gun.
                             IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
-                            playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                            entity.addPartsPostAddition(playerWrapper, newData);
+                            //IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                            //EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                            //playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                            //entity.addPartsPostAddition(playerWrapper, newData);
 
                             //If the player is new, also add handbooks.
                             if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
@@ -950,9 +950,8 @@ public class WrapperWorld extends AWrapperWorld {
                                 ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
                                 ConfigSystem.saveToDisk();
                             }
-                        } else {
-                            ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                         }
+                        ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                     }
                 }
             } else {

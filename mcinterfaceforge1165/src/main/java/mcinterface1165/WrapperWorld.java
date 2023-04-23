@@ -921,7 +921,6 @@ public class WrapperWorld extends AWrapperWorld {
             if (event.phase.equals(Phase.START)) {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
                 tickAll();
-
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
 
@@ -964,13 +963,13 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                         if (++totalTicksWaited == 60) {
                             IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
-                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
 
                             //Spawn gun.
                             if (gunBuilder == null) {
-                                EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
-                                playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                                entity.addPartsPostAddition(playerWrapper, newData);
+                                //IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                                //EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                                //playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                                //entity.addPartsPostAddition(playerWrapper, newData);
                             }
 
                             //Spawn follower.
@@ -988,9 +987,8 @@ public class WrapperWorld extends AWrapperWorld {
                                 ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
                                 ConfigSystem.saveToDisk();
                             }
-                        } else {
-                            ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                         }
+                        ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                     }
                 }
             } else {

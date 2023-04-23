@@ -108,8 +108,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     @Override
     public void update() {
         super.update();
-        //Make sure player is still valid and haven't left the server.
-        if (player != null && player.isValid()) {
+        //Make sure player is still valid and haven't left the server or the world we are in.
+        if (player != null && player.isValid() && world == player.getWorld()) {
             //Set our position to the player's position.  We may update this later if we have a gun.
             //We can't update position without the gun as it has an offset defined in it.
             position.set(player.getPosition());
