@@ -24,6 +24,12 @@ public class TileEntityRadio extends TileEntityDecor {
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        radio.remove();
+    }
+
+    @Override
     public boolean interact(IWrapperPlayer player) {
         return radio.interact(player);
     }

@@ -352,6 +352,11 @@ public class GUISignalController extends AGUIBase {
         }
     }
 
+    @Override
+    protected boolean canStayOpen() {
+        return controller.isValid;
+    }
+
     private class GUIComponentNumericTextBox extends GUIComponentTextBox {
         private final boolean floatingPoint;
         private static final int NUMERIC_HEIGHT = 10;

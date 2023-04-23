@@ -179,6 +179,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (rider != null) {
             removeRider();
         }
+        if (radio != null) {
+            radio.remove();
+        }
     }
 
     @Override

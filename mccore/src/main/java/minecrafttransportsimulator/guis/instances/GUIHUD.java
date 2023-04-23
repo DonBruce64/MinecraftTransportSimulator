@@ -140,6 +140,11 @@ public class GUIHUD extends AGUIBase {
     }
 
     @Override
+    protected boolean canStayOpen() {
+        return seat.rider != null;
+    }
+
+    @Override
     public int getWidth() {
         return HUD_WIDTH;
     }

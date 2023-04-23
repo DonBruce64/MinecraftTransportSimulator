@@ -149,6 +149,9 @@ public abstract class AGUIBase {
      */
     public void setStates() {
         background.visible = renderBackground();
+        if (!canStayOpen()) {
+            close();
+        }
     }
 
     /**
@@ -327,6 +330,13 @@ public abstract class AGUIBase {
      */
     public boolean pauseOnOpen() {
         return false;
+    }
+
+    /**
+     * If this returns false, the GUI will be closed.
+     */
+    protected boolean canStayOpen() {
+        return true;
     }
 
     /**

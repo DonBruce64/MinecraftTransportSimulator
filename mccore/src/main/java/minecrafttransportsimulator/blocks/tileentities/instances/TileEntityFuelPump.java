@@ -81,6 +81,12 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        tank.remove();
+    }
+
+    @Override
     protected boolean hasFuel() {
         return tank.getFluidLevel() > 0;
     }

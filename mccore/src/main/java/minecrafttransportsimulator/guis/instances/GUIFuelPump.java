@@ -153,4 +153,9 @@ public class GUIFuelPump extends AGUIInventory {
             }
         }
     }
+
+    @Override
+    protected boolean canStayOpen() {
+        return pump.isValid;
+    }
 }

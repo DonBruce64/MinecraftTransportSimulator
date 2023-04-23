@@ -24,6 +24,12 @@ public class TileEntityChest extends TileEntityDecor {
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        inventory.remove();
+    }
+
+    @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
         return true;

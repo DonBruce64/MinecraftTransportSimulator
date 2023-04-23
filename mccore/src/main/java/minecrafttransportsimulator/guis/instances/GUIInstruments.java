@@ -247,6 +247,11 @@ public class GUIInstruments extends AGUIBase {
     }
 
     @Override
+    protected boolean canStayOpen() {
+        return vehicle.isValid;
+    }
+
+    @Override
     public int getWidth() {
         return panelDef.panel.backgroundWidth;
     }

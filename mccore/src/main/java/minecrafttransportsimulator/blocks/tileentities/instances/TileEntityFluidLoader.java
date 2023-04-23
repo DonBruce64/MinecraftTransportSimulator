@@ -21,6 +21,12 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        tank.remove();
+    }
+
+    @Override
     public boolean isUnloader() {
         return definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER);
     }

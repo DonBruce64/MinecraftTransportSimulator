@@ -271,6 +271,11 @@ public class GUIRadio extends AGUIBase {
         }
     }
 
+    @Override
+    protected boolean canStayOpen() {
+        return radio.isValid;
+    }
+
     private void presetButtonClicked(GUIComponentButton buttonClicked) {
         int presetClicked = presetButtons.indexOf(buttonClicked);
         if (teachMode) {

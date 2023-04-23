@@ -145,6 +145,11 @@ public class GUIFurnace extends AGUIInventory {
     }
 
     @Override
+    protected boolean canStayOpen() {
+        return furnace.isValid;
+    }
+
+    @Override
     public int getWidth() {
         return 176;
     }

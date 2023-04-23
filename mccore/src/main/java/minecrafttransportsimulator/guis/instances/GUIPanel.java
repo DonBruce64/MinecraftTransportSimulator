@@ -473,6 +473,11 @@ public class GUIPanel extends AGUIBase {
     }
 
     @Override
+    protected boolean canStayOpen() {
+        return vehicle.isValid;
+    }
+
+    @Override
     public int getWidth() {
         return definition.panel.backgroundWidth;
     }

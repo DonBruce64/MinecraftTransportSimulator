@@ -61,6 +61,12 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        inventory.remove();
+    }
+
+    @Override
     public boolean isUnloader() {
         return definition.decor.type.equals(DecorComponentType.ITEM_UNLOADER);
     }

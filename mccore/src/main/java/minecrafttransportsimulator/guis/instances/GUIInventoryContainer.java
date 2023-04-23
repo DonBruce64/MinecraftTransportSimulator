@@ -112,4 +112,9 @@ public class GUIInventoryContainer extends AGUIInventory {
     protected void handlePlayerItemClick(int slotClicked) {
         InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked, isPlayerHolding));
     }
+
+    @Override
+    protected boolean canStayOpen() {
+        return inventory.isValid;
+    }
 }

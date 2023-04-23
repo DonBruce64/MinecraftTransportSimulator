@@ -92,6 +92,17 @@ public final class PartInteractable extends APart {
     }
 
     @Override
+    public void remove() {
+        super.remove();
+        if (inventory != null) {
+            inventory.remove();
+        }
+        if (tank != null) {
+            tank.remove();
+        }
+    }
+
+    @Override
     public void destroy(BoundingBox box) {
         double explosivePower = getExplosiveContribution();
         if (explosivePower > 0 && isValid) {

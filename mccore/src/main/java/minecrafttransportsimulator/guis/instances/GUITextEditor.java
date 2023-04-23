@@ -122,4 +122,9 @@ public class GUITextEditor extends AGUIBase {
             signTextLabels.get(i).text = textInputBoxes.get(i).getText();
         }
     }
+
+    @Override
+    protected boolean canStayOpen() {
+        return entity.isValid;
+    }
 }
