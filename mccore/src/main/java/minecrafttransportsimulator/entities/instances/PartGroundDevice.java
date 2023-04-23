@@ -229,15 +229,6 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    public void remove() {
-        super.remove();
-        if (fakePart != null) {
-            //Don't remove here, this could cause a CME if we're in a removal iteration loop.
-            fakePart.isValid = false;
-        }
-    }
-
-    @Override
     public void addDropsToList(List<IWrapperItemStack> drops) {
         if (!isFlat) {
             super.addDropsToList(drops);

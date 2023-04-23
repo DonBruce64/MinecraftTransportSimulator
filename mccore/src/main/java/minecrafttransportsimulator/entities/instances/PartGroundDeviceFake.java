@@ -19,6 +19,14 @@ public final class PartGroundDeviceFake extends PartGroundDevice {
     }
 
     @Override
+    public void update() {
+        super.update();
+        if (!masterPart.isValid) {
+            remove();
+        }
+    }
+
+    @Override
     public boolean isFake() {
         return true;
     }

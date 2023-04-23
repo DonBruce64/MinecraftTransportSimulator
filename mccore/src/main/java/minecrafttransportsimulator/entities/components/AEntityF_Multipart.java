@@ -369,6 +369,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             APart part = iterator.next();
             part.update();
             if (!part.isValid) {
+                //Part was removed during updates, remove from the part listing.
                 removePart(part, iterator);
             } else {
                 part.doPostUpdateLogic();
@@ -571,11 +572,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
                 //Recalculate slots.
                 recalculatePartSlots();
+            }
 
-                //If we are on the server, notify all clients of this change.
-                if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(part));
-                }
+            //If we are on the server, notify all clients of this change.
+            if (!world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(part));
             }
         }
 

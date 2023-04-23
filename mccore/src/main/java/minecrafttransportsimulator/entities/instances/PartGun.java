@@ -307,7 +307,7 @@ public class PartGun extends APart {
                     state = state.demote(GunState.ACTIVE);
                     //If we are hand-held, we need to die since we aren't a valid gun.
                     if (entityOn instanceof EntityPlayerGun) {
-                        isValid = false;
+                        remove();
                         return;
                     }
                 }

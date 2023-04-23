@@ -120,7 +120,7 @@ public class PartEffector extends APart {
                                         boxTimeSpentAtPosition.put(box, 0);
                                         blockFlooredPositionsBrokeThisTick.add(flooredCenter.copy());
                                         if (++blocksBroken == definition.effector.drillDurability) {
-                                            this.isValid = false;
+                                            remove();
                                         } else {
                                             InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this));
                                         }
