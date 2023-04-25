@@ -8,7 +8,6 @@ import java.util.Random;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -51,7 +50,7 @@ public class EntityParticle extends AEntityC_Renderable {
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
-        if (definition.axisAligned) {
+        if (!definition.axisAligned) {
             orientation.set(entitySpawning.orientation);
             orientation.multiply(definition.rot);
             prevOrientation.set(orientation);
@@ -70,21 +69,20 @@ public class EntityParticle extends AEntityC_Renderable {
         position.add(helperOffset);
 
         if (definition.initialVelocity != null) {
-            Point3D adjustedVelocity = definition.initialVelocity.copy();
-            adjustedVelocity.y += (Math.random() - 0.5F) * definition.spreadFactorVertical;
-            adjustedVelocity.rotate(helperTransform);
-
-            if (definition.spreadFactorHorizontal != 0) {
-                motion.add(adjustedVelocity).scale(1D / 10D);
-                RotationMatrix spreadRotation = new RotationMatrix();
-                spreadRotation.angles.set((Math.random() - 0.5F) * definition.spreadFactorHorizontal, (Math.random() - 0.5F) * definition.spreadFactorHorizontal, 0);
-                motion.rotate(spreadRotation);
+            if (definition.spreadVelocity != null) {
+                motion.x = 2 * definition.spreadVelocity.x * Math.random() - definition.spreadVelocity.x;
+                motion.y = 2 * definition.spreadVelocity.y * Math.random() - definition.spreadVelocity.y;
+                motion.z = 2 * definition.spreadVelocity.z * Math.random() - definition.spreadVelocity.z;
+                motion.add(definition.initialVelocity);
             } else {
                 //Add some basic randomness so particles don't all go in a line.
-                motion.x += adjustedVelocity.x / 10D + 0.02 - Math.random() * 0.04;
-                motion.y += adjustedVelocity.y / 10D + 0.02 - Math.random() * 0.04;
-                motion.z += adjustedVelocity.z / 10D + 0.02 - Math.random() * 0.04;
+                motion.x = definition.initialVelocity.x + 0.2 - Math.random() * 0.4;
+                motion.y = definition.initialVelocity.y + 0.2 - Math.random() * 0.4;
+                motion.z = definition.initialVelocity.z + 0.2 - Math.random() * 0.4;
             }
+            //Scale down by 10 since most of the time we go too fast.
+            motion.scale(1D / 10D);
+            motion.rotate(helperTransform);
         }
         initialVelocity = motion.copy();
 
@@ -311,7 +309,11 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (!definition.axisAligned) {
+        if (definition.axisAligned) {
+            Point3D vector = clientPlayer.getEyePosition().copy().subtract(position);
+            vector.y = 0;
+            orientation.setToVector(vector, true);
+        } else {
             orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
         }
     }

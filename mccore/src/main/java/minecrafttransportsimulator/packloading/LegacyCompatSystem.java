@@ -196,6 +196,17 @@ public final class LegacyCompatSystem {
                     }
                 }
             }
+
+            //Check particles.
+            if (provider.rendering.particles != null) {
+                for (JSONParticle particleDef : provider.rendering.particles) {
+                    if (particleDef.spreadFactorVertical != 0 || particleDef.spreadFactorHorizontal != 0) {
+                        particleDef.spreadVelocity = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
+                        particleDef.spreadFactorVertical = 0;
+                        particleDef.spreadFactorHorizontal = 0;
+                    }
+                }
+            }
         }
     }
 

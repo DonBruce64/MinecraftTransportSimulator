@@ -46,12 +46,6 @@ public class JSONParticle {
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
 
-    @JSONDescription("How much off-zero the particle will be when spawned, in the XZ plane.  0 is no spread, higher values have higher spread.  This is per-particle, so if quantity is 10 they will all have different spread.")
-    public float spreadFactorHorizontal;
-
-    @JSONDescription("Like spreadFactorHorizontal, just for the vertical (Y) component.")
-    public float spreadFactorVertical;
-
     @JSONDescription("Normally particles use built-in textures.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
 
@@ -83,6 +77,9 @@ public class JSONParticle {
     @JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
     public Point3D terminalVelocity;
 
+    @JSONDescription("The velocity to make this particle spread by.  Will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
+    public Point3D spreadVelocity;
+
     @JSONDescription("This is a list of animatedObjects that can be used to move the spawn position of this particle.")
     public List<JSONAnimationDefinition> spawningAnimations;
 
@@ -95,6 +92,12 @@ public class JSONParticle {
 
     @Deprecated
     public Point3D velocityVector;
+
+    @Deprecated
+    public float spreadFactorHorizontal;
+
+    @Deprecated
+    public float spreadFactorVertical;
 
     public static class JSONSubParticle {
 
