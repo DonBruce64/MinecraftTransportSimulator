@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -39,7 +40,7 @@ public class WrapperEntity implements IWrapperEntity {
     private static final Map<Entity, WrapperEntity> entityServerWrappers = new HashMap<>();
 
     protected final Entity entity;
-    private AEntityB_Existing cachedEntityRiding;
+    private AEntityE_Interactable<?> cachedEntityRiding;
 
     /**
      * Returns a wrapper instance for the passed-in entity instance.
@@ -98,13 +99,13 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
-    public AEntityB_Existing getEntityRiding() {
+    public AEntityE_Interactable<?> getEntityRiding() {
         if (cachedEntityRiding != null) {
             return cachedEntityRiding;
         } else {
             Entity mcEntityRiding = entity.getRidingEntity();
             if (mcEntityRiding instanceof BuilderEntityLinkedSeat) {
-                AEntityB_Existing entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
+                AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
                 //Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
                 if (entityRiding != null && this.equals(entityRiding.rider)) {
                     return entityRiding;
@@ -115,7 +116,7 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
-    public void setRiding(AEntityB_Existing entityToRide) {
+    public void setRiding(AEntityE_Interactable<?> entityToRide) {
         if (entityToRide != null) {
             //Don't re-add a seat entity if we are just changing seats.
             //This just causes extra execution logic.
@@ -183,13 +184,13 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getEyePosition() {
-        AEntityB_Existing riding = getEntityRiding();
+        AEntityE_Interactable<?> riding = getEntityRiding();
         return riding != null ? riding.riderEyePosition : getPosition().add(0, getEyeHeight() + getSeatOffset(), 0);
     }
 
     @Override
     public Point3D getHeadPosition() {
-        AEntityB_Existing riding = getEntityRiding();
+        AEntityE_Interactable<?> riding = getEntityRiding();
         return riding != null ? riding.riderHeadPosition : getPosition().add(0, getEyeHeight() + getSeatOffset(), 0);
     }
 

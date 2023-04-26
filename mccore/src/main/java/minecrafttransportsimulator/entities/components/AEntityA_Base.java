@@ -70,7 +70,7 @@ public abstract class AEntityA_Base {
     }
 
     /**
-     * Returns true if this entity should be ticked in the main update calls.
+     * Returns true if this entity should be ticked in the main update calls
      * Note that this does not block one from calling {@link #update()} manually; this
      * just blocks the auto-ticking code.
      */

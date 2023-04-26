@@ -6,7 +6,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 
 /**
@@ -55,14 +55,14 @@ public interface IWrapperEntity {
      * the entity is not riding any MTS entity (rider may will be riding
      * a vanilla entity).
      */
-    AEntityB_Existing getEntityRiding();
+    AEntityE_Interactable<?> getEntityRiding();
 
     /**
      * Tells the entity to start riding the passed-in entity.
      * If null is passed-in, then this rider will stop riding whatever entity it
      * is riding, if it was riding any entity.
      */
-    void setRiding(AEntityB_Existing entityToRide);
+    void setRiding(AEntityE_Interactable<?> entityToRide);
 
     /**
      * Returns the vertical scaling factor for this entity.  Normally is 1,

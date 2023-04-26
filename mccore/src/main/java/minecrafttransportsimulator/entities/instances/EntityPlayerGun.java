@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -161,7 +161,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Only change firing command on servers to prevent de-syncs.
             //Packets will get sent to clients to change them.
             if (activeGun != null) {
-                AEntityB_Existing ridingEntity = player.getEntityRiding();
+                AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
                 RotationMatrix playerRotation = ridingEntity != null ? ridingEntity.riderRelativeOrientation : player.getOrientation();
 
                 //Offset to the end of the hand with our offset and current rotation.

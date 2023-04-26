@@ -2,7 +2,7 @@ package mcinterface1122;
 
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,7 +28,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
-    protected AEntityB_Existing entity;
+    protected AEntityE_Interactable<?> entity;
     /**
      * Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
@@ -114,18 +114,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
 
     @Override
     public void updatePassenger(Entity passenger) {
-        //Forward passenger updates to the entity.
-        //Need to verify the entity has a rider, it might not if we are on the
-        //client and waiting for the rider packet.  Or on the server and waiting for loading of the player.
-        if (entity != null && entity.rider != null) {
+        if (entity != null) {
             entity.updateRider();
-            //Call getters so it resets to current value.
-            //This allows the calling of the method in other areas to see MC deltas.
-            //Make sure the rider wasn't removed, however.
-            if (entity.rider != null) {
-                entity.rider.getYawDelta();
-                entity.rider.getPitchDelta();
-            }
         }
     }
 

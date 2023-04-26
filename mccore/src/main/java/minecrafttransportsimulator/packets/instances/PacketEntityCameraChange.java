@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -11,9 +11,9 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  *
  * @author don_bruce
  */
-public class PacketEntityCameraChange extends APacketEntity<AEntityB_Existing> {
+public class PacketEntityCameraChange extends APacketEntity<AEntityE_Interactable<?>> {
 
-    public PacketEntityCameraChange(AEntityB_Existing entity) {
+    public PacketEntityCameraChange(AEntityE_Interactable<?> entity) {
         super(entity);
     }
 
@@ -22,7 +22,7 @@ public class PacketEntityCameraChange extends APacketEntity<AEntityB_Existing> {
     }
 
     @Override
-    public boolean handle(AWrapperWorld world, AEntityB_Existing entity) {
+    public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity) {
         ++entity.cameraIndex;
         return true;
     }

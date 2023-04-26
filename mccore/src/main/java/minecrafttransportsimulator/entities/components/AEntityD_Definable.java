@@ -233,7 +233,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Called to perform supplemental update logic on this entity.  This is called after the main {@link #update()}
      * loop, and is used to do updates that require the new state to be ready.  At this point, all "prior" values
-     * and current values will be set to their current states.
+     * and current values will be set to their current states.  Normally, this just updates the rider position to
+     * their new position as defined by this entity.
      */
     public void doPostUpdateLogic() {
         //Update value-based text.  Only do this on clients as servers won't render this text.
@@ -393,6 +394,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
         }
         return (ItemInstance) cachedItem;
+    }
+
+    /**
+     * Normally, entities are saved and loaded to world data individually.  However, if one has
+     * entities on other entities, the data should be saved as one block.  As such, this should
+     * return false on any sub-entity of that block.  This is set to false by default as most
+     * entities don't load directly from world data and are either sub-components or non-synced.
+     */
+    public boolean loadFromWorldData() {
+        return false;
     }
 
     /**

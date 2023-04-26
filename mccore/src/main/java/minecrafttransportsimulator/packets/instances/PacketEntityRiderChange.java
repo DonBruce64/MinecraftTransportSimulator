@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -13,14 +13,14 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  *
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntityInteract<AEntityB_Existing, IWrapperEntity> {
+public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity> {
     private final boolean mount;
     private final boolean facesForwards;
 
     /**
      * Constructor for setting the rider.
      **/
-    public PacketEntityRiderChange(AEntityB_Existing entity, IWrapperEntity rider, boolean facesForwards) {
+    public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, boolean facesForwards) {
         super(entity, rider);
         this.mount = true;
         this.facesForwards = facesForwards;
@@ -29,7 +29,7 @@ public class PacketEntityRiderChange extends APacketEntityInteract<AEntityB_Exis
     /**
      * Constructor for removing the rider.
      **/
-    public PacketEntityRiderChange(AEntityB_Existing entity, IWrapperEntity rider) {
+    public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider) {
         super(entity, rider);
         this.mount = false;
         this.facesForwards = false;
@@ -49,7 +49,7 @@ public class PacketEntityRiderChange extends APacketEntityInteract<AEntityB_Exis
     }
 
     @Override
-    protected boolean handle(AWrapperWorld world, AEntityB_Existing entity, IWrapperEntity rider) {
+    protected boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperEntity rider) {
         if (mount) {
             entity.setRider(rider, facesForwards);
         } else {

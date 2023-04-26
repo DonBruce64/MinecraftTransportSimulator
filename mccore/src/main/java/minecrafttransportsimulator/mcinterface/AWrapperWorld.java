@@ -45,7 +45,7 @@ public abstract class AWrapperWorld extends EntityManager {
         if (!isClient()) {
             UUID playerUUID = player.getID();
 
-            //Remove old gun in case we already spawned it.
+            //Remove old gun if we already spawned it.
             EntityPlayerGun gun = playerServerGuns.get(playerUUID);
             if (gun != null) {
                 gun.remove();

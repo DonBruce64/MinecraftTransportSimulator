@@ -37,7 +37,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
-import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -103,7 +102,6 @@ import net.minecraftforge.items.IItemHandler;
 
 public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
-    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
     private static Map<UUID, BuilderEntityRenderForwarder> playerFollowers = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
@@ -150,6 +148,11 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @Override
+    public AWrapperWorld getWorld() {
+        return this;
     }
 
     @Override
@@ -924,21 +927,6 @@ public class WrapperWorld extends AWrapperWorld {
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
 
-                    BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
-                    if (gunBuilder != null) {
-                        //Gun exists, check if world is the same and it is actually updating.
-                        //We check basic states, and then the watchdog bit that gets reset every tick.
-                        //This way if we're in the world, but not valid we will know.
-                        if (gunBuilder.level != mcPlayer.level || !mcPlayer.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
-                            //Follower is not linked.  Remove it and re-create in code below.
-                            gunBuilder.remove();
-                            playerServerGunBuilders.remove(playerUUID);
-                            ticksSincePlayerJoin.remove(playerUUID);
-                        } else {
-                            ++gunBuilder.idleTickCounter;
-                        }
-                    }
-
                     BuilderEntityRenderForwarder followerBuilder = playerFollowers.get(playerUUID);
                     if (followerBuilder != null) {
                         //Follower exists, check if world is the same and it is actually updating.
@@ -955,7 +943,7 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
 
-                    if (mcPlayer.isAlive() && (gunBuilder == null || followerBuilder == null)) {
+                    if (mcPlayer.isAlive() && followerBuilder == null) {
                         //Some follower doesn't exist.  Check if player has been present for 3 seconds and spawn it.
                         int totalTicksWaited = 0;
                         if (ticksSincePlayerJoin.containsKey(playerUUID)) {
@@ -964,28 +952,12 @@ public class WrapperWorld extends AWrapperWorld {
                         if (++totalTicksWaited == 60) {
                             IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
 
-                            //Spawn gun.
-                            if (gunBuilder == null) {
-                                //IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                                //EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
-                                //playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                                //entity.addPartsPostAddition(playerWrapper, newData);
-                            }
-
                             //Spawn follower.
                             if (followerBuilder == null) {
                                 followerBuilder = new BuilderEntityRenderForwarder(mcPlayer);
                                 followerBuilder.loadedFromSavedNBT = true;
                                 playerFollowers.put(playerUUID, followerBuilder);
                                 world.addFreshEntity(followerBuilder);
-                            }
-
-                            //If the player is new, add handbooks.
-                            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
-                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
-                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
-                                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
-                                ConfigSystem.saveToDisk();
                             }
                         }
                         ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
