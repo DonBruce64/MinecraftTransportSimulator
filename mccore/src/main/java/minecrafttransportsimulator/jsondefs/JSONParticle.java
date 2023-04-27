@@ -22,6 +22,9 @@ public class JSONParticle {
     @JSONDescription("Normally, particles align themselves to face the player.  Set this to true if you want them to not do this and just be aligned as spawned.")
     public boolean axisAligned;
 
+    @JSONDescription("Normally, particles align themselves to face the player about all axis.  Setting this to true makes them always face the player, but they will do so by rotating about their Y-axis.")
+    public boolean axisLocked;
+
     @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
     public boolean randomTexture;
 

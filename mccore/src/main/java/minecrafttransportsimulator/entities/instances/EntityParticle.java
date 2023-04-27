@@ -50,7 +50,7 @@ public class EntityParticle extends AEntityC_Renderable {
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
-        if (!definition.axisAligned) {
+        if (definition.axisAligned) {
             orientation.set(entitySpawning.orientation);
             orientation.multiply(definition.rot);
             prevOrientation.set(orientation);
@@ -309,11 +309,11 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (definition.axisAligned) {
+        if (definition.axisLocked) {
             Point3D vector = clientPlayer.getEyePosition().copy().subtract(position);
             vector.y = 0;
             orientation.setToVector(vector, true);
-        } else {
+        } else if (!definition.axisAligned) {
             orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
         }
     }
