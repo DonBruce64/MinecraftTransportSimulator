@@ -105,11 +105,6 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     }
 
     @Override
-    public boolean canCollide() {
-        return true;
-    }
-
-    @Override
     public boolean shouldRenderBeams() {
         return currentPart != null ? currentPart.shouldRenderBeams() : false;
     }

@@ -5,10 +5,15 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -19,8 +24,6 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -39,7 +42,6 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean changeCameraRequest;
     private static BuilderEntityRenderForwarder activeFollower;
     private static int ticksSincePlayerJoin;
-    private static World clientWorldToInit;
 
     @Override
     public boolean isGamePaused() {
@@ -192,20 +194,26 @@ public class InterfaceClient implements IInterfaceClient {
             WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    world.runTick(true);
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
 
-                    //Check client world if we have it and need to send a packet.
-                    if (clientWorldToInit != null) {
-                        WrapperWorld.getWrapperFor(clientWorldToInit).onPlayerJoin(WrapperPlayer.getWrapperFor(Minecraft.getMinecraft().player));
-                        clientWorldToInit = null;
+                    //Open pack missing screen if we don't have packs.
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null && !player.isSpectator()) {
+                        ControlSystem.controlGlobal(player);
+                        if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
+                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                                new GUIPackMissing();
+                            }
+                        }
                     }
 
                     //Check follower.
-                    EntityPlayer mcPlayer = Minecraft.getMinecraft().player;
                     if (activeFollower != null) {
                         //Follower exists, check if world is the same and it is actually updating.
                         //We check basic states, and then the watchdog bit that gets reset every tick.
                         //This way if we're in the world, but not valid we will know.
+                        EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
                         if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
                             //Follower is not linked.  Remove it and re-create in code below.
                             activeFollower.setDead();
@@ -217,16 +225,19 @@ public class InterfaceClient implements IInterfaceClient {
                     } else {
                         //Follower does not exist, check if player has been present for 3 seconds and spawn it.
                         if (++ticksSincePlayerJoin == 60) {
-                            activeFollower = new BuilderEntityRenderForwarder(mcPlayer);
+                            activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
                             activeFollower.loadedFromSavedNBT = true;
                             world.world.spawnEntity(activeFollower);
                         }
                     }
                 } else {
-                    world.runTick(false);
+                    //Update player guns.  These happen at the end since they need the player to update first.
+                    world.beginProfiling("MTS_PlayerGunUpdates", true);
+                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
+                        gun.update();
+                        gun.doPostUpdateLogic();
+                    }
 
-                    //Update camera state and requests.
-                    //Needs to happen at the end of the tick to ensure all other change events are processed.
                     changedCameraState = false;
                     if (actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
                         changedCameraState = true;
@@ -249,20 +260,8 @@ public class InterfaceClient implements IInterfaceClient {
                         changeCameraRequest = false;
                     }
                 }
-
+                world.endProfiling();
             }
-        }
-    }
-
-    /**
-     * Forward to event processor.
-     */
-    @SubscribeEvent
-    public static void on(WorldEvent.Load event) {
-        if (event.getWorld().isRemote) {
-            System.out.println("HELLO CLIENT WORLD");
-            //Delay sending of packet until we tick, as we can't create the wrapper here or we'll not have everything loaded.
-            clientWorldToInit = event.getWorld();
         }
     }
 }

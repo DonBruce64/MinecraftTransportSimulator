@@ -7,12 +7,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -237,15 +242,30 @@ public class InterfaceClient implements IInterfaceClient {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    world.runTick(true);
+                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
+                    world.tickAll();
 
                     //Need to update world brightness since sky darken isn't calculated normally on clients.
                     ((WrapperWorld) world).world.updateSkyBrightness();
-                } else {
-                    world.runTick(false);
 
-                    //Update camera state and requests.
-                    //Needs to happen at the end of the tick to ensure all other change events are processed.
+                    //Open pack missing screen if we don't have packs.
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null && !player.isSpectator()) {
+                        ControlSystem.controlGlobal(player);
+                        if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
+                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                                new GUIPackMissing();
+                            }
+                        }
+                    }
+                } else {
+                    //Update player guns.  These happen at the end since they need the player to update first.
+                    world.beginProfiling("MTS_PlayerGunUpdates", true);
+                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
+                        gun.update();
+                        gun.doPostUpdateLogic();
+                    }
+
                     changedCameraState = false;
                     if (actuallyFirstPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON) {
                         changedCameraState = true;

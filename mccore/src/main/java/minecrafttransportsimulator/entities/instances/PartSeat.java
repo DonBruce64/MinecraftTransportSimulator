@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
@@ -79,7 +79,7 @@ public final class PartSeat extends APart {
                             //Check if the rider is riding something before adding them.
                             //If they are riding something, remove them from it first.
                             //If they are riding our vehicle, don't adjust their head position.
-                            AEntityE_Interactable<?> entityPlayerRiding = player.getEntityRiding();
+                            AEntityB_Existing entityPlayerRiding = player.getEntityRiding();
                             if (entityPlayerRiding != null) {
                                 if(entityPlayerRiding instanceof PartSeat) {
                                    ((PartSeat) entityPlayerRiding).riderChangingSeats = true;
@@ -316,9 +316,8 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    public void updateRider() {
-        super.updateRider();
-        if (rider != null) {
+    public boolean updateRider() {
+        if (super.updateRider()) {
             //Update scale, need to not include main vehicle scaling since that doesn't affect player scale.
             if (vehicleOn != null) {
                 riderScale.set(scale.x / vehicleOn.scale.x, scale.y / vehicleOn.scale.y, scale.z / vehicleOn.scale.z);
@@ -340,6 +339,9 @@ public final class PartSeat extends APart {
             if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && riderIsClient) {
                 ControlSystem.controlMultipart(masterEntity, placementDefinition.isController);
             }
+            return true;
+        } else {
+            return false;
         }
     }
 

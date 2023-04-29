@@ -99,9 +99,4 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
     public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
         entityMap.put(EntityVehicleF_Physics.class.getSimpleName(), (world, placingPlayer, data) -> new EntityVehicleF_Physics(world, placingPlayer, data));
     }
-
-    @Override
-    public EntityVehicleF_Physics createEntityFromData(AWrapperWorld world, IWrapperNBT data) {
-        return new EntityVehicleF_Physics(world, null, data);
-    }
 }

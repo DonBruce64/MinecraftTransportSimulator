@@ -75,9 +75,9 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     @Override
-    public EntityUpdateType getUpdateType() {
-        //Radios get ticked from their spawning entities post-update.
-        return EntityUpdateType.NONE;
+    public boolean shouldAutomaticallyUpdate() {
+        //Radios get ticked from their parents post-update.
+        return false;
     }
 
     @Override

@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -17,21 +15,9 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.packets.instances.PacketPlayerJoin;
-import minecrafttransportsimulator.packets.instances.PacketWorldEntityData;
-import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.ControlSystem;
 
 /**
  * IWrapper to a world instance.  This contains many common methods that
@@ -45,161 +31,6 @@ import minecrafttransportsimulator.systems.ControlSystem;
  * @author don_bruce
  */
 public abstract class AWrapperWorld extends EntityManager {
-    private final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
-    private static int packWarningTicks;
-
-    /**
-     * Handles things that happen after the player joins.
-     * Called on both server and client, though mostly just sends
-     * over server entity data to them on their clients.
-     * Note that this is called on the client ITSELF  on join,
-     * but on the server this is called via a PACKET sent by the client.
-     * This ensures the client is connected and ready to receive any data we give it.
-     */
-    public void onPlayerJoin(IWrapperPlayer player) {
-        if (isClient()) {
-            //Send packet to the server to handle join logic.
-            InterfaceManager.packetInterface.sendToServer(new PacketPlayerJoin(player));
-        } else {
-            //Send data to the client.
-            for (AEntityA_Base entity : trackedEntityMap.values()) {
-                if (entity instanceof AEntityD_Definable) {
-                    AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-                    if (definable.loadFromWorldData()) {
-                        player.sendPacket(new PacketWorldEntityData(definable));
-                    }
-                }
-            }
-
-            UUID playerUUID = player.getID();
-
-            //Remove old gun if we already spawned it.
-            EntityPlayerGun gun = playerServerGuns.get(playerUUID);
-            if (gun != null) {
-                gun.remove();
-            }
-
-            //Spawn gun.
-            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            gun = new EntityPlayerGun(this, player, newData);
-            gun.addPartsPostAddition(player, newData);
-            playerServerGuns.put(playerUUID, gun);
-
-            //If the player is new, add handbooks.
-            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
-                player.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
-                player.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
-                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
-                ConfigSystem.saveToDisk();
-            }
-        }
-    }
-
-    /**
-     * Does all ticking operations for all entities, plus any supplemental logic for housekeeping.
-     */
-    public void runTick(boolean mainUpdate) {
-        beginProfiling("MTS_EntityUpdates", true);
-        for (AEntityA_Base entity : mainUpdate ? allMainTickableEntities : allLastTickableEntities) {
-            if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
-                entity.update();
-                if (entity instanceof AEntityD_Definable) {
-                    ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
-                }
-                endProfiling();
-            }
-        }
-
-        beginProfiling("MTS_GeneralFunctions", true);
-        if (mainUpdate) {
-            if (isClient()) {
-                //Get player for future client calls and make sure they're valid.
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                if (player != null && !player.isSpectator()) {
-                    //Call controls system to handle inputs.
-                    ControlSystem.controlGlobal(player);
-
-                    //Open pack missing GUI every 5 sec on clients without packs to force them to get some.
-                    if (!PackParser.arePacksPresent() && ++packWarningTicks == 100) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                            new GUIPackMissing();
-                        }
-                        packWarningTicks = 0;
-                    }
-                }
-            }
-        }
-        endProfiling();
-    }
-
-    /**
-     * Like {@link #addEntity(AEntityA_Base)}, except this creates the entity from the data rather than
-     * adding an existing entity.
-     */
-    public void addEntityByData(IWrapperNBT data) {
-        AItemPack<?> packItem = PackParser.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
-        if (packItem instanceof AItemSubTyped) {
-            AEntityD_Definable<?> entity = ((AItemSubTyped<?>) packItem).createEntityFromData(this, data);
-            if (entity != null) {
-                if (entity instanceof AEntityF_Multipart) {
-                    ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
-                }
-                addEntity(entity);
-                return;
-            }
-        } else if (packItem == null) {
-            InterfaceManager.coreInterface.logError("Tried to create entity from NBT but couldn't find an item to create it from.  Did a pack change?");
-        } else {
-            InterfaceManager.coreInterface.logError("Tried to create entity from NBT but found a pack item that wasn't a sub-typed item.  A pack could have changed, but this is probably a bug and should be reported.");
-        }
-    }
-
-    /**
-     * Called to save all entities that need saving to the world.
-     * Only called on servers, as clients don't save anything.
-     */
-    public void saveEntities() {
-        IWrapperNBT entityData = InterfaceManager.coreInterface.getNewNBTWrapper();
-        int entityCount = 0;
-        for (AEntityA_Base entity : trackedEntityMap.values()) {
-            if (entity instanceof AEntityD_Definable) {
-                AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-                if (definable.loadFromWorldData()) {
-                    entityData.setData("entity" + entityCount++, entity.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-                }
-            }
-        }
-        entityData.setInteger("entityCount", entityCount);
-        setData("entities", entityData);
-    }
-
-    /**
-     * Called to load all entities that were previously saved in the world.
-     * Only called on servers, as clients don't save anything.
-     */
-    public void loadEntities() {
-        IWrapperNBT entityData = getData("entities");
-        if (entityData != null) {
-            int entityCount = entityData.getInteger("entityCount");
-            System.out.println("Found X ents to load " + entityCount);
-            for (int i = 0; i < entityCount; ++i) {
-                System.out.println("Trying to load " + "entity" + i);
-                addEntityByData(entityData.getData("entity" + i));
-            }
-        }
-    }
-
-    /**
-     * Called to close out the world.  This does a final save, among other
-     * clean-up operations.
-     */
-    public void close() {
-        saveEntities();
-        for (AEntityA_Base entity : allEntities) {
-            entity.remove();
-        }
-    }
 
     /**
      * Returns true if this is a client world, false if we're on the server.

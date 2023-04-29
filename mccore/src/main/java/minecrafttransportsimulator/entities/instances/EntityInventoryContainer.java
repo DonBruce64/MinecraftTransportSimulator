@@ -32,9 +32,9 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     }
 
     @Override
-    public EntityUpdateType getUpdateType() {
-        //Inventories don't need to tick.
-        return EntityUpdateType.NONE;
+    public boolean shouldAutomaticallyUpdate() {
+        //Furnaces don't need to tick.
+        return false;
     }
 
     @Override

@@ -18,9 +18,11 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -34,6 +36,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -68,11 +71,9 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.event.world.GetCollisionBoxesEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -88,9 +89,10 @@ import net.minecraftforge.items.IItemHandler;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber
 public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
+    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
+    private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
     private final Set<BlockPos> knownAirBlocks = new HashSet<>();
 
@@ -133,6 +135,7 @@ public class WrapperWorld extends AWrapperWorld {
                 throw new IllegalStateException("Could not load saved data from disk!  This will result in data loss if we continue!");
             }
         }
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -194,9 +197,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public File getDataFile() {
-        File dataDir = new File(((WorldServer) world).getChunkSaveLocation(), "data");
-        dataDir.mkdirs();
-        return new File(dataDir, "mtsdata.dat");
+        return new File(world.getSaveHandler().getWorldDirectory(), "mtsdata.dat");
     }
 
     @Override
@@ -243,12 +244,20 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void spawnEntity(AEntityB_Existing entity) {
+        spawnEntityInternal(entity);
+    }
+
+    /**
+     * Internal method to spawn entities and return their builders.
+     */
+    protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
         BuilderEntityExisting builder = new BuilderEntityExisting(((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
         builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, 0, 0);
         builder.entity = entity;
         world.spawnEntity(builder);
         addEntity(entity);
+        return builder;
     }
 
     @Override
@@ -890,82 +899,86 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Forward event to processor.
+     * Spawn "follower" entities for the player if they don't exist already.
+     * This only happens 3 seconds after the player joins.
+     * This delay is done to ensure all chunks are loaded before spawning any followers.
+     * We also track followers, and ensure that if the player doesn't exist, they are removed.
+     * This handles players leaving.  We could use events for this, but they're not reliable.
      */
     @SubscribeEvent
-    public static void on(TickEvent.WorldTickEvent event) {
+    public void on(TickEvent.WorldTickEvent event) {
+        //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
-        if (!event.world.isRemote) {
-            WrapperWorld world = WrapperWorld.getWrapperFor(event.world);
+        if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
-                world.runTick(true);
-            } else {
-                world.runTick(false);
-            }
-        }
-    }
+                beginProfiling("MTS_ServerVehicleUpdates", true);
+                tickAll();
 
-    /**
-     * Forward event to processor.
-     */
-    @SubscribeEvent
-    public static void on(WorldEvent.Save event) {
-        if (!event.getWorld().isRemote) {
-            System.out.println("SAVE WORLD");
-            WrapperWorld.getWrapperFor(event.getWorld()).saveEntities();
-        }
-    }
+                for (EntityPlayer player : event.world.playerEntities) {
+                    UUID playerUUID = player.getUniqueID();
+                    BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
+                    if (gunBuilder != null) {
+                        //Gun exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        if (gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            gunBuilder.setDead();
+                            playerServerGunBuilders.remove(playerUUID);
+                            ticksSincePlayerJoin.remove(playerUUID);
+                        } else {
+                            ++gunBuilder.idleTickCounter;
+                        }
+                    } else if (!player.isDead) {
+                        //Gun does not exist, check if player has been present for 3 seconds and spawn it.
+                        int totalTicksWaited = 0;
+                        if (ticksSincePlayerJoin.containsKey(playerUUID)) {
+                            totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
+                        }
+                        if (++totalTicksWaited == 60) {
+                            //Spawn gun.
+                            IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                            playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                            entity.addPartsPostAddition(playerWrapper, newData);
 
-    /**
-     * Forward event to processor.
-     */
-    @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
-        if (!event.getWorld().isRemote) {
-            System.out.println("DIE WORLD");
-            WrapperWorld.getWrapperFor(event.getWorld()).close();
-            worldWrappers.remove(event.getWorld());
-        }
-    }
-
-    /**
-     * Forward to event processor.
-     */
-    @SubscribeEvent
-    public static void on(WorldEvent.Load event) {
-        if (!event.getWorld().isRemote) {
-            System.out.println("HELLO SERVER WORLD");
-            WrapperWorld.getWrapperFor(event.getWorld()).loadEntities();
-        }
-    }
-
-    /**
-     * Handle collision check.
-     */
-    @SubscribeEvent
-    public static void on(GetCollisionBoxesEvent event) {
-        //We want to handle this both on server and client worlds.
-        System.out.println("COL CHECK");
-        AxisAlignedBB box = event.getAabb();
-        WrapperWorld world = WrapperWorld.getWrapperFor(event.getWorld());
-        world.mutableCollisionBounds.widthRadius = (box.maxX - box.minX) / 2D;
-        world.mutableCollisionBounds.heightRadius = (box.maxY - box.minY) / 2D;
-        world.mutableCollisionBounds.depthRadius = (box.maxZ - box.minZ) / 2D;
-        world.mutableCollisionBounds.globalCenter.x = box.minX + world.mutableCollisionBounds.widthRadius;
-        world.mutableCollisionBounds.globalCenter.y = box.minY + world.mutableCollisionBounds.heightRadius;
-        world.mutableCollisionBounds.globalCenter.z = box.minZ + world.mutableCollisionBounds.depthRadius;
-
-        for (AEntityE_Interactable<?> entity : world.collidableEntities) {
-            if (entity.encompassingBox.intersects(world.mutableCollisionBounds)) {
-                for (BoundingBox testBox : entity.getCollisionBoxes()) {
-                    if (testBox.intersects(world.mutableCollisionBounds)) {
-                        System.out.println("HIT");
-                        event.getCollisionBoxesList().add(convert(testBox));
+                            //If the player is new, also add handbooks.
+                            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
+                                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
+                                ConfigSystem.saveToDisk();
+                            }
+                        } else {
+                            ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
+                        }
                     }
                 }
+            } else {
+                //Update player guns.  These happen at the end since they need the player to update first.
+                beginProfiling("MTS_PlayerGunUpdates", true);
+                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
+                    gun.update();
+                    gun.doPostUpdateLogic();
+                }
             }
+            endProfiling();
         }
     }
 
-    private final BoundingBox mutableCollisionBounds = new BoundingBox(new Point3D(), 0);
+    /**
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     * Also remove this wrapper from the created lists, as it's invalid.
+     */
+    @SubscribeEvent
+    public void on(WorldEvent.Unload event) {
+        //Need to check if it's our world, because Forge is stupid like that.
+        if (event.getWorld() == world) {
+            for (AEntityA_Base entity : allEntities) {
+                entity.remove();
+            }
+            worldWrappers.remove(world);
+        }
+    }
 }

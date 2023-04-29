@@ -3,7 +3,7 @@ package minecrafttransportsimulator.systems;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
@@ -47,10 +47,10 @@ public class CameraSystem {
      */
     public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, RotationMatrix cameraRotation, float partialTicks) {
         //Get camera.
-        AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+        AEntityB_Existing ridingEntity = player.getEntityRiding();
         PartSeat sittingSeat = ridingEntity instanceof PartSeat ? (PartSeat) ridingEntity : null;
-        EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGun;
-        AEntityE_Interactable<?> cameraProvider = sittingSeat != null ? sittingSeat : playerGunEntity;
+        EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
+        AEntityB_Existing cameraProvider = sittingSeat != null ? sittingSeat : playerGunEntity;
 
         //Reset FOV, sensitivity, overlay, and effect.
         if (currentFOV != 0) {

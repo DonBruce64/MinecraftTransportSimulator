@@ -7,14 +7,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityA_Base.EntityUpdateType;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Class that manages entities in a world or other area.
@@ -22,14 +22,12 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  *
  * @author don_bruce
  */
-public abstract class EntityManager {
-    protected final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
-    protected final ConcurrentLinkedQueue<AEntityA_Base> allMainTickableEntities = new ConcurrentLinkedQueue<>();
-    protected final ConcurrentLinkedQueue<AEntityA_Base> allLastTickableEntities = new ConcurrentLinkedQueue<>();
+public class EntityManager {
+    public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
-    public final ConcurrentLinkedQueue<AEntityE_Interactable<?>> collidableEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<>();
-    protected final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
 
     /**
      * Adds the entity to the world.  This will make it get update ticks and be rendered
@@ -40,16 +38,11 @@ public abstract class EntityManager {
      */
     public <EntityType extends AEntityA_Base> void addEntity(EntityType entity) {
         allEntities.add(entity);
-        if (entity.getUpdateType() == EntityUpdateType.MAIN) {
-            allMainTickableEntities.add(entity);
-        } else if (entity.getUpdateType() == EntityUpdateType.LAST) {
-            allLastTickableEntities.add(entity);
+        if (entity.shouldAutomaticallyUpdate()) {
+            allTickableEntities.add(entity);
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
-            if (entity instanceof AEntityE_Interactable && ((AEntityE_Interactable<?>) entity).canCollide()) {
-                collidableEntities.add((AEntityE_Interactable<?>) entity);
-            }
         }
 
         @SuppressWarnings("unchecked")
@@ -60,34 +53,7 @@ public abstract class EntityManager {
         }
         classList.add(entity);
         if (entity.shouldSync()) {
-            AEntityA_Base otherEntity = trackedEntityMap.get(entity.uniqueUUID);
-            if (otherEntity != null) {
-                InterfaceManager.coreInterface.logError("Attempting to add already-created and tracked entity with UUID:" + entity.uniqueUUID + " old entity is being replaced!");
-                removeEntity(otherEntity);
-            }
             trackedEntityMap.put(entity.uniqueUUID, entity);
-        }
-    }
-
-    /**
-     * Removes this entity from the world.  Taking it off the update/functional lists.
-     */
-    public void removeEntity(AEntityA_Base entity) {
-        allEntities.remove(entity);
-        if (entity.getUpdateType() == EntityUpdateType.MAIN) {
-            allMainTickableEntities.remove(entity);
-        } else if (entity.getUpdateType() == EntityUpdateType.LAST) {
-            allLastTickableEntities.remove(entity);
-        }
-        if (entity instanceof AEntityC_Renderable) {
-            renderableEntities.remove(entity);
-            if (entity instanceof AEntityE_Interactable && ((AEntityE_Interactable<?>) entity).canCollide()) {
-                collidableEntities.remove(entity);
-            }
-        }
-        entitiesByClass.get(entity.getClass()).remove(entity);
-        if (entity.shouldSync()) {
-            trackedEntityMap.remove(entity.uniqueUUID);
         }
     }
 
@@ -130,6 +96,23 @@ public abstract class EntityManager {
     }
 
     /**
+     * Ticks all entities that exist and need ticking.  These are any entities that
+     * are not parts, since parts are ticked by their parents.
+     */
+    public void tickAll() {
+        for (AEntityA_Base entity : allTickableEntities) {
+            if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
+                entity.update();
+                if (entity instanceof AEntityD_Definable) {
+                    ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
+                }
+                entity.world.endProfiling();
+            }
+        }
+    }
+
+    /**
      * Gets the closest multipart intersected with, be it a vehicle, a part on that vehicle, or a placed part.
      * If nothing is intersected, null is returned.
      */
@@ -157,6 +140,21 @@ public abstract class EntityManager {
             }
         }
         return closestResult;
+    }
+
+    /**
+     * Removes this entity from the world.  Taking it off the update/functional lists.
+     */
+    public void removeEntity(AEntityA_Base entity) {
+        allEntities.remove(entity);
+        allTickableEntities.remove(entity);
+        if (entity instanceof AEntityC_Renderable) {
+            renderableEntities.remove(entity);
+        }
+        entitiesByClass.get(entity.getClass()).remove(entity);
+        if (entity.shouldSync()) {
+            trackedEntityMap.remove(entity.uniqueUUID);
+        }
     }
 
     /**

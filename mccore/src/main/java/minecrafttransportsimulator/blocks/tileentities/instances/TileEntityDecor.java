@@ -59,14 +59,15 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     }
 
     @Override
-    public void doPostUpdateLogic() {
-        super.doPostUpdateLogic();
-        /*
-        if (rider != null) {
+    public boolean updateRider() {
+        if (super.updateRider()) {
             position.y += definition.decor.sittingOffset;
             rider.setPosition(position, false);
             position.y -= definition.decor.sittingOffset;
-        }*/
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -87,8 +88,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
             	 }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
-            //FIXME spawn entity and set rider.
-            //setRider(player, true);
+            setRider(player, true);
         } else {
             setVariable(CLICKED_VARIABLE, 1);
             toggleVariable(ACTIVATED_VARIABLE);

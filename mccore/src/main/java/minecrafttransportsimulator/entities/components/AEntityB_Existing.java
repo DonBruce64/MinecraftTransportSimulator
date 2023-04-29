@@ -1,17 +1,24 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.CameraSystem;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -32,6 +39,51 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public final Point3D prevMotion;
     public double velocity;
     public final BoundingBox boundingBox;
+
+    /**
+     * The entity that is currently riding this entity.  There is only one rider per entity, though one can
+     * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
+     **/
+    public IWrapperEntity rider;
+
+    /**
+     * True if the running instance is the client, and the rider on this entity is the client player.
+     **/
+    public boolean riderIsClient;
+
+    /**
+     * List of all cameras available on this entity for the rider.  These get populated by other systems as applicable.
+     **/
+    public final List<JSONCameraObject> cameras = new ArrayList<>();
+    public final Map<JSONCameraObject, AEntityD_Definable<?>> cameraEntities = new LinkedHashMap<>();
+    public JSONCameraObject activeCamera;
+    public AEntityD_Definable<?> activeCameraEntity;
+    public AnimationSwitchbox activeCameraSwitchbox;
+
+    /**
+     * The position of the eyes of the rider.  This is slightly different than the return for 
+     * {@link IWrapperEntity#getPosition()}, as the former is usually where the rider is sitting, 
+     * whereas this is usually that value offset by {@link IWrapperEntity#getEyeHeight()} and
+     * {@link IWrapperEntity#getSeatOffset()}, multiplied by {@link IWrapperEntity#getVerticalScale()}.
+     * Though this may differ if the default logic is overridden.
+     **/
+    public final Point3D riderEyePosition = new Point3D();
+    public final Point3D prevRiderEyePosition = new Point3D();
+    /**Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.**/
+    public final Point3D riderHeadPosition = new Point3D();
+
+    /**
+     * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
+     * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
+     **/
+    public RotationMatrix riderRelativeOrientation;
+    public RotationMatrix prevRiderRelativeOrientation;
+    private static final Point3D riderTempPoint = new Point3D();
+    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
+
+    //Camera variables.
+    public int zoomLevel;
+    public int cameraIndex;
 
     //Internal sound variables.
     public final EntityRadio radio;
@@ -85,6 +137,30 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             prevMotion.set(motion);
             prevOrientation.set(orientation);
             velocity = motion.length();
+
+            //Only do camera checks if we have an active camera.
+            //Checking at other times wastes CPU cycles.
+            //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
+            if (cameraIndex != 0 && ticksExisted >= 5) {
+                //Check for valid camera, and perform operations if so.
+                activeCamera = null;
+                while (cameraIndex != 0 && activeCamera == null) {
+                    if ((cameraIndex - 1) < cameras.size()) {
+                        activeCamera = cameras.get(cameraIndex - 1);
+                        activeCameraEntity = cameraEntities.get(activeCamera);
+                        activeCameraSwitchbox = activeCameraEntity.cameraSwitchboxes.get(activeCamera);
+                        if (activeCameraSwitchbox != null && !activeCameraSwitchbox.runSwitchbox(0, false)) {
+                            //Camera is inactive, go to next.
+                            ++cameraIndex;
+                            activeCamera = null;
+                        }
+                    } else {
+                        //No active cameras found, set index to 0 to disable and go back to normal rendering.
+                        cameraIndex = 0;
+                        activeCamera = null;
+                    }
+                }
+            }
         }
         world.endProfiling();
     }
@@ -100,9 +176,132 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 sound.stopSound = true;
             }
         }
+        if (rider != null) {
+            removeRider();
+        }
         if (radio != null) {
             radio.remove();
         }
+    }
+
+    @Override
+    public double getMass() {
+        return rider != null ? 100 : 0;
+    }
+
+    /**
+     * Called to update the rider on this entity.  This gets called after the update loop,
+     * as the entity needs to move to its new position before we can know where the
+     * riders of said entity will be.  The calling function will assure that the rider
+     * is non-null at this point, so null checks are not required in this function.
+     * However, if the rider is removed, false is returned, and further processing should halt.
+     */
+    public boolean updateRider() {
+        //Update entity position, motion, and orientation.
+        if (rider.isValid()) {
+            rider.setPosition(position, false);
+            rider.setVelocity(motion);
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            riderRelativeOrientation.angles.y += rider.getYawDelta();
+            //Need to clamp between +/- 180 to ensure that we don't confuse things.
+            if (riderRelativeOrientation.angles.y > 180) {
+                riderRelativeOrientation.angles.y -= 360;
+                prevRiderRelativeOrientation.angles.y -= 360;
+            } else if (riderRelativeOrientation.angles.y < -180) {
+                riderRelativeOrientation.angles.y += 360;
+                prevRiderRelativeOrientation.angles.y += 360;
+            }
+
+            //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
+            float pitchDelta = rider.getPitchDelta();
+            if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
+                riderRelativeOrientation.angles.x += pitchDelta;
+            }
+            riderRelativeOrientation.updateToAngles();
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
+            prevRiderEyePosition.set(riderEyePosition);
+            riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+            riderHeadPosition.set(riderEyePosition);
+
+            //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
+            if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
+                int zoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
+                riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
+                riderEyePosition.add(riderTempPoint);
+            }
+            return true;
+        } else {
+            //Remove invalid rider.
+            //Don't call this on the client; they will get a removal packet from this method.
+            if (!world.isClient()) {
+                removeRider();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Called to set the rider for this entity.  If this isn't possible because
+     * there is already a rider, or we shouldn't accept riders, return false.
+     * Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
+     * for syncing so calling this on clients will result in Bad Stuff.
+     * If the rider needs to face forward when they are added, set the boolean to true.
+     * Note: this will only set them to face forwards on the tick they mount.
+     * It won't block them from turning to a different orientation later.
+     */
+    public boolean setRider(IWrapperEntity newRider, boolean facesForwards) {
+        if (rider != null) {
+            return false;
+        } else {
+            rider = newRider;
+            riderIsClient = world.isClient() && rider.equals(InterfaceManager.clientInterface.getClientPlayer());
+
+            //Create variables for use in other code areas.
+            if (riderRelativeOrientation == null) {
+                riderRelativeOrientation = new RotationMatrix();
+                prevRiderRelativeOrientation = new RotationMatrix();
+            }
+
+            if (facesForwards) {
+                riderRelativeOrientation.setToZero();
+            } else {
+                riderTempPoint.set(0, 0, 1).rotate(rider.getOrientation()).reOrigin(orientation);
+                riderRelativeOrientation.setToVector(riderTempPoint, false);
+            }
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
+            rider.setPosition(position, false);
+            //Call getters so it resets to current value, if we don't do this, they'll get flagged for a change in the update call.
+            rider.getYawDelta();
+            rider.getPitchDelta();
+            rider.setRiding(this);
+            if (!world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, facesForwards));
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Called to remove the rider that is currently riding this entity.
+     */
+    public void removeRider() {
+        rider.setRiding(null);
+        if (!world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
+        }
+        rider = null;
+        riderIsClient = false;
+    }
+
+    /**
+     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
+     * the rider's {@link #riderRelativeOrientation}.
+     */
+    public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
+        store.interploate(prevRiderRelativeOrientation, riderRelativeOrientation, partialTicks);
     }
 
     /**

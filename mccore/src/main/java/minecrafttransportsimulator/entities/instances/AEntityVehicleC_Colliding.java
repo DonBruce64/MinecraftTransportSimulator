@@ -75,11 +75,6 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         world.endProfiling();
     }
 
-    @Override
-    public boolean loadFromWorldData() {
-        return true;
-    }
-
     /**
      * Checks collisions and returns the collision depth for a box.
      * Returns -1 if collision was hard enough to destroy the vehicle.
@@ -146,11 +141,6 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         } else {
             return 0;
         }
-    }
-
-    @Override
-    public boolean canCollide() {
-        return true;
     }
 
     @Override

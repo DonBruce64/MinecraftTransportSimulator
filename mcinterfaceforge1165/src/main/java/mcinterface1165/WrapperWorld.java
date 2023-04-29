@@ -19,9 +19,11 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -35,6 +37,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -83,7 +86,6 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -101,6 +103,7 @@ import net.minecraftforge.items.IItemHandler;
 
 public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
+    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
     private static Map<UUID, BuilderEntityRenderForwarder> playerFollowers = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
@@ -916,12 +919,26 @@ public class WrapperWorld extends AWrapperWorld {
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isClientSide && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
-                runTick(true);
+                beginProfiling("MTS_ServerVehicleUpdates", true);
+                tickAll();
 
-                //Unlike 1.12.2 and earlier, we can't spawn this entity only on the client.
-                //Rather, we need to spawn them on the server, one per player.
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
+
+                    BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
+                    if (gunBuilder != null) {
+                        //Gun exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        if (gunBuilder.level != mcPlayer.level || !mcPlayer.isAlive() || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            gunBuilder.remove();
+                            playerServerGunBuilders.remove(playerUUID);
+                            ticksSincePlayerJoin.remove(playerUUID);
+                        } else {
+                            ++gunBuilder.idleTickCounter;
+                        }
+                    }
 
                     BuilderEntityRenderForwarder followerBuilder = playerFollowers.get(playerUUID);
                     if (followerBuilder != null) {
@@ -939,61 +956,66 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
 
-                    if (mcPlayer.isAlive() && followerBuilder == null) {
+                    if (mcPlayer.isAlive() && (gunBuilder == null || followerBuilder == null)) {
                         //Some follower doesn't exist.  Check if player has been present for 3 seconds and spawn it.
                         int totalTicksWaited = 0;
                         if (ticksSincePlayerJoin.containsKey(playerUUID)) {
                             totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
                         }
                         if (++totalTicksWaited == 60) {
+                            IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
+                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+
+                            //Spawn gun.
+                            if (gunBuilder == null) {
+                                EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                                playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                                entity.addPartsPostAddition(playerWrapper, newData);
+                            }
+
+                            //Spawn follower.
                             if (followerBuilder == null) {
                                 followerBuilder = new BuilderEntityRenderForwarder(mcPlayer);
                                 followerBuilder.loadedFromSavedNBT = true;
                                 playerFollowers.put(playerUUID, followerBuilder);
                                 world.addFreshEntity(followerBuilder);
                             }
+
+                            //If the player is new, add handbooks.
+                            if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
+                                ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
+                                ConfigSystem.saveToDisk();
+                            }
+                        } else {
+                            ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                         }
-                        ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
                     }
                 }
             } else {
-                runTick(false);
+                //Update player guns.  These happen at the end since they need the player to update first.
+                beginProfiling("MTS_PlayerGunUpdates", true);
+                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
+                    gun.update();
+                    gun.doPostUpdateLogic();
+                }
             }
         }
     }
 
     /**
-     * Forward event to processor, and rmeove us as a wrapper to free up the world objects.
-     */
-    @SubscribeEvent
-    public void on(WorldEvent.Save event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        if (event.getWorld() == world) {
-            saveEntities();
-        }
-    }
-
-    /**
-     * Forward event to processor, and rmeove us as a wrapper to free up the world objects.
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     * Also remove this wrapper from the created lists, as it's invalid.
      */
     @SubscribeEvent
     public void on(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.
         if (event.getWorld() == world) {
-            close();
+            for (AEntityA_Base entity : allEntities) {
+                entity.remove();
+            }
             worldWrappers.remove(world);
-        }
-    }
-
-    /**
-     * Forward to event processor.
-     */
-    @SubscribeEvent
-    public void on(EntityJoinWorldEvent event) {
-        //Need to check if it's our world, because Forge is stupid like that.
-        //Also make sure we're on the client here.
-        if (event.getWorld() == world && event.getWorld().isClientSide() && event.getEntity() instanceof PlayerEntity) {
-            onPlayerJoin(WrapperPlayer.getWrapperFor((PlayerEntity) event.getEntity()));
         }
     }
 }
