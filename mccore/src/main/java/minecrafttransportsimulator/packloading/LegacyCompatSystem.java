@@ -75,16 +75,35 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class LegacyCompatSystem {
 
     public static void performLegacyCompats(AJSONBase definition) {
+        if (definition instanceof AJSONItem) {
+            AJSONItem item = (AJSONItem) definition;
+            //Update materials to match new format.
+            if (item.general.materials != null) {
+                item.general.materialLists = new ArrayList<List<String>>();
+                item.general.materialLists.add(item.general.materials);
+                item.general.materials = null;
+            } else if (item.general.materialLists == null) {
+                item.general.materialLists = new ArrayList<List<String>>();
+                item.general.materialLists.add(new ArrayList<>());
+            }
+            if (item.general.repairMaterials != null) {
+                item.general.repairMaterialLists = new ArrayList<List<String>>();
+                item.general.repairMaterialLists.add(item.general.repairMaterials);
+                item.general.repairMaterials = null;
+            }
+        }
+
         if (definition instanceof AJSONMultiModelProvider) {
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
             //If we are a multi-model provider without a definition, add one so we don't crash on other systems.
             if (provider.definitions == null) {
                 provider.definitions = new ArrayList<>();
-                JSONSubDefinition subDefinition = new JSONSubDefinition();
-                subDefinition.extraMaterials = new ArrayList<>();
-                subDefinition.name = provider.general.name;
-                subDefinition.subName = "";
-                provider.definitions.add(subDefinition);
+                JSONSubDefinition subDef = new JSONSubDefinition();
+                subDef.extraMaterialLists = new ArrayList<List<String>>();
+                provider.general.materialLists.forEach(entry -> subDef.extraMaterialLists.add(new ArrayList<>()));
+                subDef.name = provider.general.name;
+                subDef.subName = "";
+                provider.definitions.add(subDef);
             }
 
             //Add model name if we don't have one.
@@ -145,22 +164,6 @@ public final class LegacyCompatSystem {
             performSkinLegacyCompats((JSONSkin) definition);
         } else if (definition instanceof JSONBullet) {
             performBulletLegacyCompats((JSONBullet) definition);
-        }
-
-        if (definition instanceof AJSONItem) {
-            AJSONItem item = (AJSONItem) definition;
-            //Update materials to match new format.
-            //This comes after skin compats, which change this.
-            if (item.general.materials != null) {
-                item.general.materialLists = new ArrayList<List<String>>();
-                item.general.materialLists.add(item.general.materials);
-                item.general.materials = null;
-            }
-            if (item.general.repairMaterials != null) {
-                item.general.repairMaterialLists = new ArrayList<List<String>>();
-                item.general.repairMaterialLists.add(item.general.repairMaterials);
-                item.general.repairMaterials = null;
-            }
         }
 
         if (definition instanceof AJSONMultiModelProvider) {
@@ -1723,8 +1726,6 @@ public final class LegacyCompatSystem {
             definition.skin.systemName = definition.general.systemName;
             definition.general.systemName = null;
         }
-        //Make the materials empty, as the parser doesn't like them null.
-        definition.general.materials = new ArrayList<>();
     }
 
     private static void performBulletLegacyCompats(JSONBullet definition) {
