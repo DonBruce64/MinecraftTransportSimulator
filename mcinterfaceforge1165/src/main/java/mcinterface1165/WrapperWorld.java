@@ -19,11 +19,9 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -85,6 +83,7 @@ import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -148,11 +147,6 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
         MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @Override
-    public AWrapperWorld getWorld() {
-        return this;
     }
 
     @Override
@@ -922,8 +916,10 @@ public class WrapperWorld extends AWrapperWorld {
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isClientSide && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
-                beginProfiling("MTS_ServerVehicleUpdates", true);
-                tickAll();
+                runTick(true);
+
+                //Unlike 1.12.2 and earlier, we can't spawn this entity only on the client.
+                //Rather, we need to spawn them on the server, one per player.
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
 
@@ -950,9 +946,6 @@ public class WrapperWorld extends AWrapperWorld {
                             totalTicksWaited = ticksSincePlayerJoin.get(playerUUID);
                         }
                         if (++totalTicksWaited == 60) {
-                            IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
-
-                            //Spawn follower.
                             if (followerBuilder == null) {
                                 followerBuilder = new BuilderEntityRenderForwarder(mcPlayer);
                                 followerBuilder.loadedFromSavedNBT = true;
@@ -964,28 +957,43 @@ public class WrapperWorld extends AWrapperWorld {
                     }
                 }
             } else {
-                //Update player guns.  These happen at the end since they need the player to update first.
-                beginProfiling("MTS_PlayerGunUpdates", true);
-                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                    gun.update();
-                    gun.doPostUpdateLogic();
-                }
+                runTick(false);
             }
         }
     }
 
     /**
-     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
-     * Also remove this wrapper from the created lists, as it's invalid.
+     * Forward event to processor, and rmeove us as a wrapper to free up the world objects.
+     */
+    @SubscribeEvent
+    public void on(WorldEvent.Save event) {
+        //Need to check if it's our world, because Forge is stupid like that.
+        if (event.getWorld() == world) {
+            saveEntities();
+        }
+    }
+
+    /**
+     * Forward event to processor, and rmeove us as a wrapper to free up the world objects.
      */
     @SubscribeEvent
     public void on(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.
         if (event.getWorld() == world) {
-            for (AEntityA_Base entity : allEntities) {
-                entity.remove();
-            }
+            close();
             worldWrappers.remove(world);
+        }
+    }
+
+    /**
+     * Forward to event processor.
+     */
+    @SubscribeEvent
+    public void on(EntityJoinWorldEvent event) {
+        //Need to check if it's our world, because Forge is stupid like that.
+        //Also make sure we're on the client here.
+        if (event.getWorld() == world && event.getWorld().isClientSide() && event.getEntity() instanceof PlayerEntity) {
+            onPlayerJoin(WrapperPlayer.getWrapperFor((PlayerEntity) event.getEntity()));
         }
     }
 }

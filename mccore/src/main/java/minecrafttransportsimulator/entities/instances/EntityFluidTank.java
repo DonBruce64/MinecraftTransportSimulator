@@ -29,9 +29,9 @@ public class EntityFluidTank extends AEntityA_Base {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityUpdateType getUpdateType() {
         //Tanks don't need to tick.
-        return false;
+        return EntityUpdateType.NONE;
     }
 
     @Override

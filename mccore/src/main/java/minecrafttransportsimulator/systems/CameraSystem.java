@@ -49,7 +49,7 @@ public class CameraSystem {
         //Get camera.
         AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
         PartSeat sittingSeat = ridingEntity instanceof PartSeat ? (PartSeat) ridingEntity : null;
-        EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
+        EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGun;
         AEntityE_Interactable<?> cameraProvider = sittingSeat != null ? sittingSeat : playerGunEntity;
 
         //Reset FOV, sensitivity, overlay, and effect.

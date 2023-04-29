@@ -97,7 +97,7 @@ public final class ControlSystem {
     private static void handleClick(IWrapperPlayer player) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
-        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGun;
         if (playerGun != null && playerGun.activeGun != null) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
         }

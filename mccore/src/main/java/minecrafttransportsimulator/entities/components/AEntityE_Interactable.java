@@ -646,6 +646,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
+     * Returns true if the entity can collide whatsoever with other entities, false if not.
+     * Normally returns false, since only top-level entities should do collision, and they
+     * should contain the collision of their components, if any exist.
+     */
+    public boolean canCollide() {
+        return false;
+    }
+
+    /**
      * Returns a collection of BoundingBoxes that make up this entity's collision bounds.
      */
     public Collection<BoundingBox> getCollisionBoxes() {

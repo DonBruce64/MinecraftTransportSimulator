@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketWorldEntityRemove;
 
 /**
  * Base entity class.  This class is the base for all in-game entities.  What these
@@ -50,6 +52,8 @@ public abstract class AEntityA_Base {
         //Get the map of entities we belong to.
         if (shouldSync() && !newlyCreated) {
             //Check to make sure we aren't a duplicate.
+            //If we are, and we are on a server, we must be a copy.
+            //If so, we need to make anew UUID for this entity so it doesn't foul packets.
             UUID savedUUID = data.getUUID("uniqueUUID");
             if (!world.isClient() && world.getEntity(savedUUID) != null) {
                 this.uniqueUUID = UUID.randomUUID();
@@ -70,12 +74,10 @@ public abstract class AEntityA_Base {
     }
 
     /**
-     * Returns true if this entity should be ticked in the main update calls
-     * Note that this does not block one from calling {@link #update()} manually; this
-     * just blocks the auto-ticking code.
+     * Returns the update type for the entity.
      */
-    public boolean shouldAutomaticallyUpdate() {
-        return true;
+    public EntityUpdateType getUpdateType() {
+        return EntityUpdateType.MAIN;
     }
 
     /**
@@ -99,6 +101,10 @@ public abstract class AEntityA_Base {
         if (isValid) {
             isValid = false;
             world.removeEntity(this);
+            if (!world.isClient() && shouldSync()) {
+                //Send packet to all clients to notify them of entity removal.
+                InterfaceManager.packetInterface.sendToAllClients(new PacketWorldEntityRemove(this));
+            }
         }
     }
 
@@ -118,5 +124,16 @@ public abstract class AEntityA_Base {
     public IWrapperNBT save(IWrapperNBT data) {
         data.setUUID("uniqueUUID", uniqueUUID);
         return data;
+    }
+
+    public static enum EntityUpdateType {
+        /**Entity will never have its {@link AEntityA_Base#update()} method called.**/
+        NONE,
+        /**Entity will update during the main update calls.**/
+        MAIN,
+        /**Entity will update after all update calls have been processed, including external entities.
+         * Useful for entities that depend on external entity processing for their states.**/
+        LAST;
+
     }
 }

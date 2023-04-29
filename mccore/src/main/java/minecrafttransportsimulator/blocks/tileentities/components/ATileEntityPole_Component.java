@@ -26,9 +26,9 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
-        //Our poles update us all at once so their states are correct.
-        return false;
+    public EntityUpdateType getUpdateType() {
+        //Pole components get updated by the main pole.
+        return EntityUpdateType.NONE;
     }
 
     @Override

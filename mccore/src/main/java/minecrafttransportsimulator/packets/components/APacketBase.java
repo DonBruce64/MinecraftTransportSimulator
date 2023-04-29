@@ -54,6 +54,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketWorldEntityData;
+import minecrafttransportsimulator.packets.instances.PacketWorldEntityRemove;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -285,6 +286,7 @@ public abstract class APacketBase {
 
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldEntityData.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldEntityRemove.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
     }
