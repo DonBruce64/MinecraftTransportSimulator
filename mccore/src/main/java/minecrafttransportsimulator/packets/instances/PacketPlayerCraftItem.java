@@ -51,17 +51,18 @@ public class PacketPlayerCraftItem extends APacketPlayer {
         if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair))) {
             //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
             if (forRepair) {
-                //Find the repair item and repair it.
+                //Find the repair item and make a copy for repair.
+                //The repair recipe will remove the old item.
                 int repairIndex = inventory.getRepairIndex(itemToCraft, recipeIndex);
-                IWrapperItemStack stack = inventory.getStack(repairIndex);
+                IWrapperItemStack stack = inventory.getStack(repairIndex).copy();
                 AItemPack<?> item = (AItemPack<?>) stack.getItem();
                 IWrapperNBT stackData = stack.getData();
                 item.repair(stackData);
                 stack.setData(stackData);
+
                 if (!player.isCreative()) {
                     inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
                 }
-                //Need to set stack after item removal, as removal code removes this item.
                 inventory.setStack(stack, repairIndex);
             } else {
                 //Check we can add the stack before removing materials.

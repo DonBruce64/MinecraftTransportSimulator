@@ -330,7 +330,6 @@ public class GUIPartBench extends AGUIBase {
      * Sets the variables to be used on a button action, so once an action is performed this
      * logic MUST be called to update the button action states!
      */
-    @SuppressWarnings("RedundantCast")
     private void updateNames() {
         //Get all pack indexes.
         List<String> packIDs = new ArrayList<>(PackParser.getAllPackIDs());
