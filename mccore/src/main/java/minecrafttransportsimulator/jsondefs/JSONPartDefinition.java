@@ -54,6 +54,9 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If set, then whenever the paint gun is used on the vehicle this part is on, this part will attempt to match the tone specified by the index.  If the specified tone does not exist, the part will not change.  Default parts will automatically attempt to match tones, but hand-placed parts will not change unless painted.")
     public int toneIndex;
 
+    @JSONDescription("This parameter is optional.  If set, then this ground part will be forcibly added to the specified GDB (1 = LB, 2=RB, 3= RF, 4 = LF)")
+    public int groundDeviceBoxNumber;
+
     @JSONDescription("The minimum value that this slot will accept.  Parts with values lower than this will be invalid and show up as red holograms.  This differs depending on the part, with engines using fuelConsumption as their value, ground_devices using their diameter, and propellers using their diameter as well.  This allows you an easy way to make sure people don't add oversized engines to your little econo-box or put monster tires on the family sedan.  See the details for each part for what parameter is used for min/max calculations.")
     public float minValue;
 
