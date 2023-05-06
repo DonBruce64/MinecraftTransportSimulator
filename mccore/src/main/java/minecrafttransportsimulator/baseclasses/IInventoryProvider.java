@@ -113,7 +113,7 @@ public interface IInventoryProvider {
                         setStack(stackToAdd.split(amountToAdd), i);
                     }
                 } else if (stackToAdd.isCompleteMatch(stack)) {
-                    amountToAdd = getStackSize() - stack.getSize();
+                    amountToAdd = Math.min(getStackSize(), stack.getMaxSize()) - stack.getSize();
                     //Checks both for full stacks, and over-full stacks to avoid negatives.
                     if (amountToAdd > 0) {
                         if (amountToAdd > qty) {
