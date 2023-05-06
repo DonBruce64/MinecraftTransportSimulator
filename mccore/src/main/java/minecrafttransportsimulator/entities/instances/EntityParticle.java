@@ -12,6 +12,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -50,13 +51,13 @@ public class EntityParticle extends AEntityC_Renderable {
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
-        if (definition.axisAligned) {
+        helperTransform.resetTransforms();
+        if (definition.orientation == ParticleOrientation.FIXED) {
             orientation.set(entitySpawning.orientation);
             orientation.multiply(definition.rot);
             prevOrientation.set(orientation);
+            helperTransform.set(entitySpawning.orientation);
         }
-
-        helperTransform.resetTransforms().set(entitySpawning.orientation);
         if (switchbox != null) {
             helperTransform.multiply(switchbox.netMatrix);
         }
@@ -309,12 +310,12 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (definition.axisLocked) {
+        if (definition.orientation == ParticleOrientation.PLAYER) {
+            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
+        } else if (definition.orientation == ParticleOrientation.YAXIS) {
             Point3D vector = clientPlayer.getEyePosition().copy().subtract(position);
             vector.y = 0;
             orientation.setToVector(vector, true);
-        } else if (!definition.axisAligned) {
-            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
         }
     }
 

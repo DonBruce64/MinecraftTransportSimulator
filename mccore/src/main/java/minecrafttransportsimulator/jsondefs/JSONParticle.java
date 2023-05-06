@@ -19,11 +19,8 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
-    @JSONDescription("Normally, particles align themselves to face the player.  Set this to true if you want them to not do this and just be aligned as spawned.")
-    public boolean axisAligned;
-
-    @JSONDescription("Normally, particles align themselves to face the player about all axis.  Setting this to true makes them always face the player, but they will do so by rotating about their Y-axis.")
-    public boolean axisLocked;
+    @JSONDescription("The orientation this particle spawns and rotates about.")
+    public ParticleOrientation orientation;
 
     @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
     public boolean randomTexture;
@@ -102,6 +99,9 @@ public class JSONParticle {
     @Deprecated
     public float spreadFactorVertical;
 
+    @Deprecated
+    public boolean axisAligned;
+
     public static class JSONSubParticle {
 
         @JSONDescription("The particle to spawn.")
@@ -109,6 +109,17 @@ public class JSONParticle {
 
         @JSONDescription("The time, in ticks, at which to spawn the particle.")
         public int time;
+    }
+
+    public enum ParticleOrientation {
+        @JSONDescription("Particle does not rotate and orients as spawned.")
+        FIXED,
+        @JSONDescription("Particle orients itelf to the world, rather than what has spawned it.  This also makes it not consider the spawning entity's orientation.")
+        WORLD,
+        @JSONDescription("Orients the particle to face the player.")
+        PLAYER,
+        @JSONDescription("Orients the particle to face the player, but only about the Y-axis.")
+        YAXIS;
     }
 
     public enum ParticleType {

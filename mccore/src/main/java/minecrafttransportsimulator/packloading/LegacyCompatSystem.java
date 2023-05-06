@@ -48,6 +48,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
@@ -204,6 +205,9 @@ public final class LegacyCompatSystem {
                         particleDef.spreadVelocity = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
                         particleDef.spreadFactorVertical = 0;
                         particleDef.spreadFactorHorizontal = 0;
+                    }
+                    if (particleDef.orientation == null) {
+                        particleDef.orientation = particleDef.axisAligned ? ParticleOrientation.FIXED : ParticleOrientation.PLAYER;
                     }
                 }
             }
