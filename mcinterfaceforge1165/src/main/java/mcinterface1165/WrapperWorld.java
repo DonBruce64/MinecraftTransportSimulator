@@ -49,11 +49,10 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.INPC;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -363,8 +362,8 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
-        for (Entity entity : world.getEntitiesOfClass(Entity.class, WrapperWorld.convert(box))) {
-            if (entity.getVehicle() == null && (entity instanceof INPC || entity instanceof AnimalEntity) && !(entity instanceof IMob)) {
+        for (LivingEntity entity : world.getEntitiesOfClass(LivingEntity.class, WrapperWorld.convert(box))) {
+            if (entity.getVehicle() == null && !(entity instanceof MonsterEntity)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
