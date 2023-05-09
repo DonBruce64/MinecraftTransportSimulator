@@ -56,8 +56,10 @@ public class EntityParticle extends AEntityC_Renderable {
             orientation.set(entitySpawning.orientation);
             orientation.multiply(definition.rot);
             prevOrientation.set(orientation);
+        } else if (definition.orientation != ParticleOrientation.WORLD) {
             helperTransform.set(entitySpawning.orientation);
         }
+
         if (switchbox != null) {
             helperTransform.multiply(switchbox.netMatrix);
         }
@@ -119,6 +121,13 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = definition.texture;
         } else if (definition.type == ParticleType.BREAK) {
             texture = RenderableObject.GLOBAL_TEXTURE_NAME;
+        } else if (definition.type == ParticleType.SMOKE) {
+            textureList = new ArrayList<String>();
+            for (int i = 0; i <= 11; ++i) {
+                textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
+            }
+            texture = textureList.get(0);
+            timeOfNextTexture = maxAge / 12F;
         } else if (definition.textureList != null) {
             //Set initial texture delay and texture.
             textureList = definition.textureList;
