@@ -130,17 +130,15 @@ public class EntityParticle extends AEntityC_Renderable {
             if (definition.textureDelays != null) {
                 timeOfNextTexture = definition.textureDelays.get(textureDelayIndex);
             }
-        } else {
-            if (definition.type == ParticleType.SMOKE) {
-                textureList = new ArrayList<String>();
-                for (int i = 0; i <= 11; ++i) {
-                    textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
-                }
-                texture = textureList.get(0);
-                timeOfNextTexture = maxAge / 12F;
-            } else {
-                texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
+        } else if (definition.type == ParticleType.SMOKE) {
+            textureList = new ArrayList<String>();
+            for (int i = 0; i <= 11; ++i) {
+                textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
+            texture = textureList.get(0);
+            timeOfNextTexture = maxAge / 12F;
+        } else {
+            texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
         }
         this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, false);
 
@@ -251,7 +249,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Check if we need to change textures.
-        if (definition.textureDelays != null && timeOfNextTexture <= ticksExisted) {
+        if (textureList != null && timeOfNextTexture <= ticksExisted) {
             if (++textureIndex == textureList.size()) {
                 textureIndex = 0;
             }
