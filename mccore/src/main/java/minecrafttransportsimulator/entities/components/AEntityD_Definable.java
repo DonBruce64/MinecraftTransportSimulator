@@ -700,7 +700,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                        if (!playerRidingThisEntity && entityRiding != null && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
                             sound.volume *= 0.5F;
                         }
 
