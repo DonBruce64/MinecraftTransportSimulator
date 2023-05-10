@@ -127,6 +127,28 @@ public class Point3D {
     }
 
     /**
+     * Clamps all values in this point to be between the bounds of -clamp and +clamp, inclusive.
+     */
+    public Point3D clamp(double clamp) {
+        if (x > clamp) {
+            x = clamp;
+        } else if (x < -clamp) {
+            x = -clamp;
+        }
+        if (y > clamp) {
+            y = clamp;
+        } else if (y < -clamp) {
+            y = -clamp;
+        }
+        if (z > clamp) {
+            z = clamp;
+        } else if (z < -clamp) {
+            z = -clamp;
+        }
+        return this;
+    }
+
+    /**
      * Sets the point to the interpolation between itself, and the passed-in point,
      * with the distance passed-in.
      */

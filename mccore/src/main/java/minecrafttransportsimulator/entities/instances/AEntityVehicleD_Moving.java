@@ -844,7 +844,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
                     clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
                     clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
-                    clientDeltaMApplied.scale(1D / 25D);
+                    clientDeltaMApplied.scale(1D / 25D).clamp(5);
                     clientDeltaM.add(clientDeltaMApplied);
                     position.add(clientDeltaMApplied);
                 }
@@ -863,19 +863,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
                     clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
                     clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
-                    clientDeltaRApplied.scale(1D / 25D);
-                    if (clientDeltaRApplied.x < -5)
-                        clientDeltaRApplied.x = -5;
-                    if (clientDeltaRApplied.x > 5)
-                        clientDeltaRApplied.x = 5;
-                    if (clientDeltaRApplied.y < -5)
-                        clientDeltaRApplied.y = -5;
-                    if (clientDeltaRApplied.y > 5)
-                        clientDeltaRApplied.y = 5;
-                    if (clientDeltaRApplied.z < -5)
-                        clientDeltaRApplied.z = -5;
-                    if (clientDeltaRApplied.z > 5)
-                        clientDeltaRApplied.z = 5;
+                    clientDeltaRApplied.scale(1D / 25D).clamp(5);
                     clientDeltaR.add(clientDeltaRApplied);
                     orientation.angles.add(clientDeltaRApplied);
                     orientation.updateToAngles();
@@ -886,6 +874,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (clientDeltaPApplied != 0) {
                     clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
                     clientDeltaPApplied *= 1D / 25D;
+                    if (clientDeltaPApplied > 5) {
+                        clientDeltaPApplied = 5;
+                    } else if (clientDeltaPApplied < -5) {
+                        clientDeltaPApplied = -5;
+                    }
                     clientDeltaP += clientDeltaPApplied;
                     totalPathDelta += clientDeltaPApplied;
                 }
