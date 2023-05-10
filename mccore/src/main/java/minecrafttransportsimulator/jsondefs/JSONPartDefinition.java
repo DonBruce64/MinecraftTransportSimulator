@@ -54,9 +54,6 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If set, then whenever the paint gun is used on the vehicle this part is on, this part will attempt to match the tone specified by the index.  If the specified tone does not exist, the part will not change.  Default parts will automatically attempt to match tones, but hand-placed parts will not change unless painted.")
     public int toneIndex;
 
-    @JSONDescription("This parameter is optional.  If set, then this ground part will be forcibly added to the specified GDB (1 = LB, 2=RB, 3= RF, 4 = LF)")
-    public int groundDeviceBoxNumber;
-
     @JSONDescription("The minimum value that this slot will accept.  Parts with values lower than this will be invalid and show up as red holograms.  This differs depending on the part, with engines using fuelConsumption as their value, ground_devices using their diameter, and propellers using their diameter as well.  This allows you an easy way to make sure people don't add oversized engines to your little econo-box or put monster tires on the family sedan.  See the details for each part for what parameter is used for min/max calculations.")
     public float minValue;
 
@@ -138,6 +135,9 @@ public class JSONPartDefinition {
 
     @JSONDescription("If this is set, then the animations on this part slot will first use the animations for this object (not the part) from the rendering section instead of the animations defined here.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
     public String applyAfter;
+
+    @JSONDescription("This parameter is optional.  If set, then this ground part will be forcibly added to the specified GDB (1 = LB, 2=RB, 3= RF, 4 = LF)")
+    public String groundDeviceBox;
 
     @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  However, since these objects actually move the part rather than change how it looks, there are some caveats and quirks that aren't normally present for all other animations.  They are as follows:\naddPriorOffset has no function with part movement animations.  This is because that relies of vector-based clamping, which part movement does not support.\nAs part rotation is angle-based rather than vector-based, the axis parameter is actually the angles the part will move in, not the axis the part will move around.  For simple rotations that only are applied in one axis, this has no effect on the JSON.  However, for multiple animations it may cause issues.  In particular, the order the animations are applied is key to proper function.  This is because as an animation is applied, it changes the axis for following animations.  So if you have an animation that rotates the part 90 degrees on the Y-axis, and then want to rotate it on the +X axis, you'd actually have to put in +Z rotation as the part has been rotated to a different orientation.")
     public List<JSONAnimationDefinition> animations;

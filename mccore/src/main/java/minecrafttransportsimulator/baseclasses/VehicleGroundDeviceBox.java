@@ -101,9 +101,9 @@ public class VehicleGroundDeviceBox {
             if (part instanceof PartGroundDevice) {
                 if (!part.isSpare) {
                     PartGroundDevice ground = (PartGroundDevice) part;
-                    int groundDeviceBoxNumber = part.placementDefinition.groundDeviceBoxNumber;
-                    if (isFront && ((ground.wheelbasePoint.z > 0 && groundDeviceBoxNumber == 0) || 3 <= groundDeviceBoxNumber)) {
-                        if (isLeft && ((ground.wheelbasePoint.x >= 0 && groundDeviceBoxNumber == 0) || groundDeviceBoxNumber == 4)) {
+                    String groundDeviceBox = part.placementDefinition.groundDeviceBox == null ? "" : part.placementDefinition.groundDeviceBox;
+                    if (isFront && ((ground.wheelbasePoint.z > 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.endsWith("Front"))) {
+                        if (isLeft && ((ground.wheelbasePoint.x >= 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.contentEquals("leftFront"))) {
                             groundDevices.add(ground);
                             totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
@@ -112,7 +112,7 @@ public class VehicleGroundDeviceBox {
                             if (ground.definition.ground.canFloat) {
                                 liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && ((ground.wheelbasePoint.x <= 0 && groundDeviceBoxNumber == 0) || groundDeviceBoxNumber == 3)) {
+                        } else if (!isLeft && ((ground.wheelbasePoint.x <= 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.contentEquals("rightFront"))) {
                             groundDevices.add(ground);
                             totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
@@ -122,8 +122,8 @@ public class VehicleGroundDeviceBox {
                                 liquidDevices.add(ground);
                             }
                         }
-                    } else if (!isFront && ((ground.wheelbasePoint.z <= 0 && groundDeviceBoxNumber == 0) || (1 <= groundDeviceBoxNumber && groundDeviceBoxNumber <= 2))) {
-                        if (isLeft && ((ground.wheelbasePoint.x >= 0 && groundDeviceBoxNumber == 0) || groundDeviceBoxNumber == 1)) {
+                    } else if (!isFront && ((ground.wheelbasePoint.z <= 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.endsWith("Back"))) {
+                        if (isLeft && ((ground.wheelbasePoint.x >= 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.startsWith("leftBack"))) {
                             groundDevices.add(ground);
                             totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
@@ -132,7 +132,7 @@ public class VehicleGroundDeviceBox {
                             if (ground.definition.ground.canFloat) {
                                 liquidDevices.add(ground);
                             }
-                        } else if (!isLeft && ((ground.wheelbasePoint.x <= 0 && groundDeviceBoxNumber == 0) || groundDeviceBoxNumber == 2)) {
+                        } else if (!isLeft && ((ground.wheelbasePoint.x <= 0 && groundDeviceBox.isEmpty()) || groundDeviceBox.contentEquals("rightBack"))) {
                             groundDevices.add(ground);
                             totalClimbHeight += ground.definition.ground.climbHeight;
                             if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
