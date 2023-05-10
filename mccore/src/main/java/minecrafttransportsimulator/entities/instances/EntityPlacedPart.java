@@ -106,7 +106,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
 
     @Override
     public boolean shouldRenderBeams() {
-        return currentPart != null ? currentPart.shouldRenderBeams() : false;
+        return ConfigSystem.client.renderingSettings.vehicleBeams.value;
     }
 
     @Override
