@@ -124,9 +124,11 @@ public class EntityParticle extends AEntityC_Renderable {
             //Set initial texture delay and texture.
             if (definition.randomTexture) {
                 textureIndex = new Random().nextInt(definition.textureList.size());
+                texture = definition.textureList.get(textureIndex);
+            } else {
+                textureList = definition.textureList;
+                texture = textureList.get(0);
             }
-            textureList = definition.textureList;
-            texture = textureList.get(textureIndex);
             if (definition.textureDelays != null) {
                 timeOfNextTexture = definition.textureDelays.get(textureDelayIndex);
             }
