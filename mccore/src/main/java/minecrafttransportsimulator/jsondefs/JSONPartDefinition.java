@@ -136,8 +136,8 @@ public class JSONPartDefinition {
     @JSONDescription("If this is set, then the animations on this part slot will first use the animations for this object (not the part) from the rendering section instead of the animations defined here.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
     public String applyAfter;
 
-    @JSONDescription("This parameter is optional.  If set, then this ground part will be forcibly added to the specified GDB (1 = LB, 2=RB, 3= RF, 4 = LF)")
-    public String groundDeviceBox;
+    @JSONDescription("This parameter is optional.  If set, then this ground part will be forcibly added to the specified GDB.")
+    public JSONGroundDevicePosition groundDevicePosition;
 
     @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  However, since these objects actually move the part rather than change how it looks, there are some caveats and quirks that aren't normally present for all other animations.  They are as follows:\naddPriorOffset has no function with part movement animations.  This is because that relies of vector-based clamping, which part movement does not support.\nAs part rotation is angle-based rather than vector-based, the axis parameter is actually the angles the part will move in, not the axis the part will move around.  For simple rotations that only are applied in one axis, this has no effect on the JSON.  However, for multiple animations it may cause issues.  In particular, the order the animations are applied is key to proper function.  This is because as an animation is applied, it changes the axis for following animations.  So if you have an animation that rotates the part 90 degrees on the Y-axis, and then want to rotate it on the +X axis, you'd actually have to put in +Z rotation as the part has been rotated to a different orientation.")
     public List<JSONAnimationDefinition> animations;
@@ -199,5 +199,24 @@ public class JSONPartDefinition {
         public Point3D pos;
         public Point3D velocity;
         public float scale;
+    }
+
+    public static enum JSONGroundDevicePosition {
+        FRONT_LEFT(true, true, false),
+        FRONT_RIGHT(true, false, true),
+        FRONT_CENTER(true, true, true),
+        REAR_LEFT(false, true, false),
+        REAR_RIGHT(false, false, true),
+        REAR_CENTER(false, true, true);
+
+        public final boolean isFront;
+        public final boolean isLeft;
+        public final boolean isRight;
+
+        private JSONGroundDevicePosition(boolean isFront, boolean isLeft, boolean isRight) {
+            this.isFront = isFront;
+            this.isLeft = isLeft;
+            this.isRight = isRight;
+        }
     }
 }
