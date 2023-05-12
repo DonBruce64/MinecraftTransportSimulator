@@ -122,15 +122,15 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = RenderableObject.GLOBAL_TEXTURE_NAME;
         } else if (definition.textureList != null) {
             //Set initial texture delay and texture.
+            textureList = definition.textureList;
             if (definition.randomTexture) {
-                textureIndex = new Random().nextInt(definition.textureList.size());
-                texture = definition.textureList.get(textureIndex);
-            } else {
-                textureList = definition.textureList;
-                texture = textureList.get(0);
+                textureIndex = new Random().nextInt(textureList.size());
             }
+            texture = textureList.get(textureIndex);
             if (definition.textureDelays != null) {
                 timeOfNextTexture = definition.textureDelays.get(textureDelayIndex);
+            } else {
+                timeOfNextTexture = maxAge;
             }
         } else if (definition.type == ParticleType.SMOKE) {
             textureList = new ArrayList<String>();
@@ -238,6 +238,7 @@ public class EntityParticle extends AEntityC_Renderable {
         //Check age to see if we are on our last tick.
         if (ticksExisted == maxAge) {
             remove();
+            return;
         }
 
         //Update bounds as we might have changed size.
