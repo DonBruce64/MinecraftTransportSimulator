@@ -153,6 +153,7 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             setParticleTextureBounds(0, 1, 0, 1);
         }
+        updateOrientation();
     }
 
     @Override
@@ -246,10 +247,8 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
 
-        //Update orientation to always face the player.
-        if (!definition.axisAligned) {
-            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
-        }
+        //Update orientation.
+        updateOrientation();
 
         //Check if we need to change textures.
         if (textureList != null && timeOfNextTexture <= ticksExisted) {
@@ -308,6 +307,12 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
             renderable.render();
+        }
+    }
+
+    private void updateOrientation() {
+        if (!definition.axisAligned) {
+            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
         }
     }
 
