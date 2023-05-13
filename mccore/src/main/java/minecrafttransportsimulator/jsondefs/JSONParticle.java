@@ -19,6 +19,7 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
+    @JSONRequired
     @JSONDescription("The orientation this particle spawns and rotates about.")
     public ParticleOrientation orientation;
 
