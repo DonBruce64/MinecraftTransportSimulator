@@ -90,7 +90,7 @@ public class InterfaceJEI implements IModPlugin {
         @Override
         public void getIngredients(IIngredients ingredients) {
             List<List<ItemStack>> inputs = new ArrayList<>();
-            for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, recipeIndex, true, true, forRepair)) {
+            for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, recipeIndex, true, true, forRepair, true)) {
                 List<ItemStack> stacks = new ArrayList<>();
                 for (IWrapperItemStack stack : component.possibleItems) {
                     stacks.add(((WrapperItemStack) stack).stack);

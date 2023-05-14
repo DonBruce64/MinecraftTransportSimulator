@@ -132,7 +132,7 @@ public class InterfaceJEI implements IModPlugin {
 
         @Override
         public void setIngredients(PackRecipeWrapper recipe, IIngredients ingredients) {
-            List<PackMaterialComponent> components = PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair);
+            List<PackMaterialComponent> components = PackMaterialComponent.parseFromJSON(recipe.packItem, recipe.recipeIndex, true, true, recipe.forRepair, true);
             if (components != null) {
                 List<List<ItemStack>> inputs = new ArrayList<>();
                 for (PackMaterialComponent component : components) {
