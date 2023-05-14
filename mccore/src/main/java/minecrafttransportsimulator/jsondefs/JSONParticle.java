@@ -20,8 +20,12 @@ public class JSONParticle {
     public boolean isBright;
 
     @JSONRequired
-    @JSONDescription("The orientation this particle spawns and rotates about.")
-    public ParticleOrientation orientation;
+    @JSONDescription("The orientation this particle spawns about.")
+    public ParticleSpawningOrientation spawningOrientation;
+
+    @JSONRequired
+    @JSONDescription("The orientation this particle rotates.")
+    public ParticleRenderingOrientation renderingOrientation;
 
     @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
     public boolean randomTexture;
@@ -65,7 +69,6 @@ public class JSONParticle {
     @JSONDescription("The position where this particle should be spawned relative to the spawning object.  May be left out if the particle should spawn at the same position.")
     public Point3D pos;
 
-    @JSONRequired(dependentField = "textureList", dependentValues = "true")
     @JSONDescription("The rotation to rotate this particle to.  Has no effect if axisAligned is false, as particles normally rotate to face the player.")
     public RotationMatrix rot;
 
@@ -112,14 +115,19 @@ public class JSONParticle {
         public int time;
     }
 
-    public enum ParticleOrientation {
+    public enum ParticleSpawningOrientation {
+        @JSONDescription("Particle spawns relative to the entity that spawned it.")
+        ENTITY,
+        @JSONDescription("Particle spawns relative to the world and ignores entity orientation.")
+        WORLD;
+    }
+
+    public enum ParticleRenderingOrientation {
         @JSONDescription("Particle does not rotate and orients as spawned.")
         FIXED,
-        @JSONDescription("Particle orients itelf to the world, rather than what has spawned it.  This also makes it not consider the spawning entity's orientation.")
-        WORLD,
-        @JSONDescription("Orients the particle to face the player.")
+        @JSONDescription("Particle rotates to always face the player.")
         PLAYER,
-        @JSONDescription("Orients the particle to face the player, but only about the Y-axis.")
+        @JSONDescription("Particle rotates to face the player, but only about the Y-axis.")
         YAXIS;
     }
 

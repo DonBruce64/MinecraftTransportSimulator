@@ -12,7 +12,8 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
-import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleOrientation;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleRenderingOrientation;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -52,17 +53,19 @@ public class EntityParticle extends AEntityC_Renderable {
         super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
         helperTransform.resetTransforms();
-        if (definition.orientation == ParticleOrientation.FIXED) {
+        if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
             orientation.set(entitySpawning.orientation);
-            orientation.multiply(definition.rot);
-            prevOrientation.set(orientation);
-        } else if (definition.orientation != ParticleOrientation.WORLD) {
             helperTransform.set(entitySpawning.orientation);
         }
-
         if (switchbox != null) {
             helperTransform.multiply(switchbox.netMatrix);
         }
+
+        if (definition.rot != null) {
+            orientation.multiply(definition.rot);
+        }
+        prevOrientation.set(orientation);
+
         if (definition.pos != null) {
             helperOffset.set(definition.pos).multiply(entitySpawning.scale);
         } else {
@@ -319,9 +322,9 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (definition.orientation == ParticleOrientation.PLAYER) {
+        if (definition.renderingOrientation == ParticleRenderingOrientation.PLAYER) {
             orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
-        } else if (definition.orientation == ParticleOrientation.YAXIS) {
+        } else if (definition.renderingOrientation == ParticleRenderingOrientation.YAXIS) {
             Point3D vector = clientPlayer.getEyePosition().copy().subtract(position);
             vector.y = 0;
             orientation.setToVector(vector, true);

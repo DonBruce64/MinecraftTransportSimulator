@@ -48,7 +48,8 @@ import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
-import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleOrientation;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleRenderingOrientation;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
@@ -206,8 +207,11 @@ public final class LegacyCompatSystem {
                         particleDef.spreadFactorVertical = 0;
                         particleDef.spreadFactorHorizontal = 0;
                     }
-                    if (particleDef.orientation == null) {
-                        particleDef.orientation = particleDef.axisAligned ? ParticleOrientation.FIXED : ParticleOrientation.PLAYER;
+                    if (particleDef.renderingOrientation == null) {
+                        particleDef.renderingOrientation = particleDef.axisAligned ? ParticleRenderingOrientation.FIXED : ParticleRenderingOrientation.PLAYER;
+                    }
+                    if (particleDef.spawningOrientation == null) {
+                        particleDef.spawningOrientation = ParticleSpawningOrientation.ENTITY;
                     }
                 }
             }

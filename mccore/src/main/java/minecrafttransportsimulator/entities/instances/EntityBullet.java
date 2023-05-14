@@ -396,7 +396,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             }
             position.set(hitResult.position);
             lastHit = HitType.BLOCK;
-            displayDebugMessage("HIT BLOCK");
+            displayDebugMessage("HIT BLOCK AT " + position);
             startDespawn();
             return;
         }
