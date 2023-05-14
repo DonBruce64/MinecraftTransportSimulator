@@ -48,6 +48,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleRenderingOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
@@ -202,17 +203,7 @@ public final class LegacyCompatSystem {
             //Check particles.
             if (provider.rendering.particles != null) {
                 for (JSONParticle particleDef : provider.rendering.particles) {
-                    if (particleDef.spreadFactorVertical != 0 || particleDef.spreadFactorHorizontal != 0) {
-                        particleDef.spreadVelocity = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
-                        particleDef.spreadFactorVertical = 0;
-                        particleDef.spreadFactorHorizontal = 0;
-                    }
-                    if (particleDef.renderingOrientation == null) {
-                        particleDef.renderingOrientation = particleDef.axisAligned ? ParticleRenderingOrientation.FIXED : ParticleRenderingOrientation.PLAYER;
-                    }
-                    if (particleDef.spawningOrientation == null) {
-                        particleDef.spawningOrientation = ParticleSpawningOrientation.ENTITY;
-                    }
+                    performParticleLegacyCompats(particleDef);
                 }
             }
         }
@@ -1792,6 +1783,25 @@ public final class LegacyCompatSystem {
             activeAnimation.clampMax = 1.0F;
             particleDef.activeAnimations.add(activeAnimation);
             definition.rendering.particles.add(particleDef);
+        }
+    }
+
+    private static void performParticleLegacyCompats(JSONParticle particleDef) {
+        if (particleDef.spreadFactorVertical != 0 || particleDef.spreadFactorHorizontal != 0) {
+            particleDef.spreadVelocity = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
+            particleDef.spreadFactorVertical = 0;
+            particleDef.spreadFactorHorizontal = 0;
+        }
+        if (particleDef.renderingOrientation == null) {
+            particleDef.renderingOrientation = particleDef.axisAligned ? ParticleRenderingOrientation.FIXED : ParticleRenderingOrientation.PLAYER;
+        }
+        if (particleDef.spawningOrientation == null) {
+            particleDef.spawningOrientation = ParticleSpawningOrientation.ENTITY;
+        }
+        if (particleDef.subParticles != null) {
+            for (JSONSubParticle subParticleDef : particleDef.subParticles) {
+                performParticleLegacyCompats(subParticleDef.particle);
+            }
         }
     }
 

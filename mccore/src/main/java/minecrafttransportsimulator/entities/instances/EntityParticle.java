@@ -388,7 +388,7 @@ public class EntityParticle extends AEntityC_Renderable {
      * does not necessarily need to take the scale of the particle into account.
      */
     private float getSize() {
-        return definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
+        return definition.type.equals(ParticleType.BREAK) ? 0.1F : (definition.model == null ? 0.2F : 1.0F);
     }
 
     private float interpolate(float start, float end, boolean clamp, float partialTicks) {
