@@ -118,6 +118,17 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
+    public InputStream getTextureStream(String name) {
+        try {
+            String domain = name.substring("/assets/".length(), name.indexOf("/", "/assets/".length()));
+            String location = name.substring("/assets/".length() + domain.length() + 1);
+            return Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation(domain, location)).getInputStream();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
     public void renderItemModel(GUIComponentItem component) {
         stacksToRender.add(component);
     }

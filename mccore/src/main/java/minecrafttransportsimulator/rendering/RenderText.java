@@ -132,7 +132,7 @@ public class RenderText {
         private static final byte CHARS_PER_ROWCOL = 16;
         private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL * CHARS_PER_ROWCOL;
         private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
-        private static final float CHAR_SPACING = 0.5F;
+        private static final float CHAR_SPACING = 1.5F;
         private static final ColorRGB[] COLORS = new ColorRGB[]{new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255)};
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
         private static final int MAX_VERTCIES_PER_RENDER = 1000 * 6;
@@ -192,22 +192,35 @@ public class RenderText {
         private final float[] supplementalUV = new float[2];
 
         private FontData(String fontName) {
-            this.isDefault = fontName == null;
 
             //Get font locations.
             String fontBaseLocation;
-            if (isDefault) {
+            if (fontName == null) {
                 fontBaseLocation = "/assets/minecraft/textures/font/unicode_page_";
             } else {
                 fontBaseLocation = "/assets/" + fontName.substring(0, fontName.indexOf(":")) + "/textures/fonts/" + fontName.substring(fontName.indexOf(":") + 1) + "/unicode_page_";
             }
 
             //Parse char widths.
+            boolean isDefault = true;
             for (int i = 0; i < fontLocations.length; ++i) {
                 fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
                 BufferedImage bufferedImage;
                 try {
-                    bufferedImage = ImageIO.read(InterfaceManager.coreInterface.getPackResource(fontLocations[i]));
+                    bufferedImage = ImageIO.read(InterfaceManager.renderingInterface.getTextureStream(fontLocations[i]));
+                    if (isDefault) {
+                        //Check if this is default font by checking against the default font itself.
+                        BufferedImage defaultImage = ImageIO.read(InterfaceManager.coreInterface.getPackResource(fontLocations[i]));
+                        if (bufferedImage.getHeight() == defaultImage.getHeight()) {
+                            for (int pixelCol = 0; isDefault && pixelCol < bufferedImage.getWidth(); ++pixelCol) {
+                                for (int pixelRow = 0; isDefault && pixelRow < bufferedImage.getHeight(); ++pixelRow) {
+                                    if (bufferedImage.getRGB(pixelCol, pixelRow) != defaultImage.getRGB(pixelCol, pixelRow)) {
+                                        isDefault = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     //Just continue, as we don't care about this file.  Not all files may be present for any given font.
                     continue;
@@ -219,7 +232,7 @@ public class RenderText {
                 //have found the end of the char and that's its width.
                 //Order is all chars in row 1, then row 2, etc.
                 int pixelsPerSide = bufferedImage.getHeight();
-                int pixelsPerRowCol = pixelsPerSide / CHARS_PER_ROWCOL;
+                int pixelsPerCharRowCol = pixelsPerSide / CHARS_PER_ROWCOL;
                 for (int charRow = 0; charRow < CHARS_PER_ROWCOL; ++charRow) {
                     for (int charCol = 0; charCol < CHARS_PER_ROWCOL; ++charCol) {
                         //Get char and set defaults.
@@ -237,17 +250,36 @@ public class RenderText {
                             charWidths[charChecking] = DEFAULT_PIXELS_PER_CHAR;
 
                             //Check each pixel in the pixel sub-col to get the actual width of the char.
+                            //Do this for the left and right side to get the bounds.
                             boolean foundPixelThisCol = false;
-                            for (int pixelCol = (charCol + 1) * pixelsPerRowCol - 1; pixelCol >= charCol * pixelsPerRowCol; --pixelCol) {
+                            for (int pixelCol = charCol * pixelsPerCharRowCol; pixelCol < (charCol + 1) * pixelsPerCharRowCol; ++pixelCol) {
                                 //Check all rows of pixels in this column to see if we have one.
-                                for (int pixelRow = charRow * pixelsPerRowCol; pixelRow < (charRow + 1) * pixelsPerRowCol; ++pixelRow) {
+                                for (int pixelRow = charRow * pixelsPerCharRowCol; pixelRow < (charRow + 1) * pixelsPerCharRowCol; ++pixelRow) {
+                                    //Check for alpha and color.  Some systems write color, but no alpha to a pixel.
+                                    int pixelValue = bufferedImage.getRGB(pixelCol, pixelRow);
+                                    if (pixelValue != 0 && (pixelValue >> 24) != 0) {
+                                        //Found a pixel, we must have this as our UV.
+                                        offsetsMinU[charChecking] = pixelCol / (float) pixelsPerCharRowCol / CHARS_PER_ROWCOL;
+                                        foundPixelThisCol = true;
+                                        break;
+                                    }
+                                }
+                                if (foundPixelThisCol) {
+                                    break;
+                                }
+                            }
+
+                            foundPixelThisCol = false;
+                            for (int pixelCol = (charCol + 1) * pixelsPerCharRowCol - 1; pixelCol >= charCol * pixelsPerCharRowCol; --pixelCol) {
+                                //Check all rows of pixels in this column to see if we have one.
+                                for (int pixelRow = charRow * pixelsPerCharRowCol; pixelRow < (charRow + 1) * pixelsPerCharRowCol; ++pixelRow) {
                                     //Check for alpha and color.  Some systems write color, but no alpha to a pixel.
                                     int pixelValue = bufferedImage.getRGB(pixelCol, pixelRow);
                                     if (pixelValue != 0 && (pixelValue >> 24) != 0) {
                                         //Found a pixel, we must have this as our UV.
                                         ++pixelCol;
-                                        offsetsMaxU[charChecking] = pixelCol / (float) pixelsPerRowCol / CHARS_PER_ROWCOL;
-                                        charWidths[charChecking] = (pixelCol - charCol * pixelsPerRowCol) * DEFAULT_PIXELS_PER_CHAR / (float) pixelsPerRowCol;
+                                        offsetsMaxU[charChecking] = pixelCol / (float) pixelsPerCharRowCol / CHARS_PER_ROWCOL;
+                                        charWidths[charChecking] = (offsetsMaxU[charChecking] - offsetsMinU[charChecking]) * pixelsPerSide * DEFAULT_PIXELS_PER_CHAR / pixelsPerCharRowCol;
                                         foundPixelThisCol = true;
                                         break;
                                     }
@@ -260,6 +292,8 @@ public class RenderText {
                     }
                 }
             }
+
+            this.isDefault = isDefault;
         }
 
         private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue) {

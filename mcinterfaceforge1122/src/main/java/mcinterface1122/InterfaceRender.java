@@ -1,6 +1,7 @@
 package mcinterface1122;
 
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
@@ -75,6 +76,17 @@ public class InterfaceRender implements IInterfaceRender {
     public float[] getDefaultBlockTexture(String name) {
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getTextureMap().getAtlasSprite(name.replace(":", ":blocks/"));
         return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
+    }
+
+    @Override
+    public InputStream getTextureStream(String name) {
+        try {
+            String domain = name.substring("/assets/".length(), name.indexOf("/", "/assets/".length()));
+            String location = name.substring("/assets/".length() + domain.length() + 1);
+            return Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(domain, location)).getInputStream();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

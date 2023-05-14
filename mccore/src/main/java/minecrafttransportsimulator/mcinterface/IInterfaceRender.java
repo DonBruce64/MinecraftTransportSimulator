@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.InputStream;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.rendering.RenderableObject;
@@ -21,6 +23,11 @@ public interface IInterfaceRender {
      * Returns a 4-float array for the default block texture.  This doesn't take into account world-state.
      */
     float[] getDefaultBlockTexture(String name);
+
+    /**
+     * Returns a stream of the texture specified.  This can vary depending on what texture packs are loaded!
+     */
+    InputStream getTextureStream(String name);
 
     /**
      * Renders the item model for the passed-in component.  Only
