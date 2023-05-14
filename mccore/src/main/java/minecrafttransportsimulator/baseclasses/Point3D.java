@@ -150,12 +150,12 @@ public class Point3D {
 
     /**
      * Sets the point to the interpolation between itself, and the passed-in point,
-     * with the distance passed-in.
+     * relative to the passed-in factor (from 0 to 1).
      */
-    public Point3D interpolate(Point3D point, double distance) {
-        this.x += (point.x - x) * distance;
-        this.y += (point.y - y) * distance;
-        this.z += (point.z - z) * distance;
+    public Point3D interpolate(Point3D point, double factor) {
+        this.x += (point.x - x) * factor;
+        this.y += (point.y - y) * factor;
+        this.z += (point.z - z) * factor;
         return this;
     }
 

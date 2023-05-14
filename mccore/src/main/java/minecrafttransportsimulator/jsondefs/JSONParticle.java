@@ -33,6 +33,9 @@ public class JSONParticle {
     @JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
     public int quantity;
 
+    @JSONDescription("How far apart individual particles should spawn, in blocks.  Note that this overrides spawing rates and will be checked every frame.  Use sparingly!")
+    public float distance;
+
     @JSONDescription("How long, in ticks, the particle should remain.  If not set on a defined type, the age will be auto-calculated the same way it would be for a Vanilla particle.  Defaults to 200 on any other types.")
     public int duration;
 

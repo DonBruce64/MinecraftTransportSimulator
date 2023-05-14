@@ -91,6 +91,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
+    private final Map<JSONParticle, Point3D> lastPositionParticleSpawned = new HashMap<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
 
     /**
@@ -480,15 +481,41 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             boolean shouldParticleSpawn = switchbox.runSwitchbox(partialTicks, false);
 
             //Make the particle spawn if able.
-            if (shouldParticleSpawn && (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))) {
-                lastTickParticleSpawned.put(particleDef, ticksExisted);
-                for (int i = 0; i < particleDef.quantity; ++i) {
-                    AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                    if (spawningSwitchbox != null) {
-                        spawningSwitchbox.runSwitchbox(partialTicks, false);
+            if (shouldParticleSpawn) {
+                if (particleDef.distance > 0) {
+                    Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
+                    if (lastParticlePosition == null) {
+                        lastParticlePosition = position.copy();
+                        lastPositionParticleSpawned.put(particleDef, lastParticlePosition);
+                        continue;//First tick we are active, checks are assured to fail.
                     }
-                    world.addEntity(new EntityParticle(this, particleDef, spawningSwitchbox));
+                    while (!lastParticlePosition.isDistanceToCloserThan(position, particleDef.distance)) {
+                        double distanceFactor = particleDef.distance / position.distanceTo(lastParticlePosition);
+                        Point3D spawningPosition = lastParticlePosition.copy().interpolate(position, distanceFactor);
+                        for (int i = 0; i < particleDef.quantity; ++i) {
+                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
+                            if (spawningSwitchbox != null) {
+                                spawningSwitchbox.runSwitchbox(partialTicks, false);
+                            }
+                            world.addEntity(new EntityParticle(this, particleDef, spawningPosition, spawningSwitchbox));
+                        }
+                        lastParticlePosition.set(spawningPosition);
+                    }
+                } else {
+                    if (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef))) {
+                        lastTickParticleSpawned.put(particleDef, ticksExisted);
+                        for (int i = 0; i < particleDef.quantity; ++i) {
+                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
+                            if (spawningSwitchbox != null) {
+                                spawningSwitchbox.runSwitchbox(partialTicks, false);
+                            }
+                            world.addEntity(new EntityParticle(this, particleDef, position, spawningSwitchbox));
+                        }
+                    }
                 }
+            } else if (particleDef.distance != 0) {
+                //Need to remove or we'll foul deltas.
+                lastPositionParticleSpawned.remove(particleDef);
             }
         }
     }

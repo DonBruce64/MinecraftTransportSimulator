@@ -54,8 +54,8 @@ public class EntityParticle extends AEntityC_Renderable {
     private int textureDelayIndex;
     private List<String> textureList;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox) {
-        super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox switchbox) {
+        super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 
         helperTransform.resetTransforms();
         if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
@@ -309,7 +309,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.subParticles != null) {
             for (JSONSubParticle subDef : definition.subParticles) {
                 if (subDef.particle.spawnEveryTick ? subDef.time >= ticksExisted : subDef.time == ticksExisted) {
-                    world.addEntity(new EntityParticle(this, subDef.particle, null));
+                    world.addEntity(new EntityParticle(this, subDef.particle, position, null));
                 }
             }
         }
