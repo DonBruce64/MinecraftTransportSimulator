@@ -76,6 +76,16 @@ public class ItemPartEngine extends AItemPart {
         }
     }
 
+    public boolean needsRepair(IWrapperNBT data) {
+        return super.needsRepair(data) || data.getDouble(PartEngine.HOURS_VARIABLE) > 0;
+    }
+
+    @Override
+    public void repair(IWrapperNBT data) {
+        super.repair(data);
+        data.setDouble(PartEngine.HOURS_VARIABLE, 0);
+    }
+
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {
         @Override
         public boolean isCreatorValid(JSONPart definition) {

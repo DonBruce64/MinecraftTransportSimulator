@@ -32,6 +32,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class PartGroundDevice extends APart {
     public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
     public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
+    public static final String FLAT_VARIABLE = "isFlat";
 
     //External states for animations.
     public boolean drivenLastTick = true;
@@ -62,7 +63,7 @@ public class PartGroundDevice extends APart {
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
-        this.isFlat = data.getBoolean("isFlat");
+        this.isFlat = data.getBoolean(FLAT_VARIABLE);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
@@ -349,7 +350,7 @@ public class PartGroundDevice extends APart {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("isFlat", isFlat);
+        data.setBoolean(FLAT_VARIABLE, isFlat);
         return data;
     }
 }

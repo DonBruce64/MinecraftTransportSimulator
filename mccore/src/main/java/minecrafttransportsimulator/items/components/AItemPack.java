@@ -121,11 +121,16 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
     }
 
     /**
+     * Returns true if the item needs repair, false if not.
+     */
+    public boolean needsRepair(IWrapperNBT data) {
+        return data.getDouble(AEntityE_Interactable.DAMAGE_VARIABLE) > 0;
+    }
+
+    /**
      * Repairs the item.  What happens during repair differs from item to item.
      */
     public void repair(IWrapperNBT data) {
-        if (data.getDouble(AEntityE_Interactable.DAMAGE_VARIABLE) > 0) {
-            data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
-        }
+        data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
     }
 }

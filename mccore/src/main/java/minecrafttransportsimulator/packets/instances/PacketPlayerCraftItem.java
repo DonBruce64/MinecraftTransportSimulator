@@ -48,22 +48,23 @@ public class PacketPlayerCraftItem extends APacketPlayer {
     @Override
     public void handle(AWrapperWorld world, IWrapperPlayer player) {
         IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair))) {
+        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair, false))) {
             //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
             if (forRepair) {
-                //Find the repair item and make a copy for repair.
-                //The repair recipe will remove the old item.
-                int repairIndex = inventory.getRepairIndex(itemToCraft, recipeIndex);
-                IWrapperItemStack stack = inventory.getStack(repairIndex).copy();
-                AItemPack<?> item = (AItemPack<?>) stack.getItem();
-                IWrapperNBT stackData = stack.getData();
-                item.repair(stackData);
-                stack.setData(stackData);
+                //Find the repair item and fix it.
+                int repairIndex = inventory.getRepairIndex(itemToCraft);
+                if (repairIndex != -1) {
+                    IWrapperItemStack stack = inventory.getStack(repairIndex);
+                    AItemPack<?> item = (AItemPack<?>) stack.getItem();
+                    IWrapperNBT stackData = stack.getData();
+                    item.repair(stackData);
+                    stack.setData(stackData);
 
-                if (!player.isCreative()) {
-                    inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                    if (!player.isCreative()) {
+                        inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                    }
+                    inventory.setStack(stack, repairIndex);
                 }
-                inventory.setStack(stack, repairIndex);
             } else {
                 //Check we can add the stack before removing materials.
                 if (inventory.addStack(itemToCraft.getNewStack(null))) {

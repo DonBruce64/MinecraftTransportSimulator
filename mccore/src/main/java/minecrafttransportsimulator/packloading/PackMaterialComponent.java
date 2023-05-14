@@ -102,17 +102,18 @@ public class PackMaterialComponent {
      * This prevents the returned stacks from having the wildcard value in their metadata and not being actual items.
      * If an error occured during parsing, then null is returned and {@link #lastErrorMessage} is set to the error.
      */
-    public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
+    public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair, boolean includeRepair) {
         //Get all the strings that represent the items.
         List<String> itemTexts = new ArrayList<String>();
         String currentSubName = "";
         if (forRepair) {
             if (item.definition.general.repairMaterialLists != null) {
-                //Get repair materials. Make sure to add actual item into the list too.
-                if (InterfaceManager.coreInterface.isGameFlattened()) {
-                    itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + "1");
-                } else {
-                    itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
+                if (includeRepair) {
+                    if (InterfaceManager.coreInterface.isGameFlattened()) {
+                        itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + "1");
+                    } else {
+                        itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
+                    }
                 }
                 itemTexts.addAll(item.definition.general.repairMaterialLists.get(recipeIndex));
             }

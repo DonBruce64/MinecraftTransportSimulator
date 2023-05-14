@@ -184,7 +184,7 @@ public class GUIPaintGun extends AGUIBase {
         //Check all possible recipes, since some might be for other mods or versions.
         String errorMessage = "";
         do {
-            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false);
+            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false, false);
             if (materials != null) {
                 for (byte i = 0; i < craftingItemIcons.size(); ++i) {
                     if (i < materials.size()) {

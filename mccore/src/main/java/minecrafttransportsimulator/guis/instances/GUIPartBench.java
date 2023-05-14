@@ -286,7 +286,7 @@ public class GUIPartBench extends AGUIBase {
                 int materialIndex = i + materialOffset;
                 if (materialIndex < materials.size()) {
                     craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && player.getInventory().hasSpecificMaterial(currentItem, recipeIndex, i, true, true, viewingRepair);
+                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && player.getInventory().hasSpecificMaterial(currentItem, recipeIndex, i, true, true, viewingRepair, true);
                 } else {
                     craftingItemIcons.get(i).stacks = null;
                     craftingItemBackgrounds.get(i).visible = false;
@@ -465,7 +465,7 @@ public class GUIPartBench extends AGUIBase {
         //Parse crafting items and set icon items.
         String errorMessage = "";
         do {
-            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair);
+            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair, true);
             if (materials != null) {
                 for (byte i = 0; i < craftingItemIcons.size(); ++i) {
                     if (i < materials.size()) {

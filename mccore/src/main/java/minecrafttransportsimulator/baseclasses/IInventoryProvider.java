@@ -242,8 +242,8 @@ public interface IInventoryProvider {
     /**
      * Returns true if this inventory has the specified material index to make the pack-based item.
      */
-    default boolean hasSpecificMaterial(AItemPack<?> item, int recipeIndex, int index, boolean includeMain, boolean includeSub, boolean forRepair) {
-        PackMaterialComponent material = PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair).get(index);
+    default boolean hasSpecificMaterial(AItemPack<?> item, int recipeIndex, int index, boolean includeMain, boolean includeSub, boolean forRepair, boolean includeRepair) {
+        PackMaterialComponent material = PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair, includeRepair).get(index);
         int requiredMaterialCount = material.qty;
         for (IWrapperItemStack materialStack : material.possibleItems) {
             for (int i = 0; i < getSize(); ++i) {
@@ -261,9 +261,10 @@ public interface IInventoryProvider {
      * {@link #hasMaterials(AItemPack, boolean, boolean, boolean)} MUST be called before this method to ensure
      * the the inventory actually has the required materials.  Failure to do so will
      * result in the this method removing the incorrect number of materials.
+     * Note that for repair recipes, this will not remove the implicit item to repair.
      */
     default void removeMaterials(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
-        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair)) {
+        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair, false)) {
             for (IWrapperItemStack stack : material.possibleItems) {
                 removeStack(stack, material.qty);
             }
@@ -273,18 +274,11 @@ public interface IInventoryProvider {
     /**
      * Returns the index in the inventory of the item to repair that matches the passed-in item.
      */
-    default int getRepairIndex(AItemPack<?> item, int recipeIndex) {
-        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, false, false, true)) {
-            for (IWrapperItemStack materialStack : material.possibleItems) {
-                if (materialStack.getItem().equals(item)) {
-                    //Repair item in recipe found, find it in our inventory.
-                    for (int i = 0; i < getSize(); ++i) {
-                        IWrapperItemStack testStack = getStack(i);
-                        if (InterfaceManager.coreInterface.isOredictMatch(testStack, materialStack)) {
-                            return i;
-                        }
-                    }
-                }
+    default int getRepairIndex(AItemPack<?> item) {
+        for (int i = 0; i < getSize(); ++i) {
+            IWrapperItemStack testStack = getStack(i);
+            if (item.equals(testStack.getItem()) && ((AItemPack<?>) testStack.getItem()).needsRepair(testStack.getData())) {
+                return i;
             }
         }
         return -1;

@@ -107,6 +107,7 @@ public class PartEngine extends APart {
     public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
     public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
     public static final String GEAR_VARIABLE = "engine_gear";
+    public static final String HOURS_VARIABLE = "hours";
     public static final float COLD_TEMP = 30F;
     public static final float OVERHEAT_TEMP_1 = 115.556F;
     public static final float OVERHEAT_TEMP_2 = 121.111F;
@@ -117,7 +118,7 @@ public class PartEngine extends APart {
     public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
         this.running = data.getBoolean("running");
-        this.hours = data.getDouble("hours");
+        this.hours = data.getDouble(HOURS_VARIABLE);
         this.rpm = data.getDouble("rpm");
         this.temp = data.getDouble("temp");
         this.pressure = data.getDouble("pressure");
@@ -1184,7 +1185,7 @@ public class PartEngine extends APart {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setBoolean("running", running);
-        data.setDouble("hours", hours);
+        data.setDouble(HOURS_VARIABLE, hours);
         data.setDouble("rpm", rpm);
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);

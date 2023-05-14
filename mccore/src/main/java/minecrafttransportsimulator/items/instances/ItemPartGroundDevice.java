@@ -56,6 +56,16 @@ public class ItemPartGroundDevice extends AItemPart {
         tooltipLines.add(definition.ground.canFloat ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_FALSE.value);
     }
 
+    public boolean needsRepair(IWrapperNBT data) {
+        return super.needsRepair(data) || data.getBoolean(PartGroundDevice.FLAT_VARIABLE);
+    }
+
+    @Override
+    public void repair(IWrapperNBT data) {
+        super.repair(data);
+        data.deleteData(PartGroundDevice.FLAT_VARIABLE);
+    }
+
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {
         @Override
         public boolean isCreatorValid(JSONPart definition) {
