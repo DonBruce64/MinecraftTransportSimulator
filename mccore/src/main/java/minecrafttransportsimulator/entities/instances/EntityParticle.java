@@ -333,7 +333,7 @@ public class EntityParticle extends AEntityC_Renderable {
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
-        if (!((textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
+        if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             if (staticColor == null) {
                 renderable.color.red = interpolate(startColor.red, endColor.red, true, partialTicks);
                 renderable.color.green = interpolate(startColor.green, endColor.green, true, partialTicks);
