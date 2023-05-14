@@ -54,6 +54,9 @@ public class JSONParticle {
     @JSONDescription("Normally particles use built-in textures.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
 
+    @JSONDescription("Normally particles use a 2D model to render as a flat texture.  However, one can specify a model to use here for full 3D objects.  Format is packID:path/to/model.")
+    public String model;
+
     @JSONDescription("If you want your particle to have multiple textures, you can specify the texture PNG files to use here.  The delay between each texture segment is goverend by the textureDelay variable, if it is set.  If you delay past the last texture, the cycle repeats.")
     public List<String> textureList;
 

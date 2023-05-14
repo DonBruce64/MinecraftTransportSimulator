@@ -2,7 +2,9 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
@@ -17,6 +19,7 @@ import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrienta
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**
@@ -29,10 +32,12 @@ public class EntityParticle extends AEntityC_Renderable {
     private static final FloatBuffer STANDARD_RENDER_BUFFER = generateStandardBuffer();
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
     private static final Point3D helperOffset = new Point3D();
+    private static final Map<String, FloatBuffer> parsedParticleBuffers = new HashMap<>();
 
     //Constant properties.
     private final AEntityC_Renderable entitySpawning;
     private final JSONParticle definition;
+    private final boolean textureIsTranslucent;
     private final int maxAge;
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
@@ -114,11 +119,6 @@ public class EntityParticle extends AEntityC_Renderable {
             this.staticColor = ColorRGB.WHITE;
         }
 
-        //Generate the points for this particle's renderable and create it.
-        FloatBuffer buffer = FloatBuffer.allocate(STANDARD_RENDER_BUFFER.capacity());
-        buffer.put(STANDARD_RENDER_BUFFER);
-        STANDARD_RENDER_BUFFER.rewind();
-        buffer.flip();
         final String texture;
         if (definition.texture != null) {
             texture = definition.texture;
@@ -153,15 +153,42 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
         }
-        this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, false);
+        this.textureIsTranslucent = texture.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
+
+        FloatBuffer buffer;
+        if (definition.model != null) {
+            FloatBuffer totalModel = parsedParticleBuffers.get(definition.model);
+            if (totalModel == null) {
+                String modelDomain = definition.model.substring(0, definition.model.indexOf(':'));
+                String modelPath = definition.model.substring(modelDomain.length() + 1);
+                List<RenderableObject> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath);
+                int totalVertices = 0;
+                for (RenderableObject parsedObject : parsedObjects) {
+                    totalVertices += parsedObject.vertices.capacity();
+                }
+                totalModel = FloatBuffer.allocate(totalVertices);
+                for (RenderableObject parsedObject : parsedObjects) {
+                    totalModel.put(parsedObject.vertices);
+                }
+                totalModel.flip();
+                parsedParticleBuffers.put(definition.model, totalModel);
+            }
+            buffer = totalModel;
+        } else {
+            buffer = FloatBuffer.allocate(STANDARD_RENDER_BUFFER.capacity());
+            buffer.put(STANDARD_RENDER_BUFFER);
+            STANDARD_RENDER_BUFFER.rewind();
+            buffer.flip();
+        }
+        this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, definition.model != null);
 
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
-        renderable.ignoreWorldShading = true;
+        renderable.ignoreWorldShading = definition.model == null || definition.isBright;
         renderable.isTranslucent = true;
         if (definition.type == ParticleType.BREAK) {
             float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
             setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
-        } else {
+        } else if (definition.model == null) {
             setParticleTextureBounds(0, 1, 0, 1);
         }
         updateOrientation();
@@ -305,13 +332,13 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
-        if (blendingEnabled) {
+        renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
+        if (!((textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             if (staticColor == null) {
                 renderable.color.red = interpolate(startColor.red, endColor.red, true, partialTicks);
                 renderable.color.green = interpolate(startColor.green, endColor.green, true, partialTicks);
                 renderable.color.blue = interpolate(startColor.blue, endColor.blue, true, partialTicks);
             }
-            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
             renderable.transform.set(transform);
             float scale = (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, false, partialTicks);
             double totalScale = getSize() * scale;
