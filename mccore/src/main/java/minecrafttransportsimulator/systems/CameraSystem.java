@@ -136,7 +136,7 @@ public class CameraSystem {
 
         //No custom cameras, check if we are sitting in a seat to adjust orientation.
         if (sittingSeat != null) {
-            cameraAdjustedPosition.set(sittingSeat.prevRiderEyePosition).interpolate(sittingSeat.riderEyePosition, partialTicks);
+            cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
             sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
             sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
             cameraRotation.multiply(riderOrientation);

@@ -68,9 +68,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      * Though this may differ if the default logic is overridden.
      **/
     public final Point3D riderEyePosition = new Point3D();
-    public final Point3D prevRiderEyePosition = new Point3D();
     /**Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.**/
     public final Point3D riderHeadPosition = new Point3D();
+    /**Like {@link #riderEyePosition}, but for the camera.  This may or may not match the eye position depending on
+     * the game implementation and settings, since some settings add a default camera offset we need to account for here.**/
+    public final Point3D riderCameraPosition = new Point3D();
+    public final Point3D prevRiderCameraPosition = new Point3D();
 
     /**
      * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
@@ -220,15 +223,31 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             riderRelativeOrientation.updateToAngles();
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);
-            prevRiderEyePosition.set(riderEyePosition);
             riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
             riderHeadPosition.set(riderEyePosition);
 
             //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
-            if (world.isClient() && !CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
-                int zoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
-                riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
-                riderEyePosition.add(riderTempPoint);
+            if (world.isClient()) {
+                prevRiderCameraPosition.set(riderCameraPosition);
+                if (!CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
+                    riderCameraPosition.set(riderEyePosition);
+
+                    //Adjust eye position to account for zoom settings.
+                    int zoomRequired = 4 + zoomLevel;
+                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
+                    riderEyePosition.add(riderTempPoint);
+
+                    //Check if camera should be where eyes are, or somewhere different.
+                    int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
+                    if (zoomRequired != cameraZoomRequired) {
+                        riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -cameraZoomRequired : cameraZoomRequired).rotate(rider.getOrientation());
+                        riderCameraPosition.add(riderTempPoint);
+                    } else {
+                        riderCameraPosition.add(riderTempPoint);
+                    }
+                } else {
+                    riderCameraPosition.set(riderEyePosition);
+                }
             }
             return true;
         } else {
