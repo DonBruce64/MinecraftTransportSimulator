@@ -30,6 +30,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     private boolean doneRenderingShaders;
     private static int framesShadersDetected;
     private static boolean shadersDetected;
+    private static boolean renderPass21;
 
     public BuilderEntityRenderForwarder(World world) {
         super(world);
@@ -104,7 +105,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
         //This may not be the case if shaders are present and we haven't rendered the shader component.
         //Shaders do a pre-render to get their shadow, so the first render pass is actually invalid.
         if (!shadersDetected || doneRenderingShaders) {
-            //Rendering the actual model now.
             lastTickRendered[renderPass] = world.getTotalWorldTime();
             lastPartialTickRendered[renderPass] = partialTicks;
         } else if (shadersDetected && !doneRenderingShaders) {
@@ -122,7 +122,18 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
             if (shadersDetected) {
                 doneRenderingShaders = false;
             }
-            return lastTickRendered[0] != lastTickRendered[2] || lastPartialTickRendered[0] != lastPartialTickRendered[2];
+            //If we rendered on pass 2 before to render pass 0, we need to do a second render on pass 2 for actual pass 1.
+            if (InterfaceRender.lastRenderPassActualPass == 1 && renderPass21) {
+                return true;
+            } else {
+                boolean render = lastTickRendered[0] != lastTickRendered[2] || lastPartialTickRendered[0] != lastPartialTickRendered[2];
+                if (render && InterfaceRender.lastRenderPassActualPass == 0) {
+                    renderPass21 = true;
+                } else {
+                    renderPass21 = false;
+                }
+                return render;
+            }
         } else {
             return true;
         }

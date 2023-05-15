@@ -84,7 +84,7 @@ public class InterfaceEventsModelLoader {
                 if (player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
                     if (allEntities != null) {
-                        boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
+                        boolean blendingEnabled = (MinecraftForgeClient.getRenderPass() == -1 ? InterfaceRender.lastRenderPassActualPass : MinecraftForgeClient.getRenderPass()) == 1;
 
                         //Use smooth shading for model rendering.
                         GL11.glShadeModel(GL11.GL_SMOOTH);

@@ -63,6 +63,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
+    protected static int lastRenderPassActualPass;
 
     @Override
     public float[] getBlockBreakTexture(AWrapperWorld world, Point3D position) {
@@ -421,8 +422,8 @@ public class InterfaceRender implements IInterfaceRender {
         setLightingState(true);
 
         //Render pass 0 and 1 here manually.
-        for (int pass = 0; pass < 2; ++pass) {
-            if (pass == 1) {
+        for (lastRenderPassActualPass = 0; lastRenderPassActualPass < 2; ++lastRenderPassActualPass) {
+            if (lastRenderPassActualPass == 1) {
                 setBlend(true);
                 GlStateManager.depthMask(false);
             }
@@ -431,7 +432,7 @@ public class InterfaceRender implements IInterfaceRender {
                 Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, event.getPartialTicks());
             }
 
-            if (pass == 1) {
+            if (lastRenderPassActualPass == 1) {
                 setBlend(false);
                 GlStateManager.depthMask(true);
             }
