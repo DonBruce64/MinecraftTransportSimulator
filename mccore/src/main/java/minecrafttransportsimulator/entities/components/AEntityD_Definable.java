@@ -93,6 +93,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
     private final Map<JSONParticle, Point3D> lastPositionParticleSpawned = new HashMap<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
+    private long lastTickParticlesSpawned;
+    private float lastPartialTickParticlesSpawned;
 
     /**
      * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
@@ -1169,10 +1171,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
         }
-        //Handle particles.
-        if (!InterfaceManager.clientInterface.isGamePaused() && !blendingEnabled) {
+        //Handle particles.  Need to only do this once per frame-render.  Shaders may have us render multiple times.
+        if (!InterfaceManager.clientInterface.isGamePaused() && !(ticksExisted == lastTickParticlesSpawned && partialTicks == lastPartialTickParticlesSpawned)) {
             world.beginProfiling("Particles", false);
             spawnParticles(partialTicks);
+            lastTickParticlesSpawned = ticksExisted;
+            lastPartialTickParticlesSpawned = partialTicks;
         }
         world.endProfiling();
     }
