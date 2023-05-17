@@ -382,8 +382,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     protected void updateCollisionBoxes() {
         super.updateCollisionBoxes();
-        //Add part slot boxes to interaction boxes since we can interact with those.
-        interactionBoxes.addAll(activePartSlotBoxes.keySet());
+        //Only add active slots on clients, but all slots on servers.
+        //Different clients may have different boxes active, but the server will always have them all.
+        if (world.isClient()) {
+            interactionBoxes.addAll(activePartSlotBoxes.keySet());
+        } else {
+            interactionBoxes.addAll(partSlotBoxes.keySet());
+        }
     }
 
     @Override
@@ -683,13 +688,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     protected void updateEncompassingBox() {
         super.updateEncompassingBox();
-        //Only add active slots on clients, but all slots on servers.
-        //Different clients may have different boxes active, but the server will always have them all.
-        if (world.isClient()) {
-            interactionBoxes.addAll(activePartSlotBoxes.keySet());
-        } else {
-            interactionBoxes.addAll(partSlotBoxes.keySet());
-        }
 
         //Set active collision box, door box, and interaction box lists to current boxes.
         allEntityCollisionBoxes.clear();
