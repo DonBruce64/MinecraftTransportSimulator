@@ -797,7 +797,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("speed_factor"):
                 return speedFactor;
             case ("acceleration"):
-                return motion.length() - prevMotion.length();
+                return Math.round((motion.length() - prevMotion.length()) * 1000.0) / 1000.0;
             case ("road_angle_front"):
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
             case ("road_angle_rear"):
