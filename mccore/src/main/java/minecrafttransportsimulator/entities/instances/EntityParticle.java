@@ -10,6 +10,7 @@ import java.util.Random;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -31,8 +32,10 @@ import minecrafttransportsimulator.rendering.RenderableObject;
 public class EntityParticle extends AEntityC_Renderable {
     private static final FloatBuffer STANDARD_RENDER_BUFFER = generateStandardBuffer();
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
-    private static final Point3D helperOffset = new Point3D();
+    private static final RotationMatrix helperRotation = new RotationMatrix();
+    private static final Point3D helperPoint = new Point3D();
     private static final Map<String, FloatBuffer> parsedParticleBuffers = new HashMap<>();
+    private static final Random particleRandom = new Random();
 
     //Constant properties.
     private final AEntityC_Renderable entitySpawning;
@@ -42,17 +45,22 @@ public class EntityParticle extends AEntityC_Renderable {
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 
-    private final ColorRGB startColor;
-    private final ColorRGB endColor;
+    private ColorRGB startColor;
+    private ColorRGB endColor;
     private final ColorRGB staticColor;
     private final RenderableObject renderable;
 
     //Runtime variables.
     private boolean touchingBlocks;
-    private float timeOfNextTexture;
+    private int timeOfNextTexture;
     private int textureIndex;
     private int textureDelayIndex;
     private List<String> textureList;
+
+    private int timeOfCurrentColor;
+    private int timeOfNextColor;
+    private int colorIndex;
+    private int colorDelayIndex;
 
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
@@ -69,21 +77,29 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.rot != null) {
             orientation.multiply(definition.rot);
         }
+        if (definition.rotationRandomness != null) {
+            helperPoint.set(definition.rotationRandomness);
+            helperPoint.x = (2 * Math.random() - 1) * helperPoint.x;
+            helperPoint.y = (2 * Math.random() - 1) * helperPoint.y;
+            helperPoint.z = (2 * Math.random() - 1) * helperPoint.z;
+            helperRotation.setToAngles(helperPoint);
+            orientation.multiply(helperRotation);
+        }
         prevOrientation.set(orientation);
 
         if (definition.pos != null) {
-            helperOffset.set(definition.pos).multiply(entitySpawning.scale);
+            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
         } else {
-            helperOffset.set(0, 0, 0);
+            helperPoint.set(0, 0, 0);
         }
-        helperOffset.transform(helperTransform);
-        position.add(helperOffset);
+        helperPoint.transform(helperTransform);
+        position.add(helperPoint);
 
         if (definition.initialVelocity != null) {
-            if (definition.spreadVelocity != null) {
-                motion.x = 2 * definition.spreadVelocity.x * Math.random() - definition.spreadVelocity.x;
-                motion.y = 2 * definition.spreadVelocity.y * Math.random() - definition.spreadVelocity.y;
-                motion.z = 2 * definition.spreadVelocity.z * Math.random() - definition.spreadVelocity.z;
+            if (definition.spreadRandomness != null) {
+                motion.x = 2 * definition.spreadRandomness.x * Math.random() - definition.spreadRandomness.x;
+                motion.y = 2 * definition.spreadRandomness.y * Math.random() - definition.spreadRandomness.y;
+                motion.z = 2 * definition.spreadRandomness.z * Math.random() - definition.spreadRandomness.z;
                 motion.add(definition.initialVelocity);
             } else {
                 //Add some basic randomness so particles don't all go in a line.
@@ -99,7 +115,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         this.entitySpawning = entitySpawning;
         this.definition = definition;
-        boundingBox.widthRadius = getSize() / 2D;
+        boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
         this.maxAge = generateMaxAge();
@@ -107,16 +123,32 @@ public class EntityParticle extends AEntityC_Renderable {
             if (definition.toColor != null) {
                 this.startColor = definition.color;
                 this.endColor = definition.toColor;
+                this.timeOfNextColor = maxAge;
                 this.staticColor = null;
             } else {
-                this.startColor = null;
-                this.endColor = null;
                 this.staticColor = definition.color;
             }
         } else {
-            this.startColor = null;
-            this.endColor = null;
-            this.staticColor = ColorRGB.WHITE;
+            if (definition.colorList != null) {
+                if (definition.randomColor) {
+                    colorIndex = particleRandom.nextInt(definition.colorList.size());
+                }
+                startColor = definition.colorList.get(colorIndex);
+                if (colorIndex + 1 < definition.colorList.size()) {
+                    endColor = definition.colorList.get(colorIndex + 1);
+                } else {
+                    endColor = definition.colorList.get(0);
+                }
+
+                if (definition.colorDelays != null) {
+                    timeOfNextColor = definition.colorDelays.get(colorDelayIndex);
+                } else {
+                    timeOfNextColor = maxAge;
+                }
+                this.staticColor = null;
+            } else {
+                this.staticColor = ColorRGB.WHITE;
+            }
         }
 
         final String texture;
@@ -130,12 +162,12 @@ public class EntityParticle extends AEntityC_Renderable {
                 textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
             texture = textureList.get(0);
-            timeOfNextTexture = maxAge / 12F;
+            timeOfNextTexture = (int) (maxAge / 12F);
         } else if (definition.textureList != null) {
             //Set initial texture delay and texture.
             textureList = definition.textureList;
             if (definition.randomTexture) {
-                textureIndex = new Random().nextInt(textureList.size());
+                textureIndex = particleRandom.nextInt(textureList.size());
             }
             texture = textureList.get(textureIndex);
             if (definition.textureDelays != null) {
@@ -149,7 +181,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
             texture = textureList.get(0);
-            timeOfNextTexture = maxAge / 12F;
+            timeOfNextTexture = (int) (maxAge / 12F);
         } else {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
         }
@@ -181,6 +213,11 @@ public class EntityParticle extends AEntityC_Renderable {
             buffer.flip();
         }
         this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, definition.model != null);
+        if (definition.transparency == 0 && definition.toTransparency == 0) {
+            renderable.alpha = 1.0F;
+        } else {
+            renderable.alpha = definition.transparency;
+        }
 
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = definition.model == null || definition.isBright;
@@ -197,99 +234,100 @@ public class EntityParticle extends AEntityC_Renderable {
     @Override
     public void update() {
         super.update();
-        //Set movement.
-        if (definition.movementDuration != 0) {
-            if (ticksExisted <= definition.movementDuration) {
-                Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
-                Point3D velocityThisTick = initialVelocity.copy().scale((definition.movementDuration - ticksExisted) / (float) definition.movementDuration);
-                motion.add(velocityThisTick).subtract(velocityLastTick);
-            }
-        }
-
-        if (definition.movementVelocity != null) {
-            motion.add(definition.movementVelocity);
-            if (definition.terminalVelocity != null) {
-                if (motion.x > definition.terminalVelocity.x) {
-                    motion.x = definition.terminalVelocity.x;
-                }
-                if (motion.x < -definition.terminalVelocity.x) {
-                    motion.x = -definition.terminalVelocity.x;
-                }
-                if (motion.y > definition.terminalVelocity.y) {
-                    motion.y = definition.terminalVelocity.y;
-                }
-                if (motion.y < -definition.terminalVelocity.y) {
-                    motion.y = -definition.terminalVelocity.y;
-                }
-                if (motion.z > definition.terminalVelocity.z) {
-                    motion.z = definition.terminalVelocity.z;
-                }
-                if (motion.z < -definition.terminalVelocity.z) {
-                    motion.z = -definition.terminalVelocity.z;
-                }
-            }
-        } else {
-            switch (definition.type) {
-                case SMOKE: {
-                    //Update the motions to make the smoke float up.
-                    motion.x *= 0.9;
-                    motion.y += 0.004;
-                    motion.z *= 0.9;
-                    break;
-                }
-                case FLAME: {
-                    //Flame just slowly drifts in the direction it was going.
-                    motion.scale(0.96);
-                    break;
-                }
-                case BUBBLE: {
-                    //Bubbles float up until they break the surface of the water, then they pop.
-                    if (!world.isBlockLiquid(position)) {
-                        remove();
-                    } else {
-                        motion.scale(0.85).add(0, 0.002D, 0);
-                    }
-                    break;
-                }
-                case BREAK: {
-                    //Breaking just fall down quickly.
-                    if (!touchingBlocks) {
-                        motion.scale(0.98).add(0D, -0.04D, 0D);
-                    } else {
-                        motion.scale(0.0);
-                    }
-                    break;
-                }
-                default: {
-                    //No default movement for generic particles.
-                    break;
-                }
-            }
-        }
-
-        //Check collision movement.  If we hit a block, don't move.
-        touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
-        if (touchingBlocks) {
-            motion.add(-boundingBox.currentCollisionDepth.x * Math.signum(motion.x), -boundingBox.currentCollisionDepth.y * Math.signum(motion.y), -boundingBox.currentCollisionDepth.z * Math.signum(motion.z));
-        }
-        position.add(motion);
-
         //Check age to see if we are on our last tick.
         if (ticksExisted == maxAge) {
             remove();
             return;
         }
 
-        //Update bounds as we might have changed size.
-        boundingBox.widthRadius = getSize() / 2D;
-        boundingBox.heightRadius = boundingBox.widthRadius;
-        boundingBox.depthRadius = boundingBox.widthRadius;
+        //Set movement.
+        if (!definition.stopsOnGround || !touchingBlocks) {
+            if (definition.movementDuration != 0) {
+                if (ticksExisted <= definition.movementDuration) {
+                    Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
+                    Point3D velocityThisTick = initialVelocity.copy().scale((definition.movementDuration - ticksExisted) / (float) definition.movementDuration);
+                    motion.add(velocityThisTick).subtract(velocityLastTick);
+                }
+            }
 
-        //Update orientation.
-        updateOrientation();
+            if (definition.movementVelocity != null) {
+                motion.add(definition.movementVelocity);
+                if (definition.terminalVelocity != null) {
+                    if (motion.x > definition.terminalVelocity.x) {
+                        motion.x = definition.terminalVelocity.x;
+                    }
+                    if (motion.x < -definition.terminalVelocity.x) {
+                        motion.x = -definition.terminalVelocity.x;
+                    }
+                    if (motion.y > definition.terminalVelocity.y) {
+                        motion.y = definition.terminalVelocity.y;
+                    }
+                    if (motion.y < -definition.terminalVelocity.y) {
+                        motion.y = -definition.terminalVelocity.y;
+                    }
+                    if (motion.z > definition.terminalVelocity.z) {
+                        motion.z = definition.terminalVelocity.z;
+                    }
+                    if (motion.z < -definition.terminalVelocity.z) {
+                        motion.z = -definition.terminalVelocity.z;
+                    }
+                }
+            } else {
+                switch (definition.type) {
+                    case SMOKE: {
+                        //Update the motions to make the smoke float up.
+                        motion.x *= 0.9;
+                        motion.y += 0.004;
+                        motion.z *= 0.9;
+                        break;
+                    }
+                    case FLAME: {
+                        //Flame just slowly drifts in the direction it was going.
+                        motion.scale(0.96);
+                        break;
+                    }
+                    case BUBBLE: {
+                        //Bubbles float up until they break the surface of the water, then they pop.
+                        if (!world.isBlockLiquid(position)) {
+                            remove();
+                        } else {
+                            motion.scale(0.85).add(0, 0.002D, 0);
+                        }
+                        break;
+                    }
+                    case BREAK: {
+                        //Breaking just fall down quickly.
+                        if (!touchingBlocks) {
+                            motion.scale(0.98).add(0D, -0.04D, 0D);
+                        } else {
+                            motion.scale(0.0);
+                        }
+                        break;
+                    }
+                    default: {
+                        //No default movement for generic particles.
+                        break;
+                    }
+                }
+            }
 
-        //Check if we need to change textures.
-        if (textureList != null && timeOfNextTexture <= ticksExisted) {
+            //Check collision movement.  If we hit a block, don't move.
+            touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
+            if (touchingBlocks) {
+                motion.add(-boundingBox.currentCollisionDepth.x * Math.signum(motion.x), -boundingBox.currentCollisionDepth.y * Math.signum(motion.y), -boundingBox.currentCollisionDepth.z * Math.signum(motion.z));
+            }
+            position.add(motion);
+
+            //Update orientation.
+            updateOrientation();
+            if (definition.rotationVelocity != null) {
+                helperRotation.setToAngles(definition.rotationVelocity);
+                orientation.multiply(helperRotation);
+            }
+        }
+
+        //Check if we need to change textures or colors.
+        if (textureList != null && timeOfNextTexture == ticksExisted) {
             if (++textureIndex == textureList.size()) {
                 textureIndex = 0;
             }
@@ -303,6 +341,23 @@ public class EntityParticle extends AEntityC_Renderable {
                 //Assume internal smoke, so use constant delay.
                 timeOfNextTexture += maxAge / 12F;
             }
+        }
+        if (definition.colorDelays != null && timeOfNextColor == ticksExisted) {
+            if (++colorIndex == definition.colorList.size()) {
+                colorIndex = 0;
+            }
+            startColor = definition.colorList.get(colorIndex);
+            if (colorIndex + 1 < definition.colorList.size()) {
+                endColor = definition.colorList.get(colorIndex + 1);
+            } else {
+                endColor = definition.colorList.get(0);
+            }
+
+            if (++colorDelayIndex == definition.colorDelays.size()) {
+                colorDelayIndex = 0;
+            }
+            timeOfCurrentColor = timeOfNextColor;
+            timeOfNextColor += definition.colorDelays.get(colorDelayIndex);
         }
 
         //Check for sub particles.
@@ -332,16 +387,25 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
-        renderable.alpha = interpolate(definition.transparency, definition.toTransparency, true, partialTicks);
+        if (definition.transparency != 0 || definition.toTransparency != 0) {
+            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks);
+        }
         if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             if (staticColor == null) {
-                renderable.color.red = interpolate(startColor.red, endColor.red, true, partialTicks);
-                renderable.color.green = interpolate(startColor.green, endColor.green, true, partialTicks);
-                renderable.color.blue = interpolate(startColor.blue, endColor.blue, true, partialTicks);
+                float colorDelta = (timeOfNextColor - ticksExisted + partialTicks) / (timeOfNextColor - timeOfCurrentColor);
+                renderable.color.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
+                renderable.color.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
+                renderable.color.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
             }
             renderable.transform.set(transform);
-            float scale = (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) ? (float) (1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F) : interpolate(definition.scale, definition.toScale, false, partialTicks);
-            double totalScale = getSize() * scale;
+            double totalScale;
+            if (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) {
+                totalScale = 1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F;
+            } else if (definition.scale != 0 || definition.toScale != 0) {
+                totalScale = interpolate(definition.scale, definition.toScale, (ticksExisted + partialTicks) / maxAge, false, partialTicks);
+            } else {
+                totalScale = 1.0;
+            }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
             renderable.render();
@@ -382,26 +446,9 @@ public class EntityParticle extends AEntityC_Renderable {
         }
     }
 
-    /**
-     * Gets the current size of the particle.  This parameter
-     * is used for the particle's bounding box for collision, and
-     * does not necessarily need to take the scale of the particle into account.
-     */
-    private float getSize() {
-        return definition.type.equals(ParticleType.BREAK) ? 0.1F : (definition.model == null ? 0.2F : 1.0F);
-    }
-
-    private float interpolate(float start, float end, boolean clamp, float partialTicks) {
-        if (start != 0) {
-            if (end != 0) {
-                float value = start + (end - start) * (ticksExisted + partialTicks) / maxAge;
-                return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
-            } else {
-                return start;
-            }
-        } else {
-            return 1.0F;
-        }
+    private float interpolate(float start, float end, float factor, boolean clamp, float partialTicks) {
+        float value = start + (end - start) * factor;
+        return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
     }
 
     private void setParticleTextureBounds(float u, float U, float v, float V) {

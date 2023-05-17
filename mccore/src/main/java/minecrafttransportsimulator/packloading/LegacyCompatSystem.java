@@ -1788,7 +1788,7 @@ public final class LegacyCompatSystem {
 
     private static void performParticleLegacyCompats(JSONParticle particleDef) {
         if (particleDef.spreadFactorVertical != 0 || particleDef.spreadFactorHorizontal != 0) {
-            particleDef.spreadVelocity = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
+            particleDef.spreadRandomness = new Point3D(particleDef.initialVelocity.x * particleDef.spreadFactorHorizontal, particleDef.spreadFactorVertical / 2D, particleDef.initialVelocity.z * particleDef.spreadFactorHorizontal);
             particleDef.spreadFactorVertical = 0;
             particleDef.spreadFactorHorizontal = 0;
         }
@@ -1802,6 +1802,11 @@ public final class LegacyCompatSystem {
             for (JSONSubParticle subParticleDef : particleDef.subParticles) {
                 performParticleLegacyCompats(subParticleDef.particle);
             }
+        }
+        if (particleDef.hitboxSize == 0) {
+            particleDef.hitboxSize = particleDef.type == ParticleType.BREAK ? 0.1F : 0.2F;
+            particleDef.scale *= particleDef.hitboxSize;
+            particleDef.toScale *= particleDef.hitboxSize;
         }
     }
 

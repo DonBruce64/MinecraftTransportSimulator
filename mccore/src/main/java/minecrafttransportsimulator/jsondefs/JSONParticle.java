@@ -19,6 +19,9 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
+    @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
+    public boolean stopsOnGround;
+
     @JSONRequired
     @JSONDescription("The orientation this particle spawns about.")
     public ParticleSpawningOrientation spawningOrientation;
@@ -26,9 +29,6 @@ public class JSONParticle {
     @JSONRequired
     @JSONDescription("The orientation this particle rotates.")
     public ParticleRenderingOrientation renderingOrientation;
-
-    @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
-    public boolean randomTexture;
 
     @JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
     public int quantity;
@@ -51,6 +51,9 @@ public class JSONParticle {
     @JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this is not set.")
     public float scale;
 
+    @JSONDescription("The size of the hitbox.  Defaults to 0.2 for all particles except break, which are 0.1, if not set.")
+    public float hitboxSize;
+
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
 
@@ -66,6 +69,18 @@ public class JSONParticle {
     @JSONDescription("A list of delays between cycling to the next texture.  If the end of this list is reached, the delay sequence will repeat from the start of the list.")
     public List<Integer> textureDelays;
 
+    @JSONDescription("Normally, textureList starts with the first texture.  Setting this true starts from a random spot.  If textureDelays is null, then it'll just pick a random texture and stick with it.  Otherwise, it will cycle as normal.")
+    public boolean randomTexture;
+
+    @JSONDescription("If you want your particle to have multiple colors, you can specify the colors to use here.  The delay between each color is goverend by the colorDelay variable, if it is set.  If you delay past the last color, the cycle repeats.")
+    public List<ColorRGB> colorList;
+
+    @JSONDescription("A list of delays between cycling to the next color.  If the end of this list is reached, the delay sequence will repeat from the start of the list.")
+    public List<Integer> colorDelays;
+
+    @JSONDescription("Normally, colorList starts with the first color.  Setting this true starts from a random spot.  If colorDelays is null, then it'll just pick a random color and stick with it.  Otherwise, it will cycle as normal.")
+    public boolean randomColor;
+
     @JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
     public ColorRGB color;
 
@@ -75,8 +90,14 @@ public class JSONParticle {
     @JSONDescription("The position where this particle should be spawned relative to the spawning object.  May be left out if the particle should spawn at the same position.")
     public Point3D pos;
 
-    @JSONDescription("The rotation to rotate this particle to.  Has no effect if axisAligned is false, as particles normally rotate to face the player.")
+    @JSONDescription("The rotation to rotate this particle to.  Only has an effect for FIXED orientation particles, as do all other rotational parameters.")
     public RotationMatrix rot;
+
+    @JSONDescription("These angles will be randomly added to rot, multipled by a random value between -1 and 1.")
+    public Point3D rotationRandomness;
+
+    @JSONDescription("The angles to rotate this particle by every tick.")
+    public Point3D rotationVelocity;
 
     @JSONDescription("The initial velocity of the particle, where +Z is straight ahead relative to the thing that is producing it.  May be omitted to make a particle that doesn't spawn with any initial velocity except the velocity of the object spawning it.")
     public Point3D initialVelocity;
@@ -87,8 +108,8 @@ public class JSONParticle {
     @JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
     public Point3D terminalVelocity;
 
-    @JSONDescription("The velocity to make this particle spread by.  Will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
-    public Point3D spreadVelocity;
+    @JSONDescription("This velocity will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
+    public Point3D spreadRandomness;
 
     @JSONDescription("This is a list of animatedObjects that can be used to move the spawn position of this particle.")
     public List<JSONAnimationDefinition> spawningAnimations;
