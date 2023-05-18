@@ -212,16 +212,13 @@ public class EntityParticle extends AEntityC_Renderable {
             STANDARD_RENDER_BUFFER.rewind();
             buffer.flip();
         }
-        this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, definition.model != null);
-        if (definition.transparency == 0 && definition.toTransparency == 0) {
-            renderable.alpha = 1.0F;
-        } else {
+        this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, false);
+        if (definition.transparency != 0 || definition.toTransparency != 0) {
             renderable.alpha = definition.transparency;
         }
 
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = definition.model == null || definition.isBright;
-        renderable.isTranslucent = true;
         if (definition.type == ParticleType.BREAK) {
             float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
             setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
@@ -387,10 +384,11 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
-        if (definition.transparency != 0 || definition.toTransparency != 0) {
+        if (definition.toTransparency != 0) {
             renderable.alpha = interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks);
         }
         if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
+            renderable.isTranslucent = blendingEnabled;
             if (staticColor == null) {
                 float colorDelta = (timeOfNextColor - ticksExisted + partialTicks) / (timeOfNextColor - timeOfCurrentColor);
                 renderable.color.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
@@ -401,8 +399,10 @@ public class EntityParticle extends AEntityC_Renderable {
             double totalScale;
             if (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) {
                 totalScale = 1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F;
-            } else if (definition.scale != 0 || definition.toScale != 0) {
+            } else if (definition.toScale != 0) {
                 totalScale = interpolate(definition.scale, definition.toScale, (ticksExisted + partialTicks) / maxAge, false, partialTicks);
+            } else if (definition.scale != 0) {
+                totalScale = definition.scale;
             } else {
                 totalScale = 1.0;
             }

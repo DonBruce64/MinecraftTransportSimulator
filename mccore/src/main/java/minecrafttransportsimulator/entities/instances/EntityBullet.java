@@ -74,7 +74,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         this.boundingBox.depthRadius = definition.bullet.diameter / 1000D / 2D;
         this.initialVelocity = motion.length();
         if (definition.bullet.accelerationTime > 0) {
-            velocityToAddEachTick = (definition.bullet.maxVelocity / 20D / 10D - motion.length()) / definition.bullet.accelerationTime;
+            velocityToAddEachTick = (definition.bullet.maxVelocity / 20D - motion.length()) / definition.bullet.accelerationTime;
             this.motionToAddEachTick = new Point3D(0, 0, velocityToAddEachTick).rotate(gun.orientation);
         } else {
             velocityToAddEachTick = 0;

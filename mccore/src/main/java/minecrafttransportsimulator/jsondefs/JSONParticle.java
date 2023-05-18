@@ -51,11 +51,11 @@ public class JSONParticle {
     @JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this is not set.")
     public float scale;
 
-    @JSONDescription("The size of the hitbox.  Defaults to 0.2 for all particles except break, which are 0.1, if not set.")
-    public float hitboxSize;
-
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
+
+    @JSONDescription("The size of the hitbox.  Defaults to 0.2 for all particles except break, which are 0.1, if not set.")
+    public float hitboxSize;
 
     @JSONDescription("Normally particles use built-in textures.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
     public String texture;
@@ -99,6 +99,9 @@ public class JSONParticle {
     @JSONDescription("The angles to rotate this particle by every tick.")
     public Point3D rotationVelocity;
 
+    @JSONDescription("This velocity will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
+    public Point3D spreadRandomness;
+
     @JSONDescription("The initial velocity of the particle, where +Z is straight ahead relative to the thing that is producing it.  May be omitted to make a particle that doesn't spawn with any initial velocity except the velocity of the object spawning it.")
     public Point3D initialVelocity;
 
@@ -107,9 +110,6 @@ public class JSONParticle {
 
     @JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
     public Point3D terminalVelocity;
-
-    @JSONDescription("This velocity will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
-    public Point3D spreadRandomness;
 
     @JSONDescription("This is a list of animatedObjects that can be used to move the spawn position of this particle.")
     public List<JSONAnimationDefinition> spawningAnimations;

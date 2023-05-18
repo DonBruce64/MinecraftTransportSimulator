@@ -988,7 +988,7 @@ public class PartGun extends APart {
     public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, boolean addSpread) {
         //Set velocity.
         if (definition.gun.muzzleVelocity != 0) {
-            bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
+            bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D);
             //Randomize the spread for normal bullet and pellets
             if (addSpread) {
                 if (loadedBullet == null) {

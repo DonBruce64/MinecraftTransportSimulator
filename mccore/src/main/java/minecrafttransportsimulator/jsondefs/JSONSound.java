@@ -54,15 +54,15 @@ public class JSONSound {
     @JSONDescription("The volume of the sound at the minimum distance.")
     public double minDistanceVolume;
 
-    @JSONDescription("The maximum distance as to where this sound can be heard.  If this and minDistance are left out, 0-32 is used.")
-    public double maxDistance;
-
-    @JSONDescription("The volume of the sound at the maximum distance.")
-    public double maxDistanceVolume;
-
     @JSONDescription("A special distance that causes a middle calculation in the sound volume.  This allows for a triangular interpolation of sound volume.")
     public double middleDistance;
 
     @JSONDescription("The volume of the sound at the middle distance.")
     public double middleDistanceVolume;
+
+    @JSONDescription("The maximum distance as to where this sound can be heard.  If this and minDistance are left out, 0-32 is used.")
+    public double maxDistance;
+
+    @JSONDescription("The volume of the sound at the maximum distance.")
+    public double maxDistanceVolume;
 }
