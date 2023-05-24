@@ -60,6 +60,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private Point3D relativeGunPos;
     private Point3D prevRelativeGunPos;
     private Point3D blockToBreakPos;
+    private final List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
 
     /**
      * Generic constructor for no target.
@@ -272,15 +273,20 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             }
         }
 
+        //Populate multiparts for following functions.
+        multiparts.clear();
+        multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+        multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
+
         //Check for collided internal entities and attack them.
         //This is a bit more involved, as we need to check all possible types and check hitbox distance.
         Point3D endPoint = position.copy().add(motion);
-        BoundingBox bulletMovmenetBounds = new BoundingBox(position, endPoint);
-        for (EntityVehicleF_Physics hitVehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+        BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
+        for (AEntityF_Multipart<?> hitVehicle : multiparts) {
             //Don't attack the entity that has the gun that fired us.
             if (!hitVehicle.allParts.contains(gun)) {
                 //Make sure that we could even possibly hit this vehicle before we try and attack it.
-                if (hitVehicle.encompassingBox.intersects(bulletMovmenetBounds)) {
+                if (hitVehicle.encompassingBox.intersects(bulletMovementBounds)) {
                     //Get all collision boxes on the vehicle, and check if we hit any of them.
                     //Sort them by distance for later.
                     TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
@@ -358,7 +364,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 if (hitPart.definition.generic.forwardsDamage || hitPart instanceof PartEngine) {
                                     if (!world.isClient()) {
                                         //Need to re-create damage object to use box on vehicle.  Otherwise, we'll attack the part.
-                                        damage = new Damage((hitPart.definition.generic.forwardsDamageMultiplier*damage.amount), null, gun, null, null);
+                                        damage = new Damage((hitPart.definition.generic.forwardsDamageMultiplier * damage.amount), null, gun, null, null);
                                         damage.setBullet(getItem());
                                         hitVehicle.attack(damage);
                                     }
@@ -423,9 +429,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     int maxSteps = (int) Math.floor(velocity / definition.bullet.proximityFuze);
                     proxBounds.globalCenter.set(position);
                     for (int step = 0; step < maxSteps; ++step) {
-                        List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
-                        multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-                        multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
                         for (AEntityF_Multipart<?> multipart : multiparts) {
                             if (multipart.encompassingBox.intersects(proxBounds)) {
                                 //Could have hit this multipart, check all boxes.
