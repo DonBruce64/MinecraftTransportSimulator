@@ -697,6 +697,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 for (SoundInstance sound : sounds) {
                     if (sound != null && sound.soundName.equals(soundDef.name)) {
                         //Adjust volume.
+                        if (soundDef.pos != null) {
+                            //Change distance to actual distance since this will be different.
+                            distance = sound.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        }
                         SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
                         boolean definedVolume = false;
                         if (volumeSwitchbox != null) {
