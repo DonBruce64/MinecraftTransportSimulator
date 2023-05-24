@@ -218,7 +218,7 @@ public class InterfaceEventsEntityRendering {
             entity.prevRenderYawOffset = 0;
 
             //Translate the rider to the camera so it rotates on the proper coordinate system.
-            EntityPlayer cameraEntity = Minecraft.getMinecraft().player;
+            Entity cameraEntity = Minecraft.getMinecraft().getRenderViewEntity();
             if (cameraEntity != null) {
                 //Get delta between camera and rendered entity.
                 Point3D deltaDistance = new Point3D(entity.lastTickPosX - cameraEntity.lastTickPosX + (entity.posX - entity.lastTickPosX - (cameraEntity.posX - cameraEntity.lastTickPosX)) * event.getPartialRenderTick(), entity.lastTickPosY - cameraEntity.lastTickPosY + (entity.posY - entity.lastTickPosY - (cameraEntity.posY - cameraEntity.lastTickPosY)) * event.getPartialRenderTick(), entity.lastTickPosZ - cameraEntity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (cameraEntity.posZ - cameraEntity.lastTickPosZ)) * event.getPartialRenderTick());

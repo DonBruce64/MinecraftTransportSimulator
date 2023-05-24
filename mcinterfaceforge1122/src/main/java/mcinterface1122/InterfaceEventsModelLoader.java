@@ -32,6 +32,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -81,6 +82,7 @@ public class InterfaceEventsModelLoader {
                 //Only do this if the player the builder is following is the client player.
                 WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
                 EntityPlayer player = Minecraft.getMinecraft().player;
+                Entity cameraEntity = Minecraft.getMinecraft().getRenderViewEntity();
                 if (player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
                     if (allEntities != null) {
@@ -101,7 +103,7 @@ public class InterfaceEventsModelLoader {
                             //Rendering system expects coordinates to be at center of entity when called, translate us so that's the case.
                             world.beginProfiling("MTSRendering", true);
                             GL11.glPushMatrix();
-                            GL11.glTranslated(entity.position.x - (player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks), entity.position.y - (player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks), entity.position.z - (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks));
+                            GL11.glTranslated(entity.position.x - (cameraEntity.lastTickPosX + (cameraEntity.posX - cameraEntity.lastTickPosX) * partialTicks), entity.position.y - (cameraEntity.lastTickPosY + (cameraEntity.posY - cameraEntity.lastTickPosY) * partialTicks), entity.position.z - (cameraEntity.lastTickPosZ + (cameraEntity.posZ - cameraEntity.lastTickPosZ) * partialTicks));
                             entity.render(blendingEnabled, partialTicks);
                             GL11.glPopMatrix();
                             world.endProfiling();
