@@ -170,7 +170,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.update();
         world.beginProfiling("EntityF_Level", true);
 
-        //Populate active part slot list.
+        //Populate active part slot list and update box positions.
         //Only do this on clients; servers reference the main list to handle clicks.
         //Boxes added on clients depend on what the player is holding.
         //We add these before part boxes so the player can click them before clicking a part.
@@ -211,22 +211,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                 }
             }
-        }
 
-        if (requiresDeltaUpdates()) {
             //Update part slot box positions.
-            world.beginProfiling("PartSlotPositions", true);
-            partSlotBoxes.forEach((box, partDef) -> {
-                AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
-                if (switchBox != null) {
-                    if (switchBox.runSwitchbox(0, false)) {
-                        box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
-                        box.updateToEntity(this, box.globalCenter);
+            if (requiresDeltaUpdates()) {
+                world.beginProfiling("PartSlotPositions", true);
+                activePartSlotBoxes.forEach((box, partDef) -> {
+                    AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
+                    if (switchBox != null) {
+                        if (switchBox.runSwitchbox(0, false)) {
+                            box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
+                            box.updateToEntity(this, box.globalCenter);
+                        }
+                    } else {
+                        box.updateToEntity(this, null);
                     }
-                } else {
-                    box.updateToEntity(this, null);
-                }
-            });
+                });
+            }
         }
 
         //Check for part slot variable changes and do logic.
@@ -382,12 +382,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     protected void updateCollisionBoxes() {
         super.updateCollisionBoxes();
-        //Only add active slots on clients, but all slots on servers.
+        //Only add active slots on clients.
         //Different clients may have different boxes active, but the server will always have them all.
         if (world.isClient()) {
             interactionBoxes.addAll(activePartSlotBoxes.keySet());
-        } else {
-            interactionBoxes.addAll(partSlotBoxes.keySet());
         }
     }
 
