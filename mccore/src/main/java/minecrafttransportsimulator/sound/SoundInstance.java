@@ -48,7 +48,8 @@ public class SoundInstance {
         this.soundName = soundName;
         this.soundPlayingName = soundDef != null && soundDef.soundVariations != null ? soundDef.soundVariations.get(new Random().nextInt(soundDef.soundVariations.size())) : soundName;
         this.radio = radio;
-        this.position = entity.position.copy();
+        this.position = new Point3D();
+        updatePosition();
     }
 
     public void updatePosition() {
