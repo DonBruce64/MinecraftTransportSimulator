@@ -133,13 +133,13 @@ public class VehicleGroundDeviceCollection {
                 if (frontRightGDB.contactPoint.isZero()) {
                     return null;
                 } else {
-                    return frontRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+                    return frontRightGDB.contactPoint.copy();
                 }
             } else {
                 if (frontRightGDB.contactPoint.isZero()) {
-                    return frontRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+                    return frontLeftGDB.contactPoint.copy();
                 } else {
-                    return frontRightGDB.contactPoint.copy().subtract(frontLeftGDB.contactPoint).scale(0.5).add(frontLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+                    return frontRightGDB.contactPoint.copy().subtract(frontLeftGDB.contactPoint).scale(0.5).add(frontLeftGDB.contactPoint);
                 }
             }
         } else {
@@ -151,9 +151,9 @@ public class VehicleGroundDeviceCollection {
                 }
             } else {
                 if (rearRightGDB.contactPoint.isZero()) {
-                    return rearRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+                    return rearLeftGDB.contactPoint.copy();
                 } else {
-                    return rearRightGDB.contactPoint.copy().subtract(rearLeftGDB.contactPoint).scale(0.5).add(rearLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+                    return rearRightGDB.contactPoint.copy().subtract(rearLeftGDB.contactPoint).scale(0.5).add(rearLeftGDB.contactPoint);
                 }
             }
         }
