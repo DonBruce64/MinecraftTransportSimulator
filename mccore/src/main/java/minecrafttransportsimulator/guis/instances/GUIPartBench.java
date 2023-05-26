@@ -466,14 +466,7 @@ public class GUIPartBench extends AGUIBase {
         String errorMessage = "";
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair, true);
-            if (materials != null) {
-                for (byte i = 0; i < craftingItemIcons.size(); ++i) {
-                    if (i < materials.size()) {
-                        craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
-                    }
-                }
-            } else {
-                craftingItemIcons.forEach(icon -> icon.stacks = null);
+            if (materials == null) {
                 if (++recipeIndex == (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() : currentItem.definition.general.materialLists.size())) {
                     recipeIndex = 0;
                 }

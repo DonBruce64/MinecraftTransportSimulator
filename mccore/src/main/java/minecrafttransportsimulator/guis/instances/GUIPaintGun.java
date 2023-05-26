@@ -126,6 +126,20 @@ public class GUIPaintGun extends AGUIBase {
 
         //Set confirm button based on if player has materials.
         confirmButton.enabled = currentItem != null && (player.isCreative() || (materials != null && player.getInventory().hasMaterials(materials)));
+
+        //Set materials.
+        //Get the offset index based on the clock-time and the number of materials.
+        if (materials != null) {
+            for (byte i = 0; i < craftingItemIcons.size(); ++i) {
+                if (i < materials.size()) {
+                    craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+                } else {
+                    craftingItemIcons.get(i).stacks = null;
+                }
+            }
+        } else {
+            craftingItemIcons.forEach(icon -> icon.stacks = null);
+        }
     }
 
     @Override
@@ -185,14 +199,7 @@ public class GUIPaintGun extends AGUIBase {
         String errorMessage = "";
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false, false);
-            if (materials != null) {
-                for (byte i = 0; i < craftingItemIcons.size(); ++i) {
-                    if (i < materials.size()) {
-                        craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
-                    }
-                }
-            } else {
-                craftingItemIcons.forEach(icon -> icon.stacks = null);
+            if (materials == null) {
                 if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
                     recipeIndex = 0;
                 }
