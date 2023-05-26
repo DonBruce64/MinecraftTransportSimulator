@@ -573,8 +573,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Motion is applied after yaw corrections to ensure the trailer follows the truck.
                 //Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
                 //For these offsets, we want them to be local to our coordinates, as that is what system we will need to apply yaw in.
-                hitchPrevOffset.set(towedByConnection.hitchPriorPosition).subtract(prevPosition).reOrigin(orientation);
-                hitchCurrentOffset.set(towedByConnection.hitchCurrentPosition).subtract(position).reOrigin(orientation);
+                if (towedByConnection.hookupConnection.pos.x != 0) {
+                    //Need to offset reference point to account for offset hookup location relative to center-line.
+                    hitchPrevOffset.set(-towedByConnection.hookupConnection.pos.x, 0, 0).rotate(prevOrientation);
+                    hitchCurrentOffset.set(-towedByConnection.hookupConnection.pos.x, 0, 0).rotate(orientation);
+
+                    hitchPrevOffset.add(towedByConnection.hitchPriorPosition).subtract(prevPosition);
+                    hitchCurrentOffset.add(towedByConnection.hitchCurrentPosition).subtract(position);
+                } else {
+                    hitchPrevOffset.set(towedByConnection.hitchPriorPosition).subtract(prevPosition);
+                    hitchCurrentOffset.set(towedByConnection.hitchCurrentPosition).subtract(position);
+                }
 
                 //Calculate how much yaw we need to apply to rotate ourselves to match the hitch point.
                 hitchPrevOffset.y = 0;
@@ -587,6 +596,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
                 rotation.angles.set(0, rotationDelta, 0);
                 rotation.updateToAngles();
+
+                //Update hookup position now that rotation is current.
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
             }
             //Now get positional delta.  This assumes perfectly-aligned orientation.				
