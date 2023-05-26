@@ -52,7 +52,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
     //Runtime variables.
     private boolean touchingBlocks;
-    private int timeOfNextTexture;
+    private float timeOfNextTexture;
     private int textureIndex;
     private int textureDelayIndex;
     private List<String> textureList;
@@ -181,7 +181,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
             texture = textureList.get(0);
-            timeOfNextTexture = (int) (maxAge / 12F);
+            timeOfNextTexture = maxAge / 12F;
         } else {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
         }
@@ -324,7 +324,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Check if we need to change textures or colors.
-        if (textureList != null && timeOfNextTexture == ticksExisted) {
+        if (textureList != null && timeOfNextTexture <= ticksExisted) {
             if (++textureIndex == textureList.size()) {
                 textureIndex = 0;
             }
