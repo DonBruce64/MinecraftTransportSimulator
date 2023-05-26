@@ -540,7 +540,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             if (damageAmount > definition.general.health) {
                 double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
                 damageAmount = definition.general.health;
-                outOfHealth = definition.general.health != 0;
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
             } else {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));

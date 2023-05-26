@@ -97,6 +97,13 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 tooltipLines.add(JSONConfigLanguage.ITEMINFO_JUMPERPACK.value);
                 break;
             }
+            case REPAIR_PACK: {
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK.value + definition.repair.amount + "%");
+                if (definition.repair.canRepairTotaled) {
+                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK_UNTOTAL.value);
+                }
+                break;
+            }
             case Y2K_BUTTON: {
                 tooltipLines.add(JSONConfigLanguage.ITEMINFO_Y2KBUTTON.value);
                 break;
@@ -371,6 +378,32 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
                             return CallbackType.ALL;
+                        }
+                    }
+                }
+                return CallbackType.NONE;
+            }
+            case REPAIR_PACK: {
+                if (rightClick && !entity.world.isClient()) {
+                    if (entity instanceof APart) {
+                        entity = ((APart) entity).vehicleOn;
+                    }
+                    if (entity instanceof EntityVehicleF_Physics) {
+                        if (!entity.outOfHealth || definition.repair.canRepairTotaled) {
+                            double amountToHeal = entity.definition.general.health * definition.repair.amount / 100D;
+                            if (entity.damageAmount < amountToHeal) {
+                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, 0));
+                            } else {
+                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, entity.damageAmount - amountToHeal);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, entity.damageAmount - amountToHeal));
+                            }
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS), player);
+                            if (!player.isCreative()) {
+                                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                            }
+                        } else {
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_FAIL), player);
                         }
                     }
                 }

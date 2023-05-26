@@ -23,6 +23,10 @@ public class JSONItem extends AJSONItem {
     @JSONDescription("Weapon-specific item section.")
     public JSONWeapon weapon;
 
+    @JSONRequired(dependentField = "type", dependentValues = { "repair" }, subField = "item")
+    @JSONDescription("Repair-specific item section.")
+    public JSONRepair repair;
+
     public static class JSONItemGeneric {
         @JSONDescription("The functionality to give this item.")
         public ItemComponentType type;
@@ -84,6 +88,14 @@ public class JSONItem extends AJSONItem {
         public double attackCooldown;
     }
 
+    public static class JSONRepair {
+        @JSONDescription("Normally, repair pack cannot repair totaled vehicles.  This allows them to do so.")
+        public boolean canRepairTotaled;
+
+        @JSONDescription("How much damage this repair pack removes, in % total health.  Cannot be more than 100.")
+        public double amount;
+    }
+
     public enum ItemComponentType {
         @JSONDescription("Creates an item with no functionality.")
         NONE,
@@ -111,6 +123,8 @@ public class JSONItem extends AJSONItem {
         JUMPER_CABLES,
         @JSONDescription("Creates an item that works as a jumper pack.")
         JUMPER_PACK,
+        @JSONDescription("Creates an item that works as a repair pack.")
+        REPAIR_PACK,
         @JSONDescription("Creates an item that works as a Y2K button.")
         Y2K_BUTTON
     }
