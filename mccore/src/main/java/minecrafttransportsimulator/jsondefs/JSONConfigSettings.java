@@ -26,7 +26,7 @@ public class JSONConfigSettings {
     public ConfigFuel fuel = new ConfigFuel();
 
     public static class ConfigGeneral {
-        public JSONConfigEntry<Boolean> dumpCraftingConfig = new JSONConfigEntry<>(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
+        public JSONConfigEntry<Boolean> generateOverrideConfigs = new JSONConfigEntry<>(false, "If true, then crafting and damage override config files will be dumped into the config folder at boot.  WARNING: this will overwrite your existing override files!");
         public JSONConfigEntry<Boolean> opSignEditingOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, vehicles can only be picked up in creative mode.");

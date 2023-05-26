@@ -10,7 +10,7 @@ import java.util.Map;
  *
  * @author don_bruce
  */
-public class JSONCraftingOverrides {
+public class JSONConfigCraftingOverrides {
     public String comment1 = "The following section is used for overriding crafting recipes from packs for use in modpacks and servers.";
     public String comment2 = "Everything that is crafted on one of the benches can be modified here to include any item, including modded ones.";
     public String comment3 = "The format is one of [modID]:[ItemName]:[Metadata]:[Qty], with the name being the same as the in-game /give command. (Ignore metadata for 1.16.5+ versions)";

@@ -156,6 +156,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public boolean hurt(DamageSource source, float amount) {
         if (ConfigSystem.settings.damage.allowExternalDamage.value && !level.isClientSide && entity instanceof AEntityE_Interactable) {
             AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
+            if (interactable instanceof EntityVehicleF_Physics) {
+                amount *= ConfigSystem.externalDamageOverrides.overrides.get(interactable.definition.packID).get(interactable.definition.systemName);
+            }
             Entity attacker = source.getDirectEntity();
             Entity trueSource = source.getEntity();
             WrapperPlayer playerSource = trueSource instanceof PlayerEntity ? WrapperPlayer.getWrapperFor((PlayerEntity) trueSource) : null;

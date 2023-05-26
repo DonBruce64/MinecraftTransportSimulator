@@ -11,11 +11,13 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient;
+import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides;
+import minecrafttransportsimulator.jsondefs.JSONConfigExternalDamageOverrides;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
-import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -33,8 +35,10 @@ public final class ConfigSystem {
     private static File settingsFile;
     private static File clientFile;
     private static File craftingFile;
+    private static File externalDamageFile;
     public static JSONConfigSettings settings;
     public static JSONConfigClient client;
+    public static JSONConfigExternalDamageOverrides externalDamageOverrides;
     private static File configDirectory;
     private static boolean onClient;
     private static Map<String, JSONConfigLanguage> languageFiles = new HashMap<>();
@@ -84,8 +88,9 @@ public final class ConfigSystem {
             }
         }
 
-        //Get crafting overrides file location.  This is used later when packs are parsed.
+        //Get overrides file location.  This is used later when packs are parsed.
         craftingFile = new File(settingsFile.getParentFile(), "mtscraftingoverrides.json");
+        externalDamageFile = new File(settingsFile.getParentFile(), "mtsexternaldamageoverrides.json");
 
         //If we have the old config file, delete it.
         File oldConfigFile = new File(configDirectory, "mts.cfg");
@@ -128,58 +133,88 @@ public final class ConfigSystem {
      * Called to do crafting overrides.  Must be called after all packs are loaded.
      */
     public static void initCraftingOverrides() {
-        if (settings.general.dumpCraftingConfig.value) {
+        if (settings.general.generateOverrideConfigs.value) {
             //Make the default override file and save it.
             try {
-                JSONCraftingOverrides craftingOverridesObject = new JSONCraftingOverrides();
-                craftingOverridesObject.overrides = new LinkedHashMap<>();
+                JSONConfigCraftingOverrides overrideObject = new JSONConfigCraftingOverrides();
+                overrideObject.overrides = new LinkedHashMap<>();
                 for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-                    if (!craftingOverridesObject.overrides.containsKey(packItem.definition.packID)) {
-                        craftingOverridesObject.overrides.put(packItem.definition.packID, new LinkedHashMap<>());
+                    if (!overrideObject.overrides.containsKey(packItem.definition.packID)) {
+                        overrideObject.overrides.put(packItem.definition.packID, new LinkedHashMap<>());
                     }
                     if (packItem instanceof AItemSubTyped) {
                         List<String> materials = new ArrayList<>();
                         materials.addAll(packItem.definition.general.materialLists.get(0));
                         materials.addAll(((AItemSubTyped<?>) packItem).subDefinition.extraMaterialLists.get(0));
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subDefinition.subName, materials);
+                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subDefinition.subName, materials);
                     } else {
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materialLists.get(0));
+                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materialLists.get(0));
                     }
                     if (packItem.definition.general.repairMaterialLists != null) {
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterialLists.get(0));
+                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterialLists.get(0));
                     }
                 }
-                JSONParser.exportStream(craftingOverridesObject, Files.newOutputStream(craftingFile.toPath()));
+                JSONParser.exportStream(overrideObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
             }
-        } else if (craftingFile.exists()) {
             try {
-                JSONCraftingOverrides craftingOverridesObject = JSONParser.parseStream(Files.newInputStream(craftingFile.toPath()), JSONCraftingOverrides.class, null, null);
-                for (String craftingOverridePackID : craftingOverridesObject.overrides.keySet()) {
-                    for (String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()) {
-                        AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
-                        if (item instanceof AItemSubTyped) {
-                            List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).subDefinition.extraMaterialLists;
-                            extraMaterialLists.clear();
-                            extraMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+                createDefaultExternalDamageOverrides();
+                JSONParser.exportStream(externalDamageOverrides, Files.newOutputStream(externalDamageFile.toPath()));
+            } catch (Exception e) {
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh external damage overrides file.  Report to the mod author!");
+            }
+        } else {
+            if (craftingFile.exists()) {
+                try {
+                    JSONConfigCraftingOverrides overridesObject = JSONParser.parseStream(Files.newInputStream(craftingFile.toPath()), JSONConfigCraftingOverrides.class, null, null);
+                    for (String craftingOverridePackID : overridesObject.overrides.keySet()) {
+                        for (String craftingOverrideSystemName : overridesObject.overrides.get(craftingOverridePackID).keySet()) {
+                            AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
+                            if (item instanceof AItemSubTyped) {
+                                List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).subDefinition.extraMaterialLists;
+                                extraMaterialLists.clear();
+                                extraMaterialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
 
-                            //Clear main list, we just use extra here for the item.  Same effect.
-                            //Need to add blank entries though so we match counts.
-                            item.definition.general.materialLists.clear();
-                            extraMaterialLists.forEach(list -> item.definition.general.materialLists.add(new ArrayList<>()));
-                        } else if (item != null) {
-                            item.definition.general.materialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-                        }
-                        List<String> repairMaterials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
-                        if (repairMaterials != null) {
-                            item.definition.general.repairMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
+                                //Clear main list, we just use extra here for the item.  Same effect.
+                                //Need to add blank entries though so we match counts.
+                                item.definition.general.materialLists.clear();
+                                extraMaterialLists.forEach(list -> item.definition.general.materialLists.add(new ArrayList<>()));
+                            } else if (item != null) {
+                                item.definition.general.materialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+                            }
+                            List<String> repairMaterials = overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
+                            if (repairMaterials != null) {
+                                item.definition.general.repairMaterialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    InterfaceManager.coreInterface.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                 }
-            } catch (Exception e) {
-                InterfaceManager.coreInterface.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-                InterfaceManager.coreInterface.logError(e.getMessage());
+            }
+            if (externalDamageFile.exists()) {
+                try {
+                    externalDamageOverrides = JSONParser.parseStream(Files.newInputStream(externalDamageFile.toPath()), JSONConfigExternalDamageOverrides.class, null, null);
+                } catch (Exception e) {
+                    InterfaceManager.coreInterface.logError("ConfigSystem failed to parse external damage override file.  Overrides will not be applied.");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
+                    createDefaultExternalDamageOverrides();
+                }
+            }
+        }
+    }
+
+    private static void createDefaultExternalDamageOverrides() {
+        externalDamageOverrides = new JSONConfigExternalDamageOverrides();
+        externalDamageOverrides.overrides = new LinkedHashMap<>();
+        for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
+            if (packItem instanceof ItemVehicle) {
+                if (!externalDamageOverrides.overrides.containsKey(packItem.definition.packID)) {
+                    externalDamageOverrides.overrides.put(packItem.definition.packID, new LinkedHashMap<>());
+                }
+                externalDamageOverrides.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, 1.0D);
             }
         }
     }
