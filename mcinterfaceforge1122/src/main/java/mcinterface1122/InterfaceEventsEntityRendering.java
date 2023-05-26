@@ -2,8 +2,10 @@ package mcinterface1122;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -47,10 +49,10 @@ import net.minecraftforge.fml.relauncher.Side;
 public class InterfaceEventsEntityRendering {
     public static boolean renderCurrentRiderSitting;
     public static boolean renderCurrentRiderStanding;
-    private static boolean overwrotePlayerModel = false;
     private static boolean needPlayerTweaks = false;
     private static boolean needToPopMatrix = false;
     private static ItemStack heldStackHolder = null;
+    private static final Set<EntityPlayer> playersOverwritten = new HashSet<>();
     private static final Point3D leftArmAngles = new Point3D();
     private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
@@ -244,9 +246,9 @@ public class InterfaceEventsEntityRendering {
             //Check if we are holding a gun.  This is the only other time
             //we apply player tweaks besides riding in a vehicle.
             if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
+                EntityPlayer player = (EntityPlayer) entity;
                 EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
                 if (gunEntity != null && gunEntity.activeGun != null) {
-                    EntityPlayer player = (EntityPlayer) entity;
 
                     //Get arm rotations.
                     Point3D heldVector;
@@ -285,49 +287,50 @@ public class InterfaceEventsEntityRendering {
                     //Flag us for player tweaks in the render.
                     needPlayerTweaks = true;
                 }
-            }
 
-            //Check if we modified the player model to allow us to change angles.
-            boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
-            boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
-            if (setModelToCustom || setModelToDefault) {
-                for (Field renderManagerField : RenderManager.class.getDeclaredFields()) {
-                    if (renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")) {
-                        try {
-                            if (!renderManagerField.isAccessible()) {
-                                renderManagerField.setAccessible(true);
-                            }
+                //Check if we modified the player model to allow us to change angles.
+                boolean overwrotePlayerModel = playersOverwritten.contains(player);
+                boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
+                boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
+                if (setModelToCustom || setModelToDefault) {
+                    for (Field renderManagerField : RenderManager.class.getDeclaredFields()) {
+                        if (renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")) {
+                            try {
+                                if (!renderManagerField.isAccessible()) {
+                                    renderManagerField.setAccessible(true);
+                                }
 
-                            @SuppressWarnings("unchecked")
-                            Map<String, RenderPlayer> skinMap = (Map<String, RenderPlayer>) renderManagerField.get(Minecraft.getMinecraft().getRenderManager());
-                            List<String> skinTypes = new ArrayList<>(skinMap.keySet());
+                                @SuppressWarnings("unchecked")
+                                Map<String, RenderPlayer> skinMap = (Map<String, RenderPlayer>) renderManagerField.get(Minecraft.getMinecraft().getRenderManager());
+                                List<String> skinTypes = new ArrayList<>(skinMap.keySet());
 
-                            for (String skinType : skinTypes) {
-                                RenderPlayer render = skinMap.get(skinType);
-                                for (Field field : RenderLivingBase.class.getDeclaredFields()) {
-                                    if (field.getName().equals("mainModel") || field.getName().equals("field_77045_g")) {
-                                        try {
-                                            if (!field.isAccessible()) {
-                                                field.setAccessible(true);
+                                for (String skinType : skinTypes) {
+                                    RenderPlayer render = skinMap.get(skinType);
+                                    for (Field field : RenderLivingBase.class.getDeclaredFields()) {
+                                        if (field.getName().equals("mainModel") || field.getName().equals("field_77045_g")) {
+                                            try {
+                                                if (!field.isAccessible()) {
+                                                    field.setAccessible(true);
+                                                }
+
+                                                if (setModelToCustom) {
+                                                    playersOverwritten.add(player);
+                                                    field.set(render, new ModelPlayerCustom((ModelPlayer) field.get(render), skinType.equals("slim")));
+                                                } else {
+                                                    playersOverwritten.remove(player);
+                                                    field.set(render, ((ModelPlayerCustom) field.get(render)).base);
+                                                }
+                                            } catch (Exception e) {
+                                                ConfigSystem.client.renderingSettings.playerTweaks.value = false;
+                                                e.printStackTrace();
                                             }
-
-                                            if (setModelToCustom) {
-                                                overwrotePlayerModel = true;
-                                                field.set(render, new ModelPlayerCustom((ModelPlayer) field.get(render), skinType.equals("slim")));
-                                            } else {
-                                                overwrotePlayerModel = false;
-                                                field.set(render, ((ModelPlayerCustom) field.get(render)).base);
-                                            }
-                                        } catch (Exception e) {
-                                            ConfigSystem.client.renderingSettings.playerTweaks.value = false;
-                                            e.printStackTrace();
                                         }
                                     }
                                 }
+                            } catch (Exception e) {
+                                ConfigSystem.client.renderingSettings.playerTweaks.value = false;
+                                e.printStackTrace();
                             }
-                        } catch (Exception e) {
-                            ConfigSystem.client.renderingSettings.playerTweaks.value = false;
-                            e.printStackTrace();
                         }
                     }
                 }
