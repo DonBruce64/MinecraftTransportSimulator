@@ -91,10 +91,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<>();
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
-    private final Map<JSONParticle, Point3D> lastPositionParticleSpawned = new HashMap<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
-    private long lastTickParticlesSpawned;
-    private float lastPartialTickParticlesSpawned;
 
     /**
      * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
@@ -483,41 +480,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             boolean shouldParticleSpawn = switchbox.runSwitchbox(partialTicks, false);
 
             //Make the particle spawn if able.
-            if (shouldParticleSpawn) {
-                if (particleDef.distance > 0) {
-                    Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
-                    if (lastParticlePosition == null) {
-                        lastParticlePosition = position.copy();
-                        lastPositionParticleSpawned.put(particleDef, lastParticlePosition);
-                        continue;//First tick we are active, checks are assured to fail.
+            if (shouldParticleSpawn && (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))) {
+                lastTickParticleSpawned.put(particleDef, ticksExisted);
+                for (int i = 0; i < particleDef.quantity; ++i) {
+                    AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
+                    if (spawningSwitchbox != null) {
+                        spawningSwitchbox.runSwitchbox(partialTicks, false);
                     }
-                    while (!lastParticlePosition.isDistanceToCloserThan(position, particleDef.distance)) {
-                        double distanceFactor = particleDef.distance / position.distanceTo(lastParticlePosition);
-                        Point3D spawningPosition = lastParticlePosition.copy().interpolate(position, distanceFactor);
-                        for (int i = 0; i < particleDef.quantity; ++i) {
-                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                            if (spawningSwitchbox != null) {
-                                spawningSwitchbox.runSwitchbox(partialTicks, false);
-                            }
-                            world.addEntity(new EntityParticle(this, particleDef, spawningPosition, spawningSwitchbox));
-                        }
-                        lastParticlePosition.set(spawningPosition);
-                    }
-                } else {
-                    if (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef))) {
-                        lastTickParticleSpawned.put(particleDef, ticksExisted);
-                        for (int i = 0; i < particleDef.quantity; ++i) {
-                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                            if (spawningSwitchbox != null) {
-                                spawningSwitchbox.runSwitchbox(partialTicks, false);
-                            }
-                            world.addEntity(new EntityParticle(this, particleDef, position, spawningSwitchbox));
-                        }
-                    }
+                    world.addEntity(new EntityParticle(this, particleDef, spawningSwitchbox));
                 }
-            } else if (particleDef.distance != 0) {
-                //Need to remove or we'll foul deltas.
-                lastPositionParticleSpawned.remove(particleDef);
             }
         }
     }
@@ -697,10 +668,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 for (SoundInstance sound : sounds) {
                     if (sound != null && sound.soundName.equals(soundDef.name)) {
                         //Adjust volume.
-                        if (soundDef.pos != null) {
-                            //Change distance to actual distance since this will be different.
-                            distance = sound.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                        }
                         SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
                         boolean definedVolume = false;
                         if (volumeSwitchbox != null) {
@@ -733,7 +700,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingThisEntity && entityRiding != null && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                        if (!playerRidingThisEntity && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
                             sound.volume *= 0.5F;
                         }
 
@@ -1125,12 +1092,19 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         @Override
         public void runTranslation(DurationDelayClock clock, float partialTicks) {
             if (clock.animation.axis.x != 0) {
-                modifiedValue *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+                modifiedValue = clock.animation.invert ? modifiedValue * (float) Math.pow(entity.getAnimatedVariableValue(clock, 1, partialTicks), 1/clock.animation.axis.x) : modifiedValue * (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks));
             } else if (clock.animation.axis.y != 0) {
-                modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+                modifiedValue = clock.animation.invert ? modifiedValue / (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks)) : modifiedValue + (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks));
             } else {
                 modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
             }
+        }
+
+        //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
+        @Override
+        public void runRotation(DurationDelayClock clock, float partialTicks) {
+        	//modifiedValue *= Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks)));
+        	modifiedValue *= clock.animation.invert ? clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x)) + clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y)) + clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z)) : clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x)) + clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y)) + clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
         }
     }
 
@@ -1175,12 +1149,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
         }
-        //Handle particles.  Need to only do this once per frame-render.  Shaders may have us render multiple times.
-        if (!InterfaceManager.clientInterface.isGamePaused() && !(ticksExisted == lastTickParticlesSpawned && partialTicks == lastPartialTickParticlesSpawned)) {
+        //Handle particles.
+        if (!InterfaceManager.clientInterface.isGamePaused() && !blendingEnabled) {
             world.beginProfiling("Particles", false);
             spawnParticles(partialTicks);
-            lastTickParticlesSpawned = ticksExisted;
-            lastPartialTickParticlesSpawned = partialTicks;
         }
         world.endProfiling();
     }
