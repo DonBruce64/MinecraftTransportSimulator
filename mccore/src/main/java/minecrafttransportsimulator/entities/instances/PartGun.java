@@ -257,7 +257,7 @@ public class PartGun extends APart {
                 } else {
                     //If this gun type can only have one selected at a time, check that this has the selected index.
                     lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                    if (getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(getItem()).get(lastControllerSeat.gunIndex) == this)) {
+                    if (cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(cachedItem).get(lastControllerSeat.gunIndex) == this)) {
                         state = state.promote(GunState.CONTROLLED);
                     } else {
                         state = state.demote(GunState.ACTIVE);
@@ -279,7 +279,7 @@ public class PartGun extends APart {
                                 //Check if the coaxial is controlled or not.
                                 lastController = controller;
                                 lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                                if (part.getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.getItem()).get(lastControllerSeat.gunIndex) == part)) {
+                                if (part.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.cachedItem).get(lastControllerSeat.gunIndex) == part)) {
                                     state = state.promote(GunState.CONTROLLED);
                                     isRunningInCoaxialMode = true;
                                 }
@@ -296,7 +296,7 @@ public class PartGun extends APart {
                         //Check if the coaxial is controlled or not.
                         lastController = controller;
                         lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                        if (entityOn.getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(entityOn.getItem()).get(lastControllerSeat.gunIndex) == entityOn)) {
+                        if (entityOn.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(entityOn.cachedItem).get(lastControllerSeat.gunIndex) == entityOn)) {
                             state = state.promote(GunState.CONTROLLED);
                             isRunningInCoaxialMode = true;
                         }
@@ -345,7 +345,7 @@ public class PartGun extends APart {
                     //Don't calculate this if we already did on a prior firing command.
                     if (camOffset <= 0) {
                         if (!definition.gun.fireSolo && lastControllerSeat != null) {
-                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
+                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
                             int thisGunIndex = gunGroup.indexOf(this);
                             if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
                                 if (gunGroup.size() > 1) {
@@ -425,7 +425,7 @@ public class PartGun extends APart {
                     }
                     if (cycledGun) {
                         if (lastControllerSeat != null) {
-                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
+                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
                             int currentIndex = gunGroup.indexOf(this);
                             if (currentIndex + 1 < gunGroup.size()) {
                                 lastControllerSeat.gunGroupIndex = currentIndex + 1;
@@ -1160,7 +1160,7 @@ public class PartGun extends APart {
     @Override
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
         if (textDef.variableName.equals("gun_lockedon_name")) {
-            return entityTarget != null ? entityTarget.getName() : (engineTarget != null ? engineTarget.masterEntity.getItem().getItemName() : "");
+            return entityTarget != null ? entityTarget.getName() : (engineTarget != null ? engineTarget.masterEntity.toString() : "");
         }
 
         return super.getRawTextVariableValue(textDef, partialTicks);

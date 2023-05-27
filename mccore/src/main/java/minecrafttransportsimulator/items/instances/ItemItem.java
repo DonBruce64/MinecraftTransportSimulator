@@ -18,7 +18,6 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -151,7 +150,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 if(vehicle != null) {
                                     if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
                                         vehicle.disconnectAllConnections();
-                                        vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), hitBox.globalCenter);
+                                        vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter);
                                         vehicle.remove();
                                     }
                                 }
@@ -165,10 +164,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                             return CallbackType.NONE;
                                         } else {
                                             //Player can remove part, spawn item in the world and remove part.
-                                            AItemPart droppedItem = part.getItem();
-                                            if (droppedItem != null) {
-                                                part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
-                                            }
+                                            part.entityOn.world.spawnItemStack(part.getStack(), part.position);
                                             part.entityOn.removePart(part, null);
                                         }
                                     }

@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -27,6 +29,19 @@ public class TileEntityChest extends TileEntityDecor {
     public void remove() {
         super.remove();
         inventory.remove();
+    }
+
+    @Override
+    public void destroy(BoundingBox box) {
+        //Drop all inventory items when destroyed.
+        for (int i = 0; i < inventory.getSize(); ++i) {
+            IWrapperItemStack stack = inventory.getStack(i);
+            if (stack != null) {
+                world.spawnItemStack(stack, position);
+            }
+        }
+        //Now forward destruction call.  If we didn't, we'd have removed our inventory already.
+        super.destroy(box);
     }
 
     @Override

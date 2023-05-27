@@ -145,7 +145,7 @@ public final class PartSeat extends APart {
 
         gunGroups.clear();
         for (PartGun gun : gunList) {
-            ItemPartGun gunItem = gun.getItem();
+            ItemPartGun gunItem = (ItemPartGun) gun.cachedItem;
             if (!gunGroups.containsKey(gunItem)) {
                 gunGroups.put(gunItem, new ArrayList<>());
             }

@@ -139,20 +139,18 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
 
             if (!world.isClient()) {
                 //Check to make sure if we had a gun, that it didn't change.
-                if (activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())) {
+                AItemBase heldItem = player.getHeldItem();
+                ItemPartGun heldGun = heldItem instanceof ItemPartGun ? (ItemPartGun) heldItem : null;
+                if (activeGun != null && (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex())) {
                     saveGun(true);
                 }
 
                 //If we don't have a gun yet, try to get the current one if the player is holding one.
-                if (activeGun == null) {
-                    AItemBase heldItem = player.getHeldItem();
-                    if (heldItem instanceof ItemPartGun) {
-                        ItemPartGun heldGun = (ItemPartGun) heldItem;
-                        if (heldGun.definition.gun.handHeld) {
-                            gunStack = player.getHeldStack();
-                            addPartFromItem(heldGun, player, gunStack.getData(), 0);
-                            hotbarSelected = player.getHotbarIndex();
-                        }
+                if (activeGun == null && heldGun != null) {
+                    if (heldGun.definition.gun.handHeld) {
+                        gunStack = player.getHeldStack();
+                        addPartFromStack(gunStack, player, 0);
+                        hotbarSelected = player.getHotbarIndex();
                     }
                 }
             }

@@ -867,14 +867,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnItem(AItemBase item, IWrapperNBT data, Point3D point) {
-        //Spawn 1 block above in case we're right on a block.
-        world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) item.getNewStack(data)).stack));
-    }
-
-    @Override
     public void spawnItemStack(IWrapperItemStack stack, Point3D point) {
-        world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack));
+        //Spawn 1 block above in case we're right on a block.
+        world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack));
     }
 
     @Override

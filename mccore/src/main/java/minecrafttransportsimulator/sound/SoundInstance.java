@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public class SoundInstance {
+    private static final Random soundRandom = new Random();
 
     public final AEntityB_Existing entity;
     public final String soundName;
@@ -46,7 +47,7 @@ public class SoundInstance {
         this.entity = entity;
         this.soundDef = soundDef;
         this.soundName = soundName;
-        this.soundPlayingName = soundDef != null && soundDef.soundVariations != null ? soundDef.soundVariations.get(new Random().nextInt(soundDef.soundVariations.size())) : soundName;
+        this.soundPlayingName = soundDef != null && soundDef.soundVariations != null ? soundDef.soundVariations.get(soundRandom.nextInt(soundDef.soundVariations.size())) : soundName;
         this.radio = radio;
         this.position = new Point3D();
         updatePosition();

@@ -64,10 +64,11 @@ public class BuilderBlock extends Block {
      **/
     protected final ABlockBase block;
     /**
-     * Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops
+     * Holding map for tile entity drops.  MC calls breakage code after the TE is removed, so we need to store dropped stack
      * created during the drop checks here to ensure they actually drop when the block is broken.
+     * We could drop the stack during breaking, but that would cause it to drop while in creative, which we don't want.
      **/
-    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<>();
+    private static final Map<BlockPos, IWrapperItemStack> stackAtPositions = new HashMap<>();
 
     BuilderBlock(ABlockBase block) {
         super(Material.ROCK);
@@ -179,9 +180,9 @@ public class BuilderBlock extends Block {
             if (mcTile instanceof BuilderTileEntity) {
                 ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
                 if (tile != null) {
-                    AItemPack<?> item = tile.getItem();
-                    if (item != null) {
-                        return ((WrapperItemStack) item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
+                    IWrapperItemStack stack = tile.getStack();
+                    if (stack != null) {
+                        return ((WrapperItemStack) stack).stack;
                     }
                 }
             }
@@ -193,12 +194,10 @@ public class BuilderBlock extends Block {
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         //If this is a TE, drop TE drops.  Otherwise, drop normal drops.
         if (block instanceof ABlockBaseTileEntity) {
-            List<IWrapperItemStack> positionDrops = dropsAtPositions.get(pos);
-            if (positionDrops != null) {
-                for (IWrapperItemStack stack : positionDrops) {
-                    drops.add(((WrapperItemStack) stack).stack);
-                }
-                dropsAtPositions.remove(pos);
+            IWrapperItemStack positionDrop = stackAtPositions.get(pos);
+            if (positionDrop != null) {
+                drops.add(((WrapperItemStack) positionDrop).stack);
+                stackAtPositions.remove(pos);
             }
         } else {
             super.getDrops(drops, world, pos, state, fortune);
@@ -217,9 +216,7 @@ public class BuilderBlock extends Block {
             TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof BuilderTileEntity) {
                 if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                    List<IWrapperItemStack> drops = new ArrayList<>();
-                    ((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
-                    dropsAtPositions.put(pos, drops);
+                    stackAtPositions.put(pos, ((BuilderTileEntity<?>) tile).tileEntity.getStack());
                 }
             }
         }

@@ -628,7 +628,7 @@ public class RenderableModelObject {
         List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0)));
         List<TreadRoller> rollers = new ArrayList<>();
         if (tread.placementDefinition.treadPath == null) {
-            throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo.getItem().getItemName() + "!");
+            throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo + "!");
         }
         for (String rollerName : tread.placementDefinition.treadPath) {
             boolean foundRoller = false;
@@ -640,7 +640,7 @@ public class RenderableModelObject {
                 }
             }
             if (!foundRoller) {
-                throw new IllegalArgumentException("Could not create tread path for " + entityTreadAttachedTo.getItem().getItemName() + " Due to missing roller " + rollerName + " in the model!");
+                throw new IllegalArgumentException("Could not create tread path for " + entityTreadAttachedTo + " Due to missing roller " + rollerName + " in the model!");
             }
         }
 

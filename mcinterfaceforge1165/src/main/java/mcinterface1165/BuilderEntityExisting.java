@@ -12,8 +12,8 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -217,9 +217,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.interactionBoxes) {
                     if (box.isPointInside(new Point3D(target.getLocation().x, target.getLocation().y, target.getLocation().z))) {
-                        AItemPack<?> partItem = part.getItem();
-                        if (partItem != null) {
-                            return ((WrapperItemStack) part.getItem().getNewStack(part.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
+                        IWrapperItemStack stack = part.getStack();
+                        if (stack != null) {
+                            return ((WrapperItemStack) stack).stack;
                         }
                     }
                 }

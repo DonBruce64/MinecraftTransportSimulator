@@ -1,16 +1,14 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -92,7 +90,7 @@ public class PartGroundDevice extends APart {
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
             IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            getItem().populateDefaultData(fakeData);
+            ((ItemPartGroundDevice) getStack().getItem()).populateDefaultData(fakeData);
             fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
             entityOn.addPart(fakePart, false);
         }
@@ -226,13 +224,6 @@ public class PartGroundDevice extends APart {
                         break;
                 }
             }
-        }
-    }
-
-    @Override
-    public void addDropsToList(List<IWrapperItemStack> drops) {
-        if (!isFlat) {
-            super.addDropsToList(drops);
         }
     }
 

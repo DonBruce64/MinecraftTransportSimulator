@@ -26,7 +26,6 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -88,7 +87,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 components.put(componentType, newComponent);
             }
         }
-        components.put(definition.road.type, getItem());
+        components.put(definition.road.type, (ItemRoadComponent) getStack().getItem());
 
         //Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
         this.lanes = new ArrayList<>();
@@ -140,15 +139,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     @Override
-    public void addDropsToList(List<IWrapperItemStack> drops) {
-        for (RoadComponent componentType : RoadComponent.values()) {
-            if (components.containsKey(componentType)) {
-                drops.add(components.get(componentType).getNewStack(null));
-            }
-        }
-    }
-
-    @Override
     public void remove() {
         super.remove();
         for (RenderableObject object : componentRenderables.values()) {
@@ -173,6 +163,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 //This is required in case our TE is corrupt or someone messes with it.
                 if (world.getBlock(blockLocation) instanceof BlockCollision) {
                     world.destroyBlock(blockLocation, true);
+                }
+            }
+
+            //Finally, spawn component drops.
+            for (RoadComponent componentType : RoadComponent.values()) {
+                if (components.containsKey(componentType)) {
+                    world.spawnItemStack(components.get(componentType).getNewStack(null), position);
                 }
             }
         }

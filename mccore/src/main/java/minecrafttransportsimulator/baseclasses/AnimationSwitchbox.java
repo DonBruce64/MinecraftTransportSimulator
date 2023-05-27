@@ -56,7 +56,7 @@ public class AnimationSwitchbox {
             if (applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
                 if (switchbox == null) {
-                    throw new IllegalArgumentException("Was told to applyAfter the object " + applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + ", but there aren't any animations to applyAfter!");
+                    throw new IllegalArgumentException("Was told to applyAfter the object " + applyAfter + " on " + entity + ", but there aren't any animations to applyAfter!");
                 }
                 if (switchbox.runSwitchbox(partialTicks, forceSameTick)) {
                     translation.set(switchbox.translation);

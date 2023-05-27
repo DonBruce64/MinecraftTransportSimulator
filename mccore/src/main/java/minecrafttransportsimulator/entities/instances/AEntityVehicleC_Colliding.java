@@ -168,7 +168,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         //Drop our parts as items.
         for (APart part : parts) {
             if (!part.isPermanent) {
-                part.addDropsToList(drops);
+                drops.add(part.getStack());
             }
         }
 

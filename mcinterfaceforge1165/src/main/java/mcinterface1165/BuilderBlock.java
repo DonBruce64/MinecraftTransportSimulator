@@ -15,9 +15,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -142,9 +140,9 @@ public class BuilderBlock extends Block {
             if (mcTile instanceof BuilderTileEntity) {
                 ATileEntityBase<?> tile = ((BuilderTileEntity) mcTile).tileEntity;
                 if (tile != null) {
-                    AItemPack<?> item = tile.getItem();
-                    if (item != null) {
-                        return ((WrapperItemStack) item.getNewStack(((BuilderTileEntity) mcTile).tileEntity.save(InterfaceManager.coreInterface.getNewNBTWrapper()))).stack;
+                    IWrapperItemStack stack = tile.getStack();
+                    if (stack != null) {
+                        return ((WrapperItemStack) stack).stack;
                     }
                 }
             }
@@ -159,10 +157,8 @@ public class BuilderBlock extends Block {
         TileEntity tile = builder.getOptionalParameter(LootParameters.BLOCK_ENTITY);
         if (tile instanceof BuilderTileEntity) {
             if (((BuilderTileEntity) tile).tileEntity != null) {
-                List<IWrapperItemStack> drops = new ArrayList<>();
-                ((BuilderTileEntity) tile).tileEntity.addDropsToList(drops);
                 List<ItemStack> convertedDrops = new ArrayList<>();
-                drops.forEach(drop -> convertedDrops.add(((WrapperItemStack) drop).stack));
+                convertedDrops.add(((WrapperItemStack) ((BuilderTileEntity) tile).tileEntity.getStack()).stack);
                 return convertedDrops;
             }
         }

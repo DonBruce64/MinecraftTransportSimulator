@@ -303,7 +303,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (masterEntity.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
             } else {
-                if (player.getInventory().addStack(getItem().getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())))) {
+                if (player.getInventory().addStack(getStack())) {
                     entityOn.removePart(this, null);
                 }
             }

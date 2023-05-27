@@ -62,9 +62,7 @@ public final class PartInteractable extends APart {
                 player.openCraftingGUI();
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
                 entityOn.removePart(this, null);
-                IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                save(data);
-                world.spawnItem(getItem(), data, position);
+                world.spawnItemStack(getStack(), position);
             } else if (tank != null) {
                 player.getHeldStack().interactWith(tank, player);
             }

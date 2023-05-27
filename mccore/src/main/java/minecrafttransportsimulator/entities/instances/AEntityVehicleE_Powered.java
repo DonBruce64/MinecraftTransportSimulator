@@ -190,7 +190,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         //Spawn instruments in the world.
         for (ItemInstrument instrument : instruments) {
             if (instrument != null) {
-                world.spawnItem(instrument, null, box.globalCenter);
+                world.spawnItemStack(instrument.getNewStack(null), box.globalCenter);
             }
         }
 

@@ -135,7 +135,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
      **/
-    private AItemPack<JSONDefinition> cachedItem;
+    public AItemPack<JSONDefinition> cachedItem;
 
     //Radar lists.  Only updated once a tick.  Created when first requested via animations.
     private List<EntityVehicleF_Physics> aircraftOnRadar;
@@ -179,6 +179,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         super(world, position, motion, angles);
         this.definition = creatingItem.definition;
         updateSubDefinition(creatingItem.subDefinition.subName);
+    }
+
+    @Override
+    public String toString() {
+        return definition.packID + ":" + definition.systemName + ":" + subDefinition;
     }
 
     @Override
@@ -265,7 +270,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     testSubDef.constants.forEach(var -> variables.put(var, 1D));
                 }
                 subDefinition = testSubDef;
-                cachedItem = null;
+                cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
                 return;
             }
         }
@@ -388,27 +393,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the current item for this entity.  This is not a static value to allow for overriding by packs.
+     * Returns the entity as an item stack.  This may or may not have NBT defined on it depending on implementation.
+     * The default is to just return our item without data, but this is not assured if this function is overridden.
      */
-    @SuppressWarnings("unchecked")
-    public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem() {
-        if (cachedItem == null) {
-            cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
-        }
-        return (ItemInstance) cachedItem;
-    }
-
-    /**
-     * Populates the passed-in list with item stacks that will drop when this entity is broken.
-     * This is different than what is used for middle-clicking, as that will
-     * return a stack that can re-create this entity, whereas drops may or may not allow for this.
-     * An example is a vehicle that is broken in a crash versus picked up via a wrench.
-     */
-    public void addDropsToList(List<IWrapperItemStack> drops) {
-        AItemPack<JSONDefinition> packItem = getItem();
-        if (packItem != null) {
-            drops.add(packItem.getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())));
-        }
+    public IWrapperItemStack getStack() {
+        return cachedItem.getNewStack(null);
     }
 
     /**

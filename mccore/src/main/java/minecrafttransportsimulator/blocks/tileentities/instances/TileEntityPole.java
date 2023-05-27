@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -89,6 +89,21 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     }
 
     @Override
+    public void destroy(BoundingBox box) {
+        //Drop all components when destroyed, except the center value, which won't be.
+        for (Axis axis : Axis.values()) {
+            if (axis != Axis.NONE) {
+                ATileEntityPole_Component component = components.get(axis);
+                if (component != null) {
+                    world.spawnItemStack(component.getStack(), position);
+                }
+            }
+        }
+        //Now forward destruction call.  If we didn't, we'd have removed our components already.
+        super.destroy(box);
+    }
+
+    @Override
     public boolean interact(IWrapperPlayer player) {
         //Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
         //Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
@@ -103,7 +118,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                 //Need to check if it will fit in the player's inventory.
                 if (components.containsKey(axis)) {
                     ATileEntityPole_Component component = components.get(axis);
-                    if (player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(InterfaceManager.coreInterface.getNewNBTWrapper())))) {
+                    if (player.isCreative() || player.getInventory().addStack(component.getStack())) {
                         changeComponent(axis, null);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
                     }
@@ -138,16 +153,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     @Override
     public float getLightProvided() {
         return maxTotalLightLevel;
-    }
-
-    @Override
-    public void addDropsToList(List<IWrapperItemStack> drops) {
-        for (Axis axis : Axis.values()) {
-            ATileEntityPole_Component component = components.get(axis);
-            if (component != null) {
-                drops.add(component.getItem().getNewStack(component.save(InterfaceManager.coreInterface.getNewNBTWrapper())));
-            }
-        }
     }
 
     /**

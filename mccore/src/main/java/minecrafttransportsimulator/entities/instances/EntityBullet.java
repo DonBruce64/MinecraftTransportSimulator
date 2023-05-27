@@ -253,7 +253,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Now that we have an accurate motion, check for collisions.
         //First get a damage object to try to attack entities with.
         Damage damage = new Damage(definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, gun.lastController, gun.lastController != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL);
-        damage.setBullet(getItem());
+        damage.setBullet(this);
 
         //Check for collided external entities and attack them.
         List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
@@ -334,7 +334,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         } else {
                             //Need to re-create damage object to reference this hitbox.
                             damage = new Damage(damage.amount, hitBox, gun, null, null);
-                            damage.setBullet(getItem());
+                            damage.setBullet(this);
 
                             //Now check which damage we need to apply.
                             if (hitBox.groupDef != null) {
@@ -365,7 +365,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     if (!world.isClient()) {
                                         //Need to re-create damage object to use box on vehicle.  Otherwise, we'll attack the part.
                                         damage = new Damage((hitPart.definition.generic.forwardsDamageMultiplier * damage.amount), null, gun, null, null);
-                                        damage.setBullet(getItem());
+                                        damage.setBullet(this);
                                         hitVehicle.attack(damage);
                                     }
                                     displayDebugMessage("FORWARDING DAMAGE TO VEHICLE.  CURRENT DAMAGE IS: " + (int) hitVehicle.damageAmount);

@@ -16,7 +16,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 
 /**
@@ -374,13 +373,6 @@ public abstract class AWrapperWorld extends EntityManager {
      * no stack was able to be found or no block was present to extract from.
      */
     public abstract IWrapperItemStack extractStack(Point3D position, Axis axis);
-
-    /**
-     * Spawns the passed-in item as an item entity at the passed-in point.
-     * This should be called only on servers, as spawning items on clients
-     * leads to phantom items that can't be picked up.
-     */
-    public abstract void spawnItem(AItemBase item, IWrapperNBT data, Point3D point);
 
     /**
      * Spawns the passed-in stack as an item entity at the passed-in point.

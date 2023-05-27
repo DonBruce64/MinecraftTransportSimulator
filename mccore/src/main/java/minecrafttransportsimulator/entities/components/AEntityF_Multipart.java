@@ -27,6 +27,7 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -244,7 +245,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 if (entry.getValue() == partDef) {
                                     for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                                         if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(entry.getKey().globalCenter, 2)) {
-                                            if (addPartFromItem(partToTransfer.getItem(), null, partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper()), i) != null) {
+                                            if (addPartFromStack(partToTransfer.getStack(), null, i) != null) {
                                                 partToTransfer.entityOn.removePart(partToTransfer, null);
                                                 break;
                                             }
@@ -266,7 +267,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                                 APart part2 = vehicle.getPartWithBox(box);
                                                 AEntityF_Multipart<?> entityToPlaceOn = part2 != null ? part2 : vehicle;
                                                 int slotIndex = entityToPlaceOn.definition.parts.indexOf(entityToPlaceOn.partSlotBoxes.get(box));
-                                                if (entityToPlaceOn.addPartFromItem(currentPart.getItem(), null, currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper()), slotIndex) != null) {
+                                                if (entityToPlaceOn.addPartFromStack(currentPart.getStack(), null, slotIndex) != null) {
                                                     removePart(currentPart, null);
                                                     currentPart = null;
                                                     break;
@@ -278,13 +279,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
                                 if (currentPart != null) {
                                     //No vehicle found, just place part on the ground.
-                                    AItemPart partItem = currentPart.getItem();
+                                    IWrapperItemStack partStack = currentPart.getStack();
                                     Point3D partPosition = currentPart.position.copy();
                                     partPosition.x = Math.floor(partPosition.x) + 0.5;
                                     partPosition.y = Math.floor(partPosition.y);
                                     partPosition.z = Math.floor(partPosition.z) + 0.5;
                                     double yRotation = Math.round((currentPart.orientation.convertToAngles().y + 180) / 90) * 90 % 360;
-                                    partItem.placeOnGround(world, null, partPosition, yRotation, currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                                    ((AItemPart) partStack.getItem()).placeOnGround(world, null, partPosition, yRotation, partStack.getData());
                                     removePart(currentPart, null);
                                 }
                             }
@@ -331,6 +332,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (APart part : parts) {
             part.remove();
         }
+    }
+
+    @Override
+    public IWrapperItemStack getStack() {
+        //Add data to the stack we return.  We need to remember the parts we have on us, even in item form.
+        IWrapperItemStack stack = super.getStack();
+        stack.setData(save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        return stack;
     }
 
     @Override
@@ -472,8 +481,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 try {
                     IWrapperNBT partData = data.getData("part_" + i);
                     if (partData != null) {
-                        AItemPart partItem = PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
-                        addPartFromItem(partItem, placingPlayer, partData, i);
+                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i);
                     }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
@@ -514,10 +522,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * and a packet is sent to all clients to inform them of this change.
      * This method returns the part if it was added, null if it wasn't.
      */
-    public APart addPartFromItem(AItemPart partItem, IWrapperPlayer playerAdding, IWrapperNBT partData, int slotIndex) {
+    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
+        AItemPart partItem = (AItemPart) stack.getItem();
         if (partsInSlots.get(slotIndex) == null && (newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, true))) {
             //Part is not already present, and is valid, add it.
+            IWrapperNBT partData = stack.getData();
             partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
             addPart(partToAdd, true);
@@ -647,7 +657,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
-	                APart addedPart = addPartFromItem(PackParser.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partSlot);
+                    APart addedPart = addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot);
 	                if (addedPart != null) {
 	                    //Set the default tone for the part, if it requests one and we can provide one.
 	                    addedPart.updateTone(false);
