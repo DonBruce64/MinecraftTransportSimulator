@@ -311,12 +311,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Not a removable part, or is an actual attack.
             super.attack(damage);
             if (outOfHealth && definition.generic.destroyable) {
+                destroy(damage.box);
                 if (ConfigSystem.settings.damage.explosions.value) {
                     world.spawnExplosion(position, 1F, true);
                 } else {
                     world.spawnExplosion(position, 0F, false);
                 }
-                destroy(damage.box);
             }
         }
     }

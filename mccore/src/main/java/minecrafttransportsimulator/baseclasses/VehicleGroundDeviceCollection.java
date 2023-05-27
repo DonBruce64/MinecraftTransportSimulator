@@ -365,7 +365,7 @@ public class VehicleGroundDeviceCollection {
      * Actual motion and position are not changed, despite rotation being.
      */
     public void performRollCorrection(Point3D groundMotion) {
-        //Counter-clockwise rotation if both left wheels are free
+        //Counter-clockwise rotation if both left wheels are free 
         if (!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && frontLeftGDB.isReady() && !rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && rearLeftGDB.isReady()) {
             //Make sure right is grounded or collided on at least one wheel before rotating.
             //This prevents us from doing rotation in the air.
@@ -392,6 +392,26 @@ public class VehicleGroundDeviceCollection {
                 }
             } else if (rearLeftGDB.isCollided || rearLeftGDB.isGrounded) {
                 adjustAnglesMatrix(rearLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
+            }
+        }
+
+        //The above cases handle normal 4-point vehicles.  For those, we need to use opposite corners to ensure we don't over-correct.
+        //However, this does not work for vehicles with a mid-wheel layout, or those without mid-wheels entierly.  We check those now.
+        if (frontLeftGDB.contactPoint.x == 0 && frontRightGDB.contactPoint.x == 0 && rearLeftGDB.isReady() && rearRightGDB.isReady()) {
+            //Only use rear wheels for roll on this vehicle.
+            //Counter-clockwise rotation if left wheel is free and right is touching.  Clockwise otherwise.
+            if (!rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && (rearRightGDB.isCollided || rearRightGDB.isGrounded)) {
+                adjustAnglesMatrix(rearRightGDB.contactPoint, rearLeftGDB, rearLeftGDB, false, false, true, groundMotion);
+            } else if (!rearRightGDB.isCollided && !rearRightGDB.isGrounded && (rearLeftGDB.isCollided || rearLeftGDB.isGrounded)) {
+                adjustAnglesMatrix(rearLeftGDB.contactPoint, rearRightGDB, rearRightGDB, true, false, true, groundMotion);
+            }
+        } else if (rearLeftGDB.contactPoint.x == 0 && rearRightGDB.contactPoint.x == 0 && frontLeftGDB.isReady() && frontRightGDB.isReady()) {
+            //Only use front wheels for roll on this vehicle.
+            //Counter-clockwise rotation if left wheel is free and right is touching.  Clockwise otherwise.
+            if (!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && (frontRightGDB.isCollided || frontRightGDB.isGrounded)) {
+                adjustAnglesMatrix(frontRightGDB.contactPoint, frontLeftGDB, frontLeftGDB, false, false, true, groundMotion);
+            } else if (!frontRightGDB.isCollided && !frontRightGDB.isGrounded && (frontLeftGDB.isCollided || frontLeftGDB.isGrounded)) {
+                adjustAnglesMatrix(frontLeftGDB.contactPoint, frontRightGDB, frontRightGDB, true, false, true, groundMotion);
             }
         }
     }
