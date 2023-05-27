@@ -1092,9 +1092,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         @Override
         public void runTranslation(DurationDelayClock clock, float partialTicks) {
             if (clock.animation.axis.x != 0) {
-                modifiedValue = clock.animation.invert ? modifiedValue * (float) Math.pow(entity.getAnimatedVariableValue(clock, 1, partialTicks), 1/clock.animation.axis.x) : modifiedValue * (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks));
+                modifiedValue *= Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks), clock.animation.axis.y != 0 ? clock.animation.axis.y : 1);
             } else if (clock.animation.axis.y != 0) {
-                modifiedValue = clock.animation.invert ? modifiedValue / (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks)) : modifiedValue + (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks));
+                modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
             } else {
                 modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
             }
