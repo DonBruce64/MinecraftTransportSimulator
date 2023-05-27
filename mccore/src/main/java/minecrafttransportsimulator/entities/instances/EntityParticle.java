@@ -22,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.sound.SoundInstance;
 
 /**
  * Basic particle class.  This mimic's MC's particle logic, except we can manually set
@@ -312,6 +313,15 @@ public class EntityParticle extends AEntityC_Renderable {
             touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
             if (touchingBlocks) {
                 motion.add(-boundingBox.currentCollisionDepth.x * Math.signum(motion.x), -boundingBox.currentCollisionDepth.y * Math.signum(motion.y), -boundingBox.currentCollisionDepth.z * Math.signum(motion.z));
+                if (definition.stopsOnGround && definition.groundSounds != null) {
+                    double distance = position.distanceTo(clientPlayer.getPosition());
+                    if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+
+                        SoundInstance sound = new SoundInstance(this, definition.groundSounds.get(particleRandom.nextInt(definition.groundSounds.size())));
+                        sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                        InterfaceManager.soundInterface.playQuickSound(sound);
+                    }
+                }
             }
             position.add(motion);
 
@@ -386,6 +396,9 @@ public class EntityParticle extends AEntityC_Renderable {
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (definition.toTransparency != 0) {
             renderable.alpha = interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks);
+        }
+        if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
+            renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime;
         }
         if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             renderable.isTranslucent = blendingEnabled;

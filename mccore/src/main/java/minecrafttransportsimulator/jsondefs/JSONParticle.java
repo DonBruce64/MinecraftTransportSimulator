@@ -22,6 +22,9 @@ public class JSONParticle {
     @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
     public boolean stopsOnGround;
 
+    @JSONDescription("A random sound from this list of sounds will play when the particle stops on the ground when stopsOnGround is true.  Format for each entry is [packID:soundName]")
+    public List<String> groundSounds;
+
     @JSONRequired
     @JSONDescription("The orientation this particle spawns about.")
     public ParticleSpawningOrientation spawningOrientation;
@@ -41,6 +44,9 @@ public class JSONParticle {
 
     @JSONDescription("If set, the particle will linearly change its speed from the intialVelocity, to 0, after this many ticks.  If the particle is still present after this, it will not move.  If the particle's duration is less than this value, then the particle will only slow down according to the linear interpolation and will never stop. Note that movementVelocity and terminalVelocity is still applied if applicable, so the velocity may not follow this exact value if those are present.")
     public int movementDuration;
+
+    @JSONDescription("The time, in ticks, for the particle to fade out at the end of its lifespan.  Particles fade out by multiplying their defined alpha times the relative time-value of this value.  So if fade-out time is 40, and the particle is 20 ticks from death, alpha will be half of what is defined (20/40).")
+    public int fadeTransparencyTime;
 
     @JSONDescription("A number between 0.0 and 1.0 describing how transparent the particle should be.  If both this and toTransparency are not set, they are assumed to be 1.0 for both and no transparency changes will be performed.")
     public float transparency;
