@@ -309,7 +309,7 @@ public class EntityParticle extends AEntityC_Renderable {
             }
 
             //Check collision movement.  If we hit a block, don't move.
-            touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
+            touchingBlocks = boundingBox.updateCollisions(world, motion, true);
             if (touchingBlocks) {
                 motion.add(-boundingBox.currentCollisionDepth.x * Math.signum(motion.x), -boundingBox.currentCollisionDepth.y * Math.signum(motion.y), -boundingBox.currentCollisionDepth.z * Math.signum(motion.z));
                 if (definition.stopsOnGround && definition.groundSounds != null) {

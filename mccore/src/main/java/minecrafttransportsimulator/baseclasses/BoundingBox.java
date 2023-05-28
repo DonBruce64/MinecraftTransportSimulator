@@ -112,19 +112,7 @@ public class BoundingBox {
      * Note that the passed-in offset is only applied for this check,  and is reverted after this call.
      * If blocks collided with this box after this method, true is returned.
      */
-    public boolean updateCollidingBlocks(AWrapperWorld world, Point3D offset) {
-        return updateCollisions(world, offset, false);
-    }
-
-    /**
-     * Like {@link #updateCollidingBlocks(AWrapperWorld, Point3D)}, but takes movement into account
-     * when setting collision depth.
-     */
-    public boolean updateMovingCollisions(AWrapperWorld world, Point3D offset) {
-        return updateCollisions(world, offset, true);
-    }
-
-    private boolean updateCollisions(AWrapperWorld world, Point3D offset, boolean ignoreIfGreater) {
+    public boolean updateCollisions(AWrapperWorld world, Point3D offset, boolean ignoreIfGreater) {
         tempGlobalCenter.set(globalCenter);
         globalCenter.add(offset);
         world.updateBoundingBoxCollisions(this, offset, ignoreIfGreater);

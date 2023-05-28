@@ -152,7 +152,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             position.add(motionApplied);
             for (BoundingBox coreBox : allBlockCollisionBoxes) {
                 coreBox.updateToEntity(this, null);
-                if (coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))) {
+                if (coreBox.updateCollisions(world, new Point3D(0D, -furthestDownPoint, 0D), false)) {
                     //New vehicle shouldn't have been spawned.  Bail out.
                     placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
                     //Need to add stack back as it will have been removed here.
@@ -995,7 +995,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (!rotation.angles.isZero()) {
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, speedFactor);
-                if (box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))) {
+                if (box.updateCollisions(world, tempBoxPosition.subtract(box.globalCenter), false)) {
                     rotation.setToZero();
                     break;
                 }

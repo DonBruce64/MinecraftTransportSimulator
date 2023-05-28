@@ -87,7 +87,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
         //If we collided, so check to see if we can break some blocks or if we need to explode.
         //Don't bother with this logic if it's impossible for us to break anything.
-        if (box.updateCollidingBlocks(world, collisionMotion)) {
+        if (box.updateCollisions(world, collisionMotion, false)) {
             float hardnessHitThisBox = 0;
             for (Point3D blockPosition : box.collidingBlockPositions) {
                 float blockHardness = world.getBlockHardness(blockPosition);
