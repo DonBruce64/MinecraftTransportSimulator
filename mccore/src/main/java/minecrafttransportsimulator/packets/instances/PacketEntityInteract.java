@@ -158,10 +158,10 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             return false;
         }
 
-        //Not holding an item that can interact with a entity, nor clicked a box.  Try to interact with the entity itself.
+        //Not holding an item that can interact with a entity, nor right-clicked a box.  Try to interact with the entity itself.
         if (rightClick) {
             entity.interact(player);
-        } else if (leftClick) {
+        } else if (leftClick && (hitBox.definition == null || hitBox.definition.armorThickness == 0)) {
             entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
         }
         return false;

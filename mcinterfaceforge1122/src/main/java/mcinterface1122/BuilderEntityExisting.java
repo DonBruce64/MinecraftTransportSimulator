@@ -190,8 +190,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     }
                 }
 
-                //If we have damage on a point, attack it now.
-                if (damage != null) {
+                //If we have damage on a point that's not armor, attack it now.
+                if (damage != null && (damage.box.definition == null || damage.box.definition.armorThickness == 0)) {
                     interactable.attack(damage);
                 }
             }
