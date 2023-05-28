@@ -1,38 +1,40 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
+import minecrafttransportsimulator.packets.components.APacketEntityBullet;
 
 /**
  * Packet sent when a bullet hits a block.
- * Really all this is for is to play break sounds.
  *
  * @author don_bruce
  */
-public class PacketEntityBulletHitBlock extends APacketBase {
-    private final Point3D hitPosition;
+public class PacketEntityBulletHitBlock extends APacketEntityBullet {
+    private final BlockHitResult hitResult;
 
-    public PacketEntityBulletHitBlock(Point3D hitPosition) {
-        super(null);
-        this.hitPosition = hitPosition;
+    public PacketEntityBulletHitBlock(EntityBullet bullet, BlockHitResult hitResult) {
+        super(bullet);
+        this.hitResult = hitResult;
     }
 
     public PacketEntityBulletHitBlock(ByteBuf buf) {
         super(buf);
-        this.hitPosition = readPoint3dFromBuffer(buf);
+        this.hitResult = new BlockHitResult(readPoint3dFromBuffer(buf), ABlockBase.Axis.values()[buf.readByte()]);
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        writePoint3dToBuffer(hitPosition, buf);
+        writePoint3dToBuffer(hitResult.position, buf);
+        buf.writeByte(hitResult.side.ordinal());
     }
 
     @Override
-    public void handle(AWrapperWorld world) {
-        InterfaceManager.clientInterface.playBlockBreakSound(hitPosition);
+    public boolean handle(AWrapperWorld world, EntityBullet bullet) {
+        bullet.performBlockHitLogic(hitResult);
+        return true;
     }
 }

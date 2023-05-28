@@ -2,8 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -74,6 +76,7 @@ public class PartGun extends APart {
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
 
     //Stored variables used to determine bullet firing behavior.
+    public int bulletsFired;
     private int bulletsLeft;
     private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
@@ -105,6 +108,7 @@ public class PartGun extends APart {
     public Point3D targetPosition;
     public EntityBullet currentBullet;
     public final Set<EntityBullet> activeManualBullets = new HashSet<>();
+    public final Map<Integer, EntityBullet> activeBullets = new HashMap<>();
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
     private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -189,6 +193,7 @@ public class PartGun extends APart {
 
         //Load saved data.
         this.state = GunState.values()[data.getInteger("state")];
+        this.bulletsFired = data.getInteger("bulletsFired");
         this.bulletsLeft = data.getInteger("bulletsLeft");
         this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
         this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
@@ -1182,6 +1187,7 @@ public class PartGun extends APart {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setInteger("state", (byte) state.ordinal());
+        data.setInteger("bulletsFired", bulletsFired);
         data.setInteger("bulletsLeft", bulletsLeft);
         data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
         data.setPoint3d("internalAngles", internalOrientation.angles);

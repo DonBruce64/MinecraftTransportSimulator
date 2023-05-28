@@ -5,9 +5,11 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -48,10 +50,18 @@ public class Damage {
         this.language = language;
     }
 
-    /**
-     * Sets this damage to the properties of the bullet.
-     */
-    public void setBullet(EntityBullet bullet) {
+    public Damage(EntityBullet bullet, BoundingBox box) {
+        this(bullet, box, bullet.definition.bullet.isHeat ? bullet.definition.bullet.damage : (bullet.velocity / bullet.initialVelocity) * bullet.definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value);
+
+    }
+
+    public Damage(EntityBullet bullet, BoundingBox box, double amount) {
+        this.amount = amount;
+        this.box = box;
+        this.damgeSource = bullet;
+        this.entityResponsible = bullet.gun.lastController;
+        this.language = bullet.gun.lastController != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
+
         ignoreCooldown = true;
         if (bullet.definition.bullet.types.contains(BulletType.WATER)) {
             isWater = true;

@@ -310,6 +310,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         } else {
             //Not a removable part, or is an actual attack.
             super.attack(damage);
+            if (definition.generic.forwardsDamageMultiplier != 0) {
+                //Need to re-create damage object to use on entity.  Use null for box since we want to hurt the core entity.
+                masterEntity.attack(new Damage(definition.generic.forwardsDamageMultiplier * damage.amount, null, damage.damgeSource, damage.entityResponsible, damage.language));
+            }
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
                 if (ConfigSystem.settings.damage.explosions.value) {

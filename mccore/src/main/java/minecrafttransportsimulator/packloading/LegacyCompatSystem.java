@@ -569,11 +569,6 @@ public final class LegacyCompatSystem {
             definition.general.useVehicleTexture = false;
         }
         
-        //While we're here in generic, check if we have forwardsDamageMultiplier defined and if not, lemon-grenade it until it's defined.
-        if (definition.generic.forwardsDamageMultiplier == 0) {
-                definition.generic.forwardsDamageMultiplier = 1;
-            }
-        
         //Move subParts to parts if we have them there.
         if (definition.subParts != null) {
             definition.parts = definition.subParts;
@@ -691,6 +686,11 @@ public final class LegacyCompatSystem {
             //Add engine type if it is missing.
             if (definition.engine.type == null) {
                 definition.engine.type = JSONPart.EngineType.NORMAL;
+            }
+
+            //Set damage forwards multiplier if not set.
+            if (definition.generic.forwardsDamageMultiplier == 0) {
+                definition.generic.forwardsDamageMultiplier = 1;
             }
 
             //Add fuel type, if it is missing.

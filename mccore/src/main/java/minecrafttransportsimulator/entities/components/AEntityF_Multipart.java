@@ -315,14 +315,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public void attack(Damage damage) {
         //If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
         //Otherwise, we allow ourselves to be attacked.
-        APart hitPart = getPartWithBox(damage.box);
-        if (hitPart != null) {
-            if (hitPart.isValid) {
+        if (damage.box != null) {
+            APart hitPart = getPartWithBox(damage.box);
+            if (hitPart != null && hitPart.isValid) {
                 hitPart.attack(damage);
+                return;
             }
-        } else {
-            super.attack(damage);
         }
+        super.attack(damage);
     }
 
     @Override
@@ -386,6 +386,16 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         }
         world.endProfiling();
         super.doPostUpdateLogic();
+    }
+
+    @Override
+    public void damageCollisionBox(BoundingBox box, double damageAmount) {
+        APart part = getPartWithBox(box);
+        if (part != null) {
+            part.damageCollisionBox(box, damageAmount);
+        } else {
+            super.damageCollisionBox(box, damageAmount);
+        }
     }
 
     @Override

@@ -11,6 +11,10 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExternalEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
@@ -152,7 +156,7 @@ public abstract class APacketBase {
     }
 
     /**
-     * Helper method to read a UUID from the buffer.
+     * Helper method to read a pack item from the buffer.
      */
     @SuppressWarnings("unchecked")
     protected static <T extends AItemPack<?>> T readItemFromBuffer(ByteBuf buf) {
@@ -229,6 +233,10 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInteract.class);
 
         //Bullet packets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitGeneric.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitCollision.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitEntity.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitExternalEntity.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
 
         //Fluid tank packets.
