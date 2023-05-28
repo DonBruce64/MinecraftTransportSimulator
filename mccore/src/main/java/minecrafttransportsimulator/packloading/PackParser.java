@@ -181,7 +181,7 @@ public final class PackParser {
         //Flag a save operation, as we probably changed a few things.
         //Also handle crafting overrides, now that we have all packs.
         ConfigSystem.saveToDisk();
-        ConfigSystem.initCraftingOverrides();
+        ConfigSystem.initOverrides();
     }
 
     /**

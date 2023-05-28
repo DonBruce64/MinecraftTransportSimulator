@@ -130,9 +130,9 @@ public final class ConfigSystem {
     }
 
     /**
-     * Called to do crafting overrides.  Must be called after all packs are loaded.
+     * Called to do overrides.  Must be called after all packs are loaded.
      */
-    public static void initCraftingOverrides() {
+    public static void initOverrides() {
         if (settings.general.generateOverrideConfigs.value) {
             //Make the default override file and save it.
             try {
@@ -202,6 +202,8 @@ public final class ConfigSystem {
                     InterfaceManager.coreInterface.logError(e.getMessage());
                     createDefaultExternalDamageOverrides();
                 }
+            } else {
+                createDefaultExternalDamageOverrides();
             }
         }
     }
