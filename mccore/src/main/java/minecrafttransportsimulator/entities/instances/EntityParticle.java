@@ -95,7 +95,6 @@ public class EntityParticle extends AEntityC_Renderable {
         }
         helperPoint.transform(helperTransform);
         position.add(helperPoint);
-
         if (definition.initialVelocity != null) {
             if (definition.spreadRandomness != null) {
                 motion.x = 2 * definition.spreadRandomness.x * Math.random() - definition.spreadRandomness.x;
@@ -221,7 +220,7 @@ public class EntityParticle extends AEntityC_Renderable {
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = definition.model == null || definition.isBright;
         if (definition.type == ParticleType.BREAK) {
-            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
+            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, entitySpawning.position);
             setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
         } else if (definition.model == null) {
             setParticleTextureBounds(0, 1, 0, 1);
@@ -396,6 +395,8 @@ public class EntityParticle extends AEntityC_Renderable {
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (definition.toTransparency != 0) {
             renderable.alpha = interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks);
+        } else {
+            renderable.alpha = 1.0F;
         }
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
             renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime;
@@ -418,6 +419,9 @@ public class EntityParticle extends AEntityC_Renderable {
                 totalScale = definition.scale;
             } else {
                 totalScale = 1.0;
+            }
+            if (definition.fadeScaleTime > maxAge - ticksExisted) {
+                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeScaleTime;
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;

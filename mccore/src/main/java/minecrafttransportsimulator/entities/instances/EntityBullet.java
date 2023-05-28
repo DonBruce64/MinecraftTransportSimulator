@@ -54,6 +54,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
     //States
     private boolean waitingOnActionPacket;
+    private BlockHitResult serverBlockResult;
     private int impactDespawnTimer = -1;
     private Point3D targetPosition;
     public double targetDistance;
@@ -124,6 +125,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     @Override
     public void update() {
         super.update();
+
+        //Check remaining server block actions, if we have any.
+        if (!world.isClient()) {
+            if (serverBlockResult != null) {
+                performBlockHitLogic(serverBlockResult);
+                serverBlockResult = null;
+            }
+        }
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
         if (impactDespawnTimer >= 0) {
@@ -378,16 +387,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) multipart.damageAmount);
 
                                     if (world.isClient()) {
-                                        waitingOnActionPacket = removeAfterDamage;
                                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitEntity, hitBox, damage));
                                         if (removeAfterDamage) {
                                             waitingOnActionPacket = true;
                                             return;
                                         }
                                     } else {
+                                        performEntityHitLogic(hitEntity, damage);
                                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitEntity(this, hitEntity, hitBox, damage));
                                         if (removeAfterDamage) {
-                                            performEntityHitLogic(hitEntity, damage);
                                             return;
                                         }
                                     }
@@ -557,10 +565,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     public void performEntityHitLogic(AEntityE_Interactable<?> entity, Damage damage) {
+        boolean applyDamage = ((damage.box.groupDef != null && (damage.box.groupDef.health == 0 || damage.isWater)) || entity instanceof APart);
+        boolean removeAfterDamage = applyDamage && (!(entity instanceof APart) || ((APart) entity).definition.generic.forwardsDamageMultiplier > 0);
+
         if (!world.isClient()) {
             entity.attack(damage);
         }
-        performGenericHitLogic(entity.position, HitType.VEHICLE);
+        if (removeAfterDamage) {
+            performGenericHitLogic(damage.box.globalCenter, HitType.VEHICLE);
+        }
     }
 
     public void performExternalEntityHitLogic(IWrapperEntity entity) {
@@ -571,6 +584,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     public void performBlockHitLogic(BlockHitResult hitResult) {
+        //On the server, however, delay actions by 1 tick.
+        //This lets the client get sent packets for particles and sounds that will occur before the packets
+        //to do these actions which modify the blocks by blowing them up and such.
+        if (!world.isClient() && serverBlockResult == null) {
+            serverBlockResult = hitResult;
+            return;
+        }
+
         //Only change block state on the server.
         //Clients just spawn break sounds.
         if (!world.isClient()) {

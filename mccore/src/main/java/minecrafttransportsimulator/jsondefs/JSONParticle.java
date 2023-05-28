@@ -45,20 +45,23 @@ public class JSONParticle {
     @JSONDescription("If set, the particle will linearly change its speed from the intialVelocity, to 0, after this many ticks.  If the particle is still present after this, it will not move.  If the particle's duration is less than this value, then the particle will only slow down according to the linear interpolation and will never stop. Note that movementVelocity and terminalVelocity is still applied if applicable, so the velocity may not follow this exact value if those are present.")
     public int movementDuration;
 
-    @JSONDescription("The time, in ticks, for the particle to fade out at the end of its lifespan.  Particles fade out by multiplying their defined alpha times the relative time-value of this value.  So if fade-out time is 40, and the particle is 20 ticks from death, alpha will be half of what is defined (20/40).")
-    public int fadeTransparencyTime;
-
     @JSONDescription("A number between 0.0 and 1.0 describing how transparent the particle should be.  If both this and toTransparency are not set, they are assumed to be 1.0 for both and no transparency changes will be performed.")
     public float transparency;
 
     @JSONDescription("Like above, but tells the particle to gradually change from its initial transparency to this value.  If transparency is set and non-zero, then this defaults to 0.0.  Othwerise, it is used as-is.")
     public float toTransparency;
 
+    @JSONDescription("The time, in ticks, for the particle to fade out at the end of its lifespan.  Particles fade out by multiplying their defined alpha times the relative time-value of this value.  So if fade-out time is 40, and the particle is 20 ticks from death, alpha will be half of what is defined (20/40).")
+    public int fadeTransparencyTime;
+
     @JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this is not set.")
     public float scale;
 
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
+
+    @JSONDescription("The time, in ticks, for the particle to scale out at the end of its lifespan.  Particles scale out by multiplying their defined scale times the relative time-value of this value.  So if fade-out time is 40, and the particle is 20 ticks from death, scale will be half of what is defined (20/40).")
+    public int fadeScaleTime;
 
     @JSONDescription("The size of the hitbox.  Defaults to 0.2 for all particles except break, which are 0.1, if not set.")
     public float hitboxSize;
