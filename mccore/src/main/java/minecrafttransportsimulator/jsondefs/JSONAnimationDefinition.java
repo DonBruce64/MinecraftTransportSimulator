@@ -35,7 +35,7 @@ public class JSONAnimationDefinition {
     @JSONDescription("If true, the absolute value of the variable will be used rather than the actual value.  Note that negative movements are still possible via a negative rotation factor or a large negative offset.")
     public boolean absolute;
 
-    @JSONDescription("Used for VMs. If true, multiplication will become square rooting, addition will become division, and trig functions will be inverted.")
+    @JSONDescription("Used for VMs. If true, trig functions will be inverted.")
     public boolean invert;
 
     @JSONDescription("The duration of this animation, in ticks.  Causes the animation to be interpolated over the duration for smooth movement.  Useful for things like doors.  Only works for variables that go from 0-1.")
