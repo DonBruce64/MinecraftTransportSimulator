@@ -8,6 +8,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -41,6 +42,7 @@ public class GUIPaintGun extends AGUIBase {
 
     //Crafting components.
     private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
     private List<PackMaterialComponent> materials;
 
     //Renders for the item.
@@ -92,10 +94,15 @@ public class GUIPaintGun extends AGUIBase {
 
         //Create the crafting item slots.  8 16X16 slots (8X2) need to be made here.
         craftingItemIcons.clear();
+        craftingItemBackgrounds.clear();
         for (byte i = 0; i < 4 * 2; ++i) {
             GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 4), guiTop + 26 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 4), 1.0F);
+            GUIComponentCutout itemBackground = new GUIComponentCutout(craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
+            itemBackground.visible = false;
             addComponent(craftingItem);
+            addComponent(itemBackground);
             craftingItemIcons.add(craftingItem);
+            craftingItemBackgrounds.add(itemBackground);
         }
 
         //Create the OBJ render.
@@ -133,8 +140,10 @@ public class GUIPaintGun extends AGUIBase {
             for (byte i = 0; i < craftingItemIcons.size(); ++i) {
                 if (i < materials.size()) {
                     craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && player.getInventory().hasSpecificMaterial(currentItem, recipeIndex, i, false, true, false, true);
                 } else {
                     craftingItemIcons.get(i).stacks = null;
+                    craftingItemBackgrounds.get(i).visible = false;
                 }
             }
         } else {
