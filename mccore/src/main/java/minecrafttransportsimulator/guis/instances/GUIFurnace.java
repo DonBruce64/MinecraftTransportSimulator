@@ -146,7 +146,7 @@ public class GUIFurnace extends AGUIInventory {
 
     @Override
     protected boolean canStayOpen() {
-        return furnace.isValid;
+        return super.canStayOpen() && furnace.isValid;
     }
 
     @Override

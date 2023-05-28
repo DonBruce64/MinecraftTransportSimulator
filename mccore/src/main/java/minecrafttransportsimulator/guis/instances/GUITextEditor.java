@@ -125,6 +125,6 @@ public class GUITextEditor extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return entity.isValid;
+        return super.canStayOpen() && entity.isValid;
     }
 }

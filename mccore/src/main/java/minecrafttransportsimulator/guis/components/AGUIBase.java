@@ -336,7 +336,7 @@ public abstract class AGUIBase {
      * If this returns false, the GUI will be closed.
      */
     protected boolean canStayOpen() {
-        return true;
+        return InterfaceManager.clientInterface.getClientPlayer().isValid();
     }
 
     /**

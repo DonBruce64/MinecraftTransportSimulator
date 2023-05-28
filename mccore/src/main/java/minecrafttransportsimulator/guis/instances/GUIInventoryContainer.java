@@ -115,6 +115,6 @@ public class GUIInventoryContainer extends AGUIInventory {
 
     @Override
     protected boolean canStayOpen() {
-        return inventory.isValid;
+        return super.canStayOpen() && inventory.isValid;
     }
 }

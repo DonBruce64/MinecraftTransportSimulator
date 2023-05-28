@@ -273,7 +273,7 @@ public class GUIRadio extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return radio.isValid;
+        return super.canStayOpen() && radio.isValid;
     }
 
     private void presetButtonClicked(GUIComponentButton buttonClicked) {

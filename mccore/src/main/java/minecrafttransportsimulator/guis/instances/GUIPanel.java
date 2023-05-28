@@ -474,7 +474,7 @@ public class GUIPanel extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return vehicle.isValid;
+        return super.canStayOpen() && vehicle.isValid;
     }
 
     @Override

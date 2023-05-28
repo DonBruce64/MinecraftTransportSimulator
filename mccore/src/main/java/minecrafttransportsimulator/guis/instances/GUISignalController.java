@@ -354,7 +354,7 @@ public class GUISignalController extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return controller.isValid;
+        return super.canStayOpen() && controller.isValid;
     }
 
     private class GUIComponentNumericTextBox extends GUIComponentTextBox {

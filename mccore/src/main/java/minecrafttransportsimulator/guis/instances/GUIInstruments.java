@@ -248,7 +248,7 @@ public class GUIInstruments extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return vehicle.isValid;
+        return super.canStayOpen() && vehicle.isValid;
     }
 
     @Override
