@@ -208,7 +208,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public AxisAlignedBB getBoundingBox() {
         //Override this to make collision checks work with the multiple collision points.
         //We return the collision boxes as a wrapper here as we need a bounding box large enough to encompass both.
-        return collisionBoxes != null ? collisionBoxes : super.getBoundingBox();
+        return interactionBoxes != null ? interactionBoxes : super.getBoundingBox();
     }
 
     @Override
@@ -231,7 +231,12 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     @Override
     public boolean canBeCollidedWith() {
         //This gets overridden to allow players to interact with this entity.
-        return collisionBoxes != null && !collisionBoxes.boxes.isEmpty();
+        return interactionBoxes != null && !interactionBoxes.boxes.isEmpty();
+    }
+
+    public boolean isPickable() {
+        //This gets overridden to allow players to interact with this entity.
+        return interactionBoxes != null && !interactionBoxes.boxes.isEmpty();
     }
 
     @Override
