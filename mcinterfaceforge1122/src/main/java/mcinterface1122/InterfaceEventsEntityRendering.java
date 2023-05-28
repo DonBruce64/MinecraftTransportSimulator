@@ -228,6 +228,7 @@ public class InterfaceEventsEntityRendering {
                 //Apply translations and rotations to move entity to correct position relative to the camera entity.
                 riderTotalTransformation.resetTransforms();
                 riderTotalTransformation.setTranslation(deltaDistance);
+                riderTotalTransformation.applyTranslation(0, -entityWrapper.getSeatOffset(), 0);
                 riderTotalTransformation.applyRotation(riderBodyOrientation);
                 riderTotalTransformation.applyScaling(entityScale);
                 riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
