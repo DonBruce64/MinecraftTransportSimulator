@@ -1127,7 +1127,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (clock.animation.axis.x != 0) {
                 modifiedValue *= clock.animation.axis.y == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks), clock.animation.axis.y); //If the Y axis is zero, simply multiply. If it is not zero, multiply the variable raised to the power of Y.
             } else if (clock.animation.axis.y != 0) {
-                modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+                modifiedValue += clock.animation.axis.x == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks), clock.animation.axis.z);
             } else {
                 modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
             }
