@@ -2,10 +2,8 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -81,7 +79,8 @@ public class PartGun extends APart {
     private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
     private final RotationMatrix prevInternalOrientation;
-    protected ItemBullet loadedBullet;
+    public ItemBullet loadedBullet;
+    public ItemBullet lastLoadedBullet;
     private ItemBullet reloadingBullet;
     public ItemBullet clientNextBullet;
     private final Random randomGenerator = new Random();
@@ -108,7 +107,6 @@ public class PartGun extends APart {
     public Point3D targetPosition;
     public EntityBullet currentBullet;
     public final Set<EntityBullet> activeManualBullets = new HashSet<>();
-    public final Map<Integer, EntityBullet> activeBullets = new HashMap<>();
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
     private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -202,6 +200,7 @@ public class PartGun extends APart {
         if (!loadedBulletPack.isEmpty()) {
             String loadedBulletName = data.getString("loadedBulletName");
             this.loadedBullet = PackParser.getItem(loadedBulletPack, loadedBulletName);
+            this.lastLoadedBullet = loadedBullet;
         }
         String reloadingBulletPack = data.getString("reloadingBulletPack");
         if (!reloadingBulletPack.isEmpty()) {
@@ -376,29 +375,34 @@ public class PartGun extends APart {
                         if (camOffset == 0) {
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
-                                    //Get the bullet's state.
-                                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
+                                    ++bulletsFired;
 
-                                    //Add the bullet to the world.
-                                    //If the bullet is a missile, give it a target.
-                                    EntityBullet newBullet;
-                                    if (loadedBullet.definition.bullet.turnRate > 0) {
-                                        if (entityTarget != null) {
-                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-                                        } else if (engineTarget != null) {
-                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
-                                        } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
-                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
-                                            activeManualBullets.add(newBullet);
+                                    //If this bullet isn't long-range, don't spawn on the server.  That's just extra tracking.
+                                    if (world.isClient() || loadedBullet.definition.bullet.isLongRange) {
+                                        //Get the bullet's state.
+                                        setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
+
+                                        //Add the bullet to the world.
+                                        //If the bullet is a missile, give it a target.
+                                        EntityBullet newBullet;
+                                        if (loadedBullet.definition.bullet.turnRate > 0) {
+                                            if (entityTarget != null) {
+                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+                                            } else if (engineTarget != null) {
+                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                            } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
+                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
+                                                activeManualBullets.add(newBullet);
+                                            } else {
+                                                //No entity found, just fire missile off in direction facing.
+                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                            }
                                         } else {
-                                            //No entity found, just fire missile off in direction facing.
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                         }
-                                    } else {
-                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-                                    }
 
-                                    world.addEntity(newBullet);
+                                        world.addEntity(newBullet);
+                                    }
                                 }
 
                                 //Decrement bullets, but check to make sure we still have some.
@@ -508,6 +512,7 @@ public class PartGun extends APart {
                 --reloadTimeRemaining;
             } else if (reloadingBullet != null) {
                 loadedBullet = reloadingBullet;
+                lastLoadedBullet = loadedBullet;
                 bulletsLeft += reloadingBullet.definition.bullet.quantity;
                 reloadingBullet = null;
             }

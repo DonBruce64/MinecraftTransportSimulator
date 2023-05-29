@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -13,8 +15,10 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGun;
 
 /**
  * Class that manages entities in a world or other area.
@@ -28,6 +32,8 @@ public class EntityManager {
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
 
     /**
      * Adds the entity to the world.  This will make it get update ticks and be rendered
@@ -43,6 +49,14 @@ public class EntityManager {
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
+        }
+        if (entity instanceof PartGun) {
+            gunMap.put(entity.uniqueUUID, (PartGun) entity);
+            bulletMap.put(entity.uniqueUUID, new HashMap<>());
+        }
+        if (entity instanceof EntityBullet) {
+            EntityBullet bullet = (EntityBullet) entity;
+            bulletMap.get(bullet.gun.uniqueUUID).put(bullet.bulletNumber, bullet);
         }
 
         @SuppressWarnings("unchecked")
@@ -63,6 +77,24 @@ public class EntityManager {
     @SuppressWarnings("unchecked")
     public <EntityType extends AEntityA_Base> EntityType getEntity(UUID uniqueUUID) {
         return (EntityType) trackedEntityMap.get(uniqueUUID);
+    }
+
+    /**
+     * Returns the gun associated with the gunID.  Guns are saved when they are seen in the world and
+     * remain here for query even when removed.  This allows for referencing their properties for bullets
+     * that were fired from a gun that was put away, moved out of render distance, etc.  If the gun is re-loaded
+     * at some point, it simply replaces the reference returned by the function with the new instance.
+     */
+    public PartGun getBulletGun(UUID gunID) {
+        return gunMap.get(gunID);
+    }
+
+    /**
+     * Gets the bullet associated with the gun and bulletNumber.
+     * This bullet MAY be null if we have had de-syncs across worlds that fouled the indexing.
+     */
+    public EntityBullet getBullet(UUID gunID, int bulletNumber) {
+        return bulletMap.get(gunID).get(bulletNumber);
     }
 
     /**
@@ -154,6 +186,10 @@ public class EntityManager {
         entitiesByClass.get(entity.getClass()).remove(entity);
         if (entity.shouldSync()) {
             trackedEntityMap.remove(entity.uniqueUUID);
+        }
+        if (entity instanceof EntityBullet) {
+            EntityBullet bullet = (EntityBullet) entity;
+            bulletMap.get(bullet.gun.uniqueUUID).remove(bullet.bulletNumber);
         }
     }
 

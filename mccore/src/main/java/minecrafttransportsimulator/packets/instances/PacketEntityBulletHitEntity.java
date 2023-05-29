@@ -18,20 +18,17 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteractHitbo
  */
 public class PacketEntityBulletHitEntity extends APacketEntityInteractHitbox {
     private final UUID gunID;
-    private final int bulletNumber;
     private final double amount;
 
-    public PacketEntityBulletHitEntity(EntityBullet bullet, AEntityE_Interactable<?> entity, BoundingBox hitBox, Damage damage) {
-        super(entity, hitBox);
-        this.gunID = bullet.gun.uniqueUUID;
-        this.bulletNumber = bullet.bulletNumber;
+    public PacketEntityBulletHitEntity(PartGun gun, AEntityE_Interactable<?> entity, Damage damage) {
+        super(entity, damage.box);
+        this.gunID = gun.uniqueUUID;
         this.amount = damage.amount;
     }
 
     public PacketEntityBulletHitEntity(ByteBuf buf) {
         super(buf);
         this.gunID = readUUIDFromBuffer(buf);
-        this.bulletNumber = buf.readInt();
         this.amount = buf.readDouble();
     }
 
@@ -39,20 +36,13 @@ public class PacketEntityBulletHitEntity extends APacketEntityInteractHitbox {
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writeUUIDToBuffer(gunID, buf);
-        buf.writeInt(bulletNumber);
         buf.writeDouble(amount);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, BoundingBox hitBox) {
-        PartGun gun = world.getEntity(gunID);
-        if (gun != null) {
-            EntityBullet bullet = gun.activeBullets.get(bulletNumber);
-            if (bullet != null) {
-                bullet.performEntityHitLogic(entity, new Damage(bullet, hitBox, amount));
-                return true;
-            }
-        }
+        EntityBullet.performEntityHitLogic(entity, new Damage(world.getBulletGun(gunID), hitBox, amount));
+        //Don't send this back to clients.  The damage method in the call does this for us.
         return false;
     }
 }
