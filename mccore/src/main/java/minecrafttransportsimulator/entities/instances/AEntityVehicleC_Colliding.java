@@ -30,7 +30,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
     //Internal states.
-    private float hardnessHitThisTick = 0;
     public double currentMass;
     public double axialVelocity;
     public final Point3D headingVector = new Point3D();
@@ -69,78 +68,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
             variables.keySet().removeIf(s -> s.startsWith("door"));
         }
 
-        //Set hardness hit this tick to 0 to reset collision force calculations.
-        hardnessHitThisTick = 0;
         world.endProfiling();
         world.endProfiling();
-    }
-
-    /**
-     * Checks collisions and returns the collision depth for a box.
-     * Returns -1 if collision was hard enough to destroy the vehicle.
-     * Returns -2 if the vehicle hit a block but had to stop because blockBreaking was disabled.
-     * Otherwise, we return the collision depth in the specified axis.
-     */
-    protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis) {
-        //Get the motion the entity is trying to move, and add it to the passed-in box value.
-        Point3D collisionMotion = motion.copy().scale(speedFactor);
-
-        //If we collided, so check to see if we can break some blocks or if we need to explode.
-        //Don't bother with this logic if it's impossible for us to break anything.
-        if (box.updateCollisions(world, collisionMotion, false)) {
-            float hardnessHitThisBox = 0;
-            for (Point3D blockPosition : box.collidingBlockPositions) {
-                float blockHardness = world.getBlockHardness(blockPosition);
-                if (!world.isBlockLiquid(blockPosition)) {
-                    if (ConfigSystem.settings.general.blockBreakage.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
-                        hardnessHitThisBox += blockHardness;
-                        if (!yAxis) {
-                            //Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
-                            hardnessHitThisTick += blockHardness;
-                        }
-                        motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
-                        if (!world.isClient()) {
-                            if (ticksExisted > 500) {
-                                world.destroyBlock(blockPosition, true);
-                                if (box.groupDef != null && blockHardness > 0) {
-                                    damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
-                                }
-                            } else {
-                                motion.set(0D, 0D, 0D);
-                                return -1;
-                            }
-                        }
-                    } else {
-                        hardnessHitThisTick = 0;
-                        motion.set(0, 0, 0);
-                        return -2;
-                    }
-                }
-            }
-
-            if (ConfigSystem.settings.general.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
-                if (!world.isClient()) {
-                    APart partHit = getPartWithBox(box);
-                    if (partHit != null) {
-                        hardnessHitThisTick -= hardnessHitThisBox;
-                        removePart(partHit, null);
-                    } else {
-                        destroy(box);
-                    }
-                }
-                return -1;
-            } else if (xAxis) {
-                return box.currentCollisionDepth.x;
-            } else if (yAxis) {
-                return box.currentCollisionDepth.y;
-            } else if (zAxis) {
-                return box.currentCollisionDepth.z;
-            } else {
-                throw new IllegalArgumentException("Collision requested but no axis was specified!");
-            }
-        } else {
-            return 0;
-        }
     }
 
     @Override

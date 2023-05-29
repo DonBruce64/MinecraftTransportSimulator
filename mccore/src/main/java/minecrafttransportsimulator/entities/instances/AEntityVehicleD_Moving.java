@@ -937,56 +937,57 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * be done on it as states may be un-defined.
      */
     private boolean correctCollidingMovement() {
-        //First check the X-axis.
-        if (motion.x != 0) {
-            for (BoundingBox box : allBlockCollisionBoxes) {
-                double collisionDepth = getCollisionForAxis(box, true, false, false);
-                if (collisionDepth == -1) {
-                    return true;
-                } else if (collisionDepth == -2) {
-                    break;
-                } else {
-                    if (motion.x > 0) {
-                        motion.x = Math.max(motion.x - collisionDepth / speedFactor, 0);
-                    } else if (motion.x < 0) {
-                        motion.x = Math.min(motion.x + collisionDepth / speedFactor, 0);
+        double hardnessHitThisTick = 0;
+        Point3D collisionMotion = motion.copy().scale(speedFactor);
+        for (BoundingBox box : allBlockCollisionBoxes) {
+            //If we collided, so check to see if we can break some blocks or if we need to explode.
+            //Don't bother with this logic if it's impossible for us to break anything.
+            if (box.updateCollisions(world, collisionMotion, true)) {
+                float hardnessHitThisBox = 0;
+                boolean inhibitMovement = false;
+                for (Point3D blockPosition : box.collidingBlockPositions) {
+                    float blockHardness = world.getBlockHardness(blockPosition);
+                    if (!world.isBlockLiquid(blockPosition)) {
+                        if (ConfigSystem.settings.general.blockBreakage.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
+                            hardnessHitThisBox += blockHardness;
+                            if (collisionMotion.y > -0.01) {
+                                //Don't want to blow up from falling fast.
+                                hardnessHitThisTick += blockHardness;
+                            }
+                            //Slow down for broken blocks.
+                            motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
+                            if (ticksExisted > 500) {
+                                if (!world.isClient()) {
+                                    world.destroyBlock(blockPosition, true);
+                                    if (box.groupDef != null && blockHardness > 0) {
+                                        damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+                        inhibitMovement = true;
                     }
                 }
-            }
-        }
 
-        //Do the same for the Z-axis
-        if (motion.z != 0) {
-            for (BoundingBox box : allBlockCollisionBoxes) {
-                double collisionDepth = getCollisionForAxis(box, false, false, true);
-                if (collisionDepth == -1) {
-                    return true;
-                } else if (collisionDepth == -2) {
-                    break;
-                } else {
-                    if (motion.z > 0) {
-                        motion.z = Math.max(motion.z - collisionDepth / speedFactor, 0);
-                    } else if (motion.z < 0) {
-                        motion.z = Math.min(motion.z + collisionDepth / speedFactor, 0);
+                //If we hit too many blocks.  Either remove part this is a box on, or destroy us.
+                if (ConfigSystem.settings.general.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
+                    if (!world.isClient()) {
+                        APart partHit = getPartWithBox(box);
+                        if (partHit != null) {
+                            hardnessHitThisTick -= hardnessHitThisBox;
+                            removePart(partHit, null);
+                        } else {
+                            destroy(box);
+                            return false;
+                        }
                     }
                 }
-            }
-        }
 
-        //Now that the XZ motion has been limited based on collision we can move in the Y.
-        if (motion.y != 0) {
-            for (BoundingBox box : allBlockCollisionBoxes) {
-                double collisionDepth = getCollisionForAxis(box, false, true, false);
-                if (collisionDepth == -1) {
-                    return true;
-                } else if (collisionDepth == -2) {
-                    break;
-                } else if (collisionDepth != 0) {
-                    if (motion.y > 0) {
-                        motion.y = Math.max(motion.y - collisionDepth / speedFactor, 0);
-                    } else if (motion.y < 0) {
-                        motion.y = Math.min(motion.y + collisionDepth / speedFactor, 0);
-                    }
+                //If we didn't break all our blocks, we need to inhibit our movement to prevent us from going inside them.
+                if (inhibitMovement) {
+                    motion.subtract(box.currentCollisionDepth.scale(1 / speedFactor));
+                    collisionMotion.set(motion.copy().scale(speedFactor));
                 }
             }
         }

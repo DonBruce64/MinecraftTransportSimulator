@@ -523,42 +523,60 @@ public class WrapperWorld extends AWrapperWorld {
         //If we are in the depth bounds for this collision, set it as the collision depth.
         box.currentCollisionDepth.set(0D, 0D, 0D);
         double boxCollisionDepth;
-        double minDelta = 0.0;
         for (AxisAlignedBB colBox : mutableCollidingAABBs) {
             if (collisionMotion.x > 0) {
                 boxCollisionDepth = mcBox.maxX - colBox.minX;
-                if (!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > -minDelta) {
-                    box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
+                if (box.currentCollisionDepth.x < boxCollisionDepth) {
+                    box.currentCollisionDepth.x = boxCollisionDepth;
                 }
             } else if (collisionMotion.x < 0) {
-                boxCollisionDepth = colBox.maxX - mcBox.minX;
-                if (!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < minDelta) {
-                    box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
+                boxCollisionDepth = -(colBox.maxX - mcBox.minX);
+                if (box.currentCollisionDepth.x > boxCollisionDepth) {
+                    box.currentCollisionDepth.x = boxCollisionDepth;
                 }
             }
             if (collisionMotion.y > 0) {
                 boxCollisionDepth = mcBox.maxY - colBox.minY;
-                if (!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > -minDelta) {
-                    box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
+                if (box.currentCollisionDepth.y < boxCollisionDepth) {
+                    box.currentCollisionDepth.y = boxCollisionDepth;
                 }
             } else if (collisionMotion.y < 0) {
-                boxCollisionDepth = colBox.maxY - mcBox.minY;
-                if (!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < minDelta) {
-                    box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
+                boxCollisionDepth = -(colBox.maxY - mcBox.minY);
+                if (box.currentCollisionDepth.y > boxCollisionDepth) {
+                    box.currentCollisionDepth.y = boxCollisionDepth;
                 }
             }
             if (collisionMotion.z > 0) {
                 boxCollisionDepth = mcBox.maxZ - colBox.minZ;
-                if (!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > -minDelta) {
-                    box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
+                if (box.currentCollisionDepth.z < boxCollisionDepth) {
+                    box.currentCollisionDepth.z = boxCollisionDepth;
                 }
             } else if (collisionMotion.z < 0) {
-                boxCollisionDepth = colBox.maxZ - mcBox.minZ;
-                if (!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < minDelta) {
-                    box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
+                boxCollisionDepth = -(colBox.maxZ - mcBox.minZ);
+                if (box.currentCollisionDepth.z > boxCollisionDepth) {
+                    box.currentCollisionDepth.z = boxCollisionDepth;
                 }
             }
         }
+
+        if (ignoreIfGreater) {
+            if (collisionMotion.x > 0 && box.currentCollisionDepth.x > collisionMotion.x) {
+                box.currentCollisionDepth.x = collisionMotion.x;
+            } else if (collisionMotion.x < 0 && box.currentCollisionDepth.x < collisionMotion.x) {
+                box.currentCollisionDepth.x = collisionMotion.x;
+            }
+            if (collisionMotion.y > 0 && box.currentCollisionDepth.y > collisionMotion.y) {
+                box.currentCollisionDepth.y = collisionMotion.y;
+            } else if (collisionMotion.y < 0 && box.currentCollisionDepth.y < collisionMotion.y) {
+                box.currentCollisionDepth.y = collisionMotion.y;
+            }
+            if (collisionMotion.z > 0 && box.currentCollisionDepth.z > collisionMotion.z) {
+                box.currentCollisionDepth.z = collisionMotion.z;
+            } else if (collisionMotion.z < 0 && box.currentCollisionDepth.z < collisionMotion.z) {
+                box.currentCollisionDepth.z = collisionMotion.z;
+            }
+        }
+
         if (box.currentCollisionDepth.isZero()) {
             box.collidingBlockPositions.clear();
         }
