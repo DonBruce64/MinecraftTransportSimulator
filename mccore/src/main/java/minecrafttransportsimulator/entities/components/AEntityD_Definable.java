@@ -1114,12 +1114,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         @Override
         public void runTranslation(DurationDelayClock clock, float partialTicks) {
             if (clock.animation.axis.x != 0) {
-                modifiedValue *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+                modifiedValue *= clock.animation.axis.y == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks), clock.animation.axis.y); //If the Y axis is zero, simply multiply. If it is not zero, multiply the variable raised to the power of Y.
             } else if (clock.animation.axis.y != 0) {
-                modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+                modifiedValue += clock.animation.axis.z == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks), clock.animation.axis.z);
             } else {
                 modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
             }
+        }
+
+        //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
+        @Override
+        public void runRotation(DurationDelayClock clock, float partialTicks) {
+        	modifiedValue *= clock.animation.invert ? (clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x))) + (clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y))) + (clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z))) : (clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x))) + (clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y))) + (clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z)));
         }
     }
 
