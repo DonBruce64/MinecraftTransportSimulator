@@ -591,6 +591,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitType));
         }
 
+        //Spawn an explosion if we are an explosive bullet on the server.
+        if (!gun.world.isClient() && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
+            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
+            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
+        }
+
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
         if (bullet != null) {
             bullet.position.set(position);
@@ -598,18 +604,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             bullet.impactDespawnTimer = bullet.definition.bullet.impactDespawnTime;
 
             //If we are on the client, do one last particle check.
-            //This lets systems query the blocks we hit before the server adjusts them in the following destruction logic.
+            //This lets systems query the blocks we hit before the server adjusts them the next tick.
             if (bullet.world.isClient()) {
                 bullet.spawnParticles(0);
             }
         }
         gun.currentBullet = null;
-
-        //Spawn an explosion if we are an explosive bullet on the server.
-        if (!gun.world.isClient() && bullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            float blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter / 10F : bullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(position, blastSize, bullet.definition.bullet.types.contains(BulletType.INCENDIARY));
-        }
     }
 
     private void displayDebugMessage(String message) {
