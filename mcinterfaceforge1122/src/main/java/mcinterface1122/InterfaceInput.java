@@ -52,7 +52,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public int getKeysetID() {
-        return 0;
+        return 12;
     }
 
     @Override
