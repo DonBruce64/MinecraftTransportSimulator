@@ -218,9 +218,9 @@ public class GUIPanel extends AGUIBase {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
-                                        vehicle.toggleVariable(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE);
+                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
                                     } else {
-                                        vehicle.toggleVariable(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE);
+                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
                                     }
                                 }
 
