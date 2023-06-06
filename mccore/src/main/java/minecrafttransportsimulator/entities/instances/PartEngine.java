@@ -801,6 +801,12 @@ public class PartEngine extends APart {
                 return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
             case ("engine_rpm_target"):
             	return engineTargetRPM;
+            case ("engine_fuel_consumption"):
+                return currentFuelConsumption;
+            case ("engine_supercharger_fuel_consumption"):
+                return currentSuperchargerFuelConsumption;
+            case ("engine_supercharger_efficiency"):
+                return currentSuperchargerEfficiency;
             case ("engine_fuel_flow"):
                 return fuelFlow * 20D * 60D / 1000D;
             case ("engine_fuel_remaining"):
