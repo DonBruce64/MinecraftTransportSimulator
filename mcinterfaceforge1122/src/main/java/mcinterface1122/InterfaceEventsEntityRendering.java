@@ -57,7 +57,6 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
-    private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
     private static final Point3D playerPosition = new Point3D();
     private static final Point3D playerPrevPosition = new Point3D();
@@ -67,6 +66,8 @@ public class InterfaceEventsEntityRendering {
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
     private static int lastScreenWidth;
     private static int lastScreenHeight;
+    private static float lastRiderPitch;
+    private static float lastRiderPrevPitch;
 
 
     /**
@@ -211,8 +212,12 @@ public class InterfaceEventsEntityRendering {
 
             //Set the entity's head yaw to the delta between their yaw and their angled yaw.
             //This needs to be relative as we're going to render relative to the body here, not the world.
-            entity.rotationYawHead = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
+            entity.rotationYawHead = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
             entity.prevRotationYawHead = entity.rotationYawHead;
+            lastRiderPitch = entity.rotationPitch;
+            lastRiderPrevPitch = entity.prevRotationPitch;
+            entity.rotationPitch = (float) ridingEntity.riderRelativeOrientation.angles.x;
+            entity.prevRotationPitch = entity.rotationPitch;
 
             //Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
             //This isn't the entity's normal yaw, which is the direction they are facing.
@@ -346,6 +351,8 @@ public class InterfaceEventsEntityRendering {
     public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             GL11.glPopMatrix();
+            event.getEntity().rotationPitch = lastRiderPitch;
+            event.getEntity().prevRotationPitch = lastRiderPrevPitch;
         }
         if (heldStackHolder != null) {
             EntityPlayer player = (EntityPlayer) event.getEntity();

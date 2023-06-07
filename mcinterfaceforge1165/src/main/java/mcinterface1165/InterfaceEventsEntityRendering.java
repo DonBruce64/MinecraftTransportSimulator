@@ -42,7 +42,6 @@ public class InterfaceEventsEntityRendering {
     private static ItemStack heldStackHolder = null;
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
-    private static final Point3D riderHeadAngles = new Point3D();
     private static float riderStoredHeadRot;
     private static float riderStoredHeadRotO;
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
@@ -52,6 +51,8 @@ public class InterfaceEventsEntityRendering {
 
     private static int lastScreenWidth;
     private static int lastScreenHeight;
+    private static float lastRiderPitch;
+    private static float lastRiderPrevPitch;
 
     /**
      * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
@@ -169,8 +170,12 @@ public class InterfaceEventsEntityRendering {
             //Need to store these though, since they get used in other areas not during rendering and this will foul them.
             riderStoredHeadRot = entity.yHeadRot;
             riderStoredHeadRotO = entity.yHeadRotO;
-            entity.yHeadRot = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
+            entity.yHeadRot = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
             entity.yHeadRotO = entity.yHeadRot;
+            lastRiderPitch = entity.xRot;
+            lastRiderPrevPitch = entity.xRotO;
+            entity.xRot = (float) ridingEntity.riderRelativeOrientation.angles.x;
+            entity.xRotO = entity.xRot;
 
             //Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
             //This isn't the entity's normal yaw, which is the direction they are facing.
@@ -222,6 +227,8 @@ public class InterfaceEventsEntityRendering {
             LivingEntity entity = event.getEntity();
             entity.yHeadRot = riderStoredHeadRot;
             entity.yHeadRotO = riderStoredHeadRotO;
+            event.getEntity().xRot = lastRiderPitch;
+            event.getEntity().xRotO = lastRiderPrevPitch;
             needToPopMatrix = false;
         }
         if (heldStackHolder != null) {
