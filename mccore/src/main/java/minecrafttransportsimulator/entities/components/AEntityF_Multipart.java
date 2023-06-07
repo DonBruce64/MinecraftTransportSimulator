@@ -245,7 +245,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 if (entry.getValue() == partDef) {
                                     for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                                         if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(entry.getKey().globalCenter, 2)) {
-                                            if (addPartFromStack(partToTransfer.getStack(), null, i) != null) {
+                                            if (addPartFromStack(partToTransfer.getStack(), null, i, false) != null) {
                                                 partToTransfer.entityOn.removePart(partToTransfer, null);
                                                 break;
                                             }
@@ -267,7 +267,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                                 APart part2 = vehicle.getPartWithBox(box);
                                                 AEntityF_Multipart<?> entityToPlaceOn = part2 != null ? part2 : vehicle;
                                                 int slotIndex = entityToPlaceOn.definition.parts.indexOf(entityToPlaceOn.partSlotBoxes.get(box));
-                                                if (entityToPlaceOn.addPartFromStack(currentPart.getStack(), null, slotIndex) != null) {
+                                                if (entityToPlaceOn.addPartFromStack(currentPart.getStack(), null, slotIndex, false) != null) {
                                                     removePart(currentPart, null);
                                                     currentPart = null;
                                                     break;
@@ -491,7 +491,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 try {
                     IWrapperNBT partData = data.getData("part_" + i);
                     if (partData != null) {
-                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i);
+                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true);
                     }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
@@ -528,14 +528,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     /**
      * Adds the passed-part to this entity.  This method will check at the passed-in point
-     * if the item-based part can go to this entity.  If so, it is constructed and added,
+     * if the item-based part can go to this entity (if it's not bypassed).  If so, it is constructed and added,
      * and a packet is sent to all clients to inform them of this change.
      * This method returns the part if it was added, null if it wasn't.
      */
-    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex) {
+    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex, boolean bypassSlotChecks) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
         AItemPart partItem = (AItemPart) stack.getItem();
-        if (partsInSlots.get(slotIndex) == null && (newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, true))) {
+        if (partsInSlots.get(slotIndex) == null && (bypassSlotChecks || newPartDef.bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, true))) {
             //Part is not already present, and is valid, add it.
             IWrapperNBT partData = stack.getData();
             partItem.populateDefaultData(partData);
@@ -667,7 +667,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
-                    APart addedPart = addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot);
+                    APart addedPart = addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, true);
 	                if (addedPart != null) {
 	                    //Set the default tone for the part, if it requests one and we can provide one.
 	                    addedPart.updateTone(false);
