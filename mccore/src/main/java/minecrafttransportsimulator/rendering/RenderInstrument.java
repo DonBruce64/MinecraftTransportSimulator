@@ -66,15 +66,20 @@ public final class RenderInstrument {
                     textTransform.applyTranslation(0, 0, i * RenderableObject.Z_BUFFER_OFFSET);
                     double totalScaling = slotScale * component.scale;
                     textTransform.applyScaling(totalScaling, totalScaling, totalScaling);
-                    int variablePartNumber = AEntityF_Multipart.getVariableNumber(component.textObject.variableName);
-                    final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
-                    if (addSuffix) {
-                        String oldName = component.textObject.variableName;
-                        component.textObject.variableName += "_" + partNumber;
-                        RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
-                        component.textObject.variableName = oldName;
-                    } else {
-                        RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
+
+                    //Render if we don't have transforms, or of those transforms said we were good.
+                    InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
+                    if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
+                        int variablePartNumber = AEntityF_Multipart.getVariableNumber(component.textObject.variableName);
+                        final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
+                        if (addSuffix) {
+                            String oldName = component.textObject.variableName;
+                            component.textObject.variableName += "_" + partNumber;
+                            RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
+                            component.textObject.variableName = oldName;
+                        } else {
+                            RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
+                        }
                     }
                 } else {
                     //Init variables.
@@ -181,6 +186,9 @@ public final class RenderInstrument {
             } else if (component.moveComponent) {
                 //Translate the rather than adjust the window coords.
                 renderObject.transform.applyTranslation(xTranslation, yTranslation, 0);
+            } else if (component.textObject != null) {
+                //Text object needs translating with basic operations.
+                textTransform.applyTranslation(xTranslation, yTranslation, 0);
             } else {
                 //Offset the window coords to the appropriate section of the texture sheet.
                 //We don't want to do an OpenGL translation here as that would move the texture's
@@ -228,6 +236,11 @@ public final class RenderInstrument {
                 topLeft.subtract(clock.animation.centerPoint);
                 topRight.subtract(clock.animation.centerPoint);
                 bottomRight.subtract(clock.animation.centerPoint);
+            } else if (component.textObject != null) {
+                textTransform.applyTranslation((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
+                helperRotationMatrix.setToAxisAngle(0, 0, 1, variableValue);
+                textTransform.applyRotation(helperRotationMatrix);
+                textTransform.applyTranslation(-(component.xCenter + clock.animation.centerPoint.x), (component.yCenter + clock.animation.centerPoint.y), 0.0);
             } else {
                 renderObject.transform.applyTranslation((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
                 helperRotationMatrix.setToAxisAngle(0, 0, 1, variableValue);
