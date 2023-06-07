@@ -50,7 +50,7 @@ public class PartEngine extends APart {
 
     //Runtime calculated values.
     public double fuelFlow;
-    public double rocketFuel;
+    public double rocketFuelUsed;
     public PartEngine linkedEngine;
 
     //Internal properties
@@ -162,7 +162,7 @@ public class PartEngine extends APart {
         if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
             setVariable(GEAR_VARIABLE, 1);
         }
-        this.rocketFuel = definition.engine.rocketFuel;
+        this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
     }
 
     @Override
@@ -472,13 +472,13 @@ public class PartEngine extends APart {
                 case ROCKET: {
                     if (running) {
                         //Remove fuel, and if we don't have any, turn ourselves off.
-                        rocketFuel -= getTotalFuelConsumption();
-                        if (rocketFuel <= 0) {
+                        rocketFuelUsed += getTotalFuelConsumption();
+                        if (rocketFuelUsed >= definition.engine.rocketFuel) {
                             running = false;
                         }
                     } else {
                         //If the magneto comes on, and we have fuel, ignite.
-                        if (magnetoOn && rocketFuel > 0) {
+                        if (magnetoOn && rocketFuelUsed < definition.engine.rocketFuel) {
                             running = true;
                         }
                     }
@@ -593,7 +593,7 @@ public class PartEngine extends APart {
             //Or, if we are not on, just slowly spin the engine down.
             if ((wheelFriction == 0 && linkedPropellers.isEmpty()) || currentGearRatio == 0) {
                 if (running) {
-                    if (rocketFuel > 0) {
+                    if (rocketFuelUsed < definition.engine.rocketFuel) {
                         engineTargetRPM = currentMaxRPM;
                     } else {
                         engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
@@ -810,7 +810,7 @@ public class PartEngine extends APart {
             case ("engine_fuel_flow"):
                 return fuelFlow * 20D * 60D / 1000D;
             case ("engine_fuel_remaining"):
-                return rocketFuel / definition.engine.rocketFuel;
+                return (definition.engine.rocketFuel - rocketFuelUsed) / definition.engine.rocketFuel;
             case ("engine_temp"):
                 return temp;
             case ("engine_pressure"):
@@ -1195,6 +1195,7 @@ public class PartEngine extends APart {
         data.setDouble("rpm", rpm);
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);
+        data.setDouble("rocketFuelUsed", rocketFuelUsed);
         return data;
     }
 }
