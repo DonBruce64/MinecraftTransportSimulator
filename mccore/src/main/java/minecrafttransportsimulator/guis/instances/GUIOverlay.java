@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -38,7 +39,7 @@ public class GUIOverlay extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
 
-        addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F));
+        addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -61,19 +62,29 @@ public class GUIOverlay extends AGUIBase {
     @Override
     public void setStates() {
         super.setStates();
-        //Set mouseover label text.
+        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(10).add(startPosition);
+        EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+
         mouseoverLabel.text = "";
+        if (interactResult != null && interactResult.entity instanceof PartInteractable) {
+            PartInteractable interactable = (PartInteractable) interactResult.entity;
+            if (interactable.tank != null) {
+                String fluidName = interactable.tank.getFluid();
+                if(fluidName.isEmpty()) {
+                    mouseoverLabel.text = String.format("%.1f/%.1fb", interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
+                }else {
+                    mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
+                }
+            }
+        }
+
         scannerItem.stack = null;
         tooltipText.clear();
-
-        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (player.isHoldingItemType(ItemComponentType.SCANNER)) {
-            Point3D startPosition = player.getEyePosition();
-            Point3D endPosition = player.getLineOfSight(10).add(startPosition);
-            EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null && interactResult.entity instanceof AEntityF_Multipart) {
                 AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) interactResult.entity;
-
                 BoundingBox mousedOverBox = null;
                 JSONPartDefinition packVehicleDef = null;
                 for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activePartSlotBoxes.entrySet()) {
