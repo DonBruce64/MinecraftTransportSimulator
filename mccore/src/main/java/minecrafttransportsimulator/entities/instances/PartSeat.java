@@ -288,6 +288,9 @@ public final class PartSeat extends APart {
             //Otherwise, put us to the right or left of the seat depending on x-offset.
             //Make sure to take into the movement of the seat we were riding if it had moved.
             //This ensures the dismount moves with the seat.
+            //Need to tell the rider to not ride us before we do this.
+            //This'll get called in super again, but it won't hurt anything.
+            rider.setRiding(null);
             if (placementDefinition.dismountPos != null) {
                 rider.setPosition(placementDefinition.dismountPos.copy().rotate(entityOn.orientation).add(entityOn.position), false);
             } else if (vehicleOn != null) {
