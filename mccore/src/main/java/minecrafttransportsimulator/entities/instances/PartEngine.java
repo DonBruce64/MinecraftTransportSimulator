@@ -311,15 +311,16 @@ public class PartEngine extends APart {
 
             //Check for any shifting requests.
             if (!world.isClient()) {
+                if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
+                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+                    shiftNeutral();
+                }
                 if (isVariableActive(UP_SHIFT_VARIABLE)) {
                     toggleVariable(UP_SHIFT_VARIABLE);
                     shiftUp();
                 } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
                     toggleVariable(DOWN_SHIFT_VARIABLE);
                     shiftDown();
-                } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
-                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
-                    shiftNeutral();
                 }
             }
 

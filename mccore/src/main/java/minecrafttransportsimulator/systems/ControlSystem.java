@@ -425,6 +425,7 @@ public final class ControlSystem {
                     //and invert controls if we are in a reverse gear.
                     //Use only the first engine for this.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
                     } else if (powered.engines.get(0).currentGear >= 0) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
@@ -441,17 +442,11 @@ public final class ControlSystem {
                     powered.engines.forEach(engine -> {
                         //If we don't have velocity, and we have the appropriate control, shift.
                         if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
-                            if (engine.currentGear > 0) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                            } else {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
-                            }
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.DOWN_SHIFT_VARIABLE, 1));
                         } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
-                            if (engine.currentGear < 0) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                            } else {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
-                            }
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.UP_SHIFT_VARIABLE, 1));
                         }
                     });
                 }
