@@ -386,20 +386,24 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     }
                     if (entity instanceof EntityVehicleF_Physics) {
                         if (!entity.outOfHealth || definition.repair.canRepairTotaled) {
-                            double amountToHeal = entity.definition.general.health * definition.repair.amount / 100D;
-                            if (entity.damageAmount < amountToHeal) {
-                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, 0));
+                            if (entity.damageAmount == 0) {
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_NONEED), player);
+                                return CallbackType.NONE;
                             } else {
-                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, entity.damageAmount - amountToHeal);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, entity.damageAmount - amountToHeal));
-                            }
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS), player);
-                            if (!player.isCreative()) {
-                                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                                double amountRepaired = definition.repair.amount;
+                                if (entity.damageAmount < amountRepaired) {
+                                    amountRepaired = entity.damageAmount;
+                                }
+                                double newDamage = entity.damageAmount - amountRepaired;
+                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, newDamage);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, newDamage));
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                if (!player.isCreative()) {
+                                    player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                                }
                             }
                         } else {
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_FAIL), player);
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOTALED), player);
                         }
                     }
                 }

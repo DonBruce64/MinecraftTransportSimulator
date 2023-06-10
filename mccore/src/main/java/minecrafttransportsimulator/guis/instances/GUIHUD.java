@@ -101,8 +101,9 @@ public class GUIHUD extends AGUIBase {
         }
 
         //Set health label text and visibility.
-        healthLabel.text = String.format("Health:%3.1f%%", 100 * (vehicle.definition.general.health - vehicle.damageAmount) / vehicle.definition.general.health);
+        healthLabel.text = String.format("Health: %.0f/%d", vehicle.definition.general.health - vehicle.damageAmount, vehicle.definition.general.health);
         healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
+        healthLabel.color = vehicle.outOfHealth ? ColorRGB.RED : ColorRGB.WHITE;
 
         //Set gun label text, if we are in a seat that has one.
         //If we are in a seat controlling a gun, render a text line for it.

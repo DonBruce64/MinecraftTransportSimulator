@@ -9,6 +9,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -63,7 +64,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
                     }
                 }
                 if (vehicle.fuelTank.getFluid().isEmpty()) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, "A defaultFuelQty was specified for: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.  Vehicle will be spawned without fuel and engine."));
+                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.SYSTEM_DEBUG, "A defaultFuelQty was specified for: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.  Vehicle will be spawned without fuel and engine."));
                 }
             }
 

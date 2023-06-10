@@ -24,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -183,10 +184,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                     addInstrument(instrument, definition.instruments.indexOf(packInstrument));
                                 }
                             } catch (NullPointerException e) {
-                                placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry."));
+                                placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.SYSTEM_DEBUG, "Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry."));
                             }
                         } catch (IndexOutOfBoundsException e) {
-                            placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\""));
+                            placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.SYSTEM_DEBUG, "Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\""));
                         }
                     }
                 }

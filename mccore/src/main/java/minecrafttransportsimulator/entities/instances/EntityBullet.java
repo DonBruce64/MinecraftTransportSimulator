@@ -616,7 +616,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (ConfigSystem.settings.general.devMode.value && gun.lastController instanceof IWrapperPlayer) {
             if (!world.isClient()) {
                 IWrapperPlayer player = (IWrapperPlayer) gun.lastController;
-                player.sendPacket(new PacketPlayerChatMessage(player, message));
+                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.SYSTEM_DEBUG, message));
             } else {
                 ((IWrapperPlayer) gun.lastController).displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
             }

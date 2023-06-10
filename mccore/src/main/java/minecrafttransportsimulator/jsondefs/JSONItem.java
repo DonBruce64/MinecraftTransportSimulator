@@ -92,8 +92,8 @@ public class JSONItem extends AJSONItem {
         @JSONDescription("Normally, repair pack cannot repair totaled vehicles.  This allows them to do so.")
         public boolean canRepairTotaled;
 
-        @JSONDescription("How much damage this repair pack removes, in % total health.  Cannot be more than 100.")
-        public double amount;
+        @JSONDescription("How much health repair pack restores.")
+        public int amount;
     }
 
     public enum ItemComponentType {

@@ -22,6 +22,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -673,10 +674,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	                    addedPart.updateTone(false);
 	                }
 	            } catch (NullPointerException e) {
-	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, JSONConfigLanguage.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 	            }
 	        } catch (IndexOutOfBoundsException e) {
-	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, JSONConfigLanguage.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
 	        }
     	}
     }

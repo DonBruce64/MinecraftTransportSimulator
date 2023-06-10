@@ -15,36 +15,39 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * @author don_bruce
  */
 public class PacketPlayerChatMessage extends APacketPlayer {
-    private final String message;
+    private final LanguageEntry language;
+    private final String[] message;
 
-    public PacketPlayerChatMessage(IWrapperPlayer player, LanguageEntry language) {
+    public PacketPlayerChatMessage(IWrapperPlayer player, LanguageEntry language, Object... args) {
         super(player);
-        this.message = language.key;
-    }
-
-    public PacketPlayerChatMessage(IWrapperPlayer player, String message) {
-        super(player);
-        this.message = message;
+        this.language = language;
+        this.message = new String[args.length];
+        for (byte i = 0; i < args.length; ++i) {
+            message[i] = args[i].toString();
+        }
     }
 
     public PacketPlayerChatMessage(ByteBuf buf) {
         super(buf);
-        this.message = readStringFromBuffer(buf);
+        this.language = JSONConfigLanguage.coreEntries.get(readStringFromBuffer(buf));
+        this.message = new String[buf.readByte()];
+        for (byte i = 0; i < message.length; ++i) {
+            message[i] = readStringFromBuffer(buf);
+        }
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        writeStringToBuffer(message, buf);
+        writeStringToBuffer(language.key, buf);
+        buf.writeByte(message.length);
+        for (byte i = 0; i < message.length; ++i) {
+            writeStringToBuffer(message[i], buf);
+        }
     }
 
     @Override
     public void handle(AWrapperWorld world, IWrapperPlayer player) {
-        LanguageEntry language = JSONConfigLanguage.coreEntries.get(message);
-        if (language != null) {
-            player.displayChatMessage(language);
-        } else {
-            player.displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
-        }
+        player.displayChatMessage(language, (Object[]) message);
     }
 }
