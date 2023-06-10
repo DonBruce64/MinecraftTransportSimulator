@@ -265,7 +265,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_FUELHOSE = new LanguageEntry("iteminfo.fuelhose", "Use on a vehicle tank to select.\nUse on second tank or vehicle to link.\nHose will transfer liquids from tank 1 to selected.\nHose will stop when tank 1 is empty, selected is full or if tank 1 and selected are too far away.");
     public static final LanguageEntry ITEMINFO_JUMPERCABLES = new LanguageEntry("iteminfo.jumpercables", "Use on an engine to select.\nUse on second engine to link.\nLinked engines will exchange power.\nEngines will un-link when power is even or if they get too far away.");
     public static final LanguageEntry ITEMINFO_JUMPERPACK = new LanguageEntry("iteminfo.jumperpack", "Use on a vehicle to charge battery to max level.");
-    public static final LanguageEntry ITEMINFO_REPAIRPACK = new LanguageEntry("iteminfo.repairpack", "Use on a vehicle to repair it.  This pack heals the vehicle ");
+    public static final LanguageEntry ITEMINFO_REPAIRPACK = new LanguageEntry("iteminfo.repairpack", "Use on a vehicle to repair it.  This pack heals the vehicle: ");
     public static final LanguageEntry ITEMINFO_REPAIRPACK_UNTOTAL = new LanguageEntry("iteminfo.repairpack.untotal", "This repair pack is able to repair totaled vehicles as well.");
     public static final LanguageEntry ITEMINFO_Y2KBUTTON = new LanguageEntry("iteminfo.y2kbutton", "Use in a world to turn off all vehicle engines, engage their parking brakes, and turn off their lights.\nOnly usable by admins.");
 

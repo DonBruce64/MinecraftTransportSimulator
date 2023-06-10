@@ -97,7 +97,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 break;
             }
             case REPAIR_PACK: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK.value + definition.repair.amount + "%");
+                tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK.value + definition.repair.amount + " HP");
                 if (definition.repair.canRepairTotaled) {
                     tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK_UNTOTAL.value);
                 }
