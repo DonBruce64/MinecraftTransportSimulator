@@ -246,6 +246,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_REPAIR_PASS = new LanguageEntry("interact.repair.pass", "Repaired vehicle HP by %s.  HP is now at %s of %s.");
     public static final LanguageEntry INTERACT_REPAIR_NONEED = new LanguageEntry("interact.repair.noneed", "This vehicle is already at full health and doesn't need to be repaired.");
     public static final LanguageEntry INTERACT_REPAIR_TOTALED = new LanguageEntry("interact.repair.fail", "This vehicle is totaled and cannot be repaired with this repair pack.  Only special repair packs can repair totaled vehicles.");
+    public static final LanguageEntry INTERACT_REPAIR_TOOSOON = new LanguageEntry("interact.repair.toosoon", "You cannot repair this vehicle now.  Wait 10 seconds between repairs.");
 
     public static final LanguageEntry INTERACT_TRAILER_CONNECTED = new LanguageEntry("interact.trailer.connected", "Trailer connected.");
     public static final LanguageEntry INTERACT_TRAILER_DISCONNECTED = new LanguageEntry("interact.trailer.disconnected", "Trailer disconnected.");

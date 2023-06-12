@@ -80,6 +80,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public boolean turningLeft;
     public boolean turningRight;
     public byte turningCooldown;
+    public int repairCooldownTicks;
     @DerivedValue
     public double autopilotSetting;
     public double airDensity;
@@ -160,6 +161,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public void update() {
         super.update();
         world.beginProfiling("VehicleF_Level", true);
+        if (repairCooldownTicks > 0) {
+            --repairCooldownTicks;
+        }
+
         //Set vectors.
         verticalVector.set(0D, 1D, 0D).rotate(orientation);
         normalizedVelocityVector.set(motion).normalize();

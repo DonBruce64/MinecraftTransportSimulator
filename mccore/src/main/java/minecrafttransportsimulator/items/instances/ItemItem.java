@@ -385,25 +385,31 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         entity = ((APart) entity).vehicleOn;
                     }
                     if (entity instanceof EntityVehicleF_Physics) {
-                        if (!entity.outOfHealth || definition.repair.canRepairTotaled) {
-                            if (entity.damageAmount == 0) {
-                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_NONEED), player);
-                                return CallbackType.NONE;
+                        EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                        if (vehicle.repairCooldownTicks == 0) {
+                            if (!vehicle.outOfHealth || definition.repair.canRepairTotaled) {
+                                if (entity.damageAmount == 0) {
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_NONEED), player);
+                                    return CallbackType.NONE;
+                                } else {
+                                    double amountRepaired = definition.repair.amount;
+                                    if (vehicle.damageAmount < amountRepaired) {
+                                        amountRepaired = vehicle.damageAmount;
+                                    }
+                                    double newDamage = vehicle.damageAmount - amountRepaired;
+                                    vehicle.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, newDamage);
+                                    vehicle.repairCooldownTicks = 200;
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(vehicle, AEntityE_Interactable.DAMAGE_VARIABLE, newDamage));
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                    if (!player.isCreative()) {
+                                        player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                                    }
+                                }
                             } else {
-                                double amountRepaired = definition.repair.amount;
-                                if (entity.damageAmount < amountRepaired) {
-                                    amountRepaired = entity.damageAmount;
-                                }
-                                double newDamage = entity.damageAmount - amountRepaired;
-                                entity.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, newDamage);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, AEntityE_Interactable.DAMAGE_VARIABLE, newDamage));
-                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
-                                if (!player.isCreative()) {
-                                    player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
-                                }
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOTALED), player);
                             }
                         } else {
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOTALED), player);
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOOSOON), player);
                         }
                     }
                 }
