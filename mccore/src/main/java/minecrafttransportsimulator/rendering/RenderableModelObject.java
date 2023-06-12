@@ -127,7 +127,7 @@ public class RenderableModelObject {
                     //If we don't have anything set, we just use the existing texture.
                     for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
                         JSONText textDef = textEntry.getKey();
-                        if (object.name.contains(textDef.fieldName)) {
+                        if (textDef.fieldName != null && object.name.contains(textDef.fieldName)) {
                             String textValue = entity.text.get(textDef);
                             if (!textValue.isEmpty() && !textValue.contains(" ")) {
                                 String errorString = InterfaceManager.renderingInterface.downloadURLTexture(textValue);
@@ -233,7 +233,7 @@ public class RenderableModelObject {
         //Online textures only render if the field has text.
         if (isOnlineTexture) {
             for (JSONText textDef : entity.text.keySet()) {
-                if (object.name.contains(textDef.fieldName)) {
+                if (textDef.fieldName != null && object.name.contains(textDef.fieldName)) {
                     if (entity.text.get(textDef).isEmpty()) {
                         return false;
                     }
