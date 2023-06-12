@@ -2,7 +2,6 @@ package minecrafttransportsimulator.systems;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,12 +11,13 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient;
 import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides;
+import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides.JSONCraftingOverride;
 import minecrafttransportsimulator.jsondefs.JSONConfigExternalDamageOverrides;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -136,25 +136,32 @@ public final class ConfigSystem {
         if (settings.general.generateOverrideConfigs.value) {
             //Make the default override file and save it.
             try {
-                JSONConfigCraftingOverrides overrideObject = new JSONConfigCraftingOverrides();
-                overrideObject.overrides = new LinkedHashMap<>();
+                JSONConfigCraftingOverrides overridesObject = new JSONConfigCraftingOverrides();
+                overridesObject.overrides = new LinkedHashMap<>();
                 for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-                    if (!overrideObject.overrides.containsKey(packItem.definition.packID)) {
-                        overrideObject.overrides.put(packItem.definition.packID, new LinkedHashMap<>());
+                    Map<String, JSONCraftingOverride> packOverrides = overridesObject.overrides.get(packItem.definition.packID);
+                    if (packOverrides == null) {
+                        packOverrides = new LinkedHashMap<>();
+                        overridesObject.overrides.put(packItem.definition.packID, packOverrides);
                     }
+
+                    JSONCraftingOverride override = packOverrides.get(packItem.definition.systemName);
+                    if (override == null) {
+                        override = new JSONCraftingOverride();
+                        packOverrides.put(packItem.definition.systemName, override);
+                    }
+
+                    override.commonMaterialLists = packItem.definition.general.materialLists;
                     if (packItem instanceof AItemSubTyped) {
-                        List<String> materials = new ArrayList<>();
-                        materials.addAll(packItem.definition.general.materialLists.get(0));
-                        materials.addAll(((AItemSubTyped<?>) packItem).subDefinition.extraMaterialLists.get(0));
-                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subDefinition.subName, materials);
-                    } else {
-                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materialLists.get(0));
+                        if (override.extraMaterialLists == null) {
+                            override.extraMaterialLists = new HashMap<>();
+                        }
+                        JSONSubDefinition subDefinition = ((AItemSubTyped<?>) packItem).subDefinition;
+                        override.extraMaterialLists.put(subDefinition.subName, subDefinition.extraMaterialLists);
                     }
-                    if (packItem.definition.general.repairMaterialLists != null) {
-                        overrideObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterialLists.get(0));
-                    }
+                    override.repairMaterialLists = packItem.definition.general.repairMaterialLists;
                 }
-                JSONParser.exportStream(overrideObject, Files.newOutputStream(craftingFile.toPath()));
+                JSONParser.exportStream(overridesObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
             }
@@ -168,24 +175,24 @@ public final class ConfigSystem {
             if (craftingFile.exists()) {
                 try {
                     JSONConfigCraftingOverrides overridesObject = JSONParser.parseStream(Files.newInputStream(craftingFile.toPath()), JSONConfigCraftingOverrides.class, null, null);
-                    for (String craftingOverridePackID : overridesObject.overrides.keySet()) {
-                        for (String craftingOverrideSystemName : overridesObject.overrides.get(craftingOverridePackID).keySet()) {
-                            AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
-                            if (item instanceof AItemSubTyped) {
-                                List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).subDefinition.extraMaterialLists;
-                                extraMaterialLists.clear();
-                                extraMaterialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-
-                                //Clear main list, we just use extra here for the item.  Same effect.
-                                //Need to add blank entries though so we match counts.
-                                item.definition.general.materialLists.clear();
-                                extraMaterialLists.forEach(list -> item.definition.general.materialLists.add(new ArrayList<>()));
-                            } else if (item != null) {
-                                item.definition.general.materialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-                            }
-                            List<String> repairMaterials = overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
-                            if (repairMaterials != null) {
-                                item.definition.general.repairMaterialLists.add(overridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
+                    for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
+                        Map<String, JSONCraftingOverride> packOverrides = overridesObject.overrides.get(packItem.definition.packID);
+                        if (packOverrides != null) {
+                            JSONCraftingOverride override = packOverrides.get(packItem.definition.systemName);
+                            if (override != null) {
+                                if (override.commonMaterialLists != null) {
+                                    packItem.definition.general.materialLists = override.commonMaterialLists;
+                                }
+                                if (override.extraMaterialLists != null) {
+                                    JSONSubDefinition subDefinition = ((AItemSubTyped<?>) packItem).subDefinition;
+                                    List<List<String>> extraMaterialLists = override.extraMaterialLists.get(subDefinition.subName);
+                                    if (extraMaterialLists != null) {
+                                        subDefinition.extraMaterialLists = extraMaterialLists;
+                                    }
+                                }
+                                if (override.repairMaterialLists != null) {
+                                    packItem.definition.general.repairMaterialLists = override.repairMaterialLists;
+                                }
                             }
                         }
                     }

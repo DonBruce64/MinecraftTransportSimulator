@@ -17,5 +17,12 @@ public class JSONConfigCraftingOverrides {
     public String comment4 = "If you need the full listing of items, set dumpCraftingConfig to true in the general config section.";
     public String comment5 = "This will overwrite this file with all craft-able items in all packs.";
     public String comment6 = "Note that their crafting recipes may vary depending on what packs are installed.";
-    public Map<String, Map<String, List<String>>> overrides;
+    public String comment7 = "For each entry, there are commom materials that are used in all recipes, type materials that are used in specific recipes, and repair materials.";
+    public Map<String, Map<String, JSONCraftingOverride>> overrides;
+
+    public static class JSONCraftingOverride {
+        public List<List<String>> commonMaterialLists;
+        public Map<String, List<List<String>>> extraMaterialLists;
+        public List<List<String>> repairMaterialLists;
+    }
 }
