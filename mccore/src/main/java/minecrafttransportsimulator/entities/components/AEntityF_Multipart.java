@@ -275,6 +275,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                                 }
                                             }
                                         }
+                                        if (currentPart == null) {
+                                            break;
+                                        }
                                     }
                                 }
 
