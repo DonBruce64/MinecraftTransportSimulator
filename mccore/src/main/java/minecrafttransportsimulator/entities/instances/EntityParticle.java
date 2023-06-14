@@ -404,7 +404,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             renderable.isTranslucent = blendingEnabled;
             if (staticColor == null) {
-                float colorDelta = (timeOfNextColor - ticksExisted + partialTicks) / (timeOfNextColor - timeOfCurrentColor);
+                float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
                 renderable.color.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
                 renderable.color.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
                 renderable.color.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
