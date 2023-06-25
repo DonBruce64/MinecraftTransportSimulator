@@ -132,7 +132,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 if (activeGun != null && gunStack == null) {
                     //Either the player's held item changed, or the pack did.
                     //Held gun is invalid, so don't use or save it.
-                    removePart(activeGun, null);
+                    removePart(activeGun, true, null);
                     activeGun = null;
                 }
             }
@@ -288,7 +288,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
-            removePart(activeGun, null);
+            removePart(activeGun, true, null);
             activeGun = null;
         }
     }

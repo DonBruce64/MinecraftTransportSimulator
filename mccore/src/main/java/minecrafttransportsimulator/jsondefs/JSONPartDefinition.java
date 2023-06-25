@@ -9,7 +9,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONPartDefinition {
-    public boolean bypassSlotChecks;
+    public transient boolean bypassSlotMinMax;
 
     @JSONRequired
     @JSONDescription("An entry of x, y, and z coordinates that define the center point of where this part will attach to the object.")

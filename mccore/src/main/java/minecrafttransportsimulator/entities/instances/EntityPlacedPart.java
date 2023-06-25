@@ -3,8 +3,6 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -26,8 +24,9 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     private static final List<String> allPartTypes = new ArrayList<>();
 
     public APart currentPart;
+    private boolean riderPresentLastCheck;
+    private boolean riderPresentThisCheck;
     private boolean needToFindGround = true;
-    private final Point3D tempBoxPosition = new Point3D();
 
     public EntityPlacedPart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -56,36 +55,45 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     @Override
     public void update() {
         super.update();
+        //TODO will NOT be empty normally, but have to check due to syncing.  See F-class TODO for details.
         if (parts.isEmpty()) {
-            remove();
+            if (ticksExisted > 100) {
+                remove();
+            }
         } else {
             currentPart = parts.get(0);
-            currentPart.placementDefinition.pos.y = currentPart.definition.generic.placedOffset;
-            forceCollisionUpdateThisTick = currentPart.requiresDeltaUpdates();
+            if (currentPart != null) {
+                currentPart.placementDefinition.pos.y = currentPart.definition.generic.placedOffset;
+                forceCollisionUpdateThisTick = currentPart.requiresDeltaUpdates();
+                //Seat checks are needed to allow the seat to update interactable boxes when rider state changes.
+                riderPresentLastCheck = riderPresentThisCheck;
+                riderPresentThisCheck = currentPart.rider != null;
 
-            //Go down to find ground, if we haven't already.
-            if (needToFindGround) {
-                if (currentPart.definition.generic.fallsToGround) {
-                    motion.y += (9.8 / 400) * ConfigSystem.settings.general.gravityFactor.value;
-                    position.add(motion);
-                    boolean clearedCache = false;
-                    for (BoundingBox box : allInteractionBoxes) {
-                        box.updateToEntity(this, null);
-                        if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)) {
-                            //Set position to the rounded Y value and halt.
-                            position.y = Math.floor(position.y - 0.5) + 0.5;
-                            motion.y = 0;
-                            needToFindGround = false;
-                            break;
+                //Go down to find ground, if we haven't already.
+                if (needToFindGround) {
+                    if (currentPart.definition.generic.fallsToGround) {
+                        //Don't check on the first tick, since we won't be updated yet.
+                        if (ticksExisted > 1) {
+                            world.updateBoundingBoxCollisions(encompassingBox, motion, true);
+                            if (encompassingBox.currentCollisionDepth.y != 0) {
+                                position.subtract(encompassingBox.currentCollisionDepth);
+                                motion.y = 0;
+                                needToFindGround = false;
+                            } else {
+                                position.add(motion);
+                                if (motion.y < 3.9) {
+                                    motion.y += -0.08;
+                                }
+                            }
+
+                            if (!needToFindGround) {
+                                //Do final box update.
+                                allInteractionBoxes.forEach(box -> box.updateToEntity(this, null));
+                            }
                         }
-                        clearedCache = true;
+                    } else {
+                        needToFindGround = false;
                     }
-                    if (!needToFindGround) {
-                        //Do final box update.
-                        allInteractionBoxes.forEach(box -> box.updateToEntity(this, null));
-                    }
-                } else {
-                    needToFindGround = false;
                 }
             }
         }
@@ -93,7 +101,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
 
     @Override
     public boolean requiresDeltaUpdates() {
-        return super.requiresDeltaUpdates() || needToFindGround;
+        return super.requiresDeltaUpdates() || needToFindGround || (riderPresentLastCheck != riderPresentThisCheck);
     }
 
     @Override

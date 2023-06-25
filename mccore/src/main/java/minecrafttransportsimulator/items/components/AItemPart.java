@@ -55,21 +55,23 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
     }
 
     /**
-     * Helper method to place the part in the world, used by both player-placing and entity-placing logic.
+     * Helper method to place the part in the world when clicked by a player.
      */
-    public void placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
+    public APart placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
         //Construct the class, add ourselves as a part, and spawn.
         IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
         EntityPlacedPart entity = new EntityPlacedPart(world, player, placerData);
         entity.addPartsPostAddition(player, placerData);
+        
         populateDefaultData(data);
-        entity.addPartFromStack(getNewStack(data), player, 0, true);
+        APart newPart = entity.addPartFromStack(getNewStack(data), player, 0, true);
 
         entity.position.set(position);
         entity.prevPosition.set(position);
         entity.orientation.setToAngles(new Point3D(0, yRotation, 0));
         entity.prevOrientation.set(entity.orientation);
         entity.world.spawnEntity(entity);
+        return newPart;
     }
 
     /**

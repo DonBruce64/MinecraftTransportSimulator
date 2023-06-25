@@ -174,7 +174,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //Check the damage at the current position of the attacker.
                 Point3D attackerPosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
                 for (BoundingBox box : interactionBoxes.boxes) {
-                    if (box.isPointInside(attackerPosition)) {
+                    if (box.isPointInside(attackerPosition, null)) {
                         damage = new Damage(amount, box, null, playerSource, null);
                         break;
                     }
@@ -219,7 +219,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.interactionBoxes) {
-                    if (box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z))) {
+                    if (box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z), null)) {
                         IWrapperItemStack stack = part.getStack();
                         if (stack != null) {
                             return ((WrapperItemStack) stack).stack;
