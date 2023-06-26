@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -354,7 +355,7 @@ public class JSONParser {
                 //Create a map lookup for the enums to speed up processing.
                 final Map<String, EnumType> lowercaseToEnum = new HashMap<>();
                 for (EnumType enumConstant : rawType.getEnumConstants()) {
-                    lowercaseToEnum.put(enumConstant.toString().toLowerCase(), enumConstant);
+                    lowercaseToEnum.put(enumConstant.toString().toLowerCase(Locale.ROOT), enumConstant);
                 }
 
                 //Return the new type adapter.
@@ -364,7 +365,7 @@ public class JSONParser {
                         if (value == null) {
                             writer.nullValue();
                         } else {
-                            writer.value(value.toString().toLowerCase());
+                            writer.value(value.toString().toLowerCase(Locale.ROOT));
                         }
                     }
 

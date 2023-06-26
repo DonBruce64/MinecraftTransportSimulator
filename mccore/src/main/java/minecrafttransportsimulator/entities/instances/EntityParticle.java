@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -183,9 +184,9 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = textureList.get(0);
             timeOfNextTexture = maxAge / 12F;
         } else {
-            texture = "mts:textures/particles/" + definition.type.name().toLowerCase() + ".png";
+            texture = "mts:textures/particles/" + definition.type.name().toLowerCase(Locale.ROOT) + ".png";
         }
-        this.textureIsTranslucent = texture.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
+        this.textureIsTranslucent = texture.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 
         FloatBuffer buffer;
         if (definition.model != null) {

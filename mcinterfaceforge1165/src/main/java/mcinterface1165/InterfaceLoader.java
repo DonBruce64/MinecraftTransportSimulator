@@ -3,6 +3,7 @@ package mcinterface1165;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
@@ -139,7 +140,7 @@ public class InterfaceLoader {
             //If the item is for OreDict, make it a fake tag, since we are forced to use JSON otherwise.
             //Stupid JSON everything without code hooks.
             if (item.definition.general.oreDict != null) {
-                String lowerCaseOre = item.definition.general.oreDict.toLowerCase();
+                String lowerCaseOre = item.definition.general.oreDict.toLowerCase(Locale.ROOT);
                 List<BuilderItem> items = InterfaceCore.taggedItems.get(lowerCaseOre);
                 if (items == null) {
                     items = new ArrayList<>();
@@ -160,7 +161,7 @@ public class InterfaceLoader {
                 if (!blocksRegistred.contains(itemBlockBlock)) {
                     //New block class detected.  Register it and its instance.
                     BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
-                    String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase();
+                    String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase(Locale.ROOT);
                     BuilderBlock.BLOCKS.register(name, () -> wrapper);
                     BuilderBlock.blockMap.put(itemBlockBlock, wrapper);
                     blocksRegistred.add(itemBlockBlock);
@@ -172,7 +173,7 @@ public class InterfaceLoader {
         for (int i = 0; i < BlockCollision.blockInstances.size(); ++i) {
             BlockCollision collisionBlock = BlockCollision.blockInstances.get(i);
             BuilderBlock wrapper = new BuilderBlock(collisionBlock);
-            String name = collisionBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase() + i;
+            String name = collisionBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase(Locale.ROOT) + i;
             BuilderBlock.BLOCKS.register(name, () -> wrapper);
             BuilderBlock.blockMap.put(collisionBlock, wrapper);
         }

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.Locale;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -34,7 +36,7 @@ public class CameraSystem {
 
     static {
         NIGHT_VISION_CAMERA_POTION.duration = 300;
-        NIGHT_VISION_CAMERA_POTION.name = PotionDefaults.NIGHT_VISION.name().toLowerCase();
+        NIGHT_VISION_CAMERA_POTION.name = PotionDefaults.NIGHT_VISION.name().toLowerCase(Locale.ROOT);
     }
 
     /**

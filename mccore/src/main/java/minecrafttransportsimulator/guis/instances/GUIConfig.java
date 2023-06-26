@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -229,7 +230,7 @@ public class GUIConfig extends AGUIBase {
             byte offset = 0;
             Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<>();
             for (ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()) {
-                if (dynamicControl.name().toLowerCase().contains(vehicleType)) {
+                if (dynamicControl.name().toLowerCase(Locale.ROOT).contains(vehicleType)) {
                     GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 135 + offset, ColorRGB.BLACK, "");
                     dynamicLabels.put(label, dynamicControl);
                     addComponent(label);

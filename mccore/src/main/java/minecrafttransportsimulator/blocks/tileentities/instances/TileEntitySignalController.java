@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -722,7 +723,7 @@ public class TileEntitySignalController extends TileEntityDecor {
         public final String lowercaseName;
 
         LightType() {
-            this.lowercaseName = name().toLowerCase();
+            this.lowercaseName = name().toLowerCase(Locale.ROOT);
         }
     }
 

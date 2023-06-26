@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -58,8 +59,8 @@ public class RenderableModelObject {
     public RenderableModelObject(String modelLocation, RenderableObject object) {
         super();
         this.modelLocation = modelLocation;
-        this.isWindow = object.name.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME);
-        this.isOnlineTexture = object.name.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || object.name.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
+        this.isWindow = object.name.toLowerCase(Locale.ROOT).contains(AModelParser.WINDOW_OBJECT_NAME);
+        this.isOnlineTexture = object.name.toLowerCase(Locale.ROOT).startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || object.name.toLowerCase(Locale.ROOT).endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
 
         //If we are a window, split the model into two parts.  The first will be the exterior which will
         //be our normal model, the second will be a new, inverted, interior model.

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -199,7 +200,7 @@ public class InterfaceInput implements IInterfaceInput {
                 if (name.contains("NUMPAD")) {
                     return InputMappings.getKey("key.keyboard.keypad." + name.substring(name.length() - 1)).getValue();
                 } else {
-                    return InputMappings.getKey("key.keyboard." + name.toLowerCase()).getValue();
+                    return InputMappings.getKey("key.keyboard." + name.toLowerCase(Locale.ROOT)).getValue();
                 }
             }
         }

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -87,13 +88,13 @@ public class PackResourceLoader {
         public static List<String> getAllTypesAsStrings() {
             List<String> assetTypes = new ArrayList<>();
             for (ItemClassification classification : ItemClassification.values()) {
-                assetTypes.add(classification.name().toLowerCase());
+                assetTypes.add(classification.name().toLowerCase(Locale.ROOT));
             }
             return assetTypes;
         }
 
         public String toDirectory() {
-            return this.name().toLowerCase() + "s/";
+            return this.name().toLowerCase(Locale.ROOT) + "s/";
         }
 
         public static ItemClassification fromDirectory(String directory) {
