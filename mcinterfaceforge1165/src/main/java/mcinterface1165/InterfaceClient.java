@@ -238,7 +238,8 @@ public class InterfaceClient implements IInterfaceClient {
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
-        if (!InterfaceManager.clientInterface.isGamePaused()) {
+        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+        if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
@@ -249,8 +250,7 @@ public class InterfaceClient implements IInterfaceClient {
                     ((WrapperWorld) world).world.updateSkyBrightness();
 
                     //Open pack missing screen if we don't have packs.
-                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                    if (player != null && !player.isSpectator()) {
+                    if (!player.isSpectator()) {
                         ControlSystem.controlGlobal(player);
                         if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
                             if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {

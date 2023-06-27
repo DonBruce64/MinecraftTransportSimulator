@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.items.components;
 
 import java.util.List;
+import java.util.Locale;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -23,7 +24,7 @@ public abstract class AItemBase {
      * Returns the registration name of this item.  This MUST be unique for all items, or Bad Stuff will happen.
      */
     public String getRegistrationName() {
-        return getClass().getSimpleName().substring("Item".length()).toLowerCase();
+        return getClass().getSimpleName().substring("Item".length()).toLowerCase(Locale.ROOT);
     }
 
     /**

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -97,7 +98,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
         if (hasMaterials) {
             if (craftingDefinition.items != null) {
                 return craftingDefinition.items.contains(definition.packID + ":" + definition.systemName);
-            } else if (craftingDefinition.itemTypes.contains(definition.classification.toString().toLowerCase())) {
+            } else if (craftingDefinition.itemTypes.contains(definition.classification.toString().toLowerCase(Locale.ROOT))) {
                 if (definition instanceof JSONPart && craftingDefinition.partTypes != null) {
                     for (String partType : craftingDefinition.partTypes) {
                         if (((JSONPart) definition).generic.type.contains(partType)) {

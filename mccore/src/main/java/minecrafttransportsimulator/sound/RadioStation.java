@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
@@ -213,7 +214,7 @@ public class RadioStation {
         while (iterator.hasNext()) {
             try {
                 File musicFile = iterator.next();
-                if (!musicFile.getName().toLowerCase().endsWith(".mp3")) {
+                if (!musicFile.getName().toLowerCase(Locale.ROOT).endsWith(".mp3")) {
                     iterator.remove();
                 } else {
                     displayText = "Station: " + musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName();

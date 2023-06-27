@@ -103,6 +103,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         this.prevOrientation = new RotationMatrix().set(orientation);
         this.motion = data.getPoint3d("motion");
         this.prevMotion = motion.copy();
+        this.zoomLevel = data.getInteger("zoomLevel");
+        this.cameraIndex = data.getInteger("cameraIndex");
 
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
         if (hasRadio()) {
@@ -140,31 +142,32 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             prevMotion.set(motion);
             prevOrientation.set(orientation);
             velocity = motion.length();
+        }
 
-            //Only do camera checks if we have an active camera.
-            //Checking at other times wastes CPU cycles.
-            //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
-            if (cameraIndex != 0 && ticksExisted >= 5) {
-                //Check for valid camera, and perform operations if so.
-                activeCamera = null;
-                while (cameraIndex != 0 && activeCamera == null) {
-                    if ((cameraIndex - 1) < cameras.size()) {
-                        activeCamera = cameras.get(cameraIndex - 1);
-                        activeCameraEntity = cameraEntities.get(activeCamera);
-                        activeCameraSwitchbox = activeCameraEntity.cameraSwitchboxes.get(activeCamera);
-                        if (activeCameraSwitchbox != null && !activeCameraSwitchbox.runSwitchbox(0, false)) {
-                            //Camera is inactive, go to next.
-                            ++cameraIndex;
-                            activeCamera = null;
-                        }
-                    } else {
-                        //No active cameras found, set index to 0 to disable and go back to normal rendering.
-                        cameraIndex = 0;
+        //Only do camera checks if we have an active camera.
+        //Checking at other times wastes CPU cycles.
+        //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
+        if (rider != null && cameraIndex != 0 && ticksExisted >= 5) {
+            //Check for valid camera, and perform operations if so.
+            activeCamera = null;
+            while (cameraIndex != 0 && activeCamera == null) {
+                if ((cameraIndex - 1) < cameras.size()) {
+                    activeCamera = cameras.get(cameraIndex - 1);
+                    activeCameraEntity = cameraEntities.get(activeCamera);
+                    activeCameraSwitchbox = activeCameraEntity.cameraSwitchboxes.get(activeCamera);
+                    if (activeCameraSwitchbox != null && !activeCameraSwitchbox.runSwitchbox(0, false)) {
+                        //Camera is inactive, go to next.
+                        ++cameraIndex;
                         activeCamera = null;
                     }
+                } else {
+                    //No active cameras found, set index to 0 to disable and go back to normal rendering.
+                    cameraIndex = 0;
+                    activeCamera = null;
                 }
             }
         }
+
         world.endProfiling();
     }
 
@@ -445,6 +448,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (radio != null) {
             data.setData("radio", radio.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
+        data.setInteger("zoomLevel", zoomLevel);
+        data.setInteger("cameraIndex", cameraIndex);
         return data;
     }
 }

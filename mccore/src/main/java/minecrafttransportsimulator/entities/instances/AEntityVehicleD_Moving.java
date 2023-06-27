@@ -976,7 +976,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         APart partHit = getPartWithBox(box);
                         if (partHit != null) {
                             hardnessHitThisTick -= hardnessHitThisBox;
-                            removePart(partHit, null);
+                            removePart(partHit, true, null);
                         } else {
                             destroy(box);
                             return false;

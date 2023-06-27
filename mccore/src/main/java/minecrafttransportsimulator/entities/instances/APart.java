@@ -28,7 +28,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
- * and {@link AEntityF_Multipart#removePart(APart, Iterator)} to remove them.
+ * and {@link AEntityF_Multipart#removePart(APart, boolean, Iterator)} to remove them.
  * You may extend {@link AEntityF_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -39,26 +39,26 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     //JSON properties.
     public JSONPartDefinition placementDefinition;
-    public final int placementSlot;
+    public int placementSlot;
 
     //Instance properties.
     /**
      * The entity this part has been placed on,  can be a vehicle or a part.
      */
-    public final AEntityF_Multipart<?> entityOn;
+    public AEntityF_Multipart<?> entityOn;
     /**
      * The top-most entity for this part.  May be the {@link #entityOn} if the part is only one level deep.
      */
-    public final AEntityF_Multipart<?> masterEntity;
+    public AEntityF_Multipart<?> masterEntity;
     /**
      * The vehicle this part has been placed on.  Identical to {@link #masterEntity}, just saves a cast.
      * Will be null, however, if this part isn't on a vehicle (say if it's on a decor).
      */
-    public final EntityVehicleF_Physics vehicleOn;
+    public EntityVehicleF_Physics vehicleOn;
     /**
      * The part this part is on, or null if it's on a base entity.
      */
-    public final APart partOn;
+    public APart partOn;
     /**
      * All linked parts for this part.  Updated whenever the part set changes.
      */
@@ -68,9 +68,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isActive = true;
     public boolean isPermanent = false;
     public boolean isMoveable;
-    public final boolean turnsWithSteer;
-    public final boolean isSpare;
-    public final boolean isMirrored;
+    public boolean turnsWithSteer;
+    public boolean isSpare;
+    public boolean isMirrored;
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.
@@ -88,6 +88,36 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, data);
+        this.localOffset = placementDefinition.pos.copy();
+        this.localOrientation = new RotationMatrix();
+        this.zeroReferenceOrientation = new RotationMatrix();
+        this.prevZeroReferenceOrientation = new RotationMatrix();
+
+        //Set initial position, rotation, and scale.  This ensures part doesn't "warp" the first tick.
+        //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
+        //when we initialize all of our animations.
+        position.set(localOffset).rotate(entityOn.orientation).add(entityOn.position);
+        prevPosition.set(position);
+        orientation.set(entityOn.orientation);
+        if (placementDefinition.rot != null) {
+            orientation.multiply(placementDefinition.rot);
+        }
+        prevOrientation.set(orientation);
+        scale.set(entityOn.scale);
+        if (placementDefinition.partScale != null) {
+            scale.multiply(placementDefinition.partScale);
+        }
+        prevScale.set(scale);
+
+        //Now set entity properties.
+        linkToEntity(entityOn, placementDefinition);
+    }
+
+    /**
+     * Sets the part to be part of the passed-in entity.  This happens during construction, but can also
+     * be called to change the entity the part is located on.
+     */
+    public void linkToEntity(AEntityF_Multipart<?> entityOn, JSONPartDefinition placementDefinition) {
         this.entityOn = entityOn;
         AEntityF_Multipart<?> parentEntity = entityOn;
         while (parentEntity instanceof APart) {
@@ -99,27 +129,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.placementDefinition = placementDefinition;
         this.placementSlot = entityOn.definition.parts.indexOf(placementDefinition);
 
-        this.localOffset = placementDefinition.pos.copy();
-        this.localOrientation = new RotationMatrix();
-        this.zeroReferenceOrientation = new RotationMatrix();
-        this.prevZeroReferenceOrientation = new RotationMatrix();
-
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
-
-        //Set initial position, rotation, and scale.  This ensures part doesn't "warp" the first tick.
-        //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
-        //when we initialize all of our animations.
-        position.set(localOffset).add(entityOn.position);
-        prevPosition.set(position);
-        orientation.set(entityOn.orientation);
-        prevOrientation.set(orientation);
-        scale.set(entityOn.scale);
-        if (placementDefinition.partScale != null) {
-            scale.multiply(placementDefinition.partScale);
-        }
-        prevScale.set(scale);
     }
 
     @Override
@@ -304,7 +316,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
             } else {
                 if (player.getInventory().addStack(getStack())) {
-                    entityOn.removePart(this, null);
+                    entityOn.removePart(this, true, null);
                 }
             }
         } else {

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.Locale;
+
 import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -636,7 +638,7 @@ public final class ControlSystem {
         ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language) {
             this.linkedJoystick = linkedJoystick;
             this.isMomentary = isMomentary;
-            this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
+            this.systemName = this.name().toLowerCase(Locale.ROOT).replaceFirst("_", ".");
             this.language = language;
             this.defaultKeyName = defaultKeyName;
             if (ConfigSystem.client.controls.keyboard.containsKey(systemName)) {
@@ -745,7 +747,7 @@ public final class ControlSystem {
         ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language) {
             this.isAxis = isAxis;
             this.isMomentary = isMomentary;
-            this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
+            this.systemName = this.name().toLowerCase(Locale.ROOT).replaceFirst("_", ".");
             this.language = language;
             if (ConfigSystem.client.controls.joystick.containsKey(systemName)) {
                 this.config = ConfigSystem.client.controls.joystick.get(systemName);

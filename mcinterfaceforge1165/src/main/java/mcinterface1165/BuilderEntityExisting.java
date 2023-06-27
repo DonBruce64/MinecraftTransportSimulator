@@ -179,7 +179,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 Vector3d attackerMcPos = attacker.position();
                 Point3D attackerPosition = new Point3D(attackerMcPos.x, attackerMcPos.y, attackerMcPos.z);
                 for (BoundingBox box : interactionBoxes.boxes) {
-                    if (box.isPointInside(attackerPosition)) {
+                    if (box.isPointInside(attackerPosition, null)) {
                         damage = new Damage(amount, box, null, playerSource, null);
                         break;
                     }
@@ -216,7 +216,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.interactionBoxes) {
-                    if (box.isPointInside(new Point3D(target.getLocation().x, target.getLocation().y, target.getLocation().z))) {
+                    if (box.isPointInside(new Point3D(target.getLocation().x, target.getLocation().y, target.getLocation().z), null)) {
                         IWrapperItemStack stack = part.getStack();
                         if (stack != null) {
                             return ((WrapperItemStack) stack).stack;

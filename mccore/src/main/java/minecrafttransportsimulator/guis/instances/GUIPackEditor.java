@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -454,7 +455,7 @@ public class GUIPackEditor extends JFrame {
         comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
         EnumType[] enumConstants = objectClass.getEnumConstants();
         for (EnumType enumConstant : enumConstants) {
-            comboBox.addItem(((Enum<?>) enumConstant).name().toLowerCase());
+            comboBox.addItem(((Enum<?>) enumConstant).name().toLowerCase(Locale.ROOT));
         }
         comboBox.addItemListener(listener);
         comboBox.setRenderer(generateEnumTooltipRenderer(enumConstants));

@@ -16,7 +16,7 @@ public class JSONDummyPartProvider extends AJSONPartProvider {
         JSONPartDefinition fakeDef = new JSONPartDefinition();
         fakeDef.pos = new Point3D();
         fakeDef.types = new ArrayList<>();
-        fakeDef.bypassSlotChecks = true;
+        fakeDef.bypassSlotMinMax = true;
         definition.parts = new ArrayList<>();
         definition.parts.add(fakeDef);
 

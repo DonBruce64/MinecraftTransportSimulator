@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -102,7 +103,7 @@ class InterfaceCore implements IInterfaceCore {
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize) {
         //Convert to lowercase in case we are camelCase from oreDict systems.
-        String lowerCaseOre = oreName.toLowerCase();
+        String lowerCaseOre = oreName.toLowerCase(Locale.ROOT);
         List<IWrapperItemStack> stacks = new ArrayList<>();
         ITag<Item> tag = ItemTags.getAllTags().getTag(new ResourceLocation("minecraft", lowerCaseOre));
         if (tag == null) {

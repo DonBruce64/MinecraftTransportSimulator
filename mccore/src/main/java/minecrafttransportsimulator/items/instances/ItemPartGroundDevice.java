@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -49,7 +50,7 @@ public class ItemPartGroundDevice extends AItemPart {
                     modifierString.append(", ");
                 }
             }
-            modifierString.append(modifier.getKey().name().toLowerCase()).append(": ").append(modifier.getValue());
+            modifierString.append(modifier.getKey().name().toLowerCase(Locale.ROOT)).append(": ").append(modifier.getValue());
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + modifierString);
         tooltipLines.add(definition.ground.isWheel ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.value);

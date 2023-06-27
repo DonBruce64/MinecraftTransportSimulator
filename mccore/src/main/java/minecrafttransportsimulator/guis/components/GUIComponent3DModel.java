@@ -3,6 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -62,7 +63,7 @@ public class GUIComponent3DModel extends AGUIComponent {
             if (!modelParsedObjects.containsKey(modelLocation)) {
                 List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
                 //Remove any windows and "commented" objects from the model.  We don't want to render those.
-                parsedObjects.removeIf(object -> object.name.toLowerCase().contains("window") || object.name.startsWith("#"));
+                parsedObjects.removeIf(object -> object.name.toLowerCase(Locale.ROOT).contains("window") || object.name.startsWith("#"));
 
                 //Get the min/max vertex values for the model so we know how much to scale it.
                 //Also get how many vertices are in the model total for the final buffer.

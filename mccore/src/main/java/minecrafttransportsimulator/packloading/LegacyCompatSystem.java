@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -1473,7 +1474,7 @@ public final class LegacyCompatSystem {
         //Move pole general properties to new location.
         if (definition.general.type != null) {
             definition.pole = new JSONPoleComponent.JSONPoleGeneric();
-            definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase());
+            definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
             definition.general.type = null;
             definition.pole.radius = definition.general.radius;
             definition.general.radius = 0;
@@ -1485,30 +1486,30 @@ public final class LegacyCompatSystem {
             for (Axis axis : Axis.values()) {
                 if (!axis.equals(Axis.NONE)) {
                     JSONAnimatedObject connectorModelObject = new JSONAnimatedObject();
-                    connectorModelObject.objectName = axis.name().toLowerCase();
+                    connectorModelObject.objectName = axis.name().toLowerCase(Locale.ROOT);
                     connectorModelObject.animations = new ArrayList<>();
                     JSONAnimationDefinition connectorVisibilityInhibitor = new JSONAnimationDefinition();
 
                     connectorVisibilityInhibitor.animationType = AnimationComponentType.INHIBITOR;
-                    connectorVisibilityInhibitor.variable = "solid_present_" + axis.name().toLowerCase();
+                    connectorVisibilityInhibitor.variable = "solid_present_" + axis.name().toLowerCase(Locale.ROOT);
                     connectorVisibilityInhibitor.clampMin = 1.0F;
                     connectorVisibilityInhibitor.clampMax = 1.0F;
                     connectorModelObject.animations.add(connectorVisibilityInhibitor);
 
                     JSONAnimationDefinition connectorVisibility = new JSONAnimationDefinition();
                     connectorVisibility.animationType = AnimationComponentType.VISIBILITY;
-                    connectorVisibility.variable = "neighbor_present_" + axis.name().toLowerCase();
+                    connectorVisibility.variable = "neighbor_present_" + axis.name().toLowerCase(Locale.ROOT);
                     connectorVisibility.clampMin = 1.0F;
                     connectorVisibility.clampMax = 1.0F;
                     connectorModelObject.animations.add(connectorVisibility);
                     definition.rendering.animatedObjects.add(connectorModelObject);
 
                     JSONAnimatedObject solidModelObject = new JSONAnimatedObject();
-                    solidModelObject.objectName = axis.name().toLowerCase() + "_solid";
+                    solidModelObject.objectName = axis.name().toLowerCase(Locale.ROOT) + "_solid";
                     solidModelObject.animations = new ArrayList<>();
                     JSONAnimationDefinition solidVisibility = new JSONAnimationDefinition();
                     solidVisibility.animationType = AnimationComponentType.VISIBILITY;
-                    solidVisibility.variable = "solid_present_" + axis.name().toLowerCase();
+                    solidVisibility.variable = "solid_present_" + axis.name().toLowerCase(Locale.ROOT);
                     solidVisibility.clampMin = 1.0F;
                     solidVisibility.clampMax = 1.0F;
                     solidModelObject.animations.add(solidVisibility);
@@ -1516,11 +1517,11 @@ public final class LegacyCompatSystem {
 
                     if (axis.equals(Axis.UP) || axis.equals(Axis.DOWN)) {
                         JSONAnimatedObject slabModelObject = new JSONAnimatedObject();
-                        slabModelObject.objectName = axis.name().toLowerCase() + "_slab";
+                        slabModelObject.objectName = axis.name().toLowerCase(Locale.ROOT) + "_slab";
                         slabModelObject.animations = new ArrayList<>();
                         JSONAnimationDefinition slabVisibility = new JSONAnimationDefinition();
                         slabVisibility.animationType = AnimationComponentType.VISIBILITY;
-                        slabVisibility.variable = "slab_present_" + axis.name().toLowerCase();
+                        slabVisibility.variable = "slab_present_" + axis.name().toLowerCase(Locale.ROOT);
                         slabVisibility.clampMin = 1.0F;
                         slabVisibility.clampMax = 1.0F;
                         slabModelObject.animations.add(slabVisibility);
@@ -1536,7 +1537,7 @@ public final class LegacyCompatSystem {
         if (definition.decor == null) {
             definition.decor = new JSONDecor.JSONDecorGeneric();
             if (definition.general.type != null) {
-                definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase());
+                definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
                 definition.general.type = null;
             }
             definition.decor.width = definition.general.width;
@@ -1704,7 +1705,7 @@ public final class LegacyCompatSystem {
         if (definition.item == null) {
             definition.item = new JSONItem.JSONItemGeneric();
             if (definition.general.type != null) {
-                definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase());
+                definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
                 definition.general.type = null;
             }
         }
@@ -2372,7 +2373,7 @@ public final class LegacyCompatSystem {
                         lightDef.brightnessAnimations = new ArrayList<>();
 
                         //Add standard animation variable for light name.
-                        String lowerCaseName = object.name.toLowerCase();
+                        String lowerCaseName = object.name.toLowerCase(Locale.ROOT);
                         JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                         if (lowerCaseName.contains("brakelight")) {
                             activeAnimation.variable = EntityVehicleF_Physics.BRAKE_VARIABLE;
@@ -2554,9 +2555,9 @@ public final class LegacyCompatSystem {
             List<String> leftRollers = new ArrayList<>();
             List<String> rightRollers = new ArrayList<>();
             for (RenderableObject object : parsedModel) {
-                if (object.name.toLowerCase().contains("roller")) {
+                if (object.name.toLowerCase(Locale.ROOT).contains("roller")) {
                     //Add roller to roller lists.
-                    if (object.name.toLowerCase().startsWith("l") || object.name.toLowerCase().startsWith("$l")) {
+                    if (object.name.toLowerCase(Locale.ROOT).startsWith("l") || object.name.toLowerCase(Locale.ROOT).startsWith("$l")) {
                         leftRollers.add(object.name);
                     } else {
                         rightRollers.add(object.name);

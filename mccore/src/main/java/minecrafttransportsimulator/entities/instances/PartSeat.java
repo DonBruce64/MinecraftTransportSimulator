@@ -46,8 +46,14 @@ public final class PartSeat extends APart {
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
         this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
-        this.zoomLevel = data.getInteger("zoomLevel");
-        this.cameraIndex = data.getInteger("cameraIndex");
+    }
+
+    @Override
+    public void linkToEntity(AEntityF_Multipart<?> entityOn, JSONPartDefinition placementDefinition) {
+        if (vehicleOn != null) {
+            removeRiderFromVehicle();
+        }
+        super.linkToEntity(entityOn, placementDefinition);
     }
 
     @Override
@@ -222,51 +228,7 @@ public final class PartSeat extends APart {
     @Override
     public void removeRider() {
         if (vehicleOn != null) {
-            //Check if we have another controller, and if they are creative.
-            boolean otherController = false;
-            boolean otherCreativeController = false;
-            for (APart part : vehicleOn.allParts) {
-                if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
-                    otherController = true;
-                    if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
-                        otherCreativeController = true;
-                        break;
-                    }
-                }
-            }
-
-            //Set creative to false if there are no other creative controllers.
-            if (!otherCreativeController) {
-                vehicleOn.isCreative = false;
-            }
-
-            //Remove controller from count, if we are one.
-            if (placementDefinition.isController) {
-                --vehicleOn.controllerCount;
-            }
-
-            if (riderIsClient && vehicleOn != null) {
-                //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-                AGUIBase.closeIfOpen(GUIPanel.class);
-                AGUIBase.closeIfOpen(GUIHUD.class);
-                AGUIBase.closeIfOpen(GUIRadio.class);
-
-                //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
-                if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
-                    vehicleOn.engines.forEach(engine -> {
-                        if (engine.magnetoOn) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                        }
-                        if (engine.electricStarterEngaged) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                        }
-                    });
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
-                    if (!vehicleOn.parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
-                    }
-                }
-            }
+            removeRiderFromVehicle();
         }
 
         //De-select active gun if required.
@@ -316,6 +278,54 @@ public final class PartSeat extends APart {
         }
         riderChangingSeats = false;
         super.removeRider();
+    }
+
+    private void removeRiderFromVehicle() {
+        //Check if we have another controller, and if they are creative.
+        boolean otherController = false;
+        boolean otherCreativeController = false;
+        for (APart part : vehicleOn.allParts) {
+            if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
+                otherController = true;
+                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
+                    otherCreativeController = true;
+                    break;
+                }
+            }
+        }
+
+        //Set creative to false if there are no other creative controllers.
+        if (!otherCreativeController) {
+            vehicleOn.isCreative = false;
+        }
+
+        //Remove controller from count, if we are one.
+        if (placementDefinition.isController) {
+            --vehicleOn.controllerCount;
+        }
+
+        if (riderIsClient) {
+            //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
+            AGUIBase.closeIfOpen(GUIPanel.class);
+            AGUIBase.closeIfOpen(GUIHUD.class);
+            AGUIBase.closeIfOpen(GUIRadio.class);
+
+            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
+            if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
+                vehicleOn.engines.forEach(engine -> {
+                    if (engine.magnetoOn) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+                    }
+                    if (engine.electricStarterEngaged) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+                    }
+                });
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
+                if (!vehicleOn.parkingBrakeOn) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                }
+            }
+        }
     }
 
     @Override
@@ -460,8 +470,6 @@ public final class PartSeat extends APart {
             data.setString("activeGunSystemName", activeGunItem.definition.systemName);
             data.setString("activeGunSubName", activeGunItem.subDefinition.subName);
         }
-        data.setInteger("zoomLevel", zoomLevel);
-        data.setInteger("cameraIndex", cameraIndex);
         return data;
     }
 }

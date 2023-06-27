@@ -169,8 +169,12 @@ public class BoundingBox {
      * Note that this returns true for points on the border, to allow use to use in
      * in conjunction with hit-scanning code to find out which box got hit-scanned.
      */
-    public boolean isPointInside(Point3D point) {
-        return globalCenter.x - widthRadius <= point.x && globalCenter.x + widthRadius >= point.x && globalCenter.y - heightRadius <= point.y && globalCenter.y + heightRadius >= point.y && globalCenter.z - depthRadius <= point.z && globalCenter.z + depthRadius >= point.z;
+    public boolean isPointInside(Point3D point, Point3D growthOffset) {
+        if (growthOffset != null) {
+            return globalCenter.x - widthRadius - growthOffset.x <= point.x && globalCenter.x + widthRadius + growthOffset.x >= point.x && globalCenter.y - heightRadius - growthOffset.y <= point.y && globalCenter.y + heightRadius + growthOffset.y >= point.y && globalCenter.z - depthRadius - growthOffset.z <= point.z && globalCenter.z + depthRadius + growthOffset.z >= point.z;
+        } else {
+            return globalCenter.x - widthRadius <= point.x && globalCenter.x + widthRadius >= point.x && globalCenter.y - heightRadius <= point.y && globalCenter.y + heightRadius >= point.y && globalCenter.z - depthRadius <= point.z && globalCenter.z + depthRadius >= point.z;
+        }
     }
 
     /**
