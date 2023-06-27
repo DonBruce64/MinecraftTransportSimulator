@@ -235,7 +235,7 @@ public class JSONParser {
                 writer.endArray();
                 writer.setIndent("  ");
             } else {
-                StringBuilder hexString = new StringBuilder(Integer.toHexString(value.rgbInt).toUpperCase());
+                StringBuilder hexString = new StringBuilder(Integer.toHexString(value.rgbInt).toUpperCase(Locale.ROOT));
                 while (hexString.length() < 6) {
                     hexString.insert(0, "0");
                 }

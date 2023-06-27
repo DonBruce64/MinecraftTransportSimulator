@@ -137,7 +137,7 @@ public class InterfaceInput implements IInterfaceInput {
                     while (iterator.hasNext()) {
                         try {
                             Entry<String, ConfigJoystick> controllerEntry = iterator.next();
-                            ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase());
+                            ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase(Locale.ROOT));
                             ConfigJoystick config = controllerEntry.getValue();
                             if (runningClassicMode) {
                                 if (classicJoystickMap.containsKey(config.joystickName)) {

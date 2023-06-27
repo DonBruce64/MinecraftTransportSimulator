@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -111,7 +112,7 @@ public class JSONConfigSettings {
                     if (!fuels.containsKey(engine.definition.engine.fuelType)) {
                         Map<String, Double> fluids = new HashMap<>();
                         try {
-                            switch (FuelDefaults.valueOf(engine.definition.engine.fuelType.toUpperCase())) {
+                            switch (FuelDefaults.valueOf(engine.definition.engine.fuelType.toUpperCase(Locale.ROOT))) {
                                 case GASOLINE: {
                                     fluids.put("lava", 1.0);
                                     fluids.put("gasoline", 1.0);

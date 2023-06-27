@@ -1474,7 +1474,7 @@ public final class LegacyCompatSystem {
         //Move pole general properties to new location.
         if (definition.general.type != null) {
             definition.pole = new JSONPoleComponent.JSONPoleGeneric();
-            definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase());
+            definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
             definition.general.type = null;
             definition.pole.radius = definition.general.radius;
             definition.general.radius = 0;
@@ -1537,7 +1537,7 @@ public final class LegacyCompatSystem {
         if (definition.decor == null) {
             definition.decor = new JSONDecor.JSONDecorGeneric();
             if (definition.general.type != null) {
-                definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase());
+                definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
                 definition.general.type = null;
             }
             definition.decor.width = definition.general.width;
@@ -1705,7 +1705,7 @@ public final class LegacyCompatSystem {
         if (definition.item == null) {
             definition.item = new JSONItem.JSONItemGeneric();
             if (definition.general.type != null) {
-                definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase());
+                definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase(Locale.ROOT));
                 definition.general.type = null;
             }
         }

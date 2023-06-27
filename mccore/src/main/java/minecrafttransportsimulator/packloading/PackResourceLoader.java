@@ -99,7 +99,7 @@ public class PackResourceLoader {
 
         public static ItemClassification fromDirectory(String directory) {
             try {
-                return ItemClassification.valueOf(directory.substring(0, directory.length() - "s/".length()).toUpperCase());
+                return ItemClassification.valueOf(directory.substring(0, directory.length() - "s/".length()).toUpperCase(Locale.ROOT));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Was told to get classification for directory: " + directory + " but none exists.  Contact the mod author!");
             }

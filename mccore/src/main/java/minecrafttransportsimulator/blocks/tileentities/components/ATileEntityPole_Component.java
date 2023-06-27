@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.Locale;
+
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -50,18 +52,18 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 
         //Check connector variables.
         if (variable.startsWith("neighbor_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase());
+            Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase(Locale.ROOT));
             ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
             return otherTile instanceof TileEntityPole ? 1 : 0;
         }
         if (variable.startsWith("matching_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("matching_present_".length()).toUpperCase());
+            Axis connectionAxis = Axis.valueOf(variable.substring("matching_present_".length()).toUpperCase(Locale.ROOT));
             ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
             return otherTile != null && core.definition.systemName.equals(otherTile.definition.systemName) ? 1 : 0;
         }
         //Check solid block variables.
         if (variable.startsWith("solid_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase());
+            Axis connectionAxis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase(Locale.ROOT));
             return world.isBlockSolid(connectionAxis.getOffsetPoint(position), connectionAxis.getOpposite()) ? 1 : 0;
         }
         //Check slab variables.

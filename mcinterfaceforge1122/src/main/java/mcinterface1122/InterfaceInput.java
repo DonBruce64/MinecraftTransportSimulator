@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -133,7 +134,7 @@ public class InterfaceInput implements IInterfaceInput {
                     while (iterator.hasNext()) {
                         try {
                             Entry<String, ConfigJoystick> controllerEntry = iterator.next();
-                            ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase());
+                            ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase(Locale.ROOT));
                             ConfigJoystick config = controllerEntry.getValue();
                             if (runningClassicMode) {
                                 if (classicJoystickMap.containsKey(config.joystickName)) {
