@@ -253,9 +253,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     orientation.rotateX(targetVector.x);
 
                     //Set motion to new orientation.
+                    if(ticksExisted > definition.bullet.burnTime){
+                        motion.y -= definition.bullet.gravitationalVelocity;
+                    }
                     targetVector.set(0, 0, motion.length()).rotate(orientation);
-                    motion.set(targetVector);
-
+                    if(ticksExisted > definition.bullet.burnTime){
+                        motion.set(targetVector.x, motion.y, targetVector.z);
+                    } else {
+                        motion.set(targetVector);
+                    }
                     //Update target distance.
                     targetDistance = targetPosition.distanceTo(position);
                 }
