@@ -46,8 +46,6 @@ public final class PartSeat extends APart {
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
         this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
-        this.zoomLevel = data.getInteger("zoomLevel");
-        this.cameraIndex = data.getInteger("cameraIndex");
     }
 
     @Override
@@ -472,8 +470,6 @@ public final class PartSeat extends APart {
             data.setString("activeGunSystemName", activeGunItem.definition.systemName);
             data.setString("activeGunSubName", activeGunItem.subDefinition.subName);
         }
-        data.setInteger("zoomLevel", zoomLevel);
-        data.setInteger("cameraIndex", cameraIndex);
         return data;
     }
 }

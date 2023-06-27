@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -74,22 +75,30 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
                     if (currentPart.definition.generic.fallsToGround) {
                         //Don't check on the first tick, since we won't be updated yet.
                         if (ticksExisted > 1) {
-                            world.updateBoundingBoxCollisions(encompassingBox, motion, true);
-                            if (encompassingBox.currentCollisionDepth.y != 0) {
-                                position.subtract(encompassingBox.currentCollisionDepth);
-                                motion.y = 0;
-                                needToFindGround = false;
-                            } else {
-                                position.add(motion);
-                                if (motion.y < 3.9) {
-                                    motion.y += -0.08;
-                                }
+                            if (motion.y > -3.9) {
+                                motion.y += -0.08;
                             }
 
-                            if (!needToFindGround) {
-                                //Do final box update.
-                                allInteractionBoxes.forEach(box -> box.updateToEntity(this, null));
+                            //We can only go down 1 block at a time to ensure proper collision checks.
+                            //Too fast and we skip them.
+                            Point3D motionApplied = new Point3D();
+                            while (needToFindGround && motionApplied.y > motion.y) {
+                                motionApplied.y -= 1;
+                                if (motionApplied.y < motion.y) {
+                                    motionApplied.y = motion.y;
+                                }
+                                encompassingBox.globalCenter.set(position).add(motionApplied);
+                                world.updateBoundingBoxCollisions(encompassingBox, motionApplied, true);
+
+                                if (encompassingBox.currentCollisionDepth.y != 0) {
+                                    position.add(motionApplied).subtract(encompassingBox.currentCollisionDepth);
+                                    motion.y = 0;
+                                    needToFindGround = false;
+                                    //Do final box update.
+                                    allInteractionBoxes.forEach(box -> box.updateToEntity(this, null));
+                                }
                             }
+                            position.add(motion);
                         }
                     } else {
                         needToFindGround = false;
