@@ -76,6 +76,8 @@ public class PartEngine extends APart {
     private float currentGearRatio;
     @ModifiedValue
     private float currentForceShift;
+    @ModifiedValue
+    public float currentIsAutomatic;
 
     //Internal variables.
     private boolean autoStarterEngaged;
@@ -365,7 +367,7 @@ public class PartEngine extends APart {
                 }
 
                 //Do automatic transmission functions if needed.
-                if (definition.engine.isAutomatic && !world.isClient() && currentGear != 0) {
+                if (currentIsAutomatic != 0 && !world.isClient() && currentGear != 0) {
                     if (shiftCooldown == 0) {
                         if (currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears) {
                             //Can shift up, try to do so.
@@ -706,6 +708,7 @@ public class PartEngine extends APart {
         currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
         currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
         currentForceShift = definition.engine.forceShift ? 1 : 0;
+        currentIsAutomatic = definition.engine.isAutomatic ? 1 : 0;
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -744,6 +747,9 @@ public class PartEngine extends APart {
                     case "forceShift":
                     	currentForceShift = adjustVariable(modifier, currentForceShift);
                         break;
+                    case "isAutomatic":
+                    	currentIsAutomatic = adjustVariable(modifier, currentIsAutomatic);
+                        break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
                         break;
@@ -773,7 +779,7 @@ public class PartEngine extends APart {
     public double getRawVariableValue(String variable, float partialTicks) {
         switch (variable) {
             case ("engine_isautomatic"):
-                return definition.engine.isAutomatic ? 1 : 0;
+                return currentIsAutomatic != 0 ? 1 : 0;
             case ("engine_rotation"):
                 return getEngineRotation(partialTicks);
             case ("engine_sin"):
@@ -970,7 +976,7 @@ public class PartEngine extends APart {
     //--------------------START OF ENGINE GEAR METHODS--------------------
 
     public float getGearshiftRotation() {
-        return definition.engine.isAutomatic ? Math.min(1, currentGear) * 15F : currentGear * 5;
+        return currentIsAutomatic != 0 ? Math.min(1, currentGear) * 15F : currentGear * 5;
     }
 
     public float getGearshiftPosition_Vertical() {
