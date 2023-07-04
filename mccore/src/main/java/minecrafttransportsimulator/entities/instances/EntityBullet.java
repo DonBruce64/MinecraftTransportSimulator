@@ -214,7 +214,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             normalizedConeVector.set(searchVector).normalize();
                             normalizedEntityVector.set(externalEntityTargeted.getPosition()).subtract(startPoint).normalize();
                             double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                            if (externalEntityTargeted.isValid() && targetAngle < coneAngle || world.getBlockHit(startPoint, targetVector) != null || targetDistance > definition.bullet.seekerRange) {
+                            if (externalEntityTargeted.isValid() && targetAngle < coneAngle || world.getBlockHit(startPoint, targetPosition) != null || targetPosition.distanceTo(position) > definition.bullet.seekerRange) {
                                 targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
                             } else {
                                 //Entity is dead. Don't target it anymore.
@@ -227,7 +227,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
                             //Don't need to update the position variable for engines, as it auto-syncs.
                             //Do need to check if the engine is still warm and valid, however.
-                            if (!engineTargeted.isValid || targetAngle > coneAngle || world.getBlockHit(startPoint, targetVector) != null || targetDistance > definition.bullet.seekerRange) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            if (!engineTargeted.isValid || targetAngle > coneAngle || world.getBlockHit(startPoint, targetPosition) != null || targetPosition.distanceTo(position) > definition.bullet.seekerRange) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
                                 engineTargeted.vehicleOn.missilesIncoming.remove(this);
                                 engineTargeted = null;
                                 targetPosition = null;
