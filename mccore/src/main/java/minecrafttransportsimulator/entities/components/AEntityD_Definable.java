@@ -1125,7 +1125,30 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
         @Override
         public void runRotation(DurationDelayClock clock, float partialTicks) {
-        	modifiedValue *= clock.animation.invert ? (clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x))) + (clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y))) + (clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z))) : (clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x))) + (clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y))) + (clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z)));
+        	//modifiedValue *= Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks)));
+        	float trigValue = 0;
+        	if (clock.animation.invert) {
+        		if (clock.animation.axis.x != 0) {
+        			trigValue += clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
+        		}
+        		if (clock.animation.axis.y != 0) {
+	    			trigValue += clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
+        		}
+        		if (clock.animation.axis.z != 0) {
+	    			trigValue += clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
+        		}
+        	} else {
+        		if (clock.animation.axis.x != 0) {
+        			trigValue += clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
+        		}
+        		if (clock.animation.axis.y != 0) {
+	    			trigValue += clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
+        		}
+        		if (clock.animation.axis.z != 0) {
+	    			trigValue += clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
+        		}
+        	}
+        	modifiedValue *= trigValue;
         }
     }
 
