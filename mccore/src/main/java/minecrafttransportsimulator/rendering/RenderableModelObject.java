@@ -308,7 +308,8 @@ public class RenderableModelObject {
         boolean[] renderIndexes = null;
         if (tread.definition.ground.treadOrder != null) {
             int treadCycleCount = tread.definition.ground.treadOrder.size();
-            int treadCycleIndex = (int) Math.floor(treadCycleCount * (treadLinearPosition % (treadCycleCount * tread.definition.ground.spacing)));
+            double treadCycleTotalDistance = treadCycleCount * tread.definition.ground.spacing;
+            int treadCycleIndex = (int) Math.floor(treadCycleCount * ((treadLinearPosition % treadCycleTotalDistance) / treadCycleTotalDistance));
             if (treadCycleIndex < 0) {
                 //Need to handle negatives if we only go backwards.
                 treadCycleIndex += treadCycleCount;
