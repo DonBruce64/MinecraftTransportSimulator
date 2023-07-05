@@ -1125,7 +1125,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
         @Override
         public void runRotation(DurationDelayClock clock, float partialTicks) {
-        	//modifiedValue *= Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks)));
         	float trigValue = 0;
         	if (clock.animation.invert) {
         		if (clock.animation.axis.x != 0) {
