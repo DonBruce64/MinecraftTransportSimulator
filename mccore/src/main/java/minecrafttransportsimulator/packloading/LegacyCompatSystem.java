@@ -1755,8 +1755,11 @@ public final class LegacyCompatSystem {
             definition.bullet.damage = definition.bullet.diameter / 5F;
         }
         //Make guided bullets default to active guidance
+        //Also gives default seeker cone of 45 degrees
         if (definition.bullet.guidanceType == null && definition.bullet.turnRate > 0) {
             definition.bullet.guidanceType = JSONBullet.GuidanceType.ACTIVE;
+            definition.bullet.seekerRange = 1024;
+            definition.bullet.seekerMaxAngle = 45;
         }
 
         //Make rendering particle section for bullets for block hitting if it doesn't exist.
