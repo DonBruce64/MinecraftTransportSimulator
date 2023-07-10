@@ -55,7 +55,7 @@ tasks.register("buildForge1165") {
 tasks.register("buildForge1182") {
     doFirst { preBuild() }
     doLast {
-        moveToOut(mcInterfaceForge1165, "1.18.2")
+        moveToOut(mcInterfaceForge1182, "1.18.2")
     }
     dependsOn(mcInterfaceForge1182.tasks.build)
 }
