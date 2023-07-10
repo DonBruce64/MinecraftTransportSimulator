@@ -27,6 +27,7 @@ var modVersion: String = project.property("global_version").toString()
 var mcCore = project(":mccore")
 var mcInterfaceForge1122 = project(":mcinterfaceforge1122")
 var mcInterfaceForge1165 = project(":mcinterfaceforge1165")
+var mcInterfaceForge1182 = project(":mcinterfaceforge1182")
 
 tasks.register("buildCore") {
     dependsOn(mcCore.tasks.build)
@@ -51,9 +52,18 @@ tasks.register("buildForge1165") {
     dependsOn(mcInterfaceForge1165.tasks.build)
 }
 
+tasks.register("buildForge1182") {
+    doFirst { preBuild() }
+    doLast {
+        moveToOut(mcInterfaceForge1165, "1.18.2")
+    }
+    dependsOn(mcInterfaceForge1182.tasks.build)
+}
+
 tasks.register("buildForgeAll") {
     dependsOn(tasks.getByName("buildForge1122"))
     dependsOn(tasks.getByName("buildForge1165"))
+    dependsOn(tasks.getByName("buildForge1182"))
 }
 
 @OptIn(ExperimentalPathApi::class)
