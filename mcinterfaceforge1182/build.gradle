@@ -24,7 +24,7 @@ group = project.mod_group
 archivesBaseName = project.archive_name
 
 //Options for Java version to compile to.
-sourceCompatibility = targetCompatibility = "1.8"
+sourceCompatibility = targetCompatibility = "17"
 compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
