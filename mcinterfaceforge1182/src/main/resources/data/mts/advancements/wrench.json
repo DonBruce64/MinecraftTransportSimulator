@@ -1,0 +1,16 @@
+{
+    "parent": "mts:vehiclebench",
+    "display": {
+        "icon": {"item": "mts:mts.wrench"},
+        "title": {"translate": "advancements.mts.wrench.title"},
+        "description": {"translate": "advancements.mts.wrench.description"}
+    },
+    "criteria": {
+        "has_wrench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.wrench"}]
+            }
+        }
+    }
+}
