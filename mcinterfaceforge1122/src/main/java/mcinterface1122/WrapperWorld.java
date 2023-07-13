@@ -916,11 +916,6 @@ public class WrapperWorld extends AWrapperWorld {
         world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack));
     }
 
-    @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames&&ConfigSystem.settings.general.blockBreakage.value, ConfigSystem.settings.general.blockBreakage.value);
-    }
-
     /**
      * Helper method to convert a BoundingBox to an AxisAlignedBB.
      */
