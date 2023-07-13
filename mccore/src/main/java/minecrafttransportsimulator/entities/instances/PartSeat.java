@@ -310,8 +310,8 @@ public final class PartSeat extends APart {
             AGUIBase.closeIfOpen(GUIHUD.class);
             AGUIBase.closeIfOpen(GUIRadio.class);
 
-            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
-            if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
+            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats, or this vehicle has the override.
+            if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value && !vehicleOn.definition.motorized.overrideAutoStart) {
                 vehicleOn.engines.forEach(engine -> {
                     if (engine.magnetoOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
