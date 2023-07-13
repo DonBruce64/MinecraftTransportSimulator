@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -988,11 +987,6 @@ public class WrapperWorld extends AWrapperWorld {
             item = new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack);
         }
         world.spawnEntity(item);
-    }
-
-    @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, true);
     }
 
     /**

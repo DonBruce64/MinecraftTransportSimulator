@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -412,5 +411,32 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Spawns an explosion of the specified strength at the passed-in point.
      */
-    public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+    public void spawnExplosion(Point3D location, double strength, boolean flames) {
+        double maxDistance = 25;
+        double attackValue = 100;
+        for (AEntityE_Interactable<?> entity : getEntitiesExtendingType(AEntityE_Interactable.class)) {
+            System.out.println(entity);
+            if (entity.position.isDistanceToCloserThan(location, maxDistance)) {
+                Damage damage = new Damage(attackValue * Math.pow(0.2, 3 * entity.position.distanceTo(location)), null, null, null, null).setExplosive();
+                if (flames) {
+                    damage.setFire();
+                }
+                entity.attack(damage);
+                System.out.println("ATTACKED " + damage.amount);
+            }
+        }
+    }
+
+    /**
+     * Class for hitting on blocks.
+     */
+    public static class BlockHitResult {
+        public final Point3D position;
+        public final Axis side;
+
+        public BlockHitResult(Point3D position, Axis side) {
+            this.position = position;
+            this.side = side;
+        }
+    }
 }
