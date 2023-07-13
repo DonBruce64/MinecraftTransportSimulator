@@ -881,7 +881,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0;
             case ("beacon_glideslope_delta"):
                 return selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0;
-
+            case ("beacon_distance"):
+                return selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0;
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.

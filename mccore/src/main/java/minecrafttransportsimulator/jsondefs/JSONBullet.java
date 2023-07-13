@@ -20,6 +20,12 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Defines the method for how a bullet will guide to it's target.")
         public GuidanceType guidanceType;
 
+        @JSONDescription("How far away the gun will be able to lock targets.")
+        public int seekerRange;
+
+        @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
+        public double seekerMaxAngle;
+
         @JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
         public boolean isHeat;
 

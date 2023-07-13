@@ -60,6 +60,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private double distanceTraveled;
     private double armorPenetrated;
     private Point3D targetVector;
+    private Point3D normalizedConeVector = new Point3D();
+    private Point3D normalizedEntityVector = new Point3D();
     private PartEngine engineTargeted;
     private IWrapperEntity externalEntityTargeted;
     private HitType lastHit;
@@ -171,7 +173,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     //Bullet will track whatever the gun was locked to, but if it can't see it,
                     //it will continue looking and track the closest thing that comes into its view cone.
                     case PASSIVE: {
-                        //can't figure how to implement this yet.
+                        //goes for what it can see, even if bullet lock is broken.
+                        //will search for its own target if fired without one
+                        //cant get this to work w/o crashing atm
                         break;
                     }
                     case SEMI_ACTIVE: {
@@ -201,9 +205,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         break;
                     }
                     case ACTIVE: {
+                        Point3D startPoint = position;
+                        Point3D searchVector = new Point3D(0, 0, definition.bullet.seekerRange).rotate(orientation);
+                        double coneAngle = definition.bullet.seekerMaxAngle;
                         //Always knows where the target is once fired.
                         if (externalEntityTargeted != null) {
-                            if (externalEntityTargeted.isValid()) {
+                            //check to see if target is able to be locked on to still.(seeker can see it)
+                            normalizedConeVector.set(searchVector).normalize();
+                            normalizedEntityVector.set(externalEntityTargeted.getPosition()).subtract(startPoint).normalize();
+                            double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                            if (externalEntityTargeted.isValid() && targetAngle < coneAngle || world.getBlockHit(startPoint, targetPosition) != null || targetPosition.distanceTo(position) > definition.bullet.seekerRange) {
                                 targetPosition.set(externalEntityTargeted.getPosition()).add(0, externalEntityTargeted.getBounds().heightRadius, 0);
                             } else {
                                 //Entity is dead. Don't target it anymore.
@@ -211,9 +222,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 targetPosition = null;
                             }
                         } else if (engineTargeted != null) {
+                            normalizedConeVector.set(searchVector).normalize();
+                            normalizedEntityVector.set(engineTargeted.vehicleOn.position).subtract(startPoint).normalize();
+                            double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
                             //Don't need to update the position variable for engines, as it auto-syncs.
                             //Do need to check if the engine is still warm and valid, however.
-                            if (!engineTargeted.isValid) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+                            if (!engineTargeted.isValid || targetAngle > coneAngle || world.getBlockHit(startPoint, targetPosition) != null || targetPosition.distanceTo(position) > definition.bullet.seekerRange) {// || engineTargeted.temp <= PartEngine.COLD_TEMP){
                                 engineTargeted.vehicleOn.missilesIncoming.remove(this);
                                 engineTargeted = null;
                                 targetPosition = null;

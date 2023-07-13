@@ -1758,6 +1758,12 @@ public final class LegacyCompatSystem {
         if (definition.bullet.guidanceType == null && definition.bullet.turnRate > 0) {
             definition.bullet.guidanceType = JSONBullet.GuidanceType.ACTIVE;
         }
+        if (definition.bullet.seekerMaxAngle == 0) {
+            definition.bullet.seekerMaxAngle = 90;
+        }
+        if (definition.bullet.seekerRange == 0) {
+            definition.bullet.seekerRange = 1024;
+        }
 
         //Make rendering particle section for bullets for block hitting if it doesn't exist.
         if (definition.rendering == null || definition.rendering.particles == null) {

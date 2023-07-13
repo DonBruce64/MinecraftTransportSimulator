@@ -79,6 +79,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If this is true, the HUD will be always rendered as a full HUD.  Useful if you have specific large instruments.")
         public boolean fullHUDOnly;
 
+        @JSONDescription("If this is true, and auto engine start is true, this vehicle will behave as if auto engine start is false.")
+        public boolean overrideAutoStart;
+
         @JSONDescription("The mass of this vehicle, when empty, in kg.  Note that fuel, cargo, players, and player inventories all count as weight, so this mass will not be the mass of the vehicle during normal operation.  Not too important in cars, but in aircraft this value should be as close to the real-life value as possible to avoid physics issues.")
         public int emptyMass;
 
