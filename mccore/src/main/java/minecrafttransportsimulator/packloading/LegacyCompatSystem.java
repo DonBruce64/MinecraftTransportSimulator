@@ -1759,7 +1759,7 @@ public final class LegacyCompatSystem {
             definition.bullet.guidanceType = JSONBullet.GuidanceType.ACTIVE;
         }
         if (definition.bullet.seekerMaxAngle == 0) {
-            definition.bullet.seekerMaxAngle = 45;
+            definition.bullet.seekerMaxAngle = 90;
         }
         if (definition.bullet.seekerRange == 0) {
             definition.bullet.seekerRange = 1024;
