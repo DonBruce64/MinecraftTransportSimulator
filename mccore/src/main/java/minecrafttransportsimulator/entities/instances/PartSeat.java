@@ -202,7 +202,7 @@ public final class PartSeat extends APart {
                 new GUIHUD(vehicleOn, this);
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
-                if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
+                if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider) && !vehicleOn.definition.motorized.overrideAutoStart) {
                     vehicleOn.engines.forEach(engine -> {
                         if (!vehicleOn.definition.motorized.isAircraft) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
