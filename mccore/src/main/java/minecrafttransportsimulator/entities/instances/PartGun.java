@@ -1051,12 +1051,7 @@ public class PartGun extends APart {
 
     public double getLockedOnDirection(){
         double direction = 0;
-        Point3D referencePos = new Point3D();
-        if (vehicleOn != null) {
-            referencePos.set(vehicleOn.position);
-        } else {
-            referencePos.set(position);
-        }
+        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
         if (engineTarget != null) {
             direction = Math.toDegrees(Math.atan2(-engineTarget.vehicleOn.position.z + referencePos.z, -engineTarget.vehicleOn.position.x + referencePos.x)) + 90 + orientation.angles.y;
         } else if (entityTarget != null) {
@@ -1071,12 +1066,7 @@ public class PartGun extends APart {
 
     public double getLockedOnAngle(){
         double angle = 0;
-        Point3D referencePos = new Point3D();
-        if (vehicleOn != null) {
-            referencePos.set(vehicleOn.position);
-        } else {
-            referencePos.set(position);
-        }
+        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
         if (engineTarget != null) {
             angle = -Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y,Math.hypot(-engineTarget.position.z + referencePos.z,-engineTarget.position.x + referencePos.x))) + orientation.angles.x;
         } else if (entityTarget != null) {
@@ -1116,10 +1106,11 @@ public class PartGun extends APart {
 
     public double getLeadAngleY() {
         double angle = 0;
+        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
         if(engineTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + (vehicleOn != null ? vehicleOn.position.y : position.y), Math.hypot(-engineTarget.position.z + (vehicleOn != null ? vehicleOn.position.z : position.z), -engineTarget.position.x + (vehicleOn != null ? vehicleOn.position.x : position.x)))) + orientation.angles.x);
+            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x);
         } else if (entityTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + (vehicleOn != null ? vehicleOn.position.y : position.y), Math.hypot(-entityTarget.getPosition().z + (vehicleOn != null ? vehicleOn.position.z : position.z), -entityTarget.getPosition().x + (vehicleOn != null ? vehicleOn.position.x : position.x)))) + orientation.angles.x);
+            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
         }
         return angle;
     }
