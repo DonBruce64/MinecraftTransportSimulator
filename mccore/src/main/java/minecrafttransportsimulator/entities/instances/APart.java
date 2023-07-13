@@ -132,12 +132,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
+
+        //Set to false to re-create animation since we don't want to use old animations we are linked to.
+        animationsInitialized = false;
     }
 
     @Override
     protected void initializeAnimations() {
         super.initializeAnimations();
         isMoveable = false;
+        placementMovementSwitchbox = null;
         if (placementDefinition.animations != null || placementDefinition.applyAfter != null) {
             List<JSONAnimationDefinition> animations = new ArrayList<>();
             if (placementDefinition.animations != null) {
@@ -146,13 +150,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
             isMoveable = true;
         }
+        internalMovementSwitchbox = null;
         if (definition.generic.movementAnimations != null) {
             internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
             isMoveable = true;
         }
+        placementActiveSwitchbox = null;
         if (placementDefinition.activeAnimations != null) {
             placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
         }
+        internalActiveSwitchbox = null;
         if (definition.generic.activeAnimations != null) {
             internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
         }

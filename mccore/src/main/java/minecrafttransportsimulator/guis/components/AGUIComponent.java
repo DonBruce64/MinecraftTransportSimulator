@@ -124,7 +124,7 @@ public abstract class AGUIComponent {
             int xOffset;
             if (gui.screenWidth - mouseX > mouseX) {
                 //Render right.
-                xOffset = mouseX + TOOLTIP_BORDER_PADDING;
+                xOffset = mouseX;
             } else {
                 //Render left.
                 xOffset = mouseX - actualStringWidth - 2 * TOOLTIP_BORDER_PADDING;
@@ -133,7 +133,7 @@ public abstract class AGUIComponent {
             int yOffset;
             if (gui.screenHeight - mouseY > mouseY) {
                 //Render bottom.
-                yOffset = mouseY + TOOLTIP_BORDER_PADDING;
+                yOffset = mouseY;
             } else {
                 //Render top.
                 yOffset = mouseY - actualStringHeight - 2 * TOOLTIP_BORDER_PADDING;

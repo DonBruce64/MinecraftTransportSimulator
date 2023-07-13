@@ -79,34 +79,21 @@ public class RenderText {
      * Returns the width of the passed-in text.  Units are in pixels,
      * though these are standardized for the default font.  Fonts with
      * higher resolutions may result in non-whole-pixel widths.
-     * NOTE: this applies an automatic 1.4 scaling to the default font
-     * as this is done internally by the renderer.  This won't matter for
-     * most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getStringWidth(String text, String fontName) {
         FontData font = getFontData(fontName);
-        if (font.isDefault) {
-            return 1.4F * font.getStringWidth(text);
-        } else {
-            return font.getStringWidth(text);
-        }
+        return font.charScale * font.getStringWidth(text);
     }
 
     /**
      * Returns the height of the number of lines of text.  Units are in pixels,
      * though these are standardized for the default font.  Fonts with
      * higher resolutions may result in non-whole-pixel widths.
-     * NOTE: this applies an automatic 1.4 scaling to the default font
-     * as this is done internally by the renderer.  This won't matter for
-     * most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getHeight(int numberLines, String fontName) {
-        float height = numberLines * (FontData.DEFAULT_PIXELS_PER_CHAR + FontData.CHAR_SPACING);
-        if (getFontData(fontName).isDefault) {
-            return 1.4F * height;
-        } else {
-            return height;
-        }
+        FontData font = getFontData(fontName);
+        float height = numberLines * (font.charHeight + font.charSpacing);
+        return font.charScale * height;
     }
 
     /**
@@ -131,16 +118,34 @@ public class RenderText {
     private static class FontData {
         private static final byte CHARS_PER_ROWCOL = 16;
         private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL * CHARS_PER_ROWCOL;
+        private static final byte DEFAULT_CHAR_HEIGHT_PIXELS = 7;
         private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
-        private static final float CHAR_SPACING = 1.5F;
         private static final ColorRGB[] COLORS = new ColorRGB[]{new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255)};
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
         private static final int MAX_VERTCIES_PER_RENDER = 1000 * 6;
         private static final Point3D adjustmentOffset = new Point3D();
 
-        private final boolean isDefault;
-        /*Texture locations for the font files.**/
+        /**
+         * Texture locations for the font files.
+         **/
         private final String[] fontLocations = new String[Character.MAX_VALUE / CHARS_PER_TEXTURE_SHEET];
+        /**
+         * Char scale.  Normally 1.0, but can be more or less depending on the char ratio.
+         * Standard ASCII font is 7px tall out of 8, so this ratio is a scale of 1.0.
+         * Unicode font is 10px tall out of 16, or 5 out of 8.
+         * Therefore, standard unicode scale is (7/8)/(5/8) = 1.4.
+         **/
+        private final float charScale;
+        /**
+         * Height of the char.  Equal to DEFAULT_PIXLES_PER_CHAR divided by the charScale.
+         * Factored to allow for less spacing in upscaled fonts since they get more spacing during scaling.
+         **/
+        private final float charHeight;
+        /**
+         * Spacing between chars.  Equal to 1.5 divided by the charScale.
+         * Factored to allow for less spacing in upscaled fonts since they get more spacing during scaling.
+         **/
+        private final float charSpacing;
         /**
          * Char width, in actual game texture pixels (not font texture pixels).  May be fractions of a pixel if the font is up-scaled.
          **/
@@ -192,7 +197,6 @@ public class RenderText {
         private final float[] supplementalUV = new float[2];
 
         private FontData(String fontName) {
-
             //Get font locations.
             String fontBaseLocation;
             if (fontName == null) {
@@ -201,26 +205,13 @@ public class RenderText {
                 fontBaseLocation = "/assets/" + fontName.substring(0, fontName.indexOf(":")) + "/textures/fonts/" + fontName.substring(fontName.indexOf(":") + 1) + "/unicode_page_";
             }
 
-            //Parse char widths.
-            boolean isDefault = true;
+            //Parse char widths and the height when applicable.
+            float scale = 1.0F;
             for (int i = 0; i < fontLocations.length; ++i) {
                 fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
                 BufferedImage bufferedImage;
                 try {
                     bufferedImage = ImageIO.read(InterfaceManager.renderingInterface.getTextureStream(fontLocations[i]));
-                    if (isDefault) {
-                        //Check if this is default font by checking against the default font itself.
-                        BufferedImage defaultImage = ImageIO.read(InterfaceManager.coreInterface.getPackResource(fontLocations[i]));
-                        if (bufferedImage.getHeight() == defaultImage.getHeight()) {
-                            for (int pixelCol = 0; isDefault && pixelCol < bufferedImage.getWidth(); ++pixelCol) {
-                                for (int pixelRow = 0; isDefault && pixelRow < bufferedImage.getHeight(); ++pixelRow) {
-                                    if (bufferedImage.getRGB(pixelCol, pixelRow) != defaultImage.getRGB(pixelCol, pixelRow)) {
-                                        isDefault = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
                 } catch (Exception e) {
                     //Just continue, as we don't care about this file.  Not all files may be present for any given font.
                     continue;
@@ -237,6 +228,36 @@ public class RenderText {
                     for (int charCol = 0; charCol < CHARS_PER_ROWCOL; ++charCol) {
                         //Get char and set defaults.
                         char charChecking = (char) (i * CHARS_PER_TEXTURE_SHEET + charRow * CHARS_PER_ROWCOL + charCol);
+                        if (charChecking == '0') {
+                            //We will always have 0, and it's a known-height char, so use this for our scale checks.
+                            //Look top-down for pixels to see if we have any gaps.
+                            boolean foundTopPixel = false;
+                            int topPixel = charRow * pixelsPerCharRowCol;
+                            int bottomPixel = (charRow + 1) * pixelsPerCharRowCol - 1;
+                            for (int pixelRow = charRow * pixelsPerCharRowCol; pixelRow < (charRow + 1) * pixelsPerCharRowCol; ++pixelRow) {
+                                boolean foundPixelThisRow = false;
+                                for (int pixelCol = charCol * pixelsPerCharRowCol; pixelCol < (charCol + 1) * pixelsPerCharRowCol; ++pixelCol) {
+                                    //Check all pixels in this row to see if we have one.
+                                    //Check for alpha and color.  Some systems write color, but no alpha to a pixel.
+                                    int pixelValue = bufferedImage.getRGB(pixelCol, pixelRow);
+                                    if (pixelValue != 0 && (pixelValue >> 24) != 0) {
+                                        foundPixelThisRow = true;
+                                        if (!foundTopPixel) {
+                                            //First existing pixel found, must be top.
+                                            topPixel = pixelRow;
+                                            foundTopPixel = true;
+                                        }
+                                    }
+                                }
+                                if (!foundPixelThisRow && foundTopPixel) {
+                                    //First blank pixel found after finding some pixels, must be bottom.
+                                    bottomPixel = pixelRow;
+                                    break;
+                                }
+                            }
+
+                            scale = (DEFAULT_CHAR_HEIGHT_PIXELS / (float) DEFAULT_PIXELS_PER_CHAR) / ((bottomPixel - topPixel) / (float) pixelsPerCharRowCol);
+                        }
                         if (charChecking == ' ') {
                             //Space isn't rendered, but is half-width.
                             charWidths[charChecking] = DEFAULT_PIXELS_PER_CHAR / 2;
@@ -279,7 +300,7 @@ public class RenderText {
                                         //Found a pixel, we must have this as our UV.
                                         ++pixelCol;
                                         offsetsMaxU[charChecking] = pixelCol / (float) pixelsPerCharRowCol / CHARS_PER_ROWCOL;
-                                        charWidths[charChecking] = (offsetsMaxU[charChecking] - offsetsMinU[charChecking]) * pixelsPerSide * DEFAULT_PIXELS_PER_CHAR / pixelsPerCharRowCol;
+                                        charWidths[charChecking] = (offsetsMaxU[charChecking] - offsetsMinU[charChecking]) * CHARS_PER_ROWCOL * DEFAULT_PIXELS_PER_CHAR;
                                         foundPixelThisCol = true;
                                         break;
                                     }
@@ -292,8 +313,9 @@ public class RenderText {
                     }
                 }
             }
-
-            this.isDefault = isDefault;
+            this.charScale = scale;
+            this.charSpacing = 1.5F / charScale;
+            this.charHeight = DEFAULT_PIXELS_PER_CHAR / charScale;
         }
 
         private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue) {
@@ -334,19 +356,17 @@ public class RenderText {
                 text = String.valueOf(textArray);
             }
 
-            //Standard ASCII font is 7px tall out of 8.
-            //Unicode font is 10pz tall out of 16, or 5 out of 8.
-            //To compensate, we scale the font by (7/8)/(5/8) = 1.4.
-            //However, this will move the font down, as it's top-left centered.
-            //To compensate, we move the font 2px up, which would get the unicode
-            //to the same top-char position as ASCII without scale.  We do this
+            //Get font scale and apply it.
+            //If scale is non-one, we need to adjust the font position as it's top-left centered.
+            //To compensate, we move the font up based on the scale.  We do this
             //movement post-scaling, as if we did it pre-scaling it wouldn't work
             //since scaled fonts have different top-alignments.
-            //We only do this on the default font, however, which is replacing ASCII.
-            //This ensures the same font size as ASCII was.
-            if (isDefault) {
-                adjustmentOffset.set(0, 2, 0);
-                scale *= 1.4;
+            //Default height is 7/8 of the char.
+            if (charScale != 1.0) {
+                //Get the number of pixels the char would be if it wasn't scaled, and offset ourself to account for that.
+                //(7/8)/(X/8) = charScale -> 7/charScale = X, so 7-X == pixelDelta
+                adjustmentOffset.set(0, DEFAULT_CHAR_HEIGHT_PIXELS - DEFAULT_CHAR_HEIGHT_PIXELS / charScale, 0);
+                scale *= charScale;
             } else {
                 adjustmentOffset.set(0, 0, 0);
             }
@@ -376,7 +396,7 @@ public class RenderText {
                     //Adjust text down based on how much we changed scale.
                     //Adjust based on 1/2 the height of the text, times how much we adjusted scale.
                     //So 1/2 reduction in scale will move the text 1/4 down.
-                    adjustmentOffset.add(0, DEFAULT_PIXELS_PER_CHAR / 2D * (scaleFactor - 1), 0);
+                    adjustmentOffset.add(0, charHeight / 2D * (scaleFactor - 1), 0);
                 }
                 //Don't use wrap width if we already adjusted scale for it.
                 wrapWidth = 0;
@@ -399,8 +419,8 @@ public class RenderText {
                 wrapWidth /= scale;
             }
 
-            int currentOffset = 0;
-            int currentLineOffset = 0;
+            float currentOffset = 0;
+            float currentLineOffset = 0;
             int indexAtLastNewline = 0;
             ColorRGB currentColor = color;
             FontRenderState currentState = STATES[0];
@@ -445,7 +465,7 @@ public class RenderText {
                 if (textChar == '\n') {
                     //Go down one line.
                     currentOffset = 0;
-                    currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+                    currentLineOffset -= charHeight + charSpacing;
                     indexAtLastNewline = i;
                 } else if (wrapWidth != 0 && currentOffset > wrapWidth) {
                     //Go backwards in text to find last space and split based on that.
@@ -458,7 +478,7 @@ public class RenderText {
                             if (priorChar == ' ') {
                                 i = j;
                                 currentOffset = 0;
-                                currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+                                currentLineOffset -= charHeight + charSpacing;
                                 indexAtLastNewline = i;
                                 break;
                             } else {
@@ -489,12 +509,12 @@ public class RenderText {
                         }
                     } else {
                         currentOffset = 0;
-                        currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+                        currentLineOffset -= charHeight + charSpacing;
                         indexAtLastNewline = i;
                     }
                 } else if (textChar == ' ') {
                     //Just increment the offset, spaces don't render.
-                    currentOffset += charWidths[textChar] + CHAR_SPACING;
+                    currentOffset += charWidths[textChar] + charSpacing;
                 } else {
                     //Actual char to render.
                     //Do normal char addition to the map of chars to draw.
@@ -581,30 +601,30 @@ public class RenderText {
                                     }
 
                                     //Set position to master and set custom char.
-                                    supplementalVertex[1] += CHAR_SPACING;
+                                    supplementalVertex[1] += charSpacing;
                                     switch (j % 6) {
                                         case (0):
                                         case (3): {//Bottom-right
-                                            supplementalVertex[0] += CHAR_SPACING;
+                                            supplementalVertex[0] += charSpacing;
                                             supplementalUV[0] = offsetsMaxU[customChar];
                                             supplementalUV[1] = offsetsMinV[customChar];
                                             break;
                                         }
                                         case (1): {//Top-right
-                                            supplementalVertex[0] += CHAR_SPACING;
+                                            supplementalVertex[0] += charSpacing;
                                             supplementalUV[0] = offsetsMaxU[customChar];
                                             supplementalUV[1] = offsetsMaxV[customChar];
                                             break;
                                         }
                                         case (2):
                                         case (4): {//Top-left
-                                            supplementalVertex[0] -= CHAR_SPACING;
+                                            supplementalVertex[0] -= charSpacing;
                                             supplementalUV[0] = offsetsMinU[customChar];
                                             supplementalUV[1] = offsetsMaxV[customChar];
                                             break;
                                         }
                                         case (5): {//Bottom-left
-                                            supplementalVertex[0] -= CHAR_SPACING;
+                                            supplementalVertex[0] -= charSpacing;
                                             supplementalUV[0] = offsetsMinU[customChar];
                                             supplementalUV[1] = offsetsMinV[customChar];
                                             break;
@@ -630,7 +650,7 @@ public class RenderText {
                     }
 
                     //Increment offset to next char position and set char points and add render block to active list.
-                    currentOffset += charWidth + CHAR_SPACING;
+                    currentOffset += charWidth + charSpacing;
                     activeRenderObjects.add(currentRenderObject);
                 }
             }
@@ -669,8 +689,8 @@ public class RenderText {
 
         private float getStringWidth(String text) {
             float stringWidth = 0;
-            int totalChars = 0;
             boolean skipNext = false;
+            boolean foundCharAlready = false;
             for (char textChar : text.toCharArray()) {
                 //Skip formatting chars and their next char.
                 if (textChar == FORMATTING_CHAR) {
@@ -679,10 +699,14 @@ public class RenderText {
                     skipNext = false;
                 } else {
                     stringWidth += charWidths[textChar];
-                    ++totalChars;
+                    if (foundCharAlready) {
+                        stringWidth += charSpacing;
+                    } else {
+                        foundCharAlready = true;
+                    }
                 }
             }
-            return stringWidth + totalChars * CHAR_SPACING;
+            return stringWidth;
         }
 
         private static class FontRenderState {
