@@ -147,7 +147,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         //Only do camera checks if we have an active camera.
         //Checking at other times wastes CPU cycles.
         //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
-        if (rider != null && cameraIndex != 0 && ticksExisted >= 5) {
+        if (cameraIndex != 0 && ticksExisted >= 5) {
             //Check for valid camera, and perform operations if so.
             activeCamera = null;
             while (cameraIndex != 0 && activeCamera == null) {
