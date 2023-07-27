@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -1059,11 +1060,7 @@ public class PartEngine extends APart {
     }
 
     protected void explodeEngine() {
-        if (ConfigSystem.settings.damage.explosions.value) {
-            world.spawnExplosion(position, 1F, true);
-        } else {
-            world.spawnExplosion(position, 0F, false);
-        }
+        world.spawnExplosion(new Explosion(position, 0F, false));
         remove();
     }
 
