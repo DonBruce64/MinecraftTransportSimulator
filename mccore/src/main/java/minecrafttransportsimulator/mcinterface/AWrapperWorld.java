@@ -7,6 +7,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -384,19 +385,29 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Spawns an explosion of the specified strength at the passed-in point.
      */
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        double maxDistance = 25;
-        double attackValue = 100;
-        for (AEntityE_Interactable<?> entity : getEntitiesExtendingType(AEntityE_Interactable.class)) {
-            System.out.println(entity);
-            if (entity.position.isDistanceToCloserThan(location, maxDistance)) {
-                Damage damage = new Damage(attackValue * Math.pow(0.2, 3 * entity.position.distanceTo(location)), null, null, null, null).setExplosive();
-                if (flames) {
-                    damage.setFire();
+    public void spawnExplosion(Explosion explosion) {
+        //Check if we are an actual explosion.  If we have a strength of 0, we just want to spawn sounds/particles and not do logic.
+        if (explosion.strength > 0) {
+            for (AEntityE_Interactable<?> entity : getEntitiesExtendingType(AEntityE_Interactable.class)) {
+                System.out.println(entity);
+                if (entity.position.isDistanceToCloserThan(explosion.position, explosion.reductionEndRadius)) {
+                    double factor;
+                    if (entity.position.isDistanceToCloserThan(explosion.position, explosion.reductionStartRadius)) {
+                        factor = 1;
+                    } else {
+                        factor = (explosion.reductionEndRadius - entity.position.distanceTo(explosion.position)) / (explosion.reductionEndRadius - explosion.reductionStartRadius);
+                    }
+                    Damage damage = new Damage(factor * explosion.strength, null, null, null, null).setExplosive();
+                    if (explosion.isFlamable) {
+                        damage.setFire();
+                    }
+                    entity.attack(damage);
+                    System.out.println("ATTACKED " + damage.amount);
                 }
-                entity.attack(damage);
-                System.out.println("ATTACKED " + damage.amount);
             }
+        }
+        if (!isClient()) {
+            //FIXME add packet to send to clients to spawn default sound/particles.  Do we allow for custom ones for bulllets?
         }
     }
 
