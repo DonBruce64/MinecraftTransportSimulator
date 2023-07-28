@@ -118,7 +118,7 @@ public abstract class AGUIComponent {
                 }
             }
             int actualStringWidth = (int) (longestLineWidth > wrapWidth ? wrapWidth : longestLineWidth);
-            int actualStringHeight = (int) Math.ceil(RenderText.getHeight(linesOfText, null));
+            int actualStringHeight = (int) Math.ceil(RenderText.getHeight(linesOfText));
 
             //We now know how wide the text will be, and how high.  Find quadrant.
             int xOffset;
