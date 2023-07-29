@@ -232,7 +232,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             //Update part slot box positions.
             if (requiresDeltaUpdates()) {
-                world.beginProfiling("PartSlotPositions", true);
+                world.beginProfiling("PartSlotPositions", false);
                 activePartSlotBoxes.forEach((box, partDef) -> {
                     AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
                     if (switchBox != null) {
@@ -260,8 +260,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
         }
-
-        world.endProfiling();
         world.endProfiling();
     }
 

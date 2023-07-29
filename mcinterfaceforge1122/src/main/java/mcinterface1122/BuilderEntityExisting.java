@@ -91,8 +91,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //If we are outside valid bounds on the server, set us as dead and exit.
                 if (!world.isRemote && posY < 0 && world.isOutsideBuildHeight(getPosition())) {
                     setDead();
-                    entity.world.endProfiling();
-                    entity.world.endProfiling();
                     return;
                 }
 
@@ -104,7 +102,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Only do this after the first tick of the entity, as we might have some states that need updating
                     //on that first tick that would cause bad maths.
                     //We also do this only every second, as it prevents excess checks.
-                    entity.world.beginProfiling("CollisionOverhead", false);
                     interactionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getInteractionBoxes());
                     collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
                     if (entity instanceof EntityVehicleF_Physics && interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
@@ -114,7 +111,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                             World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
                         }
                     }
-                    entity.world.endProfiling();
                 }
             }
         } else {
