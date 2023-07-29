@@ -829,7 +829,7 @@ public class WrapperWorld extends AWrapperWorld {
         BlockState oldState = world.getBlockState(pos);
         BlockState newState;
         Block block = oldState.getBlock();
-        if (block == Blocks.GRASS || block == Blocks.GRASS_PATH || block == Blocks.DIRT) {
+        if (block == Blocks.GRASS_BLOCK || block == Blocks.GRASS_PATH || block == Blocks.DIRT) {
             newState = Blocks.FARMLAND.defaultBlockState();
         } else if (block.equals(Blocks.COARSE_DIRT)) {
             newState = Blocks.DIRT.defaultBlockState();
