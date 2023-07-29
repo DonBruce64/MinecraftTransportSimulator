@@ -25,6 +25,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -89,9 +90,14 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 setPos(entity.position.x, entity.position.y, entity.position.z);
 
                 //If we are outside valid bounds on the server, set us as dead and exit.
-                if (!level.isClientSide && position().y < 0 && World.isOutsideBuildHeight(blockPosition())) {
-                    remove();
-                    return;
+                //If we are outside height bounds, only remove if we are less than 0.  Don't remove for being too high.
+                //If we are in height bounds, but outside spawnable bounds, remove, since we're over the world border.
+                if (!level.isClientSide) {
+                    BlockPos pos = blockPosition();
+                    if (World.isOutsideBuildHeight(pos) ? position().y < 0 : !World.isInSpawnableBounds(pos)) {
+                        remove();
+                        return;
+                    }
                 }
 
                 if (entity instanceof AEntityE_Interactable) {
