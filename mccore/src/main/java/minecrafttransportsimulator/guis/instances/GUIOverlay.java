@@ -147,6 +147,11 @@ public class GUIOverlay extends AGUIBase {
     }
 
     @Override
+    protected boolean canStayOpen() {
+        return true;
+    }
+
+    @Override
     public boolean capturesPlayer() {
         return false;
     }
