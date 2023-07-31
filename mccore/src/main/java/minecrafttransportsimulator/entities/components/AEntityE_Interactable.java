@@ -612,8 +612,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
 
         if (definition.instruments != null) {
-            String[] instrumentsInSlots = new String[definition.instruments.size()];
-            for (int i = 0; i < instrumentsInSlots.length; ++i) {
+            for (int i = 0; i < definition.instruments.size(); ++i) {
                 ItemInstrument instrument = instruments.get(i);
                 if (instrument != null) {
                     data.setString("instrument" + i + "_packID", instrument.definition.packID);
