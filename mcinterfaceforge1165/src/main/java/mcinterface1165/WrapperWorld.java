@@ -54,6 +54,7 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
@@ -800,22 +801,25 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean plantBlock(Point3D position, IWrapperItemStack stack) {
         //Check for valid seeds.
         Item item = ((WrapperItemStack) stack).stack.getItem();
-        if (item instanceof IPlantable) {
-            IPlantable plantable = (IPlantable) item;
+        if (item instanceof BlockItem) {
+            Block block = ((BlockItem) item).getBlock();
+            if (block instanceof IPlantable) {
+                IPlantable plantable = (IPlantable) block;
 
-            //Check if we have farmland below and air above.
-            BlockPos farmlandPos = new BlockPos(position.x, position.y, position.z);
-            BlockState farmlandState = world.getBlockState(farmlandPos);
-            Block farmlandBlock = farmlandState.getBlock();
-            if (farmlandBlock instanceof FarmlandBlock) {
-                BlockPos cropPos = farmlandPos.above();
-                if (world.isEmptyBlock(cropPos)) {
-                    //Check to make sure the block can sustain the plant we want to plant.
-                    BlockState plantState = plantable.getPlant(world, cropPos);
-                    if (farmlandBlock.canSustainPlant(plantState, world, farmlandPos, Direction.UP, plantable)) {
-                        world.setBlock(cropPos, plantState, 11);
-                        world.playSound(null, farmlandPos, plantState.getBlock().getSoundType(plantState, world, farmlandPos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F);
-                        return true;
+                //Check if we have farmland below and air above.
+                BlockPos farmlandPos = new BlockPos(position.x, position.y, position.z);
+                BlockState farmlandState = world.getBlockState(farmlandPos);
+                Block farmlandBlock = farmlandState.getBlock();
+                if (farmlandBlock instanceof FarmlandBlock) {
+                    BlockPos cropPos = farmlandPos.above();
+                    if (world.isEmptyBlock(cropPos)) {
+                        //Check to make sure the block can sustain the plant we want to plant.
+                        BlockState plantState = plantable.getPlant(world, cropPos);
+                        if (farmlandBlock.canSustainPlant(farmlandState, world, farmlandPos, Direction.UP, plantable)) {
+                            world.setBlock(cropPos, plantState, 11);
+                            world.playSound(null, farmlandPos, plantState.getBlock().getSoundType(plantState, world, farmlandPos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F);
+                            return true;
+                        }
                     }
                 }
             }
