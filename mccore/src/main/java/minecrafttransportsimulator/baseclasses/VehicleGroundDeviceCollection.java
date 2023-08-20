@@ -21,6 +21,7 @@ public class VehicleGroundDeviceCollection {
     private final VehicleGroundDeviceBox frontRightGDB;
     private final VehicleGroundDeviceBox rearLeftGDB;
     private final VehicleGroundDeviceBox rearRightGDB;
+    private final Point3D hookupRelativePosition = new Point3D();
     private final Point3D translationApplied = new Point3D();
     private final RotationMatrix rotationApplied = new RotationMatrix();
     private final TransformationMatrix transformApplied = new TransformationMatrix();
@@ -164,40 +165,39 @@ public class VehicleGroundDeviceCollection {
      * plus a left or right box if one of those boxes aren't centered.
      */
     public boolean isReady() {
+        boolean haveLeftPoint = false;
+        boolean haveRightPoint = false;
+        boolean haveCenterPoint = false;
         boolean haveFrontPoint = false;
         boolean haveRearPoint = false;
-        boolean haveCenterPoint = false;
         if (frontLeftGDB.isReady()) {
+            haveLeftPoint = true;
             haveFrontPoint = true;
             haveCenterPoint = frontLeftGDB.contactPoint.x == 0;
         }
         if (frontRightGDB.isReady()) {
-            if (haveFrontPoint) {
-                haveCenterPoint = true;
-            } else {
-                haveFrontPoint = true;
-            }
+            haveRightPoint = true;
+            haveFrontPoint = true;
             if (!haveCenterPoint) {
                 haveCenterPoint = frontRightGDB.contactPoint.x == 0;
             }
         }
-        if (haveFrontPoint) {
-            if (rearLeftGDB.isReady()) {
-                haveRearPoint = true;
+        if (rearLeftGDB.isReady()) {
+            haveLeftPoint = true;
+            haveRearPoint = true;
+            if (!haveCenterPoint) {
                 haveCenterPoint = rearLeftGDB.contactPoint.x == 0;
             }
-            if (rearRightGDB.isReady()) {
-                if (haveRearPoint) {
-                    haveCenterPoint = true;
-                } else {
-                    haveRearPoint = true;
-                }
-                if (!haveCenterPoint) {
-                    haveCenterPoint = rearRightGDB.contactPoint.x == 0;
-                }
+        }
+        if (rearRightGDB.isReady()) {
+            haveRightPoint = true;
+            haveRearPoint = true;
+            if (!haveCenterPoint) {
+                haveCenterPoint = rearRightGDB.contactPoint.x == 0;
             }
         }
-        return haveFrontPoint && haveRearPoint && haveCenterPoint;
+        //Ready only if left/right wheels are present, or if we are a center-lined vehicle with front and rear wheels.
+        return (haveLeftPoint && haveRightPoint) || (haveFrontPoint && haveRearPoint && haveCenterPoint);
     }
 
     /**
@@ -319,7 +319,7 @@ public class VehicleGroundDeviceCollection {
             }
         } else {
             //Check if we are connected on the front or back.
-            Point3D hookupRelativePosition = vehicle.towedByConnection.hookupCurrentPosition.copy().subtract(vehicle.position).reOrigin(vehicle.orientation);
+            hookupRelativePosition.set(vehicle.towedByConnection.hookupCurrentPosition).subtract(vehicle.position).reOrigin(vehicle.orientation);
             if (hookupRelativePosition.z > 0) {
                 //Hookup is in front of the vehicle, need to rotate clockwise if wheels are collided, counter-clockwise if free.
                 if ((rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady()) && (rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady())) {
