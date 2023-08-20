@@ -27,6 +27,11 @@ class WrapperNBT implements IWrapperNBT {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof WrapperNBT && tag.equals(((WrapperNBT) obj).tag);
+    }
+
+    @Override
     public boolean getBoolean(String name) {
         return tag.getBoolean(name);
     }

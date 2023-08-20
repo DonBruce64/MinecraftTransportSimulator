@@ -152,20 +152,20 @@ public interface IInventoryProvider {
      * lookup, as it assumes removal it for crafting or usage where "fuzzy"
      * matches are desired.
      */
-    default boolean removeStack(IWrapperItemStack referenceStack, int qtyToRemove) {
+    default boolean removeStack(IWrapperItemStack referenceStack, int qtyToRemove, boolean checkNBT) {
         //Check items for number we can remove.
-        int qtyFound = qtyToRemove;
+        int qtyFound = 0;
         for (int i = 0; i < getSize(); ++i) {
             IWrapperItemStack stack = getStack(i);
-            if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack)) {
+            if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || referenceStack.getData().equals(stack.getData()))) {
                 qtyFound += stack.getSize();
             }
         }
-        if (qtyFound > qtyToRemove) {
+        if (qtyFound >= qtyToRemove) {
             qtyToRemove = -qtyToRemove;
             for (int i = 0; i < getSize(); ++i) {
                 IWrapperItemStack stack = getStack(i);
-                if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack)) {
+                if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || referenceStack.getData().equals(stack.getData()))) {
                     qtyToRemove = stack.add(qtyToRemove);
                     setStack(stack, i);
                 }
@@ -266,7 +266,7 @@ public interface IInventoryProvider {
     default void removeMaterials(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
         for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair, false)) {
             for (IWrapperItemStack stack : material.possibleItems) {
-                removeStack(stack, material.qty);
+                removeStack(stack, material.qty, false);
             }
         }
     }

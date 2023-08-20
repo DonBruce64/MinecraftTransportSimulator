@@ -54,18 +54,21 @@ public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<Tile
             return true;
         } else {
             IWrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
-            if (player.getInventory().removeStack(stack, stack.getSize())) {
+            if (world.isClient()) {
+                pump.fuelPurchased = pump.fuelAmounts.get(slotClicked);
+                pump.fuelDispensedThisPurchase = 0;
+                if (player.equals(InterfaceManager.clientInterface.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump) {
+                    AGUIBase.activeInputGUI.close();
+                }
+                return false;
+            } else if (player.getInventory().removeStack(stack, stack.getSize(), true)) {
                 stack = stack.copy();
                 pump.paymentItems.addStack(stack);
                 pump.fuelPurchased = pump.fuelAmounts.get(slotClicked);
                 pump.fuelDispensedThisPurchase = 0;
-                if (world.isClient() && player.equals(InterfaceManager.clientInterface.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump) {
-                    AGUIBase.activeInputGUI.close();
-                }
                 return true;
-            } else {
-                return false;
             }
+            return false;
         }
     }
 }
