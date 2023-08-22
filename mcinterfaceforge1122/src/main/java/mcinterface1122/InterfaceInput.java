@@ -22,8 +22,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -34,6 +34,10 @@ import net.minecraftforge.fml.relauncher.Side;
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
+
+    //Mouse variables.
+    private static boolean leftMouseButtonDown;
+    private static boolean rightMouseButtonDown;
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
@@ -287,12 +291,25 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public boolean isLeftMouseButtonDown() {
-        return Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
+        return leftMouseButtonDown;
     }
 
     @Override
     public boolean isRightMouseButtonDown() {
-        return Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
+        return rightMouseButtonDown;
+    }
+
+    /**
+     * Stores mouse presses, since stupid mods take them from us.
+     */
+    @SubscribeEvent
+    public static void on(MouseEvent event) {
+        int button = event.getButton();
+        if (button == 0) {
+            leftMouseButtonDown = event.isButtonstate();
+        } else if (button == 1) {
+            rightMouseButtonDown = event.isButtonstate();
+        }
     }
 
     /**
