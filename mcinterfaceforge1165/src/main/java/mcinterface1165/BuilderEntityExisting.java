@@ -94,7 +94,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //If we are in height bounds, but outside spawnable bounds, remove, since we're over the world border.
                 if (!level.isClientSide) {
                     BlockPos pos = blockPosition();
-                    if (World.isOutsideBuildHeight(pos) ? position().y < 0 : !World.isInSpawnableBounds(pos)) {
+                    if (World.isOutsideBuildHeight(pos) ? position().y < 0 : !level.getWorldBorder().isWithinBounds(pos)) {
                         remove();
                         return;
                     }
