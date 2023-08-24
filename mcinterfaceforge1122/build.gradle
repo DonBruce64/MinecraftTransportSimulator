@@ -3,6 +3,7 @@ buildscript {
         maven { url = "https://maven.minecraftforge.net" }
         maven { url = "https://maven.parchmentmc.org" }
         mavenCentral()
+        maven { url = "https://example-repo.com/maven" } // Add the repository URL for ForgeGradle 8.1+
     }
     dependencies {
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "6.0.+", changing: true
@@ -68,6 +69,16 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven {
+        // location of the maven that hosts JEI files
+        name = "Progwml6 maven"
+        url = "https://dvs1.progwml6.com/files/maven/"
+    }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+    }
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
@@ -78,18 +89,26 @@ repositories {
     // }
 }
 
+configurations {
+    embed
+    implementation.extendsFrom(embed)
+}
+
 dependencies {
     implementation project(path: ':mccore')
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
+    //At runtime, use the full JEI jar
+    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
+    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
+    //runtimeOnly fg.deobf("mezz.jei:jei_${minecraft_version}:${jei_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
-            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version: forge_version, forge_version_range: forge_version_range,
-            loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors: mod_authors, mod_description: mod_description,
+            minecraft_version: minecraft_version,
+            forge_version: forge_version,
+            mod_id: mod_id, mod_version: mod_version,
     ]
     inputs.properties replaceProperties
 

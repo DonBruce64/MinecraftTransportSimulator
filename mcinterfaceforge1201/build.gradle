@@ -14,10 +14,11 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "org.parchmentmc.librarian.forgegradle"
 apply plugin: "idea"
+apply plugin: "eclipse"
 apply plugin: "maven-publish"
 
 version = mod_version
-group = mod_group_id
+group = project.mod_group
 
 base {
     archivesName = mod_id
@@ -77,9 +78,15 @@ repositories {
     // }
 }
 
+configurations {
+    embed
+    implementation.extendsFrom(embed)
+}
+
 dependencies {
     implementation project(path: ':mccore')
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -87,8 +94,7 @@ tasks.named('processResources', ProcessResources).configure {
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
             forge_version: forge_version, forge_version_range: forge_version_range,
             loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors: mod_authors, mod_description: mod_description,
+            mod_id: mod_id, mod_version: mod_version,
     ]
     inputs.properties replaceProperties
 
@@ -102,11 +108,9 @@ tasks.named('jar', Jar).configure {
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
-                'Specification-Vendor'    : mod_authors,
                 'Specification-Version'   : '1', // We are version 1 of ourselves
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
