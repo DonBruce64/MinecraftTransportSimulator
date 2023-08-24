@@ -1,0 +1,16 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {"item": "mts:mts.partscanner"},
+        "title": {"translate": "advancements.mts.partscanner.title"},
+        "description": {"translate": "advancements.mts.partscanner.description"}
+    },
+    "criteria": {
+        "has_partscanner": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.partscanner"}]
+            }
+        }
+    }
+}
