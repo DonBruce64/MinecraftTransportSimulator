@@ -119,7 +119,6 @@ public class RenderText {
         private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL * CHARS_PER_ROWCOL;
         private static final byte DEFAULT_CHAR_HEIGHT_PIXELS = 7;
         private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
-        private static final float CHAR_SPACING = 1.5F;
         private static final float LINE_SPACING = 1.0F;
         private static final ColorRGB[] COLORS = new ColorRGB[]{new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255)};
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
@@ -146,6 +145,11 @@ public class RenderText {
          * Char width, in actual game texture pixels (not texture pixels).  May be fractions of a pixel if the font is up-scaled.
          **/
         private final float[] charWidths = new float[Character.MAX_VALUE];
+        /**
+         * Char spacing, in actual game texture pixels (not texture pixels).  May be fractions of a pixel if the font is up-scaled.
+         * This is for BOTH the left and right side, total spacing is double this.
+         **/
+        private final float[] charSpacings = new float[Character.MAX_VALUE];
         /**
          * Left-most offset for font text position, from 0-1, relative to the texture png.
          **/
@@ -258,8 +262,9 @@ public class RenderText {
                             scale = (DEFAULT_CHAR_HEIGHT_PIXELS / (float) DEFAULT_PIXELS_PER_CHAR) / ((bottomPixel - topPixel) / (float) pixelsPerCharRowCol);
                         }
                         if (charChecking == ' ') {
-                            //Space isn't rendered, but is half-width.
+                            //Space isn't rendered, but is half-width with 1 spacing on each side.
                             charWidths[charChecking] = DEFAULT_PIXELS_PER_CHAR / 2;
+                            charSpacings[charChecking] = 0;
                         } else {
                             offsetsMinU[charChecking] = charCol / (float) CHARS_PER_ROWCOL;
                             offsetsMaxU[charChecking] = (charCol + 1) / (float) CHARS_PER_ROWCOL;
@@ -280,6 +285,7 @@ public class RenderText {
                                     if (pixelValue != 0 && (pixelValue >> 24) != 0) {
                                         //Found a pixel, we must have this as our UV.
                                         offsetsMinU[charChecking] = pixelCol / (float) pixelsPerCharRowCol / CHARS_PER_ROWCOL;
+                                        charSpacings[charChecking] = (pixelCol - charCol * pixelsPerCharRowCol) / (float) pixelsPerCharRowCol * DEFAULT_PIXELS_PER_CHAR;
                                         foundPixelThisCol = true;
                                         break;
                                     }
@@ -502,9 +508,11 @@ public class RenderText {
                     }
                 } else if (textChar == ' ') {
                     //Just increment the offset, spaces don't render.
-                    currentOffset += charWidths[textChar] + CHAR_SPACING;
+                    currentOffset += charWidths[textChar] + charSpacings[textChar];
                 } else {
-                    //Actual char to render.
+                    //Actual char to render.  Add leading spacing.
+                    currentOffset += charSpacings[textChar];
+
                     //Do normal char addition to the map of chars to draw.
                     //If we are bold, we will double-render slightly offset.
                     //If we are underline, add an underline overlay.
@@ -589,30 +597,30 @@ public class RenderText {
                                     }
 
                                     //Set position to master and set custom char.
-                                    supplementalVertex[1] += CHAR_SPACING;
+                                    //supplementalVertex[1] += CHAR_SPACING;
                                     switch (j % 6) {
                                         case (0):
                                         case (3): {//Bottom-right
-                                            supplementalVertex[0] += CHAR_SPACING;
+                                            //supplementalVertex[0] += CHAR_SPACING;
                                             supplementalUV[0] = offsetsMaxU[customChar];
                                             supplementalUV[1] = offsetsMinV[customChar];
                                             break;
                                         }
                                         case (1): {//Top-right
-                                            supplementalVertex[0] += CHAR_SPACING;
+                                            //supplementalVertex[0] += CHAR_SPACING;
                                             supplementalUV[0] = offsetsMaxU[customChar];
                                             supplementalUV[1] = offsetsMaxV[customChar];
                                             break;
                                         }
                                         case (2):
                                         case (4): {//Top-left
-                                            supplementalVertex[0] -= CHAR_SPACING;
+                                            //supplementalVertex[0] -= CHAR_SPACING;
                                             supplementalUV[0] = offsetsMinU[customChar];
                                             supplementalUV[1] = offsetsMaxV[customChar];
                                             break;
                                         }
                                         case (5): {//Bottom-left
-                                            supplementalVertex[0] -= CHAR_SPACING;
+                                            //supplementalVertex[0] -= CHAR_SPACING;
                                             supplementalUV[0] = offsetsMinU[customChar];
                                             supplementalUV[1] = offsetsMinV[customChar];
                                             break;
@@ -638,7 +646,7 @@ public class RenderText {
                     }
 
                     //Increment offset to next char position and set char points and add render block to active list.
-                    currentOffset += charWidth + CHAR_SPACING;
+                    currentOffset += charWidth + charSpacings[textChar];
                     activeRenderObjects.add(currentRenderObject);
                 }
             }
@@ -688,10 +696,8 @@ public class RenderText {
                 } else if (skipNext) {
                     skipNext = false;
                 } else {
-                    stringWidth += charWidths[textChar];
-                    if (foundCharAlready) {
-                        stringWidth += CHAR_SPACING;
-                    } else {
+                    stringWidth += charWidths[textChar] + 2 * charSpacings[textChar];
+                    if (!foundCharAlready) {
                         foundCharAlready = true;
                     }
                 }
