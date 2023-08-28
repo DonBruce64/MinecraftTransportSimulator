@@ -433,6 +433,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         //Have an entity target, check if we got close enough to them.
                         if (position.distanceTo(targetPosition) < definition.bullet.proximityFuze + velocity) {
                             targetToHit = targetPosition;
+                            hitType = engineTargeted != null ? HitType.VEHICLE : HitType.ENTITY;
+                            displayDebugMessage("PROX FUZE HIT TRACKED TARGET");
                         }
                     } else {
                         //No entity target, first check blocks.
@@ -449,14 +451,17 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             proxBounds.globalCenter.set(position);
                             for (int step = 0; step < maxSteps; ++step) {
                                 for (AEntityF_Multipart<?> multipart : multiparts) {
-                                    if (multipart.encompassingBox.intersects(proxBounds)) {
-                                        //Could have hit this multipart, check all boxes.
-                                        for (BoundingBox box : multipart.allInteractionBoxes) {
-                                            if (box.globalCenter.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
-                                                targetToHit = proxBounds.globalCenter.copy();
-                                                hitType = HitType.VEHICLE;
-                                                displayDebugMessage("PROX FUZE HIT VEHICLE");
-                                                break;
+                                    //Don't attack the entity that has the gun that fired us.
+                                    if (!multipart.allParts.contains(gun)) {
+                                        if (multipart.encompassingBox.intersects(proxBounds)) {
+                                            //Could have hit this multipart, check all boxes.
+                                            for (BoundingBox box : multipart.allInteractionBoxes) {
+                                                if (box.globalCenter.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
+                                                    targetToHit = box.globalCenter.copy();
+                                                    hitType = HitType.VEHICLE;
+                                                    displayDebugMessage("PROX FUZE HIT VEHICLE");
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
@@ -468,8 +473,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 //If we didn't hit a vehicle, try entities.
                                 if (targetToHit == null) {
                                     for (IWrapperEntity entity : world.getEntitiesWithin(proxBounds)) {
-                                        if (entity.getPosition().isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
-                                            targetToHit = proxBounds.globalCenter.copy();
+                                        Point3D entityPos = entity.getPosition();
+                                        if (entityPos.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
+                                            targetToHit = entityPos.copy();
                                             hitType = HitType.ENTITY;
                                             displayDebugMessage("PROX FUZE HIT ENTITY");
                                             break;
@@ -486,19 +492,17 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             }
                         }
                     }
-                    if (lastHit != null) {
-                        if (targetToHit != null) {
-                            double distanceToTarget = position.distanceTo(targetToHit);
-                            if (distanceToTarget > definition.bullet.proximityFuze) {
-                                //We will hit this target this tick, but we need to move right to the prox distance before detonating.
-                                position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze) / definition.bullet.proximityFuze);
-                            }
+                    if (hitType != null) {
+                        double distanceToTarget = position.distanceTo(targetToHit);
+                        if (distanceToTarget > definition.bullet.proximityFuze) {
+                            //We will hit this target this tick, but we need to move right to the prox distance before detonating.
+                            position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze) / definition.bullet.proximityFuze);
                         }
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, targetToHit, hitType));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitType));
                             waitingOnActionPacket = true;
                         } else {
-                            performGenericHitLogic(gun, bulletNumber, targetToHit, hitType);
+                            performGenericHitLogic(gun, bulletNumber, position, hitType);
                         }
                         return;
                     }
