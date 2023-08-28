@@ -360,14 +360,6 @@ public class RenderText {
                 text = String.valueOf(textArray);
             }
 
-            //Reduce scale by 16 and increase wrapWidth by 16 if we're not using pixel coords.
-            //Entity rendering systems calling this function feeding params will have those in block coords.
-            //We need to be be in pixel coords for all the rendering operations here.
-            if (!pixelCoords) {
-                scale /= 16;
-                wrapWidth *= 16;
-            }
-
             //Set adjustment offset Y position to make the char go up to be top-aligned.
             adjustmentOffset.set(0, charTopOffset, 0);
 
@@ -393,6 +385,14 @@ public class RenderText {
                 }
                 //Don't use wrap width if we already adjusted scale for it.
                 wrapWidth = 0;
+            }
+
+            //Reduce scale by 16 if we're not using pixel coords.
+            //Entity rendering systems calling this function feeding params will scale in block coords.
+            //We need to be be in pixel coords for all the rendering operations here.
+            //We need to do this after auto-wrapping since that doesn't use the global 1/16 scale modifier.
+            if (!pixelCoords) {
+                scale /= 16;
             }
 
             //Check if we need to adjust our offset for our alignment.
