@@ -241,6 +241,7 @@ public class RadioStation {
             //Create a URL and open a connection.
             URL urlObj = new URL(url);
             URLConnection connection = urlObj.openConnection();
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
             //Verify stream is actually an HTTP stream.
             String contentType = connection.getHeaderField("Content-Type");
@@ -279,7 +280,7 @@ public class RadioStation {
             //Create a thread to start up the sound once the parsing is done.
             //This keeps us from blocking the main thread.
             decoder = null;
-            decoderThread = new DecoderThread(this, contentType, urlObj);
+            decoderThread = new DecoderThread(this, contentType, connection);
             decoderThread.start();
             return true;
         } catch (Exception e) {
@@ -298,20 +299,20 @@ public class RadioStation {
     public static class DecoderThread extends Thread {
         private final RadioStation station;
         private final String contentType;
-        private final URL contentURL;
+        private final URLConnection contentConnection;
         private final File contentFile;
 
-        public DecoderThread(RadioStation station, String contentType, URL contentURL) {
+        public DecoderThread(RadioStation station, String contentType, URLConnection contentConnection) {
             this.station = station;
             this.contentType = contentType;
-            this.contentURL = contentURL;
+            this.contentConnection = contentConnection;
             this.contentFile = null;
         }
 
         public DecoderThread(RadioStation station, File contentFile) {
             this.station = station;
             this.contentType = null;
-            this.contentURL = null;
+            this.contentConnection = null;
             this.contentFile = contentFile;
         }
 
@@ -319,13 +320,13 @@ public class RadioStation {
         public void run() {
             //Act based on our stream type.
             try {
-                if (contentURL != null) {
+                if (contentConnection != null) {
                     switch (contentType) {
                         case ("audio/mpeg"):
-                            station.decoder = new MP3Decoder(contentURL.openStream(), station.equalizer);
+                            station.decoder = new MP3Decoder(contentConnection.getInputStream(), station.equalizer);
                             break;
                         case ("application/ogg"):
-                            station.decoder = new OGGDecoder(contentURL.openStream());
+                            station.decoder = new OGGDecoder(contentConnection.getInputStream());
                             break;
                     }
                 } else {
@@ -337,10 +338,10 @@ public class RadioStation {
                 for (byte i = 0; i < 5; ++i) {
                     station.generateBufferIndex();
                 }
-                station.decoderThread = null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            station.decoderThread = null;
         }
     }
 }
