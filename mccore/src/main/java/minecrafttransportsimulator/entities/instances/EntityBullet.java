@@ -2,7 +2,6 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -21,8 +20,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExternalEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -53,12 +50,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final BoundingBox proxBounds;
 
     //States
-    private boolean waitingOnActionPacket;
+    public boolean waitingOnActionPacket;
     private int impactDespawnTimer = -1;
     private Point3D targetPosition;
     public double targetDistance;
     private double distanceTraveled;
-    private double armorPenetrated;
+    public double armorPenetrated;
     private Point3D targetVector;
     private Point3D normalizedConeVector = new Point3D();
     private Point3D normalizedEntityVector = new Point3D();
@@ -287,6 +284,24 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 double amount = definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value;
                 Damage damage = new Damage(gun, boundingBox, amount);
 
+                //Populate multiparts for following functions.
+                multiparts.clear();
+                multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+                multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
+
+                //Check for collided internal entities and attack them.
+                //This is a bit more involved, as we need to check all possible types and check hitbox distance.
+                Point3D endPoint = position.copy().add(motion);
+                BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
+                for (AEntityF_Multipart<?> multipart : multiparts) {
+                    //Don't attack the entity that has the gun that fired us.
+                    if (!multipart.allParts.contains(gun)) {
+                        if (multipart.attackProjectile(damage, position, endPoint, bulletMovementBounds) != null) {
+                            return;
+                        }
+                    }
+                }
+
                 //Check for collided external entities and attack them.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
                 for (IWrapperEntity entity : attackedEntities) {
@@ -302,109 +317,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             performExternalEntityHitLogic(entity, damage);
                             performGenericHitLogic(gun, bulletNumber, entity.getPosition(), HitType.ENTITY);
                         }
-                        displayDebugMessage("HIT ENTITY");
+                        displayDebugMessage("HIT MC ENTITY " + entity.getName());
                         return;
-                    }
-                }
-
-                //Populate multiparts for following functions.
-                multiparts.clear();
-                multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-                multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
-
-                //Check for collided internal entities and attack them.
-                //This is a bit more involved, as we need to check all possible types and check hitbox distance.
-                Point3D endPoint = position.copy().add(motion);
-                BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
-                for (AEntityF_Multipart<?> multipart : multiparts) {
-                    //Don't attack the entity that has the gun that fired us.
-                    if (!multipart.allParts.contains(gun)) {
-                        //if(multipart.att
-
-                        //Make sure that we could even possibly hit this vehicle before we try and attack it.
-                        if (multipart.encompassingBox.intersects(bulletMovementBounds)) {
-                            //Get all collision boxes on the vehicle, and check if we hit any of them.
-                            //Sort them by distance for later.
-                            TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
-                            for (BoundingBox box : multipart.allInteractionBoxes) {
-                                if (!multipart.allPartSlotBoxes.containsKey(box)) {
-                                    Point3D delta = box.getIntersectionPoint(position, endPoint);
-                                    if (delta != null) {
-                                        hitBoxes.put(delta.distanceTo(position), box);
-                                    }
-                                }
-                            }
-                            for (BoundingBox box : multipart.allBulletCollisionBoxes) {
-                                Point3D delta = box.getIntersectionPoint(position, endPoint);
-                                if (delta != null) {
-                                    hitBoxes.put(delta.distanceTo(position), box);
-                                }
-                            }
-
-                            //Check all boxes for armor and see if we penetrated them.
-                            for (BoundingBox hitBox : hitBoxes.values()) {
-                                APart hitPart = multipart.getPartWithBox(hitBox);
-                                AEntityE_Interactable<?> hitEntity = hitPart != null ? hitPart : multipart;
-
-                                //First check if we need to reduce health of the hitbox.
-                                if (!world.isClient() && hitBox.groupDef != null && hitBox.groupDef.health != 0 && !damage.isWater) {
-                                    String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitBox.groupDef) + 1) + "_damage";
-                                    double currentDamage = hitEntity.getVariable(variableName);
-                                    displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health + "  ATTACKED FOR: " + damage.amount);
-
-                                    //This is a server-only action that does NOT cause us to stop processing.
-                                    if (world.isClient()) {
-                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitBox, damage.amount));
-                                    } else {
-                                        hitEntity.damageCollisionBox(hitBox, damage.amount);
-                                    }
-                                }
-
-                                double armorThickness = hitBox.definition != null ? (definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
-                                double penetrationPotential = definition.bullet.isHeat ? definition.bullet.armorPenetration : definition.bullet.armorPenetration * velocity / initialVelocity;
-                                if (armorThickness > 0) {
-                                    armorPenetrated += armorThickness;
-                                    displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
-
-                                    if (armorPenetrated > penetrationPotential) {
-                                        //Hit too much armor.  We die now.
-                                        if (world.isClient()) {
-                                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitBox.globalCenter, HitType.ARMOR));
-                                            waitingOnActionPacket = true;
-                                        } else {
-                                            performGenericHitLogic(gun, bulletNumber, hitBox.globalCenter, HitType.ARMOR);
-                                        }
-                                        displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
-                                        return;
-                                    }
-                                } else {
-                                    //Need to re-create damage object to reference this hitbox.
-                                    damage = new Damage(gun, hitBox, amount);
-
-                                    //Apply damage if we hit a core group or a part.
-                                    //Other hits are already taken care of.
-                                    //Remove bullet if we are applying damage to a core group, or a part that forwards damage.
-                                    boolean applyDamage = ((hitBox.groupDef != null && (hitBox.groupDef.health == 0 || damage.isWater)) || hitPart != null);
-                                    boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
-                                    displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) multipart.damageAmount);
-
-                                    if (world.isClient()) {
-                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(gun, hitEntity, damage));
-                                        if (removeAfterDamage) {
-                                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, damage.box.globalCenter, HitType.VEHICLE));
-                                            waitingOnActionPacket = true;
-                                            return;
-                                        }
-                                    } else {
-                                        performEntityHitLogic(hitEntity, damage);
-                                        if (removeAfterDamage) {
-                                            performGenericHitLogic(gun, bulletNumber, damage.box.globalCenter, HitType.VEHICLE);
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
 
@@ -477,7 +391,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                         if (entityPos.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
                                             targetToHit = entityPos.copy();
                                             hitType = HitType.ENTITY;
-                                            displayDebugMessage("PROX FUZE HIT ENTITY");
+                                            displayDebugMessage("PROX FUZE HIT ENTITY " + entity.getName());
                                             break;
                                         }
                                     }
@@ -634,7 +548,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         gun.currentBullet = null;
     }
 
-    private void displayDebugMessage(String message) {
+    public void displayDebugMessage(String message) {
         if (ConfigSystem.settings.general.devMode.value && gun.lastController instanceof IWrapperPlayer) {
             if (!world.isClient()) {
                 IWrapperPlayer player = (IWrapperPlayer) gun.lastController;
@@ -643,7 +557,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 ((IWrapperPlayer) gun.lastController).displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
             }
         }
-
     }
 
     @Override

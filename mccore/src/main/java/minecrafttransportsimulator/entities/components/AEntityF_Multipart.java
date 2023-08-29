@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -16,7 +17,10 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
+import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -32,6 +36,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
@@ -86,6 +93,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * List of bullet boxes, plus all part boxes included.
      **/
     public final List<BoundingBox> allBulletCollisionBoxes = new ArrayList<>();
+
+    /**
+     * List of damage boxes, plus all part boxes included.
+     **/
+    public final List<BoundingBox> allDamageCollisionBoxes = new ArrayList<>();
 
     /**
      * Map of part slot boxes.  Key is the box, value is the definition for that slot.
@@ -357,6 +369,115 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.attack(damage);
     }
 
+    /**
+     * Called when the entity is attacked by a projectile.  Returns a {@link EntityBullet.HitType} if the projectile hit something
+     * and should be removed from the world.  Null if it can keep going.  Note that returning false does
+     * NOT imply no damage was applied: some entities/parts allow for projectiles to damage and pass through them.
+     * Also note that unlike {@link #attack(Damage)}, this method functions both on client and servers, though you must only
+     * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
+     */
+    public EntityBullet.HitType attackProjectile(Damage damage, Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds) {
+        if (encompassingBox.intersects(movementBounds)) {
+            //Get all collision boxes and check if we hit any of them.
+            //Sort them by distance for later.
+            TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
+            for (BoundingBox box : allDamageCollisionBoxes) {
+                if (!allPartSlotBoxes.containsKey(box)) {
+                    Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
+                    if (delta != null) {
+                        hitBoxes.put(delta.distanceTo(pathStart), box);
+                    }
+                }
+            }
+
+            //Check all boxes for armor and see if we penetrated them.
+            for (BoundingBox hitBox : hitBoxes.values()) {
+                APart hitPart = getPartWithBox(hitBox);
+                AEntityF_Multipart<?> hitEntity = hitPart != null ? hitPart : this;
+                EntityBullet bullet = damage.damgeSource instanceof PartGun ? ((PartGun) damage.damgeSource).currentBullet : null;
+
+                //First check if we need to reduce health of the hitbox.
+                boolean hitOperationalHitbox = false;
+                if (hitBox.groupDef != null && hitBox.groupDef.health != 0 && !damage.isWater) {
+                    String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitBox.groupDef) + 1) + "_damage";
+                    double currentDamage = hitEntity.getVariable(variableName);
+                    if (bullet != null) {
+                        bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health + "  ATTACKED FOR: " + damage.amount);
+                    }
+
+                    //This is a server-only action that does NOT cause us to stop processing.
+                    //Send off packet to damage the health hitbox (or damage directly on server) and continue as if we didn't hit anything.
+                    if (world.isClient()) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitBox, damage.amount));
+                    } else {
+                        hitEntity.damageCollisionBox(hitBox, damage.amount);
+                    }
+                    hitOperationalHitbox = true;
+                }
+
+                //Check armor pen and see if we hit too much and need to stop processing.
+                if (hitBox.definition != null && (hitBox.definition.armorThickness != 0 || hitBox.definition.heatArmorThickness != 0)) {
+                    hitOperationalHitbox = true;
+                    if (bullet != null) {
+                        double armorThickness = hitBox.definition != null ? (bullet.definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
+                        double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
+                        bullet.armorPenetrated += armorThickness;
+                        bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
+
+                        if (bullet.armorPenetrated > penetrationPotential) {
+                            //Bullet hit too much armor.
+                            if (world.isClient()) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR));
+                                bullet.waitingOnActionPacket = true;
+                            } else {
+                                EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR);
+                            }
+                            bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
+                            return EntityBullet.HitType.ARMOR;
+                        }
+                    } else {
+                        //Not a bullet, but hit armor, 100% stopping power with no damage.
+                        return EntityBullet.HitType.ARMOR;
+                    }
+                }
+
+                //Don't apply damage if we already damaged a health box.
+                if (!hitOperationalHitbox) {
+                    if (bullet != null) {
+                        //Didn't hit health or armor, must have hit something we can damage.
+                        //Need to re-create damage object to reference this hitbox.
+                        //Remove bullet if we are applying damage to a core group, or a part that forwards damage.
+                        damage = new Damage(bullet.gun, hitBox, damage.amount);
+                        boolean applyDamage = ((hitBox.groupDef != null && (hitBox.groupDef.health == 0 || damage.isWater)) || hitPart != null);
+                        boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
+
+                        bullet.displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) hitEntity.damageAmount);
+                        if (world.isClient()) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
+                            if (removeAfterDamage) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE));
+                                bullet.waitingOnActionPacket = true;
+                                return EntityBullet.HitType.VEHICLE;
+                            }
+                        } else {
+                            EntityBullet.performEntityHitLogic(hitEntity, damage);
+                            if (removeAfterDamage) {
+                                EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE);
+                                return EntityBullet.HitType.VEHICLE;
+                            }
+                        }
+                    } else {
+                        //Not a bullet, just attack directly.
+                        damage = new Damage(damage.amount, damage.box, damage.damgeSource, damage.entityResponsible, damage.language);
+                        hitEntity.attack(damage);
+                        return EntityBullet.HitType.VEHICLE;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void remove() {
         super.remove();
@@ -390,8 +511,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public Collection<BoundingBox> getInteractionBoxes() {
-        return allInteractionBoxes;
+    public Collection<BoundingBox> getDamageBoxes() {
+        return allDamageCollisionBoxes;
     }
 
     @Override
@@ -437,6 +558,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         //Different clients may have different boxes active, but the server will always have them all.
         if (world.isClient()) {
             interactionBoxes.addAll(activePartSlotBoxes.keySet());
+            damageCollisionBoxes.addAll(activePartSlotBoxes.keySet());
         }
     }
 
@@ -679,8 +801,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public APart getPartWithBox(BoundingBox box) {
         for (APart part : parts) {
-            if (part.allInteractionBoxes.contains(box) || part.allBulletCollisionBoxes.contains(box)) {
-                if (part.interactionBoxes.contains(box) || part.bulletCollisionBoxes.contains(box)) {
+            if (part.allDamageCollisionBoxes.contains(box)) {
+                if (part.damageCollisionBoxes.contains(box)) {
                     return part;
                 } else {
                     return part.getPartWithBox(box);
@@ -753,6 +875,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         allInteractionBoxes.addAll(interactionBoxes);
         allBulletCollisionBoxes.clear();
         allBulletCollisionBoxes.addAll(bulletCollisionBoxes);
+        allDamageCollisionBoxes.clear();
+        allDamageCollisionBoxes.addAll(damageCollisionBoxes);
         allPartSlotBoxes.clear();
         allPartSlotBoxes.putAll(partSlotBoxes);
 
@@ -762,6 +886,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             allBlockCollisionBoxes.addAll(part.allBlockCollisionBoxes);
             allBulletCollisionBoxes.addAll(part.allBulletCollisionBoxes);
             allInteractionBoxes.addAll(part.allInteractionBoxes);
+            allDamageCollisionBoxes.addAll(part.damageCollisionBoxes);
             allPartSlotBoxes.putAll(part.allPartSlotBoxes);
         }
 

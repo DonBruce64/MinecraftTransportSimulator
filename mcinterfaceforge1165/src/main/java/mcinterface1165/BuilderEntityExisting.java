@@ -2,7 +2,6 @@ package mcinterface1165;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -66,7 +65,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     /**
      * Collective for interaction boxes.  These are used by this entity to allow players to interact with it.
      **/
-    private WrapperAABBCollective interactionBoxes;
+    private WrapperAABBCollective damageBoxes;
     /**
      * Collective for collision boxes.  These are used by this entity to make things collide with it.
      **/
@@ -109,7 +108,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //on that first tick that would cause bad maths.
                     //We also do this only every second, as it prevents excess checks.
                     entity.world.beginProfiling("CollisionOverhead", true);
-                    interactionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getInteractionBoxes());
+                    damageBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getDamageBoxes());
                     collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
                     if (entity instanceof EntityVehicleF_Physics && interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
                         mutableDims = new EntitySize((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F, false);
@@ -160,10 +159,10 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (ConfigSystem.settings.damage.allowExternalDamage.value && !level.isClientSide && entity instanceof AEntityE_Interactable) {
-            AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
-            if (interactable instanceof EntityVehicleF_Physics) {
-                amount *= ConfigSystem.externalDamageOverrides.overrides.get(interactable.definition.packID).get(interactable.definition.systemName);
+        if (ConfigSystem.settings.damage.allowExternalDamage.value && !level.isClientSide && entity instanceof AEntityF_Multipart) {
+            AEntityF_Multipart<?> multipart = ((AEntityF_Multipart<?>) entity);
+            if (multipart instanceof EntityVehicleF_Physics) {
+                amount *= ConfigSystem.externalDamageOverrides.overrides.get(multipart.definition.packID).get(multipart.definition.systemName);
             }
             Entity attacker = source.getDirectEntity();
             Entity trueSource = source.getEntity();
@@ -173,37 +172,31 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
                 //Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
-                for (BoundingBox box : interactionBoxes.boxes) {
+                for (BoundingBox box : damageBoxes.boxes) {
                     if (box.intersects(explosiveBounds)) {
-                        interactable.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
+                        multipart.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
                     }
                 }
                 lastExplosionPosition = null;
             } else if (attacker != null) {
-                Damage damage = null;
                 //Check the damage at the current position of the attacker.
                 Vector3d attackerMcPos = attacker.position();
                 Point3D attackerPosition = new Point3D(attackerMcPos.x, attackerMcPos.y, attackerMcPos.z);
-                for (BoundingBox box : interactionBoxes.boxes) {
+                for (BoundingBox box : damageBoxes.boxes) {
                     if (box.isPointInside(attackerPosition, null)) {
-                        damage = new Damage(amount, box, null, playerSource, null);
-                        break;
+                        multipart.attack(new Damage(amount, box, null, playerSource, null));
+                        return true;
                     }
                 }
 
-                if (damage == null) {
+                //No damage from direct attack, see if we have movement and are a projectile.
+                Vector3d mcMovement = attacker.getDeltaMovement();
+                if (mcMovement.lengthSqr() != 0) {
                     //Check the theoretical position of the entity should it have moved.
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
-                    Optional<Vector3d> hitRaytrace = interactionBoxes.clip(attackerMcPos, attackerMcPos.add(attacker.getDeltaMovement()));
-                    if (hitRaytrace != null) {
-                        damage = new Damage(amount, interactionBoxes.lastBoxRayTraced, null, playerSource, null);
-                    }
-                }
-
-                //If we have damage on a point, attack it now.
-                if (damage != null && (damage.box == null || damage.box.definition == null || damage.box.definition.armorThickness == 0)) {
-                    interactable.attack(damage);
+                    Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
+                    multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
                 }
             }
         }
@@ -214,7 +207,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public AxisAlignedBB getBoundingBox() {
         //Override this to make collision checks work with the multiple collision points.
         //We return the collision boxes as a wrapper here as we need a bounding box large enough to encompass both.
-        return interactionBoxes != null ? interactionBoxes : super.getBoundingBox();
+        return damageBoxes != null ? damageBoxes : super.getBoundingBox();
     }
 
     @Override
@@ -237,12 +230,12 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     @Override
     public boolean canBeCollidedWith() {
         //This gets overridden to allow players to interact with this entity.
-        return interactionBoxes != null && !interactionBoxes.boxes.isEmpty();
+        return damageBoxes != null && !damageBoxes.boxes.isEmpty();
     }
 
     public boolean isPickable() {
         //This gets overridden to allow players to interact with this entity.
-        return interactionBoxes != null && !interactionBoxes.boxes.isEmpty();
+        return damageBoxes != null && !damageBoxes.boxes.isEmpty();
     }
 
     @Override

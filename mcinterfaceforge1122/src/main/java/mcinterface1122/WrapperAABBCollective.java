@@ -21,7 +21,6 @@ import net.minecraft.util.math.Vec3d;
  */
 class WrapperAABBCollective extends AxisAlignedBB {
     protected final Collection<BoundingBox> boxes;
-    protected BoundingBox lastBoxRayTraced;
 
     public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes) {
         super(encompassingBox.globalCenter.x - encompassingBox.widthRadius, encompassingBox.globalCenter.y - encompassingBox.heightRadius, encompassingBox.globalCenter.z - encompassingBox.depthRadius, encompassingBox.globalCenter.x + encompassingBox.widthRadius, encompassingBox.globalCenter.y + encompassingBox.heightRadius, encompassingBox.globalCenter.z + encompassingBox.depthRadius);
@@ -120,7 +119,6 @@ class WrapperAABBCollective extends AxisAlignedBB {
     @Override
     @Nullable
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB) {
-        lastBoxRayTraced = null;
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
@@ -144,7 +142,6 @@ class WrapperAABBCollective extends AxisAlignedBB {
                     } else {
                         sideHit = EnumFacing.SOUTH;
                     }
-                    lastBoxRayTraced = testBox;
                 }
             }
         }
