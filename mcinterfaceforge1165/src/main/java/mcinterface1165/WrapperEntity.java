@@ -237,10 +237,25 @@ public class WrapperEntity implements IWrapperEntity {
     private final RotationMatrix mutableOrientation = new RotationMatrix();
     private float lastPitchChecked;
     private float lastYawChecked;
+    private float lastYawApplied;
 
     @Override
     public void setOrientation(RotationMatrix rotation) {
-        entity.yRot = (float) -rotation.angles.y;
+        if (entity.level.isClientSide) {
+            //Client-side expects the yaw keep going and not reset at the 360 bounds like our matrix does.
+            //Therefore, we need to check our delta from our rotation matrix and apply that VS the raw value.
+            //Clamp delta to +/- 180 to ensure that we don't go 360 backwards when crossing the 0/360 zone.
+            float yawDelta = ((float) -rotation.angles.y - lastYawApplied) % 360;
+            if (yawDelta > 180) {
+                yawDelta -= 360;
+            } else if (yawDelta < -180) {
+                yawDelta -= 360;
+            }
+            entity.yRot = lastYawApplied + yawDelta;
+            lastYawApplied = entity.yRot;
+        } else {
+            entity.yRot = (float) -rotation.angles.y;
+        }
         entity.xRot = (float) rotation.angles.x;
     }
 
