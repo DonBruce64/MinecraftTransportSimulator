@@ -274,6 +274,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (!isFake()) {
             super.updateCollisionBoxes();
             interactionBoxes.add(boundingBox);
+            damageCollisionBoxes.add(boundingBox);
         }
     }
 

@@ -136,7 +136,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                 ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, player, axis, stackData);
                 changeComponent(axis, newComponent);
                 if (!player.isCreative()) {
-                    player.getInventory().removeStack(player.getHeldStack(), 1);
+                    player.getInventory().removeStack(player.getHeldStack(), 1, false);
                 }
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(InterfaceManager.coreInterface.getNewNBTWrapper())));
                 return true;

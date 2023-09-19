@@ -286,6 +286,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         updateSubDefinition(subDefinition.subName);
 
         if (definition.rendering != null && definition.rendering.sounds != null) {
+            for (SoundInstance sound : sounds) {
+                sound.stopSound = true;
+            }
+
             allSoundDefs.clear();
             soundActiveSwitchboxes.clear();
             soundVolumeSwitchboxes.clear();
@@ -656,7 +660,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     boolean isSoundPlaying = false;
                     if (soundDef.looping) {
                         for (SoundInstance sound : sounds) {
-                            if (sound.soundName.equals(soundDef.name)) {
+                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
                                 isSoundPlaying = true;
                                 break;
                             }
@@ -670,7 +674,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         //If sound is playing, stop it.
                         //Non-looping sounds are trigger-based and will stop on their own.
                         for (SoundInstance sound : sounds) {
-                            if (sound.soundName.equals(soundDef.name)) {
+                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
                                 sound.stopSound = true;
                                 break;
                             }

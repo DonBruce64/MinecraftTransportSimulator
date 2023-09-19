@@ -147,7 +147,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         //Only do camera checks if we have an active camera.
         //Checking at other times wastes CPU cycles.
         //We also wait 5 ticks after spawn before checking, since it might take time to init the cameras.
-        if (rider != null && cameraIndex != 0 && ticksExisted >= 5) {
+        if (cameraIndex != 0 && ticksExisted >= 5) {
             //Check for valid camera, and perform operations if so.
             activeCamera = null;
             while (cameraIndex != 0 && activeCamera == null) {
@@ -209,7 +209,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderRelativeOrientation.angles.y += rider.getYawDelta();
-            //Need to clamp between +/- 180 to ensure that we don't confuse things.
+            //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
             if (riderRelativeOrientation.angles.y > 180) {
                 riderRelativeOrientation.angles.y -= 360;
                 prevRiderRelativeOrientation.angles.y -= 360;

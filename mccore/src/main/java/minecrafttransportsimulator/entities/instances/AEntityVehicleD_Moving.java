@@ -160,6 +160,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         placingPlayer.setHeldStack(getStack());
                     }
                     remove();
+                    world.endProfiling();
                     return;
                 } else {
                     addToServerDeltas(null, null, 0);
@@ -732,10 +733,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     if (towedByConnection != null) {
                         Point3D initalMotion = motion.copy();
                         if (correctCollidingMovement()) {
+                            world.endProfiling();
                             return;
                         }
                         towedByConnection.towingVehicle.motion.add(motion).subtract(initalMotion);
                     } else if (correctCollidingMovement()) {
+                        world.endProfiling();
                         return;
                     }
                     groundDeviceCollective.updateCollisions();

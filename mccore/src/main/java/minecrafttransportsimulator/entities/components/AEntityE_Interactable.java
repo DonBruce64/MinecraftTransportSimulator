@@ -90,6 +90,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public final Set<BoundingBox> bulletCollisionBoxes = new HashSet<>();
 
     /**
+     * List of bounding boxes that should be used for damage collisions with this entity.
+     * These can't be clicked by players, and can't be collided with, but can be attacked.
+     * By default, this includes all {@link #interactionBoxes} and {@link #bulletCollisionBoxes}.
+     **/
+    public final Set<BoundingBox> damageCollisionBoxes = new HashSet<>();
+
+    /**
      * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
      * to check a single large box rather than multiple small ones to save processing power.
      **/
@@ -311,6 +318,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         entityCollisionBoxes.clear();
         interactionBoxes.clear();
         bulletCollisionBoxes.clear();
+        damageCollisionBoxes.clear();
 
         if (definition.collisionGroups != null) {
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
@@ -351,6 +359,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             }
         }
         interactionBoxes.addAll(entityCollisionBoxes);
+        damageCollisionBoxes.addAll(interactionBoxes);
+        damageCollisionBoxes.addAll(bulletCollisionBoxes);
     }
 
     /**
@@ -361,12 +371,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         encompassingBox.widthRadius = 0;
         encompassingBox.heightRadius = 0;
         encompassingBox.depthRadius = 0;
-        for (BoundingBox box : interactionBoxes) {
-            encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x) + box.widthRadius);
-            encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y) + box.heightRadius);
-            encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z) + box.depthRadius);
-        }
-        for (BoundingBox box : bulletCollisionBoxes) {
+        for (BoundingBox box : damageCollisionBoxes) {
             encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x) + box.widthRadius);
             encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y) + box.heightRadius);
             encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z) + box.depthRadius);
@@ -453,16 +458,20 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     /**
      * Returns a collection of BoundingBoxes that make up this entity's collision bounds.
+     * These are boxes that other entities can collide with that should block their movement.
+     * This is an externally-facing method and should not be used by normal code.
      */
     public Collection<BoundingBox> getCollisionBoxes() {
         return entityCollisionBoxes;
     }
 
     /**
-     * Returns a collection of BoundingBoxes that make up this entity's interaction bounds.
+     * Returns a collection of BoundingBoxes that make up this entity's damage bounds.
+     * These are boxes that can be damaged by other entities.
+     * This is an externally-facing method and should not be used by normal code.
      */
-    public Collection<BoundingBox> getInteractionBoxes() {
-        return interactionBoxes;
+    public Collection<BoundingBox> getDamageBoxes() {
+        return damageCollisionBoxes;
     }
 
     /**
@@ -612,8 +621,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
 
         if (definition.instruments != null) {
-            String[] instrumentsInSlots = new String[definition.instruments.size()];
-            for (int i = 0; i < instrumentsInSlots.length; ++i) {
+            for (int i = 0; i < definition.instruments.size(); ++i) {
                 ItemInstrument instrument = instruments.get(i);
                 if (instrument != null) {
                     data.setString("instrument" + i + "_packID", instrument.definition.packID);

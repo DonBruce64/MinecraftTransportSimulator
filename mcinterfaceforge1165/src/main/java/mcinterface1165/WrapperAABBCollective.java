@@ -18,7 +18,6 @@ import net.minecraft.util.math.vector.Vector3d;
  */
 public class WrapperAABBCollective extends AxisAlignedBB {
     protected final Collection<BoundingBox> boxes;
-    protected BoundingBox lastBoxRayTraced;
 
     public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes) {
         super(encompassingBox.globalCenter.x - encompassingBox.widthRadius, encompassingBox.globalCenter.y - encompassingBox.heightRadius, encompassingBox.globalCenter.z - encompassingBox.depthRadius, encompassingBox.globalCenter.x + encompassingBox.widthRadius, encompassingBox.globalCenter.y + encompassingBox.heightRadius, encompassingBox.globalCenter.z + encompassingBox.depthRadius);
@@ -50,7 +49,6 @@ public class WrapperAABBCollective extends AxisAlignedBB {
 
     @Override
     public Optional<Vector3d> clip(Vector3d vecA, Vector3d vecB) {
-        lastBoxRayTraced = null;
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
@@ -60,7 +58,6 @@ public class WrapperAABBCollective extends AxisAlignedBB {
             if (testIntersection != null) {
                 if (intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)) {
                     intersection = testIntersection;
-                    lastBoxRayTraced = testBox;
                 }
             }
         }

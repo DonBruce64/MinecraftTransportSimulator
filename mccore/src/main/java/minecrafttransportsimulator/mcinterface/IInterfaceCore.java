@@ -72,7 +72,7 @@ public interface IInterfaceCore {
     String getStackItemName(IWrapperItemStack stack);
 
     /**
-     * Returns true if both stacks are Oredict compatible.
+     * Returns true if both stacks are Oredict compatible.  Does NOT take NBT into account.
      */
     boolean isOredictMatch(IWrapperItemStack stackA, IWrapperItemStack stackB);
 

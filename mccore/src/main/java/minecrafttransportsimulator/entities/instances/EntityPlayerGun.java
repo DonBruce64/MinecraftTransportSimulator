@@ -284,6 +284,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         //Do nothing and don't add any collision.  This could block player actions.
     }
 
+    @Override
+    protected void updateEncompassingBox() {
+        //Do nothing and don't add any interaction.  This could block player actions.
+    }
+
     private void saveGun(boolean remove) {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;

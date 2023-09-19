@@ -70,10 +70,10 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
      */
     public final void render(boolean blendingEnabled, float partialTicks) {
         //If we need to render, do so now.
-        world.beginProfiling("RenderSetup", true);
         if (!disableRendering(partialTicks)) {
 
             //Get interpolated orientation if required.
+            world.beginProfiling("RenderSetup", true);
             if (requiresDeltaUpdates()) {
                 getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
             } else {
@@ -90,9 +90,9 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             rotatedMatrix.applyRotation(interpolatedOrientationHolder);
             interpolatedScaleHolder.set(scale).subtract(prevScale).scale(partialTicks).add(prevScale);
             rotatedMatrix.applyScaling(interpolatedScaleHolder);
+            world.endProfiling();
 
             //Render the main model.
-            world.endProfiling();
             renderModel(rotatedMatrix, blendingEnabled, partialTicks);
 
             //End rotation render matrix.
@@ -112,8 +112,8 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
             //Normal sounds are handled on the main tick loop.
             world.beginProfiling("Sounds", true);
             updateSounds(partialTicks);
+            world.endProfiling();
         }
-        world.endProfiling();
     }
 
     /**
