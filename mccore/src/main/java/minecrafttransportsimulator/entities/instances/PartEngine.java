@@ -528,7 +528,7 @@ public class PartEngine extends APart {
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
-                            if isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                            if (isActive && vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
