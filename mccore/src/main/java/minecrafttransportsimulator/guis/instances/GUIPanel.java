@@ -58,11 +58,17 @@ public class GUIPanel extends AGUIBase {
     }
 
     public static JSONPanel getDefinitionFor(EntityVehicleF_Physics vehicle) {
+        JSONPanel panel = null;
         try {
             String packID = vehicle.definition.motorized.panel.substring(0, vehicle.definition.motorized.panel.indexOf(':'));
             String systemName = vehicle.definition.motorized.panel.substring(packID.length() + 1);
-            return PackParser.getPackPanel(packID, systemName);
+            panel = PackParser.getPackPanel(packID, systemName);
         } catch (Exception e) {
+            //Do nothing, we just use default and throw an error if bad format or missing.
+        }
+        if (panel != null) {
+            return panel;
+        } else {
             InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
             if (vehicle.definition.motorized.isAircraft) {
                 return PackParser.getPackPanel(InterfaceManager.coreModID, "default_plane");
