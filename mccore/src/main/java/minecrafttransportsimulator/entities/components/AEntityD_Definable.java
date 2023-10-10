@@ -633,8 +633,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                 //Next, check the distance.
                 double distance = 0;
+                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
                 if (shouldSoundStartPlaying) {
-                    distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
                     if (soundDef.maxDistance != soundDef.minDistance) {
                         shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
                     } else {
@@ -711,7 +712,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
                             //Default sound distance.
                             double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
-                            sound.volume *= (maxDistance - distance) / (maxDistance);
+                            if (distance > maxDistance) {
+                                //Edge-case if we floating-point errors give us badmaths with the distance calcs.
+                                sound.volume = 0;
+                            } else {
+                                sound.volume *= (maxDistance - distance) / (maxDistance);
+                            }
                         } else if (soundDef.middleDistance != 0) {
                             //Middle interpolation.
                             if (distance < soundDef.middleDistance) {
@@ -721,7 +727,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                             }
                         } else {
                             //Min/max.
-                            sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
+                            if (distance > soundDef.maxDistance) {
+                                //Edge-case if we floating-point errors give us badmaths with the distance calcs.
+                                sound.volume = 0;
+                            } else {
+                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
+                            }
                         }
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
