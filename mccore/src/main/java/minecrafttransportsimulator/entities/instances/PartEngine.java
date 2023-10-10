@@ -61,7 +61,17 @@ public class PartEngine extends APart {
     @ModifiedValue
     private float currentRevlimitRPM;
     @ModifiedValue
+    private float currentRevlimitBounce;
+    @ModifiedValue
+    private float currentRevResistance;
+    @ModifiedValue
     private float currentIdleRPM;
+    @ModifiedValue
+    private float currentStartRPM;
+    @ModifiedValue
+    private float currentStallRPM;
+    @ModifiedValue
+    private float currentStarterPower;
     @ModifiedValue
     private float currentFuelConsumption;
     @ModifiedValue
@@ -78,6 +88,10 @@ public class PartEngine extends APart {
     private float currentForceShift;
     @ModifiedValue
     public float currentIsAutomatic;
+    @ModifiedValue
+    private float currentWearFactor;
+    @ModifiedValue
+    private float currentWinddownRate;
 
     //Internal variables.
     private boolean autoStarterEngaged;
@@ -299,10 +313,10 @@ public class PartEngine extends APart {
             //If the starter is running, adjust RPM.
             if (starterLevel > 0) {
                 --starterLevel;
-                if (rpm < definition.engine.startRPM * 2) {
-                    rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.startRPM * 2);
+                if (rpm < currentStartRPM * 2) {
+                    rpm = Math.min(rpm + currentStarterPower, currentStartRPM * 2);
                 } else {
-                    rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.startRPM * 2);
+                    rpm = Math.max(rpm - currentStarterPower, currentStartRPM * 2);
                 }
             }
 
@@ -437,13 +451,16 @@ public class PartEngine extends APart {
 
                         //Check if we need to stall the engine for various conditions.
                         if (!world.isClient()) {
-                            if (isInLiquid()) {
+                            if (!isActive) {
+                                stallEngine(Signal.INACTIVE);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
+                            } else if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
                             } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                            } else if (rpm < definition.engine.stallRPM) {
+                            } else if (rpm < currentStallRPM) {
                                 stallEngine(Signal.TOO_SLOW);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
                             }
@@ -460,7 +477,7 @@ public class PartEngine extends APart {
                         //Start engine if the RPM is high enough to cause it to start by itself.
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
-                        if (rpm >= definition.engine.startRPM && !world.isClient() && !vehicleOn.outOfHealth) {
+                        if (rpm >= currentStartRPM && !world.isClient() && !vehicleOn.outOfHealth) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (!isInLiquid() && magnetoOn) {
                                     startEngine();
@@ -503,12 +520,15 @@ public class PartEngine extends APart {
                             if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+                            } else if (!isActive) {
+                                stallEngine(Signal.INACTIVE);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                             }
                         }
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
-                            if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                            if (isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
                                 if (magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
@@ -528,7 +548,7 @@ public class PartEngine extends APart {
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
                 wheelFriction = 0;
-                engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM : definition.engine.startRPM;
+                engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM : currentStartRPM;
 
                 //Update wheel friction and velocity.
                 for (PartGroundDevice wheel : drivenWheels) {
@@ -546,9 +566,9 @@ public class PartEngine extends APart {
                     //Don't adjust it down to stall the engine, that can only be done via backfire.
                     if (wheelFriction > 0) {
                         double desiredRPM = lowestWheelVelocity * 1200F * currentGearRatio * vehicleOn.currentAxleRatio;
-                        rpm += (desiredRPM - rpm) / definition.engine.revResistance;
-                        if (rpm < (currentIdleRPM - ((currentIdleRPM - definition.engine.stallRPM) * 0.5)) && running) {
-                            rpm = currentIdleRPM - ((currentIdleRPM - definition.engine.stallRPM) * 0.5);
+                        rpm += (desiredRPM - rpm) / currentRevResistance;
+                        if (rpm < (currentIdleRPM - ((currentIdleRPM - currentStallRPM) * 0.5)) && running) {
+                            rpm = currentIdleRPM - ((currentIdleRPM - currentStallRPM) * 0.5);
                         }
                     } else {
                         //No wheel force.  Adjust wheels to engine speed.
@@ -576,10 +596,10 @@ public class PartEngine extends APart {
                         double engineRPMDifference = engineTargetRPM - rpm;
 
                         //propellerFeedback can't make an engine stall, but hours can.
-                        if (rpm + engineRPMDifference / definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference / definition.engine.revResistance + propellerFeedback < definition.engine.stallRPM) {
-                            rpm = definition.engine.stallRPM;
+                        if (rpm + engineRPMDifference / currentRevResistance > currentStallRPM && rpm + engineRPMDifference / currentRevResistance + propellerFeedback < currentStallRPM) {
+                            rpm = currentStallRPM;
                         } else {
-                            rpm += engineRPMDifference / definition.engine.revResistance + propellerFeedback;
+                            rpm += engineRPMDifference / currentRevResistance + propellerFeedback;
                         }
                     } else if (!electricStarterEngaged && !handStarterEngaged) {
                         rpm += (propellerFeedback - 1) * Math.abs(propellerGearboxRatio);
@@ -601,18 +621,18 @@ public class PartEngine extends APart {
                     } else {
                         engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
                     }
-                    rpm += (engineTargetRPM - rpm) / (definition.engine.revResistance * 3);
+                    rpm += (engineTargetRPM - rpm) / (currentRevResistance * 3);
                     if (currentRevlimitRPM == -1) {
                         if (rpm > currentMaxSafeRPM) {
                             rpm -= Math.abs(engineTargetRPM - rpm) / 60;
                         }
                     } else {
                         if (rpm > currentRevlimitRPM) {
-                            rpm -= Math.abs(engineTargetRPM - rpm) / definition.engine.revlimitBounce;
+                            rpm -= Math.abs(engineTargetRPM - rpm) / currentRevlimitBounce;
                         }
                     }
                 } else if (!electricStarterEngaged && !handStarterEngaged) {
-                    rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
+                    rpm = Math.max(rpm - currentWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, 10 rpm a tick by default
                 }
             }
 
@@ -700,7 +720,12 @@ public class PartEngine extends APart {
         currentMaxRPM = definition.engine.maxRPM;
         currentMaxSafeRPM = definition.engine.maxSafeRPM;
         currentRevlimitRPM = definition.engine.revlimitRPM;
+        currentRevlimitBounce = definition.engine.revlimitBounce;
+        currentRevResistance = definition.engine.revResistance;
         currentIdleRPM = definition.engine.idleRPM;
+        currentStartRPM = definition.engine.startRPM;
+        currentStallRPM = definition.engine.stallRPM;
+        currentStarterPower = definition.engine.starterPower;
         currentFuelConsumption = definition.engine.fuelConsumption;
         currentHeatingCoefficient = definition.engine.heatingCoefficient;
         currentCoolingCoefficient = definition.engine.coolingCoefficient;
@@ -709,6 +734,8 @@ public class PartEngine extends APart {
         currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
         currentForceShift = definition.engine.forceShift ? 1 : 0;
         currentIsAutomatic = definition.engine.isAutomatic ? 1 : 0;
+        currentWearFactor = definition.engine.engineWearFactor;
+        currentWinddownRate = definition.engine.engineWinddownRate;
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -723,8 +750,23 @@ public class PartEngine extends APart {
                     case "revlimitRPM":
                         currentRevlimitRPM = adjustVariable(modifier, currentRevlimitRPM);
                         break;
+                    case "revlimitBounce":
+                        currentRevlimitBounce = adjustVariable(modifier, currentRevlimitBounce);
+                        break;
+                    case "revResistance":
+                        currentRevResistance = adjustVariable(modifier, currentRevResistance);
+                        break;
                     case "idleRPM":
                         currentIdleRPM = adjustVariable(modifier, currentIdleRPM);
+                        break;
+                    case "startRPM":
+                        currentStartRPM = adjustVariable(modifier, currentStartRPM);
+                        break;
+                    case "stallRPM":
+                        currentStallRPM = adjustVariable(modifier, currentStallRPM);
+                        break;
+                    case "starterPower":
+                        currentStarterPower = adjustVariable(modifier, currentStarterPower);
                         break;
                     case "fuelConsumption":
                         currentFuelConsumption = adjustVariable(modifier, currentFuelConsumption);
@@ -749,6 +791,12 @@ public class PartEngine extends APart {
                         break;
                     case "isAutomatic":
                     	currentIsAutomatic = adjustVariable(modifier, currentIsAutomatic);
+                        break;
+                    case "engineWearFactor":
+                        currentWearFactor = adjustVariable(modifier, currentWearFactor);
+                        break;
+                    case "engineWinddownRate":
+                        currentWinddownRate = adjustVariable(modifier, currentWinddownRate);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -808,6 +856,14 @@ public class PartEngine extends APart {
                 return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
             case ("engine_rpm_target"):
             	return engineTargetRPM;
+            case ("engine_rpm_idle"):
+            	return currentIdleRPM;
+            case ("engine_rpm_start"):
+            	return currentStartRPM;
+            case ("engine_rpm_stall"):
+            	return currentStallRPM;
+            case ("engine_starter_power"):
+            	return currentStarterPower;
             case ("engine_fuel_consumption"):
                 return currentFuelConsumption;
             case ("engine_supercharger_fuel_consumption"):
@@ -820,6 +876,8 @@ public class PartEngine extends APart {
                 return (definition.engine.rocketFuel - rocketFuelUsed) / definition.engine.rocketFuel;
             case ("engine_temp"):
                 return temp;
+            case ("engine_temp_ambient"):
+                return ambientTemp;
             case ("engine_pressure"):
                 return pressure;
             case ("engine_gear"):
@@ -1094,9 +1152,9 @@ public class PartEngine extends APart {
 
     public double getTotalWearFactor() {
         if (currentSuperchargerEfficiency > 1.0F) {
-            return definition.engine.engineWearFactor * currentSuperchargerEfficiency * ConfigSystem.settings.general.engineHoursFactor.value;
+            return currentWearFactor * currentSuperchargerEfficiency * ConfigSystem.settings.general.engineHoursFactor.value;
         } else {
-            return definition.engine.engineWearFactor * ConfigSystem.settings.general.engineHoursFactor.value;
+            return currentWearFactor * ConfigSystem.settings.general.engineHoursFactor.value;
         }
     }
 
