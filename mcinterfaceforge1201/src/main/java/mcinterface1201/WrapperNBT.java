@@ -10,19 +10,19 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.NonNullList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.ItemStack;
 
 class WrapperNBT implements IWrapperNBT {
-    protected final CompoundNBT tag;
+    protected final CompoundTag tag;
 
     protected WrapperNBT() {
-        this.tag = new CompoundNBT();
+        this.tag = new CompoundTag();
     }
 
-    protected WrapperNBT(CompoundNBT tag) {
+    protected WrapperNBT(CompoundTag tag) {
         this.tag = tag;
     }
 
@@ -108,7 +108,7 @@ class WrapperNBT implements IWrapperNBT {
     public List<IWrapperItemStack> getStacks(int count) {
         List<IWrapperItemStack> stacks = new ArrayList<>();
         NonNullList<ItemStack> mcList = NonNullList.withSize(count, ItemStack.EMPTY);
-        ItemStackHelper.loadAllItems(tag, mcList);
+        ContainerHelper.loadAllItems(tag, mcList);
         for (ItemStack stack : mcList) {
             stacks.add(new WrapperItemStack(stack));
         }
@@ -121,7 +121,7 @@ class WrapperNBT implements IWrapperNBT {
         for (IWrapperItemStack stack : stacks) {
             mcList.add(((WrapperItemStack) stack).stack);
         }
-        ItemStackHelper.saveAllItems(tag, mcList);
+        ContainerHelper.saveAllItems(tag, mcList);
     }
 
     @Override

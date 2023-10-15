@@ -5,11 +5,11 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.RegistryObject;
 
 /**
  * Builder for an entity to sit in so they can ride another entity.  We use this rather

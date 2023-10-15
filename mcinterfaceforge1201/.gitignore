@@ -19,3 +19,6 @@ out
 *.iws
 *.iml
 .idea
+
+# vscode
+.vscode

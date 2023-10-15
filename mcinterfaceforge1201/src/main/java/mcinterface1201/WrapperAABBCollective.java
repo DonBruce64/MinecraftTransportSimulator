@@ -6,7 +6,7 @@ import java.util.Optional;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * This class is essentially a collective list of BoundingBoxes.  It intercepts all AABB

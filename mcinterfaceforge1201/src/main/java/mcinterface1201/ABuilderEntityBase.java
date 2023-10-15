@@ -6,12 +6,12 @@ import java.util.List;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.play.server.SSpawnObjectPacket;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundTag;
+// import net.minecraft.network.IPacket;
+// import net.minecraft.network.play.server.SSpawnObjectPacket;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -23,7 +23,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 //Need to extend LivingEntity since spawn syncing packets don't work with the base Entity class.
 public abstract class ABuilderEntityBase extends Entity {
-    protected static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, InterfaceLoader.MODID);
+    protected static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, InterfaceLoader.MODID);
     protected static EntityType<ABuilderEntityBase> E_TYPE;
 
     /**
@@ -36,7 +36,7 @@ public abstract class ABuilderEntityBase extends Entity {
      * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
      * on servers, or set by packet on clients.
      */
-    public CompoundNBT lastLoadedNBT;
+    public CompoundTag lastLoadedNBT;
     /**
      * Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
      * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
@@ -60,11 +60,11 @@ public abstract class ABuilderEntityBase extends Entity {
      **/
     public int idleTickCounter;
 
-    public ABuilderEntityBase(World level) {
+    public ABuilderEntityBase(Level level) {
         super(E_TYPE, level);
     }
 
-    public ABuilderEntityBase(EntityType<?> etype, World level) {
+    public ABuilderEntityBase(EntityType<?> etype, Level level) {
         super(etype, level);
     }
 
@@ -83,7 +83,7 @@ public abstract class ABuilderEntityBase extends Entity {
         //Said mods are Sponge plugins, but I'm sure there are others.
         //super.onEntityUpdate();
 
-        if (level.isClientSide) {
+        if (this.level().isClientSide) {
             //No data.  Wait for NBT to be loaded.
             //As we are on a client we need to send a packet to the server to request NBT data.
             ///Although we could call this in the constructor, some mods will create random

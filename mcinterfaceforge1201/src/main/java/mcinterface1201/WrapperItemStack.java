@@ -9,15 +9,15 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -43,15 +43,15 @@ public class WrapperItemStack implements IWrapperItemStack {
 
     @Override
     public IWrapperItemStack getSmeltedItem(AWrapperWorld world) {
-        World mcWorld = ((WrapperWorld) world).world;
-        List<FurnaceRecipe> results = mcWorld.getRecipeManager().getAllRecipesFor(IRecipeType.SMELTING);
+        Level mcWorld = ((WrapperWorld) world).world;
+        List<SmeltingRecipe> results = mcWorld.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING);
         return new WrapperItemStack(results.isEmpty() ? ItemStack.EMPTY : results.get(0).getResultItem());
     }
 
     @Override
     public int getSmeltingTime(AWrapperWorld world) {
-        World mcWorld = ((WrapperWorld) world).world;
-        return mcWorld.getRecipeManager().getAllRecipesFor(IRecipeType.SMELTING).get(0).getCookingTime();
+        Level mcWorld = ((WrapperWorld) world).world;
+        return mcWorld.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING).get(0).getCookingTime();
     }
 
     @Override
@@ -106,7 +106,7 @@ public class WrapperItemStack implements IWrapperItemStack {
 
     @Override
     public boolean interactWith(EntityFluidTank tank, IWrapperPlayer player) {
-        IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null).orElse(null);
+        IFluidHandlerItem handler = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM, null).orElse(null);
         if (handler != null) {
             if (!player.isSneaking()) {
                 //Item can provide fluid.  Check if the tank can accept it.
