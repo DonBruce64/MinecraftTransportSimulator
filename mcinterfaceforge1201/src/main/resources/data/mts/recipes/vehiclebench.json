@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "c c"
+    ],
+    "key": {
+        "a": {
+            "tag": "minecraft:planks"
+        },
+        "b": {
+            "tag": "minecraft:wooden_fences"
+        },
+        "c": {
+            "item": "minecraft:glass_pane"
+        }
+    },
+    "result": {
+        "item": "mts:mts.vehiclebench"
+    }
+}

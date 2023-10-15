@@ -1,0 +1,22 @@
+{
+    "display": {
+        "icon": {"item": "mts:mts.wrench"},
+        "title": {"translate": "advancements.mts.root.title"},
+        "description": {"translate": "advancements.mts.root.description"},
+        "background": "minecraft:textures/gui/advancements/backgrounds/stone.png"
+    },
+    "criteria": {
+        "crafting_table": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "minecraft:crafting_table"}]
+            }
+        }
+    },
+    "rewards": {
+        "recipes": [
+            "mts:handbook_car",
+            "mts:handbook_plane"
+        ]
+    }
+}
