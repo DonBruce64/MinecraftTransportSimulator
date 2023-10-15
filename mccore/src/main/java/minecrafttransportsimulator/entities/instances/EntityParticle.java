@@ -310,16 +310,17 @@ public class EntityParticle extends AEntityC_Renderable {
             }
 
             //Check collision movement.  If we hit a block, don't move.
-            touchingBlocks = boundingBox.updateCollisions(world, motion, true);
-            if (touchingBlocks) {
-                motion.subtract(boundingBox.currentCollisionDepth);
-                if (definition.stopsOnGround && definition.groundSounds != null) {
-                    double distance = position.distanceTo(clientPlayer.getPosition());
-                    if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
-
-                        SoundInstance sound = new SoundInstance(this, definition.groundSounds.get(particleRandom.nextInt(definition.groundSounds.size())));
-                        sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
-                        InterfaceManager.soundInterface.playQuickSound(sound);
+            if (!definition.ignoreCollision) {
+                touchingBlocks = boundingBox.updateCollisions(world, motion, true);
+                if (touchingBlocks) {
+                    motion.subtract(boundingBox.currentCollisionDepth);
+                    if (definition.stopsOnGround && definition.groundSounds != null) {
+                        double distance = position.distanceTo(clientPlayer.getPosition());
+                        if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
+                            SoundInstance sound = new SoundInstance(this, definition.groundSounds.get(particleRandom.nextInt(definition.groundSounds.size())));
+                            sound.volume = (float) (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE);
+                            InterfaceManager.soundInterface.playQuickSound(sound);
+                        }
                     }
                 }
             }
