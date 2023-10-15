@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -53,9 +54,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public boolean waitingOnActionPacket;
     private int impactDespawnTimer = -1;
     private Point3D targetPosition;
+    private final Point3D helperPoint = new Point3D();
     public double targetDistance;
     private double distanceTraveled;
     public double armorPenetrated;
+
     private Point3D targetVector;
     private Point3D normalizedConeVector = new Point3D();
     private Point3D normalizedEntityVector = new Point3D();
@@ -284,62 +287,133 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 double amount = definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value;
                 Damage damage = new Damage(gun, boundingBox, amount);
 
+                //Declare variables that may be used for hit logic.
+                AEntityF_Multipart<?> hitMultipart = null;
+                Collection<BoundingBox> hitMultipartBoxes = null;
+                IWrapperEntity hitExternalEntity = null;
+                BlockHitResult hitBlock = world.getBlockHit(position, motion);
+                
+                //Check for collided external entities.
+                List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
+                for (IWrapperEntity entity : attackedEntities) {
+                    //Check to make sure we don't hit our controller.
+                    //This can happen with hand-held guns at speed.
+                    if (!entity.equals(gun.lastController)) {
+                        //Make sure there's not a block in the way.
+                        if (hitBlock != null && position.isFirstCloserThanSecond(hitBlock.position, entity.getPosition())) {
+                            continue;
+                        }
+
+                        //Check if already-found entity is closer.
+                        if (hitExternalEntity != null) {
+                            //Need to use helper here since the position object will be re-used on next call to other entity.
+                            helperPoint.set(hitExternalEntity.getPosition());
+                            if (position.isFirstCloserThanSecond(helperPoint, entity.getPosition())) {
+                                continue;
+                            }
+                        }
+                        hitExternalEntity = entity;
+                    }
+                }
+
+                //If we hit a entity, and we have a block hit, we need to discard the block.
+                //The only way tne entity could be hit is if it was in front of the block, and thus the block shouldn't be hit.
+                if (hitExternalEntity != null) {
+                    hitBlock = null;
+                }
+
                 //Populate multiparts for following functions.
                 multiparts.clear();
                 multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
                 multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
 
-                //Check for collided internal entities and attack them.
+                //Check for collided internal entities.
                 //This is a bit more involved, as we need to check all possible types and check hitbox distance.
                 Point3D endPoint = position.copy().add(motion);
                 BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
                 for (AEntityF_Multipart<?> multipart : multiparts) {
                     //Don't attack the entity that has the gun that fired us.
                     if (!multipart.allParts.contains(gun)) {
-                        if (multipart.attackProjectile(damage, position, endPoint, bulletMovementBounds) != null) {
-                            return;
+                        Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(position, endPoint, bulletMovementBounds);
+                        if (hitBoxes != null) {
+                          //Check boxes hit in the last-found multipart against each other to pick the closest part.
+                          boolean anyHitboxCanBeHit = false;
+                            for (BoundingBox hitBox : hitBoxes) {
+                              boolean hitboxCanBeHit = true;
+
+                              //Check the prior multipart, if any of its hit hitboxes are closer, we can't be hit.
+                                if(hitMultipart != null) {
+                                    for(BoundingBox oldBox : hitMultipartBoxes) {
+                                        if (position.isFirstCloserThanSecond(oldBox.globalCenter, hitBox.globalCenter)) {
+                                            hitboxCanBeHit = false;
+                                            break;
+                                        }
+                                    }
+                                    if (!hitboxCanBeHit) {
+                                        break;
+                                    }
+                                }
+                                
+                                //Can't hit hitboxes behind blocks.
+                                if (hitboxCanBeHit && hitBlock != null && position.isFirstCloserThanSecond(hitBox.globalCenter, hitBlock.position)) {
+                                    hitboxCanBeHit = false;
+                                }
+
+                                //Can't hit hitboxes behind other entities.
+                                if (hitboxCanBeHit && hitExternalEntity != null && position.isFirstCloserThanSecond(hitBox.globalCenter, hitExternalEntity.getPosition())) {
+                                    hitboxCanBeHit = false;
+                                }
+
+                                if (hitboxCanBeHit) {
+                                    anyHitboxCanBeHit = true;
+                                    break;
+                                }
+                            }
+
+                            if (anyHitboxCanBeHit) {
+                                hitMultipart = multipart;
+                                hitMultipartBoxes = hitBoxes;
+                            }
                         }
                     }
                 }
 
-                //Check for collided external entities and attack them.
-                List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
-                for (IWrapperEntity entity : attackedEntities) {
-                    //Check to make sure we don't hit our controller.
-                    //This can happen with hand-held guns at speed.
-                    if (!entity.equals(gun.lastController)) {
-                        //Only attack the first entity.  Bullets don't get to attack multiple per scan.
-                        if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(entity, damage));
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, entity.getPosition(), HitType.ENTITY));
-                            waitingOnActionPacket = true;
-                        } else {
-                            performExternalEntityHitLogic(entity, damage);
-                            performGenericHitLogic(gun, bulletNumber, entity.getPosition(), HitType.ENTITY);
-                        }
-                        displayDebugMessage("HIT MC ENTITY " + entity.getName());
-                        return;
-                    }
+                //At this point, whatever we have to attack should be attacked.
+                //First attack the entity, since the bullet could go through it and hit a entity or block on the other side.
+                if (hitMultipart != null && hitMultipart.attackProjectile(damage, hitMultipartBoxes) != null) {
+                    return;
                 }
-
-                //Didn't hit an entity.  Check for blocks.
-                BlockHitResult hitResult = world.getBlockHit(position, motion);
-                if (hitResult != null) {
+                
+                //Now attack the block or external entity, if we have either.
+                if (hitExternalEntity != null) {
                     if (world.isClient()) {
-                        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
-                        //particles and sounds prior to the request from the internal system for the destruction of this block.
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitResult.position, HitType.BLOCK));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, hitResult));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(hitExternalEntity, damage));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitExternalEntity.getPosition(), HitType.ENTITY));
                         waitingOnActionPacket = true;
                     } else {
-                        performBlockHitLogic(gun, hitResult);
-                        performGenericHitLogic(gun, bulletNumber, hitResult.position, HitType.BLOCK);
+                        performExternalEntityHitLogic(hitExternalEntity, damage);
+                        performGenericHitLogic(gun, bulletNumber, hitExternalEntity.getPosition(), HitType.ENTITY);
                     }
-                    displayDebugMessage("HIT BLOCK AT " + hitResult.position);
+                    displayDebugMessage("HIT MC ENTITY " + hitExternalEntity.getName());
                     return;
                 }
 
-                //Check proximity fuze against our target and blocks.
+                if (hitBlock != null) {
+                    if (world.isClient()) {
+                        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
+                        //particles and sounds prior to the request from the internal system for the destruction of this block.
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitBlock.position, HitType.BLOCK));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, hitBlock));
+                        waitingOnActionPacket = true;
+                    } else {
+                        performBlockHitLogic(gun, hitBlock);
+                        performGenericHitLogic(gun, bulletNumber, hitBlock.position, HitType.BLOCK);
+                    }
+                    displayDebugMessage("HIT BLOCK AT " + hitBlock.position);
+                    return;
+                }
+
+                //Hit nothing this tick.  Check proximity fuze against our target and blocks.
                 if (definition.bullet.proximityFuze != 0 && distanceTraveled > definition.bullet.proximityFuze * 3) {
                     HitType hitType = null;
                     Point3D targetToHit = null;
@@ -352,9 +426,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         }
                     } else {
                         //No entity target, first check blocks.
-                        hitResult = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
-                        if (hitResult != null) {
-                            targetToHit = hitResult.position;
+                        hitBlock = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
+                        if (hitBlock != null) {
+                            targetToHit = hitBlock.position;
                             hitType = HitType.BLOCK;
                             displayDebugMessage("PROX FUZE HIT BLOCK");
                         } else {
