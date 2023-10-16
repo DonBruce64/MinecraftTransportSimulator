@@ -497,8 +497,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         lastParticlePosition.set(spawningPosition);
                     }
                 } else {
-                    if (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef))) {
-                        lastTickParticleSpawned.put(particleDef, ticksExisted);
+                    //If we've never spawned the particle, or have waited a whole tick for constant-spawners, spawn one now.
+                    Long particleSpawnTime = lastTickParticleSpawned.get(particleDef);
+                    if (particleSpawnTime == null || (particleDef.spawnEveryTick && ticksExisted > particleSpawnTime)) {
                         for (int i = 0; i < particleDef.quantity; ++i) {
                             AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
                             if (spawningSwitchbox != null) {
@@ -506,10 +507,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                             }
                             world.addEntity(new EntityParticle(this, particleDef, position, spawningSwitchbox));
                         }
+                        lastTickParticleSpawned.put(particleDef, ticksExisted);
                     }
                 }
-            } else if (particleDef.distance != 0) {
-                //Need to remove or we'll foul deltas.
+            } else {
+                lastTickParticleSpawned.remove(particleDef);
                 lastPositionParticleSpawned.remove(particleDef);
             }
         }
