@@ -9,6 +9,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -33,7 +34,7 @@ public class WrapperItemStack implements IWrapperItemStack {
     @Override
     public boolean isCompleteMatch(IWrapperItemStack other) {
         ItemStack otherStack = ((WrapperItemStack) other).stack;
-        return otherStack.sameItem(stack) && (otherStack.hasTag() ? otherStack.getTag().equals(stack.getTag()) : !stack.hasTag());
+        return otherStack.is(stack.getItem()) && (otherStack.hasTag() ? otherStack.getTag().equals(stack.getTag()) : !stack.hasTag());
     }
 
     @Override
@@ -44,8 +45,9 @@ public class WrapperItemStack implements IWrapperItemStack {
     @Override
     public IWrapperItemStack getSmeltedItem(AWrapperWorld world) {
         Level mcWorld = ((WrapperWorld) world).world;
+        RegistryAccess registryAccess = mcWorld.registryAccess();
         List<SmeltingRecipe> results = mcWorld.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING);
-        return new WrapperItemStack(results.isEmpty() ? ItemStack.EMPTY : results.get(0).getResultItem());
+        return new WrapperItemStack(results.isEmpty() ? ItemStack.EMPTY : results.get(0).getResultItem(registryAccess));
     }
 
     @Override
@@ -113,11 +115,12 @@ public class WrapperItemStack implements IWrapperItemStack {
                 FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, FluidAction.SIMULATE);
                 if (drainedStack != null) {
                     //Able to take fluid from item, attempt to do so.
-                    int amountToDrain = (int) tank.fill(drainedStack.getFluid().getRegistryName().getPath(), drainedStack.getAmount(), false);
+                    
+                    int amountToDrain = (int) tank.fill(RegistryUtils.getRegistryName(drainedStack.getFluid()).getPath(), drainedStack.getAmount(), false);
                     drainedStack = handler.drain(amountToDrain, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
                     if (drainedStack != null) {
                         //Was able to provide liquid from item.  Fill the tank.
-                        tank.fill(drainedStack.getFluid().getRegistryName().getPath(), drainedStack.getAmount(), true);
+                        tank.fill(RegistryUtils.getRegistryName(drainedStack.getFluid()).getPath(), drainedStack.getAmount(), true);
                         player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                     }
                 }
