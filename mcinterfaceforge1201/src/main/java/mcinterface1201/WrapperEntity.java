@@ -16,21 +16,28 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.LeadItem;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Potion;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.client.renderer.EffectInstance;
+// import net.minecraft.item.ItemStack;
+// import net.minecraft.item.LeadItem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+// import net.minecraft.potion.EffectInstance;
+// import net.minecraft.potion.Potion;
+// import net.minecraft.util.DamageSource;
+// import net.minecraft.util.EntityDamageSource;
+// import net.minecraft.util.text.ITextComponent;
+// import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.LeadItem;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraftforge.event.level.LevelEvent;
+// import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
@@ -48,8 +55,8 @@ public class WrapperEntity implements IWrapperEntity {
      * If the entity is a player, then a player wrapper is returned.
      */
     public static WrapperEntity getWrapperFor(Entity entity) {
-        if (entity instanceof PlayerEntity) {
-            return WrapperPlayer.getWrapperFor((PlayerEntity) entity);
+        if (entity instanceof Player) {
+            return WrapperPlayer.getWrapperFor((Player) entity);
         } else if (entity != null) {
             WrapperEntity wrapper = entityWrappers.get(entity);
             if (wrapper == null || !wrapper.isValid() || entity != wrapper.entity) {
@@ -93,7 +100,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public AWrapperWorld getWorld() {
-        return WrapperWorld.getWrapperFor(entity.level);
+        return WrapperWorld.getWrapperFor(entity.level());
     }
 
     @Override
@@ -121,12 +128,12 @@ public class WrapperEntity implements IWrapperEntity {
             AEntityB_Existing entityRiding = getEntityRiding();
             if (entityRiding == null) {
                 //Only spawn and start riding on the server, clients will get packets.
-                if (!entity.level.isClientSide) {
+                if (!entity.level().isClientSide) {
                     BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(BuilderEntityLinkedSeat.E_TYPE3.get(), ((WrapperWorld) entityToRide.world).world);
                     seat.loadedFromSavedNBT = true;
                     seat.setPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z);
                     seat.entity = entityToRide;
-                    entity.level.addFreshEntity(seat);
+                    entity.level().addFreshEntity(seat);
                     entity.startRiding(seat, true);
                 }
             } else {
@@ -164,7 +171,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public double getSeatOffset() {
-        if (entity instanceof VillagerEntity) {
+        if (entity instanceof Villager) {
             return -12D / 16D;
         } else {
             return 0D;
@@ -212,7 +219,7 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public Point3D getVelocity() {
         //Need to manually put 0 here for Y since entities on ground have a constant -Y motion.
-        mutableVelocity.set(entity.getDeltaMovement().x, entity.isOnGround() ? 0 : entity.getDeltaMovement().y, entity.getDeltaMovement().z);
+        mutableVelocity.set(entity.getDeltaMovement().x, entity.onGround() ? 0 : entity.getDeltaMovement().y, entity.getDeltaMovement().z);
         return mutableVelocity;
     }
 
@@ -225,10 +232,10 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public RotationMatrix getOrientation() {
-        if (lastPitchChecked != entity.xRot || lastYawChecked != entity.yRot) {
-            lastPitchChecked = entity.xRot;
-            lastYawChecked = entity.yRot;
-            mutableOrientation.angles.set(entity.xRot, -entity.yRot, 0);
+        if (lastPitchChecked != entity.xRotO || lastYawChecked != entity.yRotO) {
+            lastPitchChecked = entity.xRotO;
+            lastYawChecked = entity.yRotO;
+            mutableOrientation.angles.set(entity.xRotO, -entity.yRotO, 0);
             mutableOrientation.setToAngles(mutableOrientation.angles);
         }
         return mutableOrientation;
@@ -241,7 +248,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void setOrientation(RotationMatrix rotation) {
-        if (entity.level.isClientSide) {
+        if (entity.level().isClientSide) {
             //Client-side expects the yaw keep going and not reset at the 360 bounds like our matrix does.
             //Therefore, we need to check our delta from our rotation matrix and apply that VS the raw value.
             //Clamp delta to +/- 180 to ensure that we don't go 360 backwards when crossing the 0/360 zone.
@@ -251,23 +258,23 @@ public class WrapperEntity implements IWrapperEntity {
             } else if (yawDelta < -180) {
                 yawDelta -= 360;
             }
-            entity.yRot = lastYawApplied + yawDelta;
-            lastYawApplied = entity.yRot;
+            entity.yRotO = lastYawApplied + yawDelta;
+            lastYawApplied = entity.yRotO;
         } else {
-            entity.yRot = (float) -rotation.angles.y;
+            entity.yRotO = (float) -rotation.angles.y;
         }
-        entity.xRot = (float) rotation.angles.x;
+        entity.xRotO = (float) rotation.angles.x;
     }
 
     @Override
     public float getPitch() {
-        return entity.xRot;
+        return entity.xRotO;
     }
 
     @Override
     public float getPitchDelta() {
-        float value = entity.xRot - lastPitch;
-        lastPitch = entity.xRot;
+        float value = entity.xRotO - lastPitch;
+        lastPitch = entity.xRotO;
         return value;
     }
 
@@ -275,13 +282,13 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public float getYaw() {
-        return -entity.yRot;
+        return -entity.yRotO;
     }
 
     @Override
     public float getYawDelta() {
-        float value = entity.yRot - lastYaw;
-        lastYaw = entity.yRot;
+        float value = entity.yRotO - lastYaw;
+        lastYaw = entity.yRotO;
         return -value;
     }
 
@@ -302,7 +309,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void setYaw(double yaw) {
-        entity.yRot = (float) -yaw;
+        entity.yRotO = (float) -yaw;
     }
 
     @Override
@@ -314,7 +321,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void setPitch(double pitch) {
-        entity.xRot = (float) pitch;
+        entity.xRotO = (float) pitch;
     }
 
     @Override
@@ -330,7 +337,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public IWrapperNBT getData() {
-        CompoundNBT tag = new CompoundNBT();
+        CompoundTag tag = new CompoundTag();
         entity.save(tag);
         return new WrapperNBT(tag);
     }
@@ -342,11 +349,11 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public boolean leashTo(IWrapperPlayer player) {
-        PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-        if (entity instanceof MobEntity) {
+        Player mcPlayer = ((WrapperPlayer) player).player;
+        if (entity instanceof Mob) {
             ItemStack heldStack = mcPlayer.getMainHandItem();
-            if (((MobEntity) entity).canBeLeashed(mcPlayer) && heldStack.getItem() instanceof LeadItem) {
-                ((MobEntity) entity).setLeashedTo(mcPlayer, true);
+            if (((Mob) entity).canBeLeashed(mcPlayer) && heldStack.getItem() instanceof LeadItem) {
+                ((Mob) entity).setLeashedTo(mcPlayer, true);
                 if (!mcPlayer.isCreative()) {
                     heldStack.shrink(1);
                 }
@@ -431,7 +438,7 @@ public class WrapperEntity implements IWrapperEntity {
      * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
-        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+    public static void on(LevelEvent.Unload event) {
+        entityWrappers.keySet().removeIf(entity1 -> event.getLevel() == entity1.level());
     }
 }
