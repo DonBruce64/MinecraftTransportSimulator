@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -16,7 +16,7 @@ import net.minecraft.world.phys.Vec3;
  *
  * @author don_bruce
  */
-public class WrapperAABBCollective extends AxisAlignedBB {
+public class WrapperAABBCollective extends AABB {
     protected final Collection<BoundingBox> boxes;
 
     public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes) {
@@ -43,12 +43,12 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     }
 
     @Override
-    public boolean contains(Vector3d vec) {
+    public boolean contains(Vec3 vec) {
         return this.intersects(vec.x, vec.y, vec.z, vec.x, vec.y, vec.z);
     }
 
     @Override
-    public Optional<Vector3d> clip(Vector3d vecA, Vector3d vecB) {
+    public Optional<Vec3> clip(Vec3 vecA, Vec3 vecB) {
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
@@ -62,7 +62,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
             }
         }
         if (intersection != null) {
-            return Optional.of(new Vector3d(intersection.x, intersection.y, intersection.z));
+            return Optional.of(new Vec3(intersection.x, intersection.y, intersection.z));
         } else {
             return Optional.empty();
         }
@@ -72,14 +72,14 @@ public class WrapperAABBCollective extends AxisAlignedBB {
      * Helper method that's akin to MC's older collision methods in 1.12.2, just here rather than
      * in a VoxelShape.
      */
-    public Vector3d getCollision(Vector3d movement, AxisAlignedBB testBox) {
+    public Vec3 getCollision(Vec3 movement, AABB testBox) {
         double x = movement.x != 0 ? calculateXOffset(testBox, movement.x) : 0;
         double y = movement.y != 0 ? calculateYOffset(testBox, movement.y) : 0;
         double z = movement.z != 0 ? calculateZOffset(testBox, movement.z) : 0;
-        return new Vector3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
-    private double calculateXOffset(AxisAlignedBB box, double offset) {
+    private double calculateXOffset(AABB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
@@ -100,7 +100,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         return offset;
     }
     
-    private double calculateYOffset(AxisAlignedBB box, double offset) {
+    private double calculateYOffset(AABB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
@@ -121,7 +121,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         return offset;
     }
     
-    private double calculateZOffset(AxisAlignedBB box, double offset) {
+    private double calculateZOffset(AABB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius) {
                 if (offset > 0.0D) {
