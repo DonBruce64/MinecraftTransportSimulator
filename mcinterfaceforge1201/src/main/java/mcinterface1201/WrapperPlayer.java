@@ -17,23 +17,26 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.inventory.container.WorkbenchContainer;
-import net.minecraft.item.Item;
-import net.minecraft.util.HandSide;
+import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
-    private static final Map<PlayerEntity, WrapperPlayer> playerWrappers = new HashMap<>();
+    private static final Map<Player, WrapperPlayer> playerWrappers = new HashMap<>();
 
-    protected final PlayerEntity player;
+    protected final Player player;
 
     /**
      * Returns a wrapper instance for the passed-in player instance.
@@ -42,7 +45,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      * the wrapped entity directly if you aren't sure what its class is.
      * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
      */
-    public static WrapperPlayer getWrapperFor(PlayerEntity player) {
+    public static WrapperPlayer getWrapperFor(Player player) {
         if (player != null) {
             WrapperPlayer wrapper = playerWrappers.get(player);
             if (wrapper == null || !wrapper.isValid() || player != wrapper.player) {
@@ -55,7 +58,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
         }
     }
 
-    protected WrapperPlayer(PlayerEntity player) {
+    protected WrapperPlayer(Player player) {
         super(player);
         this.player = player;
     }
@@ -82,7 +85,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public void displayChatMessage(LanguageEntry language, Object... args) {
-        Minecraft.getInstance().gui.getChat().addMessage(new StringTextComponent(String.format(language.value, args)));
+        Minecraft.getInstance().gui.getChat().addMessage(Component.literal(String.format(language.value, args)));
     }
 
     @Override
@@ -102,12 +105,12 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public boolean isRightHanded() {
-        return player.getMainArm() == HandSide.RIGHT;
+        return player.getMainArm() == HumanoidArm.RIGHT;
     }
 
     @Override
     public IWrapperEntity getLeashedEntity() {
-        for (MobEntity mobEntity : player.level.getLoadedEntitiesOfClass(MobEntity.class, new AxisAlignedBB(player.position().x - 7.0D, player.position().y - 7.0D, player.position().z - 7.0D, player.position().x + 7.0D, player.position().y + 7.0D, player.position().z + 7.0D))) {
+        for (Mob mobEntity : player.level().getEntitiesOfClass(Mob.class, new AABB(player.position().x - 7.0D, player.position().y - 7.0D, player.position().z - 7.0D, player.position().x + 7.0D, player.position().y + 7.0D, player.position().z + 7.0D))) {
             if (mobEntity.isLeashed() && player.equals(mobEntity.getLeashHolder())) {
                 mobEntity.dropLeash(true, !player.isCreative());
                 return WrapperEntity.getWrapperFor(mobEntity);
@@ -130,25 +133,25 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public IWrapperItemStack getHeldStack() {
-        return new WrapperItemStack(player.inventory.getItem(getHotbarIndex()));
+        return new WrapperItemStack(player.getInventory().getItem(getHotbarIndex()));
     }
 
     @Override
     public void setHeldStack(IWrapperItemStack stack) {
-        player.inventory.setItem(getHotbarIndex(), ((WrapperItemStack) stack).stack);
+        player.getInventory().setItem(getHotbarIndex(), ((WrapperItemStack) stack).stack);
     }
 
     @Override
     public int getHotbarIndex() {
-        return player.inventory.selected;
+        return player.getInventory().selected;
     }
 
     @Override
     public IWrapperInventory getInventory() {
-        return new WrapperInventory(player.inventory) {
+        return new WrapperInventory(player.getInventory()) {
             @Override
             public int getSize() {
-                return player.inventory.items.size();
+                return player.getInventory().items.size();
             }
         };
     }
@@ -163,11 +166,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
         player.openMenu(new SimpleNamedContainerProvider((containerID, playerInventory, player) -> {
             return new WorkbenchContainer(containerID, playerInventory, IWorldPosCallable.create(player.level, player.blockPosition())) {
                 @Override
-                public boolean stillValid(PlayerEntity pPlayer) {
+                public boolean stillValid(Player pPlayer) {
                     return true;
                 }
             };
-        }, new StringTextComponent("")));
+        }, Component.literal("")));
     }
 
     /**

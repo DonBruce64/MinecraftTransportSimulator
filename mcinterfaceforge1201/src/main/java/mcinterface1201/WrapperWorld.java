@@ -39,6 +39,7 @@ import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -47,11 +48,11 @@ import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.GrowingPlantBlock;
 // import net.minecraft.world.level.block.GrowingPlantBlock;
 import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.material.*;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
-// import net.minecraft.world.entity.monster.IMob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -61,6 +62,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.Items;
 // import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.ActionResultType;
@@ -68,20 +71,18 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.IBooleanFunction;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.DimensionSavedDataManager;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -102,21 +103,21 @@ import net.minecraftforge.items.IItemHandler;
  */
 
 public class WrapperWorld extends AWrapperWorld {
-    private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
+    private static final Map<Level, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
-    private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
-    private final Set<BlockPos> knownAirBlocks = new HashSet<>();
+    private final List<AABB> mutableCollidingAABBs = new ArrayList<>();
+    private final Set<Level> knownAirBlocks = new HashSet<>();
 
 
-    protected final World world;
+    protected final Level world;
     private final IWrapperNBT savedData;
 
     /**
      * Returns a wrapper instance for the passed-in world instance.
      * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
      */
-    public static WrapperWorld getWrapperFor(World world) {
+    public static WrapperWorld getWrapperFor(Level world) {
         if (world != null) {
             WrapperWorld wrapper = worldWrappers.get(world);
             if (wrapper == null || world != wrapper.world) {
@@ -129,7 +130,7 @@ public class WrapperWorld extends AWrapperWorld {
         }
     }
 
-    private WrapperWorld(World world) {
+    private WrapperWorld(Level world) {
         this.world = world;
         if (world.isClientSide) {
             //Send packet to server to request data for this world.
@@ -163,7 +164,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public String getName() {
-        return world.dimension().getRegistryName().getPath();
+        return world.dimension().location().getPath();
     }
 
     @Override
@@ -211,16 +212,16 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public File getDataFile() {
         //Need to do reflection to get hidden field.  Stupid Mojang restrictions..
-        //FD: net/minecraft/world/storage/DimensionSavedDataManager/field_215759_d net/minecraft/world/storage/DimensionSavedDataManager/dataFolder
+        //FD: net/minecraft/world/level/storage/DimensionDataStorage/dataFolder
         File dataFolder;
-        for (Field field : DimensionSavedDataManager.class.getDeclaredFields()) {
+        for (Field field : DimensionDataStorage.class.getDeclaredFields()) {
             if (field.getName().equals("dataFolder") || field.getName().equals("field_215759_d")) {
                 try {
                     if (!field.isAccessible()) {
                         field.setAccessible(true);
                     }
 
-                    dataFolder = (File) field.get(((ServerWorld) world).getDataStorage());
+                    dataFolder = (File) field.get(((ServerLevel) world).getDataStorage());
                     return new File(dataFolder, "mtsdata.dat");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -232,10 +233,10 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperEntity getExternalEntity(UUID entityID) {
-        if (world instanceof net.minecraft.world.server.ServerWorld) {
-            return WrapperEntity.getWrapperFor(((net.minecraft.world.server.ServerWorld) world).getEntity(entityID));
+        if (world instanceof ServerLevel) {
+            return WrapperEntity.getWrapperFor(((ServerLevel) world).getEntity(entityID));
         } else {
-            for (Entity entity : ((net.minecraft.client.world.ClientWorld) world).entitiesForRendering()) {
+            for (Entity entity : ((ClientLevel) world).entitiesForRendering()) {
                 if (entity.getUUID().equals(entityID)) {
                     return WrapperEntity.getWrapperFor(entity);
                 }
@@ -258,7 +259,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperPlayer> getPlayersWithin(BoundingBox box) {
         List<IWrapperPlayer> players = new ArrayList<>();
-        for (PlayerEntity player : world.getEntitiesOfClass(PlayerEntity.class, WrapperWorld.convert(box))) {
+        for (Player player : world.getEntitiesOfClass(Player.class, WrapperWorld.convert(box))) {
             players.add(WrapperPlayer.getWrapperFor(player));
         }
         return players;
@@ -269,7 +270,7 @@ public class WrapperWorld extends AWrapperWorld {
         List<IWrapperEntity> entities = new ArrayList<>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;
         for (Entity entity : world.getEntities(mcLooker, mcLooker.getBoundingBox().inflate(radius))) {
-            if (entity instanceof IMob && entity.isAlive() && (!(entity instanceof LivingEntity) || ((LivingEntity) entity).deathTime == 0)) {
+            if (entity instanceof Mob && entity.isAlive() && (!(entity instanceof LivingEntity) || ((LivingEntity) entity).deathTime == 0)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
             }
         }
@@ -295,7 +296,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList) {
-        AxisAlignedBB mcBox = WrapperWorld.convert(damage.box);
+        AABB mcBox = WrapperWorld.convert(damage.box);
         List<Entity> collidedEntities;
 
         //Get collided entities.
@@ -307,15 +308,15 @@ public class WrapperWorld extends AWrapperWorld {
         //Get variables.  If we aren't moving, we won't need these.
         Point3D startPoint;
         Point3D endPoint;
-        Vector3d start = null;
-        Vector3d end = null;
+        Vec3 start = null;
+        Vec3 end = null;
         List<IWrapperEntity> hitEntities = new ArrayList<>();
 
         if (motion != null) {
             startPoint = damage.box.globalCenter;
             endPoint = damage.box.globalCenter.copy().add(motion);
-            start = new Vector3d(startPoint.x, startPoint.y, startPoint.z);
-            end = new Vector3d(endPoint.x, endPoint.y, endPoint.z);
+            start = new Vec3(startPoint.x, startPoint.y, startPoint.z);
+            end = new Vec3(endPoint.x, endPoint.y, endPoint.z);
         }
 
         //Validate the collided entities to make sure we didn't hit something we shouldn't have.
@@ -363,7 +364,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (LivingEntity entity : world.getEntitiesOfClass(LivingEntity.class, WrapperWorld.convert(box))) {
-            if (entity.getVehicle() == null && !(entity instanceof MonsterEntity)) {
+            if (entity.getVehicle() == null && !(entity instanceof Monster)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
@@ -383,18 +384,18 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean chunkLoaded(Point3D position) {
-        return world.isLoaded(new BlockPos(position.x, position.y, position.z));
+        return world.isLoaded(new BlockPos((int) position.x, (int) position.y, (int) position.z));
     }
 
     @Override
     public ABlockBase getBlock(Point3D position) {
-        Block block = world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock();
+        Block block = world.getBlockState(new BlockPos((int) position.x, (int) position.y, (int) position.z)).getBlock();
         return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
     }
 
     @Override
     public float getBlockHardness(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         float hardness = world.getBlockState(pos).getDestroySpeed(world, pos);
         if (hardness < 0) {
             hardness = Float.MAX_VALUE;
@@ -404,13 +405,13 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public float getBlockSlipperiness(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        return world.getBlockState(pos).getSlipperiness(world, pos, null);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
+        return world.getBlockState(pos).getFriction(world, pos, null);
     }
 
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         Material material = world.getBlockState(pos).getMaterial();
         if (material == Material.DIRT || material == Material.GRASS) {
             return world.isRainingAt(pos.above()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
@@ -429,7 +430,7 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperItemStack> getBlockDrops(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         BlockState state = world.getBlockState(pos);
-        List<ItemStack> drops = Block.getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
+        List<ItemStack> drops = Block.getDrops(state, (ServerLevel) world, pos, world.getBlockEntity(pos));
         List<IWrapperItemStack> convertedList = new ArrayList<>();
         for (ItemStack stack : drops) {
             convertedList.add(new WrapperItemStack(stack.copy()));
@@ -439,7 +440,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public BlockHitResult getBlockHit(Point3D position, Point3D delta) {
-        Vector3d start = new Vector3d(position.x, position.y, position.z);
+        Vec3 start = new Vec3(position.x, position.y, position.z);
         BlockRayTraceResult trace = world.clip(new RayTraceContext(start, start.add(delta.x, delta.y, delta.z), RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
         if (trace.getType() != RayTraceResult.Type.MISS) {
             BlockPos pos = trace.getBlockPos();
@@ -453,7 +454,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean isBlockSolid(Point3D position, Axis axis) {
         if (axis.blockBased) {
-            BlockPos pos = new BlockPos(position.x, position.y, position.z);
+            BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
             BlockState state = world.getBlockState(pos);
             Block offsetMCBlock = state.getBlock();
             Direction facing = Direction.valueOf(axis.name());
@@ -465,24 +466,24 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean isBlockLiquid(Point3D position) {
-        return world.getBlockState(new BlockPos(position.x, position.y, position.z)).getMaterial().isLiquid();
+        return world.getBlockState(new BlockPos((int) position.x, (int) position.y, (int) position.z)).getMaterial().isLiquid();
     }
 
     @Override
     public boolean isBlockBelowBottomSlab(Point3D position) {
-        BlockState state = world.getBlockState(new BlockPos(position.x, position.y - 1, position.z));
+        BlockState state = world.getBlockState(new BlockPos((int) position.x, (int) position.y - 1, (int) position.z));
         return state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.BOTTOM;
     }
 
     @Override
     public boolean isBlockAboveTopSlab(Point3D position) {
-        BlockState state = world.getBlockState(new BlockPos(position.x, position.y + 1, position.z));
+        BlockState state = world.getBlockState(new BlockPos((int) position.x, (int) position.y + 1, (int) position.z));
         return state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.TOP;
     }
 
     @Override
     public double getHeight(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         //Need to go down till we find a block.
         while (pos.getY() > 0) {
             if (!world.isEmptyBlock(pos)) {
@@ -497,7 +498,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void updateBoundingBoxCollisions(BoundingBox box, Point3D collisionMotion, boolean ignoreIfGreater) {
-        AxisAlignedBB mcBox = WrapperWorld.convert(box);
+        AABB mcBox = WrapperWorld.convert(box);
         VoxelShape mcShape = VoxelShapes.create(mcBox);
         box.collidingBlockPositions.clear();
         mutableCollidingAABBs.clear();
@@ -524,7 +525,7 @@ public class WrapperWorld extends AWrapperWorld {
         //If we are in the depth bounds for this collision, set it as the collision depth.
         box.currentCollisionDepth.set(0D, 0D, 0D);
         double boxCollisionDepth;
-        for (AxisAlignedBB colBox : mutableCollidingAABBs) {
+        for (AABB colBox : mutableCollidingAABBs) {
             if (collisionMotion.x > 0) {
                 boxCollisionDepth = mcBox.maxX - colBox.minX;
                 if (box.currentCollisionDepth.x < boxCollisionDepth) {
@@ -589,7 +590,7 @@ public class WrapperWorld extends AWrapperWorld {
             knownAirBlocks.clear();
         }
         mutableCollidingAABBs.clear();
-        AxisAlignedBB mcBox = WrapperWorld.convertWithOffset(box, offset.x, offset.y, offset.z);
+        AABB mcBox = WrapperWorld.convertWithOffset(box, offset.x, offset.y, offset.z);
         VoxelShape mcShape = VoxelShapes.create(mcBox);
         for (int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i) {
             for (int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j) {
@@ -619,17 +620,17 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public int getRedstonePower(Point3D position) {
-        return world.getBestNeighborSignal(new BlockPos(position.x, position.y, position.z));
+        return world.getBestNeighborSignal(new BlockPos((int) position.x, (int) position.y, (int) position.z));
     }
 
     @Override
     public float getRainStrength(Point3D position) {
-        return world.isRainingAt(new BlockPos(position.x, position.y + 1, position.z)) ? world.getRainLevel(1.0F) + world.getThunderLevel(1.0F) : 0.0F;
+        return world.isRainingAt(new BlockPos((int) position.x, (int) position.y + 1, (int) position.z)) ? world.getRainLevel(1.0F) + world.getThunderLevel(1.0F) : 0.0F;
     }
 
     @Override
     public float getTemperature(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         return world.getBiome(pos).getTemperature(pos);
     }
 
@@ -638,9 +639,9 @@ public class WrapperWorld extends AWrapperWorld {
     public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONMultiModelProvider> boolean setBlock(ABlockBase block, Point3D position, IWrapperPlayer playerWrapper, Axis axis) {
         if (!world.isClientSide) {
             BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
-            BlockPos pos = new BlockPos(position.x, position.y, position.z);
+            BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
             if (playerWrapper != null) {
-                PlayerEntity mcPlayer = ((WrapperPlayer) playerWrapper).player;
+                Player mcPlayer = ((WrapperPlayer) playerWrapper).player;
                 WrapperItemStack stack = (WrapperItemStack) playerWrapper.getHeldStack();
                 AItemBase item = stack.getItem();
                 Direction facing = Direction.valueOf(axis.name());
@@ -678,18 +679,18 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     @SuppressWarnings("unchecked")
     public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3D position) {
-        TileEntity tile = world.getBlockEntity(new BlockPos(position.x, position.y, position.z));
+        TileEntity tile = world.getBlockEntity(new BlockPos((int) position.x, (int) position.y, (int) position.z));
         return tile instanceof BuilderTileEntity ? (TileEntityType) ((BuilderTileEntity) tile).tileEntity : null;
     }
 
     @Override
     public void markTileEntityChanged(Point3D position) {
-        world.getBlockEntity(new BlockPos(position.x, position.y, position.z)).setChanged();
+        world.getBlockEntity(new BlockPos((int) position.x, (int) position.y, (int) position.z)).setChanged();
     }
 
     @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         float sunLight = (world.getBrightness(LightType.SKY, pos) - world.getSkyDarken()) / 15F;
         float blockLight = calculateBlock ? world.getBrightness(LightType.BLOCK, pos) / 15F : 0.0F;
         return Math.max(sunLight, blockLight);
@@ -697,7 +698,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void updateLightBrightness(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         //This needs to get fired manually as even if we update the blockstate the light value won't change
         //as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
         world.getLightEngine().checkBlock(pos);
@@ -705,24 +706,24 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void destroyBlock(Point3D position, boolean spawnDrops) {
-        world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
+        world.destroyBlock(new BlockPos((int) position.x, (int) position.y, (int) position.z), spawnDrops);
     }
 
     @Override
     public boolean isAir(Point3D position) {
-        return world.isEmptyBlock(new BlockPos(position.x, position.y, position.z));
+        return world.isEmptyBlock(new BlockPos((int) position.x, (int) position.y, (int) position.z));
     }
 
     @Override
     public boolean isFire(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         BlockState state = world.getBlockState(pos);
         return state.getMaterial().equals(Material.FIRE);
     }
 
     @Override
     public void setToFire(BlockHitResult hitResult) {
-        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+        BlockPos blockpos = new BlockPos((int) hitResult.position.x, (int) hitResult.position.y, (int) hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
         if (world.isEmptyBlock(blockpos) && ConfigSystem.settings.general.blockBreakage.value) {
             world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
         }
@@ -730,7 +731,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void extinguish(BlockHitResult hitResult) {
-        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+        BlockPos blockpos = new BlockPos((int) hitResult.position.x, (int) hitResult.position.y, (int) hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
         if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
             world.removeBlock(blockpos, false);
         }
@@ -738,10 +739,10 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
         if (world.isEmptyBlock(pos)) {
             ItemStack mcStack = ((WrapperItemStack) stack).stack;
-            if (mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vector3d(position.x, position.y, position.z), Direction.DOWN, pos, true))) == ActionResultType.CONSUME) {
+            if (mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vec3(position.x, position.y, position.z), Direction.DOWN, pos, true))) == ActionResultType.CONSUME) {
                 return true;
             }
         }
@@ -754,13 +755,13 @@ public class WrapperWorld extends AWrapperWorld {
         ItemStack mcStack = ((WrapperItemStack) stack).stack;
         if (mcStack.getItem() == Items.BONE_MEAL && !world.isClientSide) {
             //Check if we are in crops.
-            BlockPos cropPos = new BlockPos(position.x, position.y, position.z);
+            BlockPos cropPos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
             BlockState cropState = world.getBlockState(cropPos);
             Block cropBlock = cropState.getBlock();
             if (cropBlock instanceof IGrowable) {
                 IGrowable growable = (IGrowable) cropState.getBlock();
                 if (growable.isValidBonemealTarget(world, cropPos, cropState, world.isClientSide)) {
-                    growable.performBonemeal((ServerWorld) world, world.random, cropPos, cropState);
+                    growable.performBonemeal((ServerLevel) world, world.random, cropPos, cropState);
                     return true;
                 }
             }
@@ -779,7 +780,7 @@ public class WrapperWorld extends AWrapperWorld {
 
             //Only return drops on servers.  Clients don't do items.
             if (!world.isClientSide) {
-                List<ItemStack> drops = Block.getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
+                List<ItemStack> drops = Block.getDrops(state, (ServerLevel) world, pos, world.getBlockEntity(pos));
                 world.removeBlock(pos, false);
                 if (harvestedBlock instanceof CropsBlock) {
                     for (ItemStack drop : drops) {
@@ -906,19 +907,19 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Helper method to convert a BoundingBox to an AxisAlignedBB.
+     * Helper method to convert a BoundingBox to an AABB.
      */
-    public static AxisAlignedBB convert(BoundingBox box) {
-        return new AxisAlignedBB(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius, box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+    public static AABB convert(BoundingBox box) {
+        return new AABB(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius, box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
     }
 
     /**
-     * Helper method to convert the BoundingBox to an AxisAlignedBB.
+     * Helper method to convert the BoundingBox to an AABB.
      * This method allows for an offset to the conversion, to prevent
      * creating two AABBs (the conversion and the offset box).
      */
-    public static AxisAlignedBB convertWithOffset(BoundingBox box, double x, double y, double z) {
-        return new AxisAlignedBB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
+    public static AABB convertWithOffset(BoundingBox box, double x, double y, double z) {
+        return new AABB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
     }
 
     /**
@@ -937,7 +938,7 @@ public class WrapperWorld extends AWrapperWorld {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
                 tickAll();
 
-                for (PlayerEntity mcPlayer : event.world.players()) {
+                for (Player mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
 
                     BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
