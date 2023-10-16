@@ -10,8 +10,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.nbt.CompoundTag;
-// import net.minecraft.network.IPacket;
-// import net.minecraft.network.play.server.SSpawnObjectPacket;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -106,7 +107,7 @@ public abstract class ABuilderEntityBase extends Entity {
         }
 
         //If we are on the server, set the NBT flag.
-        if (!loadedFromSavedNBT && lastLoadedNBT != null && !level.isClientSide) {
+        if (!loadedFromSavedNBT && lastLoadedNBT != null && !level().isClientSide) {
             loadFromSavedNBT = true;
         }
     }
@@ -121,7 +122,7 @@ public abstract class ABuilderEntityBase extends Entity {
         super.onRemovedFromWorld();
         //Catch unloaded entities from when the chunk goes away.
         if (isAlive()) {
-            remove();
+            remove(Entity.RemovalReason.KILLED);
         }
     }
 
@@ -132,14 +133,14 @@ public abstract class ABuilderEntityBase extends Entity {
     }
 
     @Override
-    public void load(CompoundNBT tag) {
+    public void load(CompoundTag tag) {
         super.load(tag);
         //Save the NBT for loading in the next update call.
         lastLoadedNBT = tag;
     }
 
     @Override
-    public CompoundNBT saveWithoutId(CompoundNBT tag) {
+    public CompoundTag saveWithoutId(CompoundTag tag) {
         super.saveWithoutId(tag);
         //Need to have this here as some mods will load us from NBT and then save us back
         //without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
@@ -152,11 +153,11 @@ public abstract class ABuilderEntityBase extends Entity {
 
     //Junk methods.
     @Override
-    protected void addAdditionalSaveData(CompoundNBT pCompound) {
+    protected void addAdditionalSaveData(CompoundTag pCompound) {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundNBT pCompound) {
+    protected void readAdditionalSaveData(CompoundTag pCompound) {
     }
 
     @Override
@@ -164,8 +165,8 @@ public abstract class ABuilderEntityBase extends Entity {
     }
 
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         //Spawn object, we have a mixin override this code on the client though since it doesn't know to handle us.
-        return new SSpawnObjectPacket(this);
+        return new ClientboundAddEntityPacket(this);
     }
 }
