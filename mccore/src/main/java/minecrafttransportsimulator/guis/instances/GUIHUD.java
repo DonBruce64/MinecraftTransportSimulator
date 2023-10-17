@@ -64,7 +64,9 @@ public class GUIHUD extends AGUIBase {
             for (APart part : vehicle.parts) {
                 for (int i = 0; i < part.instruments.size(); ++i) {
                     if (part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel) {
-                        addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
+                        GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, part, i);
+                        instruments.add(instrument);
+                        addComponent(instrument);
                     }
                 }
             }
