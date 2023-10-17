@@ -63,7 +63,7 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
 
     @Override
     public FluidStack getFluid() {
-        return tank != null && !tank.getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tank.getFluid())), (int) tank.getFluidLevel()) : null;
+        return tank != null && !tank.getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tank.getFluid())), (int) tank.getFluidLevel()) : FluidStack.EMPTY;
     }
 
     @Override
