@@ -336,12 +336,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     if (!multipart.allParts.contains(gun)) {
                         Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(position, endPoint, bulletMovementBounds);
                         if (hitBoxes != null) {
-                          //Check boxes hit in the last-found multipart against each other to pick the closest part.
-                          boolean anyHitboxCanBeHit = false;
+                            //Check boxes hit in the last-found multipart against each other to pick the closest part.
+                            boolean anyHitboxCanBeHit = false;
                             for (BoundingBox hitBox : hitBoxes) {
-                              boolean hitboxCanBeHit = true;
+                                boolean hitboxCanBeHit = true;
 
-                              //Check the prior multipart, if any of its hit hitboxes are closer, we can't be hit.
+                                //Check the prior multipart, if any of its hit hitboxes are closer, we can't be hit.
                                 if(hitMultipart != null) {
                                     for(BoundingBox oldBox : hitMultipartBoxes) {
                                         if (position.isFirstCloserThanSecond(oldBox.globalCenter, hitBox.globalCenter)) {
@@ -355,12 +355,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 }
                                 
                                 //Can't hit hitboxes behind blocks.
-                                if (hitboxCanBeHit && hitBlock != null && position.isFirstCloserThanSecond(hitBox.globalCenter, hitBlock.position)) {
+                                if (hitboxCanBeHit && hitBlock != null && position.isFirstCloserThanSecond(hitBlock.position, hitBox.globalCenter)) {
                                     hitboxCanBeHit = false;
                                 }
 
                                 //Can't hit hitboxes behind other entities.
-                                if (hitboxCanBeHit && hitExternalEntity != null && position.isFirstCloserThanSecond(hitBox.globalCenter, hitExternalEntity.getPosition())) {
+                                if (hitboxCanBeHit && hitExternalEntity != null && position.isFirstCloserThanSecond(hitExternalEntity.getPosition(), hitBox.globalCenter)) {
                                     hitboxCanBeHit = false;
                                 }
 
@@ -619,7 +619,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 bullet.spawnParticles(0);
             }
         }
-        gun.currentBullet = null;
+        if (gun.currentBullet != null && gun.currentBullet.bulletNumber <= bulletNumber) {
+            gun.currentBullet = null;
+        }
     }
 
     public void displayDebugMessage(String message) {
