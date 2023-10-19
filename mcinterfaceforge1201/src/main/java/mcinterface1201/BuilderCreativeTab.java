@@ -7,12 +7,18 @@ import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+// import net.minecraft.item.Item;
+// import net.minecraft.item.ItemGroup;
+// import net.minecraft.item.ItemStack;
+// import net.minecraft.util.NonNullList;
+// import net.minecraft.util.text.ITextComponent;
+// import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -24,7 +30,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * @author don_bruce
  */
-public class BuilderCreativeTab extends ItemGroup {
+public class BuilderCreativeTab extends CreativeModeTab {
     /**
      * Map of created tabs names linked to their builder instances.  Used for interface operations.
      **/
@@ -50,8 +56,8 @@ public class BuilderCreativeTab extends ItemGroup {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public ITextComponent getDisplayName() {
-        return new StringTextComponent(label);
+    public Component getDisplayName() {
+        return new Ch (label);
     }
 
     @Override
