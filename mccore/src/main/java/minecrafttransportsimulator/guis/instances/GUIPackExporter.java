@@ -1,15 +1,7 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -18,10 +10,9 @@ import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketPackImport;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * This GUI is normally locked, and is only available in devMode.  It allows
@@ -61,108 +52,15 @@ public class GUIPackExporter extends AGUIBase {
         addComponent(packExportButton = new GUIComponentButton(guiLeft + buttonOffset, guiTop, buttonWidth, 20, "EXPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-                File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
-                if (!jsonDir.exists()) {
-                    if (!jsonDir.mkdir()) {
-                        debug.setText("ERROR: Could not create dev folder: " + jsonDir.getAbsolutePath() + "\nIs this location write-protected?");
-                        return;
-                    }
-                }
-
-                File lastModifiedFile = new File(jsonDir, "lastexported.txt");
-                if (lastModifiedFile.exists()) {
-                    debug.setText("\nWARNING: Existing export detected!  Exporting will not continue.  Either delete the mts_dev folder, or the lastexported.txt file and try again.");
-                    return;
-                }
-
-                long lastTimeModified = 0;
-                debug.setText("Export dir is: " + jsonDir.getAbsolutePath());
-                for (String packID : PackParser.getAllPackIDs()) {
-                    File packDir = new File(jsonDir, packID);
-                    if (!packDir.exists()) {
-                        if (!packDir.mkdir()) {
-                            debug.setText("ERROR: Could not create pack folder: " + packDir.getAbsolutePath() + "\nIs this location write-protected?");
-                            return;
-                        }
-                    }
-
-                    List<AJSONBase> jsons = new ArrayList<>();
-                    PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
-                    jsons.addAll(PackParser.getAllPanelsForPack(packID));
-
-                    for (AJSONBase definition : jsons) {
-                        try {
-                            File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders);
-                            jsonFile.mkdirs();
-                            jsonFile = new File(jsonFile, definition.systemName + ".json");
-                            JSONParser.exportStream(definition, Files.newOutputStream(jsonFile.toPath()));
-                            lastTimeModified = jsonFile.lastModified();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
-                            return;
-                        }
-                    }
-                    debug.setText(debug.getText() + "\nExported pack: " + packID);
-                }
-
-                try {
-                    FileWriter writer = new FileWriter(lastModifiedFile);
-                    writer.write(String.valueOf(lastTimeModified));
-                    writer.flush();
-                    writer.close();
-                    debug.setText(debug.getText() + "\nExporting finished.");
-                } catch (IOException e) {
-                    debug.setText("\nERROR: Could not save last modified timestamp to disk.  Error is:\n" + e.getMessage());
-                    return;
-                }
+                debug.setText(JSONParser.exportAllJSONs());
             }
         });
         addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-                File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
-                if (jsonDir.exists()) {
-                    debug.setText("Import dir is: " + jsonDir.getAbsolutePath());
-                    File lastModifiedFile = new File(jsonDir, "lastexported.txt");
-                    if (lastModifiedFile.exists()) {
-                        long lastTimeModified;
-                        try {
-                            FileReader reader = new FileReader(lastModifiedFile);
-                            BufferedReader buffer = new BufferedReader(reader);
-                            lastTimeModified = Long.parseLong(buffer.readLine());
-                            buffer.close();
-                        } catch (Exception e) {
-                            debug.setText("\nERROR: Could not read last modified timestamp from disk.  Error is:\n" + e.getMessage());
-                            return;
-                        }
-
-                        Set<File> parsedFiles = new HashSet<>();
-                        for (String packID : PackParser.getAllPackIDs()) {
-                            File packDir = new File(jsonDir, packID);
-                            if (packDir.exists()) {
-                                List<AJSONBase> jsons = new ArrayList<>();
-                                PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
-                                jsons.addAll(PackParser.getAllPanelsForPack(packID));
-
-                                for (AJSONBase definition : jsons) {
-                                    File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders + definition.systemName + ".json");
-                                    if (!parsedFiles.contains(jsonFile)) {
-                                        if (jsonFile.lastModified() > lastTimeModified) {
-                                            debug.setText(debug.getText() + JSONParser.hotloadJSON(jsonFile, definition));
-                                        }
-                                        parsedFiles.add(jsonFile);
-                                    }
-                                }
-                            }
-                        }
-                        debug.setText(debug.getText() + "\nImporting finished.");
-                    } else {
-                        debug.setText("ERROR: No last modified timestamp file found at location: " + lastModifiedFile.getAbsolutePath() + "\nPlease re-export your pack data.");
-                    }
-                } else {
-                    debug.setText("ERROR: Could not find dev folder: " + jsonDir.getAbsolutePath());
-                }
+                debug.setText(JSONParser.importAllJSONs());
+                JSONParser.applyImports(vehicleClicked.world);
+                InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
             }
         });
         //Add control buttons.

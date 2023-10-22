@@ -32,6 +32,7 @@ import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPackImport;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
@@ -221,6 +222,9 @@ public abstract class APacketBase {
     public static void initPackets(byte packetIndex) {
         //Register all classes in the minecrafttransportsimulator.packets.instances package.
         //Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
+
+        //Core packsets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPackImport.class);
 
         //Entity packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCameraChange.class);

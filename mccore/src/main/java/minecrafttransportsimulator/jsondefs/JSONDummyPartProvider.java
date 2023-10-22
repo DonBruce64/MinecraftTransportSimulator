@@ -3,6 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 
 public class JSONDummyPartProvider extends AJSONPartProvider {
 
@@ -24,6 +25,9 @@ public class JSONDummyPartProvider extends AJSONPartProvider {
         subDef.subName = "";
         definition.definitions = new ArrayList<>();
         definition.definitions.add(subDef);
+
+        definition.rendering = new JSONRendering();
+        definition.rendering.modelType = ModelType.NONE;
 
         return definition;
     }

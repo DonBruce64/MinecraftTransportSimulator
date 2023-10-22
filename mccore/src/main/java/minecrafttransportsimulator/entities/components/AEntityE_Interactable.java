@@ -247,6 +247,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             instruments.clear();
             instrumentRenderables.clear();
             instrumentSlotSwitchboxes.clear();
+            instrumentComponentSwitchboxes.clear();
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 instruments.add(null);
                 instrumentRenderables.add(null);
