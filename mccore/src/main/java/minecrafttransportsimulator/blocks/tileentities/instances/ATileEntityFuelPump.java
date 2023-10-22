@@ -155,7 +155,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                         return true;
                     }
                     case MISMATCH: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE));
+                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE, nearestVehicle.fuelTank.getFluid()));
                         return true;
                     }
                 }

@@ -194,8 +194,8 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_FUELPUMP_NOFUEL = new LanguageEntry("interact.fuelpump.nofuel", "The pump is empty.  Either insert fuel into the pump via buckets, or connect it to a fluid or electrical system from the bottom.");
     public static final LanguageEntry INTERACT_FUELPUMP_FULLITEMS = new LanguageEntry("interact.fuelpump.fullitems", "This pump is set up to require payment for fuel, but it cannot accept more items.  Contact the owner to empty it!");
     public static final LanguageEntry INTERACT_FUELPUMP_TOOFAR = new LanguageEntry("interact.fuelpump.toofar", "The pump is too far away from the vehicle.  The pump should be no more than 16 blocks away.");
-    public static final LanguageEntry INTERACT_FUELPUMP_WRONGTYPE = new LanguageEntry("interact.fuelpump.wrongtype", "This pump does not contain the same fuel type as what is in the vehicle.");
-    public static final LanguageEntry INTERACT_FUELPUMP_NOENGINE = new LanguageEntry("interact.fuelpump.noengine", "There is no engine in this vehicle.  Removing engines from vehicles resets their fuel tank, so fueling this vehicle would do nothing!");
+    public static final LanguageEntry INTERACT_FUELPUMP_WRONGTYPE = new LanguageEntry("interact.fuelpump.wrongtype", "This pump does not contain the same fluid as what is in the vehicle.  %s is in the vehicle.");
+    public static final LanguageEntry INTERACT_FUELPUMP_NOENGINE = new LanguageEntry("interact.fuelpump.noengine", "There is no engine in this vehicle.  Engines with different fuel types will reset fuel, so put an engine in first to avoid fuel loss!");
     public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The contents in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
     public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Connected and fueling.");
     public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
