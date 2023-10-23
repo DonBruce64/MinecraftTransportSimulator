@@ -54,6 +54,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //Internal states.
     public boolean hasReverseThrust;
     public int gearMovementTime;
+    public int ticksOutOfHealth;
     public double electricPower;
     public double electricUsage;
     public double electricFlow;
@@ -187,6 +188,13 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Check to make sure we are still being tracked.
         radarsTracking.removeIf(tracker -> !tracker.isValid || (!tracker.aircraftOnRadar.contains(this) && !tracker.groundersOnRadar.contains(this)));
+
+        //If we are supposed to de-spawn, do so.
+        if (outOfHealth && ConfigSystem.settings.general.vehicleDeathDespawnTime.value > 0) {
+            if (++ticksOutOfHealth > ConfigSystem.settings.general.vehicleDeathDespawnTime.value * 20) {
+                remove();
+            }
+        }
         world.endProfiling();
     }
 
