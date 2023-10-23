@@ -89,6 +89,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by crashes.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
+        public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");
     }
 
     public static class ConfigFuel {
@@ -143,6 +144,9 @@ public class JSONConfigSettings {
                                     fluids.put("destabilized_redstone", 1.0);
                                     break;
                                 }
+                                case NOTHING: {
+                                    break;
+                                }
                                 default:
                                     fluids.put("lava", 1.0);
                             }
@@ -162,12 +166,13 @@ public class JSONConfigSettings {
             }
             return fuels;
         }
+    }
 
-        public enum FuelDefaults {
-            GASOLINE,
-            DIESEL,
-            AVGAS,
-            REDSTONE;
-        }
+    public enum FuelDefaults {
+        GASOLINE,
+        DIESEL,
+        AVGAS,
+        REDSTONE,
+        NOTHING;
     }
 }

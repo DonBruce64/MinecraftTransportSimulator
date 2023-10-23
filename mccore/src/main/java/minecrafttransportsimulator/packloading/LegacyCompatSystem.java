@@ -29,6 +29,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
@@ -45,6 +46,7 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -695,8 +697,11 @@ public final class LegacyCompatSystem {
             }
 
             //Add fuel type, if it is missing.
+            if (definition.engine.type == EngineType.MAGIC) {
+                definition.engine.fuelType = JSONConfigSettings.FuelDefaults.NOTHING.name().toLowerCase();
+            }
             if (definition.engine.fuelType == null) {
-                definition.engine.fuelType = "diesel";
+                definition.engine.fuelType = JSONConfigSettings.FuelDefaults.DIESEL.name().toLowerCase();
             }
 
             //If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.

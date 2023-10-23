@@ -282,6 +282,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_ENGINE_SUPERCHARGEREFFICIENCY = new LanguageEntry("iteminfo.engine.superchargerefficiency", "Supercharger efficiency: ");
     public static final LanguageEntry ITEMINFO_ENGINE_FUELTYPE = new LanguageEntry("iteminfo.engine.fueltype", "Fuel type: ");
     public static final LanguageEntry ITEMINFO_ENGINE_FLUIDS = new LanguageEntry("iteminfo.engine.fluids", "Takes Fluids: ");
+    public static final LanguageEntry ITEMINFO_ENGINE_MAGIC = new LanguageEntry("iteminfo.engine.fluids", "Uses no fuel!");
     public static final LanguageEntry ITEMINFO_ENGINE_HOURS = new LanguageEntry("iteminfo.engine.hours", "Runtime hours: ");
 
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_DIAMETER = new LanguageEntry("iteminfo.ground_device.diameter", "Diameter: ");
