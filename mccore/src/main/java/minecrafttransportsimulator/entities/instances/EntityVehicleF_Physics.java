@@ -906,6 +906,30 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         return missilesIncoming.isEmpty() ? 0 : 1;
                     }
                 }
+                //Radar variables.
+                //Variable is in the form of radar_X_variablename.
+                if (variable.startsWith("radar_")) {
+                    String radarVariable = variable.substring(variable.lastIndexOf("_") + 1);
+                    int radarNumber = getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
+                    if (radarNumber != -1) {
+                        if (radarsTracking.size() <= radarNumber) {
+                            return 0;
+                        } else {
+                            switch (radarVariable) {
+                                case ("detected"):
+                                    return 1;
+                                case ("distance"):
+                                    return radarsTracking.get(radarNumber).position.distanceTo(position);
+                                case ("direction"): {
+                                    Point3D entityPos = radarsTracking.get(radarNumber).position;
+                                    return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
+                                }
+                            }
+                        }
+                    } else if (radarVariable.equals("detected")) {
+                        return radarsTracking.isEmpty() ? 0 : 1;
+                    }
+                }
             }
         }
 

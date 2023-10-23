@@ -138,10 +138,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public AItemPack<JSONDefinition> cachedItem;
 
     //Radar lists.  Only updated once a tick.  Created when first requested via animations.
-    private List<EntityVehicleF_Physics> aircraftOnRadar;
-    private List<EntityVehicleF_Physics> groundersOnRadar;
-    private int radarRequestCooldown;
-    private Comparator<AEntityB_Existing> entityComparator;
+    public final List<EntityVehicleF_Physics> aircraftOnRadar = new ArrayList<>();
+    public final List<EntityVehicleF_Physics> groundersOnRadar = new ArrayList<>();
+    private final Comparator<AEntityB_Existing> entityComparator = new Comparator<AEntityB_Existing>() {
+        @Override
+        public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
+            return position.isFirstCloserThanSecond(o1.position, o2.position) ? -1 : 1;
+        }
+
+    };;
 
     /**
      * Constructor for synced entities
@@ -195,28 +200,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             animationsInitialized = true;
         }
         //Only update radar once a second, and only if we requested it via variables.
-        if (radarRequestCooldown > 0 && ticksExisted % 20 == 0) {
-            if (entityComparator == null) {
-                entityComparator = new Comparator<AEntityB_Existing>() {
-                    @Override
-                    public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
-                        return position.isFirstCloserThanSecond(o1.position, o2.position) ? -1 : 1;
-                    }
-
-                };
-            }
-
+        if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
             Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
-            if (aircraftOnRadar == null) {
-                aircraftOnRadar = new ArrayList<EntityVehicleF_Physics>();
-            } else {
-                aircraftOnRadar.clear();
-            }
-            if (groundersOnRadar == null) {
-                groundersOnRadar = new ArrayList<EntityVehicleF_Physics>();
-            } else {
-                groundersOnRadar.clear();
-            }
+            aircraftOnRadar.clear();
+            groundersOnRadar.clear();
             Point3D searchVector = new Point3D();
             Point3D LOSVector = new Point3D();
             for (EntityVehicleF_Physics vehicle : allVehicles) {
@@ -229,6 +216,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         aircraftOnRadar.add(vehicle);
                     } else {
                         groundersOnRadar.add(vehicle);
+                    }
+                    if (!vehicle.radarsTracking.contains(this)) {
+                        vehicle.radarsTracking.add(this);
                     }
                 }
             }
@@ -393,6 +383,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (SoundInstance sound : sounds) {
                 sound.stopSound = true;
             }
+
+            //Clear radars.
+            aircraftOnRadar.clear();
+            groundersOnRadar.clear();
         }
     }
 
@@ -860,43 +854,40 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Check if this is a radar variable.
         if (variable.startsWith("radar_")) {
-            if (radarRequestCooldown != 0 && entityComparator != null) {
-                String[] parsedVariable = variable.split("_");
-                List<? extends AEntityB_Existing> radarList;
-                switch (parsedVariable[1]) {
-                    case ("aircraft"):
-                        radarList = aircraftOnRadar;
-                        break;
-                    case ("ground"):
-                        radarList = groundersOnRadar;
-                        break;
-                    default:
-                        //Can't continue, as we expect non-null.
-                        return 0;
-                }
-                int index = Integer.parseInt(parsedVariable[2]);
-                if (index < radarList.size()) {
-                    AEntityB_Existing contact = radarList.get(index);
-                    switch (parsedVariable[3]) {
-                        case ("distance"):
-                            return contact.position.distanceTo(position);
-                        case ("direction"):
-                            double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+            String[] parsedVariable = variable.split("_");
+            List<EntityVehicleF_Physics> radarList;
+            switch (parsedVariable[1]) {
+                case ("aircraft"):
+                    radarList = aircraftOnRadar;
+                    break;
+                case ("ground"):
+                    radarList = groundersOnRadar;
+                    break;
+                default:
+                    //Can't continue, as we expect non-null.
+                    return 0;
+            }
+            int index = Integer.parseInt(parsedVariable[2]);
+            if (index < radarList.size()) {
+                AEntityB_Existing contact = radarList.get(index);
+                switch (parsedVariable[3]) {
+                    case ("distance"):
+                        return contact.position.distanceTo(position);
+                    case ("direction"):
+                        double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
                         while (delta < -180)
                             delta += 360;
                         while (delta > 180)
                             delta -= 360;
                         return delta;
-                        case ("speed"):
-                            return contact.velocity;
-                        case ("altitude"):
-                            return contact.position.y;
-                        case ("angle"):
-                            return -Math.toDegrees(Math.atan2(-contact.position.y + position.y,Math.hypot(-contact.position.z + position.z,-contact.position.x + position.x))) + orientation.angles.x;
-                    }
+                    case ("speed"):
+                        return contact.velocity;
+                    case ("altitude"):
+                        return contact.position.y;
+                    case ("angle"):
+                        return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
                 }
             }
-            radarRequestCooldown = 40;
             return 0;
         }
 
