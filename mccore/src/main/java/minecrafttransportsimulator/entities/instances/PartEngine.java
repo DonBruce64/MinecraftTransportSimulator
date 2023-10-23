@@ -155,6 +155,10 @@ public class PartEngine extends APart {
         //This allows us to swap in an engine with a different fuel type than the last one.
         if (vehicleOn != null && !vehicleOn.fuelTank.getFluid().isEmpty()) {
             switch (definition.engine.type) {
+                case MAGIC: {
+                    //Do nothing, magic engines don't need fuel.
+                    break;
+                }
                 case ELECTRIC: {
                     //Check for electricity.
                     if (!vehicleOn.fuelTank.getFluid().equals(ELECTRICITY_FUEL)) {
@@ -451,10 +455,7 @@ public class PartEngine extends APart {
 
                         //Check if we need to stall the engine for various conditions.
                         if (!world.isClient()) {
-                            if (!isActive) {
-                                stallEngine(Signal.INACTIVE);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
-                            } else if (isInLiquid()) {
+                            if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
                             } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
@@ -520,15 +521,30 @@ public class PartEngine extends APart {
                             if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                            } else if (!isActive) {
-                                stallEngine(Signal.INACTIVE);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                             }
                         }
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
                             if (isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+                                if (magnetoOn) {
+                                    startEngine();
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case MAGIC: {
+                    if (running) {
+                        //Provide electric power to the vehicle we're in.
+                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+                    } else {
+                        //Turn on engine if the magneto is onl.
+                        if (!world.isClient() && !vehicleOn.outOfHealth) {
+                            if (isActive) {
                                 if (magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
