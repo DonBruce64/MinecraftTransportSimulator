@@ -242,21 +242,25 @@ public class VehicleGroundDeviceBox {
                 isBlockedVertically = true;
 
                 //We search top-down, since it's more efficient with situations where we are within climb height bounds.
+                //Make sure our ground devices have thickness though: ground devices can have 0 thickness which would
+                //lead to an infinite loop here.
                 final float offsetDelta = (float) (solidBox.heightRadius * 2);
-                float offset = (float) (climbHeight + solidBox.heightRadius) + offsetDelta;
-                do {
-                    offset -= offsetDelta;
-                    if (offset < offsetDelta) {
-                        offset = offsetDelta;
+                if (offsetDelta > 0) {
+                    float offset = (float) (climbHeight + solidBox.heightRadius) + offsetDelta;
+                    do {
+                        offset -= offsetDelta;
+                        if (offset < offsetDelta) {
+                            offset = offsetDelta;
+                        }
+                        testOffset.y = offset;
+                        if (!vehicle.world.checkForCollisions(solidBox, testOffset, false)) {
+                            isBlockedVertically = false;
+                            break;
+                        }
+                    } while (offset != offsetDelta);
+                    if (isBlockedVertically) {
+                        vehicle.allBlockCollisionBoxes.add(solidBox);
                     }
-                    testOffset.y = offset;
-                    if (!vehicle.world.checkForCollisions(solidBox, testOffset, false)) {
-                        isBlockedVertically = false;
-                        break;
-                    }
-                } while (offset != offsetDelta);
-                if (isBlockedVertically) {
-                    vehicle.allBlockCollisionBoxes.add(solidBox);
                 }
             } else {
                 solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
