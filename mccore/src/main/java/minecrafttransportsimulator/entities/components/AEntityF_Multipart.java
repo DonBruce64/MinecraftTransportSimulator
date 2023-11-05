@@ -627,7 +627,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     /**
      * Returns true if this entity can be clicked.  Normally true, but can be false to block
-     * click-able hitboxes from showing up.
+     * click-able hitboxes from showing up.  This function should only be called on CLIENTs.
      */
     public boolean canBeClicked() {
         return true;
@@ -896,7 +896,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             allBlockCollisionBoxes.addAll(part.allBlockCollisionBoxes);
             allBulletCollisionBoxes.addAll(part.allBulletCollisionBoxes);
             allInteractionBoxes.addAll(part.allInteractionBoxes);
-            allDamageCollisionBoxes.addAll(part.damageCollisionBoxes);
+            allDamageCollisionBoxes.addAll(part.allDamageCollisionBoxes);
             allPartSlotBoxes.putAll(part.allPartSlotBoxes);
         }
 

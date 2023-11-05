@@ -99,6 +99,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
             if (hitBox == null) {
                 //Not sure how the heck this happened, but it did.
+                InterfaceManager.coreInterface.logError("Got a packet for interacting with an entity, but don't have a hitbox for it, so we can't interact?  Interacting with: " + entity.toString());
                 return false;
             }
         }

@@ -188,7 +188,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     @Override
     public String toString() {
-        return definition.packID + ":" + definition.systemName + ":" + subDefinition;
+        return definition.packID + ":" + definition.systemName + subDefinition.subName;
     }
 
     @Override
