@@ -9,6 +9,7 @@
     "client": [
         "client.RenderInfoInvokerMixin",
 				"client.ClientPlayNetHandlerMixin",
+				"client.ListenerMixin",
 				"client.SimpleReloadableResourceManagerMixin",
 				"client.BipedModelMixin",
 				"client.VillagerModelMixin",
