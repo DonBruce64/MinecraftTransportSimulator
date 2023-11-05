@@ -409,8 +409,12 @@ public class RotationMatrix {
      */
     public void interploate(RotationMatrix start, RotationMatrix end, double delta) {
         //Convert start and end matrix to quaternions.
-        double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22) / 2D;
-        double quatEndw = Math.sqrt(1 + end.m00 + end.m11 + end.m22) / 2D;
+        //Need to check for <0 here as FPEs can make us go below and get NaN results.
+        double netValue = 1 + start.m00 + start.m11 + start.m22;
+        double quatStartw = netValue <= 0 ? 0 : Math.sqrt(netValue) / 2D;
+        netValue = 1 + end.m00 + end.m11 + end.m22;
+        double quatEndw = netValue <= 0 ? 0 : Math.sqrt(netValue) / 2D;
+
         if (quatStartw < 1.0e-6 && quatEndw < 1.0e-6) {
             //Quaternions are axis-aligned.  If we continue, we get NaNed or get funny results.
             //TODO find better maths to handle this condition rather than just not interpolating.
