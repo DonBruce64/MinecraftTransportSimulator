@@ -192,7 +192,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
                     Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
                     if (hitBoxes != null) {
-                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), hitBoxes);
+                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitBoxes);
                     }
                 }
             }

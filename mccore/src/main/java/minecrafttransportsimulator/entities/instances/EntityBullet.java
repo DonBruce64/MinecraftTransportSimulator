@@ -380,7 +380,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
                 //At this point, whatever we have to attack should be attacked.
                 //First attack the entity, since the bullet could go through it and hit a entity or block on the other side.
-                if (hitMultipart != null && hitMultipart.attackProjectile(damage, hitMultipartBoxes) != null) {
+                if (hitMultipart != null && hitMultipart.attackProjectile(damage, this, hitMultipartBoxes) != null) {
                     return;
                 }
                 
@@ -595,7 +595,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, HitType hitType) {
-        //Query up return packeets first.  This ensures that we get to do this generic logic which spawns particles on clients before
+        //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
         //any block-breaking packets arrive.
         if (!gun.world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitType));

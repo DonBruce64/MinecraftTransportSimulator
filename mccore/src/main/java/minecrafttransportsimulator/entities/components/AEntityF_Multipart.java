@@ -20,7 +20,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -382,7 +381,37 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (!allPartSlotBoxes.containsKey(box)) {
                     Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
                     if (delta != null) {
-                        hitBoxes.put(delta.distanceTo(pathStart), box);
+                        double boxDistance = delta.distanceTo(pathStart);
+                        boolean addBox = true;
+                        if (box.groupDef != null) {
+                            //Don't add boxes within the same group.
+                            Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
+                            while (iterator.hasNext()) {
+                                Entry<Double, BoundingBox> entry = iterator.next();
+                                BoundingBox otherBox = entry.getValue();
+                                if (otherBox.groupDef == box.groupDef) {
+                                    //If we have more armor, remove the prior box since it won't stop the bullet as much.
+                                    //Otherwise, just use closest box.
+                                    if (box.definition.armorThickness != 0) {
+                                        if (box.definition.armorThickness > otherBox.definition.armorThickness) {
+                                            iterator.remove();
+                                        } else {
+                                            addBox = false;
+                                        }
+                                    } else {
+                                        if (entry.getKey() > boxDistance) {
+                                            iterator.remove();
+                                        } else {
+                                            addBox = false;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (addBox) {
+                            hitBoxes.put(delta.distanceTo(pathStart), box);
+                        }
                     }
                 }
             }
@@ -400,12 +429,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Also note that unlike {@link #attack(Damage)}, this method functions both on client and servers, though you must only
      * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
      */
-    public EntityBullet.HitType attackProjectile(Damage damage, Collection<BoundingBox> hitBoxes) {
+    public EntityBullet.HitType attackProjectile(Damage damage, EntityBullet bullet, Collection<BoundingBox> hitBoxes) {
             //Check all boxes for armor and see if we penetrated them.
         for (BoundingBox hitBox : hitBoxes) {
             APart hitPart = getPartWithBox(hitBox);
             AEntityF_Multipart<?> hitEntity = hitPart != null ? hitPart : this;
-            EntityBullet bullet = damage.damgeSource instanceof PartGun ? ((PartGun) damage.damgeSource).currentBullet : null;
 
             //First check if we need to reduce health of the hitbox.
             boolean hitOperationalHitbox = false;
