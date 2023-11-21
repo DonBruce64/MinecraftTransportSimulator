@@ -1177,7 +1177,9 @@ public class PartGun extends APart {
             case ("gun_ammo_count"):
                 return bulletsLeft;
             case ("gun_ammo_count_reloading"):
-                return reloadingBullet.definition.bullet.quantity;
+                return reloadTimeRemaining > 0 ? reloadingBullet.definition.bullet.quantity : 0; //EEEEVERYTHING YOU KNOW IS WRONG, BLACK IS WHITE UP IS DOWN AND INTS CAN'T 'null'!!! -cbc
+                //I would think that ideally this should've looked like the following, but apparently that's not actually possible, nor was it the solution anyways.
+                //return reloadingBullet.definition.bullet.quantity != null ? 1 : 0;
             case ("gun_ammo_percent"):
                 return bulletsLeft / definition.gun.capacity;
             case ("gun_active_muzzlegroup"):
