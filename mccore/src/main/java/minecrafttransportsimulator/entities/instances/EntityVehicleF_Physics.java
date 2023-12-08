@@ -64,7 +64,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double rudderTrim;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
-    public static final double RUDDER_DAMPEN_RATE = 2.0;
+    public static final double RUDDER_DAMPEN_RATE = ConfigSystem.client.controlSettings.steeringReturnRate.value;
     public static final String RUDDER_INPUT_VARIABLE = "input_rudder";
     public static final String RUDDER_VARIABLE = "rudder";
     public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
