@@ -64,7 +64,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double rudderTrim;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
-    public static final double RUDDER_DAMPEN_RATE = 2.0;
+    public static final double RUDDER_DAMPEN_RATE = ConfigSystem.client.controlSettings.steeringReturnRate.value;
     public static final String RUDDER_INPUT_VARIABLE = "input_rudder";
     public static final String RUDDER_VARIABLE = "rudder";
     public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
@@ -605,7 +605,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Update hookup position now that rotation is current.
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
             }
-            //Now get positional delta.  This assumes perfectly-aligned orientation.				
+            //Now get positional delta.  This assumes perfectly-aligned orientation.
             motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1 / speedFactor);
         } else {
             //Towed vehicle on a road with towing vehicle.  Just use same deltas.
