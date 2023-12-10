@@ -53,8 +53,8 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 
 
-        public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<>(2D, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
-        public JSONConfigEntry<Double> steeringReturnRate = new JSONConfigEntry<>(4D, "How many degrees to turn the wheels on vehicles for every tick the button is NOT held down.  This is not used when using a joystick.");
+        public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
+        public JSONConfigEntry<Double> steeringReturnRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RETURN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is NOT held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
