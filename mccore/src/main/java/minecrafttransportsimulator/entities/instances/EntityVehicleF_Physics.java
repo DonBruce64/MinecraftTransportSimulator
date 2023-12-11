@@ -534,10 +534,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             //Finally, get gravity.
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
             if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
-                gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+                if (gravityFactor != 0) {
+                    gravitationalForce -= gravityFactor * currentWaterBallastFactor;
+                }
+                else {
+                    gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+                }
             }
             if (!definition.motorized.isAircraft) {
-                gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
+                if (gravityFactor != 0) {
+                    gravitationalForce *= gravityFactor;
+                }
+                else {
+                    gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
+                }
             }
 
             //Add all forces to the main force matrix and apply them.
