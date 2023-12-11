@@ -52,6 +52,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean slipping;
     public boolean skidSteerActive;
     public boolean lockedOnRoad;
+    public double climbRate = definition.motorized.climbRate;
     private boolean updateGroundDevicesRequest;
     public double groundVelocity;
     public double weightTransfer = 0;
@@ -706,7 +707,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (groundMotion.y > 0) {
                     world.beginProfiling("GroundBoostApply", false);
                     //Make sure boost doesn't exceed the config value.
-                    groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value / speedFactor);
+                    if(climbRate == 0) {
+                        groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value / speedFactor);
+                    }
+                    else{
+                        groundMotion.y = Math.min(groundMotion.y, climbRate / speedFactor);
+                    }
 
                     //If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
                     //This is done as it's clear motion.y is just moving the vehicle into the ground.
