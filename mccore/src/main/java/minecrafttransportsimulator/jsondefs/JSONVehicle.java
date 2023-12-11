@@ -164,6 +164,12 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
         public float waterBallastFactor;
 
+        @JSONDescription("Gravity factor for vehicle. This will override gravity value in config if present.")
+        public float gravityFactor;
+
+        @JSONDescription("Climb Speed factor for vehicle. This will override default value in config if present.")
+        public float climbRate;
+
         @JSONRequired
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
         public String litVariable;
