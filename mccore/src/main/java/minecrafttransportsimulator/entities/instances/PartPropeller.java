@@ -40,6 +40,10 @@ public class PartPropeller extends APart {
      * In meters per second.
      **/
     public double desiredLinearVelocity;
+    /**
+     * JSON Value.
+     **/
+    public int pitchSpeed = definition.propeller.pitchSpeed;
 
     private final List<PartEngine> connectedEngines = new ArrayList<>();
     protected final Point3D propellerAxisVector = new Point3D();
