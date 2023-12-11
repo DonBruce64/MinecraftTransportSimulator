@@ -131,9 +131,21 @@ public class PartPropeller extends APart {
                     }
                 } else if (definition.propeller.isDynamicPitch) {
                     if (decreasePitch || (vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH)) {
-                        --currentPitch;
+                        if(pitchSpeed != 0){
+                            currentPitch -= pitchSpeed;
+                        }
+                        else
+                        {
+                            --currentPitch;
+                        }
                     } else if (increasePitch || (!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH)) {
-                        ++currentPitch;
+                        if(pitchSpeed != 0){
+                            currentPitch += pitchSpeed;
+                        }
+                        else
+                        {
+                            ++currentPitch;
+                        }
                     }
                 }
             }
