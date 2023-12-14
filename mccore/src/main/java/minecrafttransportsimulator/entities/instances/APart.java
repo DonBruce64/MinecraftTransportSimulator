@@ -163,6 +163,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (definition.generic.activeAnimations != null) {
             internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
         }
+
+        //Add parent constants.
+        if (placementDefinition.constantValues != null) {
+            variables.putAll(placementDefinition.constantValues);
+        }
     }
 
     @Override
