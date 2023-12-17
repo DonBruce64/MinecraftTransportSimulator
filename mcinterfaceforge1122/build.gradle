@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-		    //Leave FG5 at this version.  Newer versions do fucky stuff with 1.12.2 builds that result in odd Gradle errors.
+        //Leave FG5 at this version.  Newer versions do fucky stuff with 1.12.2 builds that result in odd Gradle errors.
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.60", changing: true
     }
 }
@@ -61,8 +61,8 @@ configurations {
 dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
-		
-		//Core to use.
+
+    //Core to use.
     embed(project(":mccore"))
 
 
@@ -88,6 +88,22 @@ jar {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
 }
+
+tasks.register("preBuild") {
+    var modVersion = project.rootProject.property("global_version").toString()
+    project.projectDir.traverse { file ->
+        if (file.name in ["gradle.properties", "mcmod.info", "InterfaceLoader.java"]) {
+            println("Processing $file.name")
+            def content = file.text
+            content = content.replaceAll("mod_version=(.+)", "mod_version=$modVersion")
+            content = content.replaceAll("\"version\": \"[^\"]*\"", "\"version\": \"$modVersion\"")
+            content = content.replaceAll("MODVER = \"[^\"]*\";", "MODVER = \"$modVersion\";")
+            file.text = content
+        }
+    }
+}
+
+tasks.build.dependsOn(tasks.preBuild)
 
 //Now compile the mod.
 jar.finalizedBy("reobfJar")

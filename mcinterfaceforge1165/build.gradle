@@ -85,7 +85,7 @@ dependencies {
     //Core to use.
     embed(project(":mccore"))
 
-		//Compile against the JEI API but do not include it at runtime
+    //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
     //At runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
@@ -95,6 +95,7 @@ mixin {
     add sourceSets.main, project.mixin_refmap
     config project.mixin_config
 }
+
 
 //Here is where we zip up all embeds and add them to our jar.
 jar {
@@ -112,9 +113,25 @@ jar {
     }
 }
 
-//Now compile the mod.
-jar.finalizedBy("reobfJar")
-
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
 }
+
+tasks.register("preBuild") {
+    var modVersion = project.rootProject.property("global_version").toString()
+    project.projectDir.traverse { file ->
+        if (file.name in ["gradle.properties", "mods.toml", "InterfaceLoader.java"]) {
+            println("Processing $file.name")
+            def content = file.text
+            content = content.replaceAll("mod_version=(.+)", "mod_version=$modVersion")
+            content = content.replaceAll("version=\"[^\"]*\"", "version=\"$modVersion\"")
+            content = content.replaceAll("MODVER = \"[^\"]*\";", "MODVER = \"$modVersion\";")
+            file.text = content
+        }
+    }
+}
+
+tasks.build.dependsOn(tasks.preBuild)
+
+//Now compile the mod.
+jar.finalizedBy("reobfJar")
