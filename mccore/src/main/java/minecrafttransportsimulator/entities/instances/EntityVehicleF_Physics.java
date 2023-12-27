@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -8,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -907,28 +909,79 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     }
                 }
                 //Radar variables.
-                //Variable is in the form of radar_X_variablename.
                 if (variable.startsWith("radar_")) {
-                    String radarVariable = variable.substring(variable.lastIndexOf("_") + 1);
-                    int radarNumber = getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
-                    if (radarNumber != -1) {
-                        if (radarsTracking.size() <= radarNumber) {
-                            return 0;
-                        } else {
-                            switch (radarVariable) {
-                                case ("detected"):
-                                    return 1;
-                                case ("distance"):
-                                    return radarsTracking.get(radarNumber).position.distanceTo(position);
-                                case ("direction"): {
-                                    Point3D entityPos = radarsTracking.get(radarNumber).position;
-                                    return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
+                    String[] parsedVariable = variable.split("_");
+
+                    //First check if we are seeing with our own radar, or being seen.
+                    //Variable is in the form of radar_X_variablename for inbound, radar_X_Y_variablename for outbound.
+                    List<EntityVehicleF_Physics> radarList;
+                    switch (parsedVariable[1]) {
+                        case ("aircraft"): {
+                            radarList = aircraftOnRadar;
+                            break;
+                        }
+                        case ("ground"): {
+                            radarList = groundersOnRadar;
+                            break;
+                        }
+                        default: {
+                            //Inbound contact from another radar.
+                            switch (parsedVariable.length) {
+                                case 2: {
+                                    switch (parsedVariable[1]) {
+                                        case ("detected"):
+                                            return radarsTracking.isEmpty() ? 0 : 1;
+                                    }
+                                    break;
+                                }
+                                case 3: {
+                                    int radarNumber = Integer.parseInt(parsedVariable[1]) - 1;
+                                    if (radarsTracking.size() <= radarNumber) {
+                                        return 0;
+                                    } else {
+                                        switch (parsedVariable[2]) {
+                                            case ("detected"):
+                                                return 1;
+                                            case ("distance"):
+                                                return radarsTracking.get(radarNumber).position.distanceTo(position);
+                                            case ("direction"): {
+                                                Point3D entityPos = radarsTracking.get(radarNumber).position;
+                                                return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                            //Invalid inbound radar value, return 0.
+                            return 0;
                         }
-                    } else if (radarVariable.equals("detected")) {
-                        return radarsTracking.isEmpty() ? 0 : 1;
                     }
+
+                    //Outbound radar found, do logic.
+                    int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
+                    if (radarNumber < radarList.size()) {
+                        AEntityB_Existing contact = radarList.get(radarNumber);
+                        switch (parsedVariable[3]) {
+                            case ("distance"):
+                                return contact.position.distanceTo(position);
+                            case ("direction"):
+                                double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+                                while (delta < -180)
+                                    delta += 360;
+                                while (delta > 180)
+                                    delta -= 360;
+                                return delta;
+                            case ("speed"):
+                                return contact.velocity;
+                            case ("altitude"):
+                                return contact.position.y;
+                            case ("angle"):
+                                return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
+                        }
+                    }
+
+                    //Contact not found or bad variable, return 0.
+                    return 0;
                 }
             }
         }
