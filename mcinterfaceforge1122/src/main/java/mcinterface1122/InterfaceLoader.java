@@ -50,8 +50,8 @@ public final class InterfaceLoader {
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
-
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+	    
+	LOGGER.info("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
