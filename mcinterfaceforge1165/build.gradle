@@ -118,7 +118,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.register("preBuild") {
-    var modVersion = project.rootProject.property("global_version").toString()
+    var modVersion = project.rootProject.properties["global_version"].toString()
     project.projectDir.traverse { file ->
         if (file.name in ["gradle.properties", "mods.toml", "InterfaceLoader.java"]) {
             println("Processing $file.name")

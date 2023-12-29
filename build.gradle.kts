@@ -5,17 +5,20 @@ import kotlin.io.path.exists
 import kotlin.io.path.moveTo
 
 
-plugins {}
+plugins {
+}
 
-repositories {}
+repositories {
+}
 
-dependencies {}
+dependencies {
+}
 
 subprojects {
     apply(plugin = "java")
 }
 
-var modVersion: String = project.property("global_version").toString()
+var modVersion: String = project.properties["global_version"].toString()
 
 var mcCore = project(":mccore")
 var mcInterfaceForge1122 = project(":mcinterfaceforge1122")
