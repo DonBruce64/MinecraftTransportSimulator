@@ -61,7 +61,7 @@ Now that you have a JDK and Git Bash setup, you can clone the repository for the
 
 1. Right-click the folder that was created when you ran `git clone` and click "Open Folder as IntelliJ yourEdition Edition IDEA Project".   If you don't have the option, start IDEA and click File -> Open then navigate to the directory and choose the folder.
 
-2. Wait for IDEA to finish setting up the Gradle script then use the "Gradle" tab on the right side of your screen to run Gradle tasks.   Run `genIntelliJRuns` in the project for the Forge version and game version you want, e.g. `mcinterfaceforge1122` for Forge for 1.12.2.
+2. Wait for IDEA to finish setting up the Gradle script then use the "Gradle" tab on the right side of your screen to run Gradle tasks.   Run `genIntelliJRuns` **in the main project**, it will not work and will throw an error otherwise.
 
 3. When you want to test your changes on the client or server, use the `runClient` or `runServer` configurations.   Click the dropdown then "Edit Configurations..." and change the `MC_VERSION` environment variable to the game version.   If the run configuration has a red x, change the project module to `Immersive_Vehicles.forgeInterfaceVersion.main` in the same menu.
 
