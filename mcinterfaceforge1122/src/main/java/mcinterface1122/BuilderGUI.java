@@ -61,30 +61,32 @@ public class BuilderGUI extends GuiScreen {
     @Override
     protected void keyTyped(char key, int keyCode) throws IOException {
         super.keyTyped(key, keyCode);
-        for (AGUIComponent component : gui.components) {
-            if (component instanceof GUIComponentTextBox) {
-                GUIComponentTextBox textBox = (GUIComponentTextBox) component;
-                if (textBox.focused) {
-                    //If we did a paste from the clipboard, we need to replace everything in the box.
-                    //Otherwise, just send the char for further processing.
-                    if (isKeyComboCtrlV(keyCode)) {
-                        textBox.setText(getClipboardString());
-                    } else {
-                        switch (keyCode) {
-                            case Keyboard.KEY_BACK:
-                                textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.BACKSPACE);
-                                continue;
-                            case Keyboard.KEY_DELETE:
-                                textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.DELETE);
-                                continue;
-                            case Keyboard.KEY_LEFT:
-                                textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.LEFT);
-                                continue;
-                            case Keyboard.KEY_RIGHT:
-                                textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.RIGHT);
-                                continue;
-                            default:
-                                textBox.handleKeyTyped(key, keyCode, null);
+        if (keyCode != 1) {
+            for (AGUIComponent component : gui.components) {
+                if (component instanceof GUIComponentTextBox) {
+                    GUIComponentTextBox textBox = (GUIComponentTextBox) component;
+                    if (textBox.focused) {
+                        //If we did a paste from the clipboard, we need to replace everything in the box.
+                        //Otherwise, just send the char for further processing.
+                        if (isKeyComboCtrlV(keyCode)) {
+                            textBox.setText(getClipboardString());
+                        } else {
+                            switch (keyCode) {
+                                case Keyboard.KEY_BACK:
+                                    textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.BACKSPACE);
+                                    continue;
+                                case Keyboard.KEY_DELETE:
+                                    textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.DELETE);
+                                    continue;
+                                case Keyboard.KEY_LEFT:
+                                    textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.LEFT);
+                                    continue;
+                                case Keyboard.KEY_RIGHT:
+                                    textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.RIGHT);
+                                    continue;
+                                default:
+                                    textBox.handleKeyTyped(key, keyCode, null);
+                            }
                         }
                     }
                 }

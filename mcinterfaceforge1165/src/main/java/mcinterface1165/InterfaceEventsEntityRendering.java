@@ -170,10 +170,10 @@ public class InterfaceEventsEntityRendering {
             //Need to store these though, since they get used in other areas not during rendering and this will foul them.
             riderStoredHeadRot = entity.yHeadRot;
             riderStoredHeadRotO = entity.yHeadRotO;
-            entity.yHeadRot = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
-            entity.yHeadRotO = entity.yHeadRot;
             lastRiderPitch = entity.xRot;
             lastRiderPrevPitch = entity.xRotO;
+            entity.yHeadRot = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
+            entity.yHeadRotO = entity.yHeadRot;
             entity.xRot = (float) ridingEntity.riderRelativeOrientation.angles.x;
             entity.xRotO = entity.xRot;
 
@@ -227,8 +227,8 @@ public class InterfaceEventsEntityRendering {
             LivingEntity entity = event.getEntity();
             entity.yHeadRot = riderStoredHeadRot;
             entity.yHeadRotO = riderStoredHeadRotO;
-            event.getEntity().xRot = lastRiderPitch;
-            event.getEntity().xRotO = lastRiderPrevPitch;
+            entity.xRot = lastRiderPitch;
+            entity.xRotO = lastRiderPrevPitch;
             needToPopMatrix = false;
         }
         if (heldStackHolder != null) {

@@ -132,7 +132,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
                                 if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
                                     player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
-                                } else {
+                                } else if (!vehicle.allParts.contains(player.getEntityRiding())) {
                                     player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                                 }
                             }
