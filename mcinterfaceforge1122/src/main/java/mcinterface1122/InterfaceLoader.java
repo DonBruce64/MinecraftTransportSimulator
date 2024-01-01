@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.12.0-BETA";
+    public static final String MODVER = "22.12.1";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 	
 	@EventHandler
@@ -50,8 +50,8 @@ public final class InterfaceLoader {
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
-
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+	    
+	LOGGER.info("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());

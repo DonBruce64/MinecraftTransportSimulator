@@ -212,7 +212,7 @@ public class InterfaceInput implements IInterfaceInput {
     }
 
     @Override
-    public void setKeyboardRepeat(boolean enabled) {
+    public void setGUIControls(boolean enabled) {
         //Nothing to do as these are always enabled it would seem.
     }
 

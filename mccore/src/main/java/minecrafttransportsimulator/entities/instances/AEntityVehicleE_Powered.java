@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -53,6 +54,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //Internal states.
     public boolean hasReverseThrust;
     public int gearMovementTime;
+    public int ticksOutOfHealth;
     public double electricPower;
     public double electricUsage;
     public double electricFlow;
@@ -63,8 +65,9 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //Engines.
     public final List<PartEngine> engines = new ArrayList<>();
 
-    //Map containing incoming missiles, sorted by distance, which is the value for this map.
+    //Map containing incoming missiles and radar info, sorted by distance.
     public final List<EntityBullet> missilesIncoming = new ArrayList<>();
+    public final List<AEntityD_Definable<?>> radarsTracking = new ArrayList<>();
 
     public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -182,6 +185,16 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Update missile list to sort by distance.
         missilesIncoming.sort((missle1, missile2) -> missle1.targetDistance < missile2.targetDistance ? -1 : 1);
+
+        //Check to make sure we are still being tracked.
+        radarsTracking.removeIf(tracker -> !tracker.isValid || (!tracker.aircraftOnRadar.contains(this) && !tracker.groundersOnRadar.contains(this)));
+
+        //If we are supposed to de-spawn, do so.
+        if (outOfHealth && ConfigSystem.settings.general.vehicleDeathDespawnTime.value > 0) {
+            if (++ticksOutOfHealth > ConfigSystem.settings.general.vehicleDeathDespawnTime.value * 20) {
+                remove();
+            }
+        }
         world.endProfiling();
     }
 

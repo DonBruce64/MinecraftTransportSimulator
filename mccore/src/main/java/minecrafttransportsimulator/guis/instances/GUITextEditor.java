@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
@@ -25,14 +27,13 @@ public class GUITextEditor extends AGUIBase {
     private GUIComponentButton confirmButton;
 
     //Input boxes and their field names.
-    private final List<GUIComponentTextBox> textInputBoxes = new ArrayList<>();
-    private final List<String> textInputFieldNames = new ArrayList<>();
+    private final Map<String, GUIComponentTextBox> textInputBoxes = new HashMap<>();
 
     //Entity clicked.
     private final AEntityD_Definable<?> entity;
 
     //Labels for sign.  These do fancy rendering.
-    private final List<GUIComponentLabel> signTextLabels = new ArrayList<>();
+    private final Map<GUIComponentLabel, String> signTextLabels = new HashMap<>();
 
     public GUITextEditor(AEntityD_Definable<?> entity) {
         super();
@@ -64,7 +65,7 @@ public class GUITextEditor extends AGUIBase {
                 JSONText textDef = textObjects.get(i);
                 GUIComponentLabel label = new GUIComponentLabel(modelRender.constructedX + (int) (textDef.pos.x * 64F), modelRender.constructedY - (int) (textDef.pos.y * 64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale * 64F / 16F, textDef.wrapWidth * 64 / 16, textDef.fontName, textDef.autoScale);
                 addComponent(label);
-                signTextLabels.add(label);
+                signTextLabels.put(label, textDef.fieldName);
             }
         } else {
             boxWidth = 200;
@@ -82,19 +83,17 @@ public class GUITextEditor extends AGUIBase {
 
         //Add text box components for every text.  Paired with labels to render the text name above the boxes.
         //Don't add multiple boxes per text field, however.  Those use the same box.
-        textInputFieldNames.clear();
         int currentOffset = 0;
         for (JSONText textObject : textObjects) {
-            if (textObject.variableName == null && !textInputFieldNames.contains(textObject.fieldName)) {
+            if (textObject.variableName == null && !textInputBoxes.containsKey(textObject.fieldName)) {
                 //No text box present for the field name.  Create a new one.
                 GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
                 addComponent(label);
                 int textRowsRequired = 1 + 5 * textObject.maxLength / boxWidth;
                 GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.constructedY + 10, boxWidth, 12 * textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
                 addComponent(box);
-                textInputBoxes.add(box);
+                textInputBoxes.put(textObject.fieldName, box);
                 currentOffset += box.height + 12;
-                textInputFieldNames.add(textObject.fieldName);
             }
         }
 
@@ -105,7 +104,7 @@ public class GUITextEditor extends AGUIBase {
                 LinkedHashMap<String, String> packetTextLines = new LinkedHashMap<String, String>();
                 for (JSONText textObject : textObjects) {
                     if (textObject.variableName == null) {
-                        packetTextLines.put(textObject.fieldName, textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+                        packetTextLines.put(textObject.fieldName, textInputBoxes.get(textObject.fieldName).getText());
                     }
                 }
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
@@ -118,9 +117,9 @@ public class GUITextEditor extends AGUIBase {
     public void setStates() {
         super.setStates();
         confirmButton.enabled = true;
-        for (int i = 0; i < signTextLabels.size(); ++i) {
-            signTextLabels.get(i).text = textInputBoxes.get(i).getText();
-        }
+        signTextLabels.forEach((label, fieldName) -> {
+            label.text = textInputBoxes.get(fieldName).getText();
+        });
     }
 
     @Override

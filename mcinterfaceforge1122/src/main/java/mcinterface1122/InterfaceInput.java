@@ -195,8 +195,12 @@ public class InterfaceInput implements IInterfaceInput {
     }
 
     @Override
-    public void setKeyboardRepeat(boolean enabled) {
+    public void setGUIControls(boolean enabled) {
         Keyboard.enableRepeatEvents(enabled);
+        if (enabled) {
+            leftMouseButtonDown = false;
+            rightMouseButtonDown = false;
+        }
     }
 
     @Override

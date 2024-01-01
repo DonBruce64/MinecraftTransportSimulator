@@ -140,7 +140,7 @@ public final class PartInteractable extends APart {
                     linkedTank = linkedVehicle.fuelTank;
                 }
             } else if (linkedPart != null) {
-                if (linkedPart.position.isDistanceToCloserThan(position, 16)) {
+                if (!linkedPart.position.isDistanceToCloserThan(position, 16)) {
                     linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedPart.tank;

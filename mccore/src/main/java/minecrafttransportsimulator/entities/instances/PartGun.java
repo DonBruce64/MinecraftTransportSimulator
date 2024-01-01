@@ -1177,7 +1177,7 @@ public class PartGun extends APart {
             case ("gun_ammo_count"):
                 return bulletsLeft;
             case ("gun_ammo_count_reloading"):
-                return reloadingBullet.definition.bullet.quantity;
+                return reloadingBullet != null ? reloadingBullet.definition.bullet.quantity : 0;
             case ("gun_ammo_percent"):
                 return bulletsLeft / definition.gun.capacity;
             case ("gun_active_muzzlegroup"):

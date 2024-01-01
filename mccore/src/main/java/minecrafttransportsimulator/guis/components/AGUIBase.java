@@ -52,7 +52,7 @@ public abstract class AGUIBase {
         if (capturesPlayer()) {
             activeInputGUI = this;
             InterfaceManager.clientInterface.setActiveGUI(this);
-            InterfaceManager.inputInterface.setKeyboardRepeat(true);
+            InterfaceManager.inputInterface.setGUIControls(true);
         }
     }
 
@@ -267,7 +267,7 @@ public abstract class AGUIBase {
             if (capturesPlayer()) {
                 activeInputGUI = null;
                 InterfaceManager.clientInterface.closeGUI();
-                InterfaceManager.inputInterface.setKeyboardRepeat(false);
+                InterfaceManager.inputInterface.setGUIControls(false);
             }
             GUIComponent3DModel.clearModelCaches();
         }

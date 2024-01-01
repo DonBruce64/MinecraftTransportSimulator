@@ -34,6 +34,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -247,6 +248,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             instruments.clear();
             instrumentRenderables.clear();
             instrumentSlotSwitchboxes.clear();
+            instrumentComponentSwitchboxes.clear();
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 instruments.add(null);
                 instrumentRenderables.add(null);
@@ -546,15 +548,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      */
     public void attack(Damage damage) {
         if (!damage.isWater) {
-            damageAmount += damage.amount;
-            if (damageAmount > definition.general.health) {
-                double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
-                damageAmount = definition.general.health;
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
-            } else {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+            if (!outOfHealth) {
+                damageAmount += damage.amount;
+                if (damageAmount > definition.general.health) {
+                    damageAmount = definition.general.health;
+                    outOfHealth = true;
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DAMAGE_VARIABLE, damageAmount));
+                } else {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+                }
+                setVariable(DAMAGE_VARIABLE, damageAmount);
             }
-            setVariable(DAMAGE_VARIABLE, damageAmount);
         }
     }
 

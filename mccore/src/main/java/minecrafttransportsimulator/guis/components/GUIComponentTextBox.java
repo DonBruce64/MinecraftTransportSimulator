@@ -66,30 +66,39 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
         //Handle control operation, or basic key typed.
         if (control != null) {
-            if (control.equals(TextBoxControlKey.BACKSPACE)) {
-                if (textIndex != 0) {
-                    //Remove the char before the current position.
-                    text = text.substring(0, textIndex - 1) + text.substring(textIndex);
-                    --textIndex;
-                    if (isTextValid(text)) {
-                        handleTextChange();
+            switch (control) {
+                case BACKSPACE: {
+                    if (textIndex != 0) {
+                        //Remove the char before the current position.
+                        text = text.substring(0, textIndex - 1) + text.substring(textIndex);
+                        --textIndex;
+                        if (isTextValid(text)) {
+                            handleTextChange();
+                        }
                     }
+                    break;
                 }
-            } else if (control.equals(TextBoxControlKey.DELETE)) {
-                if (textIndex != text.length()) {
-                    //Remove the char at the current position.
-                    text = text.substring(0, textIndex) + text.substring(textIndex + 1);
-                    if (isTextValid(text)) {
-                        handleTextChange();
+                case DELETE: {
+                    if (textIndex != text.length()) {
+                        //Remove the char at the current position.
+                        text = text.substring(0, textIndex) + text.substring(textIndex + 1);
+                        if (isTextValid(text)) {
+                            handleTextChange();
+                        }
                     }
+                    break;
                 }
-            } else if (control.equals(TextBoxControlKey.LEFT)) {
-                if (textIndex > 0) {
-                    --textIndex;
+                case LEFT: {
+                    if (textIndex > 0) {
+                        --textIndex;
+                    }
+                    break;
                 }
-            } else if (control.equals(TextBoxControlKey.RIGHT)) {
-                if (textIndex < text.length()) {
-                    ++textIndex;
+                case RIGHT: {
+                    if (textIndex < text.length()) {
+                        ++textIndex;
+                    }
+                    break;
                 }
             }
         } else if (Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))) {

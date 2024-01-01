@@ -52,6 +52,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> engineSpeedTempFactor = new JSONConfigEntry<>(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
         public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
         public JSONConfigEntry<Double> rfToElectricityFactor = new JSONConfigEntry<>(0.02D, "Factor for converting RF to internal electicity for vehicles.  Default value is 1/100, but can be adjusted.");
+        public JSONConfigEntry<Double> vehicleDeathDespawnTime = new JSONConfigEntry<>(0.0D, "Time (in seconds) between when vehicles reach 0 health and they de-spawn.  Normally 0, which means they never de-spawn.");
         public JSONConfigEntry<Set<String>> engineDimensionBlacklist = new JSONConfigEntry<>(new HashSet<>(), "Blacklist of dimension names where engines will be prevented from being started.  Can be used to disable vehicles in specific dimensions.  Think Galacticraft, where you don't want folks flying planes on the moon.");
         public JSONConfigEntry<Set<String>> engineDimensionWhitelist = new JSONConfigEntry<>(new HashSet<>(), "Whitelist of dimension names where engines will only be alowed to work.  Overrides the blacklist if this exists.");
         public JSONConfigEntry<Map<String, Double>> packVehicleScales = new JSONConfigEntry<>(new HashMap<>(), "Scale of all vehicles for this pack.  You probably won't want to change this, but if you do want the vehicles to be smaller for some reason, you can.");
@@ -89,6 +90,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by crashes.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
+        public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");
     }
 
     public static class ConfigFuel {
@@ -143,6 +145,9 @@ public class JSONConfigSettings {
                                     fluids.put("destabilized_redstone", 1.0);
                                     break;
                                 }
+                                case NOTHING: {
+                                    break;
+                                }
                                 default:
                                     fluids.put("lava", 1.0);
                             }
@@ -162,12 +167,13 @@ public class JSONConfigSettings {
             }
             return fuels;
         }
+    }
 
-        public enum FuelDefaults {
-            GASOLINE,
-            DIESEL,
-            AVGAS,
-            REDSTONE;
-        }
+    public enum FuelDefaults {
+        GASOLINE,
+        DIESEL,
+        AVGAS,
+        REDSTONE,
+        NOTHING;
     }
 }

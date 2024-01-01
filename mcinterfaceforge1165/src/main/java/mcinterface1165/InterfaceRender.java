@@ -87,8 +87,8 @@ public class InterfaceRender implements IInterfaceRender {
     private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
     private static ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
-    private static RenderState.TextureState MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
-    private static RenderState.TextureState BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
+    private static RenderState.TextureState MISSING_STATE;
+    private static RenderState.TextureState BLOCK_STATE;
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
     private static Point3D renderCameraOffset = new Point3D();
@@ -373,6 +373,12 @@ public class InterfaceRender implements IInterfaceRender {
      * Helper function to create a new texture state for the specified texture location.
      */
     private static RenderState.TextureState getTexture(String textureLocation) {
+        //Check to make sure textures exist.  We delay creating because some mods screw up this stuff in boot.  Cray, looking at you buddy.
+        if (MISSING_STATE == null) {
+            MISSING_STATE = new RenderState.TextureState(new ResourceLocation("mts:textures/rendering/missing.png"), false, false);
+            BLOCK_STATE = new RenderState.TextureState(PlayerContainer.BLOCK_ATLAS, false, false);
+        }
+
         if (animatedGIFs.containsKey(textureLocation)) {
             //Special case for GIFs.
             ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);

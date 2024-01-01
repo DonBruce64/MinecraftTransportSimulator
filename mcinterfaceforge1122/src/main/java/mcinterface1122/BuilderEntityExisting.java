@@ -1,5 +1,6 @@
 package mcinterface1122;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -189,7 +190,10 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
                     Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
-                    multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
+                    Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
+                    if (hitBoxes != null) {
+                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitBoxes);
+                    }
                 }
             }
         }

@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
-import minecrafttransportsimulator.jsondefs.JSONConfigSettings.ConfigFuel.FuelDefaults;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings.FuelDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -286,7 +286,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
         ROCKET,
         @JSONDescription("An electric engine.  Gets power from chargers connected to the grid.")
-        ELECTRIC;
+        ELECTRIC,
+        @JSONDescription("An engine that doesn't need fuel.  This is designed for vehicles that don't need fuel, like bicycles, sailboats, handcars and the like.")
+        MAGIC;
     }
 
     public static class JSONPartGroundDevice {

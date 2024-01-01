@@ -176,6 +176,9 @@ public final class PackParser {
             if (!ConfigSystem.settings.general.packVehicleScales.value.containsKey(packID)) {
                 ConfigSystem.settings.general.packVehicleScales.value.put(packID, 1.0);
             }
+            if (!ConfigSystem.settings.damage.packBulletDamageFactors.value.containsKey(packID)) {
+                ConfigSystem.settings.damage.packBulletDamageFactors.value.put(packID, 1.0);
+            }
         }
 
         //Flag a save operation, as we probably changed a few things.

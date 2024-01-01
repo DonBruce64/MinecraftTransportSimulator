@@ -22,6 +22,9 @@ public class JSONParticle {
     @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
     public boolean stopsOnGround;
 
+    @JSONDescription("Makes the particle ignore collision with all blocks.  Can and should be used on particles that don't need collision, since this takes up CPU cycles and can lead to odd behavior on occasion if particles are spawned inside blocks.")
+    public boolean ignoreCollision;
+
     @JSONDescription("A random sound from this list of sounds will play when the particle stops on the ground when stopsOnGround is true.  Format for each entry is [packID:soundName]")
     public List<String> groundSounds;
 

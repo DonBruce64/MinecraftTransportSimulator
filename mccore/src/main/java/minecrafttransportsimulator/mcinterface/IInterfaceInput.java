@@ -56,11 +56,11 @@ public interface IInterfaceInput {
     boolean isKeyPressed(int keyCode);
 
     /**
-     * Enables or disables keyboard repeat events.  This should always be set
-     * when opening a GUI that handles keypresses, but it should be un-set upon closure
-     * to prevent repeat presses in-game.
+     * Tells the input interface to act as if a player-capturing GUI is open.
+     * This should always be set when opening a GUI that handles keypresses, 
+     * and un-set when that GUI closes.
      */
-    void setKeyboardRepeat(boolean enabled);
+    void setGUIControls(boolean enabled);
 
     /**
      * Returns true if joystick support is enabled (found at least 1 joystick).

@@ -46,7 +46,9 @@ public class ItemPartEngine extends AItemPart {
             tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_BYPASSRATIO.value + definition.engine.bypassRatio);
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELTYPE.value + definition.engine.fuelType);
-        if (ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
+        if (definition.engine.type == JSONPart.EngineType.MAGIC) {
+            tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_MAGIC.value);
+        } else if (ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
             StringBuilder line = new StringBuilder(JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value);
             for (Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()) {
                 if (InterfaceManager.coreInterface.isFluidValid(fuelEntry.getKey())) {

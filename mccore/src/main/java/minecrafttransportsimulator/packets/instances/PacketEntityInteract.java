@@ -99,6 +99,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
             if (hitBox == null) {
                 //Not sure how the heck this happened, but it did.
+                InterfaceManager.coreInterface.logError("Got a packet for interacting with an entity, but don't have a hitbox for it, so we can't interact?  Interacting with: " + entity.toString());
                 return false;
             }
         }
@@ -120,9 +121,11 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
         //Check if we clicked a box with a variable attached.
         if (!leftClick && hitBox.definition != null && hitBox.definition.variableName != null) {
-            //Can't touch locked entities.
-            if (rightClick && entity.locked) {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+            if (entity.locked) {
+                //Can't touch locked entities.
+                if (rightClick) {
+                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+                }
             } else {
                 switch (hitBox.definition.variableType) {
                     case BUTTON: {

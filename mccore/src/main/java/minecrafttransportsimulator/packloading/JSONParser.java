@@ -1,6 +1,9 @@
 package minecrafttransportsimulator.packloading;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,9 +19,11 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,7 +37,7 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
@@ -50,6 +55,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -444,10 +450,115 @@ public class JSONParser {
     }
 
     /**
-     * Hot-loads the passed-in JSON, replacing the passed-in JSON with this one.
+     * Exports all JSONs into the standard folder to be edited.
+     */
+    public static String exportAllJSONs() {
+        File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
+        if (!jsonDir.exists()) {
+            if (!jsonDir.mkdir()) {
+                return "ERROR: Could not create dev folder: " + jsonDir.getAbsolutePath() + "\nIs this location write-protected?";
+            }
+        }
+
+        File lastModifiedFile = new File(jsonDir, "lastexported.txt");
+        if (lastModifiedFile.exists()) {
+            return "ERROR: Existing export detected!  Exporting will not continue.  Either delete the mts_dev folder, or the lastexported.txt file and try again.";
+        }
+
+        long lastTimeModified = 0;
+        String debugText = "Export dir is: " + jsonDir.getAbsolutePath();
+        for (String packID : PackParser.getAllPackIDs()) {
+            File packDir = new File(jsonDir, packID);
+            if (!packDir.exists()) {
+                if (!packDir.mkdir()) {
+                    return "ERROR: Could not create pack folder: " + packDir.getAbsolutePath() + "\nIs this location write-protected?";
+                }
+            }
+
+            List<AJSONBase> jsons = new ArrayList<>();
+            PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
+            jsons.addAll(PackParser.getAllPanelsForPack(packID));
+
+            for (AJSONBase definition : jsons) {
+                try {
+                    File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders);
+                    jsonFile.mkdirs();
+                    jsonFile = new File(jsonFile, definition.systemName + ".json");
+                    JSONParser.exportStream(definition, Files.newOutputStream(jsonFile.toPath()));
+                    lastTimeModified = jsonFile.lastModified();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return "ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage();
+                }
+            }
+            debugText += "\nExported pack: " + packID;
+        }
+
+        try {
+            FileWriter writer = new FileWriter(lastModifiedFile);
+            writer.write(String.valueOf(lastTimeModified));
+            writer.flush();
+            writer.close();
+            debugText += "\nExporting finished.";
+        } catch (IOException e) {
+            return "ERROR: Could not save last modified timestamp to disk.  Error is:\n" + e.getMessage();
+        }
+        return debugText;
+    }
+
+    /**
+     * Imports all JSONs from the standard folder.
+     * A multi-line string is returned with all status messages from the import process.
+     */
+    public static String importAllJSONs() {
+        File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
+        if (jsonDir.exists()) {
+            String debugText = "Import dir is: " + jsonDir.getAbsolutePath();
+            File lastModifiedFile = new File(jsonDir, "lastexported.txt");
+            if (lastModifiedFile.exists()) {
+                long lastTimeModified;
+                try {
+                    FileReader reader = new FileReader(lastModifiedFile);
+                    BufferedReader buffer = new BufferedReader(reader);
+                    lastTimeModified = Long.parseLong(buffer.readLine());
+                    buffer.close();
+                } catch (Exception e) {
+                    return "ERROR: Could not read last modified timestamp from disk.  Error is:\n" + e.getMessage();
+                }
+
+                Set<File> parsedFiles = new HashSet<>();
+                for (String packID : PackParser.getAllPackIDs()) {
+                    File packDir = new File(jsonDir, packID);
+                    if (packDir.exists()) {
+                        List<AJSONBase> jsons = new ArrayList<>();
+                        PackParser.getAllItemsForPack(packID, false).forEach(item -> jsons.add(item.definition));
+                        jsons.addAll(PackParser.getAllPanelsForPack(packID));
+
+                        for (AJSONBase definition : jsons) {
+                            File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders + definition.systemName + ".json");
+                            if (!parsedFiles.contains(jsonFile)) {
+                                if (jsonFile.lastModified() > lastTimeModified) {
+                                    debugText += JSONParser.importJSON(jsonFile, definition);
+                                }
+                                parsedFiles.add(jsonFile);
+                            }
+                        }
+                    }
+                }
+                return debugText + "\nImporting finished.";
+            } else {
+                return "ERROR: No last modified timestamp file found at location: " + lastModifiedFile.getAbsolutePath() + "\nPlease re-export your pack data.";
+            }
+        } else {
+            return "ERROR: Could not find dev folder: " + jsonDir.getAbsolutePath();
+        }
+    }
+
+    /**
+     * Imports the passed-in JSON, replacing the passed-in JSON with this one.
      * Status message is returned, which either indicates import success, or error.
      */
-    public static String hotloadJSON(File jsonFile, AJSONBase definitionToOverride) {
+    public static String importJSON(File jsonFile, AJSONBase definitionToOverride) {
         try {
             final AJSONBase loadedDefinition;
             switch (definitionToOverride.classification) {
@@ -561,22 +672,27 @@ public class JSONParser {
                     }
                 }
             }
-
-            //Reset renderers and send reset commands to entities.
-            if (definitionToOverride instanceof AJSONMultiModelProvider) {
-                AEntityD_Definable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
-            }
-            for (AEntityC_Renderable entity : InterfaceManager.clientInterface.getClientWorld().renderableEntities) {
-                if (entity instanceof AEntityD_Definable) {
-                    //Reset animations for all entities, as we don't know part linking or instrument placement or whatnot.
-                    ((AEntityD_Definable<?>) entity).animationsInitialized = false;
-                }
-            }
-
             return "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
         } catch (Exception e) {
             e.printStackTrace();
             return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Applies all imports performed.  Whereas the import should only be called once on singleplayer since
+     * the JSONs are shared on client and server instance, the applying of these imports should be called
+     * for all worlds where things are active.  Therefore, this method is seperate to allow sided-calling.
+     */
+    public static void applyImports(AWrapperWorld world) {
+        for (AEntityA_Base entity : world.allEntities) {
+            if (entity instanceof AEntityD_Definable) {
+                //Reset animations for all entities, as we don't know part linking or instrument placement or whatnot.
+                ((AEntityD_Definable<?>) entity).animationsInitialized = false;
+                if (world.isClient()) {
+                    AEntityD_Definable.clearObjectCaches(((AEntityD_Definable<?>) entity).definition);
+                }
+            }
         }
     }
 
