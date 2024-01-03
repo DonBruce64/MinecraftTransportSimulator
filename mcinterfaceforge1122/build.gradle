@@ -26,13 +26,13 @@ minecraft {
     runs {
         client {
             workingDirectory(file("run"))
-            environment("MC_VERSION", "1.12.2")
+            environment("MC_VERSION", project.mc_version)
         }
 
         // Run the server in a different directory
         server {
             workingDirectory(file("runServer"))
-            environment("MC_VERSION", "1.12.2")
+            environment("MC_VERSION", project.mc_version)
         }
     }
 }
@@ -65,9 +65,7 @@ dependencies {
     // Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
     // At runtime, use the full JEI jar
-    // Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
-    // Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
-    // runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+    runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
 }
 
 jar {
@@ -78,7 +76,6 @@ jar {
     configurations.embed.each { dependency ->
         from(project.zipTree(dependency)) {
             dependency.isDirectory() ? dependency : zipTree(dependency)
-            rename("LICENSE.txt", "org/spongepowered/LICENSE.txt")
             exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html", "module-info.class"])
         }
     }

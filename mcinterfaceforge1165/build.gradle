@@ -81,19 +81,17 @@ jar {
     finalizedBy("reobfJar")
 
     // Zip all embeds and add them to the jar
-    configurations.embed.each { dependency ->
-        from(project.zipTree(dependency)) {
-            dependency.isDirectory() ? dependency : zipTree(dependency)
-            rename("LICENSE.txt", "org/spongepowered/LICENSE.txt")
-            exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html", "module-info.class"])
-        }
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
     }
 
     manifest {
-        attributes(["TweakClass"    : project.mixin_tweaker,
-                    "TweakOrder"    : "0",
-                    "MixinConfigs"  : project.mixin_config,
-                    "MixinConnector": project.mixin_connector])
+        attributes([
+                "TweakClass"    : project.mixin_tweaker,
+                "TweakOrder"    : "0",
+                "MixinConfigs"  : project.mixin_config,
+                "MixinConnector": project.mixin_connector
+        ])
     }
 }
 
