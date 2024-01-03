@@ -572,6 +572,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Part was removed during updates, remove from the part listing.
                 removePart(part, true, iterator);
             } else {
+                //If the part needs updated collision, we will too, since our encompassing box could be affected.
+                if (part.forceCollisionUpdateThisTick) {
+                    forceCollisionUpdateThisTick = true;
+                }
                 part.doPostUpdateLogic();
             }
         }
@@ -997,8 +1001,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        super.renderBoundingBoxes(transform);
-        encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+        //Override default rendering to disable de-activated boxes from rendering.
+        for (BoundingBox box : interactionBoxes) {
+            if (allInteractionBoxes.contains(box)) {
+                if (boundingBox == box) {
+                    box.renderWireframe(this, transform, null, ColorRGB.GRAY);
+                } else {
+                    box.renderWireframe(this, transform, null, null);
+                }
+            }
+        }
+        for (BoundingBox box : bulletCollisionBoxes) {
+            box.renderWireframe(this, transform, null, null);
+        }
+        if (System.currentTimeMillis() % 1000 > 500) {
+            encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+        }
     }
 
     @Override
