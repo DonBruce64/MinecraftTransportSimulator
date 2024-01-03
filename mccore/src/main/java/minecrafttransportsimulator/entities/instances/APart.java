@@ -71,6 +71,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean turnsWithSteer;
     public boolean isSpare;
     public boolean isMirrored;
+    private boolean playerHoldingWrenchLastTick;
+    private boolean playerHoldingWrench;
+    private boolean playerHoldingScrewdriverLastTick;
+    private boolean playerHoldingScrewdriver;
+
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.
@@ -174,6 +179,17 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void update() {
         super.update();
         isInvisible = false;
+
+        //Update tool state.
+        if (world.isClient()) {
+            playerHoldingWrenchLastTick = playerHoldingWrench;
+            playerHoldingScrewdriverLastTick = playerHoldingScrewdriver;
+            playerHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
+            playerHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
+            if (playerHoldingWrenchLastTick ^ playerHoldingWrench || playerHoldingScrewdriverLastTick ^ playerHoldingScrewdriver) {
+                forceCollisionUpdateThisTick = true;
+            }
+        }
 
         //Update active state.
         isActive = partOn != null ? partOn.isActive : true;
@@ -296,12 +312,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed. This can only be done on the client.
         if (world.isClient()) {
-	    	boolean isHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
-	    	boolean isHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
-	
-	        if (isHoldingWrench || isHoldingScrewdriver) {
+            if (playerHoldingWrench || playerHoldingScrewdriver) {
 	            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
-	            if ((isHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (isHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
+                if ((playerHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (playerHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
 	                allInteractionBoxes.removeAll(interactionBoxes);
 	                return;
 	            }
