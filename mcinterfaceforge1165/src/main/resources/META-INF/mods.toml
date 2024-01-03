@@ -6,7 +6,7 @@ issueTrackerURL="https://github.com/DonBruce64/MinecraftTransportSimulator/issue
 # Mod Info
 [[mods]]
 modId="mts"
-version="22.12.0"
+version="22.12.1"
 displayName="Immersive Vehicles (formerly MTS)"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/minecraft-transport-simulator"
 logoFile="vingette.png"

@@ -1,81 +1,80 @@
-buildscript {
-    repositories {
-        maven { url = "https://maven.minecraftforge.net" }
-        mavenCentral()
-    }
-    dependencies {
-        //Leave FG5 at this version.  Newer versions do fucky stuff with 1.12.2 builds that result in odd Gradle errors.
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.60", changing: true
-    }
+plugins {
+    id("eclipse")
+    id("net.minecraftforge.gradle") version("5.1.60") // Leave on 5.1.60, newer versions error immediately
+    id("wtf.gofancy.fancygradle") version("1.1.+")
 }
 
-//Apply plugins
-apply plugin: "net.minecraftforge.gradle"
-apply plugin: "eclipse"
-
-//Set file name.
+// Set project version, group, and name
 version = "${project.mc_version}-${project.mod_version}"
 group = project.mod_group
 archivesBaseName = project.archive_name
 
-//Options for Java version to compile to.
+// Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = "1.8"
-compileJava {
-    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
-}
+compileJava.options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 
-//Minecraft mappings and run configs.
+// Minecraft mappings and run configs.
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
     // Channel:   Version:
     // snapshot   YYYYMMDD   Snapshot are built nightly.
     // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
-    mappings channel: project.mappings_channel, version: project.mappings_version
+    mappings(channel: project.mappings_channel, version: project.mappings_version)
 
-    //Run configurations.
+    // Run configurations.
     runs {
         client {
-            workingDirectory file("run")
+            workingDirectory(file("run"))
+            environment("MC_VERSION", "1.12.2")
         }
 
-        //Run the server in a different directory so that the run directory isn't a mess
+        // Run the server in a different directory
         server {
-            workingDirectory file("runServer")
+            workingDirectory(file("runServer"))
+            environment("MC_VERSION", "1.12.2")
         }
     }
 }
 
 repositories {
-    //JEI
+    // JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
 }
 
-//Configuration that holds jars to include in the jar
+// Configuration that holds jars to include in the jar
 configurations {
     embed
     implementation.extendsFrom(embed)
 }
 
-//Specify dependencies.
 dependencies {
-    //Minecraft to use.
-    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+    // Fixes a startup crash when running in dev
+    implementation("net.minecraftforge:mergetool") {
+        version {
+            strictly("0.2.3.3")
+        }
+    }
 
-    //Core to use.
+    // Minecraft and Forge version to use
+    minecraft("net.minecraftforge:forge:${project.mc_version}-${project.forge_version}")
+
+    // Embeds the core API of the mod
     embed(project(":mccore"))
 
-
-    //Compile against the JEI API but do not include it at runtime
+    // Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
-    //At runtime, use the full JEI jar
-    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
-    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
-    //runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+    // At runtime, use the full JEI jar
+    // Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
+    // Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
+    // runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
 }
 
 jar {
-    //Zip all embeds and add them to the jar
+    // Jar must be re-obfuscated to run
+    finalizedBy("reobfJar")
+
+    // Zip all embeds and add them to the jar
     configurations.embed.each { dependency ->
         from(project.zipTree(dependency)) {
             dependency.isDirectory() ? dependency : zipTree(dependency)
@@ -89,6 +88,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
 }
 
+// Sets the correct mod version for everything
 tasks.register("preBuild") {
     var modVersion = project.rootProject.properties["global_version"].toString()
     project.projectDir.traverse { file ->
@@ -103,7 +103,15 @@ tasks.register("preBuild") {
     }
 }
 
-tasks.build.dependsOn(tasks.preBuild)
+// Makes sure preBuild is run before build
+build.dependsOn(preBuild)
 
-//Now compile the mod.
-jar.finalizedBy("reobfJar")
+// Fixes a few of the many issues with FG, see
+// https://gitlab.com/gofancy/fancygradle/-/wikis/applying-patches#the-issues
+fancyGradle {
+    patches {
+        coremods
+        asm
+        mergetool
+    }
+}

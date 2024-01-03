@@ -1,33 +1,18 @@
-buildscript {
-    repositories {
-        maven { url = "https://maven.minecraftforge.net" }
-        maven { url = "https://maven.parchmentmc.org" }
-        maven { url = "https://repo.spongepowered.org/maven" }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
-        classpath group: "org.parchmentmc", name: "librarian", version: "1.+"
-        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7.+"
-    }
+plugins {
+    id("net.minecraftforge.gradle") version("5.1.60")
+    id("org.parchmentmc.librarian.forgegradle") version("1.+")
+    id("org.spongepowered.mixin") version("0.7.+")
+    id("eclipse")
 }
 
-//Apply plugins
-apply plugin: "net.minecraftforge.gradle"
-apply plugin: "org.parchmentmc.librarian.forgegradle"
-apply plugin: "org.spongepowered.mixin"
-apply plugin: "eclipse"
-
-//Set file name.
+// Set file name.
 version = "${project.mc_version}-${project.mod_version}"
 group = project.mod_group
 archivesBaseName = project.archive_name
 
-//Options for Java version to compile to.
+// Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = "1.8"
-compileJava {
-    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
-}
+compileJava.options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 
 //Minecraft mappings and run configs.
 minecraft {
@@ -42,52 +27,47 @@ minecraft {
     //Run configurations.
     runs {
         client {
-            workingDirectory project.file("run")
+            workingDirectory(file("run"))
             arg "-mixin.config=mts.mixins.json"
 
             mods {
-                minecrafttransportsimulator {
-                    source sourceSets.main
-                }
+                minecrafttransportsimulator.source(sourceSets.main)
             }
         }
 
         server {
-            workingDirectory project.file("runServer")
+            workingDirectory(file("runServer"))
 
             mods {
-                minecrafttransportsimulator {
-                    source sourceSets.main
-                }
+                minecrafttransportsimulator.source(sourceSets.main)
             }
         }
     }
 }
 
 repositories {
-    //JEI
+    // JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
 }
 
-//Configuration that holds jars to include in the jar
+// Configuration that holds jars to include in the jar
 configurations {
     embed
     implementation.extendsFrom(embed)
 }
 
-//Specify dependencies.
 dependencies {
-    //Minecraft to use.
-    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
-    //Make mixin annotations actually do something
-    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+    // Minecraft and Forge version to use
+    minecraft("net.minecraftforge:forge:${project.mc_version}-${project.forge_version}")
+    // Make mixin annotations actually do something
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 
     //Core to use.
     embed(project(":mccore"))
 
-    //Compile against the JEI API but do not include it at runtime
+    // Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
-    //At runtime, use the full JEI jar
+    // At runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
 }
 
@@ -96,20 +76,24 @@ mixin {
     config project.mixin_config
 }
 
-
-//Here is where we zip up all embeds and add them to our jar.
 jar {
-    from {
-        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    // Jar must be re-obfuscated to run
+    finalizedBy("reobfJar")
+
+    // Zip all embeds and add them to the jar
+    configurations.embed.each { dependency ->
+        from(project.zipTree(dependency)) {
+            dependency.isDirectory() ? dependency : zipTree(dependency)
+            rename("LICENSE.txt", "org/spongepowered/LICENSE.txt")
+            exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html", "module-info.class"])
+        }
     }
 
     manifest {
-        attributes([
-                "TweakClass"    : project.mixin_tweaker,
-                "TweakOrder"    : "0",
-                "MixinConfigs"  : project.mixin_config,
-                "MixinConnector": project.mixin_connector
-        ])
+        attributes(["TweakClass"    : project.mixin_tweaker,
+                    "TweakOrder"    : "0",
+                    "MixinConfigs"  : project.mixin_config,
+                    "MixinConnector": project.mixin_connector])
     }
 }
 
@@ -117,6 +101,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
 }
 
+// Sets the correct mod version for everything
 tasks.register("preBuild") {
     var modVersion = project.rootProject.properties["global_version"].toString()
     project.projectDir.traverse { file ->
@@ -131,7 +116,5 @@ tasks.register("preBuild") {
     }
 }
 
-tasks.build.dependsOn(tasks.preBuild)
-
-//Now compile the mod.
-jar.finalizedBy("reobfJar")
+// Makes sure preBuild is run before build
+build.dependsOn(preBuild)
