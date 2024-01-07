@@ -114,11 +114,17 @@ public class JSONParticle {
     @JSONDescription("This velocity will be randomly added to the initialVelocity, multipled by a random value between -1 and 1.")
     public Point3D spreadRandomness;
 
+    @JSONDescription("The factor of which to inherit the spawning velocity of the thing that is producing it, where +Z is straight ahead relative to the thing that is producing it.  If left out, no inherited velocity is assumed.")
+    public Point3D relativeInheritedVelocityFactor;
+
     @JSONDescription("The initial velocity of the particle, where +Z is straight ahead relative to the thing that is producing it.  May be omitted to make a particle that doesn't spawn with any initial velocity except the velocity of the object spawning it.")
     public Point3D initialVelocity;
 
-    @JSONDescription("The velocity to apply every tick to the particle.  This can be used to make smoke float up, oil drip down, etc.  If not set, the default particle velocity is used.")
+    @JSONDescription("The velocity to apply every tick to the particle.  This can be used to make smoke float up, oil drip down, etc.  If this and relativeMovementVelocity is not set, the default particle velocity is used.")
     public Point3D movementVelocity;
+
+    @JSONDescription("The velocity to apply every tick to the particle, relative the the particle itself.  This differs from movementVelocity, which is relative to the world.")
+    public Point3D relativeMovementVelocity;
 
     @JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
     public Point3D terminalVelocity;
@@ -167,7 +173,9 @@ public class JSONParticle {
         @JSONDescription("Particle rotates to always face the player.")
         PLAYER,
         @JSONDescription("Particle rotates to face the player, but only about the Y-axis.")
-        YAXIS;
+        YAXIS,
+        @JSONDescription("Particle rotates to face its motion.  Think bullets.")
+        MOTION;
     }
 
     public enum ParticleType {
