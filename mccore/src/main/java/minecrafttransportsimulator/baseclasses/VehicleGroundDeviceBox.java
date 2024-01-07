@@ -370,13 +370,18 @@ public class VehicleGroundDeviceBox {
                     if (box.intersects(solidBox)) {
                         if (collisionMotion.y > 0) {
                             boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
+                            if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
+                                solidBox.currentCollisionDepth.y = boxCollisionDepth;
+                                collidingBox = box;
+                            }
                         } else {
-                            boxCollisionDepth = box.globalCenter.y + box.heightRadius - (solidBox.globalCenter.y - solidBox.heightRadius);
+                            boxCollisionDepth = solidBox.globalCenter.y - solidBox.heightRadius - (box.globalCenter.y + box.heightRadius);
+                            if (boxCollisionDepth < solidBox.currentCollisionDepth.y) {
+                                solidBox.currentCollisionDepth.y = boxCollisionDepth;
+                                collidingBox = box;
+                            }
                         }
-                        if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
-                            solidBox.currentCollisionDepth.y = boxCollisionDepth;
-                            collidingBox = box;
-                        }
+
                     }
                 }
                 if (collidingBox != null) {
