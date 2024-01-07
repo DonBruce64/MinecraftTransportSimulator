@@ -25,7 +25,6 @@ public class AnimationSwitchbox {
     public Point3D scale = new Point3D();
     public double lastVisibilityValue = 1.0D;
     public DurationDelayClock lastVisibilityClock;
-    public boolean anyClockMovedThisUpdate;
 
     //Computational variables.
     protected final AEntityD_Definable<?> entity;
@@ -76,7 +75,6 @@ public class AnimationSwitchbox {
 
             inhibitAnimations = false;
             switchboxEnabled = true;
-            anyClockMovedThisUpdate = false;
             for (DurationDelayClock clock : clocks) {
                 switch (clock.animation.animationType) {
                     case TRANSLATION: {
@@ -95,9 +93,6 @@ public class AnimationSwitchbox {
                         if (!inhibitAnimations) {
                             lastVisibilityClock = clock;
                             lastVisibilityValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
-                            if (!anyClockMovedThisUpdate) {
-                                anyClockMovedThisUpdate = clock.movedThisUpdate;
-                            }
                             if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
                                 switchboxEnabled = false;
                                 return false;

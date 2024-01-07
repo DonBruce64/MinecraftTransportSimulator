@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -85,6 +87,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
+    private final Set<JSONSound> soundDefFalseLastCheck = new HashSet<>();
     private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
     private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<>();
     private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<>();
@@ -625,7 +628,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
                 boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
                 boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
-                boolean anyClockMovedThisUpdate = false;
 
                 //Next, check the distance.
                 double distance = 0;
@@ -643,13 +645,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 if (shouldSoundStartPlaying) {
                     AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
                     shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
-                    anyClockMovedThisUpdate = activeSwitchbox.anyClockMovedThisUpdate;
-                }
 
-                //If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
-                //If we didn't, then we shouldn't play, even if all states are true.
-                if (shouldSoundStartPlaying && !soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate) {
-                    shouldSoundStartPlaying = false;
+                    //If we aren't a looping or repeating sound, check if we were true last check.
+                    //If we ware, then we shouldn't play, even if all states are true, as we'd start another sound.
+                    if (!soundDef.looping && !soundDef.forceSound) {
+                        if (shouldSoundStartPlaying) {
+                            if (!soundDefFalseLastCheck.remove(soundDef)) {
+                                shouldSoundStartPlaying = false;
+                            }
+                        } else {
+                            soundDefFalseLastCheck.add(soundDef);
+                        }
+                    }
                 }
                 
                 if (shouldSoundStartPlaying) {

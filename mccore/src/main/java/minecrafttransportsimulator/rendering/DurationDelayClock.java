@@ -28,7 +28,6 @@ public class DurationDelayClock {
     public final double animationAxisMagnitude;
     public final Point3D animationAxisNormalized;
     public final boolean isUseful;
-    public boolean movedThisUpdate;
     private Long timeCommandedForwards = 0L;
     private Long timeCommandedReverse = 0L;
 
@@ -62,7 +61,6 @@ public class DurationDelayClock {
         if (!animation.skipReverseMovement) {
             reverseCycleTime += animation.duration * 50L + animation.forwardsDelay * 50L;
         }
-        movedThisUpdate = false;
 
         //If we don't have an existing command, just set ourselves to the end of our command path.
         if (timeCommandedForwards == 0 && timeCommandedReverse == 0) {
@@ -113,7 +111,6 @@ public class DurationDelayClock {
             if (timedelayed >= animation.forwardsDelay * 50L) {
                 long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay * 50L);
                 if (timeMoved < animation.duration * 50L && !animation.skipForwardsMovement) {
-                    movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.forwardsEasing != null) {
                         movementFactor = getEasingType(animation.forwardsEasing, movementFactor);
@@ -122,7 +119,6 @@ public class DurationDelayClock {
                     movementFactor = 1;
                     if (!endedForwardsMovement) {
                         endedForwardsMovement = true;
-                        movedThisUpdate = true;
                         if (animation.forwardsEndSound != null && entity.world.isClient()) {
                             double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
                             if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
@@ -150,7 +146,6 @@ public class DurationDelayClock {
             if (timedelayed >= animation.reverseDelay * 50L) {
                 long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay * 50L);
                 if (timeMoved < animation.duration * 50L && !animation.skipReverseMovement) {
-                    movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.reverseEasing != null) {
                         movementFactor = getEasingType(animation.reverseEasing, movementFactor);
@@ -159,7 +154,6 @@ public class DurationDelayClock {
                     movementFactor = 1;
                     if (!endedReverseMovement) {
                         endedReverseMovement = true;
-                        movedThisUpdate = true;
                         if (animation.reverseEndSound != null && entity.world.isClient()) {
                             double distance = entity.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
                             if (distance < SoundInstance.DEFAULT_MAX_DISTANCE) {
