@@ -1030,9 +1030,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
             if (heldPart != null || holdingScanner) {
                 if (holdingScanner) {
-                    for (BoundingBox box : activePartSlotBoxes.keySet()) {
+                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activePartSlotBoxes.entrySet()) {
+                        BoundingBox box = slotEntry.getKey();
+                        JSONPartDefinition slotDef = slotEntry.getValue();
                         Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
+                        boolean isImportant = false;
+                        for (String slotType : slotDef.types) {
+                            if (slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
+                                isImportant = true;
+                                break;
+                            }
+                        }
+                        box.renderHolographic(transform, boxCenterDelta, isImportant ? ColorRGB.YELLOW : ColorRGB.DARK_GRAY);
                     }
                 } else {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()) {
