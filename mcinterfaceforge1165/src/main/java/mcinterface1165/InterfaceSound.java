@@ -391,6 +391,21 @@ public class InterfaceSound implements IInterfaceSound {
         }
     }
 
+    public static void stopAllSounds() {
+        queuedSounds.clear();
+        for (SoundInstance sound : playingSounds) {
+            if (sound.radio != null) {
+                sound.radio.stop();
+            } else {
+                sound.stopSound = true;
+            }
+        }
+
+        //Mark world as un-paused and update sounds to stop the ones that were just removed.
+        isSystemPaused = false;
+        update();
+    }
+
     /**
      * Update all sounds every client tick.
      */
