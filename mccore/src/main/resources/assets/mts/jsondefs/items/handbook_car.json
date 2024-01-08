@@ -241,6 +241,40 @@
             },
             {
                 "pageTexture": "mts:textures/guis/manual_car_pages.png",
+                "title": "Vehicle Repairs",
+                "pageText": [
+                    {
+                        "pos": [111.0, 25.0, 0.0],
+                        "rot": [0.0, 0.0, 0.0],
+                        "scale": 1.0,
+                        "fieldName": "",
+                        "defaultText": "Vehicle Repairs",
+                        "color": "000000"
+                    },
+                    {
+                        "pos": [27.0, 40.0, 0.0],
+                        "rot": [0.0, 0.0, 0.0],
+                        "scale": 0.85,
+                        "fieldName": "",
+                        "defaultText": "Note that blowing up a vehicle by running it into a wall is not the only way to ruin a perfectly good car.  You can also take damage from mobs, projectiles, guns, and other various sources.  If you take more than the vehicle can stand, it will stop working.  Vehicle health is displayed while riding a vehicle as the driver in the overlay.",
+                        "color": "000000",
+                        "wrapWidth": 180,
+                        "renderPosition": 1
+                    },
+                    {
+                        "pos": [261.0, 25.0, 0.0],
+                        "rot": [0.0, 0.0, 0.0],
+                        "scale": 0.85,
+                        "fieldName": "",
+                        "defaultText": "To repair a vehicle, you can either craft a repair item and use it, or repair the vehicle at the bench you created it at.  Repair items are pack-specific, and benches have to be set up with repair recipes to function, so contact the author of the pack you are using if you find yourself without repair options.",
+                        "color": "000000",
+                        "wrapWidth": 180,
+                        "renderPosition": 1
+                    }
+                ]
+            },
+            {
+                "pageTexture": "mts:textures/guis/manual_car_pages.png",
                 "title": "Fueling",
                 "pageText": [
                     {
