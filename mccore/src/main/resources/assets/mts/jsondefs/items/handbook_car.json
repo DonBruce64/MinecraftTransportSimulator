@@ -266,7 +266,7 @@
                         "rot": [0.0, 0.0, 0.0],
                         "scale": 0.85,
                         "fieldName": "",
-                        "defaultText": "To repair a vehicle, you can either craft a repair item and use it, or repair the vehicle at the bench you created it at.  Repair items are pack-specific, and benches have to be set up with repair recipes to function, so contact the author of the pack you are using if you find yourself without repair options.",
+                        "defaultText": "To repair a vehicle, you can either craft a repair item and use it, or repair the vehicle at the vehicle bench.  Repair items are pack-specific, and benches have to be set up with repair recipes to function, so contact the author of the pack you are using if you find yourself without repair options.",
                         "color": "000000",
                         "wrapWidth": 180,
                         "renderPosition": 1
