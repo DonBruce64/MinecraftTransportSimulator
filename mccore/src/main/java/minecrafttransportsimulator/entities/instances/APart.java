@@ -178,7 +178,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void update() {
         super.update();
-        isInvisible = false;
+        isInvisible = partOn != null ? partOn.isInvisible : false;
 
         //Update tool state.
         if (world.isClient()) {
@@ -229,7 +229,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //First apply part slot animation translation and rotation.
         //This will rotate us to our proper slot position.
-        if (placementMovementSwitchbox != null) {
+        if (!isInvisible && placementMovementSwitchbox != null) {
             isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
             //Offset needs to move according to full transform.
             //This is because these coords are from what we are on.
