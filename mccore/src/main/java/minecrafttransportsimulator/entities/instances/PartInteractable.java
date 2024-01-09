@@ -134,13 +134,13 @@ public final class PartInteractable extends APart {
             EntityFluidTank linkedTank = null;
             LanguageEntry linkedMessage = null;
             if (linkedVehicle != null) {
-                if (!linkedVehicle.position.isDistanceToCloserThan(position, 16)) {
+                if (!linkedVehicle.isValid || !linkedVehicle.position.isDistanceToCloserThan(position, 16)) {
                     linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedVehicle.fuelTank;
                 }
             } else if (linkedPart != null) {
-                if (!linkedPart.position.isDistanceToCloserThan(position, 16)) {
+                if (!linkedPart.isValid || !linkedPart.position.isDistanceToCloserThan(position, 16)) {
                     linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedPart.tank;

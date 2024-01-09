@@ -16,7 +16,6 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
-import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleRenderingOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -111,6 +110,20 @@ public class EntityParticle extends AEntityC_Renderable {
             //Scale down by 10 since most of the time we go too fast.
             motion.scale(1D / 10D);
             motion.rotate(helperTransform);
+        }
+        if (definition.relativeInheritedVelocityFactor != null) {
+            helperRotation.setToVector(entitySpawning.motion, true);
+            helperPoint.set(entitySpawning.motion);
+            if (entitySpawning instanceof EntityVehicleF_Physics) {
+                helperPoint.scale(((EntityVehicleF_Physics) entitySpawning).speedFactor);
+            } else if (entitySpawning instanceof APart) {
+                APart partSpawning = (APart) entitySpawning;
+                if (partSpawning.vehicleOn != null) {
+                    helperPoint.scale(partSpawning.vehicleOn.speedFactor);
+                }
+            }
+            helperPoint.reOrigin(helperRotation).multiply(definition.relativeInheritedVelocityFactor).rotate(helperRotation);
+            motion.add(helperPoint);
         }
         initialVelocity = motion.copy();
 
@@ -250,27 +263,13 @@ public class EntityParticle extends AEntityC_Renderable {
 
             if (definition.movementVelocity != null) {
                 motion.add(definition.movementVelocity);
-                if (definition.terminalVelocity != null) {
-                    if (motion.x > definition.terminalVelocity.x) {
-                        motion.x = definition.terminalVelocity.x;
-                    }
-                    if (motion.x < -definition.terminalVelocity.x) {
-                        motion.x = -definition.terminalVelocity.x;
-                    }
-                    if (motion.y > definition.terminalVelocity.y) {
-                        motion.y = definition.terminalVelocity.y;
-                    }
-                    if (motion.y < -definition.terminalVelocity.y) {
-                        motion.y = -definition.terminalVelocity.y;
-                    }
-                    if (motion.z > definition.terminalVelocity.z) {
-                        motion.z = definition.terminalVelocity.z;
-                    }
-                    if (motion.z < -definition.terminalVelocity.z) {
-                        motion.z = -definition.terminalVelocity.z;
-                    }
-                }
-            } else {
+            }
+            if (definition.relativeMovementVelocity != null) {
+                helperRotation.setToVector(motion, true);
+                helperPoint.set(definition.relativeMovementVelocity).rotate(helperRotation);
+                motion.add(helperPoint);
+            }
+            if (definition.movementVelocity == null && definition.relativeMovementVelocity == null) {
                 switch (definition.type) {
                     case SMOKE: {
                         //Update the motions to make the smoke float up.
@@ -306,6 +305,27 @@ public class EntityParticle extends AEntityC_Renderable {
                         //No default movement for generic particles.
                         break;
                     }
+                }
+            }
+
+            if (definition.terminalVelocity != null) {
+                if (motion.x > definition.terminalVelocity.x) {
+                    motion.x = definition.terminalVelocity.x;
+                }
+                if (motion.x < -definition.terminalVelocity.x) {
+                    motion.x = -definition.terminalVelocity.x;
+                }
+                if (motion.y > definition.terminalVelocity.y) {
+                    motion.y = definition.terminalVelocity.y;
+                }
+                if (motion.y < -definition.terminalVelocity.y) {
+                    motion.y = -definition.terminalVelocity.y;
+                }
+                if (motion.z > definition.terminalVelocity.z) {
+                    motion.z = definition.terminalVelocity.z;
+                }
+                if (motion.z < -definition.terminalVelocity.z) {
+                    motion.z = -definition.terminalVelocity.z;
                 }
             }
 
@@ -432,12 +452,26 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (definition.renderingOrientation == ParticleRenderingOrientation.PLAYER) {
-            orientation.setToVector(clientPlayer.getEyePosition().copy().subtract(position), true);
-        } else if (definition.renderingOrientation == ParticleRenderingOrientation.YAXIS) {
-            Point3D vector = clientPlayer.getEyePosition().copy().subtract(position);
-            vector.y = 0;
-            orientation.setToVector(vector, true);
+        switch (definition.renderingOrientation) {
+            case FIXED: {
+                //No update since we never change.
+                break;
+            }
+            case PLAYER: {
+                helperPoint.set(clientPlayer.getEyePosition()).subtract(position);
+                orientation.setToVector(helperPoint, true);
+                break;
+            }
+            case YAXIS: {
+                helperPoint.set(clientPlayer.getEyePosition()).subtract(position);
+                helperPoint.y = 0;
+                orientation.setToVector(helperPoint, true);
+                break;
+            }
+            case MOTION: {
+                orientation.setToVector(motion, true);
+                break;
+            }
         }
     }
 
