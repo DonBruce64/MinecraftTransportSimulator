@@ -27,64 +27,30 @@ public class PackMaterialComponent {
 
     private PackMaterialComponent(String itemText) {
         possibleItems = new ArrayList<>();
+
+        //Format is domain:name:qty or domain:name:meta:qty.
         String[] itemParameters = itemText.split(":");
-        String domain = itemParameters[0];
-        String name = itemParameters[1];
-        boolean isOreDict = domain.equals("oredict") || domain.equals("tags");
-        if (InterfaceManager.coreInterface.isGameFlattened()) {
-            if (itemParameters.length == 4) {
-                //Un-flattned item, convert via domain:name:meta string.
-                String newName = flattenedNames.get(domain + ":" + name + ":" + itemParameters[2]);
-                if (newName != null) {
-                    //Returned format is domain:name.
-                    name = newName.split(":")[1];
-                }
-                qty = Integer.parseInt(itemParameters[3]);
-            } else {
-                if (isOreDict) {
-                    //May not have this converted, but we might.  Try to convert just in case.
-                    //Need domain:name, no meta.
-                    String newName = flattenedNames.get(domain + ":" + name);
-                    if (newName != null) {
-                        //Returned format is domain:name.
-                        name = newName.split(":")[1];
-                    }
-                }
-                qty = Integer.parseInt(itemParameters[2]);
-            }
-            //Meta is always 0 for flattened systems.
-            meta = 0;
+        this.qty = Integer.parseInt(itemParameters[itemParameters.length - 1]);
+        String mapString = itemText.substring(0, itemText.lastIndexOf(":"));
+        String newItemParameters = InterfaceManager.coreInterface.isGameFlattened() ? flattenedNames.get(mapString) : unflattenedNames.get(mapString);
+
+        if (newItemParameters != null) {
+            //Found new item, use this instead.
+            itemParameters = newItemParameters.split(":");
+
+            //If we have 3 parameters, last is meta.
+            this.meta = itemParameters.length == 3 ? Integer.parseInt(itemParameters[2]) : 0;
+        } else if (itemParameters.length == 4) {
+            //If we have 4 paramters, but not a new set, then second to last must be meta since it's 1.12.2. item.
+            this.meta = Integer.parseInt(itemParameters[2]);
         } else {
-            if (isOreDict) {
-                //May not have this converted, but we might.  Try to convert just in case.
-                //Need domain:name, no meta.
-                String newName = unflattenedNames.get(domain + ":" + name);
-                if (newName != null) {
-                    //Returned format is domain:name.
-                    name = newName.split(":")[1];
-                }
-                qty = Integer.parseInt(itemParameters[2]);
-                meta = 0;
-            } else if (itemParameters.length != 4) {
-                //Flattened item, un-convert.  Need domain:name.
-                String newName = unflattenedNames.get(domain + ":" + name);
-                if (newName != null) {
-                    String[] newNameComponents = unflattenedNames.get(name).split(":");
-                    //Returned format is domain:name:meta.
-                    name = newNameComponents[1];
-                    meta = Integer.parseInt(newNameComponents[2]);
-                } else {
-                    meta = 0;
-                }
-                qty = Integer.parseInt(itemParameters[2]);
-            } else {
-                //Un-flattened item in proper environment.
-                meta = Integer.parseInt(itemParameters[2]);
-                qty = Integer.parseInt(itemParameters[3]);
-            }
+            //Not in 1.12.2 format or converted, no meta.
+            this.meta = 0;
         }
 
-        if (isOreDict) {
+        String domain = itemParameters[0];
+        String name = itemParameters[1];
+        if (domain.equals("oredict") || domain.equals("tags")) {
             possibleItems.addAll(InterfaceManager.coreInterface.getOredictMaterials(name, qty));
         } else {
             IWrapperItemStack stack = InterfaceManager.coreInterface.getStackForProperties(domain + ":" + name, meta, qty);
@@ -185,6 +151,8 @@ public class PackMaterialComponent {
         map.put("minecraft:log:1", "minecraft:spruce_log");
         map.put("minecraft:log:2", "minecraft:birch_log");
         map.put("minecraft:log:3", "minecraft:jungle_log");
+        map.put("minecraft:log2:0", "minecraft:acacia_log");
+        map.put("minecraft:log2:1", "minecraft:dark_oak_log");
         map.put("minecraft:leaves:0", "minecraft:oak_leaves");
         map.put("minecraft:leaves:1", "minecraft:spruce_leaves");
         map.put("minecraft:leaves:2", "minecraft:birch_leaves");
@@ -269,9 +237,12 @@ public class PackMaterialComponent {
         map.put("minecraft:fence_gate:0", "minecraft:oak_fence_gate");
         map.put("minecraft:waterlily:0", "minecraft:lily_pad");
         map.put("minecraft:nether_brick:0", "minecraft:nether_bricks");
-        map.put("minecraft:wooden_slab:0", "minecraft:jungle_slab");
-        map.put("minecraft:wooden_slab:1", "minecraft:acacia_slab");
-        map.put("minecraft:wooden_slab:2", "minecraft:dark_oak_slab");
+        map.put("minecraft:wooden_slab:0", "minecraft:oak_slab");
+        map.put("minecraft:wooden_slab:1", "minecraft:spruce_slab");
+        map.put("minecraft:wooden_slab:2", "minecraft:birch_slab");
+        map.put("minecraft:wooden_slab:3", "minecraft:jungle_slab");
+        map.put("minecraft:wooden_slab:4", "minecraft:acacia_slab");
+        map.put("minecraft:wooden_slab:5", "minecraft:dark_oak_slab");
         map.put("minecraft:cobblestone_wall:1", "minecraft:mossy_cobblestone_wall");
         map.put("minecraft:wooden_button:0", "minecraft:oak_button");
         map.put("minecraft:anvil:1", "minecraft:chipped_anvil");
@@ -313,8 +284,6 @@ public class PackMaterialComponent {
         map.put("minecraft:stained_glass_pane:15", "minecraft:black_stained_glass_pane");
         map.put("minecraft:leaves2:0", "minecraft:acacia_leaves");
         map.put("minecraft:leaves2:1", "minecraft:dark_oak_leaves");
-        map.put("minecraft:log2:0", "minecraft:acacia_log");
-        map.put("minecraft:log2:1", "minecraft:dark_oak_log");
         map.put("minecraft:slime:0", "minecraft:slime_block");
         map.put("minecraft:prismarine:1", "minecraft:prismarine_bricks");
         map.put("minecraft:prismarine:2", "minecraft:dark_prismarine");
@@ -845,14 +814,52 @@ public class PackMaterialComponent {
         map.put("oredict:dustRedstone", "tags:dusts/redstone");
         map.put("oredict:dustGlowstone", "tags:dusts/glowstone");
 
-        map.put("oredict:plankWood", "tags:planks");
         map.put("oredict:logWood", "tags:logs");
+        map.put("oredict:plankWood", "tags:planks");
+        map.put("oredict:slabWood", "tags:wooden_slabs");
+        map.put("oredict:stairWood", "tags:wooden_stairs");
+        map.put("oredict:fenceWood", "tags:wooden_fences");
         return map;
     }
     
     private static Map<String, String> generateUnflattnedMappings(){
         Map<String, String> map = new HashMap<>();
         flattenedNames.forEach((key, value) -> map.put(value, key));
+
+        //Add tags that don't map to oredict, but do map to items.
+        map.put("tags:oak_logs", "minecraft:log:0");
+        map.put("tags:spruce_logs", "minecraft:log:1");
+        map.put("tags:birch_logs", "minecraft:log:2");
+        map.put("tags:jungle_logs", "minecraft:log:3");
+        map.put("tags:acacia_logs", "minecraft:log2:0");
+        map.put("tags:dark_oak_logs", "minecraft:log2:1");
+        
+        map.put("tags:oak_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:spruce_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:birch_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:jungle_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:acacia_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:dark_oak_trapdoor", "minecraft:trapdoor:0");
+        map.put("tags:wooden_trapdoors", "minecraft:trapdoor:0");
+        
+        map.put("tags:glass_panes/colorless", "minecraft:glass_pane:0");
+        map.put("tags:glass_panes/white", "minecraft:stained_glass_pane:0");
+        map.put("tags:glass_panes/orange", "minecraft:stained_glass_pane:1");
+        map.put("tags:glass_panes/magenta", "minecraft:stained_glass_pane:2");
+        map.put("tags:glass_panes/light_blue", "minecraft:stained_glass_pane:3");
+        map.put("tags:glass_panes/yellow", "minecraft:stained_glass_pane:4");
+        map.put("tags:glass_panes/lime", "minecraft:stained_glass_pane:5");
+        map.put("tags:glass_panes/pink", "minecraft:stained_glass_pane:6");
+        map.put("tags:glass_panes/gray", "minecraft:stained_glass_pane:7");
+        map.put("tags:glass_panes/silver", "minecraft:stained_glass_pane:8");
+        map.put("tags:glass_panes/cyan", "minecraft:stained_glass_pane:9");
+        map.put("tags:glass_panes/purple", "minecraft:stained_glass_pane:10");
+        map.put("tags:glass_panes/blue", "minecraft:stained_glass_pane:11");
+        map.put("tags:glass_panes/brown", "minecraft:stained_glass_pane:12");
+        map.put("tags:glass_panes/green", "minecraft:stained_glass_pane:13");
+        map.put("tags:glass_panes/red", "minecraft:stained_glass_pane:14");
+        map.put("tags:glass_panes/black", "minecraft:stained_glass_pane:15");
+
         return map;
     }
 }

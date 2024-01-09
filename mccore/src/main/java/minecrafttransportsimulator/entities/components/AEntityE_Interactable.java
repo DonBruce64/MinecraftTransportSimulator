@@ -98,6 +98,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public final Set<BoundingBox> damageCollisionBoxes = new HashSet<>();
 
     /**
+     * List of inactive bounding boxes.  Used only on servers to allow them to handle packets
+     * from clients that may have a different set of active boxes than they have due to rendering.
+     **/
+    public final Set<BoundingBox> inactiveCollisionBoxes = new HashSet<>();
+
+    /**
      * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
      * to check a single large box rather than multiple small ones to save processing power.
      **/
@@ -321,6 +327,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         interactionBoxes.clear();
         bulletCollisionBoxes.clear();
         damageCollisionBoxes.clear();
+        inactiveCollisionBoxes.clear();
 
         if (definition.collisionGroups != null) {
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
@@ -332,7 +339,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     animationsInitialized = false;
                     return;
                 }
-                if (groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health) {
+                if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage") < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
@@ -341,7 +348,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                 box.updateToEntity(this, box.globalCenter);
                             }
                         } else {
-                            //Don't let these boxes get added to the list.
+                            inactiveCollisionBoxes.addAll(collisionBoxes);
                             continue;
                         }
                     } else {

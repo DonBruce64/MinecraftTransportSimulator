@@ -20,6 +20,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -750,7 +751,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * will create the part on clients, which you will always want to do unless you are transferring a part.
      */
     public void addPart(APart part, boolean sendPacket) {
-        parts.add(part);
+        //If the part is a seat, add it at the end of the list, since other parts might affect its movement.
+        //If the part isn't a seat, add to the start so we assure its before any seats.
+        //If we don't, update order with seated riders might get fouled.
+        if (part instanceof PartSeat) {
+            parts.add(part);
+        } else {
+            parts.add(0, part);
+        }
         if (!part.isFake()) {
             partsInSlots.set(part.placementSlot, part);
 
@@ -1030,9 +1038,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
             if (heldPart != null || holdingScanner) {
                 if (holdingScanner) {
-                    for (BoundingBox box : activePartSlotBoxes.keySet()) {
+                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activePartSlotBoxes.entrySet()) {
+                        BoundingBox box = slotEntry.getKey();
+                        JSONPartDefinition slotDef = slotEntry.getValue();
                         Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
+                        boolean isImportant = false;
+                        for(String slotType : slotDef.types) {
+                            if(slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
+                                isImportant = true;
+                                break;
+                            }
+                        }
+                        box.renderHolographic(transform, boxCenterDelta, isImportant ? ColorRGB.YELLOW : ColorRGB.DARK_GRAY);
                     }
                 } else {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()) {
