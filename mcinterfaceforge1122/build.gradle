@@ -4,6 +4,10 @@ plugins {
     id("wtf.gofancy.fancygradle") version("1.1.+")
 }
 
+if (System.getProperty("idea.active")) {
+    println("IntelliJ IDEA detected, enabling FancyGradle patches and JEI for runs")
+}
+
 // Set project version, group, and name
 version = "${project.mc_version}-${project.mod_version}"
 group = project.mod_group
@@ -64,8 +68,10 @@ dependencies {
 
     // Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
-    // At runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+    // At runtime, use the full JEI jar if using IntelliJ IDEA since FancyGradle fixes access transformers
+    if (System.getProperty("idea.active")) {
+        runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+    }
 }
 
 jar {
@@ -100,15 +106,17 @@ tasks.register("preBuild") {
     }
 }
 
-// Makes sure preBuild is run before build
-build.dependsOn(preBuild)
-
-// Fixes a few of the many issues with FG, see
+// Fixes a few of the many issues with FG if you're using IntelliJ IDEA, see
 // https://gitlab.com/gofancy/fancygradle/-/wikis/applying-patches#the-issues
-fancyGradle {
-    patches {
-        coremods
-        asm
-        mergetool
+if (System.getProperty("idea.active")) {
+    fancyGradle {
+        patches {
+            coremods
+            asm
+            mergetool
+        }
     }
 }
+
+// Makes sure preBuild is run before build
+build.dependsOn(preBuild)
