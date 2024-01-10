@@ -808,7 +808,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             case ("random"):
                 return Math.random();
             case ("random_flip"):
-                return Math.floor(Math.random() * 1.99);
+                return Math.random() < 0.5 ? 0 : 1;
             case ("rain_strength"):
                 return (int) world.getRainStrength(position);
             case ("rain_sin"): {
