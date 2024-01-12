@@ -48,6 +48,12 @@ public abstract class AGUIBase {
     }
 
     public AGUIBase() {
+        //Remove old GUI if we are replacing one.
+        activeGUIs.forEach(gui -> {
+            if (gui.getClass() == this.getClass()) {
+                gui.close();
+            }
+        });
         activeGUIs.add(this);
         if (capturesPlayer()) {
             activeInputGUI = this;
