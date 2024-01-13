@@ -574,7 +574,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     rotation.updateToAngles();
                 }
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(rotation).add(towedByConnection.towedEntity.position);
-            } else {
+            } else if (!towedByConnection.hitchPriorPosition.isZero()) {//Can't update on the first tick.
                 //Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
                 //Yaw is applied based on the current and next position of the truck's hookup.
                 //Motion is applied after yaw corrections to ensure the trailer follows the truck.

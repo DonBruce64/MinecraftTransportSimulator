@@ -211,8 +211,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    public void connectTrailer(TowingConnection connection) {
-        super.connectTrailer(connection);
+    public void connectTrailer(TowingConnection connection, boolean notifyClient) {
+        super.connectTrailer(connection, notifyClient);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
         if (towedVehicle.parkingBrakeOn) {
             towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 0);
