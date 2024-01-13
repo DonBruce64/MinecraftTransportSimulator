@@ -22,6 +22,7 @@ import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelClickAction;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelComponent;
 import minecrafttransportsimulator.jsondefs.JSONPanel.SpecialComponent;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -156,6 +157,9 @@ public class GUIPanel extends AGUIBase {
         componentButtons.clear();
         labels.clear();
 
+        boolean populatedSingleEngineControl = false;
+        boolean populatedSingleEngineMag = false;
+        boolean populatedSingleEngineStarter = false;
         int engineControlIndex = 0;
         int engineMagIndex = 0;
         int engineStarterIndex = 0;
@@ -275,64 +279,55 @@ public class GUIPanel extends AGUIBase {
                     }
                     case ENGINE_CONTROL: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineControlIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineControlIndex = 1;
+                                if (!populatedSingleEngineControl) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    text = "ENGINE";
+                                    populatedSingleEngineControl = true;
                                 }
-                            } else if (engineControlIndex < vehicle.engines.size()) {
-                                engine = vehicle.engines.get(engineControlIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineControlIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    text = "ENGINE";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "ENGINE";
                         }
                         break;
                     }
                     case ENGINE_ON: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineMagIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineMagIndex = 1;
+                                if (!populatedSingleEngineMag) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    text = "MAG";
+                                    populatedSingleEngineMag = true;
                                 }
-                            } else if (vehicle.engines.size() > engineMagIndex) {
-                                engine = vehicle.engines.get(engineMagIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineMagIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    text = "MAG";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "MAG";
                         }
                         break;
                     }
                     case ENGINE_START: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineStarterIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineStarterIndex = 1;
+                                if (!populatedSingleEngineStarter) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    text = "START";
+                                    populatedSingleEngineStarter = true;
                                 }
-                            } else if (vehicle.engines.size() > engineStarterIndex) {
-                                engine = vehicle.engines.get(engineStarterIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineStarterIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    text = "START";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "START";
                         }
                         break;
                     }
@@ -506,6 +501,41 @@ public class GUIPanel extends AGUIBase {
     @Override
     protected String getTexture() {
         return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : definition.panel.texture;
+    }
+
+    private PartEngine getEngineBySwitchIndex(int index) {
+        int engineIndex = 0;
+        JSONPartDefinition engineDef = null;
+        for (JSONPartDefinition partDef : vehicle.definition.parts) {
+            for (String partType : partDef.types) {
+                if (partType.startsWith("engine_")) {
+                    if (engineIndex++ == index) {
+                        engineDef = partDef;
+                    }
+                    break;
+                }
+            }
+            if (engineDef != null) {
+                break;
+            }
+        }
+        if (engineDef != null) {
+            for (APart part : vehicle.parts) {
+                if (part.placementDefinition == engineDef) {
+                    return (PartEngine) part;
+                }
+            }
+        } else {
+            //Didn't find engineDef in main parts, check other parts.
+            for (APart part : vehicle.parts) {
+                if (part instanceof PartEngine && !vehicle.parts.contains(part)) {
+                    if (engineIndex++ == index) {
+                        return (PartEngine) part;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private void handleClickAction(JSONPanelClickAction action) {

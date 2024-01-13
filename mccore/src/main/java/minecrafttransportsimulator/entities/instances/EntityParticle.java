@@ -234,7 +234,7 @@ public class EntityParticle extends AEntityC_Renderable {
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = definition.model == null || definition.isBright;
         if (definition.type == ParticleType.BREAK) {
-            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, entitySpawning.position);
+            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
             setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
         } else if (definition.model == null) {
             setParticleTextureBounds(0, 1, 0, 1);
