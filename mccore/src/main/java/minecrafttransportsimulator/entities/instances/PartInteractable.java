@@ -5,7 +5,6 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
@@ -108,9 +107,7 @@ public final class PartInteractable extends APart {
             super.destroy(box);
             if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
-                if (ConfigSystem.settings.damage.explosions.value) {
-                    world.spawnExplosion(new Explosion(position, explosivePower, true));
-                }
+                world.spawnExplosion(position, explosivePower, true);
             }
         } else {
             super.destroy(box);

@@ -6,7 +6,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -605,7 +604,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
             float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(new Explosion(position, blastSize, gun.lastLoadedBullet.definition));
+            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
