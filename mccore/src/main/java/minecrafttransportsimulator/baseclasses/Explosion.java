@@ -1,15 +1,11 @@
 package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**
  * Basic explosion class.  Used to make instances of explosions to apply in the world.
@@ -144,21 +140,14 @@ public class Explosion {
                         }
                     }
                     if (!world.isAir(tempPosition) && factor >= world.getBlockHardness(tempPosition)) {
-                        //Second parameter is to spawn the block as an item, I think we'd want to do this?
-                        //Then again, maybe not for the center of the blast, since that'll vaporise the dirt, but maths could be used?
-                        world.destroyBlock(tempPosition, true);
+                        world.destroyBlock(tempPosition, Math.random() < 1 / (1 + factor));
                         if(isFlammable){
-                            //set blocks on fire
                             world.setToFire(world.getBlockHit(position,tempPosition));
                         }
                     }
                 }
             }
         }
-
-
-
-
     }
 
 }
