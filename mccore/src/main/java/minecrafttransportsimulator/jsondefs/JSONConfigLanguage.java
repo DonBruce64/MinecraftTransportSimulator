@@ -89,6 +89,9 @@ public class JSONConfigLanguage {
     public static final LanguageEntry DEATH_BULLET_NULL = new LanguageEntry("death.bullet.null", "%s was shot by a spy");
     public static final LanguageEntry DEATH_BULLET_PLAYER = new LanguageEntry("death.bullet.player", "%s was shot by %s");
 
+    public static final LanguageEntry DEATH_EXPLOSION_NULL = new LanguageEntry("death.explosion.null", "%s was blown to bits");
+    public static final LanguageEntry DEATH_EXPLOSION_PLAYER = new LanguageEntry("death.explosion.player", "%s was blown to bits by %s");
+
     public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
     public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 

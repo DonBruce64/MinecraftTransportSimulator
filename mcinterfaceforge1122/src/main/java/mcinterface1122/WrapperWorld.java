@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -917,8 +918,8 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames&&ConfigSystem.settings.general.blockBreakage.value, ConfigSystem.settings.general.blockBreakage.value);
+    public void spawnExplosion(Explosion explosion) {
+
     }
 
     /**

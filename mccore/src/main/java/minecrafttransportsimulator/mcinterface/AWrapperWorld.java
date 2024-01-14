@@ -4,10 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.EntityManager;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -381,10 +378,8 @@ public abstract class AWrapperWorld extends EntityManager {
      */
     public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point);
 
-    /**
-     * Spawns an explosion of the specified strength at the passed-in point.
-     */
-    public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+
+    public abstract void spawnExplosion(Explosion explosion);
 
     /**
      * Class for hitting on blocks.

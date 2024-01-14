@@ -141,7 +141,7 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Should the engine change gears on its own.  This only affects cars and will prevent users from shifting into higher or lower gears using shiftUp and shiftDown. Instead, the engine will attempt to choose the best gear for the situation.  Note that MTS's automatic transmission system isn't the best and may get confused when gear ratios are close together.  For this reason, it is recommended to either use manual transmissions on vehicles with more than 5-6 gears, or to define the RPM at which a gear is shifted up or down via upShiftRPM and downShiftRPM.")
         public boolean isAutomatic;
 
-        @JSONDescription("If true, the automatic starter will be distabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
+        @JSONDescription("If true, the automatic starter will be disabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
         public boolean disableAutomaticStarter;
 
         @JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
@@ -381,6 +381,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("Whether this cun can lock on to targets, regardless of whether the loaded bullet is guided.")
         public boolean canLockTargets;
+
+        @JSONDescription("Whether or not to use what this gun is attached to or itself as the reference origin for target tracking")
+        public boolean locksFromParent;
 
         @JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
         public boolean handHeld;
