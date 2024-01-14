@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -217,8 +218,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     explosivePower += ((PartInteractable) part).getExplosiveContribution();
                 }
             }
-            world.spawnExplosion(box.globalCenter, explosivePower + fuelTank.getExplosiveness() + 1D, true);
-        }
+            world.spawnExplosion(new Explosion(world,box.globalCenter,0F, explosivePower + fuelTank.getExplosiveness() + 1D, true));        }
 
         //Now call super, since super might modify parts.
         super.destroy(box);

@@ -32,6 +32,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Normally, bullet checks are handled only on the client that spawned them.  This client then sends the info to the server when it sees a hit.  This works best for most bullets, since it prevents the firing player from 'missing' something they hit due to lag.  However, this prevents bullets from hitting things that aren't loaded.  Setting this to true will make the bullet do checks on the server, which will let them hit anything loaded on the server, but will result in de-syncs between hit position seen and actual hit position if the gun is moving at any significant speed when fired.")
         public boolean isLongRange;
 
+        @JSONDescription("Wheter or not this bullet uses advanced guidance logic to extend its range.")
+        public boolean canLoft;
+
         @JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
         public int quantity;
 
@@ -44,8 +47,45 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("The case length of the bullet.  This determines what guns can fire it, but does not affect damage.  Units are in mm.")
         public float caseLength;
 
-        @JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
+        //Explosion mechanics : damage
+        @JSONDescription("Base Damage dealt at the source of the explosion if this bullet is explosive.")
+        public float blastDamage;
+
+        @JSONDescription("Base Damage dealt at the source of the explosion to any vehicle. Overrides 'blastDamage'")
+        public float blastDamageVsVehicles;
+
+        @JSONDescription("Base Damage dealt at the source of the explosion to any aircraft. Overrides 'blastDamage'")
+        public float blastDamageVsAircraft;
+
+        @JSONDescription("Base Damage dealt at the source of the explosion to any ground vehicle. Overrides 'blastDamage'")
+        public float blastDamageVsGround;
+
+        @JSONDescription("Base Damage dealt at the source of the explosion to any living entity. Overrides 'blastDamage'")
+        public float blastDamageVsLiving;
+
+        @JSONDescription("The max radius, in blocks, that damage can be dealt.")
+        public float blastRadius;
+
+        @JSONDescription("Inside this radius from the explosion, full damage is dealt. Damage begins decaying here.")
+        public float maxDamageRadius;
+
+        @JSONDescription("Only effects explosive bullets. Something something base block breaking damage thing.")
         public float blastStrength;
+
+        @JSONDescription("Max distance, in blocks, that block damage can be dealt.")
+        public float blastStrengthRadius;
+
+        @JSONDescription("Only effects explosive bullets. Something something base block breaking damage thing.")
+        public float maxStrengthRadius;
+
+        @JSONDescription("Amount of armor this blast can cause damage through.")
+        public float blastArmorPenetration;
+
+        @JSONDescription("Max distance, in blocks, armor can be penetrated.")
+        public float blastPenetrationRadius;
+
+        @JSONDescription("Inside this radius, base penetration is dealt.")
+        public float blastMaxPenetrationRadius;
 
         @JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
         public float armorPenetration;
