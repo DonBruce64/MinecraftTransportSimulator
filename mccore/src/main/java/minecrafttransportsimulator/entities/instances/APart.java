@@ -6,7 +6,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -338,9 +337,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
                 if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(new Explosion(position, 1F, false));
+                    world.spawnExplosion(position, 1F, true);
                 } else {
-                    world.spawnExplosion(new Explosion(position, 0F, false));
+                    world.spawnExplosion(position, 0F, false);
                 }
             }
         }

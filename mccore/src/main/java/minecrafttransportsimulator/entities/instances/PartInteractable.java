@@ -2,7 +2,6 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -121,9 +120,9 @@ public final class PartInteractable extends APart {
             if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
                 if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(new Explosion(position, explosivePower, true));
+                    world.spawnExplosion(position, explosivePower, true);
                 } else {
-                    world.spawnExplosion(new Explosion(position, 0F, false));
+                    world.spawnExplosion(position, 0F, false);
                 }
             }
         } else {
