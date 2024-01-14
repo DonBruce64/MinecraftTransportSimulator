@@ -1,10 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 
 /**
@@ -141,8 +143,9 @@ public class Explosion {
                     }
                     if (!world.isAir(tempPosition) && factor >= world.getBlockHardness(tempPosition)) {
                         world.destroyBlock(tempPosition, Math.random() < 1 / (1 + factor));
-                        if(isFlammable){
-                            world.setToFire(world.getBlockHit(position,tempPosition));
+                        --tempPosition.y;
+                        if (isFlammable && !world.isAir(tempPosition)) {
+                            world.setToFire(new BlockHitResult(tempPosition, Axis.UP));
                         }
                     }
                 }
