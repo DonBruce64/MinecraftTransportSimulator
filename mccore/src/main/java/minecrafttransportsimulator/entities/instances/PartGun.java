@@ -688,13 +688,13 @@ public class PartGun extends APart {
                     }
                     case BORESIGHT: {
                         //Boresight gets target based on gun position and barrel orientation, rather than player.
-                        startPoint = position;
+                        startPoint = masterEntity != null && definition.gun.locksFromParent ? masterEntity.position : position;
                         searchVector = new Point3D(0, 0, definition.gun.lockRange).rotate(orientation);
                         coneAngle = definition.gun.lockMaxAngle;
                         break;
                     }
                     case RADAR: {
-                        //Set target here immediately.
+                        //selectively lock a target based on orientation. or other method. biggest thing here is to not switch target once locked.
                         break;
                     }
                     case MANUAL: {
@@ -1051,7 +1051,7 @@ public class PartGun extends APart {
 
     public double getLockedOnDirection(){
         double direction = 0;
-        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
+        Point3D referencePos = masterEntity != null && definition.gun.locksFromParent ? masterEntity.position : position;
         if (engineTarget != null) {
             direction = Math.toDegrees(Math.atan2(-engineTarget.vehicleOn.position.z + referencePos.z, -engineTarget.vehicleOn.position.x + referencePos.x)) + 90 + orientation.angles.y;
         } else if (entityTarget != null) {
@@ -1066,7 +1066,7 @@ public class PartGun extends APart {
 
     public double getLockedOnAngle(){
         double angle = 0;
-        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
+        Point3D referencePos = masterEntity != null && definition.gun.locksFromParent ? masterEntity.position : position;
         if (engineTarget != null) {
             angle = -Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y,Math.hypot(-engineTarget.position.z + referencePos.z,-engineTarget.position.x + referencePos.x))) + orientation.angles.x;
         } else if (entityTarget != null) {
@@ -1083,10 +1083,10 @@ public class PartGun extends APart {
         Point3D leadPoint = new Point3D();
         double ticksToTarget = 0;
         if (engineTarget != null) {
-            ticksToTarget = engineTarget.vehicleOn.position.distanceTo(position) / (definition.gun.muzzleVelocity / 20D);
+            ticksToTarget = (definition.gun.muzzleVelocity != 0 && loadedBullet != null) ? engineTarget.vehicleOn.position.distanceTo(position) / (definition.gun.muzzleVelocity / 20D) : engineTarget.vehicleOn.position.distanceTo(position) / (loadedBullet!= null ? loadedBullet.definition.bullet.maxVelocity / 20D : 0);
             leadPoint.set(engineTarget.vehicleOn.position).addScaled(engineTarget.vehicleOn.motion, (engineTarget.vehicleOn.speedFactor) * ticksToTarget);
         } else if (entityTarget != null) {
-            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (definition.gun.muzzleVelocity / 20D);
+            ticksToTarget = (definition.gun.muzzleVelocity != 0 && loadedBullet != null) ? entityTarget.getPosition().distanceTo(position) / (definition.gun.muzzleVelocity / 20D) : entityTarget.getPosition().distanceTo(position) / (loadedBullet!= null ? loadedBullet.definition.bullet.maxVelocity / 20D : 0);
             leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), ticksToTarget);
         }
         return leadPoint;
@@ -1106,13 +1106,27 @@ public class PartGun extends APart {
 
     public double getLeadAngleY() {
         double angle = 0;
-        Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
+        Point3D referencePos = masterEntity != null && definition.gun.locksFromParent ? masterEntity.position : position;
         if(engineTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x);
+            angle = -Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))));
         } else if (entityTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
+            angle = -Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))));
         }
         return angle;
+    }
+
+    public double getTargetAspect() {
+        double aspect = 0;
+        if (engineTarget != null) {
+            aspect = -(engineTarget.vehicleOn.orientation.angles.y - orientation.angles.y);
+        } else if (entityTarget != null) {
+            aspect = -(entityTarget.getOrientation().angles.y - orientation.angles.y);
+        }
+        while (aspect < -180)
+            aspect += 360;
+        while (aspect > 180)
+            aspect -= 360;
+        return aspect;
     }
 
     @Override
@@ -1156,6 +1170,10 @@ public class PartGun extends APart {
                 return entityTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : (engineTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : 0);
             case ("gun_lockedon_leadangle_y"):
                 return entityTarget != null ? getLeadAngleY() : (engineTarget != null ? getLeadAngleY() : 0);
+
+            case ("gun_lockedon_aspect"):
+                return entityTarget != null ? getTargetAspect() : (engineTarget != null ? getTargetAspect() : 0);
+
             case ("gun_pitch"):
                 return partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x;
             case ("gun_yaw"):
