@@ -799,11 +799,13 @@ public final class LegacyCompatSystem {
                 definition.ground.frictionModifiers = new LinkedHashMap<>();
                 definition.ground.frictionModifiers.put(BlockMaterial.SNOW, -0.2F);
                 definition.ground.frictionModifiers.put(BlockMaterial.ICE, -0.2F);
-                if (!definition.ground.isTread) {
-                    definition.ground.frictionModifiers.put(BlockMaterial.DIRT_WET, -0.1F);
-                    definition.ground.frictionModifiers.put(BlockMaterial.SAND_WET, -0.1F);
-                    definition.ground.frictionModifiers.put(BlockMaterial.NORMAL_WET, -0.1F);
-                }
+            } else {
+                definition.ground.frictionModifiers.remove(BlockMaterial.DIRT_WET);
+                definition.ground.frictionModifiers.remove(BlockMaterial.SAND_WET);
+                definition.ground.frictionModifiers.remove(BlockMaterial.NORMAL_WET);
+            }
+            if (definition.ground.wetFrictionPenalty == 0 && !definition.ground.isTread) {
+                definition.ground.wetFrictionPenalty = -0.1F;
             }
         }
 

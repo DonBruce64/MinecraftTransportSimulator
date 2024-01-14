@@ -253,7 +253,7 @@ public class VehicleGroundDeviceBox {
                             offset = offsetDelta;
                         }
                         testOffset.y = offset;
-                        if (!vehicle.world.checkForCollisions(solidBox, testOffset, false)) {
+                        if (!vehicle.world.checkForCollisions(solidBox, testOffset, false, false)) {
                             isBlockedVertically = false;
                             break;
                         }
@@ -343,14 +343,14 @@ public class VehicleGroundDeviceBox {
         //Transform operates off contact points, so get the world-based transform delta the transform will apply to our contact point.
         Point3D vehicleMotionOffset = contactPoint.copy().transform(transform).subtract(contactPoint).rotate(vehicle.orientation).rotate(vehicle.rotation).addScaled(vehicle.motion, vehicle.speedFactor).add(groundMotion);
         if (!groundDevices.isEmpty()) {
-            if (vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false)) {
+            if (vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false, false)) {
                 return false;
             }
         }
 
         if (!canRollOnGround || !isAbleToDoGroundOperations) {
             if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
-                return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false);
+                return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false, false);
             }
         }
         return true;

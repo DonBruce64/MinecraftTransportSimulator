@@ -221,7 +221,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
      * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
      * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
-     * collisionDepth be set for that axis.
+     * collisionDepth be set for that axis.  Note that leaves are never checked in this code.
      */
     public abstract void updateBoundingBoxCollisions(BoundingBox box, Point3D collisionMotion, boolean ignoreIfGreater);
 
@@ -229,9 +229,9 @@ public abstract class AWrapperWorld extends EntityManager {
      * Checks the passed-in bounding box for collisions with other blocks.  Returns true if they collided,
      * false if they did not.  This is a bulk method designed to handle multiple checks in a row.  As such,
      * it stores a listing of known air blocks.  If a block has been checked before and is air, it is ignored.
-     * To reset this list, pass in clearCache.
+     * To reset this list, pass in clearCache.  Note that leaves are ignored, but can be broken if requested.
      */
-    public abstract boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache);
+    public abstract boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache, boolean breakLeaves);
 
     /**
      * Returns the current redstone power at the passed-in position.

@@ -2,7 +2,9 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -37,22 +39,20 @@ public class ItemPartGroundDevice extends AItemPart {
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_DIAMETER.value + definition.ground.height);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION.value + definition.ground.motiveFriction);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_LATERALFRICTION.value + definition.ground.lateralFriction);
-        StringBuilder modifierString = null;
-        int modifierCount = 0;
+        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_WETFRICTION.value + definition.ground.wetFrictionPenalty);
+        Map<Float, StringBuilder> frictionValues = new TreeMap<>();
         for (Entry<BlockMaterial, Float> modifier : definition.ground.frictionModifiers.entrySet()) {
-            if (modifierString == null) {
-                modifierString = new StringBuilder("\n");
-            } else {
-                if (++modifierCount == 2) {
-                    modifierCount = 0;
-                    modifierString.append("\n");
-                } else {
-                    modifierString.append(", ");
-                }
+            Float value = modifier.getValue();
+            if(!frictionValues.containsKey(value)) {
+                frictionValues.put(value, new StringBuilder().append(value).append(": ").append(modifier.getKey().name().toLowerCase(Locale.ROOT)));
+            }else {
+                frictionValues.get(value).append(", ").append(modifier.getKey().name().toLowerCase(Locale.ROOT)); 
             }
-            modifierString.append(modifier.getKey().name().toLowerCase(Locale.ROOT)).append(": ").append(modifier.getValue());
         }
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + modifierString);
+        
+        StringBuilder netString = new StringBuilder();
+        frictionValues.forEach((key, value) -> netString.append("\n  ").append(value));
+        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + netString);
         tooltipLines.add(definition.ground.isWheel ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.value);
         tooltipLines.add(definition.ground.canFloat ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_FALSE.value);
     }

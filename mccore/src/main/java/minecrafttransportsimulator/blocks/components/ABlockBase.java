@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.components;
 
+import java.util.HashMap;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -110,17 +112,42 @@ public abstract class ABlockBase {
     }
 
     /**
+     * Map of block material names to their enums.  Used for faster lookups without exceptions via valueOf function.
+     */
+    public static final HashMap<String, BlockMaterial> blockMaterialEnumMap = new HashMap<>();
+
+    /**
      * Enums for block material properties.  Not used by any of our blocks,
      * but instead are materials that blocks in the world may be made of.
      */
     public enum BlockMaterial {
-        NORMAL,
-        NORMAL_WET,
+        CLAY,
         DIRT,
-        DIRT_WET,
+        GLASS,
+        GRASS,
+        GRAVEL,
+        ICE,
+        LAVA,
+        LEAVES,
+        METAL,
         SAND,
-        SAND_WET,
         SNOW,
-        ICE
+        STONE,
+        WATER,
+        WOOD,
+        WOOL,
+        NORMAL,
+
+        //Don't use, these are old but are required here to parse old packs.
+        @Deprecated
+        DIRT_WET,
+        @Deprecated
+        SAND_WET,
+        @Deprecated
+        NORMAL_WET;
+
+        private BlockMaterial() {
+            blockMaterialEnumMap.put(name(), this);
+        }
     }
 }

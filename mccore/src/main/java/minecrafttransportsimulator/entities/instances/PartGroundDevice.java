@@ -2,6 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -46,6 +47,8 @@ public class PartGroundDevice extends APart {
     private float currentLateralFriction;
     @ModifiedValue
     private float currentHeight;
+    private final Point3D groundPosition = new Point3D();
+    private BlockMaterial materialBelow;
     public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
@@ -174,6 +177,25 @@ public class PartGroundDevice extends APart {
                     boundingBox.widthRadius -= 0.25;
                     boundingBox.depthRadius -= 0.25;
                 }
+
+                //Check for material below.
+                groundPosition.set(position);
+                groundPosition.y -= getHeight() / 2D;
+                double yPositionFraction = groundPosition.y % 1;
+                if (1 - yPositionFraction < -groundDetectionOffset.y) {
+                    //We are within a detection offset below a block.  Could be FPE, so ceiling us.
+                    groundPosition.y = Math.ceil(groundPosition.y);
+                    materialBelow = world.getBlockMaterial(groundPosition);
+                } else if (yPositionFraction > 0.5 || 0.5 - yPositionFraction < -groundDetectionOffset.y) {
+                    //We are potentially above a slab since we are above 0.5 blocks, or close to it.
+                    //Floor to use current block position.
+                    groundPosition.y = Math.floor(groundPosition.y);
+                    materialBelow = world.getBlockMaterial(groundPosition);
+                } else {
+                    //Must be less than 0.5 units from anything, floor and drop to lower block.
+                    groundPosition.y = Math.floor(groundPosition.y) - 1;
+                    materialBelow = world.getBlockMaterial(groundPosition);
+                }
             } else {
                 if (!drivenLastTick) {
                     if (vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn) {
@@ -187,8 +209,10 @@ public class PartGroundDevice extends APart {
                 if (animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)) {
                     animateAsOnGround = false;
                 }
+                materialBelow = null;
             }
             prevAngularPosition = angularPosition;
+
             //Invert rotation for all ground devices except treads.
             if (isMirrored && !definition.ground.isTread) {
                 angularPosition -= angularVelocity;
@@ -247,6 +271,13 @@ public class PartGroundDevice extends APart {
             case ("ground_distance"):
                 return world.getHeight(zeroReferencePosition);
         }
+        if (variable.startsWith("ground_blockmaterial")) {
+            if (materialBelow != null) {
+                return materialBelow.name().equals(variable.substring("ground_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
+            }
+        }
 
         return super.getRawVariableValue(variable, partialTicks);
     }
@@ -291,14 +322,17 @@ public class PartGroundDevice extends APart {
     }
 
     public float getFrictionLoss() {
-        Point3D groundPosition = position.copy().add(0, -1, 0);
         if (!world.isAir(groundPosition)) {
-            Float modifier = definition.ground.frictionModifiers.get(world.getBlockMaterial(groundPosition));
-            if (modifier == null) {
-                return world.getBlockSlipperiness(groundPosition) - 0.6F;
-            } else {
-                return world.getBlockSlipperiness(groundPosition) - 0.6F - modifier;
+            float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
+            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
+            if (modifier != null) {
+                penalty -= modifier;
             }
+            groundPosition.y += 1;
+            if (world.getRainStrength(groundPosition) > 0) {
+                penalty += definition.ground.wetFrictionPenalty;
+            }
+            return penalty;
         } else {
             return 0;
         }

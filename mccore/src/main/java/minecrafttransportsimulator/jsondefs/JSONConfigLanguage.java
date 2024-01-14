@@ -288,6 +288,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_DIAMETER = new LanguageEntry("iteminfo.ground_device.diameter", "Diameter: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION = new LanguageEntry("iteminfo.ground_device.motivefrictionmotivefriction", "Power friction: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_LATERALFRICTION = new LanguageEntry("iteminfo.ground_device.lateralfriction", "Turning friction: ");
+    public static final LanguageEntry ITEMINFO_GROUND_DEVICE_WETFRICTION = new LanguageEntry("iteminfo.ground_device.wetfriction", "Wet penalty: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS = new LanguageEntry("iteminfo.ground_device.frictionmodifiers", "Friction Modifiers: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE = new LanguageEntry("iteminfo.ground_device.rotatesonshaft_true", "Is a wheel");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE = new LanguageEntry("iteminfo.ground_device.rotatesonshaft_false", "Is NOT a wheel");
