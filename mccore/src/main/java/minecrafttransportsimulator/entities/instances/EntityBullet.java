@@ -240,16 +240,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         targetVector = new Point3D();
                     }
                     double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D);
-                    double burnTImeLeft = ticksExisted <= definition.bullet.burnTime ? definition.bullet.burnTime - ticksExisted : 0;
-                    double heightDiff = position.y - targetPosition.y;
-                    if (heightDiff < 0)
-                        heightDiff = 0;
-                    double loftAngle = Math.toDegrees(Math.acos(ticksToTarget));
-                    if (loftAngle > 45){
-                        loftAngle = 45;
-                    }
-                    double timeToFall =(motion.y + Math.sqrt((motion.y*motion.y) - (definition.bullet.gravitationalVelocity*(heightDiff))))/definition.bullet.gravitationalVelocity;
-
 
                     if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND)) {
                         targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
@@ -533,16 +523,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 relativeGunPos.set(position).subtract(gun.position).reOrigin(gun.orientation);
             }
         }
-    }
-
-    public void getTrajectory() {
-        Point3D mot1 = new Point3D();
-        double distanceNoGrav = (gun.velocity * definition.bullet.burnTime) + (0.5 * motionToAddEachTick.length() * (definition.bullet.burnTime*definition.bullet.burnTime));
-        if (definition.bullet.burnTime > 0){
-            mot1.set(0,0,gun.velocity+ gun.definition.gun.muzzleVelocity);
-        }
-
-
     }
 
     @Override
