@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -247,6 +248,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         targetVector = new Point3D();
                     }
                     double ticksToTarget = targetPosition.distanceTo(position) / (velocity / 20D);
+
                     if (engineTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.AIRCRAFT || gun.definition.gun.targetType == TargetType.GROUND)) {
                         targetVector.set(targetPosition).addScaled(engineTargeted.vehicleOn.motion, (engineTargeted.vehicleOn.speedFactor / 20D) * ticksToTarget).subtract(position).reOrigin(orientation).getAngles(true);
                     } else if (externalEntityTargeted != null && (gun.definition.gun.targetType == TargetType.ALL || gun.definition.gun.targetType == TargetType.SOFT)) {
@@ -577,6 +579,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
     }
 
+
+
     public static void performEntityHitLogic(AEntityE_Interactable<?> entity, Damage damage) {
         if (!entity.world.isClient()) {
             entity.attack(damage);
@@ -620,8 +624,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
+            Explosion boom = new Explosion(gun.world,position, gun.lastLoadedBullet.definition,gun.lastController);
+            gun.world.spawnExplosion(boom);
+            boom.breakBlocks();
+            boom.attackExternalEntity();
+            boom.attackInternalEntity();
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);

@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import mcinterface1165.mixin.common.ConcretePowderBlockMixin;
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -82,7 +82,6 @@ import net.minecraft.util.math.shapes.IBooleanFunction;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -1003,8 +1002,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames, Explosion.Mode.DESTROY);
+    public void spawnExplosion(Explosion explosion) {
+
+
     }
 
     /**

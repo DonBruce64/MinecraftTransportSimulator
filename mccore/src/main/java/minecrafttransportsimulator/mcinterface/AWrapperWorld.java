@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -408,10 +409,8 @@ public abstract class AWrapperWorld extends EntityManager {
     //FIXME make newer interfaces utilize the optional motion.
     public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion);
 
-    /**
-     * Spawns an explosion of the specified strength at the passed-in point.
-     */
-    public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+
+    public abstract void spawnExplosion(Explosion explosion);
 
     /**
      * Class for hitting on blocks.
