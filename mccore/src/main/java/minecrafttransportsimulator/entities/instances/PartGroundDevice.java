@@ -60,7 +60,7 @@ public class PartGroundDevice extends APart {
     private boolean prevActive = true;
     private final Point3D zeroReferencePosition;
     private final Point3D prevLocalOffset;
-    private PartGroundDeviceFake fakePart;
+    public PartGroundDeviceFake fakePart;
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);

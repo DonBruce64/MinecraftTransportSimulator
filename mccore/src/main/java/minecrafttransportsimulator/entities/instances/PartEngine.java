@@ -720,6 +720,13 @@ public class PartEngine extends APart {
         //Update linked wheel list.
         linkedWheels.clear();
         addLinkedPartsToList(linkedWheels, PartGroundDevice.class);
+        List<PartGroundDevice> fakeWheels = new ArrayList<>();
+        linkedWheels.forEach(wheel -> {
+            if (wheel.fakePart != null) {
+                fakeWheels.add(wheel.fakePart);
+            }
+        });
+        linkedWheels.addAll(fakeWheels);
 
         //Update propellers that are linked to us.
         linkedPropellers.clear();
