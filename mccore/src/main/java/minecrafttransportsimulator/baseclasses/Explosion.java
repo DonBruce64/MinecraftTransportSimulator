@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
@@ -21,6 +25,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
  * @author don_bruce
  */
 public class Explosion {
+    private static final List<Explosion> activeExplosions = new ArrayList<>();
+
     private final AWrapperWorld world;
     //base explosion params
     private final Point3D position;
@@ -39,6 +45,7 @@ public class Explosion {
     //Do it cause fire? Follow decay curve of strength, not damage.
     private final boolean isFlammable;
     private final JSONBullet bullet;
+    private final List<Point3D> positionsWithBlocksToBreak = new ArrayList<>();
 
     private final JSONConfigLanguage.LanguageEntry language;
 
@@ -142,12 +149,63 @@ public class Explosion {
                         }
                     }
                     if (!world.isAir(tempPosition) && factor >= world.getBlockHardness(tempPosition)) {
-                        world.destroyBlock(tempPosition, Math.random() < 1 / (1 + factor));
-                        --tempPosition.y;
-                        if (isFlammable && Math.random() < 0.25 && !world.isAir(tempPosition)) {
-                            world.setToFire(new BlockHitResult(tempPosition, Axis.UP));
-                        }
+                        //We will break this block, save it for later.  Need to copy the point since we'll modify it next loop cycle.
+                        positionsWithBlocksToBreak.add(tempPosition.copy());
                     }
+                }
+            }
+        }
+
+        //Add us to the active explosion list to be ticked.
+        activeExplosions.add(this);
+    }
+
+    //Breaks some blocks, returns true if all blocks were broken.
+    private boolean doBreakingTick() {
+        //TODO consoildate this.  We don't need these variables, they're only here for clarity for you.
+        int blocksToBreakPertick = 5;
+        int maxBlocksToDrop = 30;
+        float maxDropRate = 0.25F;
+        float fireRate = 0.10F;
+
+        //Need to cast to float here, otherwise we do integer division.
+        float dropRate = maxBlocksToDrop / (float) positionsWithBlocksToBreak.size();
+
+        //Don't want to drop all 30 blocks if we only broke 30, need to clamp to max rate.
+        if (dropRate > maxDropRate) {
+            dropRate = maxDropRate;
+        }
+
+        for (int i = 0; i < blocksToBreakPertick; ++i) {
+            //Remove operation gets the first element in the list and removes it.
+            //We just want a single block to break each go-around of this loop, until
+            //we hit the max blocks, or until they're empty.
+            Point3D blockPosition = positionsWithBlocksToBreak.remove(0);
+            world.destroyBlock(blockPosition, Math.random() < dropRate);
+            if (isFlammable && Math.random() < fireRate) {
+                --blockPosition.y;
+                if (!world.isAir(blockPosition)) {
+                    world.setToFire(new BlockHitResult(blockPosition, Axis.UP));
+                }
+            }
+            if (positionsWithBlocksToBreak.isEmpty()) {
+                return true;
+            }
+        }
+        //Didn't break all blocks, return false.
+        return false;
+    }
+
+    //Ticks explosions each tick.  Called from EntityManager each tick.
+    //This spreads out block breaking across multiple ticks to reduce lag.
+    public static void tickActiveExplosions() {
+        if (!activeExplosions.isEmpty()) {
+            //Use iterator loop here.  It allows us to remove old explosions while looping.
+            //If we didn't have this, we'd get a ConcurrentModificationException.
+            Iterator<Explosion> iterator = activeExplosions.iterator();
+            for (Explosion explosion : activeExplosions) {
+                if (explosion.doBreakingTick()) {
+                    iterator.remove();
                 }
             }
         }

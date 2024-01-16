@@ -319,6 +319,9 @@ public abstract class EntityManager {
             entity.update();
         }
         entity.world.endProfiling();
+
+        //Also tick active explosions.
+        Explosion.tickActiveExplosions();
     }
 
     /**
