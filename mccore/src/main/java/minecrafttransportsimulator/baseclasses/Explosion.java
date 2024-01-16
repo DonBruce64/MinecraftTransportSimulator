@@ -157,7 +157,9 @@ public class Explosion {
         }
 
         //Add us to the active explosion list to be ticked.
-        activeExplosions.add(this);
+        if (!positionsWithBlocksToBreak.isEmpty()) {
+            activeExplosions.add(this);
+        }
     }
 
     //Breaks some blocks, returns true if all blocks were broken.
