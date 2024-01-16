@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Explosion;
@@ -307,8 +306,10 @@ public abstract class AWrapperWorld extends EntityManager {
      * Destroys the block at the position, dropping it as whatever drop it drops as if set.
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
+     * Use quickDestroy if you want to destroy the block without any sound or particle effects.
+     * Useful for large destruction operations.
      */
-    public abstract void destroyBlock(Point3D position, boolean spawnDrops);
+    public abstract void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy);
 
     /**
      * Returns true if the block at this position is air.

@@ -598,10 +598,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!gun.world.isClient()) {
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
                 gun.world.extinguish(blockPosition, blockSide);
-            } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
                 float hardnessHit = gun.world.getBlockHardness(blockPosition);
-                if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
-                    gun.world.destroyBlock(blockPosition, true);
+                if (ConfigSystem.settings.damage.bulletBlockBreaking.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
+                    gun.world.destroyBlock(blockPosition, true, false);
                 } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
                     //Couldn't break block, but we might be able to set it on fire.
                     gun.world.setToFire(blockPosition, blockSide);
