@@ -709,8 +709,18 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void destroyBlock(Point3D position, boolean spawnDrops) {
-        world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
+    public void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (quickDestroy) {
+            IBlockState state = world.getBlockState(pos);
+            Block block = state.getBlock();
+            if (spawnDrops) {
+                block.dropBlockAsItem(world, pos, state, 0);
+            }
+            world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+        } else {
+            world.destroyBlock(pos, spawnDrops);
+        }
     }
 
     @Override
