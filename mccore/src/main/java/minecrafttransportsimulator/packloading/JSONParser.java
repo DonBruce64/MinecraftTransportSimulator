@@ -510,10 +510,10 @@ public class JSONParser {
      * Imports all JSONs from the standard folder.
      * A multi-line string is returned with all status messages from the import process.
      */
-    public static String importAllJSONs() {
+    public static String importAllJSONs(boolean returnErrorsOnly) {
         File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
         if (jsonDir.exists()) {
-            String debugText = "Import dir is: " + jsonDir.getAbsolutePath();
+            String debugText = returnErrorsOnly ? "" : "Import dir is: " + jsonDir.getAbsolutePath();
             File lastModifiedFile = new File(jsonDir, "lastexported.txt");
             if (lastModifiedFile.exists()) {
                 long lastTimeModified;
@@ -538,14 +538,22 @@ public class JSONParser {
                             File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders + definition.systemName + ".json");
                             if (!parsedFiles.contains(jsonFile)) {
                                 if (jsonFile.lastModified() > lastTimeModified) {
-                                    debugText += JSONParser.importJSON(jsonFile, definition);
+                                    debugText += JSONParser.importJSON(jsonFile, definition, returnErrorsOnly);
                                 }
                                 parsedFiles.add(jsonFile);
                             }
                         }
                     }
                 }
-                return debugText + "\nImporting finished.";
+                if(returnErrorsOnly) {
+                    if(debugText.isEmpty()) {
+                        return "Imported with no errors.";
+                    }else {
+                        return debugText;
+                    }
+                }else {
+                    return debugText + "\nImporting finished.";
+                }
             } else {
                 return "ERROR: No last modified timestamp file found at location: " + lastModifiedFile.getAbsolutePath() + "\nPlease re-export your pack data.";
             }
@@ -558,7 +566,7 @@ public class JSONParser {
      * Imports the passed-in JSON, replacing the passed-in JSON with this one.
      * Status message is returned, which either indicates import success, or error.
      */
-    public static String importJSON(File jsonFile, AJSONBase definitionToOverride) {
+    public static String importJSON(File jsonFile, AJSONBase definitionToOverride, boolean returnErrorsOnly) {
         try {
             final AJSONBase loadedDefinition;
             switch (definitionToOverride.classification) {
@@ -672,7 +680,7 @@ public class JSONParser {
                     }
                 }
             }
-            return "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
+            return returnErrorsOnly ? "" : "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
         } catch (Exception e) {
             e.printStackTrace();
             return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();

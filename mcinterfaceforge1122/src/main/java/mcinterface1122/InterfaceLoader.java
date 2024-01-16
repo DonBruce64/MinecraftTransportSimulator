@@ -83,6 +83,9 @@ public final class InterfaceLoader {
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();
 
+        //Populate language system names.
+        LanguageSystem.populateNames();
+
         if (event.getSide().isClient()) {
             //Init keybinds if we're on the client.
             InterfaceManager.inputInterface.initConfigKey();

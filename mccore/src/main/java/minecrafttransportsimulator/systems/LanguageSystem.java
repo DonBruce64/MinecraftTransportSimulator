@@ -111,9 +111,20 @@ public class LanguageSystem {
                     }
                 }
             }
+        }
+    }
 
-            //Populate pack language objects with text.
-            //Core entries, being static, will be initied on class init, so they'll be ready here too.
+    /**
+     * Called to populate the names.  This has to happen after {@link #init(boolean)},
+     * but can be deffered until the game boots up and we can scan for language settings.
+     * This method only populates runtime values, not default code ones (en_us).  Those will 
+     * always be present, provided the init function has been called.
+     */
+    public static void populateNames() {
+        //Populate pack language objects with text.
+        //Core entries, being static, will be initied on class init, so they'll be ready here too.
+        for (String packID : PackParser.getAllPackIDs()) {
+            Map<String, LanguageEntry> packMap = packLanguageEntries.get(packID);
             for (String language : InterfaceManager.clientInterface.getAllLanguages()) {
                 String filePath = "/assets/" + packID + "/language/" + language;
                 InputStream languageStream = InterfaceManager.coreInterface.getPackResource(filePath);
@@ -156,7 +167,6 @@ public class LanguageSystem {
                 }
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create template language files.  Report to the mod author!  Or, are you trying to do language stuff on servers?  Cause that's a bad idea...");
-                e.printStackTrace();
             }
         }
     }
@@ -223,6 +233,7 @@ public class LanguageSystem {
 
     public static final LanguageEntry GUI_CONFIRM = new LanguageEntry("gui.confirm", "CONFIRM");
     public static final LanguageEntry GUI_MASTERCONFIG = new LanguageEntry("gui.masterconfig", "Open configuration screen");
+    public static final LanguageEntry GUI_IMPORT = new LanguageEntry("gui.import", "Import Packs (Developers Only)");
 
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCAN = new LanguageEntry("gui.signalcontroller.scan", "Scan For Signals & Components");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCANDISTANCE = new LanguageEntry("gui.signalcontroller.scandistance", "Radius: ");

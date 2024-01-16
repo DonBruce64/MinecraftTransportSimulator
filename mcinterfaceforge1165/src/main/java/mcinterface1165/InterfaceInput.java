@@ -14,7 +14,10 @@ import org.lwjgl.glfw.GLFW;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketPackImport;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -34,6 +37,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
+    private static KeyBinding importKey;
     private static int lastScrollValue;
 
     //Joystick variables.
@@ -64,6 +68,8 @@ public class InterfaceInput implements IInterfaceInput {
     public void initConfigKey() {
         configKey = new KeyBinding(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(configKey);
+        importKey = new KeyBinding(LanguageSystem.GUI_IMPORT.getCurrentValue(), GLFW.GLFW_KEY_UNKNOWN, InterfaceLoader.MODNAME);
+        ClientRegistry.registerKeyBinding(importKey);
     }
 
     @Override
@@ -349,9 +355,14 @@ public class InterfaceInput implements IInterfaceInput {
             joystickLoadingAttempted = true;
         }
 
-        //Check if we pressed the config key.
+        //Check if we pressed the config or import key.
         if (configKey.isDown() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
+        } else if (ConfigSystem.settings.general.devMode.value && importKey.isDown()) {
+            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+            clientPlayer.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
+            JSONParser.applyImports(clientPlayer.getWorld());
+            InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
         }
     }
 
