@@ -128,23 +128,23 @@ public class Explosion {
         //These variables should already be present somewhere, might be named differently.
         Point3D tempPosition = new Point3D();
         //Note that casting the double to an int rounds things, so it won't be exact.
-        for (int x = (int) (position.x - damageDecayEndRadius); x < position.x + damageDecayEndRadius; ++x) {
-            for (int y = (int) (position.y - damageDecayEndRadius); y < position.y + damageDecayEndRadius; ++y) {
-                for (int z = (int) (position.z - damageDecayEndRadius); z < position.z + damageDecayEndRadius; ++z) {
+        for (int x = (int) (position.x - strengthDecayEndRadius); x < position.x + strengthDecayEndRadius; ++x) {
+            for (int y = (int) (position.y - strengthDecayEndRadius); y < position.y + strengthDecayEndRadius; ++y) {
+                for (int z = (int) (position.z - strengthDecayEndRadius); z < position.z + strengthDecayEndRadius; ++z) {
                     tempPosition.set(x,y,z);
                     //get strength of blast at pos
                     double factor = 0;
-                    if (tempPosition.isDistanceToCloserThan(position, damageDecayEndRadius)) {
-                        if (tempPosition.isDistanceToCloserThan(position, damageDecayStartRadius)) {
+                    if (tempPosition.isDistanceToCloserThan(position, strengthDecayEndRadius)) {
+                        if (tempPosition.isDistanceToCloserThan(position, strengthDecayStartRadius)) {
                             factor = strength;
                         } else {
-                            factor = strength * Math.pow(0.5, 3 * (tempPosition.distanceTo(position) - damageDecayStartRadius) / (damageDecayEndRadius - damageDecayStartRadius));
+                            factor = strength * Math.pow(0.5, 3 * (tempPosition.distanceTo(position) - strengthDecayStartRadius) / (strengthDecayEndRadius - strengthDecayStartRadius));
                         }
                     }
                     if (!world.isAir(tempPosition) && factor >= world.getBlockHardness(tempPosition)) {
                         world.destroyBlock(tempPosition, Math.random() < 1 / (1 + factor));
                         --tempPosition.y;
-                        if (isFlammable && !world.isAir(tempPosition)) {
+                        if (isFlammable && Math.random() < 0.25 && !world.isAir(tempPosition)) {
                             world.setToFire(new BlockHitResult(tempPosition, Axis.UP));
                         }
                     }
