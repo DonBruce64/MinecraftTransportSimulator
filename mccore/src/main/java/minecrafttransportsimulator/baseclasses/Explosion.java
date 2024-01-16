@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -157,6 +158,20 @@ public class Explosion {
 
         //Add us to the active explosion list to be ticked.
         if (!positionsWithBlocksToBreak.isEmpty()) {
+            positionsWithBlocksToBreak.sort(new Comparator<Point3D>() {
+                @Override
+                public int compare(Point3D position1, Point3D position2) {
+                    double distance1 = position.distanceTo(position1);
+                    double distance2 = position.distanceTo(position2);
+                    if (distance1 < distance2) {
+                        return -1;
+                    } else if (distance2 < distance1) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            });
             activeExplosions.add(this);
         }
     }
