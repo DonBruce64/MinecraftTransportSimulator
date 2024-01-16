@@ -361,13 +361,13 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new EntityDamageSource(damage.language.value, damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
+        DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
             public ITextComponent getLocalizedDeathMessage(LivingEntity player) {
                 if (damage.entityResponsible != null) {
-                    return new StringTextComponent(String.format(damage.language.value, player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
+                    return new StringTextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
                 } else {
-                    return new StringTextComponent(String.format(damage.language.value, player.getDisplayName().getString()));
+                    return new StringTextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString()));
                 }
             }
         };

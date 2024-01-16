@@ -18,7 +18,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -26,6 +25,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -112,7 +112,7 @@ public class GUIInstruments extends AGUIBase {
         addComponent(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
         //Create the clear button and background.
-        addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2 * GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, JSONConfigLanguage.GUI_INSTRUMENTS_CLEAR.value, true, ColorRGB.WHITE, false) {
+        addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2 * GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, LanguageSystem.GUI_INSTRUMENTS_CLEAR.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
@@ -123,7 +123,7 @@ public class GUIInstruments extends AGUIBase {
         addComponent(new GUIComponentCutout(clearButton.constructedX, clearButton.constructedY, clearButton.width, clearButton.height, 448, 0, 64, 64));
 
         //Create the HUD selection button.
-        addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, JSONConfigLanguage.GUI_INSTRUMENTS_MAIN.value, true, ColorRGB.WHITE, false) {
+        addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_MAIN.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 hudSelected = true;
@@ -134,7 +134,7 @@ public class GUIInstruments extends AGUIBase {
         });
 
         //Create the panel selection button.
-        addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, JSONConfigLanguage.GUI_INSTRUMENTS_PANEL.value, true, ColorRGB.WHITE, false) {
+        addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_PANEL.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 hudSelected = false;
@@ -237,7 +237,7 @@ public class GUIInstruments extends AGUIBase {
         panelButton.enabled = hudSelected;
 
         //Set info and clear state based on if we've clicked an instrument.
-        infoLabel.text = selectedInstrumentDefinition == null ? "\\/  " + JSONConfigLanguage.GUI_INSTRUMENTS_IDLE.value + "  \\/" : "/\\  " + JSONConfigLanguage.GUI_INSTRUMENTS_DECIDE.value + "  /\\";
+        infoLabel.text = selectedInstrumentDefinition == null ? "\\/  " + LanguageSystem.GUI_INSTRUMENTS_IDLE.getCurrentValue() + "  \\/" : "/\\  " + LanguageSystem.GUI_INSTRUMENTS_DECIDE.getCurrentValue() + "  /\\";
         clearButton.enabled = selectedInstrumentDefinition != null && selectedEntity.instruments.get(selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition)) != null;
     }
 

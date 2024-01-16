@@ -9,7 +9,6 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -18,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public EntityVehicleF_Physics connectedVehicle;
@@ -69,7 +69,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                 setConnection(null);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 25, 25, 25))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
                 }
                 return;
             }
@@ -79,7 +79,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                 setConnection(null);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_COMPLETE));
                 }
                 return;
             }
@@ -113,14 +113,14 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             if (haveEmptySlot) {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
             } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_FULLITEMS));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_FULLITEMS));
             }
             return true;
         }
 
         //If we don't have anything in our buffer, don't try and connect anything.
         if (!hasFuel()) {
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOFUEL));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_NOFUEL));
             return true;
         }
 
@@ -141,32 +141,32 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             if (nearestVehicle != null) {
                 switch (checkPump(nearestVehicle)) {
                     case NOENGINE: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOENGINE));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_NOENGINE));
                         return true;
                     }
                     case VALID: {
                         setConnection(nearestVehicle);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, nearestVehicle));
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_CONNECT));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_CONNECT));
                         return true;
                     }
                     case INVALID: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGENGINES));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_WRONGENGINES));
                         return true;
                     }
                     case MISMATCH: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE, nearestVehicle.fuelTank.getFluid()));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_WRONGTYPE, nearestVehicle.fuelTank.getFluid()));
                         return true;
                     }
                 }
             } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
             }
         } else {
             //Connected vehicle exists, disconnect it.
             setConnection(null);
             InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_DISCONNECT));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_DISCONNECT));
         }
         return true;
     }

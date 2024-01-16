@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -72,6 +73,9 @@ public final class InterfaceLoader {
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
+
+        //Init language system.
+        LanguageSystem.init(event.getSide().isClient());
     }
 
     @EventHandler

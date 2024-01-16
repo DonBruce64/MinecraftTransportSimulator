@@ -7,13 +7,13 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * This class adds engine components for vehicles, such as fuel, throttle,
@@ -291,7 +291,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 }
             }
             if (world.isClient()) {
-                player.displayChatMessage(JSONConfigLanguage.INTERACT_VEHICLE_NEEDKEY);
+                player.displayChatMessage(LanguageSystem.INTERACT_VEHICLE_NEEDKEY);
             }
             return false;
         }

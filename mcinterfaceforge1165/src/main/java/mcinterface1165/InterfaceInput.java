@@ -13,11 +13,11 @@ import org.lwjgl.glfw.GLFW;
 
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -62,7 +62,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public void initConfigKey() {
-        configKey = new KeyBinding(JSONConfigLanguage.GUI_MASTERCONFIG.value, GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
+        configKey = new KeyBinding(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(configKey);
     }
 

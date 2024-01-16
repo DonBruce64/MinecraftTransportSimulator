@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Packet used for sending the player chat messages from the server.  Mainly for informing them
@@ -29,7 +29,7 @@ public class PacketPlayerChatMessage extends APacketPlayer {
 
     public PacketPlayerChatMessage(ByteBuf buf) {
         super(buf);
-        this.language = JSONConfigLanguage.coreEntries.get(readStringFromBuffer(buf));
+        this.language = LanguageSystem.coreLanguageEntires.get(readStringFromBuffer(buf));
         this.message = new String[buf.readByte()];
         for (byte i = 0; i < message.length; ++i) {
             message[i] = readStringFromBuffer(buf);

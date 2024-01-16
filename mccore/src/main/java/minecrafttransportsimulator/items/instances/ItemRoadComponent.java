@@ -16,7 +16,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadGeneric;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -24,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock {
     private final Map<IWrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<>();
@@ -75,10 +75,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                         RoadClickData clickedRoadData = clickedRoad.getClickData(position, false);
                         JSONRoadGeneric roadDefinition = clickedRoadData.roadClicked.definition.road;
                         if ((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_LANEMISMATCHFIRST));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_LANEMISMATCHFIRST));
                             return true;
                         } else if (clickedRoadData.lanesOccupied) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_ALREADYCONNECTED));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_ALREADYCONNECTED));
                             return true;
                         }
                         lastRoadGenPositionClicked.put(player, clickedRoadData.genPosition);
@@ -96,7 +96,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                         lastRoadGenPositionClicked.put(player, genPosition);
                         lastRoadGenRotationClicked.put(player, genRotation);
                     }
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_SET));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_SET));
                 } else if (!player.isSneaking() && lastRoadGenPositionClicked.containsKey(player)) {
                     if (position.isDistanceToCloserThan(lastRoadGenPositionClicked.get(player), ConfigSystem.settings.general.roadMaxLength.value)) {
                         //If we clicked a road for our starting point, then we need to auto-place the new road block.
@@ -110,10 +110,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                             final RoadClickData startingRoadData = clickedRoad.getClickData(position, true);
                             JSONRoadGeneric roadDefinition = startingRoadData.roadClicked.definition.road;
                             if ((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length) {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_LANEMISMATCHSECOND));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_LANEMISMATCHSECOND));
                                 return true;
                             } else if (startingRoadData.lanesOccupied) {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_ALREADYCONNECTED));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_ALREADYCONNECTED));
                                 return true;
                             }
 
@@ -138,7 +138,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                             }
 
                             if (!foundSpot) {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKED));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_BLOCKED));
                                 return true;
                             }
                         } else {
@@ -162,7 +162,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 
                         //Check if the start and end position are the same.
                         if (startPosition.equals(lastRoadGenPositionClicked.get(player))) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_SAME));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_SAME));
                             return true;
                         }
 
@@ -197,10 +197,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                                 lastRoadGenRotationClicked.put(player, clickData.genRotation);
                             }
                         } else {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKED));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_BLOCKED));
                         }
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_TOOFAR));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_TOOFAR));
                     }
                     return true;
                 }
@@ -221,7 +221,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
                         }
                     }
                 } else {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKED));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_BLOCKED));
                 }
                 return true;
             }

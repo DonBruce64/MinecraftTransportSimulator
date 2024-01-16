@@ -1,5 +1,6 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +55,10 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public boolean usingDefaultLanguage() {
-        return Minecraft.getMinecraft().gameSettings.language.equals("en_us");
+    public List<String> getAllLanguages() {
+        List<String> list = new ArrayList<>();
+        Minecraft.getMinecraft().getLanguageManager().getLanguages().forEach(language -> list.add(language.getLanguageCode()));
+        return list;
     }
 
     @Override

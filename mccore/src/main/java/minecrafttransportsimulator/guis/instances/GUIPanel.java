@@ -16,7 +16,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelClickAction;
@@ -31,6 +30,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -70,7 +70,7 @@ public class GUIPanel extends AGUIBase {
         if (panel != null) {
             return panel;
         } else {
-            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
+            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
             if (vehicle.definition.motorized.isAircraft) {
                 return PackParser.getPackPanel(InterfaceManager.coreModID, "default_plane");
             } else {

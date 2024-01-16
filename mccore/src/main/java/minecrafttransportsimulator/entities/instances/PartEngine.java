@@ -7,8 +7,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -21,6 +19,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public class PartEngine extends APart {
     public static String ELECTRICITY_FUEL = "electricity";
@@ -256,7 +256,7 @@ public class PartEngine extends APart {
                     linkedEngine = null;
                     if (world.isClient()) {
                         for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                            player.displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
+                            player.displayChatMessage(LanguageSystem.INTERACT_JUMPERCABLE_LINKDROPPED);
                         }
                     }
                 } else if (vehicleOn.electricPower + 0.5 < linkedEngine.vehicleOn.electricPower) {
@@ -270,7 +270,7 @@ public class PartEngine extends APart {
                     linkedEngine = null;
                     if (world.isClient()) {
                         for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                            player.displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
+                            player.displayChatMessage(LanguageSystem.INTERACT_JUMPERCABLE_POWEREQUAL);
                         }
                     }
                 }
@@ -664,13 +664,13 @@ public class PartEngine extends APart {
                     boundingBox.depthRadius += 0.25;
                     boundingBox.globalCenter.add(vehicleOn.headingVector);
                     IWrapperEntity controller = vehicleOn.getController();
-                    LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_JETINTAKE_PLAYER : JSONConfigLanguage.DEATH_JETINTAKE_NULL;
+                    LanguageEntry language = controller != null ? LanguageSystem.DEATH_JETINTAKE_PLAYER : LanguageSystem.DEATH_JETINTAKE_NULL;
                     Damage jetIntake = new Damage(definition.engine.jetPowerFactor * ConfigSystem.settings.damage.jetDamageFactor.value * rpm / 1000F, boundingBox, this, controller, language);
                     world.attackEntities(jetIntake, null, false);
 
                     boundingBox.globalCenter.subtract(vehicleOn.headingVector);
                     boundingBox.globalCenter.subtract(vehicleOn.headingVector);
-                    language = controller != null ? JSONConfigLanguage.DEATH_JETEXHAUST_PLAYER : JSONConfigLanguage.DEATH_JETEXHAUST_NULL;
+                    language = controller != null ? LanguageSystem.DEATH_JETEXHAUST_PLAYER : LanguageSystem.DEATH_JETEXHAUST_NULL;
                     Damage jetExhaust = new Damage(definition.engine.jetPowerFactor * ConfigSystem.settings.damage.jetDamageFactor.value * rpm / 2000F, boundingBox, this, controller, language).setFire();
                     world.attackEntities(jetExhaust, null, false);
 

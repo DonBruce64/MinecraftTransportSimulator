@@ -30,12 +30,10 @@ public interface IInterfaceClient {
     String getLanguageName();
 
     /**
-     * Returns true if the default language (english) is being used.
-     * If the default language is being used, we should overwrite
-     * any language entries with those defined in the JSON or core mod.
-     * Otherwise, we leave those alone and parse from any config files.
+     * Returns a list of all possible language codes the game supports.  It is
+     * assured that the result from {@link #getLanguageName()} will be in this list.
      */
-    boolean usingDefaultLanguage();
+    List<String> getAllLanguages();
 
     /**
      * Returns the in-game name for the passed-in fluid.  If the passed-in fluid is

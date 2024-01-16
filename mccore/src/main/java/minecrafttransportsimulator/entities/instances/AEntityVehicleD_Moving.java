@@ -15,7 +15,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -23,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -154,7 +154,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollisions(world, new Point3D(0D, -furthestDownPoint, 0D), false)) {
                     //New vehicle shouldn't have been spawned.  Bail out.
-                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
+                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
                     //Need to add stack back as it will have been removed here.
                     if (!placingPlayer.isCreative()) {
                         placingPlayer.setHeldStack(getStack());

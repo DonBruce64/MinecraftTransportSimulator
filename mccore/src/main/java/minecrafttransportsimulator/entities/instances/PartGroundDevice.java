@@ -5,8 +5,6 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -16,6 +14,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * A ground device is simply a part of a vehicle that touches the ground.
@@ -171,7 +171,7 @@ public class PartGroundDevice extends APart {
                         wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value * vehicleOn.currentMass / 1000F;
                     }
                     IWrapperEntity controller = vehicleOn.getController();
-                    LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_WHEEL_PLAYER : JSONConfigLanguage.DEATH_WHEEL_NULL;
+                    LanguageEntry language = controller != null ? LanguageSystem.DEATH_WHEEL_PLAYER : LanguageSystem.DEATH_WHEEL_NULL;
                     Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
                     vehicleOn.world.attackEntities(wheelDamage, null, false);
                     boundingBox.widthRadius -= 0.25;

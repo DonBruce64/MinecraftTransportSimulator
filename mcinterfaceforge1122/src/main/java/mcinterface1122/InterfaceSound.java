@@ -17,7 +17,6 @@ import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IInterfaceSound;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -26,6 +25,7 @@ import minecrafttransportsimulator.sound.OGGDecoder;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -222,7 +222,7 @@ public class InterfaceSound implements IInterfaceSound {
                 if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                     AL10.alDeleteBuffers(dataBufferPointer);
                     if (++sourceGetFailures == 10) {
-                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
                         ///Kill off the sound that's furthest from the player to make room if we have a sound we can remove.
                         //This keeps the sounds going, even with limited slots.
                         if (!playingSounds.isEmpty()) {
@@ -274,7 +274,7 @@ public class InterfaceSound implements IInterfaceSound {
             AL10.alGenSources(sourceBuffer);
             if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                 if (++sourceGetFailures == 10) {
-                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
                 }
                 return;
             }

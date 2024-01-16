@@ -1,87 +1,204 @@
-package minecrafttransportsimulator.jsondefs;
+package minecrafttransportsimulator.systems;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
 
 /**
- * Config class for language interfacing.  This contains all default text strings, and will be loaded
- * by both the client and server.  When choosing a file to load, the current language suffix will be used
- * on clients, whereas servers will always use the default, english language.  If a file doesn't exist,
- * or is missing an entry, then the default value will be used instead.
+ * System for handling language translation.  This stores all language files found during boot,
+ * and references those files when requested.  This system also is responsible for exporting language
+ * files to a folder if requested.
  *
  * @author don_bruce
  */
-public class JSONConfigLanguage {
-    public Map<String, String> core = new LinkedHashMap<>();
-    public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<>();
-    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<>();
+public class LanguageSystem {
+    public static final Map<String, LanguageEntry> coreLanguageEntires = new LinkedHashMap<>();
+    private static final Map<String, Map<String, LanguageEntry>> packLanguageEntries = new LinkedHashMap<>();
+    private static boolean onClient;
+    private static File dumpToFolder;
 
-    public void populateEntries(boolean isClient) {
-        boolean overrideJSONWithDefinedValues = !isClient || InterfaceManager.clientInterface.usingDefaultLanguage();
-        //First populate core entries.
-        for (LanguageEntry entry : coreEntries.values()) {
-            if (!core.containsKey(entry.key) || overrideJSONWithDefinedValues) {
-                core.put(entry.key, entry.value);
-            } else {
-                entry.value = core.get(entry.key);
-            }
-        }
+    /**
+     * Called to init this system.  Must be called after all pack items are loaded, but
+     * before any pack item name references are used.
+     */
+    public static void init(boolean onClient) {
+        LanguageSystem.onClient = onClient;
 
-        //Populate pack entries.
+        //Init all packs, getting their language entries first.
         for (String packID : PackParser.getAllPackIDs()) {
-            Map<String, JSONItemEntry> packMap = packs.computeIfAbsent(packID, k -> new LinkedHashMap<>());
+            //Get all pack items and init their language objects.
+            Map<String, LanguageEntry> packMap = packLanguageEntries.computeIfAbsent(packID, k -> new LinkedHashMap<>());
             for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
-                String itemKey = packItem.getRegistrationName();
-                JSONItemEntry entry = packMap.get(itemKey);
-                if (entry == null) {
-                    entry = new JSONItemEntry();
-                    packMap.put(itemKey, entry);
-                }
+                String itemID = packItem.getRegistrationName();
                 String itemName = null;
+
                 if (packItem instanceof AItemSubTyped) {
-                    AItemSubTyped<?> subTyped = (AItemSubTyped<?>) packItem;
-                    for (JSONSubDefinition subDefinition : subTyped.definition.definitions) {
-                        if (subDefinition.subName.equals(subTyped.subDefinition.subName)) {
-                            itemName = subDefinition.name;
-                            break;
-                        }
+                    AItemSubTyped<?> subDefItem = (AItemSubTyped<?>) packItem;
+                    itemName = subDefItem.subDefinition.name;
+                    subDefItem.languageSubDescription = new LanguageEntry(subDefItem.subDefinition.description != null ? subDefItem.subDefinition.description : "");
+                    packMap.put(itemID + ".subDescription", subDefItem.languageSubDescription);
+
+                    //Description ignores subName, strip it and associate it if it already exists.
+                    String masterItemID = itemID.substring(0, itemID.length() - subDefItem.subDefinition.subName.length()) + ".description";
+                    LanguageEntry masterDescription = packMap.get(masterItemID);
+                    if (masterDescription == null) {
+                        masterDescription = new LanguageEntry(packItem.definition.general.description != null ? packItem.definition.general.description : "");
+                        packMap.put(masterItemID, masterDescription);
                     }
+                    packItem.languageDescription = masterDescription;
+                } else {
+                    packItem.languageDescription = new LanguageEntry(packItem.definition.general.description != null ? packItem.definition.general.description : "");
+                    packMap.put(itemID + ".description", packItem.languageDescription);
                 }
                 if (itemName == null) {
                     itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
                 }
-                String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-                if (!itemName.equals(entry.name) || !itemDescription.equals(entry.description) || overrideJSONWithDefinedValues) {
-                    if (entry.name == null || overrideJSONWithDefinedValues) {
-                        entry.name = itemName;
+                packItem.languageName = new LanguageEntry(itemName);
+                packMap.put(itemID + ".name", packItem.languageName);
+
+                //If this is a book item, we need to add a section for all the components.
+                if (packItem instanceof ItemItem) {
+                    ItemItem packItemItem = (ItemItem) packItem;
+                    if (packItemItem.definition.booklet != null) {
+                        itemID += ".booklet";
+                        if (packItemItem.definition.booklet.titleText != null) {
+                            packItemItem.languageTitle = new ArrayList<>();
+                            for (int i = 0; i < packItemItem.definition.booklet.titleText.size(); ++i) {
+                                LanguageEntry language = new LanguageEntry(packItemItem.definition.booklet.titleText.get(i).defaultText);
+                                packItemItem.languageTitle.add(language);
+                                packMap.put(itemID + ".title.textline" + (i + 1), language);
+                            }
+                        }
+
+                        packItemItem.languagePageTitle = new ArrayList<>();
+                        packItemItem.languagePageText = new ArrayList<>();
+                        for (int i = 0; i < packItemItem.definition.booklet.pages.size(); ++i) {
+                            BookletPage page = packItemItem.definition.booklet.pages.get(i);
+                            if (page.title != null) {
+                                LanguageEntry language = new LanguageEntry(page.title);
+                                packItemItem.languagePageTitle.add(language);
+                                packMap.put(itemID + ".page" + (i + 1) + ".title", language);
+                            } else {
+                                packItemItem.languagePageTitle.add(null);
+                            }
+                            if (page.pageText != null) {
+                                List<LanguageEntry> languageList = new ArrayList<>();
+                                for (int j = 0; j < page.pageText.size(); ++j) {
+                                    LanguageEntry language = new LanguageEntry(page.pageText.get(j).defaultText);
+                                    languageList.add(language);
+                                    packMap.put(itemID + ".page" + (i + 1) + ".textline" + (j + i), language);
+                                }
+                                packItemItem.languagePageText.add(languageList);
+                            } else {
+                                packItemItem.languagePageText.add(null);
+                            }
+                        }
                     }
-                    if (entry.description == null || overrideJSONWithDefinedValues) {
-                        entry.description = itemDescription;
+                }
+            }
+
+            //Populate pack language objects with text.
+            //Core entries, being static, will be initied on class init, so they'll be ready here too.
+            for (String language : InterfaceManager.clientInterface.getAllLanguages()) {
+                String filePath = "/assets/" + packID + "/language/" + language;
+                InputStream languageStream = InterfaceManager.coreInterface.getPackResource(filePath);
+                if (languageStream != null) {
+                    JSONLanguageFile languageFile;
+                    try {
+                        languageFile = JSONParser.parseStream(languageStream, JSONLanguageFile.class, null, null);
+                        languageFile.entries.forEach((key, value) -> {
+                            LanguageEntry languageEntry = packMap.get(key);
+                            if (languageEntry != null) {
+                                languageEntry.values.put(language, value);
+                            }
+                            languageEntry = coreLanguageEntires.get(key);
+                            if (languageEntry != null) {
+                                languageEntry.values.put(language, value);
+                            }
+                        });
+                    } catch (IOException e) {
+                        InterfaceManager.coreInterface.logError("Could not load language file: " + filePath + "  Language for this language/pack will be disabled.  Report this to the pack author!");
                     }
                 }
             }
         }
-    }
 
-    public static class LanguageEntry {
-        public final String key;
-        public String value;
-
-        public LanguageEntry(String key, String defaultValue) {
-            this.key = key;
-            this.value = defaultValue;
-            coreEntries.put(key, this);
+        if (dumpToFolder != null) {
+            //We got a message from ConfigSystem to dump what we parsed, do so now.
+            try {
+                for (Entry<String, Map<String, LanguageEntry>> languagePacks : packLanguageEntries.entrySet()) {
+                    String packID = languagePacks.getKey();
+                    JSONLanguageFile jsonFileToWrite = new JSONLanguageFile();
+                    jsonFileToWrite.entries = new LinkedHashMap<>();
+                    languagePacks.getValue().forEach((key, languageEntry) -> jsonFileToWrite.entries.put(key, languageEntry.getDefaultValue()));
+                    if (packID.equals(InterfaceManager.coreModID)) {
+                        coreLanguageEntires.forEach((key, languageEntry) -> jsonFileToWrite.entries.put(key, languageEntry.getDefaultValue()));
+                    }
+                    dumpToFolder.mkdir();
+                    File packFolder = new File(dumpToFolder, packID);
+                    packFolder.mkdir();
+                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName()).toPath()));
+                }
+            } catch (Exception e) {
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to create template language files.  Report to the mod author!  Or, are you trying to do language stuff on servers?  Cause that's a bad idea...");
+                e.printStackTrace();
+            }
         }
     }
 
-    public static class JSONItemEntry {
-        public String name;
-        public String description;
+    public static void dumpToFolder(File folder) {
+        //Set dump folder for later, ConfigSystem runs before language setup as it has to run before pack parsing.
+        dumpToFolder = folder;
+    }
+
+    public static class LanguageEntry {
+        private static final String DEFAULT_LANGUAGE_KEY = "en_us";
+        public final Map<String, String> values = new HashMap<>();
+        public final String key;
+
+        public LanguageEntry(String defaultValue) {
+            values.put(DEFAULT_LANGUAGE_KEY, defaultValue);
+            this.key = null;
+        }
+
+        /**Used only for internal language entires.**/
+        private LanguageEntry(String key, String defaultValue) {
+            values.put(DEFAULT_LANGUAGE_KEY, defaultValue);
+            this.key = key;
+            coreLanguageEntires.put(key, this);
+        }
+
+        public String getCurrentValue() {
+            if (onClient) {
+                String value = values.get(InterfaceManager.clientInterface.getLanguageName());
+                return value != null ? value : getDefaultValue();
+            } else {
+                return getDefaultValue();
+            }
+        }
+
+        public String getDefaultValue() {
+            return values.get(DEFAULT_LANGUAGE_KEY);
+        }
+    }
+
+    public static class JSONLanguageFile {
+        public Map<String, String> entries;
     }
 
     //List of language entries are kept in this file, as it ensures we init them all when this class is loaded.

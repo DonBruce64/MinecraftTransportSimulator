@@ -11,8 +11,6 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -21,6 +19,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Base entity class containing towing states and methods.
@@ -574,14 +574,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
      * Emum for easier functions for trailer connections.
      */
     private enum TrailerConnectionResult {
-        FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
-        ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
-        NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
-        TOOFAR(true, JSONConfigLanguage.INTERACT_TRAILER_TOOFAR),
-        WRONGHITCH(true, JSONConfigLanguage.INTERACT_TRAILER_WRONGHITCH),
-        MISMATCH(true, JSONConfigLanguage.INTERACT_TRAILER_MISMATCH),
-        CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
-        DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
+        FEEDBACK_LOOP(true, LanguageSystem.INTERACT_TRAILER_FEEDBACKLOOP),
+        ALREADY_TOWED(true, LanguageSystem.INTERACT_TRAILER_ALREADYTOWED),
+        NOTFOUND(true, LanguageSystem.INTERACT_TRAILER_NOTFOUND),
+        TOOFAR(true, LanguageSystem.INTERACT_TRAILER_TOOFAR),
+        WRONGHITCH(true, LanguageSystem.INTERACT_TRAILER_WRONGHITCH),
+        MISMATCH(true, LanguageSystem.INTERACT_TRAILER_MISMATCH),
+        CONNECTED(false, LanguageSystem.INTERACT_TRAILER_CONNECTED),
+        DISCONNECTED(false, LanguageSystem.INTERACT_TRAILER_DISCONNECTED);
 
         private final boolean skip;
         private final LanguageEntry language;

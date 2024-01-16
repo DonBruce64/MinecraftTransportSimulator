@@ -26,6 +26,7 @@ import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
@@ -99,6 +100,9 @@ public class InterfaceLoader {
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
+
+        //Init language system.
+        LanguageSystem.init(isClient);
 
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine

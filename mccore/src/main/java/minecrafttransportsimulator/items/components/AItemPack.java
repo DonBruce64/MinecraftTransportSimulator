@@ -11,7 +11,7 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Base item class for all pack-created items.  Stores information such as the
@@ -23,6 +23,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemBase {
     public final JSONDefinition definition;
     private final String sourcePackID;
+    public LanguageEntry languageName;
+    public LanguageEntry languageDescription;
 
     public AItemPack(JSONDefinition definition, String sourcePackID) {
         super();
@@ -37,15 +39,15 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 
     @Override
     public String getItemName() {
-        return ConfigSystem.getLanguage().packs.get(definition.packID).get(getRegistrationName()).name;
+        return languageName.getCurrentValue();
     }
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         //Don't add any tooltips if we are just an empty
-        String description = ConfigSystem.getLanguage().packs.get(definition.packID).get(getRegistrationName()).description;
-        if (description.length() > 0) {
-            Collections.addAll(tooltipLines, description.split("\n"));
+        String text = languageDescription.getCurrentValue();
+        if (!text.isEmpty()) {
+            Collections.addAll(tooltipLines, text.split("\n"));
         }
     }
 

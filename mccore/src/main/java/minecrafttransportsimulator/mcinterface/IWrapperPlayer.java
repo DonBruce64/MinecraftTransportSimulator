@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * IWrapper for the player entity class.  This class wraps the player into a more
