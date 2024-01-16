@@ -55,6 +55,7 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -730,8 +731,19 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void destroyBlock(Point3D position, boolean spawnDrops) {
-        world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
+    public void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (quickDestroy) {
+            BlockState state = world.getBlockState(pos);
+            FluidState fluidstate = world.getFluidState(pos);
+            if (spawnDrops) {
+                TileEntity tileentity = state.hasTileEntity() ? world.getBlockEntity(pos) : null;
+                Block.dropResources(state, world, pos, tileentity, null, ItemStack.EMPTY);
+            }
+            world.setBlock(pos, fluidstate.createLegacyBlock(), 3, 512);
+        } else {
+            world.destroyBlock(pos, spawnDrops);
+        }
     }
 
     @Override

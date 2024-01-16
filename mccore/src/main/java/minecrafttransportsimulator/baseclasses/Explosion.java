@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -183,7 +182,7 @@ public class Explosion {
             //We just want a single block to break each go-around of this loop, until
             //we hit the max blocks, or until they're empty.
             Point3D blockPosition = positionsWithBlocksToBreak.remove(0);
-            world.destroyBlock(blockPosition, Math.random() < dropRate);
+            world.destroyBlock(blockPosition, Math.random() < dropRate, true);
             if (isFlammable && Math.random() < fireRate) {
                 --blockPosition.y;
                 if (!world.isAir(blockPosition)) {
@@ -201,16 +200,6 @@ public class Explosion {
     //Ticks explosions each tick.  Called from EntityManager each tick.
     //This spreads out block breaking across multiple ticks to reduce lag.
     public static void tickActiveExplosions() {
-        if (!activeExplosions.isEmpty()) {
-            //Use iterator loop here.  It allows us to remove old explosions while looping.
-            //If we didn't have this, we'd get a ConcurrentModificationException.
-            Iterator<Explosion> iterator = activeExplosions.iterator();
-            for (Explosion explosion : activeExplosions) {
-                if (explosion.doBreakingTick()) {
-                    iterator.remove();
-                }
-            }
-        }
+        activeExplosions.removeIf(explosion -> explosion.doBreakingTick());
     }
-
 }

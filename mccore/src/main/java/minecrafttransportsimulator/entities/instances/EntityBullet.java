@@ -581,7 +581,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             } else {
                 float hardnessHit = gun.world.getBlockHardness(hitResult.position);
                 if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
-                    gun.world.destroyBlock(hitResult.position, true);
+                    gun.world.destroyBlock(hitResult.position, true, false);
                 } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
                     //Couldn't break block, but we might be able to set it on fire.
                     gun.world.setToFire(hitResult);

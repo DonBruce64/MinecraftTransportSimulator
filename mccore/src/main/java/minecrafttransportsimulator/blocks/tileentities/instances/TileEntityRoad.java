@@ -162,7 +162,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 //Check to make sure we don't destroy non-road blocks.
                 //This is required in case our TE is corrupt or someone messes with it.
                 if (world.getBlock(blockLocation) instanceof BlockCollision) {
-                    world.destroyBlock(blockLocation, true);
+                    world.destroyBlock(blockLocation, true, false);
                 }
             }
 

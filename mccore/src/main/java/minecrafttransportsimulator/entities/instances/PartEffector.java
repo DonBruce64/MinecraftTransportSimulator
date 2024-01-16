@@ -116,7 +116,7 @@ public class PartEffector extends APart {
                                     int timeSpentBreaking = boxTimeSpentAtPosition.get(box);
                                     if (timeSpentBreaking >= definition.effector.drillSpeed * blockHardness / definition.effector.drillHardness) {
                                         drops.addAll(world.getBlockDrops(flooredCenter));
-                                        world.destroyBlock(flooredCenter, false);
+                                        world.destroyBlock(flooredCenter, false, false);
                                         boxTimeSpentAtPosition.put(box, 0);
                                         blockFlooredPositionsBrokeThisTick.add(flooredCenter.copy());
                                         if (++blocksBroken == definition.effector.drillDurability) {

@@ -961,7 +961,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                             motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
                             if (ticksExisted > 500) {
                                 if (!world.isClient()) {
-                                    world.destroyBlock(blockPosition, true);
+                                    world.destroyBlock(blockPosition, true, false);
                                     if (box.groupDef != null && blockHardness > 0) {
                                         damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
                                     }
