@@ -870,6 +870,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             } else {
                 return 0;
             }
+        } else if (variable.startsWith("terrain_blockmaterial_")) {
+            double height = world.getHeight(position) + 1;
+            position.y -= height;
+            BlockMaterial material = world.getBlockMaterial(position);
+            position.y += height;
+            if (material != null) {
+                return material.name().equals(variable.substring("terrain_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
+            }
         }
 
         //Check if this is a generic variable.  This contains lights in most cases.
