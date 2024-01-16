@@ -205,7 +205,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (ticksExisted == 1 || updateGroundDevicesRequest) {
             groundDeviceCollective.updateMembers();
             groundDeviceCollective.updateBounds();
-            groundDeviceCollective.updateCollisions();
+            groundDeviceCollective.updateCollisions(true);
             updateGroundDevicesRequest = false;
         }
     }
@@ -528,7 +528,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //First, update the vehicle ground device boxes.
             world.beginProfiling("GDBInit", true);
             collidedEntities.clear();
-            groundDeviceCollective.updateCollisions();
+            groundDeviceCollective.updateCollisions(true);
 
             if (!definition.motorized.isAircraft) {
                 //If we aren't on a road, try to find one.
@@ -719,7 +719,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         motion.y += groundMotion.y;
                         groundMotion.y = 0;
                     }
-                    groundDeviceCollective.updateCollisions();
+                    groundDeviceCollective.updateCollisions(false);
                 }
 
                 //After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -741,7 +741,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         world.endProfiling();
                         return;
                     }
-                    groundDeviceCollective.updateCollisions();
+                    groundDeviceCollective.updateCollisions(false);
                 }
                 if (!groundDeviceCollective.isBlockedVertically() && (fallingDown || towedByConnection != null)) {
                     world.beginProfiling("GroundHandlingPitch", false);
