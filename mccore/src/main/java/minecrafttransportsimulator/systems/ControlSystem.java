@@ -488,7 +488,7 @@ public final class ControlSystem {
 
         //Check steering.  Don't check while on a road, since we auto-drive on those.
         if (!powered.lockedOnRoad) {
-            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput, ConfigSystem.client.controlSettings.steeringReturnRate.value);
         }
 
         //Check if we are shifting.
