@@ -21,7 +21,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
@@ -36,6 +35,7 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Road tile entity.  Contains the definition so we know how
@@ -318,7 +318,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
             return true;
         } else {
             collisionBlockOffsets.clear();
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKINGBLOCKS));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_ROAD_BLOCKINGBLOCKS));
             InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
             return false;
         }

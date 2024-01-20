@@ -55,7 +55,7 @@ public class GUIBooklet extends AGUIBase {
         //Title text labels.
         List<GUIComponentLabel> titleLabels = new ArrayList<>();
         for (JSONText text : booklet.definition.booklet.titleText) {
-            GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
+            GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, booklet.languageTitle.get(booklet.definition.booklet.titleText.indexOf(text)).getCurrentValue(), TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
             titleLabels.add(titleLabel);
             addComponent(titleLabel);
         }
@@ -75,7 +75,7 @@ public class GUIBooklet extends AGUIBase {
             int leftSideOffset = guiLeft + 20;
             int rightSideOffset = guiLeft + booklet.definition.booklet.textureWidth / 2 + 20;
             for (int i = 0; i < booklet.definition.booklet.pages.size(); ++i) {
-                GUIComponentButton contentsHyperlink = new GUIComponentButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10 * (i % 10), 110, 10, (i + 1) + ": " + booklet.definition.booklet.pages.get(i).title, false, booklet.definition.booklet.pages.get(i).pageText.get(0).color, false) {
+                GUIComponentButton contentsHyperlink = new GUIComponentButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10 * (i % 10), 110, 10, (i + 1) + ": " + booklet.languagePageTitle.get(i).getCurrentValue(), false, booklet.definition.booklet.pages.get(i).pageText.get(0).color, false) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         booklet.pageNumber = contentsButtons.indexOf(this) + 2;
@@ -99,7 +99,7 @@ public class GUIBooklet extends AGUIBase {
             List<GUIComponentLabel> pageLabels = new ArrayList<>();
             for (JSONText text : page.pageText) {
                 try {
-                    GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
+                    GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, booklet.languagePageText.get(booklet.definition.booklet.pages.indexOf(page)).get(page.pageText.indexOf(text)).getCurrentValue(), TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
                     pageLabels.add(pageLabel);
                     addComponent(pageLabel);
                 } catch (Exception e) {

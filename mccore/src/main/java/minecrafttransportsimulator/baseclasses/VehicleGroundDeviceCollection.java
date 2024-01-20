@@ -59,12 +59,12 @@ public class VehicleGroundDeviceCollection {
      * Updates all the boxes collision properties to take into account their new positions.
      * Also re-calculates which ground devices are on the ground.
      */
-    public void updateCollisions() {
+    public void updateCollisions(boolean updateGroundDeviceTreadPosition) {
         groundedGroundDevices.clear();
-        frontLeftGDB.updateCollisionStatuses(groundedGroundDevices);
-        frontRightGDB.updateCollisionStatuses(groundedGroundDevices);
-        rearLeftGDB.updateCollisionStatuses(groundedGroundDevices);
-        rearRightGDB.updateCollisionStatuses(groundedGroundDevices);
+        frontLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
+        frontRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
+        rearLeftGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
+        rearRightGDB.updateCollisionStatuses(groundedGroundDevices, updateGroundDeviceTreadPosition);
     }
 
     /**

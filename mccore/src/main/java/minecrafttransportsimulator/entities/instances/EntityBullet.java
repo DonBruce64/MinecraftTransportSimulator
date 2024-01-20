@@ -13,7 +13,6 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
@@ -25,6 +24,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExtern
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * This part class is special, in that it does not extend APart.
@@ -628,9 +628,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (ConfigSystem.settings.general.devMode.value && gun.lastController instanceof IWrapperPlayer) {
             if (!world.isClient()) {
                 IWrapperPlayer player = (IWrapperPlayer) gun.lastController;
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.SYSTEM_DEBUG, message));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.SYSTEM_DEBUG, message));
             } else {
-                ((IWrapperPlayer) gun.lastController).displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
+                ((IWrapperPlayer) gun.lastController).displayChatMessage(LanguageSystem.SYSTEM_DEBUG, message);
             }
         }
     }

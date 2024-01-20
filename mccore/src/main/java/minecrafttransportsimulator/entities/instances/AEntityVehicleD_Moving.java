@@ -15,7 +15,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -23,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -154,7 +154,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollisions(world, new Point3D(0D, -furthestDownPoint, 0D), false)) {
                     //New vehicle shouldn't have been spawned.  Bail out.
-                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
+                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
                     //Need to add stack back as it will have been removed here.
                     if (!placingPlayer.isCreative()) {
                         placingPlayer.setHeldStack(getStack());
@@ -205,14 +205,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (ticksExisted == 1 || updateGroundDevicesRequest) {
             groundDeviceCollective.updateMembers();
             groundDeviceCollective.updateBounds();
-            groundDeviceCollective.updateCollisions();
+            groundDeviceCollective.updateCollisions(true);
             updateGroundDevicesRequest = false;
         }
     }
 
     @Override
-    public void connectTrailer(TowingConnection connection) {
-        super.connectTrailer(connection);
+    public void connectTrailer(TowingConnection connection, boolean notifyClient) {
+        super.connectTrailer(connection, notifyClient);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
         if (towedVehicle.parkingBrakeOn) {
             towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 0);
@@ -528,7 +528,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //First, update the vehicle ground device boxes.
             world.beginProfiling("GDBInit", true);
             collidedEntities.clear();
-            groundDeviceCollective.updateCollisions();
+            groundDeviceCollective.updateCollisions(true);
 
             if (!definition.motorized.isAircraft) {
                 //If we aren't on a road, try to find one.
@@ -719,7 +719,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         motion.y += groundMotion.y;
                         groundMotion.y = 0;
                     }
-                    groundDeviceCollective.updateCollisions();
+                    groundDeviceCollective.updateCollisions(false);
                 }
 
                 //After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -741,7 +741,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         world.endProfiling();
                         return;
                     }
-                    groundDeviceCollective.updateCollisions();
+                    groundDeviceCollective.updateCollisions(false);
                 }
                 if (!groundDeviceCollective.isBlockedVertically() && (fallingDown || towedByConnection != null)) {
                     world.beginProfiling("GroundHandlingPitch", false);
@@ -920,7 +920,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
-                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)) {
+                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, true)) {
                     return true;
                 }
                 clearedCache = true;

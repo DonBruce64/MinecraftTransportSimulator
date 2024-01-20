@@ -20,8 +20,6 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.items.components.IItemFood;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -38,13 +36,19 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteractable, IItemFood {
-    /*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
+    /**Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.**/
     public int pageNumber;
-    /*First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.*/
+    public List<LanguageEntry> languageTitle;
+    public List<LanguageEntry> languagePageTitle;
+    public List<List<LanguageEntry>> languagePageText;
+
+    /**First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.**/
     private static PartEngine firstEngineClicked;
-    /*First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.*/
+    /**First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.**/
     private static PartInteractable firstPartClicked;
 
     public ItemItem(JSONItem definition) {
@@ -61,50 +65,50 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
         super.addTooltipLines(tooltipLines, data);
         switch (definition.item.type) {
             case SCANNER: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_SCANNER.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_SCANNER.getCurrentValue());
                 break;
             }
             case WRENCH: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_WRENCH.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_WRENCH.getCurrentValue());
                 break;
             }
             case SCREWDRIVER: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_SCREWDRIVER.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_SCREWDRIVER.getCurrentValue());
                 break;
             }
             case PAINT_GUN: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_PAINTGUN.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_PAINTGUN.getCurrentValue());
                 break;
             }
             case KEY: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_KEY.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_KEY.getCurrentValue());
                 break;
             }
             case TICKET: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_TICKET.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_TICKET.getCurrentValue());
                 break;
             }
             case FUEL_HOSE: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_FUELHOSE.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_FUELHOSE.getCurrentValue());
                 break;
             }
             case JUMPER_CABLES: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JUMPERCABLES.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_JUMPERCABLES.getCurrentValue());
                 break;
             }
             case JUMPER_PACK: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JUMPERPACK.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_JUMPERPACK.getCurrentValue());
                 break;
             }
             case REPAIR_PACK: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK.value + definition.repair.amount + " HP");
+                tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK.getCurrentValue() + definition.repair.amount + " HP");
                 if (definition.repair.canRepairTotaled) {
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_REPAIRPACK_UNTOTAL.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK_UNTOTAL.getCurrentValue());
                 }
                 break;
             }
             case Y2K_BUTTON: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_Y2KBUTTON.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_Y2KBUTTON.getCurrentValue());
                 break;
             }
             default: //Do nothing.
@@ -172,7 +176,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             }
                         }
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
                     }
                 }
                 return CallbackType.NONE;
@@ -183,7 +187,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     if (!ownerState.equals(PlayerOwnerState.USER)) {
                         player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
                     }
                 }
                 return CallbackType.NONE;
@@ -200,12 +204,12 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     if (keyVehicleUUID == null) {
                         //Check if we are the owner before making this a valid key.
                         if (lockable.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_NOTOWNER));
                         } else {
                             keyVehicleUUID = lockable.uniqueUUID;
                             data.setUUID("vehicle", keyVehicleUUID);
                             stack.setData(data);
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_BIND));
                         }
                         return CallbackType.NONE;
                     }
@@ -213,7 +217,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     //Try to lock or unlock this entity.
                     //If we succeed, send callback to clients to change locked state.
                     if (!keyVehicleUUID.equals(lockable.uniqueUUID)) {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_WRONGKEY));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_WRONGKEY));
                     } else {
                         if (entity instanceof PartSeat) {
                             //Entity clicked is a seat, don't do locking changes, instead, change seat.
@@ -222,7 +226,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         } else if (lockable.locked) {
                             //Unlock entity and process hitbox action if it's a closed door.
                             lockable.toggleLock();
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_UNLOCK));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_UNLOCK));
                             if (hitBox.definition != null) {
                                 if (hitBox.definition.variableName != null && !entity.isVariableActive(hitBox.definition.variableName) && hitBox.definition.variableName.startsWith("door")) {
                                     return CallbackType.SKIP;
@@ -232,7 +236,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             //Lock vehicle.  Don't interact with hitbox unless it's NOT a door, as the locking code will close doors.
                             //If we skipped, we'd just re-open the closed door.
                             lockable.toggleLock();
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_LOCK));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_LOCK));
                             if (hitBox.definition != null) {
                                 if (hitBox.definition.variableName != null && entity.isVariableActive(hitBox.definition.variableName) && !hitBox.definition.variableName.startsWith("door")) {
                                     return CallbackType.SKIP;
@@ -279,9 +283,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             if (interactable.tank != null) {
                                 if (interactable.linkedPart == null && interactable.linkedVehicle == null) {
                                     firstPartClicked = interactable;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_FIRSTLINK));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_FIRSTLINK));
                                 } else {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_ALREADYLINKED));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_ALREADYLINKED));
                                 }
                             }
                         }
@@ -294,19 +298,19 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                         if (interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                             firstPartClicked.linkedPart = interactable;
                                             InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
-                                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
+                                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_SECONDLINK));
                                             firstPartClicked = null;
                                         } else {
                                             firstPartClicked = null;
-                                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
+                                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
                                         }
                                     } else {
                                         firstPartClicked = null;
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_TOOFAR));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_TOOFAR));
                                     }
                                 } else {
                                     firstPartClicked = null;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_ALREADYLINKED));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_ALREADYLINKED));
                                 }
                             }
                         } else if (entity instanceof EntityVehicleF_Physics) {
@@ -315,15 +319,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 if (vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                     firstPartClicked.linkedVehicle = vehicle;
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_SECONDLINK));
                                     firstPartClicked = null;
                                 } else {
                                     firstPartClicked = null;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
                                 }
                             } else {
                                 firstPartClicked = null;
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_TOOFAR));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_TOOFAR));
                             }
                         }
                     }
@@ -338,25 +342,25 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             if (engine.linkedEngine == null) {
                                 if (firstEngineClicked == null) {
                                     firstEngineClicked = engine;
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_FIRSTLINK));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JUMPERCABLE_FIRSTLINK));
                                 } else if (!firstEngineClicked.equals(engine)) {
                                     if (firstEngineClicked.vehicleOn.equals(engine.vehicleOn)) {
                                         firstEngineClicked = null;
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SAMEVEHICLE));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JUMPERCABLE_SAMEVEHICLE));
                                     } else if (engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)) {
                                         engine.linkedEngine = firstEngineClicked;
                                         firstEngineClicked.linkedEngine = engine;
                                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
                                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
                                         firstEngineClicked = null;
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SECONDLINK));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JUMPERCABLE_SECONDLINK));
                                     } else {
                                         firstEngineClicked = null;
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_TOOFAR));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JUMPERCABLE_TOOFAR));
                                     }
                                 }
                             } else {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_ALREADYLINKED));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JUMPERCABLE_ALREADYLINKED));
                             }
                         }
                     }
@@ -369,7 +373,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         //Use jumper on vehicle.
                         ((EntityVehicleF_Physics) entity).electricPower = 12;
                         if (!entity.world.isClient()) {
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_JUMPERPACK), player);
                             if (!player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
@@ -389,7 +393,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         if (vehicle.repairCooldownTicks == 0) {
                             if (!vehicle.outOfHealth || definition.repair.canRepairTotaled) {
                                 if (entity.damageAmount == 0) {
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_NONEED), player);
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_NONEED), player);
                                     return CallbackType.NONE;
                                 } else {
                                     double amountRepaired = definition.repair.amount;
@@ -400,16 +404,16 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     vehicle.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, newDamage);
                                     vehicle.repairCooldownTicks = 200;
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(vehicle, AEntityE_Interactable.DAMAGE_VARIABLE, newDamage));
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
                                     if (!player.isCreative()) {
                                         player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                                     }
                                 }
                             } else {
-                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOTALED), player);
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOTALED), player);
                             }
                         } else {
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_REPAIR_TOOSOON), player);
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOOSOON), player);
                         }
                     }
                 }

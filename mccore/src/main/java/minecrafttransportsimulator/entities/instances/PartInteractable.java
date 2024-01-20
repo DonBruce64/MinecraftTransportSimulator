@@ -6,8 +6,6 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -19,6 +17,8 @@ import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractableInteract;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public final class PartInteractable extends APart {
     public final EntityFurnace furnace;
@@ -67,7 +67,7 @@ public final class PartInteractable extends APart {
                 player.getHeldStack().interactWith(tank, player);
             }
         } else {
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
         }
         return true;
     }
@@ -75,7 +75,7 @@ public final class PartInteractable extends APart {
     @Override
     public LanguageEntry checkForRemoval() {
         if (!definition.interactable.canBeOpenedInHand && getMass() > definition.generic.mass) {
-            return JSONConfigLanguage.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
+            return LanguageSystem.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
         } else {
             return super.checkForRemoval();
         }
@@ -135,13 +135,13 @@ public final class PartInteractable extends APart {
             LanguageEntry linkedMessage = null;
             if (linkedVehicle != null) {
                 if (!linkedVehicle.isValid || !linkedVehicle.position.isDistanceToCloserThan(position, 16)) {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedVehicle.fuelTank;
                 }
             } else if (linkedPart != null) {
                 if (!linkedPart.isValid || !linkedPart.position.isDistanceToCloserThan(position, 16)) {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedPart.tank;
                 }
@@ -157,13 +157,13 @@ public final class PartInteractable extends APart {
                         if (amountToTransfer > 0) {
                             linkedTank.fill(fluidToTransfer, amountToTransfer, true);
                         } else {
-                            linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
+                            linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKEMPTY;
                         }
                     } else {
-                        linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKFULL;
+                        linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKFULL;
                     }
                 } else {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKEMPTY;
                 }
             }
 

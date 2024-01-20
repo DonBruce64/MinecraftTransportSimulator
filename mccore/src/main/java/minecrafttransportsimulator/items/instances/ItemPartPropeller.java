@@ -5,12 +5,12 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemPartPropeller extends AItemPart {
 
@@ -31,9 +31,9 @@ public class ItemPartPropeller extends AItemPart {
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        tooltipLines.add(definition.propeller.isDynamicPitch ? JSONConfigLanguage.ITEMINFO_PROPELLER_DYNAMICPITCH.value : JSONConfigLanguage.ITEMINFO_PROPELLER_STATICPITCH.value);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_PROPELLER_PITCH.value + definition.propeller.pitch);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_PROPELLER_DIAMETER.value + definition.propeller.diameter);
+        tooltipLines.add(definition.propeller.isDynamicPitch ? LanguageSystem.ITEMINFO_PROPELLER_DYNAMICPITCH.getCurrentValue() : LanguageSystem.ITEMINFO_PROPELLER_STATICPITCH.getCurrentValue());
+        tooltipLines.add(LanguageSystem.ITEMINFO_PROPELLER_PITCH.getCurrentValue() + definition.propeller.pitch);
+        tooltipLines.add(LanguageSystem.ITEMINFO_PROPELLER_DIAMETER.getCurrentValue() + definition.propeller.diameter);
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

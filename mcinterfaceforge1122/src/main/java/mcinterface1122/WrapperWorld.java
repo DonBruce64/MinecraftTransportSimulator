@@ -376,20 +376,40 @@ public class WrapperWorld extends AWrapperWorld {
         return state.getBlock().getSlipperiness(state, world, pos, null);
     }
 
+    private static HashMap<Material, BlockMaterial> materialMap = new HashMap<>();
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
+        if(materialMap.isEmpty()) {
+            materialMap.put(Material.CLAY, BlockMaterial.CLAY);
+            materialMap.put(Material.GROUND, BlockMaterial.DIRT);
+            materialMap.put(Material.GLASS, BlockMaterial.GLASS);
+            materialMap.put(Material.GRASS, BlockMaterial.GRASS);
+            materialMap.put(Material.ICE, BlockMaterial.ICE);
+            materialMap.put(Material.PACKED_ICE, BlockMaterial.ICE);
+            materialMap.put(Material.LAVA, BlockMaterial.LAVA);
+            materialMap.put(Material.LEAVES, BlockMaterial.LEAVES);
+            materialMap.put(Material.ANVIL, BlockMaterial.METAL);
+            materialMap.put(Material.SAND, BlockMaterial.SAND);
+            materialMap.put(Material.SNOW, BlockMaterial.SNOW);
+            materialMap.put(Material.CRAFTED_SNOW, BlockMaterial.SNOW);
+            materialMap.put(Material.ROCK, BlockMaterial.STONE);
+            materialMap.put(Material.WATER, BlockMaterial.WATER);
+            materialMap.put(Material.WOOD, BlockMaterial.WOOD);
+            materialMap.put(Material.CLOTH, BlockMaterial.WOOL);
+        }
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        Material material = world.getBlockState(pos).getMaterial();
-        if (material.equals(Material.GROUND) || material.equals(Material.GRASS)) {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
-        } else if (material.equals(Material.SAND)) {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.SAND_WET : BlockMaterial.SAND;
-        } else if (material.equals(Material.SNOW) || material.equals(Material.CRAFTED_SNOW)) {
-            return BlockMaterial.SNOW;
-        } else if (material.equals(Material.ICE) || material.equals(Material.PACKED_ICE)) {
-            return BlockMaterial.ICE;
+        if (world.isAirBlock(pos)) {
+            return null;
         } else {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.NORMAL_WET : BlockMaterial.NORMAL;
+            BlockMaterial material = materialMap.get(world.getBlockState(pos).getMaterial());
+            if (material == null) {
+                return BlockMaterial.NORMAL;
+            } else {
+                if (material == BlockMaterial.SAND && world.getBlockState(pos).getBlock() == Blocks.GRAVEL) {
+                    return BlockMaterial.GRAVEL;
+                }
+                return material;
+            }
         }
     }
 
@@ -481,7 +501,7 @@ public class WrapperWorld extends AWrapperWorld {
                     BlockPos pos = new BlockPos(i, j, k);
                     if (world.isBlockLoaded(pos)) {
                         IBlockState state = world.getBlockState(pos);
-                        if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
+                        if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null && state.getMaterial() != Material.LEAVES) {
                             int oldCollidingBlockCount = mutableCollidingAABBs.size();
                             state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
                             if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
@@ -560,7 +580,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache) {
+    public boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache, boolean breakLeaves) {
         if (clearCache) {
             knownAirBlocks.clear();
         }
@@ -573,19 +593,25 @@ public class WrapperWorld extends AWrapperWorld {
                     if (!knownAirBlocks.contains(pos)) {
                         if (world.isBlockLoaded(pos)) {
                             IBlockState state = world.getBlockState(pos);
-                            if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
-                                int oldCollidingBlockCount = mutableCollidingAABBs.size();
-                                state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
-                                if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
-                                    return true;
+                            if (state.getMaterial() != Material.LEAVES) {
+                                if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
+                                    int oldCollidingBlockCount = mutableCollidingAABBs.size();
+                                    state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
+                                    if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
+                                        return true;
+                                    }
+                                } else {
+                                    knownAirBlocks.add(pos);
                                 }
+                                if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
+                                    if (mcBox.intersects(state.getBoundingBox(world, pos).offset(pos))) {
+                                        return true;
+                                    }
+                                }
+                            } else if (breakLeaves) {
+                                world.destroyBlock(pos, false);
                             } else {
                                 knownAirBlocks.add(pos);
-                            }
-                            if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                                if (mcBox.intersects(state.getBoundingBox(world, pos).offset(pos))) {
-                                    return true;
-                                }
                             }
                         }
                     }

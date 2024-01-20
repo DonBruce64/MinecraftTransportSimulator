@@ -14,8 +14,6 @@ import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -32,6 +30,8 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public final class PartSeat extends APart {
     public boolean canControlGuns;
@@ -67,11 +67,11 @@ public final class PartSeat extends APart {
                     //If it's an entity that can be leashed, dismount the entity and leash it.
                     if (rider instanceof IWrapperPlayer) {
                         if (player != rider) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_SEATTAKEN));
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_SEATTAKEN));
                         }
                     } else if (!rider.leashTo(player)) {
                         //Can't leash up this entity, so mark the seat as taken.
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_SEATTAKEN));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_SEATTAKEN));
                     }
                 } else {
                     //Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
@@ -108,7 +108,7 @@ public final class PartSeat extends APart {
                     }
                 }
             } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             }
         }
         return true;
@@ -361,7 +361,7 @@ public final class PartSeat extends APart {
     @Override
     public LanguageEntry checkForRemoval() {
         if (rider != null) {
-            return JSONConfigLanguage.INTERACT_VEHICLE_SEATTAKEN;
+            return LanguageSystem.INTERACT_VEHICLE_SEATTAKEN;
         } else {
             return super.checkForRemoval();
         }

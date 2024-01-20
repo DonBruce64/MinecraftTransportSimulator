@@ -26,6 +26,7 @@ import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
@@ -33,6 +34,7 @@ import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -58,6 +60,7 @@ public class InterfaceLoader {
     public InterfaceLoader() {
         gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPostConstruction);
     }
 
     /**Need to defer init until post-mod construction, as in this version
@@ -128,6 +131,9 @@ public class InterfaceLoader {
                 }
             }
         }
+
+        //Init the language system for the created items.
+        LanguageSystem.init(FMLEnvironment.dist.isClient());
 
         //Register all items in our wrapper map.
         for (Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()) {
@@ -232,5 +238,10 @@ public class InterfaceLoader {
             //Save modified config.
             ConfigSystem.saveToDisk();
         }
+    }
+
+    public void onPostConstruction(FMLLoadCompleteEvent event) {
+        //Populate language system, since we now know we have a language class.
+        LanguageSystem.populateNames();
     }
 }

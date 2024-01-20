@@ -63,12 +63,10 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public boolean usingDefaultLanguage() {
-        if (Minecraft.getInstance().getLanguageManager() != null) {
-            return Minecraft.getInstance().getLanguageManager().getSelected().getCode().equals("en_us");
-        } else {
-            return true;
-        }
+    public List<String> getAllLanguages() {
+        List<String> list = new ArrayList<>();
+        Minecraft.getInstance().getLanguageManager().getLanguages().forEach(language -> list.add(language.getCode()));
+        return list;
     }
 
     @Override

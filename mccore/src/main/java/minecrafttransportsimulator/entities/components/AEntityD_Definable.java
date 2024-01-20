@@ -19,6 +19,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -859,6 +860,26 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
             return 0;
+        }
+
+        //Check if this is a blockmaterial_x variable.
+        if (variable.startsWith("blockmaterial_")) {
+            BlockMaterial material = world.getBlockMaterial(position);
+            if (material != null) {
+                return material.name().equals(variable.substring("blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
+            }
+        } else if (variable.startsWith("terrain_blockmaterial_")) {
+            double height = world.getHeight(position) + 1;
+            position.y -= height;
+            BlockMaterial material = world.getBlockMaterial(position);
+            position.y += height;
+            if (material != null) {
+                return material.name().equals(variable.substring("terrain_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
+            }
         }
 
         //Check if this is a generic variable.  This contains lights in most cases.

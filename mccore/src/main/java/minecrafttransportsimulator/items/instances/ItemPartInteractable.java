@@ -13,7 +13,6 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -27,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemPartInteractable extends AItemPart implements IItemEntityInteractable {
 
@@ -49,21 +49,21 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
         super.addTooltipLines(tooltipLines, data);
         switch (definition.interactable.interactionType) {
             case CRATE: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_INTERACTABLE_CAPACITY.value + definition.interactable.inventoryUnits * 9);
+                tooltipLines.add(LanguageSystem.ITEMINFO_INTERACTABLE_CAPACITY.getCurrentValue() + definition.interactable.inventoryUnits * 9);
                 break;
             }
             case BARREL: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_INTERACTABLE_CAPACITY.value + definition.interactable.inventoryUnits * 10000 + "mb");
+                tooltipLines.add(LanguageSystem.ITEMINFO_INTERACTABLE_CAPACITY.getCurrentValue() + definition.interactable.inventoryUnits * 10000 + "mb");
                 break;
             }
             case JERRYCAN: {
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_FILL.value);
-                tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_DRAIN.value);
+                tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_FILL.getCurrentValue());
+                tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_DRAIN.getCurrentValue());
                 String jerrycanFluid = data.getString("jerrycanFluid");
                 if (jerrycanFluid.isEmpty()) {
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_EMPTY.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_EMPTY.getCurrentValue());
                 } else {
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceManager.clientInterface.getFluidName(jerrycanFluid));
+                    tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_CONTAINS.getCurrentValue() + InterfaceManager.clientInterface.getFluidName(jerrycanFluid));
                 }
                 break;
             }
@@ -109,9 +109,9 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
 
                                 data.setString("jerrycanFluid", "");
                                 stack.setData(data);
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_SUCCESS));
                             } else {
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_WRONGTYPE));
                             }
                         }
                     } else if (!jerrrycanFluid.isEmpty()) {
@@ -120,31 +120,31 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                             switch (vehicle.checkFuelTankCompatibility(jerrrycanFluid)) {
                                 case VALID: {
                                     if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_TOOFULL));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_TOOFULL));
                                     } else {
                                         vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
                                         data.setString("jerrycanFluid", "");
                                         stack.setData(data);
-                                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_SUCCESS));
                                     }
                                     break;
                                 }
                                 case INVALID: {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGENGINES));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_WRONGENGINES));
                                     break;
                                 }
                                 case MISMATCH: {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_WRONGTYPE));
                                     break;
                                 }
                                 case NOENGINE: {
-                                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_NOENGINE));
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_NOENGINE));
                                     break;
                                 }
                             }
                         }
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_EMPTY));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_EMPTY));
                     }
                 }
             }

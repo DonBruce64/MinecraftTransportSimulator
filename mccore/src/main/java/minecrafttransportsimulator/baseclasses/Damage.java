@@ -5,10 +5,10 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -54,7 +54,7 @@ public class Damage {
         this.box = box;
         this.damgeSource = gun;
         this.entityResponsible = gun.lastController;
-        this.language = entityResponsible != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
+        this.language = entityResponsible != null ? LanguageSystem.DEATH_BULLET_PLAYER : LanguageSystem.DEATH_BULLET_NULL;
 
         ignoreCooldown = true;
         if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {

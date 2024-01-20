@@ -13,13 +13,13 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Packet used to interact with entities.  Initially sent from clients to the server
@@ -74,7 +74,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                 if (slotEntry.getKey().localCenter.equals(hitBoxLocalCenter)) {
                     //Only owners can add parts.
                     if (ownerState.equals(PlayerOwnerState.USER)) {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
                     } else {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
                         if (heldItem instanceof AItemPart && !player.isSneaking()) {
@@ -124,7 +124,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             if (entity.locked) {
                 //Can't touch locked entities.
                 if (rightClick) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                 }
             } else {
                 switch (hitBox.definition.variableType) {

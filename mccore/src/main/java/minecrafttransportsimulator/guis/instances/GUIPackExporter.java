@@ -58,7 +58,7 @@ public class GUIPackExporter extends AGUIBase {
         addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-                debug.setText(JSONParser.importAllJSONs());
+                debug.setText(JSONParser.importAllJSONs(false));
                 JSONParser.applyImports(vehicleClicked.world);
                 InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
             }

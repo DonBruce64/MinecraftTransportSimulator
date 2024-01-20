@@ -321,6 +321,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much friction this part has for sideways movement. Used during turning operations to determine how much the vehicle will skid sideways when turning at speed.")
         public float lateralFriction;
 
+        @JSONDescription("How much friction this part looses when on wet surfaces.  Negative loses fruction, positive adds it.")
+        public float wetFrictionPenalty;
+
         @JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for longer parts like pontoons or helicopter landing skids.  Note that if this parameter is set in the vehicle JSON the vehicle value will override this value.  Since treads are normally vehicle-dependent in their size, it is recommended to NOT set this here for treads and use the vehicle parameter.")
         public float extraCollisionBoxOffset;
 

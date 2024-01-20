@@ -6,9 +6,11 @@ import java.util.List;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider> extends AItemPack<JSONDefinition> {
     public JSONSubDefinition subDefinition;
+    public LanguageEntry languageSubDescription;
 
     public AItemSubTyped(JSONDefinition definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, sourcePackID);
@@ -23,8 +25,9 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        if (subDefinition.description != null) {
-            Collections.addAll(tooltipLines, subDefinition.description.split("\n"));
+        String text = languageSubDescription.getCurrentValue();
+        if (!text.isEmpty()) {
+            Collections.addAll(tooltipLines, text.split("\n"));
         }
     }
 

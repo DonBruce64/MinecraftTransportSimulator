@@ -408,20 +408,40 @@ public class WrapperWorld extends AWrapperWorld {
         return world.getBlockState(pos).getSlipperiness(world, pos, null);
     }
 
+    private static HashMap<Material, BlockMaterial> materialMap = new HashMap<>();
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
+        if (materialMap.isEmpty()) {
+            materialMap.put(Material.CLAY, BlockMaterial.CLAY);
+            materialMap.put(Material.DIRT, BlockMaterial.DIRT);
+            materialMap.put(Material.GLASS, BlockMaterial.GLASS);
+            materialMap.put(Material.GRASS, BlockMaterial.GRASS);
+            materialMap.put(Material.ICE, BlockMaterial.ICE);
+            materialMap.put(Material.ICE_SOLID, BlockMaterial.ICE);
+            materialMap.put(Material.LAVA, BlockMaterial.LAVA);
+            materialMap.put(Material.LEAVES, BlockMaterial.LEAVES);
+            materialMap.put(Material.METAL, BlockMaterial.METAL);
+            materialMap.put(Material.SAND, BlockMaterial.SAND);
+            materialMap.put(Material.SNOW, BlockMaterial.SNOW);
+            materialMap.put(Material.TOP_SNOW, BlockMaterial.SNOW);
+            materialMap.put(Material.STONE, BlockMaterial.STONE);
+            materialMap.put(Material.WATER, BlockMaterial.WATER);
+            materialMap.put(Material.WOOD, BlockMaterial.WOOD);
+            materialMap.put(Material.WOOL, BlockMaterial.WOOL);
+        }
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        Material material = world.getBlockState(pos).getMaterial();
-        if (material == Material.DIRT || material == Material.GRASS) {
-            return world.isRainingAt(pos.above()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
-        } else if (material == Material.SAND) {
-            return world.isRainingAt(pos.above()) ? BlockMaterial.SAND_WET : BlockMaterial.SAND;
-        } else if (material == Material.SNOW || material == Material.TOP_SNOW) {
-            return BlockMaterial.SNOW;
-        } else if (material == Material.ICE || material == Material.ICE_SOLID) {
-            return BlockMaterial.ICE;
+        if (world.isEmptyBlock(pos)) {
+            return null;
         } else {
-            return world.isRainingAt(pos.above()) ? BlockMaterial.NORMAL_WET : BlockMaterial.NORMAL;
+            BlockMaterial material = materialMap.get(world.getBlockState(pos).getMaterial());
+            if (material == null) {
+                return BlockMaterial.NORMAL;
+            } else {
+                if (material == BlockMaterial.SAND && world.getBlockState(pos).getBlock() == Blocks.GRAVEL) {
+                    return BlockMaterial.GRAVEL;
+                }
+                return material;
+            }
         }
     }
 
@@ -508,7 +528,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (!world.isEmptyBlock(pos)) {
                         BlockState state = world.getBlockState(pos);
                         VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
-                        if (!collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
+                        if (!collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND) && state.getMaterial() != Material.LEAVES) {
                             mutableCollidingAABBs.addAll(collisionShape.toAabbs());
                             box.collidingBlockPositions.add(new Point3D(i, j, k));
                         }
@@ -584,7 +604,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache) {
+    public boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache, boolean breakLeaves) {
         if (clearCache) {
             knownAirBlocks.clear();
         }
@@ -599,15 +619,21 @@ public class WrapperWorld extends AWrapperWorld {
                         if (world.isLoaded(pos)) {
                             BlockState state = world.getBlockState(pos);
                             VoxelShape collisionShape = state.getCollisionShape(world, pos).move(i, j, k);
-                            if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
-                                return true;
+                            if (state.getMaterial() != Material.LEAVES) {
+                                if (collisionShape != null && !collisionShape.isEmpty() && VoxelShapes.joinIsNotEmpty(mcShape, collisionShape, IBooleanFunction.AND)) {
+                                    return true;
+                                } else {
+                                    knownAirBlocks.add(pos);
+                                }
+                                if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
+                                    if (mcBox.intersects(VoxelShapes.block().bounds().move(pos))) {
+                                        return true;
+                                    }
+                                }
+                            } else if (breakLeaves) {
+                                world.destroyBlock(pos, false);
                             } else {
                                 knownAirBlocks.add(pos);
-                            }
-                            if (box.collidesWithLiquids && state.getMaterial().isLiquid()) {
-                                if (mcBox.intersects(VoxelShapes.block().bounds().move(pos))) {
-                                    return true;
-                                }
                             }
                         }
                     }
