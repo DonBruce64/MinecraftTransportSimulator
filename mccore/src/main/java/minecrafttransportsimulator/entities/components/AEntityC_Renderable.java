@@ -66,7 +66,8 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
 
     /**
      * Called to render this entity.  This is the setup method that sets states to the appropriate values.
-     * After this, the main model rendering method is called.
+     * After this, the main model rendering method is called.  Note that this is called from a ConcurrentLinkedQueue.
+     * Therefore, static "helper" variables will just clobber things, so don't use them!
      */
     public final void render(boolean blendingEnabled, float partialTicks) {
         //If we need to render, do so now.
