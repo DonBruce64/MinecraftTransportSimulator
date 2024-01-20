@@ -142,8 +142,6 @@ public class EntityManager {
                 entity.world.endProfiling();
             }
         }
-        //Also tick active explosions.
-        Explosion.tickActiveExplosions();
     }
 
     /**

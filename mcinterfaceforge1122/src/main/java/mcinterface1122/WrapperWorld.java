@@ -966,6 +966,8 @@ public class WrapperWorld extends AWrapperWorld {
             if (event.phase.equals(Phase.START)) {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
                 tickAll();
+                //Also tick active explosions.
+                Explosion.tickActiveExplosions();
 
                 for (EntityPlayer player : event.world.playerEntities) {
                     UUID playerUUID = player.getUniqueID();
