@@ -173,6 +173,8 @@ public abstract class EntityManager {
             }
         } else {
             if (beforePlayer) {
+                //Tick active explosions with entity ticks on the server.
+                Explosion.tickActiveExplosions();
                 world.beginProfiling("MTS_ServerEntityUpdatesPre", true);
             } else {
                 world.beginProfiling("MTS_ServerEntityUpdatesPost", true);
@@ -319,9 +321,6 @@ public abstract class EntityManager {
             entity.update();
         }
         entity.world.endProfiling();
-
-        //Also tick active explosions.
-        Explosion.tickActiveExplosions();
     }
 
     /**
