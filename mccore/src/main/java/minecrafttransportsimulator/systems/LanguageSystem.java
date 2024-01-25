@@ -36,8 +36,7 @@ public class LanguageSystem {
      * Called to init this system.  Must be called after all pack items are loaded, but
      * before any pack item name references are used.
      */
-    public static void init(boolean onClient) {
-        LanguageSystem.onClient = onClient;
+    public static void init() {
 
         //Init all packs, getting their language entries first.
         for (String packID : PackParser.getAllPackIDs()) {
@@ -118,7 +117,8 @@ public class LanguageSystem {
      * Called to populate the names.  This has to happen after {@link #init(boolean)},
      * but can be deffered until the game boots up and we can scan for language settings.
      * This method only populates runtime values, not default code ones (en_us).  Those will 
-     * always be present, provided the init function has been called.
+     * always be present, provided the init function has been called.  Only call this on clients
+     * where the language setting is used: servers will crash if language population is attempted.
      */
     public static void populateNames() {
         //Populate pack language objects with text.

@@ -75,7 +75,7 @@ public final class InterfaceLoader {
         }
 
         //Init language system.
-        LanguageSystem.init(event.getSide().isClient());
+        LanguageSystem.init();
     }
 
     @EventHandler
@@ -83,11 +83,11 @@ public final class InterfaceLoader {
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();
 
-        //Populate language system names.
-        LanguageSystem.populateNames();
-
         if (event.getSide().isClient()) {
-            //Init keybinds if we're on the client.
+            //Populate language system names.
+            LanguageSystem.populateNames();
+
+            //Init keybinds.
             InterfaceManager.inputInterface.initConfigKey();
 
             //Also put all liquids into the config file for use by modpack makers.

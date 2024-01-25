@@ -133,7 +133,7 @@ public class InterfaceLoader {
         }
 
         //Init the language system for the created items.
-        LanguageSystem.init(FMLEnvironment.dist.isClient());
+        LanguageSystem.init();
 
         //Register all items in our wrapper map.
         for (Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()) {
@@ -242,6 +242,8 @@ public class InterfaceLoader {
 
     public void onPostConstruction(FMLLoadCompleteEvent event) {
         //Populate language system, since we now know we have a language class.
-        LanguageSystem.populateNames();
+        if (FMLEnvironment.dist.isClient()) {
+            LanguageSystem.populateNames();
+        }
     }
 }
