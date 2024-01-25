@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -73,16 +74,15 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //Check generic block variables.
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("redstone_active"):
-                return world.getRedstonePower(position) > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.getRedstonePower(position) > 0 ? 1 : 0, false);
             case ("redstone_level"):
-                return world.getRedstonePower(position);
+                return new ComputedVariable(this, variable, partialTicks -> world.getRedstonePower(position), false);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     /**

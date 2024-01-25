@@ -7,6 +7,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -655,25 +656,25 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("bullet_hit"):
-                return lastHit != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> lastHit != null ? 1 : 0, false);
             case ("bullet_burntime"):
-                return ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted;
+                return new ComputedVariable(this, variable, partialTicks -> ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted, false);
             case ("bullet_hit_block"):
-                return HitType.BLOCK == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BLOCK == lastHit ? 1 : 0, false);
             case ("bullet_hit_entity"):
-                return HitType.ENTITY == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ENTITY == lastHit ? 1 : 0, false);
             case ("bullet_hit_vehicle"):
-                return HitType.VEHICLE == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.VEHICLE == lastHit ? 1 : 0, false);
             case ("bullet_hit_armor"):
-                return HitType.ARMOR == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMOR == lastHit ? 1 : 0, false);
             case ("bullet_hit_burst"):
-                return HitType.BURST == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BURST == lastHit ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

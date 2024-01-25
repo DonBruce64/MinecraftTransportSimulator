@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
@@ -140,21 +141,21 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("fuelpump_active"):
-                return connectedVehicle != null ? 1 : 0;
-            case ("fuelpump_stored"):
-                return tank.getFluidLevel();
+                return new ComputedVariable(this, variable, partialTicks -> connectedVehicle != null ? 1 : 0, false);
             case ("fuelpump_dispensed"):
-                return fuelDispensedThisConnection;
+                return new ComputedVariable(this, variable, partialTicks -> fuelDispensedThisConnection, false);
             case ("fuelpump_free"):
-                return isCreative ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> isCreative ? 1 : 0, false);
             case ("fuelpump_purchased"):
-                return fuelPurchased;
+                return new ComputedVariable(this, variable, partialTicks -> fuelPurchased, false);
+            case ("fuelpump_stored"):
+                return new ComputedVariable(this, variable, partialTicks -> tank.getFluidLevel(), false);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

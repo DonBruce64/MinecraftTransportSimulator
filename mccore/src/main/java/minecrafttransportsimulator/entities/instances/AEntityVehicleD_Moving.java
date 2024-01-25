@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +27,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -202,10 +200,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
 
-        //Update variable status.  This is used in a lot of locations, so we don't want to query the set every time.
-        brake = getVariable(BRAKE_VARIABLE);
-        parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
-        locked = isVariableActive(LOCKED_VARIABLE);
+        //Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+        brake = getVariable(BRAKE_VARIABLE).getValue();
+        parkingBrakeOn = getVariable(PARKINGBRAKE_VARIABLE).isActive();
+        locked = getVariable(LOCKED_VARIABLE).isActive();
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
@@ -277,8 +275,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    protected void updateAllpartList() {
-        super.updateAllpartList();
+    public void updatePartList() {
+        super.updatePartList();
         if (ticksExisted > 1) {
             updateGroundDevicesRequest = true;
         }
@@ -304,9 +302,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super.connectTrailer(connection, notifyClient);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
         if (towedVehicle.parkingBrakeOn) {
-            towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 0);
+            towedVehicle.setVariableValue(PARKINGBRAKE_VARIABLE, 0);
         }
-        towedVehicle.setVariable(BRAKE_VARIABLE, 0);
+        towedVehicle.setVariableValue(BRAKE_VARIABLE, 0);
         towedVehicle.frontFollower = null;
         towedVehicle.rearFollower = null;
 
@@ -328,7 +326,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.get(connectionIndex);
         if (connection.towedVehicle.definition.motorized.isTrailer) {
-            connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
+            connection.towedVehicle.setVariableValue(PARKINGBRAKE_VARIABLE, 1);
         }
         super.disconnectTrailer(connectionIndex);
     }
@@ -679,9 +677,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Check for the potential to change the requested segment.
                 //We can only do this if both our followers are on the same segment.
                 LaneSelectionRequest requestedSegment;
-                if (isVariableActive(LEFTTURNLIGHT_VARIABLE) == isVariableActive(RIGHTTURNLIGHT_VARIABLE)) {
+                if (getVariable(LEFTTURNLIGHT_VARIABLE).isActive() == getVariable(RIGHTTURNLIGHT_VARIABLE).isActive()) {
                     requestedSegment = LaneSelectionRequest.NONE;
-                } else if (isVariableActive(LEFTTURNLIGHT_VARIABLE)) {
+                } else if (getVariable(LEFTTURNLIGHT_VARIABLE).isActive()) {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
                 } else {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
@@ -1092,19 +1090,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     public void toggleLock() {
         locked = !locked;
-        toggleVariable(LOCKED_VARIABLE);
-        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
+        getVariable(LOCKED_VARIABLE).toggle(true);
 
         //Check for doors to close on locking.
         if (locked) {
-            Iterator<String> iterator = variables.keySet().iterator();
-            while (iterator.hasNext()) {
-                String variable = iterator.next();
-                if (variable.contains("door")) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
-                    iterator.remove();
-                }
-            }
+            closeDoors();
         }
     }
 

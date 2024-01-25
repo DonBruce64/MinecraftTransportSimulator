@@ -96,8 +96,8 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         super.update();
         world.beginProfiling("VehicleE_Level", true);
         //Get throttle and reverse state.
-        throttle = getVariable(THROTTLE_VARIABLE);
-        reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
+        throttle = getVariable(THROTTLE_VARIABLE).getValue();
+        reverseThrust = getVariable(REVERSE_THRUST_VARIABLE).isActive();
 
         //If we have space for fuel, and we have tanks with it, transfer it.
         if (!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100) {
@@ -132,15 +132,15 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             //If we aren't being towed, set the parking brake.
             if (towedByConnection != null) {
                 if (parkingBrakeOn) {
-                    toggleVariable(PARKINGBRAKE_VARIABLE);
+                    getVariable(PARKINGBRAKE_VARIABLE).toggle(false);
                 }
-                setVariable(BRAKE_VARIABLE, towedByConnection.towingVehicle.brake);
+                getVariable(BRAKE_VARIABLE).setTo(towedByConnection.towingVehicle.brake, false);
             } else {
                 if (!parkingBrakeOn) {
-                    toggleVariable(PARKINGBRAKE_VARIABLE);
+                    getVariable(PARKINGBRAKE_VARIABLE).toggle(false);
                 }
                 if (brake != 0) {
-                    setVariable(BRAKE_VARIABLE, 0);
+                    getVariable(BRAKE_VARIABLE).toggle(false);
                 }
             }
         } else {
@@ -179,7 +179,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
 
         //Adjust gear variables.
-        if (isVariableActive(GEAR_VARIABLE)) {
+        if (getVariable(GEAR_VARIABLE).isActive()) {
             if (gearMovementTime < definition.motorized.gearSequenceDuration) {
                 ++gearMovementTime;
             }
@@ -348,7 +348,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     @Override
     public boolean renderTextLit() {
         if (super.renderTextLit() && electricPower > 3) {
-            return getCleanRawVariableValue(definition.motorized.litVariable, 0) > 0;
+            return getVariable(definition.motorized.litVariable).isActive();
         } else {
             return false;
         }

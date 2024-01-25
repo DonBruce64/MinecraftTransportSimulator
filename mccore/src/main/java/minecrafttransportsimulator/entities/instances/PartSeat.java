@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -206,7 +207,7 @@ public final class PartSeat extends APart {
 
             //Auto-close doors for the rider in this seat, if such doors exist.
             if (placementDefinition.interactableVariables != null) {
-                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.setVariable(variable, 0)));
+                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.setVariableValue(variable, 0)));
             }
             return true;
         } else {
@@ -260,7 +261,7 @@ public final class PartSeat extends APart {
             //Auto-open doors for the rider in this seat, if such doors exist.
             if (!world.isClient() && placementDefinition.interactableVariables != null) {
                 placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> {
-                    entityOn.setVariable(variable, 1);
+                    entityOn.setVariableValue(variable, 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entityOn, variable, 1));
                 }));
             }
@@ -435,24 +436,19 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        double value = super.getRawVariableValue(variable, partialTicks);
-        if (!Double.isNaN(value)) {
-            return value;
-        }
-
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("seat_occupied"):
-                return rider != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> rider != null ? 1 : 0, false);
             case ("seat_occupied_client"):
-                return riderIsClient ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> riderIsClient ? 1 : 0, false);
             case ("seat_rider_yaw"):
-                return rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.y + (riderRelativeOrientation.angles.y - prevRiderRelativeOrientation.angles.y) * partialTicks : riderRelativeOrientation.angles.y) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.y + (riderRelativeOrientation.angles.y - prevRiderRelativeOrientation.angles.y) * partialTicks : riderRelativeOrientation.angles.y) : 0, true);
             case ("seat_rider_pitch"):
-                return rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.x + (riderRelativeOrientation.angles.x - prevRiderRelativeOrientation.angles.x) * partialTicks : riderRelativeOrientation.angles.x) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.x + (riderRelativeOrientation.angles.x - prevRiderRelativeOrientation.angles.x) * partialTicks : riderRelativeOrientation.angles.x) : 0, true);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return Double.NaN;
     }
 
     @Override

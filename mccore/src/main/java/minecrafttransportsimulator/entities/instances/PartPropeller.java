@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -199,21 +200,22 @@ public class PartPropeller extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("propeller_pitch_deg"):
-                return Math.toDegrees(Math.atan(currentPitch / (definition.propeller.diameter * 0.75D * Math.PI)));
+                return new ComputedVariable(this, variable, partialTicks -> Math.toDegrees(Math.atan(currentPitch / (definition.propeller.diameter * 0.75D * Math.PI))), false);
             case ("propeller_pitch_in"):
-                return currentPitch;
+                return new ComputedVariable(this, variable, partialTicks -> currentPitch, false);
             case ("propeller_pitch_percent"):
-                return 1D * (currentPitch - PartPropeller.MIN_DYNAMIC_PITCH) / (definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
+                return new ComputedVariable(this, variable, partialTicks -> 1D * (currentPitch - PartPropeller.MIN_DYNAMIC_PITCH) / (definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH), false);
             case ("propeller_rotation"):
-                return (partialTicks != 0 ? (angularPosition - (angularVelocity * (1 - partialTicks))) : angularPosition) * 360D;
+                return new ComputedVariable(this, variable, partialTicks -> (partialTicks != 0 ? (angularPosition - (angularVelocity * (1 - partialTicks))) : angularPosition) * 360D, true);
             case ("propeller_rpm"):
-                return currentRPM;
+                return new ComputedVariable(this, variable, partialTicks -> currentRPM, false);
+            default: {
+                return super.createComputedVariable(variable);
+            }
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     public double addToForceOutput(Point3D force, Point3D torque) {

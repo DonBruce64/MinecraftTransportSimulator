@@ -6,6 +6,7 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -178,29 +179,32 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         sideVector.set(verticalVector.crossProduct(headingVector));
 
         //Parse out variables.
-        aileronInput = getVariable(AILERON_INPUT_VARIABLE);
-        aileronTrim = getVariable(AILERON_TRIM_VARIABLE);
-        elevatorInput = getVariable(ELEVATOR_INPUT_VARIABLE);
-        elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
-        rudderInput = getVariable(RUDDER_INPUT_VARIABLE);
-        rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
-        autopilotSetting = getVariable(AUTOPILOT_VALUE_VARIABLE);
-        flapDesiredAngle = getVariable(FLAPS_VARIABLE);
+        aileronInput = getVariableValue(AILERON_INPUT_VARIABLE);
+        aileronTrim = getVariableValue(AILERON_TRIM_VARIABLE);
+        elevatorInput = getVariableValue(ELEVATOR_INPUT_VARIABLE);
+        elevatorTrim = getVariableValue(ELEVATOR_TRIM_VARIABLE);
+        rudderInput = getVariableValue(RUDDER_INPUT_VARIABLE);
+        rudderTrim = getVariableValue(RUDDER_TRIM_VARIABLE);
+        autopilotSetting = getVariableValue(AUTOPILOT_VALUE_VARIABLE);
+        flapDesiredAngle = getVariableValue(FLAPS_VARIABLE);
 
         //Set indicated speed and autopilot state.
-        indicatedSpeed = axialVelocity * speedFactor * 20;
-        if (isVariableActive(AUTOPILOT_ACTIVE_VARIABLE)) {
-            if (!isVariableActive(AUTOPILOT_VALUE_VARIABLE)) {
-                //No value but we're supposed to be active, make us so.
-                if (definition.motorized.isAircraft) {
-                    setVariable(AUTOPILOT_VALUE_VARIABLE, position.y);
-                } else {
-                    setVariable(AUTOPILOT_VALUE_VARIABLE, indicatedSpeed);
+        if (!world.isClient()) {
+            indicatedSpeed = axialVelocity * speedFactor * 20;
+            if (getVariable(AUTOPILOT_ACTIVE_VARIABLE).isActive()) {
+                ComputedVariable autopilotVariable = getVariable(AUTOPILOT_VALUE_VARIABLE);
+                if (!autopilotVariable.isActive()) {
+                    //No value but we're supposed to be active, make us so.
+                    if (definition.motorized.isAircraft) {
+                        autopilotVariable.setTo(position.y, true);
+                    } else {
+                        autopilotVariable.setTo(indicatedSpeed, true);
+                    }
                 }
+            } else if (autopilotSetting != 0) {
+                //Toggle off the autopilot value to set it to 0 next go around.
+                getVariable(AUTOPILOT_VALUE_VARIABLE).toggle(true);
             }
-        } else if (autopilotSetting != 0) {
-            //Toggle off the autopilot value to set it to 0 next go around.
-            toggleVariable(AUTOPILOT_VALUE_VARIABLE);
         }
 
         world.endProfiling();
@@ -250,7 +254,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else {
             delta = -degrees;
         }
-        setVariable(RUDDER_INPUT_VARIABLE, rudderInput + delta);
+        setVariableValue(RUDDER_INPUT_VARIABLE, rudderInput + delta);
         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, delta));
     }
 
@@ -271,11 +275,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentUnderSteer = definition.motorized.underSteer;
         currentAxleRatio = definition.motorized.axleRatio;
         aileronAngle = aileronInput;
-        setVariable(AILERON_VARIABLE, aileronAngle);
+        setVariableValue(AILERON_VARIABLE, aileronAngle);
         elevatorAngle = elevatorInput;
-        setVariable(ELEVATOR_VARIABLE, elevatorAngle);
+        setVariableValue(ELEVATOR_VARIABLE, elevatorAngle);
         rudderAngle = rudderInput;
-        setVariable(RUDDER_VARIABLE, rudderAngle);
+        setVariableValue(RUDDER_VARIABLE, rudderAngle);
 
         //Adjust flaps to current setting.
         if (definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()) {
@@ -340,18 +344,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         break;
                     case AILERON_VARIABLE:
                         aileronAngle = adjustVariable(modifier, (float) aileronAngle);
-                        setVariable(AILERON_VARIABLE, aileronAngle);
+                        setVariableValue(AILERON_VARIABLE, aileronAngle);
                         break;
                     case ELEVATOR_VARIABLE:
                         elevatorAngle = adjustVariable(modifier, (float) elevatorAngle);
-                        setVariable(ELEVATOR_VARIABLE, elevatorAngle);
+                        setVariableValue(ELEVATOR_VARIABLE, elevatorAngle);
                         break;
                     case RUDDER_VARIABLE:
                         rudderAngle = adjustVariable(modifier, (float) rudderAngle);
-                        setVariable(RUDDER_VARIABLE, rudderAngle);
+                        setVariableValue(RUDDER_VARIABLE, rudderAngle);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
                         break;
                 }
             }
@@ -376,7 +380,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
                     if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
                         hasRotors = true;
-                        if (autopilotSetting == 0 && getVariable(AUTOLEVEL_VARIABLE) != 0) {
+                        if (autopilotSetting == 0 && getVariableValue(AUTOLEVEL_VARIABLE) != 0) {
                             rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
                         } else {
                             if (autopilotSetting == 0) {
@@ -644,13 +648,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             if (indicatedSpeed < autopilotSetting) {
                 if (throttle < MAX_THROTTLE) {
                     throttle += MAX_THROTTLE / 100D;
-                    setVariable(THROTTLE_VARIABLE, throttle);
+                    setVariableValue(THROTTLE_VARIABLE, throttle);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE / 100D));
                 }
             } else if (indicatedSpeed > autopilotSetting) {
                 if (throttle > 0) {
                     throttle -= MAX_THROTTLE / 100D;
-                    setVariable(THROTTLE_VARIABLE, throttle);
+                    setVariableValue(THROTTLE_VARIABLE, throttle);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE / 100D));
                 }
             }
@@ -664,11 +668,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 if (ticksExisted % 10 == 0) {
                     if (motion.y < 0 && throttle < MAX_THROTTLE) {
                         throttle += MAX_THROTTLE / 100D;
-                        setVariable(THROTTLE_VARIABLE, throttle);
+                        setVariableValue(THROTTLE_VARIABLE, throttle);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE / 100D));
                     } else if (motion.y > 0 && throttle < MAX_THROTTLE) {
                         throttle -= MAX_THROTTLE / 100D;
-                        setVariable(THROTTLE_VARIABLE, throttle);
+                        setVariableValue(THROTTLE_VARIABLE, throttle);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE / 100D));
                     }
                 }
@@ -678,33 +682,33 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 double forwardsDelta = forwardsVelocity - prevMotion.dotProduct(headingVector, false);
                 double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector, false);
                 if (forwardsDelta > 0 && forwardsVelocity > 0 && elevatorTrim < MAX_ELEVATOR_TRIM) {
-                    setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
+                    setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
                 } else if (forwardsDelta < 0 && forwardsVelocity < 0 && elevatorTrim > -MAX_ELEVATOR_TRIM) {
-                    setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
+                    setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
                 }
                 if (sidewaysVelocity > 0 && sidewaysDelta > 0 && aileronTrim < MAX_AILERON_TRIM) {
-                    setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
+                    setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim + 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
                 } else if (sidewaysVelocity < 0 && sidewaysDelta < 0 && aileronTrim > -MAX_AILERON_TRIM) {
-                    setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
+                    setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim - 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
                 }
             } else {
                 //Reset trim to prevent directional surges.
                 if (elevatorTrim < 0) {
-                    setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
+                    setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
                 } else if (elevatorTrim > 0) {
-                    setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
+                    setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
                 }
                 if (aileronTrim < 0) {
-                    setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
+                    setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim + 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
                 } else if (aileronTrim > 0) {
-                    setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
+                    setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim - 1);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
                 }
             }
@@ -712,18 +716,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             //Normal aircraft.  Do autopilot operations if required.
             //If we are not flying at a steady elevation, angle the elevator to compensate
             if (-motion.y * 10 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM) {
-                setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
+                setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 0.1));
             } else if (-motion.y * 10 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM) {
-                setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 0.1);
+                setVariableValue(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -0.1));
             }
             //Keep the roll angle at 0.
             if (-orientation.angles.z > aileronTrim + 0.1 && aileronTrim < MAX_AILERON_TRIM) {
-                setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 0.1);
+                setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim + 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 0.1));
             } else if (-orientation.angles.z < aileronTrim - 0.1 && aileronTrim > -MAX_AILERON_TRIM) {
-                setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 0.1);
+                setVariableValue(AILERON_TRIM_VARIABLE, aileronTrim - 0.1);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -0.1));
             }
         }
@@ -732,35 +736,35 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //Don't do this on roads, since those manually set our controls.
         if (!lockedOnRoad && controllerCount == 0) {
             if (aileronInput > AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
+                setVariableValue(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
             } else if (aileronInput < -AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
+                setVariableValue(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
             } else if (aileronInput != 0) {
-                setVariable(AILERON_INPUT_VARIABLE, 0);
+                setVariableValue(AILERON_INPUT_VARIABLE, 0);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
             }
 
             if (elevatorInput > ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
+                setVariableValue(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
             } else if (elevatorInput < -ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
+                setVariableValue(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
             } else if (elevatorInput != 0) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, 0);
+                setVariableValue(ELEVATOR_INPUT_VARIABLE, 0);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
             }
 
             if (rudderInput > RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
+                setVariableValue(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
             } else if (rudderInput < -RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
+                setVariableValue(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
             } else if (rudderInput != 0) {
-                setVariable(RUDDER_INPUT_VARIABLE, 0);
+                setVariableValue(RUDDER_INPUT_VARIABLE, 0);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
             }
 
@@ -803,127 +807,138 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable getVariable(String variable) {
         //If we are a forwarded variable and are a connected trailer, do that now.
         if (definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)) {
-            return towedByConnection.towingVehicle.getRawVariableValue(variable, partialTicks);
+            return towedByConnection.towingVehicle.getVariable(variable);
+        } else {
+            return super.getVariable(variable);
         }
+    }
 
-        //Not a part of a forwarded variable.  Just return normally.
+    @Override
+    public ComputedVariable createComputedVariable(String variable) {
+
+        //Not a part of a forwarded variable.  Just return new ComputedVariable(this, variable, partialTicks -> normally.
         switch (variable) {
             //Vehicle world state cases.
             case ("yaw"):
-                return orientation.angles.y;
+                return new ComputedVariable(this, variable, partialTicks -> orientation.angles.y, false);
             case ("heading"):
-                double heading = -orientation.angles.y;
-                if (ConfigSystem.client.controlSettings.north360.value)
-                    heading += 180;
-                while (heading < 0)
-                    heading += 360;
-                while (heading > 360)
-                    heading -= 360;
-                return heading;
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    double heading = -orientation.angles.y;
+                    if (ConfigSystem.client.controlSettings.north360.value)
+                        heading += 180;
+                    while (heading < 0)
+                        heading += 360;
+                    while (heading > 360)
+                        heading -= 360;
+                    return heading;
+                }, false);
             case ("pitch"):
-                return orientation.angles.x;
+                return new ComputedVariable(this, variable, partialTicks -> orientation.angles.x, false);
             case ("roll"):
-                return orientation.angles.z;
+                return new ComputedVariable(this, variable, partialTicks -> orientation.angles.z, false);
             case ("altitude"):
-                return position.y - seaLevel;
+                return new ComputedVariable(this, variable, partialTicks -> position.y - seaLevel, false);
             case ("speed"):
-                return indicatedSpeed;
+                return new ComputedVariable(this, variable, partialTicks -> indicatedSpeed, false);
             case ("speed_scaled"):
-                return indicatedSpeed / speedFactor;
+                return new ComputedVariable(this, variable, partialTicks -> indicatedSpeed / speedFactor, false);
             case ("speed_factor"):
-                return speedFactor;
+                return new ComputedVariable(this, variable, partialTicks -> speedFactor, false);
             case ("acceleration"):
-                return motion.length() - prevMotion.length();
+                return new ComputedVariable(this, variable, partialTicks -> motion.length() - prevMotion.length(), false);
             case ("road_angle_front"):
-                return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
+                return new ComputedVariable(this, variable, partialTicks -> frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0, false);
             case ("road_angle_rear"):
-                return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
+                return new ComputedVariable(this, variable, partialTicks -> rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0, false);
+
             //Vehicle state cases.
             case("autopilot_present"):
-                return definition.motorized.hasAutopilot ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> definition.motorized.hasAutopilot ? 1 : 0, false);
             case ("fuel"):
-                return fuelTank.getFluidLevel() / fuelTank.getMaxLevel();
+                return new ComputedVariable(this, variable, partialTicks -> fuelTank.getFluidLevel() / fuelTank.getMaxLevel(), false);
             case ("mass"):
-                return currentMass;
+                return new ComputedVariable(this, variable, partialTicks -> currentMass, false);
             case ("electric_power"):
-                return electricPower;
+                return new ComputedVariable(this, variable, partialTicks -> electricPower, false);
             case ("electric_usage"):
-                return electricFlow * 20D;
+                return new ComputedVariable(this, variable, partialTicks -> electricFlow * 20D, false);
             case ("engines_on"):
-                return enginesOn ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> enginesOn ? 1 : 0, false);
             case ("engines_starting"):
-                return enginesStarting ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> enginesStarting ? 1 : 0, false);
             case ("engines_running"):
-                return enginesRunning ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> enginesRunning ? 1 : 0, false);
             case ("reverser"):
-                return reverseThrust ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> reverseThrust ? 1 : 0, false);
             case ("reverser_present"):
-                return hasReverseThrust ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> hasReverseThrust ? 1 : 0, false);
             case ("locked"):
-                return locked ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> locked ? 1 : 0, false);
             case ("door"):
-                return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> parkingBrakeOn && velocity < 0.25 ? 1 : 0, false);
             case ("fueling"):
-                return beingFueled ? 1 : 0;
-            //Good for tuning aircraft engines.
+                return new ComputedVariable(this, variable, partialTicks -> beingFueled ? 1 : 0, false);
             case ("thrust"):
-                return thrustForceValue;
+                return new ComputedVariable(this, variable, partialTicks -> thrustForceValue, false);
+
             //State cases generally used on aircraft.
             case ("flaps_actual"):
-                return flapCurrentAngle;
+                return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle, false);
             case ("flaps_moving"):
-                return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle != flapDesiredAngle ? 1 : 0, false);
             case ("flaps_increasing"):
-                return flapCurrentAngle < flapDesiredAngle ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle < flapDesiredAngle ? 1 : 0, false);
             case ("flaps_decreasing"):
-                return flapCurrentAngle > flapDesiredAngle ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle > flapDesiredAngle ? 1 : 0, false);
             case ("vertical_speed"):
-                return motion.y * speedFactor * 20;
+                return new ComputedVariable(this, variable, partialTicks -> motion.y * speedFactor * 20, false);
             case ("lift_reserve"):
-                return -trackAngle;
+                return new ComputedVariable(this, variable, partialTicks -> -trackAngle, false);
             case ("turn_coordinator"):
-                return ((rotation.angles.z) / 10 + rotation.angles.y) / 0.15D * 25;
+                return new ComputedVariable(this, variable, partialTicks -> ((rotation.angles.z) / 10 + rotation.angles.y) / 0.15D * 25, false);
             case ("turn_indicator"):
-                return (rotation.angles.y) / 0.15F * 25F;
+                return new ComputedVariable(this, variable, partialTicks -> (rotation.angles.y) / 0.15F * 25F, false);
             case ("pitch_indicator"):
-                return (rotation.angles.x) / 0.15F * 25F;
+                return new ComputedVariable(this, variable, partialTicks -> (rotation.angles.x) / 0.15F * 25F, false);
             case ("slip"):
-                return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
+                return new ComputedVariable(this, variable, partialTicks -> 75 * sideVector.dotProduct(normalizedVelocityVector, true), false);
             case ("slip_degrees"):
-                return -Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector, false)));
+                return new ComputedVariable(this, variable, partialTicks -> -Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector, false))), false);
             case ("slip_understeer"):
-                return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10)));
+                return new ComputedVariable(this, variable, partialTicks -> getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10))), false);
             case ("gear_present"):
-                return definition.motorized.gearSequenceDuration != 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> definition.motorized.gearSequenceDuration != 0 ? 1 : 0, false);
             case ("gear_moving"):
-                return (isVariableActive(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> (getVariable(GEAR_VARIABLE).isActive() ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0, false);
             case ("beacon_direction"):
-                return selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0, false);
             case ("beacon_bearing_setpoint"):
-                return selectedBeacon != null ? selectedBeacon.bearing : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.bearing : 0, false);
             case ("beacon_bearing_delta"):
-                return selectedBeacon != null ? selectedBeacon.getBearingDelta(this) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.getBearingDelta(this) : 0, false);
             case ("beacon_glideslope_setpoint"):
-                return selectedBeacon != null ? selectedBeacon.glideSlope : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope : 0, false);
             case ("beacon_glideslope_actual"):
-                return selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
             case ("beacon_glideslope_delta"):
-                return selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
             case ("beacon_distance"):
-                return selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0, false);
+            case ("radar_detected"):
+                return new ComputedVariable(this, variable, partialTicks -> radarsTracking.isEmpty() ? 0 : 1, false);
+            case ("missile_incoming"):
+                return new ComputedVariable(this, variable, partialTicks -> missilesIncoming.isEmpty() ? 0 : 1, false);
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.
                 if (variable.startsWith("missile_")) {
-                    String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
-                    int missileNumber = getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
-                    if (missileNumber != -1) {
-                        if (missilesIncoming.size() <= missileNumber) {
-                            return 0;
-                        } else {
+                    final String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
+                    final int missileNumber = ComputedVariable.getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        if (missilesIncoming.size() > missileNumber) {
                             switch (missileVariable) {
                                 case ("distance"):
                                     return missilesIncoming.get(missileNumber).targetDistance;
@@ -933,92 +948,111 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                                 }
                             }
                         }
-                    } else if (missileVariable.equals("incoming")) {
-                        return missilesIncoming.isEmpty() ? 0 : 1;
-                    }
-                }
-                //Radar variables.
-                if (variable.startsWith("radar_")) {
-                    String[] parsedVariable = variable.split("_");
-
+                        return 0;
+                    }, false);
+                }else if (variable.startsWith("radar_")) {
+                    final String[] parsedVariable = variable.split("_");
+            
                     //First check if we are seeing with our own radar, or being seen.
-                    //Variable is in the form of radar_X_variablename for inbound, radar_X_Y_variablename for outbound.
-                    List<EntityVehicleF_Physics> radarList;
-                    switch (parsedVariable[1]) {
-                        case ("aircraft"): {
-                            radarList = aircraftOnRadar;
-                            break;
-                        }
-                        case ("ground"): {
-                            radarList = groundersOnRadar;
-                            break;
-                        }
-                        default: {
-                            //Inbound contact from another radar.
-                            switch (parsedVariable.length) {
-                                case 2: {
-                                    switch (parsedVariable[1]) {
-                                        case ("detected"):
-                                            return radarsTracking.isEmpty() ? 0 : 1;
-                                    }
-                                    break;
-                                }
-                                case 3: {
-                                    int radarNumber = Integer.parseInt(parsedVariable[1]) - 1;
-                                    if (radarsTracking.size() <= radarNumber) {
+                    //Variable is in the form of radar_X_variablename for inbound, radar_T_X_variablename for outbound.
+                    if(parsedVariable.length == 3) {
+                      //Inbound contact from another radar.
+                        final int radarNumber = Integer.parseInt(parsedVariable[1]) - 1;
+                        switch (parsedVariable[2]) {
+                            case ("detected"):
+                                return new ComputedVariable(this, variable, partialTicks -> radarsTracking.size() > radarNumber ? 1 : 0, false);
+                            case ("distance"):
+                                return new ComputedVariable(this, variable, partialTicks -> radarsTracking.size() > radarNumber ? radarsTracking.get(radarNumber).position.distanceTo(position) : 0, false);
+                            case ("direction"): {
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if(radarsTracking.size() > radarNumber) {
+                                        Point3D entityPos = radarsTracking.get(radarNumber).position;
+                                        return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;   
+                                    }else {
                                         return 0;
-                                    } else {
-                                        switch (parsedVariable[2]) {
-                                            case ("detected"):
-                                                return 1;
-                                            case ("distance"):
-                                                return radarsTracking.get(radarNumber).position.distanceTo(position);
-                                            case ("direction"): {
-                                                Point3D entityPos = radarsTracking.get(radarNumber).position;
-                                                return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
-                                            }
-                                        }
                                     }
-                                }
+                                }, false);
                             }
-                            //Invalid inbound radar value, return 0.
-                            return 0;
                         }
-                    }
-
-                    //Outbound radar found, do logic.
-                    int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
-                    if (radarNumber < radarList.size()) {
-                        AEntityB_Existing contact = radarList.get(radarNumber);
+                    }else if(parsedVariable.length == 4) {
+                        //Outbound radar found, do logic.
+                        final List<EntityVehicleF_Physics> radarList;
+                        switch (parsedVariable[1]) {
+                            case ("aircraft"): {
+                                radarList = aircraftOnRadar;
+                                break;
+                            }
+                            case ("ground"): {
+                                radarList = groundersOnRadar;
+                                break;
+                            }
+                            default:
+                                //Invalid radar type.
+                                return ZERO_VARIABLE;
+                        }
+                        
+                        final int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
                         switch (parsedVariable[3]) {
                             case ("distance"):
-                                return contact.position.distanceTo(position);
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if (radarNumber < radarList.size()) {
+                                        AEntityB_Existing contact = radarList.get(radarNumber);
+                                        return contact.position.distanceTo(position);
+                                    } else {
+                                        return 0;
+                                    }
+                                }, false);
                             case ("direction"):
-                                double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
-                                while (delta < -180)
-                                    delta += 360;
-                                while (delta > 180)
-                                    delta -= 360;
-                                return delta;
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if (radarNumber < radarList.size()) {
+                                        AEntityB_Existing contact = radarList.get(radarNumber);
+                                        double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+                                        while (delta < -180)
+                                            delta += 360;
+                                        while (delta > 180)
+                                            delta -= 360;
+                                        return delta;
+                                    } else {
+                                        return 0;
+                                    }
+                                }, false);
                             case ("speed"):
-                                return contact.velocity;
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if (radarNumber < radarList.size()) {
+                                        AEntityB_Existing contact = radarList.get(radarNumber);
+                                        return contact.velocity;
+                                    } else {
+                                        return 0;
+                                    }
+                                }, false);
                             case ("altitude"):
-                                return contact.position.y;
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if (radarNumber < radarList.size()) {
+                                        AEntityB_Existing contact = radarList.get(radarNumber);
+                                        return contact.position.y;
+                                    } else {
+                                        return 0;
+                                    }
+                                }, false);
                             case ("angle"):
-                                return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
+                                return new ComputedVariable(this, variable, partialTicks -> {
+                                    if (radarNumber < radarList.size()) {
+                                        AEntityB_Existing contact = radarList.get(radarNumber);
+                                        return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
+                                    } else {
+                                        return 0;
+                                    }
+                                }, false);
                         }
                     }
-
-                    //Contact not found or bad variable, return 0.
-                    return 0;
+                    
+                    //Down here means bad variable format.
+                    return ZERO_VARIABLE;
+                }else {
+                    return super.createComputedVariable(variable);
                 }
             }
         }
-
-        //Not a vehicle variable or a part variable.  We could have an error, but likely we have an older pack,
-        //a closed door, a missing part, a custom variable that's not on, or something else entirely.
-        //Just return super here.
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

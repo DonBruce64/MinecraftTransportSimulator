@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import java.util.Locale;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -45,37 +46,33 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        double value = super.getRawVariableValue(variable, partialTicks);
-        if (!Double.isNaN(value)) {
-            return value;
-        }
-
+    public ComputedVariable createComputedVariable(String variable) {
         //Check connector variables.
         if (variable.startsWith("neighbor_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase(Locale.ROOT));
-            ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
-            return otherTile instanceof TileEntityPole ? 1 : 0;
+            final Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase(Locale.ROOT));
+            return new ComputedVariable(this, variable, partialTicks -> world.getTileEntity(connectionAxis.getOffsetPoint(position)) instanceof TileEntityPole ? 1 : 0, false);
         }
         if (variable.startsWith("matching_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("matching_present_".length()).toUpperCase(Locale.ROOT));
-            ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
-            return otherTile != null && core.definition.systemName.equals(otherTile.definition.systemName) ? 1 : 0;
+            final Axis connectionAxis = Axis.valueOf(variable.substring("matching_present_".length()).toUpperCase(Locale.ROOT));
+            return new ComputedVariable(this, variable, partialTicks -> {
+                ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
+                return otherTile != null && core.definition.systemName.equals(otherTile.definition.systemName) ? 1 : 0;
+            }, false);
         }
         //Check solid block variables.
         if (variable.startsWith("solid_present_")) {
-            Axis connectionAxis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase(Locale.ROOT));
-            return world.isBlockSolid(connectionAxis.getOffsetPoint(position), connectionAxis.getOpposite()) ? 1 : 0;
+            final Axis connectionAxis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase(Locale.ROOT));
+            return new ComputedVariable(this, variable, partialTicks -> world.isBlockSolid(connectionAxis.getOffsetPoint(position), connectionAxis.getOpposite()) ? 1 : 0, false);
         }
+
         //Check slab variables.
         switch (variable) {
             case ("slab_present_up"):
-                return world.isBlockAboveTopSlab(position) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.isBlockAboveTopSlab(position) ? 1 : 0, false);
             case ("slab_present_down"):
-                return world.isBlockBelowBottomSlab(position) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.isBlockBelowBottomSlab(position) ? 1 : 0, false);
         }
-
-        return Double.NaN;
+        return ZERO_VARIABLE;
     }
 
     @Override

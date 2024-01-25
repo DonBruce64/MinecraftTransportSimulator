@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.instances.ItemDecor;
@@ -55,32 +56,17 @@ public class TileEntityChest extends TileEntityDecor {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
-            case ("inventory_count"): {
-                if (inventory != null) {
-                    return inventory.getCount();
-                } else {
-                    return 0;
-                }
-            }
-            case ("inventory_percent"): {
-                if (inventory != null) {
-                    return inventory.getCount() / (double) inventory.getSize();
-                } else {
-                    return 0;
-                }
-            }
-            case ("inventory_capacity"): {
-                if (inventory != null) {
-                    return inventory.getSize();
-                } else {
-                    return 0;
-                }
-            }
+            case ("inventory_count"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() : 0, false);
+            case ("inventory_percent"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() / (double) inventory.getSize() : 0, false);
+            case ("inventory_capacity"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : 0, false);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

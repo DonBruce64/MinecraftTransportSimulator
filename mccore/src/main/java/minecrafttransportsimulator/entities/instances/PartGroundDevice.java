@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -253,7 +254,7 @@ public class PartGroundDevice extends APart {
                     	currentHeight = adjustVariable(modifier, currentHeight);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
                         break;
                 }
             }
@@ -261,34 +262,33 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("ground_rotation"):
-                return vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0, true);
             case ("ground_rotation_normalized"):
-            	return vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0, true);
             case ("ground_onground"):
-                return vehicleOn != null && animateAsOnGround ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && animateAsOnGround ? 1 : 0, false);
             case ("ground_isflat"):
-                return isFlat ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> isFlat ? 1 : 0, false);
             case ("ground_contacted"):
-                return contactThisTick ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> contactThisTick ? 1 : 0, false);
             case ("ground_skidding"):
-                return skipAngularCalcs ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> skipAngularCalcs ? 1 : 0, false);
             case ("ground_slipping"):
-                return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0, false);
             case ("ground_distance"):
-                return world.getHeight(zeroReferencePosition);
-        }
-        if (variable.startsWith("ground_blockmaterial")) {
-            if (materialBelow != null) {
-                return materialBelow.name().equals(variable.substring("ground_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
-            } else {
-                return 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.getHeight(zeroReferencePosition), false);
+            default: {
+                if (variable.startsWith("ground_blockmaterial")) {
+                    String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> materialBelow != null && materialBelow.name().equals(materialName) ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable);
+                }
             }
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

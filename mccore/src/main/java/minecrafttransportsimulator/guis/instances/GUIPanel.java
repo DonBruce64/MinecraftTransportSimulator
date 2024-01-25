@@ -193,15 +193,15 @@ public class GUIPanel extends AGUIBase {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
-                                        if (vehicle.isVariableActive(EntityVehicleF_Physics.HEADLIGHT_VARIABLE)) {
+                                        if (vehicle.getVariable(EntityVehicleF_Physics.HEADLIGHT_VARIABLE).isActive()) {
                                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
-                                        } else if (vehicle.isVariableActive(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE)) {
+                                        } else if (vehicle.getVariable(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE).isActive()) {
                                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
                                         }
                                     } else {
-                                        if (vehicle.definition.motorized.hasRunningLights && !vehicle.isVariableActive(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE)) {
+                                        if (vehicle.definition.motorized.hasRunningLights && !vehicle.getVariable(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE).isActive()) {
                                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
-                                        } else if (vehicle.definition.motorized.hasHeadlights && !vehicle.isVariableActive(EntityVehicleF_Physics.HEADLIGHT_VARIABLE)) {
+                                        } else if (vehicle.definition.motorized.hasHeadlights && !vehicle.getVariable(EntityVehicleF_Physics.HEADLIGHT_VARIABLE).isActive()) {
                                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
                                         }
                                     }
@@ -209,7 +209,7 @@ public class GUIPanel extends AGUIBase {
 
                                 @Override
                                 public int getState() {
-                                    return vehicle.isVariableActive(EntityVehicleF_Physics.HEADLIGHT_VARIABLE) ? 2 : (vehicle.isVariableActive(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE) ? 1 : 0);
+                                    return vehicle.getVariable(EntityVehicleF_Physics.HEADLIGHT_VARIABLE).isActive() ? 2 : (vehicle.getVariable(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE).isActive() ? 1 : 0);
                                 }
                             };
                             text = "LIGHTS";
@@ -233,10 +233,10 @@ public class GUIPanel extends AGUIBase {
                                     //This makes the indicator blink when on.
                                     if (inClockPeriod(20, 10)) {
                                         int returnValue = 0;
-                                        if (vehicle.isVariableActive(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE)) {
+                                        if (vehicle.getVariable(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE).isActive()) {
                                             returnValue += 1;
                                         }
-                                        if (vehicle.isVariableActive(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE)) {
+                                        if (vehicle.getVariable(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE).isActive()) {
                                             returnValue += 2;
                                         }
                                         return returnValue;
@@ -401,7 +401,7 @@ public class GUIPanel extends AGUIBase {
 
                         @Override
                         public int getState() {
-                            return vehicle.isVariableActive(finalVar) ? 1 : 0;
+                            return vehicle.getVariable(finalVar).isActive() ? 1 : 0;
                         }
                     };
                 }
@@ -541,7 +541,7 @@ public class GUIPanel extends AGUIBase {
     private void handleClickAction(JSONPanelClickAction action) {
         switch (action.action) {
             case INCREMENT: {
-                double value = vehicle.getCleanRawVariableValue(action.variable, 0);
+                double value = vehicle.getVariable(action.variable).getValue();
                 if (value + action.value >= action.clampMin && value + action.value <= action.clampMax) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, action.variable, action.value));
                 }
@@ -572,7 +572,7 @@ public class GUIPanel extends AGUIBase {
         }
 
         public int getState() {
-            return component.statusVariable != null && vehicle.getCleanRawVariableValue(component.statusVariable, 0) > 0 ? 1 : 0;
+            return component.statusVariable != null && vehicle.getVariable(component.statusVariable).getValue() > 0 ? 1 : 0;
         }
     }
 
@@ -706,7 +706,7 @@ public class GUIPanel extends AGUIBase {
             //Trim is sneaky and updates each frame the dial is held to allow for hold-action action.
             if (trimIncrement != 0 && inClockPeriod(3, 1)) {
                 if (!appliedTrimThisRender) {
-                    double currentTrim = vehicle.getVariable(trimVariable);
+                    double currentTrim = vehicle.getVariableValue(trimVariable);
                     if (currentTrim + trimIncrement > -bounds && currentTrim + trimIncrement < bounds) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, trimVariable, trimIncrement, -bounds, bounds));
                         trimCycleVar = !trimCycleVar;

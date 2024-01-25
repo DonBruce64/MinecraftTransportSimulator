@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartEffector;
@@ -293,21 +294,22 @@ public class PartEffector extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("effector_active"):
-                return isActive ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> isActive ? 1 : 0, true);
             case ("effector_operated"):
-                return activatedThisTick ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> activatedThisTick ? 1 : 0, true);
             case ("effector_drill_broken"):
-                return blocksBroken;
+                return new ComputedVariable(this, variable, partialTicks -> blocksBroken, true);
             case ("effector_drill_max"):
-                return definition.effector.drillDurability;
+                return new ComputedVariable(this, variable, partialTicks -> definition.effector.drillDurability, false);
             case ("effector_drill_percentage"):
-                return blocksBroken / (double) definition.effector.drillDurability;
+                return new ComputedVariable(this, variable, partialTicks -> blocksBroken / (double) definition.effector.drillDurability, false);
+            default: {
+                return super.createComputedVariable(variable);
+            }
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

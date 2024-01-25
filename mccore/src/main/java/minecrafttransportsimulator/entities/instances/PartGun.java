@@ -9,6 +9,7 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -637,7 +638,7 @@ public class PartGun extends APart {
                         internalOrientation.angles.x = adjustVariable(modifier, (float) internalOrientation.angles.x);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
                         break;
                 }
             }
@@ -1160,89 +1161,89 @@ public class PartGun extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("gun_inhand"):
-                return entityOn instanceof EntityPlayerGun ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> entityOn instanceof EntityPlayerGun ? 1 : 0, false);
             case ("gun_inhand_sneaking"):
-                return entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0, false);
             case ("gun_inhand_aiming"):
-                return isHandHeldGunAimed ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunAimed ? 1 : 0, false);
             case ("gun_inhand_equipped"):
-                return isHandHeldGunEquipped ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped ? 1 : 0, false);
             case ("gun_controller_firstperson"):
-                return InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
             case ("gun_active"):
-                return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):
-                return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0, false);
             case ("gun_fired"):
-                return firedThisCheck ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> firedThisCheck ? 1 : 0, false);
             case ("gun_muzzleflash"):
-                return firedThisCheck && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> firedThisCheck && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, false);
             case ("gun_lockedon"):
-                return entityTarget != null || engineTarget != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null || engineTarget != null ? 1 : 0, false);
             case ("gun_lockedon_x"):
-                return entityTarget != null ? entityTarget.getPosition().x : (engineTarget != null ? engineTarget.position.x : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().x : (engineTarget != null ? engineTarget.position.x : 0), false);
             case ("gun_lockedon_y"):
-                return entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0), false);
             case ("gun_lockedon_z"):
-                return entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0), false);
             case ("gun_lockedon_direction"):
-                return entityTarget != null ? getLockedOnDirection() : (engineTarget != null ? getLockedOnDirection() : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLockedOnDirection() : (engineTarget != null ? getLockedOnDirection() : 0), false);
             case ("gun_lockedon_angle"):
-                return entityTarget != null ? getLockedOnAngle() : (engineTarget != null ? getLockedOnAngle() : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLockedOnAngle() : (engineTarget != null ? getLockedOnAngle() : 0), false);
             case ("gun_lockedon_leadpoint_direction"):
-                return entityTarget != null ? getLeadPointDirection() : (engineTarget != null ? getLeadPointDirection() : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLeadPointDirection() : (engineTarget != null ? getLeadPointDirection() : 0), false);
             case ("gun_lockedon_leadpoint_angle"):
-                return entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0), false);
             case ("gun_lockedon_distance"):
-                return entityTarget != null ? entityTarget.getPosition().distanceTo(position) : (engineTarget != null ? engineTarget.position.distanceTo(position) : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().distanceTo(position) : (engineTarget != null ? engineTarget.position.distanceTo(position) : 0), false);
             case ("gun_lockedon_leadangle_x"):
-                return entityTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : (engineTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : (engineTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : 0), false);
             case ("gun_lockedon_leadangle_y"):
-                return entityTarget != null ? getLeadAngleY() : (engineTarget != null ? getLeadAngleY() : 0);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLeadAngleY() : (engineTarget != null ? getLeadAngleY() : 0), false);
             case ("gun_pitch"):
-                return partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x;
+                return new ComputedVariable(this, variable, partialTicks -> partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x, true);
             case ("gun_yaw"):
-                return partialTicks != 0 ? prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks : internalOrientation.angles.y;
+                return new ComputedVariable(this, variable, partialTicks -> partialTicks != 0 ? prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks : internalOrientation.angles.y, true);
             case ("gun_pitching"):
-                return Math.abs(prevInternalOrientation.angles.x - internalOrientation.angles.x) > 0.01 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> Math.abs(prevInternalOrientation.angles.x - internalOrientation.angles.x) > 0.01 ? 1 : 0, false);
             case ("gun_yawing"):
-                return Math.abs(prevInternalOrientation.angles.y - internalOrientation.angles.y) > 0.01 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> Math.abs(prevInternalOrientation.angles.y - internalOrientation.angles.y) > 0.01 ? 1 : 0, false);
             case ("gun_cooldown"):
-                return cooldownTimeRemaining > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> cooldownTimeRemaining > 0 ? 1 : 0, false);
             case ("gun_windup_time"):
-                return windupTimeCurrent;
+                return new ComputedVariable(this, variable, partialTicks -> windupTimeCurrent, false);
             case ("gun_windup_rotation"):
-                return windupRotation;
+                return new ComputedVariable(this, variable, partialTicks -> windupRotation, false);
             case ("gun_windup_complete"):
-                return windupTimeCurrent == definition.gun.windupTime ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> windupTimeCurrent == definition.gun.windupTime ? 1 : 0, false);
             case ("gun_reload"):
-                return reloadTimeRemaining > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> reloadTimeRemaining > 0 ? 1 : 0, false);
             case ("gun_ammo_count"):
-                return bulletsLeft;
+                return new ComputedVariable(this, variable, partialTicks -> bulletsLeft, false);
             case ("gun_ammo_count_reloading"):
-                return reloadingBullet != null ? reloadingBullet.definition.bullet.quantity : 0;
+                return new ComputedVariable(this, variable, partialTicks -> reloadingBullet != null ? reloadingBullet.definition.bullet.quantity : 0, false);
             case ("gun_ammo_percent"):
-                return bulletsLeft / definition.gun.capacity;
+                return new ComputedVariable(this, variable, partialTicks -> bulletsLeft / definition.gun.capacity, false);
             case ("gun_active_muzzlegroup"):
-                return currentMuzzleGroupIndex + 1;
+                return new ComputedVariable(this, variable, partialTicks -> currentMuzzleGroupIndex + 1, false);
             case ("gun_bullet_present"):
-                return currentBullet != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? 1 : 0, false);
             case ("gun_bullet_x"):
-                return currentBullet != null ? currentBullet.getRelativePos(1, partialTicks) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.getRelativePos(1, partialTicks) : 0, true);
             case ("gun_bullet_y"):
-                return currentBullet != null ? currentBullet.getRelativePos(2, partialTicks) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.getRelativePos(2, partialTicks) : 0, true);
             case ("gun_bullet_z"):
-                return currentBullet != null ? currentBullet.getRelativePos(3, partialTicks) : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.getRelativePos(3, partialTicks) : 0, true);
             case ("gun_bullet_yaw"):
-                return currentBullet != null ? currentBullet.orientation.angles.y - orientation.angles.y : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.orientation.angles.y - orientation.angles.y : 0, false);
             case ("gun_bullet_pitch"):
-                return currentBullet != null ? currentBullet.orientation.angles.x - orientation.angles.x : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.orientation.angles.x - orientation.angles.x : 0, false);
+            default:
+                return super.createComputedVariable(variable);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

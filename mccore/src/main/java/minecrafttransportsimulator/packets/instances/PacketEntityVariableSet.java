@@ -41,7 +41,7 @@ public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        entity.setVariable(variableName, variableValue);
+        entity.getVariable(variableName).setTo(variableValue, false);
         return true;
     }
 }

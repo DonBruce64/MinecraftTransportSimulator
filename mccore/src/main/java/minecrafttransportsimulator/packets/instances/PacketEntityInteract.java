@@ -139,29 +139,27 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                 switch (hitBox.definition.variableType) {
                     case BUTTON: {
                         if (rightClick) {
-                            entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
+                            entity.setVariableValue(hitBox.definition.variableName, hitBox.definition.variableValue);
                             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
                         } else {
-                            entity.setVariable(hitBox.definition.variableName, 0);
+                            entity.setVariableValue(hitBox.definition.variableName, 0);
                             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, 0));
                         }
                         break;
                     }
                     case INCREMENT:
-                        if (rightClick && entity.incrementVariable(hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax)) {
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax));
+                        if (rightClick) {
+                            entity.getVariable(hitBox.definition.variableName).increment(hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax, true);
                         }
                         break;
                     case SET:
                         if (rightClick) {
-                            entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+                            entity.getVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
                         }
                         break;
                     case TOGGLE: {
                         if (rightClick) {
-                            entity.toggleVariable(hitBox.definition.variableName);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));
+                            entity.getVariable(hitBox.definition.variableName).toggle(true);
                         }
                         break;
                     }

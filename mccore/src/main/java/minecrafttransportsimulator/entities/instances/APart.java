@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -89,7 +90,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private AnimationSwitchbox internalActiveSwitchbox;
     private AnimationSwitchbox placementMovementSwitchbox;
     private AnimationSwitchbox internalMovementSwitchbox;
-    private static boolean checkingLinkedParts;
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, item, data);
@@ -172,7 +172,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Add parent constants.
         if (placementDefinition.constantValues != null) {
-            variables.putAll(placementDefinition.constantValues);
+            placementDefinition.constantValues.forEach((constantKey, constantValue) -> setVariableValue(constantKey, constantValue));
         }
     }
 
@@ -342,15 +342,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     world.spawnExplosion(position, 0F, false);
                 }
             }
-        }
-    }
-
-    @Override
-    public void setVariable(String variable, double value) {
-        if (variable.startsWith("parent_")) {
-            entityOn.setVariable(variable.substring("parent_".length()), value);
-        } else {
-            super.setVariable(variable, value);
         }
     }
 
@@ -565,57 +556,26 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         //If the variable is prefixed with "parent_", then we need to get our parent's value.
         if (variable.startsWith("parent_")) {
-            return entityOn.getRawVariableValue(variable.substring("parent_".length()), partialTicks);
-        } else if (definition.parts != null) {
-            //Check sub-parts for the part with the specified index.
-            int partNumber = getVariableNumber(variable);
-            if (partNumber != -1) {
-                return getSpecificPartAnimation(variable, partNumber, partialTicks);
+            return entityOn.createComputedVariable(variable.substring("parent_".length()));
+        }else {
+            switch (variable) {
+                case ("part_present"):
+                    return ONE_VARIABLE;
+                case ("part_ismirrored"):
+                    return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
+                case ("part_isonfront"):
+                    return new ComputedVariable(this, variable, partialTicks -> placementDefinition.pos.z > 0 ? 1 : 0, false);
+                case ("part_isspare"):
+                    return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
+                case ("part_onvehicle"):
+                    return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
+                default:
+                    return super.createComputedVariable(variable);
             }
         }
-
-        //Check for generic part variables.
-        switch (variable) {
-            case ("part_present"):
-                return 1;
-            case ("part_ismirrored"):
-                return isMirrored ? 1 : 0;
-            case ("part_isonfront"):
-                return placementDefinition.pos.z > 0 ? 1 : 0;
-            case ("part_isspare"):
-                return isSpare ? 1 : 0;
-            case ("part_onvehicle"):
-                return vehicleOn != null ? 1 : 0;
-        }
-
-        //No variables, check super variables before doing generic forwarding.
-        //We need this here for position-specific values, as some
-        //super variables care about position, so we can't forward those.
-        double value = super.getRawVariableValue(variable, partialTicks);
-        if (!Double.isNaN(value)) {
-            return value;
-        }
-
-        //If we are down here, we must have not found a part variable.
-        //First check all linked parts in case we want one of theirs.
-        if (!linkedParts.isEmpty() && !checkingLinkedParts) {
-            checkingLinkedParts = true;
-            for (APart part : linkedParts) {
-                value = part.getRawVariableValue(variable, partialTicks);
-                if (!Double.isNaN(value)) {
-                    checkingLinkedParts = false;
-                    return value;
-                }
-            }
-            checkingLinkedParts = false;
-        }
-
-        //Not a linked part variable.
-        //Try to get the parent variable, and return whatever we get, NaN or otherwise.
-        return entityOn.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

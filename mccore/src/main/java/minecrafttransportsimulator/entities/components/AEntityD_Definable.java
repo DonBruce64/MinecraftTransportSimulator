@@ -17,6 +17,7 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -79,9 +80,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<>();
 
     /**
-     * Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.Used for animations/physics.
+     * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
      **/
-    protected final Map<String, Double> variables = new HashMap<>();
+    private final Map<String, ComputedVariable> computedVariables = new HashMap<>();
+    protected final ComputedVariable ZERO_VARIABLE = new ComputedVariable(this, "#0", partialTicks -> 0, false);
+    protected final ComputedVariable ONE_VARIABLE = new ComputedVariable(this, "#1", partialTicks -> 1, false);
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
@@ -181,7 +184,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             //Load variables.
             for (String variableName : data.getStrings("variables")) {
-                variables.put(variableName, data.getDouble(variableName));
+                getVariable(variableName).setTo(data.getDouble(variableName), false);
             }
         } else {
             //Only set initial text/variables on initial placement.
@@ -194,7 +197,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             if (definition.initialVariables != null) {
                 for (String variable : definition.initialVariables) {
-                    variables.put(variable, 1D);
+                    getVariable(variable).setTo(1D, false);
                 }
             }
         }
@@ -299,10 +302,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (testSubDef.subName.equals(newSubDefName)) {
                 //Remove existing constants, if we have them, then add them, if we have them.
                 if (subDefinition != null && subDefinition.constants != null) {
-                    variables.keySet().removeAll(subDefinition.constants);
+                    subDefinition.constants.forEach(constant -> setVariableValue(constant, 0D));
                 }
                 if (testSubDef.constants != null) {
-                    testSubDef.constants.forEach(var -> variables.put(var, 1D));
+                    testSubDef.constants.forEach(constant -> setVariableValue(constant, 1D));
                 }
                 subDefinition = testSubDef;
                 cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
@@ -386,7 +389,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Add constants.
         if (definition.constantValues != null) {
-            variables.putAll(definition.constantValues);
+            definition.constantValues.forEach((constantKey, constantValue) -> setVariableValue(constantKey, constantValue));
         }
     }
 
@@ -822,118 +825,110 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the raw value for the passed-in variable.  If the variable is not present, NaN
-     * should be returned (calling functions need to account for this!).
-     * This should be extended on all sub-classes for them to provide their own variables.
-     * For all cases of this, the sub-classed variables should be checked first.  If none are
-     * found, then the super() method should be called to return those as a default.
+     * Returns a new computed variable for the passed-in variable.  The default implementation is to just 
+     * get the variable assuming it's a basic variable.  As such, super should always be called after any
+     * overriding functions, since super will always return a value.
      */
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("tick"):
-                return ticksExisted + partialTicks;
+                return new ComputedVariable(this, variable, partialTicks -> ticksExisted + partialTicks, true);
             case ("tick_sin"):
-                return Math.sin(Math.toRadians(ticksExisted + partialTicks));
+                return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(ticksExisted + partialTicks)), true);
             case ("tick_cos"):
-                return Math.cos(Math.toRadians(ticksExisted + partialTicks));
+                return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(ticksExisted + partialTicks)), true);
             case ("time"):
-                return world.getTime();
+                return new ComputedVariable(this, variable, partialTicks -> world.getTime(), false);
             case ("random"):
-                return Math.random();
+                return new ComputedVariable(this, variable, partialTicks -> Math.random(), true);
             case ("random_flip"):
-                return Math.random() < 0.5 ? 0 : 1;
+                return new ComputedVariable(this, variable, partialTicks -> Math.random() < 0.5 ? 0 : 1, true);
             case ("rain_strength"):
-                return (int) world.getRainStrength(position);
+                return new ComputedVariable(this, variable, partialTicks -> (int) world.getRainStrength(position), false);
             case ("rain_sin"): {
-                int rainStrength = (int) world.getRainStrength(position);
-                return rainStrength > 0 ? Math.sin(rainStrength * Math.toRadians(360 * (ticksExisted + partialTicks) / 20)) / 2D + 0.5 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    int rainStrength = (int) world.getRainStrength(position);
+                    return rainStrength > 0 ? Math.sin(rainStrength * Math.toRadians(360 * (ticksExisted + partialTicks) / 20)) / 2D + 0.5 : 0;
+                }, false);
             }
             case ("rain_cos"): {
-                int rainStrength = (int) world.getRainStrength(position);
-                return rainStrength > 0 ? Math.cos(rainStrength * Math.toRadians(360 * (ticksExisted + partialTicks) / 20)) / 2D + 0.5 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    int rainStrength = (int) world.getRainStrength(position);
+                    return rainStrength > 0 ? Math.cos(rainStrength * Math.toRadians(360 * (ticksExisted + partialTicks) / 20)) / 2D + 0.5 : 0;
+                }, false);
             }
             case ("light_sunlight"):
-                return world.getLightBrightness(position, false);
+                return new ComputedVariable(this, variable, partialTicks -> world.getLightBrightness(position, false), false);
             case ("light_total"):
-                return world.getLightBrightness(position, true);
+                return new ComputedVariable(this, variable, partialTicks -> world.getLightBrightness(position, true), false);
             case ("terrain_distance"):
-                return world.getHeight(position);
+                return new ComputedVariable(this, variable, partialTicks -> world.getHeight(position), false);
             case ("posX"):
-                return position.x;
+                return new ComputedVariable(this, variable, partialTicks -> position.x, false);
             case ("posY"):
-                return position.y;
+                return new ComputedVariable(this, variable, partialTicks -> position.y, false);
             case ("posZ"):
-                return position.z;
+                return new ComputedVariable(this, variable, partialTicks -> position.z, false);
             case ("inliquid"):
-                return world.isBlockLiquid(position) ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.isBlockLiquid(position) ? 1 : 0, false);
             case ("player_interacting"):
-                return !playersInteracting.isEmpty() ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> !playersInteracting.isEmpty() ? 1 : 0, false);
             case ("player_crafteditem"):
-                return playerCraftedItem ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> playerCraftedItem ? 1 : 0, false);
             case ("config_simplethrottle"):
-                return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0, false);
             case ("config_innerwindows"):
-                return ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0;
-        }
-
-        //Check if this is a cycle variable.
-        if (variable.endsWith("_cycle")) {
-            String[] parsedVariable = variable.split("_");
-            int offTime = Integer.parseInt(parsedVariable[0]);
-            int onTime = Integer.parseInt(parsedVariable[1]);
-            int totalTime = offTime + onTime + Integer.parseInt(parsedVariable[2]);
-            long timeInCycle = ticksExisted % totalTime;
-            return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
-        }
-
-        //Check if this is a text_x_ispresent variable.
-        if (variable.startsWith("text_") && variable.endsWith("_present")) {
-            if (definition.rendering != null && definition.rendering.textObjects != null) {
-                int textIndex = Integer.parseInt(variable.substring("text_".length(), variable.length() - "_present".length())) - 1;
-                if (definition.rendering.textObjects.size() > textIndex) {
-                    return !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0, false);
+            default: {
+                if (variable.endsWith("_cycle")) {
+                    String[] parsedVariable = variable.split("_");
+                    final int offTime = Integer.parseInt(parsedVariable[0]);
+                    final int onTime = Integer.parseInt(parsedVariable[1]);
+                    final int totalTime = offTime + onTime + Integer.parseInt(parsedVariable[2]);
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        long timeInCycle = ticksExisted % totalTime;
+                        return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
+                    }, false);
+                } else if (variable.startsWith("text_") && variable.endsWith("_present")) {
+                    if (definition.rendering != null && definition.rendering.textObjects != null) {
+                        final int textIndex = Integer.parseInt(variable.substring("text_".length(), variable.length() - "_present".length())) - 1;
+                        if (definition.rendering.textObjects.size() > textIndex) {
+                            return new ComputedVariable(this, variable, partialTicks -> !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0, false);
+                        } else {
+                            return ZERO_VARIABLE;
+                        }
+                    } else {
+                        return ZERO_VARIABLE;
+                    }
+                } else if (variable.startsWith("blockmaterial_")) {
+                    final String materialName = variable.substring("blockmaterial_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        BlockMaterial material = world.getBlockMaterial(position);
+                        if (material != null) {
+                            return material.name().equals(materialName) ? 1 : 0;
+                        } else {
+                            return 0;
+                        }
+                    }, false);
+                } else if (variable.startsWith("terrain_blockmaterial_")) {
+                    final String materialName = variable.substring("terrain_blockmaterial_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        double height = world.getHeight(position) + 1;
+                        position.y -= height;
+                        BlockMaterial material = world.getBlockMaterial(position);
+                        position.y += height;
+                        if (material != null) {
+                            return material.name().equals(materialName) ? 1 : 0;
+                        } else {
+                            return 0;
+                        }
+                    }, false);
+                } else {
+                    //Either a hard-coded value, or one we are wrapping.  No logic required.
+                    return new ComputedVariable(this, variable);
                 }
             }
-            return 0;
         }
-
-        //Check if this is a blockmaterial_x variable.
-        if (variable.startsWith("blockmaterial_")) {
-            BlockMaterial material = world.getBlockMaterial(position);
-            if (material != null) {
-                return material.name().equals(variable.substring("blockmaterial_".length()).toUpperCase()) ? 1 : 0;
-            } else {
-                return 0;
-            }
-        } else if (variable.startsWith("terrain_blockmaterial_")) {
-            double height = world.getHeight(position) + 1;
-            position.y -= height;
-            BlockMaterial material = world.getBlockMaterial(position);
-            position.y += height;
-            if (material != null) {
-                return material.name().equals(variable.substring("terrain_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
-            } else {
-                return 0;
-            }
-        }
-
-        //Check if this is a generic variable.  This contains lights in most cases.
-        Double variableValue = variables.get(variable);
-        if (variableValue != null) {
-            return variableValue;
-        }
-
-        //Didn't find a variable.  Return NaN.
-        return Double.NaN;
-    }
-
-    /**
-     * Like {@link #getRawVariableValue(String, float)}, but returns 0 if not found
-     * rather than NaN.  This is designed for getting variable values without animations.
-     */
-    public final double getCleanRawVariableValue(String variable, float partialTicks) {
-        double value = getRawVariableValue(variable, partialTicks);
-        return Double.isNaN(value) ? 0 : value;
     }
 
     /**
@@ -952,16 +947,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
-        double value;
-        if (clock.animation.variable.startsWith("!")) {
-            value = getCleanRawVariableValue(clock.animation.variable.substring(1), partialTicks);
-            value = value == 0 ? 1 : 0;
-        } else {
-            value = getRawVariableValue(clock.animation.variable, partialTicks);
-            if (Double.isNaN(value)) {
-                value = 0;
-            }
-        }
+        double value = getVariable(clock.animation.variable).getValue(partialTicks);
         if (!clock.isUseful) {
             return clampAndScale(value, clock.animation, scaleFactor, offset);
         } else {
@@ -1003,77 +989,31 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check text values first, then animated values.
         String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
-            return String.format(textDef.variableFormat, getCleanRawVariableValue(textDef.variableName, 0) * textDef.variableFactor + textDef.variableOffset);
+            return String.format(textDef.variableFormat, getVariable(textDef.variableName).getValue(partialTicks) * textDef.variableFactor + textDef.variableOffset);
         } else {
             return String.format(textDef.variableFormat, value);
         }
     }
 
     /**
-     * Helper method to toggle a variable for this entity.
+     * Helper method to get a variable object for this entity.
      */
-    public void toggleVariable(String variable) {
-        //Try to remove the variable,this requires only one key-search operation, unlike a containsKey followed by a remove.
-        if (variables.remove(variable) == null) {
-            //No key was in this map prior, so this variable was off, set it on.
-            variables.put(variable, 1D);
-        }
+    public ComputedVariable getVariable(String variable) {
+        return computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+    }
+
+    /**
+     * Helper method to get a variable for this entity.
+     */
+    public final double getVariableValue(String variable) {
+        return computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable)).getValue(0);
     }
 
     /**
      * Helper method to set a variable for this entity.
      */
-    public void setVariable(String variable, double value) {
-        if (value == 0) {
-            //Remove variable from the map so we don't have as many to deal with.
-            variables.remove(variable);
-        } else {
-            variables.put(variable, value);
-        }
-    }
-
-    /**
-     * Helper method to increment a variable for this entity.
-     * This will adjust the value between the clamps.  Returns
-     * true if the value was changed.
-     */
-    public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue) {
-        double currentValue = getVariable(variable);
-        double newValue = currentValue + incrementValue;
-        if (minValue != 0 || maxValue != 0) {
-            if (newValue < minValue) {
-                newValue = minValue;
-            } else if (newValue > maxValue) {
-                newValue = maxValue;
-            }
-        }
-        if (newValue != currentValue) {
-            setVariable(variable, newValue);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Helper method to get get a variable for this entity.
-     */
-    public double getVariable(String variable) {
-        Double value = variables.get(variable);
-        if (value == null) {
-            //Don't add the variable to the map, just return 0 here.
-            return 0;
-        } else {
-            return value;
-        }
-    }
-
-    /**
-     * Helper method to check if a variable is non-zero.
-     * This is a bit quicker than getting the value due to auto-boxing off the map.
-     */
-    public boolean isVariableActive(String variable) {
-        return variables.containsKey(variable);
+    public final void setVariableValue(String variable, double value) {
+        computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable)).setTo(value, false);
     }
 
     /**
@@ -1108,20 +1048,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (List<String> variableList : list) {
                 boolean listIsTrue = false;
                 for (String variableName : variableList) {
-                    if (variableName.startsWith("!")) {
-                        double value = getCleanRawVariableValue(variableName.substring(1), 0);
-                        if (value == 0) {
-                            //Inverted variable value is 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
-                    } else {
-                        double value = getCleanRawVariableValue(variableName, 0);
-                        if (value > 0) {
-                            //Normal variable value is non-zero 0, therefore list is true.
-                            listIsTrue = true;
-                            break;
-                        }
+                    if (getVariable(variableName).isActive()) {
+                        listIsTrue = true;
+                        break;
                     }
                 }
                 if (!listIsTrue) {
@@ -1133,6 +1062,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         } //No lists found for this entry, therefore no variables are false.
 
         return true;
+    }
+
+    /**
+     * Helper method to reset all variables.  Used for state-changes.
+     */
+    public final void resetVariables() {
+        computedVariables.clear();
+    }
+
+    /**
+     * Special method to close all doors on this entity.
+     */
+    public final void closeDoors() {
+        computedVariables.forEach((variableKey, variableValue) -> {
+            if (variableKey.contains("door")) {
+                variableValue.setTo(0, true);
+            }
+        });
     }
 
     /**
@@ -1187,13 +1134,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     /**
      * Called to update the variable modifiers for this entity.
-     * By default, this will get any variables that {@link #getVariable(String)}
+     * By default, this will get any variables that {@link #getVariableValue(String)}
      * returns, but can be extended to do other variables specific to the entity.
      */
     public void updateVariableModifiers() {
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
-                setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
             }
         }
     }
@@ -1261,11 +1208,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 data.setString("textLine" + lineNumber++, textLine);
             }
         }
-        if (!variables.isEmpty()) {
-            data.setStrings("variables", variables.keySet());
-            for (String variableName : variables.keySet()) {
-                data.setDouble(variableName, variables.get(variableName));
-            }
+        List<String> savedNames = new ArrayList<>();
+        computedVariables.values().forEach(variable -> variable.saveToNBT(savedNames, data));
+        if (!savedNames.isEmpty()) {
+            data.setStrings("variables", savedNames);
         }
         return data;
     }

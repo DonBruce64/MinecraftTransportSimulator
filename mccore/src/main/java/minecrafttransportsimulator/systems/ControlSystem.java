@@ -385,7 +385,7 @@ public final class ControlSystem {
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 
         //Check to see if we request a different auto-level state.
-        boolean aircraftIsAutolevel = aircraft.getVariable(EntityVehicleF_Physics.AUTOLEVEL_VARIABLE) != 0;
+        boolean aircraftIsAutolevel = aircraft.getVariableValue(EntityVehicleF_Physics.AUTOLEVEL_VARIABLE) != 0;
         if (ConfigSystem.client.controlSettings.heliAutoLevel.value ^ aircraftIsAutolevel) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
         }

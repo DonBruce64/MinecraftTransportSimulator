@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.rendering;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
@@ -68,7 +68,7 @@ public final class RenderInstrument {
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
-                        int variablePartNumber = AEntityF_Multipart.getVariableNumber(component.textObject.variableName);
+                        int variablePartNumber = ComputedVariable.getVariableNumber(component.textObject.variableName);
                         final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
                         if (addSuffix) {
                             String oldName = component.textObject.variableName;
@@ -146,7 +146,7 @@ public final class RenderInstrument {
             //We also need to set the partNumber to 1 if we have a part number of 0 and we're
             //doing a part-specific animation.
             //Skip adding a suffix if one already exists.
-            int variablePartNumber = AEntityF_Multipart.getVariableNumber(clock.animation.variable);
+            int variablePartNumber = ComputedVariable.getVariableNumber(clock.animation.variable);
             final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
             if (partNumber == 0 && addSuffix) {
                 partNumber = 1;

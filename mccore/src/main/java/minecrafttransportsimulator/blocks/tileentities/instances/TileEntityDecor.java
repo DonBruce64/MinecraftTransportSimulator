@@ -13,8 +13,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 /**
  * Decor tile entity.  Contains the definition so we know how
@@ -57,8 +55,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         updateVariableModifiers();
 
         super.update();
-        //Reset clicked state and crafted item.
-        setVariable(CLICKED_VARIABLE, 0);
+        //Reset clicked state.
+        setVariableValue(CLICKED_VARIABLE, 0);
     }
 
     @Override
@@ -82,6 +80,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
+            } else {
+                getVariable(CLICKED_VARIABLE).setTo(1, true);
+                getVariable(ACTIVATED_VARIABLE).toggle(true);
             }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
@@ -91,10 +92,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            setVariable(CLICKED_VARIABLE, 1);
-            toggleVariable(ACTIVATED_VARIABLE);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
+            getVariable(CLICKED_VARIABLE).setTo(1, true);
+            getVariable(ACTIVATED_VARIABLE).toggle(true);
         }
         return true;
     }
@@ -121,7 +120,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                         lightLevel = adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
                         break;
                 }
             }

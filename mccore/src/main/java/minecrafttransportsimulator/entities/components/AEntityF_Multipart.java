@@ -17,6 +17,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -43,7 +44,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
@@ -111,7 +111,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
             //the value will be set before any subsequent logic occurs.
             if (definition.constantValues != null) {
-                variables.putAll(definition.constantValues);
+                definition.constantValues.forEach((constantKey, constantValue) -> setVariableValue(constantKey, constantValue));
             }
         }
 
@@ -163,10 +163,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             for (int i = 0; i < definition.parts.size(); ++i) {
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (partDef.transferVariable != null) {
-                    if (isVariableActive(partDef.transferVariable)) {
+                    ComputedVariable variable = getVariable(partDef.transferVariable);
+                    if (variable.isActive()) {
                         transferPart(partDef);
-                        toggleVariable(partDef.transferVariable);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, partDef.transferVariable));
+                        variable.toggle(true);
                     }
                 }
             }
@@ -329,7 +329,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean hitOperationalHitbox = false;
             if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.health != 0 && !damage.isWater) {
                 String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage";
-                double currentDamage = hitEntity.getVariable(variableName);
+                double currentDamage = hitEntity.getVariableValue(variableName);
                 if (bullet != null) {
                     bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitEntry.box.groupDef.health + "  ATTACKED FOR: " + damage.amount);
                 }
@@ -476,55 +476,44 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //If we have a variable with a suffix, we need to get that part first and pass
-        //it into this method rather than trying to run through the code now.
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            return getSpecificPartAnimation(variable, partNumber, partialTicks);
-        } else {
-            return super.getRawVariableValue(variable, partialTicks);
-        }
-    }
-
-    @Override
-    public void toggleVariable(String variable) {
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            APart foundPart = getSpecificPart(variable, partNumber);
-            if (foundPart != null) {
-                variable = variable.substring(0, variable.lastIndexOf("_"));
-                foundPart.toggleVariable(variable);
+    public ComputedVariable createComputedVariable(String variable) {
+        if (ComputedVariable.isNumberedVariable(variable)) {
+            //Iterate through our parts to find the index of the pack def for the part we want.
+            String partType = variable.substring(0, variable.indexOf("_"));
+            int partNumber = ComputedVariable.getVariableNumber(variable);
+            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
+            if (partType.equals("part")) {
+                //Shortcut as we can just get the part for the slot.
+                //Check index just in case someone screwed up a JSON.
+                APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
+                if (partFound != null) {
+                    return partFound.createComputedVariable(partVariable);
+                }
+            } else if (definition.parts != null) {
+                for (int i = 0; i < definition.parts.size(); ++i) {
+                    JSONPartDefinition partDef = definition.parts.get(i);
+                    for (String partDefType : partDef.types) {
+                        if (partDefType.startsWith(partType)) {
+                            if (partNumber == 0) {
+                                APart partFound = partsInSlots.get(i);
+                                if (partFound != null) {
+                                    return partFound.createComputedVariable(partVariable);
+                                } else {
+                                    return ZERO_VARIABLE;
+                                }
+                            } else {
+                                --partNumber;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-        } else {
-            super.toggleVariable(variable);
-        }
-    }
 
-    @Override
-    public void setVariable(String variable, double value) {
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            APart foundPart = getSpecificPart(variable, partNumber);
-            if (foundPart != null) {
-                foundPart.setVariable(variable.substring(0, variable.lastIndexOf("_")), value);
-            }
+            //Couldn't find the part, set to 0.
+            return ZERO_VARIABLE;
         } else {
-            super.setVariable(variable, value);
-        }
-    }
-
-    /**
-     * Helper method to get the index of the passed-in variable.  Indexes are defined by
-     * variable names ending in _xx, where xx is a number.  The defined number is assumed
-     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
-     * define a number, then -1 is returned.
-     */
-    public static int getVariableNumber(String variable) {
-        if (variable.matches("^.*_\\d+$")) {
-            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
-        } else {
-            return -1;
+            return super.createComputedVariable(variable);
         }
     }
 
@@ -558,13 +547,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
                         e.printStackTrace();
                     }
+                    //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
+                    //the value will be set before spawning in any conditional parts.
+                    if (definition.constantValues != null) {
+                        definition.constantValues.forEach((constantKey, constantValue) -> setVariableValue(constantKey, constantValue));
+                    }
                 } else {
                     //Add default parts.  We need to do this after we actually create this part so its slots are valid.
                     //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                     JSONPartDefinition partDef = definition.parts.get(i);
                     if (partDef.conditionalDefaultParts != null) {
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
-                            if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
+                            if (getVariable(conditionalDef.getKey()).isActive()) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
                                 break;
                             }
@@ -682,7 +676,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * At the time of call, the part that was added will already be added, and the part
      * that was removed will already be removed.
      */
-    protected void updateAllpartList() {
+    protected final void updateAllpartList() {
         allParts.clear();
         parts.forEach(part -> {
             part.updateAllpartList();
@@ -702,6 +696,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         cameraEntities.clear();
 
         parts.forEach(APart::updatePartList);
+        //Clear computed variables, since our parts changed.
+        resetVariables();
     }
 
     /**
@@ -884,50 +880,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
         }
         encompassingBox.updateToEntity(this, null);
-    }
-
-    /**
-     * Helper method to return the part at the specific index for the passed-in variable.
-     * Returns null if the part doesn't exist.
-     */
-    public APart getSpecificPart(String variable, int partNumber) {
-        //Iterate through our parts to find the index of the pack def for the part we want.
-        String partType = variable.substring(0, variable.indexOf("_"));
-        if (partType.equals("part")) {
-            //Shortcut as we can just get the part for the slot.
-            //Check index just in case someone screwed up a JSON.
-            return partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
-        } else if (definition.parts != null) {
-            for (int i = 0; i < definition.parts.size(); ++i) {
-                JSONPartDefinition partDef = definition.parts.get(i);
-                for (String defPartType : partDef.types) {
-                    if (defPartType.startsWith(partType)) {
-                        if (partNumber == 0) {
-                            return partsInSlots.get(i);
-                        } else {
-                            --partNumber;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        //No valid sub-part definitions found.  This is an error, but not one we should crash for.  Return null.
-        return null;
-    }
-
-    /**
-     * Helper method to return the value of an animation for a specific part, as
-     * determined by the index of that part.
-     */
-    public double getSpecificPartAnimation(String variable, int partNumber, float partialTicks) {
-        APart foundPart = getSpecificPart(variable, partNumber);
-        if (foundPart != null) {
-            return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-        } else {
-            return 0;
-        }
     }
 
     @Override

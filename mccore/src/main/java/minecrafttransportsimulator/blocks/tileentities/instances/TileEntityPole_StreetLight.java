@@ -46,7 +46,7 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
                         lightLevel = adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
                         break;
                 }
             }
