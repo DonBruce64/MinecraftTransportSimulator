@@ -53,6 +53,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean skidSteerActive;
     public boolean lockedOnRoad;
     private boolean updateGroundDevicesRequest;
+    private int lastBlockCollisionBoxesCount;
     public double groundVelocity;
     public double weightTransfer = 0;
     public final RotationMatrix rotation = new RotationMatrix();
@@ -202,11 +203,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     protected void updateEncompassingBox() {
         super.updateEncompassingBox();
-        if (ticksExisted == 1 || updateGroundDevicesRequest) {
+        if (ticksExisted == 1 || updateGroundDevicesRequest || lastBlockCollisionBoxesCount != allBlockCollisionBoxes.size()) {
             groundDeviceCollective.updateMembers();
             groundDeviceCollective.updateBounds();
             groundDeviceCollective.updateCollisions(true);
             updateGroundDevicesRequest = false;
+            //Bit of a hack here to know if someone disables a block collision box, which might be a water box.
+            //Really, we should just do a state-change check since we could enable/disable these at the same time
+            //which would still skip this check.
+            lastBlockCollisionBoxesCount = allBlockCollisionBoxes.size();
         }
     }
 
