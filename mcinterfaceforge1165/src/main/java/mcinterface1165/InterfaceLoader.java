@@ -232,9 +232,6 @@ public class InterfaceLoader {
             //Init keybinds if we're on the client.
             InterfaceManager.inputInterface.initConfigKey();
 
-            //Also put all liquids into the config file for use by modpack makers.
-            ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
-
             //Save modified config.
             ConfigSystem.saveToDisk();
         }
@@ -244,6 +241,12 @@ public class InterfaceLoader {
         //Populate language system, since we now know we have a language class.
         if (FMLEnvironment.dist.isClient()) {
             LanguageSystem.populateNames();
+
+            //Put all liquids into the config file for use by modpack makers.
+            ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
+
+            //Save modified config.
+            ConfigSystem.saveToDisk();
         }
     }
 }

@@ -83,7 +83,7 @@ public class InterfaceClient implements IInterfaceClient {
     public Map<String, String> getAllFluidNames() {
         Map<String, String> fluidIDsToNames = new HashMap<>();
         for (Fluid fluid : ForgeRegistries.FLUIDS.getValues()) {
-            fluidIDsToNames.put(fluid.getRegistryName().getPath(), new FluidStack(fluid, 1).getDisplayName().toString());
+            fluidIDsToNames.put(fluid.getRegistryName().getPath(), new FluidStack(fluid, 1).getDisplayName().getString());
         }
         return fluidIDsToNames;
     }
