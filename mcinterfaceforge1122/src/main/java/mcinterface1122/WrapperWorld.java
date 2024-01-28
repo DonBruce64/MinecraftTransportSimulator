@@ -370,6 +370,13 @@ public class WrapperWorld extends AWrapperWorld {
         return hardness;
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
+    public float getBlockBlastResistance(Point3D position) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        return world.getBlockState(pos).getBlock().getExplosionResistance(null);
+    }
+
     @Override
     public float getBlockSlipperiness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
