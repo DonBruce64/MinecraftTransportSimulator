@@ -538,6 +538,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
             if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+                elevatorTorque = -orientation.angles.x * 2;
+                aileronTorque = -orientation.angles.z * 2;
             }
             if (!definition.motorized.isAircraft) {
                 gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
