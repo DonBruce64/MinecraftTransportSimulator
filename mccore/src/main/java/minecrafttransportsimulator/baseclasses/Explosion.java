@@ -2,6 +2,7 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -31,7 +32,7 @@ public class Explosion {
     //base explosion params
     private final Point3D position;
     //how strong of blocks it can break
-    private final double strength;
+    private double strength;
     //how much health it deals at the source
     private final double damage;
     //Out to this radius from boom, full damage is dealt. damage decays after.
@@ -76,10 +77,10 @@ public class Explosion {
         //FIXME make properties.
         this.isFlammable = bullet.bullet.types.contains(BulletType.INCENDIARY);
         this.bullet = bullet;
-        damageDecayStartRadius = bullet.bullet.maxDamageRadius;
-        damageDecayEndRadius = bullet.bullet.blastRadius;
-        strengthDecayStartRadius = bullet.bullet.maxStrengthRadius;
-        strengthDecayEndRadius = bullet.bullet.blastStrengthRadius;
+        damageDecayStartRadius = bullet.bullet.blastDamageRadiusDecay;
+        damageDecayEndRadius = bullet.bullet.blastDamageRadiusMax;
+        strengthDecayStartRadius = bullet.bullet.blaskStrengthRadiusDecay;
+        strengthDecayEndRadius = bullet.bullet.blastStrengthRadiusMax;
         language = JSONConfigLanguage.DEATH_EXPLOSION_PLAYER;
         this.entityResponsible = entityResponsible;
     }
@@ -132,31 +133,26 @@ public class Explosion {
 
     //actually break blocks
     public void breakBlocks() {
-        //These variables should already be present somewhere, might be named differently.
+        //TODO These variables should already be present somewhere, might be named differently.
         Point3D tempPosition = new Point3D();
-        //Note that casting the double to an int rounds things, so it won't be exact.
+
+        //TODO consoildate this.  We don't need these variables, they're only here for clarity for you.
+        double blastReductionBreakFactor = 0.3F;
+        double blastReductionSolidFactor = 0.5F;
+
+        //Generate a list of points that are valid explosion points.  This only checks if the block isn't air and is close enough to hit.
         for (int x = (int) (position.x - strengthDecayEndRadius); x < position.x + strengthDecayEndRadius; ++x) {
             for (int y = (int) (position.y - strengthDecayEndRadius); y < position.y + strengthDecayEndRadius; ++y) {
                 for (int z = (int) (position.z - strengthDecayEndRadius); z < position.z + strengthDecayEndRadius; ++z) {
                     tempPosition.set(x,y,z);
-                    //get strength of blast at pos
-                    double factor = 0;
-                    if (tempPosition.isDistanceToCloserThan(position, strengthDecayEndRadius)) {
-                        if (tempPosition.isDistanceToCloserThan(position, strengthDecayStartRadius)) {
-                            factor = strength;
-                        } else {
-                            factor = strength * Math.pow(0.5, 3 * (tempPosition.distanceTo(position) - strengthDecayStartRadius) / (strengthDecayEndRadius - strengthDecayStartRadius));
-                        }
-                    }
-                    if (!world.isAir(tempPosition) && factor >= world.getBlockHardness(tempPosition)) {
-                        //We will break this block, save it for later.  Need to copy the point since we'll modify it next loop cycle.
+                    if (!world.isAir(tempPosition)) {
                         positionsWithBlocksToBreak.add(tempPosition.copy());
                     }
                 }
             }
         }
 
-        //Add us to the active explosion list to be ticked.
+        //Sort points by distance for later checks.
         if (!positionsWithBlocksToBreak.isEmpty()) {
             positionsWithBlocksToBreak.sort(new Comparator<Point3D>() {
                 @Override
@@ -172,6 +168,32 @@ public class Explosion {
                     }
                 }
             });
+
+            //Now that we have all positions, do checks.  This way we do outward checking VS box-cube checking.
+            Iterator<Point3D> iterator = positionsWithBlocksToBreak.iterator();
+            while (iterator.hasNext()) {
+                Point3D blockPosition = iterator.next();
+                double factor = 0;
+                if (blockPosition.isDistanceToCloserThan(position, strengthDecayEndRadius)) {
+                    if (blockPosition.isDistanceToCloserThan(position, strengthDecayStartRadius)) {
+                        factor = strength;
+                    } else {
+                        factor = strength * Math.pow(0.5, 3 * (blockPosition.distanceTo(position) - strengthDecayStartRadius) / (strengthDecayEndRadius - strengthDecayStartRadius));
+                    }
+                }
+                double blastResistance = world.getBlockBlastResistance(blockPosition);
+                if (factor >= blastResistance) {
+                    strength -= factor * blastReductionBreakFactor;
+                } else {
+                    //Can't break this block.
+                    strength -= factor * blastReductionSolidFactor;
+                    iterator.remove();
+                }
+            }
+        }
+
+        //If we still have blocks, set us to be ticked.
+        if (!positionsWithBlocksToBreak.isEmpty()) {
             activeExplosions.add(this);
         }
     }

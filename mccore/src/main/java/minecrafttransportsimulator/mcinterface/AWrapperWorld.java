@@ -161,6 +161,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract float getBlockHardness(Point3D position);
 
     /**
+     * Returns the blast resistance of the block at the passed-in point.
+     */
+    public abstract float getBlockBlastResistance(Point3D position);
+
+    /**
      * Returns the slipperiness of the block at the passed-in position.
      * 0.6 is default slipperiness for blocks. higher values are more slippery.
      */

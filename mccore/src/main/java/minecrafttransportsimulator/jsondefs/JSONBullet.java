@@ -51,41 +51,20 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Base Damage dealt at the source of the explosion if this bullet is explosive.")
         public float blastDamage;
 
-        @JSONDescription("Base Damage dealt at the source of the explosion to any vehicle. Overrides 'blastDamage'")
-        public float blastDamageVsVehicles;
-
-        @JSONDescription("Base Damage dealt at the source of the explosion to any aircraft. Overrides 'blastDamage'")
-        public float blastDamageVsAircraft;
-
-        @JSONDescription("Base Damage dealt at the source of the explosion to any ground vehicle. Overrides 'blastDamage'")
-        public float blastDamageVsGround;
-
-        @JSONDescription("Base Damage dealt at the source of the explosion to any living entity. Overrides 'blastDamage'")
-        public float blastDamageVsLiving;
-
         @JSONDescription("The max radius, in blocks, that damage can be dealt.")
-        public float blastRadius;
+        public float blastDamageRadiusMax;
 
         @JSONDescription("Inside this radius from the explosion, full damage is dealt. Damage begins decaying here.")
-        public float maxDamageRadius;
+        public float blastDamageRadiusDecay;
 
-        @JSONDescription("Only effects explosive bullets. Something something base block breaking damage thing.")
+        @JSONDescription("The max strength of this blast.  Blocks with a blast resistance lower than this will be broken.")
         public float blastStrength;
 
         @JSONDescription("Max distance, in blocks, that block damage can be dealt.")
-        public float blastStrengthRadius;
+        public float blastStrengthRadiusMax;
 
-        @JSONDescription("Only effects explosive bullets. Something something base block breaking damage thing.")
-        public float maxStrengthRadius;
-
-        @JSONDescription("Amount of armor this blast can cause damage through.")
-        public float blastArmorPenetration;
-
-        @JSONDescription("Max distance, in blocks, armor can be penetrated.")
-        public float blastPenetrationRadius;
-
-        @JSONDescription("Inside this radius, base penetration is dealt.")
-        public float blastMaxPenetrationRadius;
+        @JSONDescription("Inside this radius from the explosion, full damage is dealt. Damage begins decaying here.")
+        public float blaskStrengthRadiusDecay;
 
         @JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
         public float armorPenetration;
