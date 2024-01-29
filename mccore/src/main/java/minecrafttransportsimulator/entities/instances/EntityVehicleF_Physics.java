@@ -546,6 +546,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Add all forces to the main force matrix and apply them.
+            if (ConfigSystem.settings.general.maxFlightHeight.value > 0 && position.y > ConfigSystem.settings.general.maxFlightHeight.value) {
+                wingForce = 0;
+                thrustForce.y = 0;
+            }
             totalForce.set(0D, wingForce - elevatorForce, 0D).rotate(orientation);
             totalForce.add(thrustForce);
             totalForce.addScaled(normalizedVelocityVector, -dragForce);
