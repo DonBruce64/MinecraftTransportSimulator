@@ -571,7 +571,7 @@ public class PartEngine extends APart {
                     //If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
                     //This means the wheel is spinning in the air and can't provide force or feedback.
                     if (vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)) {
-                        wheelFriction += Math.max(wheel.getMotiveFriction() - wheel.getFrictionLoss(), 0);
+                        wheelFriction += wheel.currentMotiveFriction;
                         lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
                         desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
                     }

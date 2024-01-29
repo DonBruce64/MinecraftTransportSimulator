@@ -396,10 +396,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //This is both grounded ground devices, and liquid collision boxes that are set as such.
         if (brakingPower > 0) {
             for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-                float groundDevicePower = groundDevice.getMotiveFriction();
-                if (groundDevicePower != 0) {
-                    brakingFactor += Math.max(groundDevicePower - groundDevice.getFrictionLoss(), 0);
-                }
+                brakingFactor += groundDevice.currentMotiveFriction;
             }
             if (brakingPower > 0) {
                 brakingFactor += 0.15D * brakingPower * groundDeviceCollective.getNumberBoxesInLiquid();
@@ -418,7 +415,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         float skiddingFactor = 0;
         //First check grounded ground devices.
         for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-            skiddingFactor += Math.max(groundDevice.getLateralFriction() - groundDevice.getFrictionLoss(), 0);
+            skiddingFactor += groundDevice.currentLateralFriction;
         }
 
         //Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
