@@ -423,12 +423,12 @@ public final class ControlSystem {
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
                     //Otherwise send normal values if we are in neutral or forwards,
-                    //and invert controls if we are in a reverse gear.
+                    //and invert controls if we are in a reverse gear (and not using a shifter).
                     //Use only the first engine for this.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
-                    } else if (powered.engines.get(0).currentGear >= 0) {
+                    } else if (powered.engines.get(0).currentGear >= 0 || ConfigSystem.client.controlSettings.useShifter.value) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
                         //Send throttle over if throttle if cruise control is off, or if the throttle is pressed, or was released this check.
                         if (powered.autopilotSetting == 0 || throttleValue > 0 || throttlePressedLastCheck) {
@@ -440,16 +440,18 @@ public final class ControlSystem {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
                     }
 
-                    powered.engines.forEach(engine -> {
-                        //If we don't have velocity, and we have the appropriate control, shift.
-                        if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.DOWN_SHIFT_VARIABLE, 1));
-                        } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.UP_SHIFT_VARIABLE, 1));
-                        }
-                    });
+                    if (!ConfigSystem.client.controlSettings.useShifter.value) {
+                        powered.engines.forEach(engine -> {
+                            //If we don't have velocity, and we have the appropriate control, shift.
+                            if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.DOWN_SHIFT_VARIABLE, 1));
+                            } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.UP_SHIFT_VARIABLE, 1));
+                            }
+                        });
+                    }
                 }
             } else {
                 //Check brake and gas and set to on or off.
@@ -492,36 +494,66 @@ public final class ControlSystem {
         }
 
         //Check if we are shifting.
-        if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
+        if (ConfigSystem.client.controlSettings.useShifter.value) {
+            final int gearNumber;
+            if (ControlsJoystick.CAR_SHIFT_1.isPressed()) {
+                gearNumber = 1;
+            } else if (ControlsJoystick.CAR_SHIFT_2.isPressed()) {
+                gearNumber = 2;
+            } else if (ControlsJoystick.CAR_SHIFT_3.isPressed()) {
+                gearNumber = 3;
+            } else if (ControlsJoystick.CAR_SHIFT_4.isPressed()) {
+                gearNumber = 4;
+            } else if (ControlsJoystick.CAR_SHIFT_5.isPressed()) {
+                gearNumber = 5;
+            } else if (ControlsJoystick.CAR_SHIFT_6.isPressed()) {
+                gearNumber = 6;
+            } else if (ControlsJoystick.CAR_SHIFT_7.isPressed()) {
+                gearNumber = 7;
+            } else if (ControlsJoystick.CAR_SHIFT_8.isPressed()) {
+                gearNumber = 8;
+            } else if (ControlsJoystick.CAR_SHIFT_9.isPressed()) {
+                gearNumber = 9;
+            } else if (ControlsJoystick.CAR_SHIFT_R.isPressed()) {
+                gearNumber = 10;
+            } else {
+                gearNumber = 11;
+            }
             powered.engines.forEach(engine -> {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.GEAR_SHIFT_VARIABLE, gearNumber));
             });
         } else {
-            if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
+            if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
                 powered.engines.forEach(engine -> {
-                    if (engine.currentIsAutomatic != 0) {
-                        if (engine.currentGear < 0) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                        } else if (engine.currentGear == 0) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                });
+            } else {
+                if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
+                    powered.engines.forEach(engine -> {
+                        if (engine.currentIsAutomatic != 0) {
+                            if (engine.currentGear < 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else if (engine.currentGear == 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+                            }
+                        } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
                         }
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
-                    }
-                });
-            }
-            if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
-                powered.engines.forEach(engine -> {
-                    if (engine.currentIsAutomatic != 0) {
-                        if (engine.currentGear > 0) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                        } else if (engine.currentGear == 0) {
+                    });
+                }
+                if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
+                    powered.engines.forEach(engine -> {
+                        if (engine.currentIsAutomatic != 0) {
+                            if (engine.currentGear > 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else if (engine.currentGear == 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+                            }
+                        } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
                         }
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
-                    }
-                });
+                    });
+                }
             }
         }
 
@@ -717,6 +749,16 @@ public final class ControlSystem {
         CAR_PANEL(false, true, LanguageSystem.INPUT_PANEL),
         CAR_SHIFT_U(false, true, LanguageSystem.INPUT_SHIFT_U),
         CAR_SHIFT_D(false, true, LanguageSystem.INPUT_SHIFT_D),
+        CAR_SHIFT_1(false, false, LanguageSystem.INPUT_SHIFT_1),
+        CAR_SHIFT_2(false, false, LanguageSystem.INPUT_SHIFT_2),
+        CAR_SHIFT_3(false, false, LanguageSystem.INPUT_SHIFT_3),
+        CAR_SHIFT_4(false, false, LanguageSystem.INPUT_SHIFT_4),
+        CAR_SHIFT_5(false, false, LanguageSystem.INPUT_SHIFT_5),
+        CAR_SHIFT_6(false, false, LanguageSystem.INPUT_SHIFT_6),
+        CAR_SHIFT_7(false, false, LanguageSystem.INPUT_SHIFT_7),
+        CAR_SHIFT_8(false, false, LanguageSystem.INPUT_SHIFT_8),
+        CAR_SHIFT_9(false, false, LanguageSystem.INPUT_SHIFT_9),
+        CAR_SHIFT_R(false, false, LanguageSystem.INPUT_SHIFT_R),
         CAR_HORN(false, false, LanguageSystem.INPUT_HORN),
         CAR_PARK(false, true, LanguageSystem.INPUT_PARK),
         CAR_RADIO(false, true, LanguageSystem.INPUT_RADIO),

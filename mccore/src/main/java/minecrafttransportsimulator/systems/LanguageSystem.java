@@ -501,6 +501,16 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_SHIFT_U = new LanguageEntry("input.shift_u", "ShiftUp");
     public static final LanguageEntry INPUT_SHIFT_D = new LanguageEntry("input.shift_d", "ShiftDown");
     public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");
+    public static final LanguageEntry INPUT_SHIFT_1 = new LanguageEntry("input.shift_1", "Gear1");
+    public static final LanguageEntry INPUT_SHIFT_2 = new LanguageEntry("input.shift_2", "Gear2");
+    public static final LanguageEntry INPUT_SHIFT_3 = new LanguageEntry("input.shift_3", "Gear3");
+    public static final LanguageEntry INPUT_SHIFT_4 = new LanguageEntry("input.shift_4", "Gear4");
+    public static final LanguageEntry INPUT_SHIFT_5 = new LanguageEntry("input.shift_5", "Gear5");
+    public static final LanguageEntry INPUT_SHIFT_6 = new LanguageEntry("input.shift_6", "Gear6");
+    public static final LanguageEntry INPUT_SHIFT_7 = new LanguageEntry("input.shift_6", "Gear7");
+    public static final LanguageEntry INPUT_SHIFT_8 = new LanguageEntry("input.shift_6", "Gear8");
+    public static final LanguageEntry INPUT_SHIFT_9 = new LanguageEntry("input.shift_6", "Gear9");
+    public static final LanguageEntry INPUT_SHIFT_R = new LanguageEntry("input.shift_r", "GearR");
     public static final LanguageEntry INPUT_HORN = new LanguageEntry("input.horn", "Horn");
     public static final LanguageEntry INPUT_SLOW = new LanguageEntry("input.slow", "Slow");
     public static final LanguageEntry INPUT_LIGHTS = new LanguageEntry("input.lights", "Lights");

@@ -75,7 +75,12 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentButton clearAssignmentButton;
 
     //Joystick digital assignment variables.
-    private final Map<String, Map<GUIComponentButton, ControlsJoystick>> digitalAssignButtons = new HashMap<>();
+    private final Map<String, List<Map<GUIComponentButton, ControlsJoystick>>> digitalAssignButtons = new HashMap<>();
+    private int digitalAssignmentGroupIndex;
+    private int digitalAssignmentGroupIndexMax;
+    private GUIComponentButton assignmentListUpButton;
+    private GUIComponentButton assignmentListDownButton;
+    private static final int DIGITAL_ASSIGN_MAX_ROWS = 6;
 
     //Joystick analog assignment variables.
     private final Map<String, Map<GUIComponentButton, ControlsJoystick>> analogAssignButtons = new HashMap<>();
@@ -183,6 +188,7 @@ public class GUIConfig extends AGUIBase {
                 public void onClicked(boolean leftSide) {
                     String lookupString = vehicleSelectionButtons.get(this);
                     vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
+                    digitalAssignmentGroupIndexMax = digitalAssignButtons.get(vehicleConfiguring).size() - 1;
                     configuringKeyboard = false;
                 }
             };
@@ -321,6 +327,18 @@ public class GUIConfig extends AGUIBase {
 
         //Joystick assignment buttons and text.
         //Global buttons and labels for digital and analog.
+        addComponent(assignmentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, 20, "/\\") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                --digitalAssignmentGroupIndex;
+            }
+        });
+        addComponent(assignmentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, 20, "\\/") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ++digitalAssignmentGroupIndex;
+            }
+        });
         addComponent(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, 20, LanguageSystem.GUI_CONFIG_JOYSTICK_CANCEL.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
@@ -347,24 +365,32 @@ public class GUIConfig extends AGUIBase {
         digitalAssignButtons.clear();
         analogAssignButtons.clear();
         for (String vehicleType : vehicleTypes) {
-            short leftOffsetDigital = 0;
             short topOffsetDigital = 0;
             short topOffsetAnalog = 0;
             Map<GUIComponentButton, ControlsJoystick> digitalControlButtons = new HashMap<>();
             Map<GUIComponentButton, ControlsJoystick> analogControlButtons = new HashMap<>();
+            digitalAssignButtons.put(vehicleType, new ArrayList<>());
             for (ControlsJoystick joystickControl : ControlsJoystick.values()) {
                 if (joystickControl.systemName.startsWith(vehicleType)) {
                     if (!joystickControl.isAxis) {
-                        GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, 15, joystickControl.language.getCurrentValue()) {
+                        GUIComponentButton button = new GUIComponentButton(guiLeft + 65, guiTop + 30 + topOffsetDigital, 120, 20, joystickControl.language.getCurrentValue()) {
                             @Override
                             public void onClicked(boolean leftSide) {
-                                digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystickName, joystickComponentId);
+                                digitalAssignButtons.get(vehicleConfiguring).get(digitalAssignmentGroupIndex).get(this).setControl(selectedJoystickName, joystickComponentId);
                                 joystickComponentId = -1;
                             }
                         };
                         digitalControlButtons.put(button, joystickControl);
+                        if (digitalControlButtons.size() == DIGITAL_ASSIGN_MAX_ROWS) {
+                            Map<GUIComponentButton, ControlsJoystick> copiedMap = new HashMap<>();
+                            copiedMap.putAll(digitalControlButtons);
+                            digitalAssignButtons.get(vehicleType).add(copiedMap);
+                            digitalControlButtons.clear();
+                            topOffsetDigital = 0;
+                        } else {
+                            topOffsetDigital += button.height;
+                        }
                         addComponent(button);
-                        topOffsetDigital += button.height;
                     } else {
                         GUIComponentButton button = new GUIComponentButton(guiLeft + 85, guiTop + 40 + topOffsetAnalog, 80, 20, joystickControl.language.getCurrentValue()) {
                             @Override
@@ -380,12 +406,8 @@ public class GUIConfig extends AGUIBase {
                         topOffsetAnalog += button.height;
                     }
                 }
-                if (topOffsetDigital >= 135) {
-                    topOffsetDigital = 0;
-                    leftOffsetDigital += 80;
-                }
             }
-            digitalAssignButtons.put(vehicleType, digitalControlButtons);
+            digitalAssignButtons.get(vehicleType).add(digitalControlButtons);
             analogAssignButtons.put(vehicleType, analogControlButtons);
         }
 
@@ -556,15 +578,23 @@ public class GUIConfig extends AGUIBase {
 
         //If we have selected a component, render the assignment buttons.
         //These are global, so they are always visible.
-        cancelAssignmentButton.visible = joystickComponentId != -1;
-        cancelAssignmentButton.enabled = cancelAssignmentButton.visible;
-        clearAssignmentButton.visible = cancelAssignmentButton.visible && !calibrating;
-        clearAssignmentButton.enabled = cancelAssignmentButton.visible && !calibrating;
+        assignmentListUpButton.visible = joystickComponentId != -1;
+        assignmentListUpButton.enabled = digitalAssignmentGroupIndex > 0;
+        assignmentListDownButton.visible = assignmentListUpButton.visible;
+        assignmentListDownButton.enabled = digitalAssignmentGroupIndex < digitalAssignmentGroupIndexMax;
+        cancelAssignmentButton.visible = assignmentListUpButton.visible;
+        cancelAssignmentButton.enabled = assignmentListUpButton.visible;
+        clearAssignmentButton.visible = assignmentListUpButton.visible && !calibrating;
+        clearAssignmentButton.enabled = assignmentListUpButton.visible && !calibrating;
 
         //Set states of digital buttons.
         for (String vehicleType : digitalAssignButtons.keySet()) {
-            for (GUIComponentButton button : digitalAssignButtons.get(vehicleType).keySet()) {
-                button.visible = joystickComponentId != -1 && vehicleConfiguring.equals(vehicleType) && assigningDigital;
+            int buttonSectionIndex = 0;
+            for (Map<GUIComponentButton, ControlsJoystick> buttonSection : digitalAssignButtons.get(vehicleType)) {
+                for (GUIComponentButton button : buttonSection.keySet()) {
+                    button.visible = joystickComponentId != -1 && vehicleConfiguring.equals(vehicleType) && assigningDigital && digitalAssignmentGroupIndex == buttonSectionIndex;
+                }
+                ++buttonSectionIndex;
             }
         }
 

@@ -122,6 +122,7 @@ public class PartEngine extends APart {
     public static final String UP_SHIFT_VARIABLE = "engine_shift_up";
     public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
     public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
+    public static final String GEAR_SHIFT_VARIABLE = "engine_shift_request";
     public static final String GEAR_VARIABLE = "engine_gear";
     public static final String HOURS_VARIABLE = "hours";
     public static final float COLD_TEMP = 30F;
@@ -341,6 +342,18 @@ public class PartEngine extends APart {
                 } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
                     toggleVariable(DOWN_SHIFT_VARIABLE);
                     shiftDown();
+                } else if (isVariableActive(GEAR_SHIFT_VARIABLE)) {
+                    double shiftValue = getVariable(GEAR_SHIFT_VARIABLE);
+                    if (shiftValue < 10) {
+                        while (currentGear < shiftValue && shiftUp())
+                            ;
+                    } else if (shiftValue == 10) {
+                        if (currentGear == 0) {
+                            shiftDown();
+                        }
+                    } else if (shiftValue == 11) {
+                        shiftNeutral();
+                    }
                 }
             }
 
@@ -1097,7 +1110,7 @@ public class PartEngine extends APart {
             } else if (currentGear == 0) {
                 //Neutral to 1st.
                 nextGear = 1;
-                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse || currentForceShift != 0;
+                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse || currentForceShift != 0;
             } else {//Gear to next gear.
                 nextGear = (byte) (currentGear + 1);
                 doShift = true;
@@ -1111,7 +1124,7 @@ public class PartEngine extends APart {
                 if (!world.isClient()) {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP));
                 }
-            } else if (!world.isClient()) {
+            } else {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
             }
         }
@@ -1129,7 +1142,7 @@ public class PartEngine extends APart {
             } else if (currentGear == 0) {
                 //Neutral to 1st reverse.
                 nextGear = -1;
-                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse || currentForceShift != 0;
+                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse || currentForceShift != 0;
             } else {//Gear to next gear.
                 nextGear = (byte) (currentGear - 1);
                 doShift = true;
@@ -1143,7 +1156,7 @@ public class PartEngine extends APart {
                 if (!world.isClient()) {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DOWN));
                 }
-            } else if (!world.isClient()) {
+            } else {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
             }
         }
