@@ -235,7 +235,7 @@ public class InterfaceClient implements IInterfaceClient {
      * not being called on clients.
      */
     @SubscribeEvent
-    public static void on(TickEvent.ClientTickEvent event) {
+    public static void onIVClientTick(TickEvent.ClientTickEvent event) {
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();

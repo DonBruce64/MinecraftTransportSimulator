@@ -298,7 +298,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Stores mouse presses, since stupid mods take them from us.
      */
     @SubscribeEvent
-    public static void on(MouseEvent event) {
+    public static void onIVMouseInput(MouseEvent event) {
         int button = event.getButton();
         if (button == 0) {
             leftMouseButtonDown = event.isButtonstate();
@@ -312,7 +312,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
-    public static void on(InputEvent.KeyInputEvent event) {
+    public static void onIVKeyInput(InputEvent.KeyInputEvent event) {
         //Check if we switched joystick modes.
         if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
             runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;

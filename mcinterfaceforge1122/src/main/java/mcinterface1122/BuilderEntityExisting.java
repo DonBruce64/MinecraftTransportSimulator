@@ -257,7 +257,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      * in {@link #attackEntityFrom(DamageSource, float)} to tell the system which part to attack.
      */
     @SubscribeEvent
-    public static void on(ExplosionEvent.Detonate event) {
+    public static void onIVExplosion(ExplosionEvent.Detonate event) {
         if (!event.getWorld().isRemote) {
             lastExplosionPosition = new Point3D(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
         }

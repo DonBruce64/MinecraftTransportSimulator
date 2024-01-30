@@ -945,7 +945,7 @@ public class WrapperWorld extends AWrapperWorld {
      * This handles players leaving.  We could use events for this, but they're not reliable.
      */
     @SubscribeEvent
-    public void on(TickEvent.WorldTickEvent event) {
+    public void onIVWorldTick(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isRemote && event.world.equals(world)) {
@@ -1011,7 +1011,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Also remove this wrapper from the created lists, as it's invalid.
      */
     @SubscribeEvent
-    public void on(WorldEvent.Unload event) {
+    public void onIVWorldUnload(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.
         if (event.getWorld() == world) {
             for (AEntityA_Base entity : allEntities) {

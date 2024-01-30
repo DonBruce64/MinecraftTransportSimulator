@@ -76,7 +76,7 @@ public class InterfaceEventsEntityRendering {
      * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
      */
     @SubscribeEvent
-    public static void on(CameraSetup event) {
+    public static void onIVCameraSetup(CameraSetup event) {
         if (event.getEntity() instanceof EntityPlayer) {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
@@ -129,7 +129,7 @@ public class InterfaceEventsEntityRendering {
      * vehicle HUds, GUIs, camera overlays, etc.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Pre event) {
+    public static void onIVRenderOverlayPre(RenderGameOverlayEvent.Pre event) {
         //If we are rendering the custom camera overlay, block the crosshairs and the hotbar..
         if ((event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS || event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR) && CameraSystem.customCameraOverlay != null) {
             event.setCanceled(true);
@@ -170,7 +170,7 @@ public class InterfaceEventsEntityRendering {
      * Pre-post methods for adjusting entity angles while seated.
      */
     @SubscribeEvent
-    public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
+    public static void onIVRenderLivingPre(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         needPlayerTweaks = false;
         needToPopMatrix = false;
         renderCurrentRiderSitting = false;
@@ -352,7 +352,7 @@ public class InterfaceEventsEntityRendering {
      * Pre-post methods for adjusting entity angles while seated.
      */
     @SubscribeEvent
-    public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
+    public static void onIVRenderLivingPost(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             GL11.glPopMatrix();
             EntityLivingBase entity = event.getEntity();
@@ -416,7 +416,7 @@ public class InterfaceEventsEntityRendering {
      * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
      */
     @SubscribeEvent
-    public static void on(RenderHandEvent event) {
+    public static void onIVRenderHand(RenderHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);
@@ -424,7 +424,7 @@ public class InterfaceEventsEntityRendering {
     }
 
     @SubscribeEvent
-    public static void on(RenderSpecificHandEvent event) {
+    public static void onIVrenderSpecificHand(RenderSpecificHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);

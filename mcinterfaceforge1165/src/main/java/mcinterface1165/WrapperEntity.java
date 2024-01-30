@@ -431,7 +431,7 @@ public class WrapperEntity implements IWrapperEntity {
      * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
+    public static void onIVWorldUnload(WorldEvent.Unload event) {
         entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
     }
 }

@@ -416,7 +416,7 @@ public class InterfaceRender implements IInterfaceRender {
      * of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
      */
     @SubscribeEvent
-    public static void on(RenderWorldLastEvent event) {
+    public static void onIVRenderLast(RenderWorldLastEvent event) {
         //Enable lighting as pass -1 has that disabled.
         RenderHelper.enableStandardItemLighting();
         setLightingState(true);

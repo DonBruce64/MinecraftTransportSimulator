@@ -342,7 +342,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
-    public static void on(KeyInputEvent event) {
+    public static void onIVKeyInput(KeyInputEvent event) {
         //Check if we switched joystick modes.
         if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
             runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;
@@ -370,7 +370,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Gets mouse scroll data, since we have to register a listner, and MC already does this for us.
      */
     @SubscribeEvent
-    public static void on(GuiScreenEvent.MouseScrollEvent.Post event) {
+    public static void onIVMouseScroll(GuiScreenEvent.MouseScrollEvent.Post event) {
         if (InterfaceManager.clientInterface.isGUIOpen()) {
             lastScrollValue = (int) event.getScrollDelta();
             event.setCanceled(true);

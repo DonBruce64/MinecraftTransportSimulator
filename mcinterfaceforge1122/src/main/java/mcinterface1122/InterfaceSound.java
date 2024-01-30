@@ -395,7 +395,7 @@ public class InterfaceSound implements IInterfaceSound {
      * Update all sounds every client tick.
      */
     @SubscribeEvent
-    public static void on(TickEvent.ClientTickEvent event) {
+    public static void onIVWorldTick(TickEvent.ClientTickEvent event) {
         //Only do updates at the end of a phase to prevent double-updates.
         if (event.phase.equals(Phase.END)) {
             //We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
@@ -412,7 +412,7 @@ public class InterfaceSound implements IInterfaceSound {
      * Stop all sounds when the world is unloaded.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
+    public static void onIVWorldUnload(WorldEvent.Unload event) {
         if (event.getWorld().isRemote) {
             queuedSounds.removeIf(soundInstance -> event.getWorld() == ((WrapperWorld) soundInstance.entity.world).world);
             for (SoundInstance sound : playingSounds) {
