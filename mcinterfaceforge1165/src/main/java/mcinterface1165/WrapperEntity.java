@@ -78,7 +78,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public boolean isValid() {
-        return entity != null && entity.isAlive() && (!(entity instanceof LivingEntity) || ((LivingEntity) entity).deathTime == 0);
+        return entity != null && entity.isAlive();
     }
 
     @Override
