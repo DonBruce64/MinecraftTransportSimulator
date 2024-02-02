@@ -30,7 +30,6 @@ public abstract class ListenerMixin {
                 forwards.set(0, 0, 1).rotate(playerRiding.orientation).rotate(playerRiding.riderRelativeOrientation);
                 up.set(0, 1, 0).rotate(playerRiding.orientation).rotate(playerRiding.riderRelativeOrientation);
                 AL10.alListenerfv(AL10.AL_ORIENTATION, new float[] { (float) forwards.x, (float) forwards.y, (float) forwards.z, (float) up.x, (float) up.y, (float) up.z });
-                System.out.println("SETTING");
             }
         }
     }
