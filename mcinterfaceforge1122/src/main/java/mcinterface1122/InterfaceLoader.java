@@ -30,7 +30,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.12.1";
+    public static final String MODVER = "22.13.0";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 	
 	@EventHandler
@@ -75,7 +75,7 @@ public final class InterfaceLoader {
         }
 
         //Init language system.
-        LanguageSystem.init(event.getSide().isClient());
+        LanguageSystem.init();
     }
 
     @EventHandler
@@ -83,11 +83,11 @@ public final class InterfaceLoader {
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();
 
-        //Populate language system names.
-        LanguageSystem.populateNames();
-
         if (event.getSide().isClient()) {
-            //Init keybinds if we're on the client.
+            //Populate language system names.
+            LanguageSystem.populateNames();
+
+            //Init keybinds.
             InterfaceManager.inputInterface.initConfigKey();
 
             //Also put all liquids into the config file for use by modpack makers.

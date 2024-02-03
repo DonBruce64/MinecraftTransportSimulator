@@ -683,27 +683,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             boolean newEntity = data.getString("uniqueUUID").isEmpty();
             for (int i = 0; i < definition.parts.size(); ++i) {
-                //Use a try-catch for parts in case they've changed since this entity was last placed.
-                //Don't want crashes due to pack updates.
-                try {
-                    IWrapperNBT partData = data.getData("part_" + i);
-                    if (partData != null) {
-                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true);
-                    }
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
-                    e.printStackTrace();
-                }
-
-                //Add default parts.  We need to do this after we actually create this part so its slots are valid.
-                //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
-                JSONPartDefinition partDef = definition.parts.get(i);
                 if (newEntity) {
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
                         variables.putAll(definition.constantValues);
                     }
+                    //Add default parts.  We need to do this after we actually create this part so its slots are valid.
+                    //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
+                    JSONPartDefinition partDef = definition.parts.get(i);
                     if (partDef.conditionalDefaultParts != null) {
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
                             if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
@@ -714,6 +702,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                     if (partDef.defaultPart != null) {
                         addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
+                    }
+                } else {
+                    //Use a try-catch for parts in case they've changed since this entity was last placed.
+                    //Don't want crashes due to pack updates.
+                    try {
+                        IWrapperNBT partData = data.getData("part_" + i);
+                        if (partData != null) {
+                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                        }
+                    } catch (Exception e) {
+                        InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                        e.printStackTrace();
                     }
                 }
             }
@@ -729,7 +729,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * and a packet is sent to all clients to inform them of this change.
      * This method returns the part if it was added, null if it wasn't.
      */
-    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex, boolean bypassSlotChecks) {
+    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex, boolean bypassSlotChecks, boolean alignTone) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
         AItemPart partItem = (AItemPart) stack.getItem();
         if (partsInSlots.get(slotIndex) == null && (bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, !newPartDef.bypassSlotMinMax))) {
@@ -737,6 +737,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             IWrapperNBT partData = stack.getData();
             partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
+            if (alignTone) {
+                partToAdd.updateTone(false);
+            }
             addPart(partToAdd, true);
             partToAdd.addPartsPostAddition(playerAdding, partData);
             return partToAdd;
@@ -876,11 +879,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
-                    APart addedPart = addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false);
-	                if (addedPart != null) {
-	                    //Set the default tone for the part, if it requests one and we can provide one.
-	                    addedPart.updateTone(false);
-	                }
+                    addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false, true);
 	            } catch (NullPointerException e) {
 	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 	            }

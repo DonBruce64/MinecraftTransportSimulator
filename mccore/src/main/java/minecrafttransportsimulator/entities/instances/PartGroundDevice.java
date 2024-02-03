@@ -42,9 +42,9 @@ public class PartGroundDevice extends APart {
 
     //Internal properties
     @ModifiedValue
-    private float currentMotiveFriction;
+    public float currentMotiveFriction;
     @ModifiedValue
-    private float currentLateralFriction;
+    public float currentLateralFriction;
     @ModifiedValue
     private float currentHeight;
     private final Point3D groundPosition = new Point3D();
@@ -184,18 +184,12 @@ public class PartGroundDevice extends APart {
                 double yPositionFraction = groundPosition.y % 1;
                 if (1 - yPositionFraction < -groundDetectionOffset.y) {
                     //We are within a detection offset below a block.  Could be FPE, so ceiling us.
-                    groundPosition.y = Math.ceil(groundPosition.y);
-                    materialBelow = world.getBlockMaterial(groundPosition);
-                } else if (yPositionFraction > 0.5 || 0.5 - yPositionFraction < -groundDetectionOffset.y) {
-                    //We are potentially above a slab since we are above 0.5 blocks, or close to it.
-                    //Floor to use current block position.
-                    groundPosition.y = Math.floor(groundPosition.y);
-                    materialBelow = world.getBlockMaterial(groundPosition);
+                    groundPosition.y = Math.ceil(groundPosition.y) - 1;
                 } else {
-                    //Must be less than 0.5 units from anything, floor and drop to lower block.
+                    //We are above a block, but not close to the top, floor to use current block position.
                     groundPosition.y = Math.floor(groundPosition.y) - 1;
-                    materialBelow = world.getBlockMaterial(groundPosition);
                 }
+                materialBelow = world.getBlockMaterial(groundPosition);
             } else {
                 if (!drivenLastTick) {
                     if (vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn) {
@@ -226,8 +220,19 @@ public class PartGroundDevice extends APart {
 
     @Override
     protected void updateVariableModifiers() {
-        currentMotiveFriction = definition.ground.motiveFriction;
-        currentLateralFriction = definition.ground.lateralFriction;
+        float frictionLoss = getFrictionLoss();
+        currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
+        currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
+        if (isFlat) {
+            currentMotiveFriction /= 10;
+            currentLateralFriction /= 10;
+        }
+        if (currentMotiveFriction < 0) {
+            currentMotiveFriction = 0;
+        }
+        if (currentLateralFriction < 0) {
+            currentLateralFriction = 0;
+        }
         currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
         //Adjust current variables to modifiers, if any exist.
@@ -321,23 +326,6 @@ public class PartGroundDevice extends APart {
         }
     }
 
-    public float getFrictionLoss() {
-        if (!world.isAir(groundPosition)) {
-            float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
-            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
-            if (modifier != null) {
-                penalty -= modifier;
-            }
-            groundPosition.y += 1;
-            if (world.getRainStrength(groundPosition) > 0) {
-                penalty += definition.ground.wetFrictionPenalty;
-            }
-            return penalty;
-        } else {
-            return 0;
-        }
-    }
-
     public double getDesiredAngularVelocity() {
         if (vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)) {
             if (vehicleOn.skidSteerActive) {
@@ -360,12 +348,22 @@ public class PartGroundDevice extends APart {
         }
     }
 
-    public float getMotiveFriction() {
-        return !isFlat ? currentMotiveFriction : currentMotiveFriction / 10F;
-    }
-
-    public float getLateralFriction() {
-        return !isFlat ? currentLateralFriction : currentLateralFriction / 10F;
+    private float getFrictionLoss() {
+        if (!world.isAir(groundPosition)) {
+            float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
+            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
+            if (modifier != null) {
+                penalty -= modifier;
+            }
+            groundPosition.y += 1;
+            if (world.getRainStrength(groundPosition) > 0) {
+                penalty += definition.ground.wetFrictionPenalty;
+            }
+            groundPosition.y -= 1;
+            return penalty;
+        } else {
+            return 0;
+        }
     }
 
     public float getLongPartOffset() {

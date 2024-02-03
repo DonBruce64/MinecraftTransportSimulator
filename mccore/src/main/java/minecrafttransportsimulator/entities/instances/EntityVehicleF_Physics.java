@@ -538,12 +538,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
             if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+                elevatorTorque = -orientation.angles.x * 2;
+                aileronTorque = -orientation.angles.z * 2;
             }
             if (!definition.motorized.isAircraft) {
                 gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
 
             //Add all forces to the main force matrix and apply them.
+            if (ConfigSystem.settings.general.maxFlightHeight.value > 0 && position.y > ConfigSystem.settings.general.maxFlightHeight.value) {
+                wingForce = 0;
+                thrustForce.y = 0;
+            }
             totalForce.set(0D, wingForce - elevatorForce, 0D).rotate(orientation);
             totalForce.add(thrustForce);
             totalForce.addScaled(normalizedVelocityVector, -dragForce);
@@ -816,8 +822,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("speed_factor"):
                 return speedFactor;
             case ("acceleration"):
-                double acceleration = motion.length() - prevMotion.length();
-                return acceleration > 0.025 || acceleration < -0.025 ? acceleration : 0;
+                return motion.length() - prevMotion.length();
             case ("road_angle_front"):
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
             case ("road_angle_rear"):

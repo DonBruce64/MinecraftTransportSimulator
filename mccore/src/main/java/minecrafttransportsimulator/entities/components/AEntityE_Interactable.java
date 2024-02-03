@@ -373,7 +373,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     * Updates the encompassinb box.  This has to run after {@link #updateCollisionBoxes()} to ensure
+     * Updates the encompassing box.  This has to run after {@link #updateCollisionBoxes()} to ensure
      * we get all boxes for the encompassing box.
      */
     protected void updateEncompassingBox() {

@@ -83,7 +83,7 @@ public class InterfaceClient implements IInterfaceClient {
     public Map<String, String> getAllFluidNames() {
         Map<String, String> fluidIDsToNames = new HashMap<>();
         for (Fluid fluid : ForgeRegistries.FLUIDS.getValues()) {
-            fluidIDsToNames.put(fluid.getRegistryName().getPath(), new FluidStack(fluid, 1).getDisplayName().toString());
+            fluidIDsToNames.put(fluid.getRegistryName().getPath(), new FluidStack(fluid, 1).getDisplayName().getString());
         }
         return fluidIDsToNames;
     }
@@ -235,7 +235,7 @@ public class InterfaceClient implements IInterfaceClient {
      * not being called on clients.
      */
     @SubscribeEvent
-    public static void on(TickEvent.ClientTickEvent event) {
+    public static void onIVClientTick(TickEvent.ClientTickEvent event) {
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();

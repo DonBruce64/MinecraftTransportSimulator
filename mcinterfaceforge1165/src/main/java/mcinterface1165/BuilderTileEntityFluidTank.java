@@ -117,7 +117,7 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
         if (getFluidAmount() > 0) {
             return this.drain(new FluidStack(getFluid().getFluid(), maxDrain), doDrain);
         }
-        return null;
+        return FluidStack.EMPTY;
     }
 
     @Override

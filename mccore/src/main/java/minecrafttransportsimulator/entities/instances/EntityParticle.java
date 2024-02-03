@@ -52,6 +52,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private final RenderableObject renderable;
 
     //Runtime variables.
+    private boolean killBreakParticle;
     private boolean touchingBlocks;
     private float timeOfNextTexture;
     private int textureIndex;
@@ -234,8 +235,14 @@ public class EntityParticle extends AEntityC_Renderable {
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = definition.model == null || definition.isBright;
         if (definition.type == ParticleType.BREAK) {
-            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
-            setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
+            if (world.isAir(position)) {
+                //Don't spawn break particles in the air, they're null textures.
+                killBreakParticle = true;
+                return;
+            } else {
+                float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
+                setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
+            }
         } else if (definition.model == null) {
             setParticleTextureBounds(0, 1, 0, 1);
         }
@@ -245,8 +252,8 @@ public class EntityParticle extends AEntityC_Renderable {
     @Override
     public void update() {
         super.update();
-        //Check age to see if we are on our last tick.
-        if (ticksExisted == maxAge) {
+        //Check age to see if we are on our last tick or if we're a bad particle.
+        if (ticksExisted == maxAge || killBreakParticle) {
             remove();
             return;
         }
@@ -449,6 +456,11 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.worldLightValue = worldLightValue;
             renderable.render();
         }
+    }
+
+    @Override
+    public boolean disableRendering(float partialTicks) {
+        return killBreakParticle || super.disableRendering(partialTicks);
     }
 
     private void updateOrientation() {
