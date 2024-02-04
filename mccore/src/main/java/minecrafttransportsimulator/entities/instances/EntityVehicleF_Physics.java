@@ -861,6 +861,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return flapCurrentAngle;
             case ("flaps_moving"):
                 return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
+            case ("flaps_increasing"):
+                return flapCurrentAngle != flapDesiredAngle && flapCurrentAngle < flapDesiredAngle ? 1 : 0;
+            case ("flaps_decreasing"):
+                return flapCurrentAngle != flapDesiredAngle && flapCurrentAngle > flapDesiredAngle ? 1 : 0;
             case ("vertical_speed"):
                 return motion.y * speedFactor * 20;
             case ("lift_reserve"):
