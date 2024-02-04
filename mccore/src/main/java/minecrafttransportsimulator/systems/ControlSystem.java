@@ -558,14 +558,18 @@ public final class ControlSystem {
         }
 
         //Check if horn button is pressed.
-        if (ControlsKeyboard.CAR_HORN.isPressed() && !hornPressedLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+        if (ControlsKeyboard.CAR_HORN.isPressed()) {
+            if (!hornPressedLastCheck) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+            }
             hornPressedLastCheck = true;
         } else {
             hornPressedLastCheck = false;
         }
-        if (!ControlsKeyboard.CAR_HORN.isPressed() && !hornReleasedLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+        if (!ControlsKeyboard.CAR_HORN.isPressed()) {
+            if (!hornReleasedLastCheck) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+            }
             hornReleasedLastCheck = true;
         } else {
             hornReleasedLastCheck = false;
