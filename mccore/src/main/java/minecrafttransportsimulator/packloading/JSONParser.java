@@ -38,6 +38,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
@@ -55,6 +56,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -687,13 +689,17 @@ public class JSONParser {
     }
 
     /**
-     * Applies all imports performed.  Whereas the import should only be called once on singleplayer since
-     * the JSONs are shared on client and server instance, the applying of these imports should be called
-     * for all worlds where things are active.  Therefore, this method is seperate to allow sided-calling.
+     * Applies all imports performed.
      */
     public static void applyImports(AWrapperWorld world) {
         if (world.isClient()) {
             AEntityD_Definable.resetModelsAndAnimations(world);
+        } else {
+	        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+	            IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+	            vehicle.remove();
+	            world.addEntity(new EntityVehicleF_Physics(world, null, data));
+	        }
         }
     }
 

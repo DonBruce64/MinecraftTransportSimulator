@@ -209,12 +209,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     @Override
-    protected void initializeAnimations() {
+    public void initializeAnimations() {
         super.initializeAnimations();
         //Create collision boxes.
         if (definition.collisionGroups != null) {
-            definitionCollisionBoxes.clear();
-            collisionSwitchboxes.clear();
             for (JSONCollisionGroup groupDef : definition.collisionGroups) {
                 List<BoundingBox> boxes = new ArrayList<>();
                 for (JSONCollisionBox boxDef : groupDef.collisions) {
@@ -230,30 +228,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
             }
         }
-        //Update collision boxes as they might have changed.
-        updateCollisionBoxes();
-        updateEncompassingBox();
 
-        //Create instrument lists and animation clocks.
+        //Create instrument animation clocks.
         if (definition.instruments != null) {
-            //Check for existing instruments and save them.  Then make new ones based on JSON.
-            List<ItemInstrument> oldInstruments = new ArrayList<>(instruments);
-            instruments.clear();
-            instrumentRenderables.clear();
-            instrumentSlotSwitchboxes.clear();
-            instrumentComponentSwitchboxes.clear();
-            for (int i = 0; i < definition.instruments.size(); ++i) {
-                instruments.add(null);
-                instrumentRenderables.add(null);
-                if (i < oldInstruments.size()) {
-                    ItemInstrument oldInstrument = oldInstruments.get(i);
-                    if (oldInstrument != null) {
-                        addInstrument(oldInstrument, i);
-                    }
-                }
-            }
-
-            //Old instruments added, make animation definitions.
             for (JSONInstrumentDefinition packInstrument : definition.instruments) {
                 if (packInstrument.animations != null) {
                     List<JSONAnimationDefinition> animations = new ArrayList<>(packInstrument.animations);
@@ -263,7 +240,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
 
         //Check if we have snap connections.
-        snapConnectionIndexes.clear();
         lastSnapConnectionTried = 0;
         if (definition.connectionGroups != null) {
             for (JSONConnectionGroup group : definition.connectionGroups) {
@@ -319,12 +295,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
                 JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
                 List<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(i);
-                if (collisionBoxes == null) {
-                    //This can only happen if we hotloaded the definition due to devMode.
-                    //Flag us as needing a reset, and then bail to prevent further collision checks.
-                    animationsInitialized = false;
-                    return;
-                }
                 if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage") < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {

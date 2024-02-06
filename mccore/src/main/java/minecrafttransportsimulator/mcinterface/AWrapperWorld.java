@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +34,11 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
  * @author don_bruce
  */
 public abstract class AWrapperWorld extends EntityManager {
+    public static final List<AWrapperWorld> worlds = new ArrayList<>();
+
+    public AWrapperWorld() {
+        worlds.add(this);
+    }
 
     /**
      * Returns true if this is a client world, false if we're on the server.

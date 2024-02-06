@@ -29,7 +29,7 @@ public class TileEntityBeacon extends TileEntityDecor {
     }
 
     @Override
-    protected void initializeAnimations() {
+    public void initializeAnimations() {
         super.initializeAnimations();
         for (JSONText textDef : text.keySet()) {
             currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));

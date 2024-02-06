@@ -146,48 +146,17 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    protected void initializeAnimations() {
+    public void initializeAnimations() {
         super.initializeAnimations();
-        //Check for removed slots.
         if (definition.parts != null) {
-            //Check for removed slots.
-            if(partsInSlots.size() > definition.parts.size()) {
-                List<APart> removedParts = new ArrayList<APart>();
-                while(partsInSlots.size() > definition.parts.size()) {
-                    APart partRemoved = partsInSlots.remove(partsInSlots.size() - 1);
-                    if (partRemoved != null) {
-                        removedParts.add(partRemoved);
+            partSlotSwitchboxes.clear();
+            for (JSONPartDefinition partDef : definition.parts) {
+                if (partDef.animations != null || partDef.applyAfter != null) {
+                    List<JSONAnimationDefinition> animations = new ArrayList<>();
+                    if (partDef.animations != null) {
+                        animations.addAll(partDef.animations);
                     }
-                }
-                removedParts.forEach(part -> {
-                    //Need to manually remove, since indexes won't exist.
-                    parts.remove(part);
-                    part.remove();
-                });
-            }
-
-            //Check for added slots.
-            while (partsInSlots.size() < definition.parts.size()) {
-                partsInSlots.add(null);
-            }
-
-            //Update existing slots.
-            parts.forEach(part -> {
-                if (!part.isFake()) {
-                    part.placementDefinition = definition.parts.get(part.placementSlot);
-                    part.animationsInitialized = false;
-                }
-            });
-            if (definition.parts != null) {
-                partSlotSwitchboxes.clear();
-                for (JSONPartDefinition partDef : definition.parts) {
-                    if (partDef.animations != null || partDef.applyAfter != null) {
-                        List<JSONAnimationDefinition> animations = new ArrayList<>();
-                        if (partDef.animations != null) {
-                            animations.addAll(partDef.animations);
-                        }
-                        partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
-                    }
+                    partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
                 }
             }
             recalculatePartSlots();

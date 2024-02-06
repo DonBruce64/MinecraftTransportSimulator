@@ -136,6 +136,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     private WrapperWorld(World world) {
+        super();
         this.world = world;
         if (world.isClientSide) {
             //Send packet to server to request data for this world.

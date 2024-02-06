@@ -18,7 +18,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketPackImport;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -337,8 +336,7 @@ public class InterfaceInput implements IInterfaceInput {
         } else if (ConfigSystem.settings.general.devMode.value && importKey.isPressed()) {
             IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
             clientPlayer.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
-            JSONParser.applyImports(clientPlayer.getWorld());
-            InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
+            JSONParser.applyImports();
         }
     }
 }

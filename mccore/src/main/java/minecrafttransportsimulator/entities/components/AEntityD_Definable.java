@@ -74,11 +74,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public JSONSubDefinition subDefinition;
 
     /**
-     * Variable for saving animation definition initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animation definitions.
-     */
-    public boolean animationsInitialized;
-
-    /**
      * Map containing text lines for saved text provided by this entity.
      **/
     public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<>();
@@ -215,10 +210,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void update() {
         super.update();
         world.beginProfiling("EntityD_Level", true);
-        if (!animationsInitialized) {
-            initializeAnimations();
-            animationsInitialized = true;
-        }
         if (world.isClient()) {
             spawnParticles(0);
         }
@@ -314,22 +305,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
-     * This should create (and reset) all JSON clocks and other static objects that depend on the definition.
+     * Called after this entity is first constructed.
+     * This should create all JSON clocks and other static objects that depend on the definition.
      */
-    protected void initializeAnimations() {
-        //Update subdef, in case this was modified.
-        updateSubDefinition(subDefinition.subName);
-
+    public void initializeAnimations() {
         if (definition.rendering != null && definition.rendering.sounds != null) {
             for (SoundInstance sound : sounds) {
                 sound.stopSound = true;
             }
-
-            allSoundDefs.clear();
-            soundActiveSwitchboxes.clear();
-            soundVolumeSwitchboxes.clear();
-            soundPitchSwitchboxes.clear();
             for (JSONSound soundDef : definition.rendering.sounds) {
                 allSoundDefs.add(soundDef);
                 soundActiveSwitchboxes.put(soundDef, new AnimationSwitchbox(this, soundDef.activeAnimations, null));
@@ -345,10 +328,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         if (definition.rendering != null && definition.rendering.lightObjects != null) {
-            lightBrightnessSwitchboxes.clear();
-            lightBrightnessValues.clear();
-            lightColorValues.clear();
-            lightObjectDefinitions.clear();
             for (JSONLight lightDef : definition.rendering.lightObjects) {
                 lightObjectDefinitions.put(lightDef.objectName, lightDef);
                 if (lightDef.brightnessAnimations != null) {
@@ -360,8 +339,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         if (definition.rendering != null && definition.rendering.particles != null) {
-            particleActiveSwitchboxes.clear();
-            particleSpawningSwitchboxes.clear();
             for (JSONParticle particleDef : definition.rendering.particles) {
                 particleActiveSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.activeAnimations, null));
                 if (particleDef.spawningAnimations != null) {
@@ -372,8 +349,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         if (definition.rendering != null && definition.rendering.animatedObjects != null) {
-            animatedObjectDefinitions.clear();
-            animatedObjectSwitchboxes.clear();
             for (JSONAnimatedObject animatedDef : definition.rendering.animatedObjects) {
                 animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
                 if (animatedDef.animations != null) {
@@ -383,7 +358,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         if (definition.rendering != null && definition.rendering.cameraObjects != null) {
-            cameraSwitchboxes.clear();
             for (JSONCameraObject cameraDef : definition.rendering.cameraObjects) {
                 if (cameraDef.animations != null) {
                     cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations, null));
@@ -391,22 +365,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
 
-        //Store text data if we have it, then reset it.
-        List<String> oldTextValues = new ArrayList<>(text.values());
-        text.clear();
-        if (definition.rendering != null && definition.rendering.textObjects != null) {
-            for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
-                if (i < oldTextValues.size()) {
-                    text.put(definition.rendering.textObjects.get(i), oldTextValues.get(i));
-                } else {
-                    text.put(definition.rendering.textObjects.get(i), definition.rendering.textObjects.get(i).defaultText);
-                }
-            }
-        }
-
         //Add variable modifiers.
         if (definition.variableModifiers != null) {
-            variableModiferSwitchboxes.clear();
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 if (modifier.animations != null) {
                     variableModiferSwitchboxes.put(modifier, new VariableModifierSwitchbox(this, modifier.animations));
@@ -1262,7 +1222,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public static void resetModelsAndAnimations(AWrapperWorld world) {
         for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
             if (entity.definition.rendering.modelType != ModelType.NONE) {
-                entity.animationsInitialized = false;
                 if (entity.objectList != null) {
                     entity.objectList.forEach(object -> object.destroy());
                     entity.objectList = null;
