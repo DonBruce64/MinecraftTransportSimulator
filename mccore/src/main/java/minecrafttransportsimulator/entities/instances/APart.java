@@ -139,11 +139,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
         //Set to false to re-create animation since we don't want to use old animations we are linked to.
-        animationsInitialized = false;
+        //FIXME need to fix linked animations.
+        //animationsInitialized = false;
     }
 
     @Override
-    protected void initializeAnimations() {
+    public void initializeAnimations() {
         super.initializeAnimations();
         isMoveable = false;
         placementMovementSwitchbox = null;

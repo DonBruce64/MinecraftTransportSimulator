@@ -11,7 +11,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketPackImport;
 import minecrafttransportsimulator.packloading.JSONParser;
 
 /**
@@ -59,8 +58,7 @@ public class GUIPackExporter extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 debug.setText(JSONParser.importAllJSONs(false));
-                JSONParser.applyImports(vehicleClicked.world);
-                InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
+                JSONParser.applyImports(InterfaceManager.clientInterface.getClientWorld());
             }
         });
         //Add control buttons.

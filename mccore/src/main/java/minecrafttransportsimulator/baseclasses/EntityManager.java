@@ -48,6 +48,9 @@ public class EntityManager {
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
+            if (entity instanceof AEntityD_Definable) {
+                ((AEntityD_Definable<?>) entity).initializeAnimations();
+            }
         }
         if (entity instanceof PartGun) {
             gunMap.put(entity.uniqueUUID, (PartGun) entity);
