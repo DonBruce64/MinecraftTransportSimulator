@@ -57,14 +57,10 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 //If the rider dismounted us, just die.
                 List<Entity> riders = getPassengers();
                 if (rider == null && !riders.isEmpty()) {
-                    rider = WrapperEntity.getWrapperFor(riders.get(0));
-                    //Check if the entity has a rider, if so, set ourselves to it.
-                    //Otherwise, set it to ourselves.  We can get a rider here if we
-                    //load it from saved disk, or we might be given one if the entity is clicked.
-                    //Only set the rider loaded on the server though: clients will get packets.
                     if (entity.rider != null) {
                         rider = (WrapperEntity) entity.rider;
-                    } else if (!level.isClientSide) {
+                    } else {
+                        rider = WrapperEntity.getWrapperFor(riders.get(0));
                         entity.setRider(rider, true);
                     }
                 } else if (dismountedRider) {
@@ -72,13 +68,12 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 }
             }
         } else {
-            //If we have NBT, and haven't loaded it, do so now.
-            if (!loadedFromSavedNBT && loadFromSavedNBT) {
+            //If we have NBT, and don't have an entity, try to get it.
+            if (loadFromSavedNBT) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                 try {
                     entity = worldWrapper.getEntity(lastLoadedNBT.getUUID("entityUUID"));
                     loadedFromSavedNBT = true;
-                    lastLoadedNBT = null;
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
@@ -121,7 +116,11 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     @Override
     protected void removePassenger(Entity passenger) {
         super.removePassenger(passenger);
-        dismountedRider = true;
+        //Need to check if we have ticked.  MC, on loading this entity, first dismounts all riders.
+        //This will cause IV to see a dismount when in actuality it's a loading sequence.
+        if (tickCount > 0) {
+            dismountedRider = true;
+        }
     }
 
     @Override
