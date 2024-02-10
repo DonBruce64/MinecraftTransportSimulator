@@ -873,12 +873,15 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void removeSnow(Point3D position) {
+    public boolean removeSnow(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         BlockState state = world.getBlockState(pos);
         if (state.getMaterial().equals(Material.SNOW) || state.getMaterial().equals(Material.TOP_SNOW)) {
             world.removeBlock(pos, false);
             world.playSound(null, pos, SoundEvents.SNOW_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F);
+            return true;
+        } else {
+            return false;
         }
     }
 
