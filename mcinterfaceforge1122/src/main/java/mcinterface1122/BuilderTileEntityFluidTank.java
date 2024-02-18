@@ -40,10 +40,13 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
                     TileEntity teBelow = world.getTileEntity(getPos().down());
                     if (teBelow != null && teBelow.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP)) {
                         IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP);
-                        int amountDrained = fluidHandler.fill(getFluid(), true);
-                        if (amountDrained > 0 && currentFluidAmount == getFluidAmount()) {
-                            //Need to drain from our tank as the system didn't do this.
-                            drain(amountDrained, true);
+                        FluidStack stack = getFluid();
+                        if (stack != null) {
+                            int amountDrained = fluidHandler.fill(getFluid(), true);
+                            if (amountDrained > 0 && currentFluidAmount == getFluidAmount()) {
+                                //Need to drain from our tank as the system didn't do this.
+                                drain(amountDrained, true);
+                            }
                         }
                     }
                 }

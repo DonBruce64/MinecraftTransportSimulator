@@ -354,8 +354,9 @@ public abstract class AWrapperWorld extends EntityManager {
 
     /**
      * Tries to remove any snow at the passed-in position.
+     * Returns true if snow was removed.
      */
-    public abstract void removeSnow(Point3D position);
+    public abstract boolean removeSnow(Point3D position);
 
     /**
      * Attempts to insert a stack-item into the block that is at the specified

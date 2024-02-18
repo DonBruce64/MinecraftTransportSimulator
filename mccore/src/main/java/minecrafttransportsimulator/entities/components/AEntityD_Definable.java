@@ -203,6 +203,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             initializeAnimations();
             animationsInitialized = true;
         }
+        if (world.isClient()) {
+            spawnParticles(0);
+        }
         //Only update radar once a second, and only if we requested it via variables.
         if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
             Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
