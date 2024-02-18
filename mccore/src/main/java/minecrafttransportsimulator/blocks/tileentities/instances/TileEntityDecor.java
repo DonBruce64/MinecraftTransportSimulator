@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
@@ -22,9 +23,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
  * @author don_bruce
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
-
-    public static final String CLICKED_VARIABLE = "clicked";
-    public static final String ACTIVATED_VARIABLE = "activated";
+	//Variables
+	public final ComputedVariable clicked;
+	public final ComputedVariable activated;
     private float lightLevel;
     public boolean craftedItem;
 
@@ -45,6 +46,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.widthRadius = definition.decor.depth / 2D;
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
+        
+        this.clicked = new ComputedVariable(this, "clicked", data);
+    	this.activated = new ComputedVariable(this, "activated", data);
     }
 
     @Override
@@ -56,7 +60,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
 
         super.update();
         //Reset clicked state.
-        setVariableValue(CLICKED_VARIABLE, 0);
+        if(clicked.isActive) {
+        	clicked.toggle(false);
+        }
     }
 
     @Override
@@ -81,8 +87,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             } else {
-                getVariable(CLICKED_VARIABLE).setTo(1, true);
-                getVariable(ACTIVATED_VARIABLE).toggle(true);
+                clicked.setTo(1, true);
+                activated.toggle(true);
             }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
@@ -92,8 +98,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            getVariable(CLICKED_VARIABLE).setTo(1, true);
-            getVariable(ACTIVATED_VARIABLE).toggle(true);
+            clicked.setTo(1, true);
+            activated.toggle(true);
         }
         return true;
     }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -32,31 +33,25 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
-    //Static variables used in logic that are kept in the global map.
-    public static final String RUNNINGLIGHT_VARIABLE = "running_light";
-    public static final String HEADLIGHT_VARIABLE = "headlight";
-    public static final String NAVIGATIONLIGHT_VARIABLE = "navigation_light";
-    public static final String STROBELIGHT_VARIABLE = "strobe_light";
-    public static final String TAXILIGHT_VARIABLE = "taxi_light";
-    public static final String LANDINGLIGHT_VARIABLE = "landing_light";
-    public static final String HORN_VARIABLE = "horn";
-    public static final String GEAR_VARIABLE = "gear_setpoint";
-    public static final String THROTTLE_VARIABLE = "throttle";
-    public static final String REVERSE_THRUST_VARIABLE = "reverser";
+    //Variables
+	public final ComputedVariable runningLightVar;
+	public final ComputedVariable headLightVar;
+	public final ComputedVariable navigationLightVar;
+	public final ComputedVariable strobeLightVar;
+	public final ComputedVariable taxiLightVar;
+	public final ComputedVariable landingLightVar;
+	public final ComputedVariable hornVar;
+	public final ComputedVariable retractGearVar;
+	public final ComputedVariable throttleVar;
+	public final ComputedVariable reverseThrustVar;
+    public static final double MAX_THROTTLE = 1.0D;
 
-    //External state control.
-    @DerivedValue
-    public boolean reverseThrust;
+    //Internal states.
     public boolean beingFueled;
     public boolean enginesOn;
     public boolean enginesStarting;
     public boolean enginesRunning;
     public boolean isCreative;
-    @DerivedValue
-    public double throttle;
-    public static final double MAX_THROTTLE = 1.0D;
-
-    //Internal states.
     public boolean hasReverseThrust;
     public int gearMovementTime;
     public int ticksOutOfHealth;
@@ -89,15 +84,23 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
         world.addEntity(fuelTank);
+        
+        this.runningLightVar = new ComputedVariable(this, "running_light", data);
+    	this.headLightVar = new ComputedVariable(this, "headlight", data);
+    	this.navigationLightVar = new ComputedVariable(this, "navigation_light", data);
+    	this.strobeLightVar = new ComputedVariable(this, "strobe_light", data);
+    	this.taxiLightVar = new ComputedVariable(this, "taxi_light", data);
+    	this.landingLightVar = new ComputedVariable(this, "landing_light", data);
+    	this.hornVar = new ComputedVariable(this, "horn", data);
+    	this.retractGearVar = new ComputedVariable(this, "gear_setpoint", data);
+    	this.throttleVar = new ComputedVariable(this, "throttle", data);
+    	this.reverseThrustVar = new ComputedVariable(this, "reverser", data);
     }
 
     @Override
     public void update() {
         super.update();
         world.beginProfiling("VehicleE_Level", true);
-        //Get throttle and reverse state.
-        throttle = getVariable(THROTTLE_VARIABLE).getValue();
-        reverseThrust = getVariable(REVERSE_THRUST_VARIABLE).isActive();
 
         //If we have space for fuel, and we have tanks with it, transfer it.
         if (!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100) {
@@ -131,16 +134,16 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             //If we are being towed set the brake state to the same as the towing vehicle.
             //If we aren't being towed, set the parking brake.
             if (towedByConnection != null) {
-                if (parkingBrakeOn) {
-                    getVariable(PARKINGBRAKE_VARIABLE).toggle(false);
+                if (parkingBrakeVar.isActive) {
+                	parkingBrakeVar.setTo(0, false);
                 }
-                getVariable(BRAKE_VARIABLE).setTo(towedByConnection.towingVehicle.brake, false);
+                brakeVar.setTo(towedByConnection.towingVehicle.brakeVar.currentValue, false);
             } else {
-                if (!parkingBrakeOn) {
-                    getVariable(PARKINGBRAKE_VARIABLE).toggle(false);
+                if (!parkingBrakeVar.isActive) {
+                    parkingBrakeVar.setTo(1, false);
                 }
-                if (brake != 0) {
-                    getVariable(BRAKE_VARIABLE).toggle(false);
+                if (brakeVar.isActive) {
+                	brakeVar.setTo(0, false);
                 }
             }
         } else {
@@ -149,9 +152,9 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             enginesStarting = false;
             enginesRunning = false;
             for (PartEngine engine : engines) {
-                if (engine.magnetoOn) {
+                if (engine.magnetoVar.isActive) {
                     enginesOn = true;
-                    if (engine.electricStarterEngaged) {
+                    if (engine.electricStarterVar.isActive) {
                         enginesStarting = true;
                     }
                     if (engine.running) {
@@ -179,7 +182,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
 
         //Adjust gear variables.
-        if (getVariable(GEAR_VARIABLE).isActive()) {
+        if (retractGearVar.isActive) {
             if (gearMovementTime < definition.motorized.gearSequenceDuration) {
                 ++gearMovementTime;
             }
@@ -348,7 +351,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     @Override
     public boolean renderTextLit() {
         if (super.renderTextLit() && electricPower > 3) {
-            return getVariable(definition.motorized.litVariable).isActive();
+            return getVariable(definition.motorized.litVariable).isActive;
         } else {
             return false;
         }

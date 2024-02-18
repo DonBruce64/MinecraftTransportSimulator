@@ -115,6 +115,8 @@ public class JSONPanel extends AJSONBase {
         ENGINE_START,
         @JSONDescription("Makes this a trailer switch, which animates based on if a connection is made or not.  The first switch present will be for the first connection, the second the second.  Will not be visible if the vehicle has no possible connections.")
         TRAILER,
+        @JSONDescription("Makes this an autopilot or cruise control switch, depending on the vehicle this panel is on.")
+        AUTOPILOT,
         @JSONDescription("Makes this a custom variable switch, which animates based on the state of the custom variable.  The first switch present will be for the first variable, the second the second.  Will not be visible if the vehicle and all its parts have no customVariables.")
         CUSTOM_VARIABLE,
         @JSONDescription("Makes this a beacon box, which allows changing the selected beacon.  Will not be visible if hasRadioNav is false for the vehicle and allPlanesWithNav is false in the config.")

@@ -39,8 +39,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     private final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> savedDisconnectedTowingConnections = new ArrayList<>();
 
-    public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
-
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
         if (data != null) {
@@ -158,37 +156,35 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         }
 
         //If we have a connection request, handle it now.
-        int connectionRequestIndex = (int) getVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE);
-        if (connectionRequestIndex != 0) {
+        if (towingConnectionVar.isActive) {
+        	//Don't handle requests on the client.  These get packets.
             if (!world.isClient()) {
-                //Don't handle requests on the client.  These get packets.
-                handleConnectionRequest(this, connectionRequestIndex - 1);
+                handleConnectionRequest(this, (int) towingConnectionVar.currentValue - 1);
             }
-            setVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+            towingConnectionVar.setTo(0, false);
         } else if (!world.isClient() && !snapConnectionIndexes.isEmpty() && ticksExisted % (10 / snapConnectionIndexes.size()) == 0) {
             if (++lastSnapConnectionTried == snapConnectionIndexes.size()) {
                 lastSnapConnectionTried = 0;
             }
             if (!connectionGroupsIndexesInUse.contains(lastSnapConnectionTried)) {
-                setVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE, lastSnapConnectionTried + 1);
+            	towingConnectionVar.setTo(lastSnapConnectionTried + 1, false);
                 bypassConnectionPacket = true;
             }
         }
         //Also check parts, in case they got a request.
         for (APart part : allParts) {
-            connectionRequestIndex = (int) part.getVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE);
-            if (connectionRequestIndex != 0) {
+            if (part.towingConnectionVar.isActive) {
+            	//Don't handle requests on the client.  These get packets.
                 if (!world.isClient()) {
-                    //Don't handle requests on the client.  These get packets.
-                    handleConnectionRequest(part, connectionRequestIndex - 1);
+                    handleConnectionRequest(part, (int) part.towingConnectionVar.currentValue - 1);
                 }
-                part.setVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+                part.towingConnectionVar.setTo(0, false);
             } else if (!world.isClient() && towedByConnection == null && !part.snapConnectionIndexes.isEmpty() && part.ticksExisted % (10 / part.snapConnectionIndexes.size()) == 0) {
                 if (++part.lastSnapConnectionTried == part.snapConnectionIndexes.size()) {
                     part.lastSnapConnectionTried = 0;
                 }
                 if (!part.connectionGroupsIndexesInUse.contains(part.lastSnapConnectionTried)) {
-                    part.setVariableValue(TOWING_CONNECTION_REQUEST_VARIABLE, part.lastSnapConnectionTried + 1);
+                	part.towingConnectionVar.setTo(part.lastSnapConnectionTried + 1, false);
                     part.bypassConnectionPacket = true;
                     break;
                 }

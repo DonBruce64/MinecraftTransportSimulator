@@ -63,7 +63,7 @@ public final class PartSeat extends APart {
         //See if we can interact with the seats of this vehicle.
         //This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
         if (isActive) {
-            if (vehicleOn == null || !vehicleOn.locked || masterEntity.allParts.contains(player.getEntityRiding())) {
+            if (vehicleOn == null || vehicleOn.lockedVar.isActive || masterEntity.allParts.contains(player.getEntityRiding())) {
                 if (rider != null) {
                     //We already have a rider for this seat.  If it's not us, mark the seat as taken.
                     //If it's an entity that can be leashed, dismount the entity and leash it.
@@ -195,19 +195,19 @@ public final class PartSeat extends APart {
                 if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider) && !vehicleOn.definition.motorized.overrideAutoStart) {
                     vehicleOn.engines.forEach(engine -> {
                         if (!vehicleOn.definition.motorized.isAircraft) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                         }
                         InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
                     });
-                    if (vehicleOn.parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                    if (vehicleOn.parkingBrakeVar.isActive) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn.parkingBrakeVar));
                     }
                 }
             }
 
             //Auto-close doors for the rider in this seat, if such doors exist.
-            if (placementDefinition.interactableVariables != null) {
-                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.setVariableValue(variable, 0)));
+            if (!world.isClient() && placementDefinition.interactableVariables != null) {
+                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.getVariable(variable).setTo(0, true)));
             }
             return true;
         } else {
@@ -260,10 +260,7 @@ public final class PartSeat extends APart {
     
             //Auto-open doors for the rider in this seat, if such doors exist.
             if (!world.isClient() && placementDefinition.interactableVariables != null) {
-                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> {
-                    entityOn.setVariableValue(variable, 1);
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entityOn, variable, 1));
-                }));
+                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.getVariable(variable).setTo(1, true)));
             }
         }
         riderChangingSeats = false;
@@ -303,16 +300,16 @@ public final class PartSeat extends APart {
             //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats, or this vehicle has the override.
             if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value && !vehicleOn.definition.motorized.overrideAutoStart) {
                 vehicleOn.engines.forEach(engine -> {
-                    if (engine.magnetoOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+                    if (engine.magnetoVar.isActive) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.magnetoVar));
                     }
-                    if (engine.electricStarterEngaged) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+                    if (engine.electricStarterVar.isActive) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.electricStarterVar));
                     }
                 });
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
-                if (!vehicleOn.parkingBrakeOn) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn.brakeVar, 0));
+                if (!vehicleOn.parkingBrakeVar.isActive) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn.parkingBrakeVar));
                 }
             }
         }

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -42,21 +43,13 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
-    //Static variables used in logic that are kept in the global map.
-    public static final String LEFTTURNLIGHT_VARIABLE = "left_turn_signal";
-    public static final String RIGHTTURNLIGHT_VARIABLE = "right_turn_signal";
-    public static final String BRAKE_VARIABLE = "brake";
-    public static final String PARKINGBRAKE_VARIABLE = "p_brake";
-
-    //External state control.
-    @DerivedValue
-    public double brake;
-    @DerivedValue
-    public boolean parkingBrakeOn;
+	//Variables
+	public final ComputedVariable leftTurnLightVar;
+	public final ComputedVariable rightTurnLightVar;
+	public final ComputedVariable brakeVar;
+	public final ComputedVariable parkingBrakeVar;
+    public final ComputedVariable lockedVar;
     public static final double MAX_BRAKE = 1D;
-    @DerivedValue
-    public boolean locked;
-    public static final String LOCKED_VARIABLE = "locked";
     public UUID keyUUID;
 
     //Internal states.
@@ -126,7 +119,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
         if (data != null) {
-            this.locked = data.getBoolean("locked");
             this.keyUUID = data.getUUID(ItemItem.KEY_UUID_TAG);
             this.totalPathDelta = data.getDouble("totalPathDelta");
             this.prevTotalPathDelta = totalPathDelta;
@@ -137,11 +129,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             this.serverDeltaM = new Point3D();
             this.serverDeltaR = new Point3D();
         }
+
         this.clientDeltaM = serverDeltaM.copy();
         this.clientDeltaR = serverDeltaR.copy();
         this.clientDeltaP = serverDeltaP;
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
+        
+        this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data);
+    	this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data);
+    	this.brakeVar = new ComputedVariable(this, "brake", data);
+    	this.parkingBrakeVar = new ComputedVariable(this, "p_brake", data);
+        this.lockedVar = new ComputedVariable(this, "locked", data);
     }
 
     @Override
@@ -199,11 +198,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
             }
         }
-
-        //Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
-        brake = getVariable(BRAKE_VARIABLE).getValue();
-        parkingBrakeOn = getVariable(PARKINGBRAKE_VARIABLE).isActive();
-        locked = getVariable(LOCKED_VARIABLE).isActive();
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
@@ -301,10 +295,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void connectTrailer(TowingConnection connection, boolean notifyClient) {
         super.connectTrailer(connection, notifyClient);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
-        if (towedVehicle.parkingBrakeOn) {
-            towedVehicle.setVariableValue(PARKINGBRAKE_VARIABLE, 0);
+        if (towedVehicle.parkingBrakeVar.isActive) {
+            towedVehicle.parkingBrakeVar.toggle(false);
         }
-        towedVehicle.setVariableValue(BRAKE_VARIABLE, 0);
+        towedVehicle.brakeVar.setTo(0, false);
         towedVehicle.frontFollower = null;
         towedVehicle.rearFollower = null;
 
@@ -326,7 +320,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.get(connectionIndex);
         if (connection.towedVehicle.definition.motorized.isTrailer) {
-            connection.towedVehicle.setVariableValue(PARKINGBRAKE_VARIABLE, 1);
+            connection.towedVehicle.parkingBrakeVar.setTo(1, false);
         }
         super.disconnectTrailer(connectionIndex);
     }
@@ -472,7 +466,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Depends on number of grounded core collision sections and braking ground devices.
      */
     private float getBrakingForce() {
-        double brakingPower = parkingBrakeOn ? MAX_BRAKE : brake;
+        double brakingPower = parkingBrakeVar.isActive ? MAX_BRAKE : brakeVar.currentValue;
         float brakingFactor = 0;
         //First get the ground device braking contributions.
         //This is both grounded ground devices, and liquid collision boxes that are set as such.
@@ -537,7 +531,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                     }
                                 }
                             } else if (part instanceof PartEngine) {
-                                if (((PartEngine) part).currentGear == 0 && ((PartEngine) part).running) {
+                                if (((PartEngine) part).currentGearVar.currentValue == 0 && ((PartEngine) part).running) {
                                     foundNeutralEngine = true;
                                 }
                             }
@@ -677,9 +671,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Check for the potential to change the requested segment.
                 //We can only do this if both our followers are on the same segment.
                 LaneSelectionRequest requestedSegment;
-                if (getVariable(LEFTTURNLIGHT_VARIABLE).isActive() == getVariable(RIGHTTURNLIGHT_VARIABLE).isActive()) {
+                if (leftTurnLightVar.isActive == rightTurnLightVar.isActive) {
                     requestedSegment = LaneSelectionRequest.NONE;
-                } else if (getVariable(LEFTTURNLIGHT_VARIABLE).isActive()) {
+                } else if (leftTurnLightVar.isActive) {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
                 } else {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
@@ -1089,11 +1083,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Call this ONLY on the server.
      */
     public void toggleLock() {
-        locked = !locked;
-        getVariable(LOCKED_VARIABLE).toggle(true);
+        lockedVar.toggle(true);
 
         //Check for doors to close on locking.
-        if (locked) {
+        if (lockedVar.isActive) {
             closeDoors();
         }
     }
@@ -1127,7 +1120,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("locked", locked);
         if (keyUUID != null) {
             data.setUUID(ItemItem.KEY_UUID_TAG, keyUUID);
         }

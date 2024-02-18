@@ -103,8 +103,8 @@ public class GUIHUD extends AGUIBase {
             instrument.visible = CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value);
         }
 
-        //Set health label text and visibility.;
-        healthLabel.text = String.format("Health: %d/%d", (int) Math.ceil(vehicle.definition.general.health - vehicle.damageAmount), vehicle.definition.general.health);
+        //Set health label text and visibility.
+        healthLabel.text = String.format("Health: %.0f/%d", (int) Math.ceil(vehicle.definition.general.health - vehicle.damageVar.currentValue), vehicle.definition.general.health);
         healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
         healthLabel.color = vehicle.outOfHealth ? ColorRGB.RED : ColorRGB.WHITE;
 

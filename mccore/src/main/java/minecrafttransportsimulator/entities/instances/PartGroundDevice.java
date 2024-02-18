@@ -32,7 +32,10 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 public class PartGroundDevice extends APart {
     public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
     public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
+    
+    //Variables
     public static final String FLAT_VARIABLE = "isFlat";
+    public final ComputedVariable flatVar;
 
     //External states for animations.
     public boolean drivenLastTick = true;
@@ -54,7 +57,6 @@ public class PartGroundDevice extends APart {
     public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
-    public boolean isFlat;
     public boolean contactThisTick = false;
     public boolean animateAsOnGround;
     private int ticksCalcsSkipped = 0;
@@ -66,7 +68,6 @@ public class PartGroundDevice extends APart {
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
-        this.isFlat = data != null && data.getBoolean(FLAT_VARIABLE);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
@@ -79,6 +80,8 @@ public class PartGroundDevice extends APart {
             wheelbasePoint.add(parentPart.placementDefinition.pos);
             parent = parentPart.entityOn;
         }
+        
+        this.flatVar = new ComputedVariable(this, FLAT_VARIABLE, data);
     }
 
     @Override
@@ -150,7 +153,7 @@ public class PartGroundDevice extends APart {
                     }
 
                     //If we have a slipping wheel, count down and possibly pop it.
-                    if (!vehicleOn.world.isClient() && !isFlat) {
+                    if (!vehicleOn.world.isClient() && !flatVar.isActive) {
                         if (!skipAngularCalcs) {
                             if (ticksCalcsSkipped > 0) {
                                 --ticksCalcsSkipped;
@@ -196,7 +199,7 @@ public class PartGroundDevice extends APart {
                 materialBelow = world.getBlockMaterial(groundPosition);
             } else {
                 if (!drivenLastTick) {
-                    if (vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn) {
+                    if (vehicleOn.brakeVar.isActive || vehicleOn.parkingBrakeVar.isActive) {
                         angularVelocity = 0;
                     } else if (angularVelocity > 0) {
                         angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
@@ -227,7 +230,7 @@ public class PartGroundDevice extends APart {
         float frictionLoss = getFrictionLoss();
         currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
         currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
-        if (isFlat) {
+        if (flatVar.isActive) {
             currentMotiveFriction /= 10;
             currentLateralFriction /= 10;
         }
@@ -238,7 +241,7 @@ public class PartGroundDevice extends APart {
             currentLateralFriction = 0;
         }
         lastHeight = currentHeight;
-        currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
+        currentHeight = (float) ((flatVar.isActive ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -271,7 +274,7 @@ public class PartGroundDevice extends APart {
             case ("ground_onground"):
                 return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && animateAsOnGround ? 1 : 0, false);
             case ("ground_isflat"):
-                return new ComputedVariable(this, variable, partialTicks -> isFlat ? 1 : 0, false);
+                return flatVar;
             case ("ground_contacted"):
                 return new ComputedVariable(this, variable, partialTicks -> contactThisTick ? 1 : 0, false);
             case ("ground_skidding"):
@@ -310,27 +313,27 @@ public class PartGroundDevice extends APart {
             //On the server, can we go flat and does the config let us?
             //Or if we are repairing, are we flat in the first place?
             if (setFlat) {
-                if (isFlat || definition.ground.flatHeight == 0 || !ConfigSystem.settings.damage.wheelBreakage.value) {
+                if (flatVar.isActive || definition.ground.flatHeight == 0 || !ConfigSystem.settings.damage.wheelBreakage.value) {
                     return;
                 }
             } else {
-                if (!isFlat) {
+                if (!flatVar.isActive) {
                     return;
                 }
             }
             //Valid conditions, send packet before continuing.
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
         }
-        isFlat = setFlat;
+        flatVar.setTo(setFlat ? 1 : 0, false);
     }
 
     public double getDesiredAngularVelocity() {
         if (vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)) {
             if (vehicleOn.skidSteerActive) {
                 if (placementDefinition.pos.x > 0) {
-                    return getLongPartOffset() == 0 ? vehicleOn.rudderAngle / 200D / (getHeight() * Math.PI) : vehicleOn.rudderAngle / 200D;
+                    return getLongPartOffset() == 0 ? vehicleOn.rudderAngleVar.currentValue / 200D / (getHeight() * Math.PI) : vehicleOn.rudderAngleVar.currentValue / 200D;
                 } else if (placementDefinition.pos.x < 0) {
-                    return getLongPartOffset() == 0 ? -vehicleOn.rudderAngle / 200D / (getHeight() * Math.PI) : -vehicleOn.rudderAngle / 200D;
+                    return getLongPartOffset() == 0 ? -vehicleOn.rudderAngleVar.currentValue / 200D / (getHeight() * Math.PI) : -vehicleOn.rudderAngleVar.currentValue / 200D;
                 } else {
                     return 0;
                 }
@@ -366,12 +369,5 @@ public class PartGroundDevice extends APart {
 
     public float getLongPartOffset() {
         return placementDefinition.extraCollisionBoxOffset != 0 ? placementDefinition.extraCollisionBoxOffset : definition.ground.extraCollisionBoxOffset;
-    }
-
-    @Override
-    public IWrapperNBT save(IWrapperNBT data) {
-        super.save(data);
-        data.setBoolean(FLAT_VARIABLE, isFlat);
-        return data;
     }
 }

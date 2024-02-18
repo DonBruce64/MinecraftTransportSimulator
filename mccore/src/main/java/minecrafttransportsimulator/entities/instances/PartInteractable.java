@@ -68,7 +68,7 @@ public final class PartInteractable extends APart {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (vehicleOn == null || !vehicleOn.locked) {
+        if (vehicleOn == null || !vehicleOn.lockedVar.isActive) {
             if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
                 player.sendPacket(new PacketPartInteractable(this, player));
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {

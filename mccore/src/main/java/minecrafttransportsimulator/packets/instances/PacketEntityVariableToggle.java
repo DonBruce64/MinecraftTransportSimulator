@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -13,27 +14,27 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketEntityVariableToggle extends APacketEntity<AEntityD_Definable<?>> {
-    private final String variableName;
+    private final String variableKey;
 
-    public PacketEntityVariableToggle(AEntityD_Definable<?> entity, String variableName) {
-        super(entity);
-        this.variableName = variableName;
+    public PacketEntityVariableToggle(ComputedVariable variable) {
+        super(variable.entity);
+        this.variableKey = variable.variableKey;
     }
 
     public PacketEntityVariableToggle(ByteBuf buf) {
         super(buf);
-        this.variableName = readStringFromBuffer(buf);
+        this.variableKey = readStringFromBuffer(buf);
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        writeStringToBuffer(variableName, buf);
+        writeStringToBuffer(variableKey, buf);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        entity.getVariable(variableName).toggle(false);
+        entity.getVariable(variableKey).toggle(false);
         return true;
     }
 }

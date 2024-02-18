@@ -204,7 +204,7 @@ public class InterfaceEventsEntityRendering {
                 }
 
                 if (seat.vehicleOn != null && seat.placementDefinition.isController) {
-                    double turningAngle = seat.vehicleOn.rudderInput / 2D;
+                    double turningAngle = seat.vehicleOn.rudderInputVar.currentValue/ 2D;
                     rightArmAngles.set(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
                     leftArmAngles.set(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
                 }

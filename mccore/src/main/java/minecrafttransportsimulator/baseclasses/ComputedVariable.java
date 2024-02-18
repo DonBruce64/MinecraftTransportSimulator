@@ -19,18 +19,24 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
  * @author don_bruce
  */
 public class ComputedVariable {
-    private final String variable;
+	/**The key of this variable, required to be unique to all variables on the entity.**/
+    public final String variableKey;
+    /**The entity this variable is defined on.**/
+    public final AEntityD_Definable<?> entity;
     private final ComputedVariableOperator function;
-    private final AEntityD_Definable<?> entity;
     private final boolean changesOnPartialTicks;
     private final boolean randomVariable;
     private final boolean isInverted;
     private long lastTickChecked;
-    private double currentValue;
+    /**The current value of this variable.  Only change by calling one of the functions in this class.**/
+    public double currentValue;
+    /**True if {@link #currentValue} is greater than 1, false otherwise.  Used for quicker boolean operations.**/
+    public boolean isActive;
 
+    /**Constructor for variables with logic that can change each tick or frame.**/
     public ComputedVariable(AEntityD_Definable<?> entity, String variable, ComputedVariableOperator function, boolean changesOnPartialTicks) {
         this.function = function;
-        this.variable = variable;
+        this.variableKey = variable;
         this.entity = entity;
         this.changesOnPartialTicks = changesOnPartialTicks;
         this.randomVariable = variable.startsWith("random");
@@ -38,11 +44,14 @@ public class ComputedVariable {
     }
 
     /**Constructor for variables with no logic, and instead maintained state.**/
-    public ComputedVariable(AEntityD_Definable<?> entity, String variable) {
+    public ComputedVariable(AEntityD_Definable<?> entity, String variable, IWrapperNBT data) {
         this(entity, variable, null, false);
         if (variable.startsWith("#")) {
             this.currentValue = Double.parseDouble(variable.substring("#".length()));
+        }else if(data != null) {
+        	this.currentValue = data.getDouble(variableKey);
         }
+        this.isActive = currentValue > 0;
     }
 
     public static boolean isNumberedVariable(String variable) {
@@ -53,17 +62,21 @@ public class ComputedVariable {
      * Helper method to get the index of the passed-in variable.  Indexes are defined by
      * variable names ending in _xx, where xx is a number.  The defined number is assumed
      * to be 1-indexed (JSON), but the returned number will be 0-indexed (Lists).  
-     * If the variable doesn't define a number, then -1 is returned.
+     * When calling this method, ensure the variable defines a number, preferably by calling
+     * {@link #isNumberedVariable(String)} before, otherwise this will cause a formatting crash.
      */
     public static int getVariableNumber(String variable) {
         return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
     }
 
     public final double getValue() {
-        return getValue(0);
+        return computeValue(0);
     }
 
-    public final double getValue(float partialTicks) {
+    /**
+     * Computes the value of this variable, updating {@link #currentValue}, and returning it.
+     */
+    public final double computeValue(float partialTicks) {
         if (function != null) {
             if (randomVariable || (changesOnPartialTicks && partialTicks != 0)) {
                 currentValue = function.apply(partialTicks);
@@ -71,24 +84,32 @@ public class ComputedVariable {
                 currentValue = function.apply(partialTicks);
                 lastTickChecked = entity.ticksExisted;
             }
-            if (isInverted) {
-                currentValue = currentValue > 0 ? 0 : 1;
-            }
+            isActive = isInverted ? currentValue > 0 : currentValue == 0;
         }
         return currentValue;
     }
 
     public final void setTo(double value, boolean sendPacket) {
         currentValue = value;
+        isActive = isInverted ? currentValue > 0 : currentValue == 0;
         if (sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, variable, currentValue));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
+        }
+    }
+    
+    public final void adjustBy(double value, boolean sendPacket) {
+        currentValue += value;
+        isActive = isInverted ? currentValue > 0 : currentValue == 0;
+        if (sendPacket) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
         }
     }
 
     public final void toggle(boolean sendPacket) {
         currentValue = currentValue > 0 ? 0 : 1;
+        isActive = isInverted ? currentValue > 0 : currentValue == 0;
         if (sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(entity, variable));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
         }
     }
 
@@ -105,9 +126,11 @@ public class ComputedVariable {
             }
         }
         if (newValue != currentValue) {
+        	incrementValue = newValue - currentValue;
             currentValue = newValue;
+            isActive = isInverted ? currentValue > 0 : currentValue == 0;
             if (sendPacket) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(entity, variable, incrementValue, minValue, maxValue));
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
             }
             return true;
         } else {
@@ -115,14 +138,10 @@ public class ComputedVariable {
         }
     }
 
-    public final boolean isActive() {
-        return isInverted ? getValue(0) == 0 : getValue(0) > 0;
-    }
-
     public final void saveToNBT(List<String> savedNames, IWrapperNBT data) {
         if (function == null) {
-            data.setDouble(variable, currentValue);
-            savedNames.add(variable);
+            data.setDouble(variableKey, currentValue);
+            savedNames.add(variableKey);
         }
     }
 

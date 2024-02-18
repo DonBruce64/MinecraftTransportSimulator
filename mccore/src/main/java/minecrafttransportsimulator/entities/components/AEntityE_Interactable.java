@@ -29,7 +29,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
@@ -99,13 +98,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      **/
     public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<>();
 
-    /**
-     * The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
-     * as damage is something that a good number of entities will have and that the base entity should track.
-     **/
-    @DerivedValue
-    public double damageAmount;
+    //Variables
     public static final String DAMAGE_VARIABLE = "damage";
+  	public final ComputedVariable damageVar;
+  	//Although we can't tow anything, we could have a request for something to tow, so this is defined here. 
+    public final ComputedVariable towingConnectionVar;
     public boolean outOfHealth;
 
     protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
@@ -115,12 +112,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        
-        //Parse variables out now to prevent variables from activating that use them.
-        damageAmount = getVariable(DAMAGE_VARIABLE).getValue();
-        outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
-
-        //Load instruments, or create the default ones.
+        //Load instruments.  If we are new, create the default ones.
         if (definition.instruments != null) {
             //Need to init lists.
             for (int i = 0; i < definition.instruments.size(); ++i) {
@@ -161,6 +153,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 }
             }
         }
+        
+        this.damageVar = new ComputedVariable(this, DAMAGE_VARIABLE, data);
+        this.towingConnectionVar = new ComputedVariable(this, "connection_requested", data);
+        outOfHealth = damageVar.currentValue == definition.general.health && definition.general.health != 0;
     }
 
     @Override
@@ -209,8 +205,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public void update() {
         super.update();
         world.beginProfiling("EntityE_Level", true);
-        damageAmount = getVariable(DAMAGE_VARIABLE).getValue();
-        outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
+        outOfHealth = damageVar.currentValue == definition.general.health && definition.general.health != 0;
         world.endProfiling();
     }
 
@@ -224,7 +219,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public ComputedVariable createComputedVariable(String variable) {
         switch (variable) {
             case ("damage_percent"):
-                return new ComputedVariable(this, variable, partialTicks -> damageAmount / definition.general.health, false);
+                return new ComputedVariable(this, variable, partialTicks -> damageVar.currentValue/ definition.general.health, false);
             case ("damage_totaled"):
                 return new ComputedVariable(this, variable, partialTicks -> outOfHealth ? 1 : 0, false);
             default:
@@ -287,16 +282,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Only call this method on the server: clients will update via variable packets.
      */
     public void damageCollisionBox(BoundingBox box, double damageAmount) {
-        String variableName = "collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage";
-        double currentDamage = getVariableValue(variableName) + damageAmount;
+        ComputedVariable variable = getVariable("collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage");
+        double currentDamage = variable.currentValue + damageAmount;
         if (currentDamage > box.groupDef.health) {
             double amountActuallyNeeded = damageAmount - (currentDamage - box.groupDef.health);
             currentDamage = box.groupDef.health;
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(variable, amountActuallyNeeded));
         } else {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damageAmount));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(variable, damageAmount));
         }
-        setVariableValue(variableName, currentDamage);
+        variable.setTo(currentDamage, false);
     }
 
     @Override
@@ -353,15 +348,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public void attack(Damage damage) {
         if (!damage.isWater) {
             if (!outOfHealth) {
-                damageAmount += damage.amount;
-                if (damageAmount > definition.general.health) {
-                    damageAmount = definition.general.health;
-                    outOfHealth = true;
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DAMAGE_VARIABLE, damageAmount));
+                double currentDamage = damageVar.currentValue + damage.amount;
+                if (currentDamage > definition.general.health) {
+                    double amountActuallyNeeded = damage.amount - (currentDamage - definition.general.health);
+                    currentDamage = definition.general.health;
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, amountActuallyNeeded));
                 } else {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, damage.amount));
                 }
-                setVariableValue(DAMAGE_VARIABLE, damageAmount);
+                damageVar.setTo(currentDamage, false);
             }
         }
     }
