@@ -1,3 +1,0 @@
-include ":mccore"
-project(":mccore").projectDir = file("../mccore")
-

@@ -1,5 +1,6 @@
 # common
 run
+runServer
 build
 .gradle
 
