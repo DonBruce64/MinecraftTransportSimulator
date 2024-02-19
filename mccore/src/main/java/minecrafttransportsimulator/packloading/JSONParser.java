@@ -694,17 +694,22 @@ public class JSONParser {
     public static void applyImports(AWrapperWorld world) {
         if (world.isClient()) {
             AEntityD_Definable.resetModelsAndAnimations(world);
-        } else {
-        	//Re-load all vehicles.  Need to copy them to a new list so we don't concurrently modify the existing one.
-        	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
-        	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-            for (EntityVehicleF_Physics vehicle : vehicles) {
-                IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+        }
+        
+        //Now re-load all vehicles.  On clients, we just kill them so they don't try and use imports.
+        //On servers, we kill them and re-add them so they'll re-spawn with the right properties.
+    	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
+    	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+        for (EntityVehicleF_Physics vehicle : vehicles) {
+        	if(!world.isClient()) {
+        		IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 vehicle.remove();
                 vehicle = new EntityVehicleF_Physics(world, null, data);
                 vehicle.addPartsPostAddition(null, data);
-                world.addEntity(vehicle);
-            }
+                world.spawnEntity(vehicle);	
+        	}else {
+        		vehicle.remove();
+        	}
         }
 	}
 
