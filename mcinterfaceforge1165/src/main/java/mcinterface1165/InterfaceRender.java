@@ -86,10 +86,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
 
     private static Map<String, RenderType> renderTypes = new HashMap<>();
-    private static final BufferData testData = new BufferData();
-    private static boolean onBufferSet2 = false;
-    private static Map<RenderableObject, List<BufferData>> bufferSet1 = new HashMap<>();
-    private static Map<RenderableObject, List<BufferData>> bufferSet2 = new HashMap<>();
+    private static Map<RenderableObject, Map<Object, BufferData>> buffers = new HashMap<>();
     private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
     private static ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
@@ -134,7 +131,7 @@ public class InterfaceRender implements IInterfaceRender {
     }
     
     @Override
-    public void renderVertices(RenderableObject object) {
+    public void renderVertices(RenderableObject object, Object objectAssociatedTo) {
         matrixStack.pushPose();
         Matrix4f matrix4f = convertMatrix4f(object.transform);
         MatrixStack.Entry stackEntry = matrixStack.last();
@@ -151,61 +148,15 @@ public class InterfaceRender implements IInterfaceRender {
             object.vertices.rewind();
         } else {
             String typeID = object.texture + object.isTranslucent + object.enableBrightBlending + object.ignoreWorldShading + object.disableLighting;
-            RenderType renderType = renderTypes.get(typeID);
+            final RenderType renderType;
             if (object.cacheVertices && !renderingGUI) {
-                if (renderType == null) {
-                    Builder stateBuilder = CustomRenderType.createForObject(object);
-                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, object.isTranslucent, stateBuilder.createCompositeState(false));
-                    renderTypes.put(typeID, renderType);
-                }
-
-                //Get the active buffer set.  We flip-flop each render.
-                List<BufferData> availableBuffers;
-                List<BufferData> usedBuffers;
-                if (onBufferSet2) {
-                    availableBuffers = bufferSet2.get(object);
-                    if (availableBuffers == null) {
-                        availableBuffers = new ArrayList<>();
-                        bufferSet2.put(object, availableBuffers);
-                    }
-                    usedBuffers = bufferSet1.get(object);
-                    if (usedBuffers == null) {
-                        usedBuffers = new ArrayList<>();
-                        bufferSet1.put(object, usedBuffers);
-                    }
-                } else {
-                    availableBuffers = bufferSet1.get(object);
-                    if (availableBuffers == null) {
-                        availableBuffers = new ArrayList<>();
-                        bufferSet1.put(object, availableBuffers);
-                    }
-                    usedBuffers = bufferSet2.get(object);
-                    if (usedBuffers == null) {
-                        usedBuffers = new ArrayList<>();
-                        bufferSet2.put(object, usedBuffers);
-                    }
-                }
-
-                //Try to get a already-created buffer rather than make a new one.
-                testData.setTo(object);
-                int index = availableBuffers.indexOf(testData);
-                BufferData data;
-                if (index != -1) {
-                    //Matching data, use it.
-                    data = availableBuffers.remove(index);
-                } else if (!availableBuffers.isEmpty()) {
-                    //Get last data, since it's least likely to be static.
-                    data = availableBuffers.remove(availableBuffers.size() - 1);
-                    data.setTo(object);
-                } else {
-                    //No data available, need to make it.
-                    data = new BufferData(renderType, object);
-                }
-                usedBuffers.add(data);
+            	//Get the render type and data buffer for this entity.
+            	renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, object.isTranslucent, CustomRenderType.createForObject(object).createCompositeState(false)));
+            	BufferData data = buffers.computeIfAbsent(object, k -> new HashMap<>()).computeIfAbsent(objectAssociatedTo, k1 -> new BufferData(renderType, object));
 
                 //Make sure data is ready, if not, init it.
                 if (!data.isReady) {
-                    index = 0;
+                    int index = 0;
                     data.builder.begin(GL11.GL_QUADS, renderType.format());
                     while (object.vertices.hasRemaining()) {
                         //Need to parse these out first since our order differs.
@@ -240,11 +191,7 @@ public class InterfaceRender implements IInterfaceRender {
                 }
                 renders.add(new RenderData(stackEntry.pose(), data.buffer));
             } else {
-                if (renderType == null) {
-                    Builder stateBuilder = CustomRenderType.createForObject(object);
-                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
-                    renderTypes.put(typeID, renderType);
-                }
+            	renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, CustomRenderType.createForObject(object).createCompositeState(false)));
                 IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
                 
                 //Now populate the state we requested.
@@ -286,16 +233,12 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void deleteVertices(RenderableObject object) {
-        //Add to removed render list, we should only remove renders AFTER they are rendered.
-        List<BufferData> dataSet = bufferSet1.remove(object);
-        if (dataSet != null) {
-            removedRenders.addAll(dataSet);
-        }
-        dataSet = bufferSet2.remove(object);
-        if (dataSet != null) {
-            removedRenders.addAll(dataSet);
-        }
+    public void deleteVertices(RenderableObject object, Object objectAssociatedTo) {
+    	if(object.cacheVertices) {
+	    	//Add to removed render list, we should only remove renders AFTER they are rendered.
+	    	//This ensures they are un-bound, if the were bound prior.
+	    	removedRenders.add(buffers.get(object).remove(objectAssociatedTo));
+    	}
     }
 
     @Override
@@ -534,9 +477,6 @@ public class InterfaceRender implements IInterfaceRender {
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
                 //Set camera offset point for later.
                 renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
-
-                //Flip the buffer set to the next one prior to rendering.
-                onBufferSet2 = !onBufferSet2;
 
                 //Set the stack variables and render.
                 matrixStack = stack;

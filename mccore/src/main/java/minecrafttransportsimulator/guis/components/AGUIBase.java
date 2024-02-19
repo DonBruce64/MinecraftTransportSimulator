@@ -275,7 +275,7 @@ public abstract class AGUIBase {
                 InterfaceManager.clientInterface.closeGUI();
                 InterfaceManager.inputInterface.setGUIControls(false);
             }
-            GUIComponent3DModel.clearModelCaches();
+            GUIComponent3DModel.clearModelCaches(this);
         }
     }
 

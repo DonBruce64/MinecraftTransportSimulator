@@ -394,6 +394,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Clear radars.
             aircraftOnRadar.clear();
             groundersOnRadar.clear();
+            
+            //Clear rendering assignments.
+            if(world.isClient()) {
+            	for (RenderableModelObject modelObject : objectLists.get(definition.getModelLocation(subDefinition))) {
+            		InterfaceManager.renderingInterface.deleteVertices(modelObject.object, this);
+                }
+            }
         }
     }
 
@@ -1214,15 +1221,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Called externally to reset all caches for all renders.
      */
     public static void clearObjectCaches(AJSONMultiModelProvider definition) {
-        for (JSONSubDefinition subDef : definition.definitions) {
-            String modelLocation = definition.getModelLocation(subDef);
-            List<RenderableModelObject> resetObjects = objectLists.remove(modelLocation);
-            if (resetObjects != null) {
-                for (RenderableModelObject modelObject : resetObjects) {
-                    modelObject.destroy();
-                }
+    	for (AEntityD_Definable<?> entity : InterfaceManager.clientInterface.getClientWorld().getEntitiesExtendingType(AEntityD_Definable.class)) {
+    		for (RenderableModelObject modelObject : objectLists.get(definition.getModelLocation(entity.subDefinition))) {
+    			modelObject.destroy(entity);
             }
-        }
+    	}
+    	objectLists.clear();
     }
 
     @Override
