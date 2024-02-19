@@ -68,9 +68,7 @@ public final class RenderInstrument {
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
-                        int variablePartNumber = ComputedVariable.getVariableNumber(component.textObject.variableName);
-                        final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
-                        if (addSuffix) {
+                        if (ComputedVariable.isNumberedVariable(component.textObject.variableName) && (component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_"))) {
                             String oldName = component.textObject.variableName;
                             component.textObject.variableName += "_" + partNumber;
                             RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
