@@ -701,7 +701,9 @@ public class JSONParser {
             for (EntityVehicleF_Physics vehicle : vehicles) {
                 IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 vehicle.remove();
-                world.addEntity(new EntityVehicleF_Physics(world, null, data));
+                vehicle = new EntityVehicleF_Physics(world, null, data);
+                vehicle.addPartsPostAddition(null, data);
+                world.addEntity(vehicle);
             }
         }
 	}
