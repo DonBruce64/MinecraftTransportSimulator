@@ -144,8 +144,7 @@ public final class RenderInstrument {
             //We also need to set the partNumber to 1 if we have a part number of 0 and we're
             //doing a part-specific animation.
             //Skip adding a suffix if one already exists.
-            int variablePartNumber = ComputedVariable.getVariableNumber(clock.animation.variable);
-            final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
+            final boolean addSuffix = ComputedVariable.isNumberedVariable(clock.animation.variable) && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
             if (partNumber == 0 && addSuffix) {
                 partNumber = 1;
             }
