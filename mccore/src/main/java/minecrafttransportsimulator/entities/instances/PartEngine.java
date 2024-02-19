@@ -39,7 +39,7 @@ public class PartEngine extends APart {
     public double rpm;
     public double temp;
     public double pressure;
-    public float propellerGearboxRatio;
+    public double propellerGearboxRatio;
 
     //Runtime calculated values.
     public double fuelFlow;
@@ -48,43 +48,43 @@ public class PartEngine extends APart {
 
     //Internal properties
     @ModifiedValue
-    private float currentMaxRPM;
+    private double currentMaxRPM;
     @ModifiedValue
-    private float currentMaxSafeRPM;
+    private double currentMaxSafeRPM;
     @ModifiedValue
-    private float currentRevlimitRPM;
+    private double currentRevlimitRPM;
     @ModifiedValue
-    private float currentRevlimitBounce;
+    private double currentRevlimitBounce;
     @ModifiedValue
-    private float currentRevResistance;
+    private double currentRevResistance;
     @ModifiedValue
-    private float currentIdleRPM;
+    private double currentIdleRPM;
     @ModifiedValue
-    private float currentStartRPM;
+    private double currentStartRPM;
     @ModifiedValue
-    private float currentStallRPM;
+    private double currentStallRPM;
     @ModifiedValue
-    private float currentStarterPower;
+    private double currentStarterPower;
     @ModifiedValue
-    private float currentFuelConsumption;
+    private double currentFuelConsumption;
     @ModifiedValue
-    private float currentHeatingCoefficient;
+    private double currentHeatingCoefficient;
     @ModifiedValue
-    private float currentCoolingCoefficient;
+    private double currentCoolingCoefficient;
     @ModifiedValue
-    private float currentSuperchargerFuelConsumption;
+    private double currentSuperchargerFuelConsumption;
     @ModifiedValue
-    private float currentSuperchargerEfficiency;
+    private double currentSuperchargerEfficiency;
     @ModifiedValue
-    private float currentGearRatio;
+    private double currentGearRatio;
     @ModifiedValue
-    private float currentForceShift;
+    private double currentForceShift;
     @ModifiedValue
-    public float currentIsAutomatic;
+    public double currentIsAutomatic;
     @ModifiedValue
-    private float currentWearFactor;
+    private double currentWearFactor;
     @ModifiedValue
-    private float currentWinddownRate;
+    private double currentWinddownRate;
 
     //Internal variables.
     private boolean autoStarterEngaged;
@@ -849,7 +849,8 @@ public class PartEngine extends APart {
                         currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
                         break;
                     default:
-                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
+                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }
@@ -1193,7 +1194,7 @@ public class PartEngine extends APart {
     }
 
     //--------------------START OF ENGINE PROPERTY METHODS--------------------
-    public float getTotalFuelConsumption() {
+    public double getTotalFuelConsumption() {
         return currentFuelConsumption + currentSuperchargerFuelConsumption;
     }
 

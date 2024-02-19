@@ -1003,27 +1003,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to get a variable for this entity.
-     */
-    public final double getVariableValue(String variable) {
-        return computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable)).computeValue(0);
-    }
-
-    /**
-     * Helper method to set a variable for this entity.
-     */
-    public final void setVariableValue(String variable, double value) {
-        computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable)).setTo(value, false);
-    }
-
-    /**
      * Helper method for variable modification.
      */
-    protected float adjustVariable(JSONVariableModifier modifier, float currentValue) {
-        float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
+    protected double adjustVariable(JSONVariableModifier modifier, double currentValue) {
+        double modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
         VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
         if (switchbox != null) {
-            switchbox.modifiedValue = modifiedValue;
+            switchbox.modifiedValue = (float) modifiedValue;
             if (switchbox.runSwitchbox(0, true)) {
                 modifiedValue = switchbox.modifiedValue;
             } else {
@@ -1134,13 +1120,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     /**
      * Called to update the variable modifiers for this entity.
-     * By default, this will get any variables that {@link #getVariableValue(String)}
-     * returns, but can be extended to do other variables specific to the entity.
      */
     public void updateVariableModifiers() {
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
-                setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
+            	ComputedVariable variable = getVariable(modifier.variable);
+            	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
             }
         }
     }

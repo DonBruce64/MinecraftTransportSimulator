@@ -67,15 +67,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
     //Properties
     @ModifiedValue
-    public float currentSteeringForceIgnoresSpeed;
+    public double currentSteeringForceIgnoresSpeed;
     @ModifiedValue
-    public float currentSteeringForceFactor;
+    public double currentSteeringForceFactor;
     @ModifiedValue
-    public float currentBrakingFactor;
+    public double currentBrakingFactor;
     @ModifiedValue
-    public float currentOverSteer;
+    public double currentOverSteer;
     @ModifiedValue
-    public float currentUnderSteer;
+    public double currentUnderSteer;
 
     //Road-following data.
     protected RoadFollowingState frontFollower;
@@ -370,7 +370,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private void performGroundOperations() {
         //Get braking force and apply it to the motions.
-        float brakingFactor = towedByConnection == null ? getBrakingForce() * currentBrakingFactor : 0;
+        double brakingFactor = towedByConnection == null ? getBrakingForce() * currentBrakingFactor : 0;
         if (brakingFactor > 0) {
             double brakingForce = 20F * brakingFactor / currentMass;
             if (brakingForce > velocity) {

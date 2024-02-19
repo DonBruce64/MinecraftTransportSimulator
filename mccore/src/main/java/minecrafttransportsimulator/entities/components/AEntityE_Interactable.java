@@ -236,7 +236,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
                 JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
                 List<BoundingBox> boxes = definitionCollisionBoxes.get(i);
-                if (groupDef.health == 0 || getVariableValue("collision_" + (i + 1) + "_damage") < groupDef.health) {
+                if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage").currentValue < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {

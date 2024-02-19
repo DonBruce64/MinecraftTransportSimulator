@@ -111,7 +111,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
             //the value will be set before any subsequent logic occurs.
             if (definition.constantValues != null) {
-                definition.constantValues.forEach((constantKey, constantValue) -> setVariableValue(constantKey, constantValue));
+                definition.constantValues.forEach((constantKey, constantValue) -> this.getVariable(constantKey).setTo(constantValue, false));
             }
         }
 
@@ -328,9 +328,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //First check if we need to reduce health of the hitbox.
             boolean hitOperationalHitbox = false;
             if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.health != 0 && !damage.isWater) {
-                String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage";
-                double currentDamage = hitEntity.getVariableValue(variableName);
                 if (bullet != null) {
+                    double currentDamage = hitEntity.getVariable("collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage").currentValue;
                     bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitEntry.box.groupDef.health + "  ATTACKED FOR: " + damage.amount);
                 }
 

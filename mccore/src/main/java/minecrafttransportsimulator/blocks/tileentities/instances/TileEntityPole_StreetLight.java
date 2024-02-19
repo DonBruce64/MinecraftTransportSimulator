@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
@@ -43,10 +44,11 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
                     case "lightLevel":
-                        lightLevel = adjustVariable(modifier, lightLevel);
+                        lightLevel = (float) adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
+                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }

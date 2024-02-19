@@ -64,11 +64,11 @@ public class PartGun extends APart {
 
     //Variables that can be modified using VMs
     @ModifiedValue
-    private float currentFireDelay;
+    private double currentFireDelay;
     @ModifiedValue
-    private float currentBulletSpreadFactor;
+    private double currentBulletSpreadFactor;
     @ModifiedValue
-    public float currentIsTwoHandedness;
+    public double currentIsTwoHandedness;
 
     private final boolean resetPosition;
 
@@ -632,13 +632,14 @@ public class PartGun extends APart {
                     	currentIsTwoHandedness = adjustVariable(modifier, currentIsTwoHandedness);
                         break;
                     case "gun_yaw":
-                        internalOrientation.angles.y = adjustVariable(modifier, (float) internalOrientation.angles.y);
+                        internalOrientation.angles.y = adjustVariable(modifier, internalOrientation.angles.y);
                         break;
                     case "gun_pitch":
-                        internalOrientation.angles.x = adjustVariable(modifier, (float) internalOrientation.angles.x);
+                        internalOrientation.angles.x = adjustVariable(modifier, internalOrientation.angles.x);
                         break;
                     default:
-                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
+                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }

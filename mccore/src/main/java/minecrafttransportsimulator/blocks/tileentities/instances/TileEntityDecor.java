@@ -123,10 +123,11 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
                     case "lightLevel":
-                        lightLevel = adjustVariable(modifier, lightLevel);
+                        lightLevel = (float) adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                        setVariableValue(modifier.variable, adjustVariable(modifier, (float) getVariableValue(modifier.variable)));
+                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }
