@@ -695,13 +695,16 @@ public class JSONParser {
         if (world.isClient()) {
             AEntityD_Definable.resetModelsAndAnimations(world);
         } else {
-	        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-	            IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-	            vehicle.remove();
-	            world.addEntity(new EntityVehicleF_Physics(world, null, data));
-	        }
+        	//Re-load all vehicles.  Need to copy them to a new list so we don't concurrently modify the existing one.
+        	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
+        	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+            for (EntityVehicleF_Physics vehicle : vehicles) {
+                IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                vehicle.remove();
+                world.addEntity(new EntityVehicleF_Physics(world, null, data));
+            }
         }
-    }
+	}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
