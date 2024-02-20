@@ -76,7 +76,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isSpare;
     public boolean isMirrored;
     private boolean requestedForcedCamera;
-    private final List<String> variablesOnParents = new ArrayList<>();
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -142,10 +141,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Set to false to re-create animation since we don't want to use old animations we are linked to.
         //FIXME need to fix linked animations.
         //animationsInitialized = false;
-        
-        //Remove existing parent variables, since they will have changed.
-        //They will be re-created next request.
-        variablesOnParents.forEach(variable -> removeVariable(variable));
     }
 
     @Override
@@ -566,9 +561,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (variable.startsWith("parent_")) {
         	if(entityOn == null) {
         		//We might not have the entity set yet if we're constructing.
-        		//If not, note this for later.
-        		variablesOnParents.add(variable);
-        		return ZERO_VARIABLE;
+        		return new ComputedVariable(this, variable, partialTicks -> {
+        			//Remove ourselves and re-create since we should have a value now.
+        			//getVariable function will auto-add to hashmap of variables.
+        			removeVariable(variable);
+        			return getVariable(variable).computeValue(partialTicks);
+        		}, false);
         	}else {
         		return entityOn.createComputedVariable(variable.substring("parent_".length()));	
         	}
