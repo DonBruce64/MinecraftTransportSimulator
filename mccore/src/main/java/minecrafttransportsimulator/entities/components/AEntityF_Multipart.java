@@ -695,8 +695,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         cameraEntities.clear();
 
         parts.forEach(APart::updatePartList);
-        //Clear computed variables, since our parts changed.
-        resetVariables();
+        //Clear computed variables for all parts and parents, since our parts changed.
+        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getValue().entity != this);
     }
 
     /**

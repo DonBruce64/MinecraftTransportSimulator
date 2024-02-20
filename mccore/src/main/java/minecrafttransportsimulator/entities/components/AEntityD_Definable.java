@@ -82,7 +82,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
      **/
-    private final Map<String, ComputedVariable> computedVariables = new HashMap<>();
+    protected final Map<String, ComputedVariable> computedVariables = new HashMap<>();
     protected final ComputedVariable ZERO_VARIABLE = new ComputedVariable(this, "#0", partialTicks -> 0, false);
     protected final ComputedVariable ONE_VARIABLE = new ComputedVariable(this, "#1", partialTicks -> 1, false);
 
@@ -1056,13 +1056,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         } //No lists found for this entry, therefore no variables are false.
 
         return true;
-    }
-
-    /**
-     * Helper method to reset all variables.  Used for state-changes.
-     */
-    public final void resetVariables() {
-        computedVariables.clear();
     }
 
     /**
