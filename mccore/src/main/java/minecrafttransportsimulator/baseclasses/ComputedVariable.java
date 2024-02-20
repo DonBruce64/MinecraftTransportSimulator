@@ -51,7 +51,7 @@ public class ComputedVariable {
         }else if(data != null) {
         	this.currentValue = data.getDouble(variableKey);
         }
-        this.isActive = currentValue > 0;
+        this.isActive = isInverted ? currentValue == 0 : currentValue > 0;
     }
 
     public static boolean isNumberedVariable(String variable) {
@@ -84,14 +84,14 @@ public class ComputedVariable {
                 currentValue = function.apply(partialTicks);
                 lastTickChecked = entity.ticksExisted;
             }
-            isActive = isInverted ? currentValue > 0 : currentValue == 0;
+            isActive = isInverted ? currentValue == 0 : currentValue > 0;
         }
         return currentValue;
     }
 
     public final void setTo(double value, boolean sendPacket) {
         currentValue = value;
-        isActive = isInverted ? currentValue > 0 : currentValue == 0;
+        isActive = isInverted ? currentValue == 0 : currentValue > 0;
         if (sendPacket) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
         }
@@ -99,7 +99,7 @@ public class ComputedVariable {
     
     public final void adjustBy(double value, boolean sendPacket) {
         currentValue += value;
-        isActive = isInverted ? currentValue > 0 : currentValue == 0;
+        isActive = isInverted ? currentValue == 0 : currentValue > 0;
         if (sendPacket) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
         }
@@ -107,7 +107,7 @@ public class ComputedVariable {
 
     public final void toggle(boolean sendPacket) {
         currentValue = currentValue > 0 ? 0 : 1;
-        isActive = isInverted ? currentValue > 0 : currentValue == 0;
+        isActive = isInverted ? currentValue == 0 : currentValue > 0;
         if (sendPacket) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
         }
@@ -128,7 +128,7 @@ public class ComputedVariable {
         if (newValue != currentValue) {
         	incrementValue = newValue - currentValue;
             currentValue = newValue;
-            isActive = isInverted ? currentValue > 0 : currentValue == 0;
+            isActive = isInverted ? currentValue == 0 : currentValue > 0;
             if (sendPacket) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
             }
