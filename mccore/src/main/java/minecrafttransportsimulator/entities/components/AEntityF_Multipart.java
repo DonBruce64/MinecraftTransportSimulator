@@ -467,10 +467,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR, null));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR, null);
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
@@ -495,14 +495,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE, null));
                             bullet.waitingOnActionPacket = true;
                             return EntityBullet.HitType.VEHICLE;
                         }
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE, null);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }

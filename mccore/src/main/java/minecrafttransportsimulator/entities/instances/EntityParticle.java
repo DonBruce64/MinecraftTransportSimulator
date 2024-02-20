@@ -52,7 +52,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private final RenderableObject renderable;
 
     //Runtime variables.
-    private boolean killBreakParticle;
+    private boolean killBadParticle;
     private boolean touchingBlocks;
     private float timeOfNextTexture;
     private int textureIndex;
@@ -70,7 +70,18 @@ public class EntityParticle extends AEntityC_Renderable {
         helperTransform.resetTransforms();
         if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
             orientation.set(entitySpawning.orientation);
-            helperTransform.set(entitySpawning.orientation);
+            helperTransform.set(orientation);
+        }else if (definition.spawningOrientation == ParticleSpawningOrientation.BLOCK) {
+        	if(entitySpawning instanceof EntityBullet) {
+        		EntityBullet bullet = (EntityBullet) entitySpawning;
+        		if(bullet.blockHit != null) {
+        			helperRotation.setToZero().rotateX(-90);        			
+        			orientation.set(bullet.blockHit.side.facingRotation).multiplyTranspose(helperRotation);
+        			helperTransform.set(orientation);
+        		}else {
+        			this.killBadParticle = true;
+        		}
+        	}
         }
         if (switchbox != null) {
             helperTransform.multiply(switchbox.netMatrix);
@@ -237,7 +248,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.type == ParticleType.BREAK) {
             if (world.isAir(position)) {
                 //Don't spawn break particles in the air, they're null textures.
-                killBreakParticle = true;
+                killBadParticle = true;
                 return;
             } else {
                 float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
@@ -253,7 +264,7 @@ public class EntityParticle extends AEntityC_Renderable {
     public void update() {
         super.update();
         //Check age to see if we are on our last tick or if we're a bad particle.
-        if (ticksExisted == maxAge || killBreakParticle) {
+        if (ticksExisted == maxAge || killBadParticle) {
             remove();
             return;
         }
@@ -460,7 +471,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     public boolean disableRendering(float partialTicks) {
-        return killBreakParticle || super.disableRendering(partialTicks);
+        return killBadParticle || super.disableRendering(partialTicks);
     }
 
     private void updateOrientation() {

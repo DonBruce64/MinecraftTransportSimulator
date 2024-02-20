@@ -164,7 +164,9 @@ public class JSONParticle {
         @JSONDescription("Particle spawns relative to the entity that spawned it.")
         ENTITY,
         @JSONDescription("Particle spawns relative to the world and ignores entity orientation.")
-        WORLD;
+        WORLD,
+        @JSONDescription("Particle spawns relative to to the block position where the bullet that spawned it hit.  If the particle is asked to spawn by anything but a bullet that hits a block, it will not be spawned.")
+        BLOCK;
     }
 
     public enum ParticleRenderingOrientation {

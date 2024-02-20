@@ -52,7 +52,8 @@ public abstract class ABlockBase {
         public final int xOffset;
         public final int yOffset;
         public final int zOffset;
-        public final RotationMatrix rotation;
+        public final RotationMatrix yRotation;
+        public final RotationMatrix facingRotation;
         public final boolean blockBased;
         public final boolean xzPlanar;
 
@@ -60,7 +61,8 @@ public abstract class ABlockBase {
             this.xOffset = xOffset;
             this.yOffset = yOffset;
             this.zOffset = zOffset;
-            this.rotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
+            this.yRotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
+            this.facingRotation = new RotationMatrix().setToVector(new Point3D(xOffset, yOffset, zOffset), true);
             this.blockBased = blockBased;
             this.xzPlanar = xzPlanar;
         }
@@ -103,7 +105,7 @@ public abstract class ABlockBase {
             }
             int degRotation = (checkDiagonals ? (int) (Math.round(rotation / 45) * 45) : (int) (Math.round(rotation / 90) * 90)) % 360;
             for (Axis axis : values()) {
-                if (axis.xzPlanar && axis.rotation.angles.y == degRotation) {
+                if (axis.xzPlanar && axis.yRotation.angles.y == degRotation) {
                     return axis;
                 }
             }
