@@ -151,7 +151,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
                 currentRenderable.worldLightValue = gui.worldLightValue;
                 currentRenderable.disableLighting = renderBright || ignoreGUILightingState;
                 currentRenderable.transform.setTranslation(position);
-                currentRenderable.render(null);
+                currentRenderable.render();
             }
         }
     }

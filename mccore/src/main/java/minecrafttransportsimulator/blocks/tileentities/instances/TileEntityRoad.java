@@ -142,7 +142,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     public void remove() {
         super.remove();
         for (RenderableObject object : componentRenderables.values()) {
-            object.destroy(this);
+            object.destroy();
         }
     }
 
@@ -482,7 +482,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     object.transform.set(transform);
                 }
                 object.worldLightValue = worldLightValue;
-                object.render(this);
+                object.render();
             }
 
             //If we are inactive render the blocking blocks and the main block.
@@ -526,7 +526,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
             Point3D invertedPosition = position.copy().invert();
             for (RenderableObject renderable : devRenderables) {
                 renderable.transform.setTranslation(invertedPosition).multiply(transform);
-                renderable.render(this);
+                renderable.render();
             }
         }
     }

@@ -10,11 +10,9 @@ import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -65,7 +63,6 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
-    private static final Map<RenderableObject, Set<Object>> objectMap = new HashMap<>();
     protected static int lastRenderPassActualPass;
 
     @Override
@@ -99,7 +96,7 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void renderVertices(RenderableObject object, Object objectAssociatedTo) {
+    public void renderVertices(RenderableObject object) {
         if (object.disableLighting) {
             setLightingState(false);
         }
@@ -122,13 +119,8 @@ public class InterfaceRender implements IInterfaceRender {
         GL11.glPushMatrix();
         applyTransformOpenGL(object.transform);
         if (object.cacheVertices) {
-        	//Add entity to the rendering mapping once rendered.
-            objectMap.computeIfAbsent(object, k -> new HashSet<>()).add(objectAssociatedTo);
             if (object.cachedVertexIndex == -1) {
-                object.cachedVertexIndex = GL11.glGenLists(1);
-                GL11.glNewList(object.cachedVertexIndex, GL11.GL_COMPILE);
-                renderVertices(object.vertices);
-                GL11.glEndList();
+                object.cachedVertexIndex = cacheVertices(object.vertices);
                 object.vertices = null;
             }
             GL11.glCallList(object.cachedVertexIndex);
@@ -151,15 +143,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void deleteVertices(RenderableObject object, Object objectAssociatedTo) {
-    	if(object.cacheVertices) {
-	    	//Only delete display list if no entities are using it.
-	    	Set<Object> set = objectMap.get(object);
-	    	set.remove(object);
-	    	if(set.isEmpty()) {
-	    		GL11.glDeleteLists(object.cachedVertexIndex, 1);	
-	    	}
-    	}
+    public void deleteVertices(RenderableObject object) {
+        GL11.glDeleteLists(object.cachedVertexIndex, 1);
     }
 
     @Override
@@ -260,6 +245,20 @@ public class InterfaceRender implements IInterfaceRender {
         //Rewind buffer for next read.
         vertices.rewind();
         GL11.glLineWidth(1);
+    }
+
+    /**
+     * Caches the vertices in some form for quick rendering.  This form is version-dependent,
+     * but no matter which version is used, the returned value is assured to be unique for each
+     * call to this function.  Note that the vertex format is expected to be the same as what 
+     * is in {@link RenderableObject}
+     */
+    private static int cacheVertices(FloatBuffer vertices) {
+        int displayListIndex = GL11.glGenLists(1);
+        GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+        renderVertices(vertices);
+        GL11.glEndList();
+        return displayListIndex;
     }
 
     /**

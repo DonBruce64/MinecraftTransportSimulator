@@ -69,7 +69,7 @@ public class GUIComponentCutout extends AGUIComponent {
             currentRenderable.ignoreWorldShading = true;
             currentRenderable.worldLightValue = gui.worldLightValue;
             currentRenderable.disableLighting = renderBright || ignoreGUILightingState;
-            currentRenderable.render(null);
+            currentRenderable.render();
         }
     }
 }

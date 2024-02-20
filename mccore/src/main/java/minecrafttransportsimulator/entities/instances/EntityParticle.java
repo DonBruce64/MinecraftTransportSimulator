@@ -465,7 +465,7 @@ public class EntityParticle extends AEntityC_Renderable {
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
-            renderable.render(null);//No vertex caching for particles
+            renderable.render();
         }
     }
 

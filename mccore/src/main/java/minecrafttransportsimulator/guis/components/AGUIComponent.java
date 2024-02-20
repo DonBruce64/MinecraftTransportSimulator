@@ -170,7 +170,7 @@ public abstract class AGUIComponent {
 
             //Do the actual rendering.
             mutableTooltipRenderable.transform.setTranslation(0, 0, textPosition.z + 25);
-            mutableTooltipRenderable.render(null);
+            mutableTooltipRenderable.render();
 
             //Need to move tooltip text by -y to account for inverted coords.
             mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);

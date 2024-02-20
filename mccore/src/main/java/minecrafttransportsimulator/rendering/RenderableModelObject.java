@@ -34,7 +34,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class RenderableModelObject {
     protected final String modelLocation;
-    public final RenderableObject object;
+    protected final RenderableObject object;
     private final boolean isWindow;
     private final boolean isOnlineTexture;
     private final RenderableObject interiorWindowObject;
@@ -170,7 +170,7 @@ public class RenderableModelObject {
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                         object.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
                         object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
-                        object.render(entity);
+                        object.render();
                     } else if (blendingEnabled == object.isTranslucent) {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
                         //Need to disable light-mapping from daylight if we are a light-up texture.
@@ -186,11 +186,11 @@ public class RenderableModelObject {
                                 object.alpha = (float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin);
                             }
                         }
-                        object.render(entity);
+                        object.render();
                         if (interiorWindowObject != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
                             interiorWindowObject.worldLightValue = object.worldLightValue;
                             interiorWindowObject.transform.set(object.transform);
-                            interiorWindowObject.render(entity);
+                            interiorWindowObject.render();
                         }
                     }
 
@@ -217,8 +217,8 @@ public class RenderableModelObject {
      * Call to destroy this renderable object.  This should be done prior to re-parsing the model
      * as it allows for the freeing of OpenGL resources.
      */
-    public void destroy(AEntityD_Definable<?> entity) {
-        object.destroy(entity);
+    public void destroy() {
+        object.destroy();
         treadPoints.remove(modelLocation);
     }
 
@@ -370,11 +370,11 @@ public class RenderableModelObject {
                 treadPathBaseTransform.set(object.transform);
                 treadRotation.setToAxisAngle(1, 0, 0, point[2] + angleDelta * treadMovementPercentage);
                 object.transform.applyRotation(treadRotation);
-                object.render(tread);
+                object.render();
                 object.transform.set(treadPathBaseTransform);
             } else {
                 //Just render as normal as we didn't rotate.
-                object.render(tread);
+                object.render();
             }
 
             //Add remaining translation.
@@ -399,7 +399,7 @@ public class RenderableModelObject {
             colorObject.color.setTo(color);
             colorObject.alpha = lightLevel;
             colorObject.transform.set(object.transform);
-            colorObject.render(entity);
+            colorObject.render();
 
         }
         if (blendingEnabled && lightLevel > 0 && lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
@@ -436,7 +436,7 @@ public class RenderableModelObject {
                     flareObject.color.setTo(color);
                     flareObject.alpha = blendableBrightness;
                     flareObject.transform.set(object.transform);
-                    flareObject.render(entity);
+                    flareObject.render();
                 }
 
                 //Render all beams.
@@ -448,7 +448,7 @@ public class RenderableModelObject {
                     beamObject.color.setTo(color);
                     beamObject.alpha = blendableBrightness;
                     beamObject.transform.set(object.transform);
-                    beamObject.render(entity);
+                    beamObject.render();
                 }
             }
         }
@@ -466,7 +466,7 @@ public class RenderableModelObject {
             coverObject.worldLightValue = object.worldLightValue;
             coverObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0;
             coverObject.transform.set(object.transform);
-            coverObject.render(entity);
+            coverObject.render();
         }
     }
 
