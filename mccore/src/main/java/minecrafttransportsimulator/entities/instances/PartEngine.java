@@ -347,7 +347,7 @@ public class PartEngine extends APart {
                 	if (shiftDownVar.isActive) {
                 		shiftDownVar.toggle(false);
                         shiftDown();
-                    }else {
+                    } else if (shiftSelectionVar.isActive) {
                     	if (shiftSelectionVar.currentValue < 10) {
                             while (currentGearVar.currentValue < shiftSelectionVar.currentValue && shiftUp())
                                 ;
@@ -1161,7 +1161,7 @@ public class PartEngine extends APart {
                 nextGear = (byte) (currentGearVar.currentValue - 1);
                 doShift = true;
             }
-
+            
             if (doShift) {
                 currentGearVar.setTo(nextGear, false);
                 shiftCooldown = definition.engine.shiftSpeed;
