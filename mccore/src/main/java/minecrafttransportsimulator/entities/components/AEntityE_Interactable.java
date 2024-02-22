@@ -154,8 +154,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             }
         }
         
-        this.damageVar = new ComputedVariable(this, DAMAGE_VARIABLE, data);
-        this.towingConnectionVar = new ComputedVariable(this, "connection_requested", data);
+        addVariable(this.damageVar = new ComputedVariable(this, DAMAGE_VARIABLE, data));
+        addVariable(this.towingConnectionVar = new ComputedVariable(this, "connection_requested", data));
+        //Need to set this to prevent state-changes on load.
         outOfHealth = damageVar.currentValue == definition.general.health && definition.general.health != 0;
     }
 

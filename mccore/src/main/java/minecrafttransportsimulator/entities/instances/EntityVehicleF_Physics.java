@@ -140,18 +140,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         if (data != null) {
             this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
         }
-        this.aileronInputVar = new ComputedVariable(this, "input_aileron", data);
-        this.elevatorInputVar = new ComputedVariable(this, "input_elevator", data);
-        this.rudderInputVar = new ComputedVariable(this, "input_rudder", data);
-        this.aileronAngleVar = new ComputedVariable(this, "aileron", data);
-        this.elevatorAngleVar = new ComputedVariable(this, "elevator", data);
-        this.rudderAngleVar = new ComputedVariable(this, "rudder", data);
-        this.aileronTrimVar = new ComputedVariable(this, "trim_aileron", data);
-        this.elevatorTrimVar = new ComputedVariable(this, "trim_elevator", data);
-        this.rudderTrimVar = new ComputedVariable(this, "trim_rudder", data);
-        this.flapDesiredAngleVar = new ComputedVariable(this, "flaps_setpoint", data);
-        this.autopilotValueVar = new ComputedVariable(this, "autopilot", data);
-        this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data);
+        addVariable(this.aileronInputVar = new ComputedVariable(this, "input_aileron", data));
+        addVariable(this.elevatorInputVar = new ComputedVariable(this, "input_elevator", data));
+        addVariable(this.rudderInputVar = new ComputedVariable(this, "input_rudder", data));
+        addVariable(this.aileronAngleVar = new ComputedVariable(this, "aileron", data));
+        addVariable(this.elevatorAngleVar = new ComputedVariable(this, "elevator", data));
+        addVariable(this.rudderAngleVar = new ComputedVariable(this, "rudder", data));
+        addVariable(this.aileronTrimVar = new ComputedVariable(this, "trim_aileron", data));
+        addVariable(this.elevatorTrimVar = new ComputedVariable(this, "trim_elevator", data));
+        addVariable(this.rudderTrimVar = new ComputedVariable(this, "trim_rudder", data));
+        addVariable(this.flapDesiredAngleVar = new ComputedVariable(this, "flaps_setpoint", data));
+        addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
+        addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
     }
 
     @Override

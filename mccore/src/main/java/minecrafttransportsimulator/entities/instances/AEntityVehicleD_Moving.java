@@ -136,11 +136,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
         
-        this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data);
-    	this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data);
-    	this.brakeVar = new ComputedVariable(this, "brake", data);
-    	this.parkingBrakeVar = new ComputedVariable(this, "p_brake", data);
-        this.lockedVar = new ComputedVariable(this, "locked", data);
+        addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
+        addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
+        addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
+        addVariable(this.parkingBrakeVar = new ComputedVariable(this, "p_brake", data));
+        addVariable(this.lockedVar = new ComputedVariable(this, "locked", data));
     }
 
     @Override

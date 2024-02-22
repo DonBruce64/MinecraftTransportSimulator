@@ -81,7 +81,7 @@ public class PartGroundDevice extends APart {
             parent = parentPart.entityOn;
         }
         
-        this.flatVar = new ComputedVariable(this, FLAT_VARIABLE, data);
+        addVariable(this.flatVar = new ComputedVariable(this, FLAT_VARIABLE, data));
     }
 
     @Override

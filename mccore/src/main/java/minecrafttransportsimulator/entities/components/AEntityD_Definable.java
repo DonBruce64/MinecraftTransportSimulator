@@ -1009,6 +1009,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void removeVariable(String variable) {
         computedVariables.remove(variable);
     }
+    
+    /**
+     * Helper method to add a variable object on this entity.
+     */
+    public void addVariable(ComputedVariable variable) {
+        computedVariables.put(variable.variableKey, variable);
+    }
 
     /**
      * Helper method for variable modification.

@@ -85,16 +85,16 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
         world.addEntity(fuelTank);
         
-        this.runningLightVar = new ComputedVariable(this, "running_light", data);
-    	this.headLightVar = new ComputedVariable(this, "headlight", data);
-    	this.navigationLightVar = new ComputedVariable(this, "navigation_light", data);
-    	this.strobeLightVar = new ComputedVariable(this, "strobe_light", data);
-    	this.taxiLightVar = new ComputedVariable(this, "taxi_light", data);
-    	this.landingLightVar = new ComputedVariable(this, "landing_light", data);
-    	this.hornVar = new ComputedVariable(this, "horn", data);
-    	this.retractGearVar = new ComputedVariable(this, "gear_setpoint", data);
-    	this.throttleVar = new ComputedVariable(this, "throttle", data);
-    	this.reverseThrustVar = new ComputedVariable(this, "reverser", data);
+        addVariable(this.runningLightVar = new ComputedVariable(this, "running_light", data));
+        addVariable(this.headLightVar = new ComputedVariable(this, "headlight", data));
+    	addVariable(this.navigationLightVar = new ComputedVariable(this, "navigation_light", data));
+    	addVariable(this.strobeLightVar = new ComputedVariable(this, "strobe_light", data));
+    	addVariable(this.taxiLightVar = new ComputedVariable(this, "taxi_light", data));
+    	addVariable(this.landingLightVar = new ComputedVariable(this, "landing_light", data));
+    	addVariable(this.hornVar = new ComputedVariable(this, "horn", data));
+    	addVariable(this.retractGearVar = new ComputedVariable(this, "gear_setpoint", data));
+    	addVariable(this.throttleVar = new ComputedVariable(this, "throttle", data));
+    	addVariable(this.reverseThrustVar = new ComputedVariable(this, "reverser", data));
     }
 
     @Override

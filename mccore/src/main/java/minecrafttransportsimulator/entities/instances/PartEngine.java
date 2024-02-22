@@ -148,15 +148,15 @@ public class PartEngine extends APart {
                 ++forwardsGears;
             }
         }
-        this.magnetoVar = new ComputedVariable(this, "engine_magneto", data);
-        this.electricStarterVar = new ComputedVariable(this, "engine_starter", data);
-        this.handStarterVar = new ComputedVariable(this, "engine_starter_hand", data);
-        this.currentGearVar = new ComputedVariable(this, "engine_gear", data);
-        this.shiftUpVar = new ComputedVariable(this, "engine_shift_up", data);
-        this.shiftDownVar = new ComputedVariable(this, "engine_shift_down", data);
-        this.shiftNeutralVar = new ComputedVariable(this, "engine_shift_neutral", data);
-        this.shiftSelectionVar = new ComputedVariable(this, "engine_shift_request", data);
-        this.hoursVar = new ComputedVariable(this, HOURS_VARIABLE, data);
+        addVariable(this.magnetoVar = new ComputedVariable(this, "engine_magneto", data));
+        addVariable(this.electricStarterVar = new ComputedVariable(this, "engine_starter", data));
+        addVariable(this.handStarterVar = new ComputedVariable(this, "engine_starter_hand", data));
+        addVariable(this.currentGearVar = new ComputedVariable(this, "engine_gear", data));
+        addVariable(this.shiftUpVar = new ComputedVariable(this, "engine_shift_up", data));
+        addVariable(this.shiftDownVar = new ComputedVariable(this, "engine_shift_down", data));
+        addVariable(this.shiftNeutralVar = new ComputedVariable(this, "engine_shift_neutral", data));
+        addVariable(this.shiftSelectionVar = new ComputedVariable(this, "engine_shift_request", data));
+        addVariable(this.hoursVar = new ComputedVariable(this, HOURS_VARIABLE, data));
 
         //Verify gears aren't out of range.  This can happen if a pack updates to lower number of gears.
         if (definition.engine.gearRatios.size() <= currentGearVar.currentValue + reverseGears) {
