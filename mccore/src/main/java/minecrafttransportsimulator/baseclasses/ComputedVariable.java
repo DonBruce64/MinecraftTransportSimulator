@@ -32,6 +32,9 @@ public class ComputedVariable {
     public double currentValue;
     /**True if {@link #currentValue} is greater than 1, false otherwise.  Used for quicker boolean operations.**/
     public boolean isActive;
+    /**Flag for external systems to allow resetting this CV.  Doesn't do any logic, but external systems can use this for state-resets.
+     * The reason this flag is here is so if this CV is referenced on multiple entities, each can do their own resetting logic.**/
+    public boolean needsReset;
 
     /**Constructor for variables with logic that can change each tick or frame.**/
     public ComputedVariable(AEntityD_Definable<?> entity, String variable, ComputedVariableOperator function, boolean changesOnPartialTicks) {
@@ -52,6 +55,11 @@ public class ComputedVariable {
         	this.currentValue = data.getDouble(variableKey);
         }
         this.isActive = isInverted ? currentValue == 0 : currentValue > 0;
+    }
+
+    @Override
+    public String toString() {
+        return variableKey + ":" + currentValue;
     }
 
     public static boolean isNumberedVariable(String variable) {

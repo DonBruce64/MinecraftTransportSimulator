@@ -141,6 +141,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Set to false to re-create animation since we don't want to use old animations we are linked to.
         //FIXME need to fix linked animations.
         //animationsInitialized = false;
+
+        //Remove any variables that aren't on this entity since we changed linking.
+        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getValue().entity != this);
     }
 
     @Override
@@ -557,33 +560,55 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public ComputedVariable createComputedVariable(String variable) {
-        //If the variable is prefixed with "parent_", then we need to get our parent's value.
-        if (variable.startsWith("parent_")) {
-        	if(entityOn == null) {
-        		//We might not have the entity set yet if we're constructing.
-        		return new ComputedVariable(this, variable, partialTicks -> {
-        			//Remove ourselves and re-create since we should have a value now.
-        			//getVariable function will auto-add to hashmap of variables.
-        			removeVariable(variable);
-        			return getVariable(variable).computeValue(partialTicks);
-        		}, false);
-        	}else {
-        		return entityOn.createComputedVariable(variable.substring("parent_".length()));	
-        	}
-        }else {
-            switch (variable) {
-                case ("part_present"):
-                    return ONE_VARIABLE;
-                case ("part_ismirrored"):
-                    return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
-                case ("part_isonfront"):
-                    return new ComputedVariable(this, variable, partialTicks -> placementDefinition.pos.z > 0 ? 1 : 0, false);
-                case ("part_isspare"):
-                    return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
-                case ("part_onvehicle"):
-                    return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
-                default:
-                    return super.createComputedVariable(variable);
+        if (entityOn == null) {
+            //We don't have the entity set yet if we're constructing, defer to later.
+            return new ComputedVariable(this, variable, partialTicks -> {
+                //Reset ourselves since we should have a value now that we're being asked for one.
+                //Whatever is calling this will detect this and will re-init us to whatever we should be.
+                resetVariable(variable);
+                return 0;
+            }, false);
+        } else {
+            //If the variable is prefixed with "parent_", then we need to get our parent's value.
+            //We also need to check if we specified a variable on a parent entity.  Prefixes aren't required.
+            //Recursively check entities on for this variable.
+            AEntityF_Multipart<?> testEntity = entityOn;
+            while (testEntity != null) {
+                if (testEntity.containsVariable(variable)) {
+                    return testEntity.getVariable(variable);
+                } else if (testEntity instanceof APart) {
+                    testEntity = ((APart) testEntity).entityOn;
+                } else {
+                    testEntity = null;
+                }
+            }
+
+            //Auto-checking didn't find a defined variable, check for a prefix.
+            if (variable.startsWith("vehicle_")) {
+                if (vehicleOn != null) {
+                    return entityOn.createComputedVariable(variable.substring("vehicle_".length()));
+                } else {
+                    //Not on a vehicle, value will always be 0.
+                    return ZERO_VARIABLE;
+                }
+            } else if (variable.startsWith("parent_")) {
+                return entityOn.createComputedVariable(variable.substring("parent_".length()));
+            } else {
+                //Not a parent variable we know about, check for part variables or just make a new one.
+                switch (variable) {
+                    case ("part_present"):
+                        return ONE_VARIABLE;
+                    case ("part_ismirrored"):
+                        return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
+                    case ("part_isonfront"):
+                        return new ComputedVariable(this, variable, partialTicks -> placementDefinition.pos.z > 0 ? 1 : 0, false);
+                    case ("part_isspare"):
+                        return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
+                    case ("part_onvehicle"):
+                        return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
+                    default:
+                        return super.createComputedVariable(variable);
+                }
             }
         }
     }

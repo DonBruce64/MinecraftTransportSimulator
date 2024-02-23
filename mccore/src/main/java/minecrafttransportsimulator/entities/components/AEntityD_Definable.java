@@ -996,25 +996,31 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to get a variable object for this entity.
+     * Gets the requested variable.  Note that this MAY change if the variable is requested to be reset,
+     * so don't keep a static reference to the variable unless you don't have to worry about state-changes.
      */
     public ComputedVariable getVariable(String variable) {
-        return computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+        ComputedVariable computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+        if (computedVar.needsReset) {
+            computedVariables.remove(variable);
+            computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+        }
+        return computedVar;
     }
     
-    /**
-     * Helper method to remove a variable object for this entity.
-     * Useful if one needs to re-create a variable for any reason.
-     */
-    public void removeVariable(String variable) {
-        computedVariables.remove(variable);
-    }
-    
-    /**
-     * Helper method to add a variable object on this entity.
-     */
     public void addVariable(ComputedVariable variable) {
         computedVariables.put(variable.variableKey, variable);
+    }
+    
+    public void resetVariable(String variable) {
+        ComputedVariable computedVar = computedVariables.get(variable);
+        if (computedVar != null) {
+            computedVar.needsReset = true;
+        }
+    }
+
+    public boolean containsVariable(String variable) {
+        return computedVariables.containsKey(variable);
     }
 
     /**
