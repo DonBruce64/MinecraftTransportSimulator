@@ -286,8 +286,8 @@ public class PartGun extends APart {
                                 if (part.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.cachedItem).get(lastControllerSeat.gunIndex) == part)) {
                                     state = state.promote(GunState.CONTROLLED);
                                     isRunningInCoaxialMode = true;
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
