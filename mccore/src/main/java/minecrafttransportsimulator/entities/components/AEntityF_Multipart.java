@@ -174,6 +174,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
             recalculatePartSlots();
         }
+
+        //Update the part list, this will re-create any linkings on us.
+        updatePartList();
     }
 
     @Override
@@ -835,11 +838,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * list should occur here, not in {@link #updateAllpartList()}.
      */
     public void updatePartList() {
-        parts.forEach(APart::updatePartList);
-
         //Clear camera list in prep for new entries from other areas.
         cameras.clear();
         cameraEntities.clear();
+
+        parts.forEach(APart::updatePartList);
     }
 
     /**
