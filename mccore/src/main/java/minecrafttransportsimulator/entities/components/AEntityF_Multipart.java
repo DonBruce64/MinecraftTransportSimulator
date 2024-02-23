@@ -28,7 +28,6 @@ import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -537,11 +536,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public void updateText(LinkedHashMap<String, String> textLines) {
         super.updateText(textLines);
-        allParts.forEach(part -> {
-            for (Entry<JSONText, String> textEntry : part.text.entrySet()) {
-                textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
-            }
-        });
+        parts.forEach(part -> part.updateText(textLines));
     }
 
     @Override
