@@ -17,7 +17,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -47,6 +49,7 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean actuallyThirdPerson;
     private static boolean changedCameraState;
     private static boolean changeCameraRequest;
+    private static int ticksToCullingWarning = 200;
 
     @Override
     public boolean isGamePaused() {
@@ -255,6 +258,15 @@ public class InterfaceClient implements IInterfaceClient {
                                 new GUIPackMissing();
                             }
                         }
+                    }
+                    
+                    //Complain about Entity Culling mod at 10 second mark.
+                    if(ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                    	if(ticksToCullingWarning > 0) {
+                    		if(--ticksToCullingWarning == 0) {
+                    			player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                    		}
+                    	}
                     }
                 } else {
                     //Update player guns.  These happen at the end since they need the player to update first.
