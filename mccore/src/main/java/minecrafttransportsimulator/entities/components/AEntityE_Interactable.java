@@ -178,6 +178,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         super(world, placingPlayer, data);
         this.locked = data.getBoolean("locked");
         this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
+        
+        //Parse variables out now to prevent variables from activating that use them.
+        locked = isVariableActive(LOCKED_VARIABLE);
+        damageAmount = getVariable(DAMAGE_VARIABLE);
+        outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
         //Load instruments.  If we are new, create the default ones.
         if (definition.instruments != null) {
