@@ -622,6 +622,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             //This lets systems query the blocks we hit before the server adjusts them the next tick.
             if (bullet.world.isClient()) {
                 bullet.spawnParticles(0);
+                bullet.updateSounds(0);
             }
         }
         if (gun.currentBullet != null && gun.currentBullet.bulletNumber <= bulletNumber) {
