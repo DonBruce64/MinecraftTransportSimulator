@@ -155,7 +155,7 @@ public class InterfaceRender implements IInterfaceRender {
     	if(object.cacheVertices) {
 	    	//Only delete display list if no entities are using it.
 	    	Set<Object> set = objectMap.get(object);
-	    	set.remove(object);
+	    	set.remove(objectAssociatedTo);
 	    	if(set.isEmpty()) {
 	    		GL11.glDeleteLists(object.cachedVertexIndex, 1);	
 	    	}
