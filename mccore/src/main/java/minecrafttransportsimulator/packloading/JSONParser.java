@@ -568,7 +568,7 @@ public class JSONParser {
      * Status message is returned, which either indicates import success, or error.
      */
     public static String importJSON(File jsonFile, AJSONBase definitionToOverride, boolean returnErrorsOnly) {
-        try {
+    	try {
             final AJSONBase loadedDefinition;
             switch (definitionToOverride.classification) {
                 case VEHICLE: {
@@ -688,31 +688,32 @@ public class JSONParser {
         }
     }
 
-    /**
-     * Applies all imports performed.
-     */
-    public static void applyImports() {
-    	for(AWrapperWorld world : AWrapperWorld.worlds) {
-	        if (world.isClient()) {
-	            AEntityD_Definable.resetModelsAndAnimations(world);
-	        }
-	        
-	        //Now re-load all vehicles.  On clients, we just kill them so they don't try and use imports.
-	        //On servers, we kill them and re-add them so they'll re-spawn with the right properties.
-	    	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
-	    	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-	        for (EntityVehicleF_Physics vehicle : vehicles) {
-	        	if(!world.isClient()) {
-	        		IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-	                vehicle.remove();
-	                vehicle = new EntityVehicleF_Physics(world, null, data);
-	                vehicle.addPartsPostAddition(null, data);
-	                world.spawnEntity(vehicle);	
-	        	}else {
-	        		vehicle.remove();
-	        	}
-	        }
+    private static final Map<AWrapperWorld, List<IWrapperNBT>> vehicleData = new HashMap<>();
+    public static void doPreImportWork() {
+        //Kill all vehicles, since part linkings can get fouled here.
+    	vehicleData.clear();
+        for(AWrapperWorld world : AWrapperWorld.worlds) {
+            for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+            	if(!world.isClient()) {
+            		vehicleData.computeIfAbsent(world, k -> new ArrayList<>()).add(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+            	}
+            	vehicle.remove();
+            }
     	}
+    	
+    	//Clear object lists before changing definitions.
+        AEntityD_Definable.objectLists.clear();
+	}
+    
+    public static void doPostImportWork() {
+        //Re-create all removed vehicles.
+    	vehicleData.forEach((world, dataList) -> {
+    		dataList.forEach(data -> {
+    			EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, null, data);
+                vehicle.addPartsPostAddition(null, data);
+                world.spawnEntity(vehicle);
+    		});
+    	});
 	}
 
     @Retention(RetentionPolicy.RUNTIME)

@@ -129,7 +129,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Object lists for models parsed in for this class.  Maps are keyed by the model name.
      **/
-    private static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
+    public static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
 
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
@@ -1178,17 +1178,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Called externally to reset all caches for all objects and animations on all entities.
+     * Called externally to reset all caches for all objects and animations on this entity.
      */
-    public static void resetModelsAndAnimations(AWrapperWorld world) {
-        for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
-            if (entity.definition.rendering.modelType != ModelType.NONE) {
-                for (RenderableModelObject modelObject : objectLists.get(entity.definition.getModelLocation(entity.subDefinition))) {
-                    modelObject.destroy(entity);
-                }
+    public void resetModelsAndAnimations() {
+        if (definition.rendering.modelType != ModelType.NONE) {
+            for (RenderableModelObject modelObject : objectLists.get(definition.getModelLocation(subDefinition))) {
+                modelObject.destroy(this);
             }
         }
-        objectLists.clear();
     }
 
     @Override
