@@ -691,26 +691,28 @@ public class JSONParser {
     /**
      * Applies all imports performed.
      */
-    public static void applyImports(AWrapperWorld world) {
-        if (world.isClient()) {
-            AEntityD_Definable.resetModelsAndAnimations(world);
-        }
-        
-        //Now re-load all vehicles.  On clients, we just kill them so they don't try and use imports.
-        //On servers, we kill them and re-add them so they'll re-spawn with the right properties.
-    	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
-    	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-        for (EntityVehicleF_Physics vehicle : vehicles) {
-        	if(!world.isClient()) {
-        		IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                vehicle.remove();
-                vehicle = new EntityVehicleF_Physics(world, null, data);
-                vehicle.addPartsPostAddition(null, data);
-                world.spawnEntity(vehicle);	
-        	}else {
-        		vehicle.remove();
-        	}
-        }
+    public static void applyImports() {
+    	for(AWrapperWorld world : AWrapperWorld.worlds) {
+	        if (world.isClient()) {
+	            AEntityD_Definable.resetModelsAndAnimations(world);
+	        }
+	        
+	        //Now re-load all vehicles.  On clients, we just kill them so they don't try and use imports.
+	        //On servers, we kill them and re-add them so they'll re-spawn with the right properties.
+	    	List<EntityVehicleF_Physics> vehicles = new ArrayList<>();
+	    	vehicles.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+	        for (EntityVehicleF_Physics vehicle : vehicles) {
+	        	if(!world.isClient()) {
+	        		IWrapperNBT data = vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+	                vehicle.remove();
+	                vehicle = new EntityVehicleF_Physics(world, null, data);
+	                vehicle.addPartsPostAddition(null, data);
+	                world.spawnEntity(vehicle);	
+	        	}else {
+	        		vehicle.remove();
+	        	}
+	        }
+    	}
 	}
 
     @Retention(RetentionPolicy.RUNTIME)
