@@ -44,7 +44,10 @@ public abstract class SimpleReloadableResourceManagerMixin {
         //Clear all model caches, since OpenGL indexes will have changed.
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         if (world != null) {
-        	AEntityD_Definable.resetModelsAndAnimations(world);
+        	for(AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+        		entity.resetModelsAndAnimations();
+        	}
+        	AEntityD_Definable.objectLists.clear();
         }
     }
 
