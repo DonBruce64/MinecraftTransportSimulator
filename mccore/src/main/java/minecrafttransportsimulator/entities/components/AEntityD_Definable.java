@@ -386,11 +386,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void remove() {
         if (isValid) {
             super.remove();
-            //Stop all playing sounds.
-            for (SoundInstance sound : sounds) {
-                sound.stopSound = true;
-            }
-
             //Clear radars.
             aircraftOnRadar.clear();
             groundersOnRadar.clear();
@@ -633,43 +628,49 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (JSONSound soundDef : allSoundDefs) {
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
-                //First check if we are in the right view to play.
-                AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
-                boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
-                boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
-
-                //Next, check the distance.
-                double distance = 0;
-                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
-                if (shouldSoundStartPlaying) {
-                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                    if (soundDef.maxDistance != soundDef.minDistance) {
-                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
-                    } else {
-                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
-                    }
-                }
-
-                //Next, check animations.
-                if (shouldSoundStartPlaying) {
-                    AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-                    shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
-
-                    //If we aren't a looping or repeating sound, check if we were true last check.
-                    //If we ware, then we shouldn't play, even if all states are true, as we'd start another sound.
-                    if (!soundDef.looping && !soundDef.forceSound) {
-                        if (shouldSoundStartPlaying) {
-                            if (!soundDefFalseLastCheck.remove(soundDef)) {
-                                shouldSoundStartPlaying = false;
-                            }
-                        } else {
-                            soundDefFalseLastCheck.add(soundDef);
+            	//First check the animated conditionals, since those drive on/off state.
+            	AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
+                boolean shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
+                    
+                //If we aren't a looping or repeating sound, check if we were true last check.
+                //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.
+                if (!soundDef.looping && !soundDef.forceSound) {
+                    if (shouldSoundStartPlaying) {
+                        if (!soundDefFalseLastCheck.remove(soundDef)) {
+                            shouldSoundStartPlaying = false;
                         }
+                    } else {
+                        soundDefFalseLastCheck.add(soundDef);
                     }
                 }
                 
+                //Now that we know if we are enabled, check if the player has the right viewpoint.
+                AEntityB_Existing entityRiding = null;
+                boolean playerRidingThisEntity = false;
+                boolean hasOpenTop = false;
+                if(shouldSoundStartPlaying) {
+		            entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
+		            AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+		            playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+		            hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+		            shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
+                }
+
+                //Next, check the distance.
+                double distance = 0;
+                if(shouldSoundStartPlaying) {
+	                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
+	                if (shouldSoundStartPlaying) {
+	                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+	                    if (soundDef.maxDistance != soundDef.minDistance) {
+	                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
+	                    } else {
+	                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
+	                    }
+	                }
+                }
+                
+                //Finally, play the sound if all checks were true.
                 if (shouldSoundStartPlaying) {
                     //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
                     boolean isSoundPlaying = false;
@@ -705,10 +706,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 for (SoundInstance sound : sounds) {
                     if (sound != null && sound.soundName.equals(soundDef.name)) {
                         //Adjust volume.
-                        if (soundDef.pos != null) {
-                            //Change distance to actual distance since this will be different.
-                            distance = sound.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                        }
                         SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
                         boolean definedVolume = false;
                         if (volumeSwitchbox != null) {

@@ -90,7 +90,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
 
     //Internal sound variables.
     public final EntityRadio radio;
-    public List<SoundInstance> sounds = new ArrayList<>();
+    public List<SoundInstance> sounds = new ArrayList<>();//TODO make this a hashmap.
 
     /**
      * Constructor for synced entities
