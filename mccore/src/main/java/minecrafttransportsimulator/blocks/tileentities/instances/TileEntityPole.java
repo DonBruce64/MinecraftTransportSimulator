@@ -268,7 +268,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
+    public boolean disableRendering() {
         //We don't render poles themselves.  Just their components.
         return true;
     }

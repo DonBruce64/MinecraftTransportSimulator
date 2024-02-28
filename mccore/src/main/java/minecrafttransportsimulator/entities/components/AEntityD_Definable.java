@@ -134,7 +134,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Object lists for models parsed in for this class.  Maps are keyed by the model name.
      **/
-    protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
+    private static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
 
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
@@ -394,6 +394,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Clear radars.
             aircraftOnRadar.clear();
             groundersOnRadar.clear();
+            
+            //Clear rendering assignments.
+            if (world.isClient() && definition.rendering.modelType != ModelType.NONE) {
+                for (RenderableModelObject modelObject : objectLists.get(definition.getModelLocation(subDefinition))) {
+                    InterfaceManager.renderingInterface.deleteVertices(modelObject.object, this);
+                }
+            }
         }
     }
 
@@ -1205,24 +1212,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     @Override
-    protected boolean disableRendering(float partialTicks) {
+    protected boolean disableRendering() {
         //Don't render if we don't have a model.
-        return super.disableRendering(partialTicks) || definition.rendering.modelType.equals(ModelType.NONE);
+        return super.disableRendering() || definition.rendering.modelType.equals(ModelType.NONE);
     }
 
     /**
-     * Called externally to reset all caches for all renders.
+     * Called externally to reset all caches for all objects and animations on all entities.
      */
-    public static void clearObjectCaches(AJSONMultiModelProvider definition) {
-        for (JSONSubDefinition subDef : definition.definitions) {
-            String modelLocation = definition.getModelLocation(subDef);
-            List<RenderableModelObject> resetObjects = objectLists.remove(modelLocation);
-            if (resetObjects != null) {
-                for (RenderableModelObject modelObject : resetObjects) {
-                    modelObject.destroy();
+    public static void resetModelsAndAnimations(AWrapperWorld world) {
+        for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+            if (entity.definition.rendering.modelType != ModelType.NONE) {
+                entity.animationsInitialized = false;
+                for (RenderableModelObject modelObject : objectLists.get(entity.definition.getModelLocation(entity.subDefinition))) {
+                    modelObject.destroy(entity);
                 }
             }
         }
+        objectLists.clear();
     }
 
     @Override

@@ -664,7 +664,7 @@ public class RenderText {
                 object.transform.applyScaling(scale, scale, scale);
                 object.transform.applyTranslation(adjustmentOffset);
                 object.vertices.flip();
-                object.render();
+                object.render(null);
             }
         }
 

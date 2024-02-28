@@ -465,13 +465,13 @@ public class EntityParticle extends AEntityC_Renderable {
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.worldLightValue = worldLightValue;
-            renderable.render();
+            renderable.render(null);//No vertex caching for particles
         }
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
-        return killBadParticle || super.disableRendering(partialTicks);
+    public boolean disableRendering() {
+        return killBadParticle || super.disableRendering();
     }
 
     private void updateOrientation() {

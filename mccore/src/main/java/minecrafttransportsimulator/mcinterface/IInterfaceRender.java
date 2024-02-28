@@ -40,15 +40,18 @@ public interface IInterfaceRender {
      * If the vertices should be cached per {@link RenderableObject#cacheVertices},
      * then they are done so and a pointer-index is stored into {@link RenderableObject#cachedVertexIndex}.
      * {@link RenderableObject#vertices} is then set to null to free memory.
-     * If the object is ever deleted, then {@link #deleteVertices(RenderableObject)}
-     * should be called to free up the respective GPU memory.
+     * If the object is ever deleted, then {@link #deleteVertices(RenderableObject, Object)}
+     * should be called to free up the respective GPU memory.  The object parameter is for
+     * rendering a cached vertex set on an object, since objects may have assigned buffers.
+     * The value of this parameter is not used otherwise.
      */
-    void renderVertices(RenderableObject object);
+    void renderVertices(RenderableObject object, Object objectAssociatedTo);
 
     /**
      * Deletes the cached vertices associated with the specified {@link RenderableObject}.
+     * The object parameter is required when vertex caching is used.
      */
-    void deleteVertices(RenderableObject object);
+    void deleteVertices(RenderableObject object, Object objectAssociatedTo);
 
     /**
      * Downloads the passed-in texture to be parsed and bound.  The texture is downloaded from the

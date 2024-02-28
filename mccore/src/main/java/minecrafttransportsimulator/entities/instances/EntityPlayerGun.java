@@ -299,7 +299,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
+    public boolean disableRendering() {
         //Don't render the player gun entity.  Only render the gun itself.
         return true;
     }

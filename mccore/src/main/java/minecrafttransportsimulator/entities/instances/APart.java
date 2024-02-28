@@ -629,8 +629,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
-        return super.disableRendering(partialTicks) || isFake() || isInvisible;
+    public boolean disableRendering() {
+        return super.disableRendering() || isFake() || isInvisible;
     }
 
     @Override
