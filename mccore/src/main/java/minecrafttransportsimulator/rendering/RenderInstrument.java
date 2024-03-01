@@ -294,6 +294,6 @@ public final class RenderInstrument {
             renderObject.vertices.put(vertex);
         }
         renderObject.vertices.flip();
-        renderObject.render(null);
+        renderObject.render();
     }
 }

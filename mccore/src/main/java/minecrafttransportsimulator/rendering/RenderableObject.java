@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
@@ -167,10 +166,13 @@ public class RenderableObject {
     }
 
     /**
-     * Forwarder to rendering interface function {@link IInterfaceRender#renderVertices(RenderableObject, Object)}
+     * Renders the vertices from this object.  If they were cached, it renders them as such and destroys
+     * the reference to the static vertices object.  This is to free up the FloatBuffer for re-use.  We
+     * would normally set it to null during construction, but it is realized that having this for post-processing
+     * after model parsing is ideal, so it's not destroyed until render.
      */
-    public void render(Object objectAssociatedTo) {
-        InterfaceManager.renderingInterface.renderVertices(this, objectAssociatedTo);
+    public void render() {
+        InterfaceManager.renderingInterface.renderVertices(this);
     }
 
     /**
@@ -291,10 +293,10 @@ public class RenderableObject {
     /**
      * Destroys this object, resetting all references in it for use in other areas.
      * Note that this is not required if {@link #cacheVertices} is false as no external
-     * references will be kept in that mode and no objects will have their vertices buffered.
+     * references will be kept in that mode.
      */
-    public void destroy(Object objectAssociatedTo) {
+    public void destroy() {
         vertices = null;
-        InterfaceManager.renderingInterface.deleteVertices(this, objectAssociatedTo);
+        InterfaceManager.renderingInterface.deleteVertices(this);
     }
 }

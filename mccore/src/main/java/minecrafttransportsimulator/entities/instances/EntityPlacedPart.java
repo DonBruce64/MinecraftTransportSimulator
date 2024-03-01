@@ -127,7 +127,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     }
 
     @Override
-    public boolean disableRendering() {
+    public boolean disableRendering(float partialTicks) {
         //Don't render the placed part entity.  Only render the part itself.
         return true;
     }

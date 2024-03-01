@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import mcinterface1165.InterfaceEventsModelLoader;
 import mcinterface1165.InterfaceSound;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -32,7 +33,12 @@ public abstract class SimpleReloadableResourceManagerMixin {
         //Clear all model caches, since OpenGL indexes will have changed.
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         if (world != null) {
-            AEntityD_Definable.resetModelsAndAnimations(world);
+            for (AEntityA_Base entity : world.allEntities) {
+                if (entity instanceof AEntityD_Definable) {
+                    ((AEntityD_Definable<?>) entity).animationsInitialized = false;
+                    AEntityD_Definable.clearObjectCaches(((AEntityD_Definable<?>) entity).definition);
+                }
+            }
         }
     }
 }

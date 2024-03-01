@@ -71,7 +71,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
      */
     public final void render(boolean blendingEnabled, float partialTicks) {
         //If we need to render, do so now.
-        if (!disableRendering()) {
+        if (!disableRendering(partialTicks)) {
 
             //Get interpolated orientation if required.
             world.beginProfiling("RenderSetup", true);
@@ -120,7 +120,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     /**
      * If rendering needs to be skipped for any reason, return true here.
      */
-    protected boolean disableRendering() {
+    protected boolean disableRendering(float partialTicks) {
         //Don't render on the first tick, as we might have not created some variables yet.
         return ticksExisted == 0;
     }

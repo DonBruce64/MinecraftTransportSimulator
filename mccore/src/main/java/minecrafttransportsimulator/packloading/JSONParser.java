@@ -37,6 +37,7 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
@@ -692,8 +693,14 @@ public class JSONParser {
      * for all worlds where things are active.  Therefore, this method is seperate to allow sided-calling.
      */
     public static void applyImports(AWrapperWorld world) {
-        if (world.isClient()) {
-            AEntityD_Definable.resetModelsAndAnimations(world);
+        for (AEntityA_Base entity : world.allEntities) {
+            if (entity instanceof AEntityD_Definable) {
+                //Reset animations for all entities, as we don't know part linking or instrument placement or whatnot.
+                ((AEntityD_Definable<?>) entity).animationsInitialized = false;
+                if (world.isClient()) {
+                    AEntityD_Definable.clearObjectCaches(((AEntityD_Definable<?>) entity).definition);
+                }
+            }
         }
     }
 
