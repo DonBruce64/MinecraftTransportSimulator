@@ -93,7 +93,7 @@ public class PartGroundDevice extends APart {
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
             IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            ((ItemPartGroundDevice) getStack().getItem()).populateDefaultData(fakeData);
+            ((ItemPartGroundDevice) cachedItem).populateDefaultData(fakeData);
             fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
             entityOn.addPart(fakePart, false);
         }

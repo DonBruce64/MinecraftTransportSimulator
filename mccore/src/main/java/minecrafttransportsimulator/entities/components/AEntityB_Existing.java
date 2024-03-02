@@ -448,8 +448,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (radio != null) {
             data.setData("radio", radio.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
-        data.setInteger("zoomLevel", zoomLevel);
-        data.setInteger("cameraIndex", cameraIndex);
+        if (!cameras.isEmpty()) {
+            data.setInteger("zoomLevel", zoomLevel);
+            data.setInteger("cameraIndex", cameraIndex);
+        }
         return data;
     }
 }

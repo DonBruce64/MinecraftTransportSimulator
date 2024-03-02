@@ -286,7 +286,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //False->True change, try to grab a part.
             Point3D partAnchor = partDef.pos.copy().rotate(orientation).add(position);
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.getStack().getItem()).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     partToTransfer.entityOn.removePart(partToTransfer, false, null);
                     partToTransfer.linkToEntity(this, partDef);
                     addPart(partToTransfer, false);
@@ -299,7 +299,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
             if (currentPart.definition.generic.canBePlacedOnGround) {
                 Point3D partAnchor = new Point3D();
-                AItemPart currentPartItem = (AItemPart) currentPart.getStack().getItem();
+                AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
                     //This keeps us from checking things really far away for no reason.
                     if (entity.encompassingBox.isPointInside(currentPart.position, PART_TRANSFER_GROWTH)) {
@@ -538,8 +538,16 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperItemStack getStack() {
         //Add data to the stack we return.  We need to remember the parts we have on us, even in item form.
+        //Just don't add default data or our UUID, that needs to be fresh.
         IWrapperItemStack stack = super.getStack();
-        stack.setData(save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        IWrapperNBT stackData = save(InterfaceManager.coreInterface.getNewNBTWrapper());
+        stackData.deleteData(UNIQUE_UUID_TAG_NAME);
+        IWrapperNBT freshData = InterfaceManager.coreInterface.getNewNBTWrapper();
+        cachedItem.populateDefaultData(freshData);
+        freshData.getAllNames().forEach(name -> stackData.deleteData(name));
+        if (!stackData.getAllNames().isEmpty()) {
+            stack.setData(stackData);
+        }
         return stack;
     }
 
@@ -686,9 +694,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partsInSlots.add(null);
             }
 
-            boolean newEntity = data.getString("uniqueUUID").isEmpty();
             for (int i = 0; i < definition.parts.size(); ++i) {
-                if (newEntity) {
+                if (!data.getBoolean("spawnedDefaultParts")) {
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
@@ -1101,6 +1108,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
+        data.setBoolean("spawnedDefaultParts", true);
         for (APart part : parts) {
             //Don't save the part if it's not valid or a fake part.
             if (part.isValid && !part.isFake()) {

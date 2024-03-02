@@ -38,7 +38,9 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setBoolean(String name, boolean value) {
-        tag.setBoolean(name, value);
+        if(value) {
+            tag.setBoolean(name, value);
+        }
     }
 
     @Override
@@ -48,7 +50,9 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setInteger(String name, int value) {
-        tag.setInteger(name, value);
+        if(value != 0) {
+            tag.setInteger(name, value);
+        }
     }
 
     @Override
@@ -58,7 +62,9 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setDouble(String name, double value) {
-        tag.setDouble(name, value);
+        if(value != 0) {
+            tag.setDouble(name, value);
+        }
     }
 
     @Override
@@ -131,9 +137,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setPoint3d(String name, Point3D value) {
-        setDouble(name + "x", value.x);
-        setDouble(name + "y", value.y);
-        setDouble(name + "z", value.z);
+        if (!value.isZero()) {
+            setDouble(name + "x", value.x);
+            setDouble(name + "y", value.y);
+            setDouble(name + "z", value.z);
+        }
     }
 
     @Override
@@ -165,9 +173,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setPoint3dCompact(String name, Point3D value) {
-        setInteger(name + "x", (int) Math.floor(value.x));
-        setInteger(name + "y", (int) Math.floor(value.y));
-        setInteger(name + "z", (int) Math.floor(value.z));
+        if (!value.isZero()) {
+            setInteger(name + "x", (int) Math.floor(value.x));
+            setInteger(name + "y", (int) Math.floor(value.y));
+            setInteger(name + "z", (int) Math.floor(value.z));
+        }
     }
 
     @Override

@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.Iterator;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -19,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -46,6 +50,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @DerivedValue
     public boolean parkingBrakeOn;
     public static final double MAX_BRAKE = 1D;
+    @DerivedValue
+    public boolean locked;
+    public static final String LOCKED_VARIABLE = "locked";
+    public final UUID ownerUUID;
 
     //Internal states.
     public boolean goingInReverse;
@@ -109,6 +117,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
+        this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
+        this.locked = data.getBoolean("locked");
         this.totalPathDelta = data.getDouble("totalPathDelta");
         this.prevTotalPathDelta = totalPathDelta;
         this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -169,9 +179,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
 
-        //Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+        //Update variable status.  This is used in a lot of locations, so we don't want to query the set every time.
         brake = getVariable(BRAKE_VARIABLE);
         parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
+        locked = isVariableActive(LOCKED_VARIABLE);
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
@@ -1034,6 +1045,37 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
+     * Locks or unlocks this entity.  Allows for supplemental logic.
+     * Call this ONLY on the server.
+     */
+    public void toggleLock() {
+        locked = !locked;
+        toggleVariable(LOCKED_VARIABLE);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
+
+        //Check for doors to close on locking.
+        if (locked) {
+            Iterator<String> iterator = variables.keySet().iterator();
+            while (iterator.hasNext()) {
+                String variable = iterator.next();
+                if (variable.contains("door")) {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the owner state of the passed-in player, relative to this entity.
+     * Takes into account player OP status and {@link #ownerUUID}, if set.
+     */
+    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
+        boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
+        return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
+    }
+
+    /**
      * Method block for getting the steering angle of this vehicle.
      * This returns the normalized steering angle, from -1.0 to 1.0;
      */
@@ -1062,6 +1104,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
+        data.setBoolean("locked", locked);
+        if (ownerUUID != null) {
+            data.setUUID("ownerUUID", ownerUUID);
+        }
         data.setPoint3d("serverDeltaM", serverDeltaM);
         data.setPoint3d("serverDeltaR", serverDeltaR);
         data.setDouble("serverDeltaP", serverDeltaP);

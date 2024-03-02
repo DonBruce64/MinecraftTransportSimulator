@@ -1228,13 +1228,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         data.setString("packID", definition.packID);
         data.setString("systemName", definition.systemName);
         data.setString("subName", subDefinition.subName);
-        int lineNumber = 0;
-        for (String textLine : text.values()) {
-            data.setString("textLine" + lineNumber++, textLine);
+        if (text.isEmpty()) {
+            int lineNumber = 0;
+            for (String textLine : text.values()) {
+                data.setString("textLine" + lineNumber++, textLine);
+            }
         }
-        data.setStrings("variables", variables.keySet());
-        for (String variableName : variables.keySet()) {
-            data.setDouble(variableName, variables.get(variableName));
+        if (!variables.isEmpty()) {
+            data.setStrings("variables", variables.keySet());
+            for (String variableName : variables.keySet()) {
+                data.setDouble(variableName, variables.get(variableName));
+            }
         }
         return data;
     }

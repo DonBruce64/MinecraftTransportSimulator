@@ -5,12 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -34,7 +32,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
@@ -142,20 +139,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<>();
 
     /**
-     * Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
-     * their owners, or OP players (server admins).
-     **/
-    @DerivedValue
-    public boolean locked;
-    public static final String LOCKED_VARIABLE = "locked";
-
-    /**
-     * The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
-     * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
-     **/
-    public final UUID ownerUUID;
-
-    /**
      * The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
      * as damage is something that a good number of entities will have and that the base entity should track.
      **/
@@ -177,11 +160,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
-        this.locked = data.getBoolean("locked");
-        this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
         
         //Parse variables out now to prevent variables from activating that use them.
-        locked = isVariableActive(LOCKED_VARIABLE);
         damageAmount = getVariable(DAMAGE_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
@@ -300,7 +280,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         world.beginProfiling("EntityE_Level", true);
         //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
-        locked = isVariableActive(LOCKED_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
         world.endProfiling();
@@ -521,37 +500,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     * Locks or unlocks this entity.  Allows for supplemental logic.
-     * Call this ONLY on the server.
-     */
-    public void toggleLock() {
-        locked = !locked;
-        toggleVariable(LOCKED_VARIABLE);
-        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
-
-        //Check for doors to close on locking.
-        if (locked) {
-            Iterator<String> iterator = variables.keySet().iterator();
-            while (iterator.hasNext()) {
-                String variable = iterator.next();
-                if (variable.contains("door")) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
-                    iterator.remove();
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the owner state of the passed-in player, relative to this entity.
-     * Takes into account player OP status and {@link #ownerUUID}, if set.
-     */
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
-        return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
-    }
-
-    /**
      * Called when the entity is attacked.
      * This should ONLY be called on the server; clients will sync via packets.
      * If calling this method in a loop, make sure to check if this entity is valid.
@@ -631,11 +579,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("locked", locked);
-        if (ownerUUID != null) {
-            data.setUUID("ownerUUID", ownerUUID);
-        }
-
         if (definition.instruments != null) {
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 ItemInstrument instrument = instruments.get(i);

@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
@@ -59,7 +60,8 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperPlayer player) {
-        PlayerOwnerState ownerState = entity.getOwnerState(player);
+        EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
+        PlayerOwnerState ownerState = vehicle != null ? vehicle.getOwnerState(player) : PlayerOwnerState.OWNER;
         IWrapperItemStack heldStack = player.getHeldStack();
         AItemBase heldItem = heldStack.getItem();
 
@@ -124,8 +126,8 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
         //Check if we clicked a box with a variable attached.
         if (!leftClick && hitBox.definition != null && hitBox.definition.variableName != null) {
-            if (entity.locked) {
-                //Can't touch locked entities.
+            if (vehicle != null && vehicle.locked) {
+                //Can't touch locked vehicles.
                 if (rightClick) {
                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                 }

@@ -43,14 +43,16 @@ public abstract class AEntityA_Base {
      **/
     public long ticksExisted;
 
+    public static String UNIQUE_UUID_TAG_NAME = "uniqueUUID";
+
     public AEntityA_Base(AWrapperWorld world, IWrapperNBT data) {
         this.world = world;
-        this.newlyCreated = data == null || data.getUUID("uniqueUUID") == null;
+        this.newlyCreated = data == null || data.getUUID(UNIQUE_UUID_TAG_NAME) == null;
 
         //Get the map of entities we belong to.
         if (shouldSync() && !newlyCreated) {
             //Check to make sure we aren't a duplicate.
-            UUID savedUUID = data.getUUID("uniqueUUID");
+            UUID savedUUID = data.getUUID(UNIQUE_UUID_TAG_NAME);
             if (!world.isClient() && world.getEntity(savedUUID) != null) {
                 this.uniqueUUID = UUID.randomUUID();
             } else {
@@ -116,7 +118,7 @@ public abstract class AEntityA_Base {
      * Returns the passed-in data IWrapper for convenience.
      */
     public IWrapperNBT save(IWrapperNBT data) {
-        data.setUUID("uniqueUUID", uniqueUUID);
+        data.setUUID(UNIQUE_UUID_TAG_NAME, uniqueUUID);
         return data;
     }
 }
