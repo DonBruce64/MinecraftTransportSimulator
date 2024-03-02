@@ -63,7 +63,7 @@ public final class PartSeat extends APart {
         //See if we can interact with the seats of this vehicle.
         //This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
         if (isActive) {
-            if (vehicleOn == null || vehicleOn.lockedVar.isActive || masterEntity.allParts.contains(player.getEntityRiding())) {
+            if (vehicleOn == null || !vehicleOn.lockedVar.isActive || masterEntity.allParts.contains(player.getEntityRiding())) {
                 if (rider != null) {
                     //We already have a rider for this seat.  If it's not us, mark the seat as taken.
                     //If it's an entity that can be leashed, dismount the entity and leash it.
