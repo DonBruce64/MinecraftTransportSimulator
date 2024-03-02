@@ -27,6 +27,7 @@ public class VehicleGroundDeviceBox {
     private final boolean isFront;
     private final boolean isLeft;
     private boolean isLongTread;
+    private boolean containsLiquidGroundDevices;
     private int treadZBestOffset;
     private float climbHeight;
     private static final Set<CollisionType> groundBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.BLOCK));
@@ -38,7 +39,6 @@ public class VehicleGroundDeviceBox {
     private final Point3D solidBoxNormalPos = new Point3D();
 
     public boolean isBlockedVertically;
-    public boolean canRollOnGround;
     public boolean contactedEntity;
     public boolean isAirborne;
     public boolean isCollided;
@@ -105,7 +105,6 @@ public class VehicleGroundDeviceBox {
         //Get all part-based collision boxes.  This includes solid and liquid ground devices.
         groundDevices.clear();
         liquidDevices.clear();
-        canRollOnGround = false;
         float totalClimbHeight = 0;
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
@@ -151,9 +150,6 @@ public class VehicleGroundDeviceBox {
                     if (!(isFront ^ groundPosition.isFront) && (isLeft && groundPosition.isLeft || !isLeft && groundPosition.isRight)) {
                         groundDevices.add(ground);
                         totalClimbHeight += ground.definition.ground.climbHeight;
-                        if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
-                            canRollOnGround = true;
-                        }
                         if (ground.definition.ground.canFloat) {
                             liquidDevices.add(ground);
                         }
@@ -161,6 +157,7 @@ public class VehicleGroundDeviceBox {
                 }
             }
         }
+        this.containsLiquidGroundDevices = !liquidDevices.isEmpty();
         this.climbHeight = !groundDevices.isEmpty() ? totalClimbHeight / groundDevices.size() : 0;
     }
 
@@ -367,7 +364,8 @@ public class VehicleGroundDeviceBox {
             }
         }
 
-        if (!canRollOnGround || !isAbleToDoGroundOperations) {
+        //Try liquids if we have liquid ground devices, or if we aren't using the solid boxes and need to use the liquid built-in ones.
+        if (containsLiquidGroundDevices || !isAbleToDoGroundOperations) {
             if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
                 liquidBox.globalCenter.set(liquidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
                 vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
@@ -392,7 +390,7 @@ public class VehicleGroundDeviceBox {
                     liquidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
                     vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
                     liquidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-                    isAbleToDoGroundOperationsLiquid = !liquidBox.collidingBlockPositions.isEmpty();
+                    isAbleToDoGroundOperationsLiquid = containsLiquidGroundDevices && !liquidBox.collidingBlockPositions.isEmpty();
                 }
 
                 //If the liquid boxes are grounded and are more collided, use liquid values.
@@ -432,7 +430,7 @@ public class VehicleGroundDeviceBox {
             }
         }
 
-        if (!canRollOnGround || !isAbleToDoGroundOperations) {
+        if (containsLiquidGroundDevices || !isAbleToDoGroundOperations) {
             if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
                 return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false, false);
             }
