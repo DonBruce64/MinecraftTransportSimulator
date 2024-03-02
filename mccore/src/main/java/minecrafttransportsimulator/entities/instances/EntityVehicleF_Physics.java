@@ -299,7 +299,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         flapCurrentAngle = adjustVariable(modifier, (float) flapCurrentAngle);
                         break;
                     default:
-                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
                     	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
@@ -723,17 +723,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
-    public ComputedVariable getVariable(String variable) {
+    public ComputedVariable getOrCreateVariable(String variable) {
         //If we are a forwarded variable and are a connected trailer, do that now.
         if (definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)) {
-            return towedByConnection.towingVehicle.getVariable(variable);
+            return towedByConnection.towingVehicle.getOrCreateVariable(variable);
         } else {
-            return super.getVariable(variable);
+            return super.getOrCreateVariable(variable);
         }
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
 
         //Not a part of a forwarded variable.  Just return new ComputedVariable(this, variable, partialTicks -> normally.
         switch (variable) {
@@ -904,7 +904,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                             }
                             default:
                                 //Invalid radar type.
-                                return ZERO_VARIABLE;
+                                return ComputedVariable.ZERO_VARIABLE;
                         }
                         
                         final int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
@@ -963,9 +963,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     }
                     
                     //Down here means bad variable format.
-                    return ZERO_VARIABLE;
+                    return ComputedVariable.ZERO_VARIABLE;
                 }else {
-                    return super.createComputedVariable(variable);
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }
             }
         }

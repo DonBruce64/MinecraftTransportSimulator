@@ -217,14 +217,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("damage_percent"):
                 return new ComputedVariable(this, variable, partialTicks -> damageVar.currentValue/ definition.general.health, false);
             case ("damage_totaled"):
                 return new ComputedVariable(this, variable, partialTicks -> outOfHealth ? 1 : 0, false);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 
@@ -237,7 +237,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
                 JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
                 List<BoundingBox> boxes = definitionCollisionBoxes.get(i);
-                if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage").currentValue < groupDef.health) {
+                if (groupDef.health == 0 || getOrCreateVariable("collision_" + (i + 1) + "_damage").currentValue < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
@@ -283,7 +283,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Only call this method on the server: clients will update via variable packets.
      */
     public void damageCollisionBox(BoundingBox box, double damageAmount) {
-        ComputedVariable variable = getVariable("collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage");
+        ComputedVariable variable = getOrCreateVariable("collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage");
         double currentDamage = variable.currentValue + damageAmount;
         if (currentDamage > box.groupDef.health) {
             double amountActuallyNeeded = damageAmount - (currentDamage - box.groupDef.health);

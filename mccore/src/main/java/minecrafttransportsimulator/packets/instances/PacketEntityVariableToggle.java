@@ -34,7 +34,7 @@ public class PacketEntityVariableToggle extends APacketEntity<AEntityD_Definable
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        entity.getVariable(variableKey).toggle(false);
+        entity.getOrCreateVariable(variableKey).toggle(false);
         return true;
     }
 }

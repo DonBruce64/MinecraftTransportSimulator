@@ -19,6 +19,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
  * @author don_bruce
  */
 public class ComputedVariable {
+    public static final ComputedVariable ZERO_VARIABLE = new ComputedVariable(null, "#0", null);
+    public static final ComputedVariable ONE_VARIABLE = new ComputedVariable(null, "#1", null);
+
 	/**The key of this variable, required to be unique to all variables on the entity.**/
     public final String variableKey;
     /**The entity this variable is defined on.**/

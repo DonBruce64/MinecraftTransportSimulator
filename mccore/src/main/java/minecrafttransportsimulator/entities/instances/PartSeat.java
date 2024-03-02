@@ -207,7 +207,13 @@ public final class PartSeat extends APart {
 
             //Auto-close doors for the rider in this seat, if such doors exist.
             if (!world.isClient() && placementDefinition.interactableVariables != null) {
-                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.getVariable(variable).setTo(0, true)));
+                placementDefinition.interactableVariables.forEach(variableKeys -> {
+                    variableKeys.forEach(variableKey -> {
+                        if (variableKey.contains("door")) {
+                            entityOn.getOrCreateVariable(variableKey).setTo(0, true);
+                        }
+                    });
+                });
             }
             return true;
         } else {
@@ -260,7 +266,13 @@ public final class PartSeat extends APart {
     
             //Auto-open doors for the rider in this seat, if such doors exist.
             if (!world.isClient() && placementDefinition.interactableVariables != null) {
-                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.getVariable(variable).setTo(1, true)));
+                placementDefinition.interactableVariables.forEach(variableKeys -> {
+                    variableKeys.forEach(variableKey -> {
+                        if (variableKey.contains("door")) {
+                            entityOn.getOrCreateVariable(variableKey).setTo(1, true);
+                        }
+                    });
+                });
             }
         }
         riderChangingSeats = false;
@@ -433,7 +445,7 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("seat_occupied"):
                 return new ComputedVariable(this, variable, partialTicks -> rider != null ? 1 : 0, false);
@@ -444,7 +456,7 @@ public final class PartSeat extends APart {
             case ("seat_rider_pitch"):
                 return new ComputedVariable(this, variable, partialTicks -> rider != null ? (partialTicks != 0 ? prevRiderRelativeOrientation.angles.x + (riderRelativeOrientation.angles.x - prevRiderRelativeOrientation.angles.x) * partialTicks : riderRelativeOrientation.angles.x) : 0, true);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 

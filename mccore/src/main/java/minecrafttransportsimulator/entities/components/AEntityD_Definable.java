@@ -83,8 +83,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
      **/
     protected final Map<String, ComputedVariable> computedVariables = new HashMap<>();
-    protected final ComputedVariable ZERO_VARIABLE = new ComputedVariable(this, "#0", partialTicks -> 0, false);
-    protected final ComputedVariable ONE_VARIABLE = new ComputedVariable(this, "#1", partialTicks -> 1, false);
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
@@ -184,7 +182,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             //Load variables.
             for (String variableName : data.getStrings("variables")) {
-                getVariable(variableName).setTo(data.getDouble(variableName), false);
+                getOrCreateVariable(variableName).setTo(data.getDouble(variableName), false);
             }
         } else {
             //Only set initial text/variables on initial placement.
@@ -197,7 +195,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             if (definition.initialVariables != null) {
                 for (String variable : definition.initialVariables) {
-                    getVariable(variable).setTo(1D, false);
+                    getOrCreateVariable(variable).setTo(1D, false);
                 }
             }
         }
@@ -302,10 +300,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (testSubDef.subName.equals(newSubDefName)) {
                 //Remove existing constants, if we have them, then add them, if we have them.
                 if (subDefinition != null && subDefinition.constants != null) {
-                    testSubDef.constants.forEach(constant -> getVariable(constant).setTo(0,  false));
+                    testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(0,  false));
                 }
                 if (testSubDef.constants != null) {
-                    testSubDef.constants.forEach(constant -> getVariable(constant).setTo(1,  false));
+                    testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(1,  false));
                 }
                 subDefinition = testSubDef;
                 cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
@@ -389,7 +387,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Add constants.
         if (definition.constantValues != null) {
-            definition.constantValues.forEach((constantKey, constantValue) -> getVariable(constantKey).setTo(constantValue, false));
+            definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
         }
     }
 
@@ -827,9 +825,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Returns a new computed variable for the passed-in variable.  The default implementation is to just 
      * get the variable assuming it's a basic variable.  As such, super should always be called after any
-     * overriding functions, since super will always return a value.
+     * overriding functions, since super will always return a value.  The only exception is if 
+     * createDefaultIfNotPresent is set to false, in which case it will return null to indicate no variable
+     * was able to be computed for the requested key.
      */
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("tick"):
                 return new ComputedVariable(this, variable, partialTicks -> ticksExisted + partialTicks, true);
@@ -895,10 +895,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         if (definition.rendering.textObjects.size() > textIndex) {
                             return new ComputedVariable(this, variable, partialTicks -> !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0, false);
                         } else {
-                            return ZERO_VARIABLE;
+                            return ComputedVariable.ZERO_VARIABLE;
                         }
                     } else {
-                        return ZERO_VARIABLE;
+                        return ComputedVariable.ZERO_VARIABLE;
                     }
                 } else if (variable.startsWith("blockmaterial_")) {
                     final String materialName = variable.substring("blockmaterial_".length()).toUpperCase();
@@ -925,7 +925,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }, false);
                 } else {
                     //Either a hard-coded value, or one we are wrapping.  No logic required.
-                    return new ComputedVariable(this, variable, null);
+                    return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
                 }
             }
         }
@@ -947,7 +947,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
-        double value = getVariable(clock.animation.variable).computeValue(partialTicks);
+        double value = getOrCreateVariable(clock.animation.variable).computeValue(partialTicks);
         if (!clock.isUseful) {
             return clampAndScale(value, clock.animation, scaleFactor, offset);
         } else {
@@ -989,7 +989,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check text values first, then animated values.
         String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
-            return String.format(textDef.variableFormat, getVariable(textDef.variableName).computeValue(partialTicks) * textDef.variableFactor + textDef.variableOffset);
+            return String.format(textDef.variableFormat, getOrCreateVariable(textDef.variableName).computeValue(partialTicks) * textDef.variableFactor + textDef.variableOffset);
         } else {
             return String.format(textDef.variableFormat, value);
         }
@@ -999,11 +999,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Gets the requested variable.  Note that this MAY change if the variable is requested to be reset,
      * so don't keep a static reference to the variable unless you don't have to worry about state-changes.
      */
-    public ComputedVariable getVariable(String variable) {
-        ComputedVariable computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+    public ComputedVariable getOrCreateVariable(String variable) {
+        ComputedVariable computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable, true));
         if (computedVar.needsReset) {
             computedVariables.remove(variable);
-            computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable));
+            computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable, true));
         }
         return computedVar;
     }
@@ -1055,7 +1055,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (List<String> variableList : list) {
                 boolean listIsTrue = false;
                 for (String variableName : variableList) {
-                    if (getVariable(variableName).isActive) {
+                    if (getOrCreateVariable(variableName).isActive) {
                         listIsTrue = true;
                         break;
                     }
@@ -1138,7 +1138,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void updateVariableModifiers() {
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
-            	ComputedVariable variable = getVariable(modifier.variable);
+            	ComputedVariable variable = getOrCreateVariable(modifier.variable);
             	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
             }
         }

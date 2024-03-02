@@ -111,7 +111,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
             //the value will be set before any subsequent logic occurs.
             if (definition.constantValues != null) {
-                definition.constantValues.forEach((constantKey, constantValue) -> this.getVariable(constantKey).setTo(constantValue, false));
+                definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
             }
         }
 
@@ -163,7 +163,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             for (int i = 0; i < definition.parts.size(); ++i) {
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (partDef.transferVariable != null) {
-                    ComputedVariable variable = getVariable(partDef.transferVariable);
+                    ComputedVariable variable = getOrCreateVariable(partDef.transferVariable);
                     if (variable.isActive) {
                         transferPart(partDef);
                         variable.toggle(true);
@@ -329,7 +329,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean hitOperationalHitbox = false;
             if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.health != 0 && !damage.isWater) {
                 if (bullet != null) {
-                    double currentDamage = hitEntity.getVariable("collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage").currentValue;
+                    double currentDamage = hitEntity.getOrCreateVariable("collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage").currentValue;
                     bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitEntry.box.groupDef.health + "  ATTACKED FOR: " + damage.amount);
                 }
 
@@ -475,10 +475,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Iterate through our parts to find the index of the pack def for the part we want.
             String partType = variable.substring(0, variable.indexOf("_"));
+            if (partType.startsWith("!")) {
+                partType = partType.substring("!".length());
+            }
             int partNumber = ComputedVariable.getVariableNumber(variable);
             String partVariable = variable.substring(0, variable.lastIndexOf("_"));
             if (partType.equals("part")) {
@@ -486,7 +489,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Check index just in case someone screwed up a JSON.
                 APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
                 if (partFound != null) {
-                    return partFound.createComputedVariable(partVariable);
+                    return partFound.createComputedVariable(partVariable, true);
                 }
             } else if (definition.parts != null) {
                 for (int i = 0; i < definition.parts.size(); ++i) {
@@ -496,9 +499,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             if (partNumber == 0) {
                                 APart partFound = partsInSlots.get(i);
                                 if (partFound != null) {
-                                    return partFound.createComputedVariable(partVariable);
+                                    return partFound.createComputedVariable(partVariable, true);
                                 } else {
-                                    return ZERO_VARIABLE;
+                                    return ComputedVariable.ZERO_VARIABLE;
                                 }
                             } else {
                                 --partNumber;
@@ -510,9 +513,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             //Couldn't find the part, set to 0.
-            return ZERO_VARIABLE;
+            return ComputedVariable.ZERO_VARIABLE;
         } else {
-            return super.createComputedVariable(variable);
+            return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 
@@ -549,7 +552,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
-                        definition.constantValues.forEach((constantKey, constantValue) -> getVariable(constantKey).setTo(constantValue, false));
+                        definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
                     }
                 } else {
                     //Add default parts.  We need to do this after we actually create this part so its slots are valid.
@@ -557,7 +560,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     JSONPartDefinition partDef = definition.parts.get(i);
                     if (partDef.conditionalDefaultParts != null) {
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
-                            if (getVariable(conditionalDef.getKey()).isActive) {
+                            if (getOrCreateVariable(conditionalDef.getKey()).isActive) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
                                 break;
                             }
@@ -696,7 +699,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
         parts.forEach(APart::updatePartList);
         //Clear computed variables for all parts and parents, since our parts changed.
-        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getValue().entity != this);
+        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getValue().entity != this || mapEntry.getKey().startsWith("part_"));
     }
 
     /**

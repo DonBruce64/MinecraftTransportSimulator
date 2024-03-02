@@ -46,7 +46,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         //Check connector variables.
         if (variable.startsWith("neighbor_present_")) {
             final Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase(Locale.ROOT));
@@ -72,7 +72,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
             case ("slab_present_down"):
                 return new ComputedVariable(this, variable, partialTicks -> world.isBlockBelowBottomSlab(position) ? 1 : 0, false);
         }
-        return ZERO_VARIABLE;
+        return ComputedVariable.ZERO_VARIABLE;
     }
 
     @Override

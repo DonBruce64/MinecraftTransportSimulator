@@ -363,7 +363,7 @@ public class GUIPanel extends AGUIBase {
                     case CUSTOM_VARIABLE: {
                         if (customVariables.size() > customVariableIndex) {
                             String customVariable = customVariables.get(customVariableIndex++);
-                            buttonVariable = vehicle.getVariable(customVariable);
+                            buttonVariable = vehicle.getOrCreateVariable(customVariable);
                             text = customVariable;
                         }
                         break;
@@ -550,7 +550,7 @@ public class GUIPanel extends AGUIBase {
     }
 
     private void handleClickAction(JSONPanelClickAction action) {
-    	ComputedVariable variable = vehicle.getVariable(action.variable);
+    	ComputedVariable variable = vehicle.getOrCreateVariable(action.variable);
         switch (action.action) {
             case INCREMENT: {
                 if (variable.currentValue + action.value >= action.clampMin && variable.currentValue + action.value <= action.clampMax) {
@@ -583,7 +583,7 @@ public class GUIPanel extends AGUIBase {
         }
 
         public int getState() {
-            return component.statusVariable != null && vehicle.getVariable(component.statusVariable).getValue() > 0 ? 1 : 0;
+            return component.statusVariable != null && vehicle.getOrCreateVariable(component.statusVariable).getValue() > 0 ? 1 : 0;
         }
     }
 

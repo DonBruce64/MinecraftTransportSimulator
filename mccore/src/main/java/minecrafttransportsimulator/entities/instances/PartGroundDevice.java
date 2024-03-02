@@ -257,7 +257,7 @@ public class PartGroundDevice extends APart {
                     	currentHeight = adjustVariable(modifier, currentHeight);
                         break;
                     default:
-                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
                     	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
@@ -266,7 +266,7 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("ground_rotation"):
                 return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0, true);
@@ -289,7 +289,7 @@ public class PartGroundDevice extends APart {
                     String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
                     return new ComputedVariable(this, variable, partialTicks -> materialBelow != null && materialBelow.name().equals(materialName) ? 1 : 0, false);
                 } else {
-                    return super.createComputedVariable(variable);
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }
             }
         }

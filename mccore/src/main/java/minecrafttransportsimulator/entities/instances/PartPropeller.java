@@ -200,7 +200,7 @@ public class PartPropeller extends APart {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("propeller_pitch_deg"):
                 return new ComputedVariable(this, variable, partialTicks -> Math.toDegrees(Math.atan(currentPitch / (definition.propeller.diameter * 0.75D * Math.PI))), false);
@@ -213,7 +213,7 @@ public class PartPropeller extends APart {
             case ("propeller_rpm"):
                 return new ComputedVariable(this, variable, partialTicks -> currentRPM, false);
             default: {
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
             }
         }
     }

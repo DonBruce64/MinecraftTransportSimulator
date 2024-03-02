@@ -203,7 +203,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (variable.startsWith("connection")) {
             //Format is (hitch/hookup)_groupIndex_connectionIndex_animationType.
             TowingConnection foundConnection = null;
@@ -232,7 +232,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 if (foundConnection != null) {
                     switch (variable) {
                         case ("connected"):
-                            return ONE_VARIABLE;
+                            return ComputedVariable.ONE_VARIABLE;
                         case ("pitch"): {
                             final Point3D helperPoint = new Point3D();
                             return new ComputedVariable(this, variable, partialTicks -> {
@@ -270,9 +270,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             }
 
             //Invalid variable, or connection not yet set.
-            return ZERO_VARIABLE;
+            return ComputedVariable.ZERO_VARIABLE;
         } else {
-            return super.createComputedVariable(variable);
+            return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 

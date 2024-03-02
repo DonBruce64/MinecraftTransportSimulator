@@ -656,7 +656,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("bullet_hit"):
                 return new ComputedVariable(this, variable, partialTicks -> lastHit != null ? 1 : 0, false);
@@ -673,7 +673,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             case ("bullet_hit_burst"):
                 return new ComputedVariable(this, variable, partialTicks -> HitType.BURST == lastHit ? 1 : 0, false);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 

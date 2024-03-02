@@ -45,7 +45,7 @@ public class TileEntityRadio extends TileEntityDecor {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("radio_active"):
                 return new ComputedVariable(this, variable, partialTicks -> radio.isPlaying() ? 1 : 0, false);
@@ -54,7 +54,7 @@ public class TileEntityRadio extends TileEntityDecor {
             case ("radio_preset"):
                 return new ComputedVariable(this, variable, partialTicks -> radio.preset, false);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 }

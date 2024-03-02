@@ -139,25 +139,25 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                 switch (hitBox.definition.variableType) {
                     case BUTTON: {
                         if (rightClick) {
-                            entity.getVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
+                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
                         } else {
-                            entity.getVariable(hitBox.definition.variableName).setTo(0, true);
+                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(0, true);
                         }
                         break;
                     }
                     case INCREMENT:
                         if (rightClick) {
-                            entity.getVariable(hitBox.definition.variableName).increment(hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax, true);
+                            entity.getOrCreateVariable(hitBox.definition.variableName).increment(hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax, true);
                         }
                         break;
                     case SET:
                         if (rightClick) {
-                            entity.getVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
+                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
                         }
                         break;
                     case TOGGLE: {
                         if (rightClick) {
-                            entity.getVariable(hitBox.definition.variableName).toggle(true);
+                            entity.getOrCreateVariable(hitBox.definition.variableName).toggle(true);
                         }
                         break;
                     }

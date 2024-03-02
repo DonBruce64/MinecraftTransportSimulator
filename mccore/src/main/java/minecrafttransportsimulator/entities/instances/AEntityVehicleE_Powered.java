@@ -351,7 +351,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     @Override
     public boolean renderTextLit() {
         if (super.renderTextLit() && electricPower > 3) {
-            return getVariable(definition.motorized.litVariable).isActive;
+            return getOrCreateVariable(definition.motorized.litVariable).isActive;
         } else {
             return false;
         }

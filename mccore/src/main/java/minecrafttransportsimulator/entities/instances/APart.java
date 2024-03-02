@@ -175,7 +175,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Add parent constants.
         if (placementDefinition.constantValues != null) {
-            placementDefinition.constantValues.forEach((constantKey, constantValue) -> getVariable(constantKey).setTo(constantValue, false));
+            placementDefinition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
         }
     }
 
@@ -559,7 +559,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (entityOn == null) {
             //We don't have the entity set yet if we're constructing, defer to later.
             return new ComputedVariable(this, variable, partialTicks -> {
@@ -569,35 +569,21 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 return 0;
             }, false);
         } else {
-            //If the variable is prefixed with "parent_", then we need to get our parent's value.
-            //We also need to check if we specified a variable on a parent entity.  Prefixes aren't required.
-            //Recursively check entities on for this variable.
-            AEntityF_Multipart<?> testEntity = entityOn;
-            while (testEntity != null) {
-                if (testEntity.containsVariable(variable)) {
-                    return testEntity.getVariable(variable);
-                } else if (testEntity instanceof APart) {
-                    testEntity = ((APart) testEntity).entityOn;
-                } else {
-                    testEntity = null;
-                }
-            }
-
-            //Auto-checking didn't find a defined variable, check for a prefix.
+            //If the variable is prefixed with "parent_" or "vehicle_", then we need to get our parent's value.
             if (variable.startsWith("vehicle_")) {
                 if (vehicleOn != null) {
-                    return entityOn.createComputedVariable(variable.substring("vehicle_".length()));
+                    return entityOn.createComputedVariable(variable.substring("vehicle_".length()), true);
                 } else {
                     //Not on a vehicle, value will always be 0.
-                    return ZERO_VARIABLE;
+                    return ComputedVariable.ZERO_VARIABLE;
                 }
             } else if (variable.startsWith("parent_")) {
-                return entityOn.createComputedVariable(variable.substring("parent_".length()));
+                return entityOn.createComputedVariable(variable.substring("parent_".length()), true);
             } else {
-                //Not a parent variable we know about, check for part variables or just make a new one.
+                //Not a parent variable we know about, check for part variables.
                 switch (variable) {
                     case ("part_present"):
-                        return ONE_VARIABLE;
+                        return ComputedVariable.ONE_VARIABLE;
                     case ("part_ismirrored"):
                         return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
                     case ("part_isonfront"):
@@ -606,8 +592,29 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
                     case ("part_onvehicle"):
                         return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
-                    default:
-                        return super.createComputedVariable(variable);
+                    default: {
+                        ComputedVariable computedVariable = super.createComputedVariable(variable, false);
+                        if (computedVariable == null) {
+                            //Not a part variable.  Check ourselves, then any entities we are on, up to the top-most parent.
+                            System.out.println("NULL VARIABLE RETURNED FOR " + variable + " ON " + definition.systemName);
+                            AEntityF_Multipart<?> testEntity = this;
+                            while (testEntity != null) {
+                                System.out.println("CHECKING " + testEntity.definition.systemName);
+                                if (testEntity.containsVariable(variable)) {
+                                    System.out.println("FOUND VARIABLE");
+                                    return testEntity.getOrCreateVariable(variable);
+                                } else if (testEntity instanceof APart) {
+                                    testEntity = ((APart) testEntity).entityOn;
+                                } else {
+                                    testEntity = null;
+                                }
+                            }
+                            System.out.println("DID NOT FIND VARIABLE ANYWHERE?");
+                            return ComputedVariable.ZERO_VARIABLE;
+                        } else {
+                            return computedVariable;
+                        }
+                    }
                 }
             }
         }

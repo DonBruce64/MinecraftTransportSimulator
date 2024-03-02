@@ -56,7 +56,7 @@ public class TileEntityChest extends TileEntityDecor {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("inventory_count"):
                 return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() : 0, false);
@@ -65,7 +65,7 @@ public class TileEntityChest extends TileEntityDecor {
             case ("inventory_capacity"):
                 return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : 0, false);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 

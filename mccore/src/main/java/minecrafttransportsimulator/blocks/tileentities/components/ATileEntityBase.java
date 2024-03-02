@@ -74,14 +74,14 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("redstone_active"):
                 return new ComputedVariable(this, variable, partialTicks -> world.getRedstonePower(position) > 0 ? 1 : 0, false);
             case ("redstone_level"):
                 return new ComputedVariable(this, variable, partialTicks -> world.getRedstonePower(position), false);
             default:
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 

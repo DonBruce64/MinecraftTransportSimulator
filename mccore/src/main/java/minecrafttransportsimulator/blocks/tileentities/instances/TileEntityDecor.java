@@ -126,7 +126,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                         lightLevel = (float) adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
                     	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }

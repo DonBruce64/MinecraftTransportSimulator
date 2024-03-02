@@ -294,7 +294,7 @@ public class PartEffector extends APart {
     }
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("effector_active"):
             	return new ComputedVariable(this, variable, partialTicks -> isActive ? 1 : 0, true);
@@ -307,7 +307,7 @@ public class PartEffector extends APart {
             case ("effector_drill_percentage"):
                 return new ComputedVariable(this, variable, partialTicks -> blocksBroken / (double) definition.effector.drillDurability, false);
             default: {
-                return super.createComputedVariable(variable);
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
             }
         }
     }

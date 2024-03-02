@@ -849,7 +849,7 @@ public class PartEngine extends APart {
                         currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
                         break;
                     default:
-                    	ComputedVariable variable = getVariable(modifier.variable);
+                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
                     	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
@@ -876,7 +876,7 @@ public class PartEngine extends APart {
 
 
     @Override
-    public ComputedVariable createComputedVariable(String variable) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("engine_isautomatic"):
                 return new ComputedVariable(this, variable, partialTicks -> currentIsAutomatic != 0 ? 1 : 0, false);
@@ -990,7 +990,7 @@ public class PartEngine extends APart {
                         variable = variable.substring(0, variable.length() - "_cam".length());
                     } else {
                         //Invaild variable.
-                        return ZERO_VARIABLE;
+                        return ComputedVariable.ZERO_VARIABLE;
                     }
 
                     //Extract the values we need
@@ -1011,10 +1011,10 @@ public class PartEngine extends APart {
                         }, true);
                     } else {
                         //Invalid piston arrangement.
-                        return ZERO_VARIABLE;
+                        return ComputedVariable.ZERO_VARIABLE;
                     }
                 } else {
-                    return super.createComputedVariable(variable);
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }
             }
         }
