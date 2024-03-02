@@ -335,7 +335,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 for (AEntityF_Multipart<?> multipart : multiparts) {
                     //Don't attack the entity that has the gun that fired us.
                     if (!multipart.allParts.contains(gun)) {
-                        Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(position, endPoint, bulletMovementBounds);
+                        Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(position, endPoint, bulletMovementBounds, true);
                         if (hitBoxes != null) {
                             //Check boxes hit in the last-found multipart against each other to pick the closest part.
                             boolean anyHitboxCanBeHit = false;

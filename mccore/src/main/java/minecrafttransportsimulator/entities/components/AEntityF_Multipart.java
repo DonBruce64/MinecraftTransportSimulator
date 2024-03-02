@@ -375,54 +375,61 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Called to get all hitboxes hit by the passed-in projectile.  No processing is done at this time, this only lets
      * the bullet know if it WILL hit this entity.  Returns null if no boxes collided, not an empty collection.
      */
-    public Collection<BoundingBox> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds) {
+    public Collection<BoundingBox> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds, boolean isBullet) {
         if (encompassingBox.intersects(movementBounds)) {
             //Get all collision boxes and check if we hit any of them.
             //Sort them by distance for later.
             TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
-            for (BoundingBox box : allDamageCollisionBoxes) {
-                if (!allPartSlotBoxes.containsKey(box)) {
-                    Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
-                    if (delta != null) {
-                        double boxDistance = delta.distanceTo(pathStart);
-                        boolean addBox = true;
-                        if (box.groupDef != null) {
-                            //Don't add boxes within the same group.
-                            Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
-                            while (iterator.hasNext()) {
-                                Entry<Double, BoundingBox> entry = iterator.next();
-                                BoundingBox otherBox = entry.getValue();
-                                if (otherBox.groupDef == box.groupDef) {
-                                    //If we have more armor, remove the prior box since it won't stop the bullet as much.
-                                    //Otherwise, just use closest box.
-                                    if (box.definition.armorThickness != 0) {
-                                        if (box.definition.armorThickness > otherBox.definition.armorThickness) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    } else {
-                                        if (entry.getKey() > boxDistance) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        if (addBox) {
-                            hitBoxes.put(delta.distanceTo(pathStart), box);
-                        }
-                    }
-                }
+            populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allDamageCollisionBoxes);
+            if (isBullet) {
+                populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allBulletCollisionBoxes);
             }
             if (!hitBoxes.isEmpty()) {
                 return hitBoxes.values();
             }
         }
         return null;
+    }
+
+    private void populateHitBoxesInSet(Point3D pathStart, Point3D pathEnd, TreeMap<Double, BoundingBox> hitBoxes, List<BoundingBox> boxesToCheck) {
+        for (BoundingBox box : boxesToCheck) {
+            if (!allPartSlotBoxes.containsKey(box)) {
+                Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
+                if (delta != null) {
+                    double boxDistance = delta.distanceTo(pathStart);
+                    boolean addBox = true;
+                    if (box.groupDef != null) {
+                        //Don't add boxes within the same group.
+                        Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            Entry<Double, BoundingBox> entry = iterator.next();
+                            BoundingBox otherBox = entry.getValue();
+                            if (otherBox.groupDef == box.groupDef) {
+                                //If we have more armor, remove the prior box since it won't stop the bullet as much.
+                                //Otherwise, just use closest box.
+                                if (box.definition.armorThickness != 0) {
+                                    if (box.definition.armorThickness > otherBox.definition.armorThickness) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                } else {
+                                    if (entry.getKey() > boxDistance) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (addBox) {
+                        hitBoxes.put(delta.distanceTo(pathStart), box);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -854,6 +861,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (APart part : parts) {
             if (part.allDamageCollisionBoxes.contains(box)) {
                 if (part.damageCollisionBoxes.contains(box)) {
+                    return part;
+                } else {
+                    return part.getPartWithBox(box);
+                }
+            } else if (part.allBulletCollisionBoxes.contains(box)) {
+                if (part.bulletCollisionBoxes.contains(box)) {
                     return part;
                 } else {
                     return part.getPartWithBox(box);

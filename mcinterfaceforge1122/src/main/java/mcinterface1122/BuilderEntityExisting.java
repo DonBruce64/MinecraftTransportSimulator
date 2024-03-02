@@ -190,7 +190,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
                     Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
-                    Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
+                    Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition), false);
                     if (hitBoxes != null) {
                         multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitBoxes);
                     }

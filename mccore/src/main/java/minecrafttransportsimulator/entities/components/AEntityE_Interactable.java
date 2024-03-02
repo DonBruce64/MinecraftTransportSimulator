@@ -93,7 +93,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     /**
      * List of bounding boxes that should be used for damage collisions with this entity.
      * These can't be clicked by players, and can't be collided with, but can be attacked.
-     * By default, this includes all {@link #interactionBoxes} and {@link #bulletCollisionBoxes}.
+     * By default, this includes all {@link #interactionBoxes} but not {@link #bulletCollisionBoxes}
+     * since those can only be damaged by bullets specifically.
      **/
     public final Set<BoundingBox> damageCollisionBoxes = new HashSet<>();
 
@@ -374,7 +375,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
         interactionBoxes.addAll(entityCollisionBoxes);
         damageCollisionBoxes.addAll(interactionBoxes);
-        damageCollisionBoxes.addAll(bulletCollisionBoxes);
     }
 
     /**
