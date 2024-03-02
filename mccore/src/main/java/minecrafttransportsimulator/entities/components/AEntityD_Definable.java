@@ -1228,7 +1228,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         data.setString("packID", definition.packID);
         data.setString("systemName", definition.systemName);
         data.setString("subName", subDefinition.subName);
-        if (text.isEmpty()) {
+        if (!text.isEmpty()) {
             int lineNumber = 0;
             for (String textLine : text.values()) {
                 data.setString("textLine" + lineNumber++, textLine);
