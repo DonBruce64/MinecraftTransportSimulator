@@ -60,10 +60,15 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
@@ -72,6 +77,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  *
  * @author don_bruce
  */
+@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
     private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
@@ -413,7 +419,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders the main GUI, setting up any transforms or operations as required.
      */
-    @SuppressWarnings("deprecation") //This is for RenderSystem calls.
+    @SuppressWarnings("deprecation")
     protected static void renderGUI(MatrixStack stack, int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
         //Get the buffer for GUI rendering.
         matrixStack = stack;
@@ -511,26 +517,59 @@ public class InterfaceRender implements IInterfaceRender {
      * class here.
      */
     public static void registerRenderer(FMLClientSetupEvent event) {
-        //Register blank classes for the builders.
+        //Register the global entity rendering class.
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.E_TYPE4.get(), manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
+            @Override
+            public ResourceLocation getTextureLocation(BuilderEntityRenderForwarder builder) {
+                return null;
+            }
+
+            @Override
+            public boolean shouldRender(BuilderEntityRenderForwarder builder, ClippingHelper camera, double camX, double camY, double camZ) {
+                //Always render the forwarder, no matter where the camera is.
+                return true;
+            }
+
+            @Override
+            public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
+                //Set camera offset point for later.
+                renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
+
+                //Flip the buffer set to the next one prior to rendering.
+                onBufferSet2 = !onBufferSet2;
+
+                //Set the stack variables and render.
+                matrixStack = stack;
+                renderBuffer = buffer;
+                doRenderCall(false, partialTicks);
+            }
+        });
+
+        //Register blank classes for the other builders.
         //If we don't, the game crashes when trying to render them.
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityExisting.E_TYPE2.get(), manager -> new BlankRender<BuilderEntityExisting>(manager));
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
     }
+    
+    @SubscribeEvent
+    public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
+        //If the buffer is null, bail, it should be set before-hand from the normal render, but might not be.
+        //This can happen if the follower hasn't been rendered yet.
+        if (renderBuffer != null) {
+            MatrixStack stack = event.getMatrixStack();
+            float partialTicks = event.getPartialTicks();
 
-    public static void doRenderCall(MatrixStack stack, IRenderTypeBuffer buffer, boolean blendingEnabled, float partialTicks) {
-        if (!blendingEnabled) {
-            //Flip the buffer set to the next one prior to rendering.
-            onBufferSet2 = !onBufferSet2;
+            //Set camera offfset point for later.
+            Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+            renderCameraOffset.set(position.x, position.y, position.z);
+            
+            ///Set the stack variables and render.
+            matrixStack = stack;
+            doRenderCall(true, partialTicks);
         }
+    }
 
-        //Set camera offfset point for later.
-        Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        renderCameraOffset.set(position.x, position.y, position.z);
-
-        //Set the global variables.
-        matrixStack = stack;
-        renderBuffer = buffer;
-
+    private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {

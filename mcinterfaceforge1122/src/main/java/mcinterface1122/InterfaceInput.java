@@ -25,6 +25,7 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -40,6 +41,7 @@ public class InterfaceInput implements IInterfaceInput {
     private static KeyBinding importKey;
 
     //Mouse variables.
+    private static boolean betterCombatDetected;
     private static boolean leftMouseButtonDown;
     private static boolean rightMouseButtonDown;
 
@@ -70,6 +72,7 @@ public class InterfaceInput implements IInterfaceInput {
         ClientRegistry.registerKeyBinding(configKey);
         importKey = new KeyBinding(LanguageSystem.GUI_IMPORT.getCurrentValue(), Keyboard.KEY_NONE, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(importKey);
+        betterCombatDetected = InterfaceManager.coreInterface.isModPresent("bettercombatmod");
     }
 
     @Override
@@ -286,24 +289,27 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public boolean isLeftMouseButtonDown() {
-        return leftMouseButtonDown;
+        return betterCombatDetected ? leftMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
     }
 
     @Override
     public boolean isRightMouseButtonDown() {
-        return rightMouseButtonDown;
+        return betterCombatDetected ? rightMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
     }
 
     /**
      * Stores mouse presses, since stupid mods take them from us.
+     * BetterCombat is one such mod.
      */
     @SubscribeEvent
     public static void onIVMouseInput(MouseEvent event) {
-        int button = event.getButton();
-        if (button == 0) {
-            leftMouseButtonDown = event.isButtonstate();
-        } else if (button == 1) {
-            rightMouseButtonDown = event.isButtonstate();
+        if (betterCombatDetected) {
+            int button = event.getButton();
+            if (button == 0) {
+                leftMouseButtonDown = event.isButtonstate();
+            } else if (button == 1) {
+                rightMouseButtonDown = event.isButtonstate();
+            }
         }
     }
 

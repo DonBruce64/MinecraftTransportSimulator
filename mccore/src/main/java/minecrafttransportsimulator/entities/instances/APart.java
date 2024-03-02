@@ -338,7 +338,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
-            if (masterEntity.locked) {
+            if (vehicleOn != null && vehicleOn.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
                 if (player.getInventory().addStack(getStack())) {
@@ -377,11 +377,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         super.updatePartList();
         linkedParts.clear();
         addLinkedPartsToList(linkedParts, APart.class);
-    }
-
-    @Override
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        return entityOn.getOwnerState(player);
     }
 
     @Override
@@ -587,6 +582,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 return 1;
             case ("part_ismirrored"):
                 return isMirrored ? 1 : 0;
+            case ("part_isonfront"):
+                return placementDefinition.pos.z > 0 ? 1 : 0;
             case ("part_isspare"):
                 return isSpare ? 1 : 0;
             case ("part_onvehicle"):

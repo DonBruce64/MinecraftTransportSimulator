@@ -33,8 +33,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             IWrapperItemStack heldStack = player.getHeldStack();
             //Make sure the definition is set in the NBT we will be giving to our new entity.
             IWrapperNBT data = heldStack.getData();
+            boolean newVehicle = data.getAllNames().isEmpty();
             populateDefaultData(data);
-            boolean wasSaved = !data.getString("uniqueUUID").isEmpty();
+
 
             //First construct the class.
             //This takes into account all saved data in the stack, so the vehicle will re-load its data from it
@@ -45,7 +46,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 
             //If we have a default fuel, add it now as we SHOULD have an engine to tell
             //us what fuel type we will need to add.
-            if (!wasSaved && vehicle.definition.motorized.defaultFuelQty > 0) {
+            if (newVehicle && vehicle.definition.motorized.defaultFuelQty > 0) {
                 for (APart part : vehicle.parts) {
                     if (part instanceof PartEngine) {
                         String mostPotentFluid = "";

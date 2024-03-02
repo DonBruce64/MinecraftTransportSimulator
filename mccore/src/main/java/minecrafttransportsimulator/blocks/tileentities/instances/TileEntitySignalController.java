@@ -213,7 +213,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                         //Add 8 units to center on the box which is 16 units long.
                         boxRelativeCenter.add(0, 0, 8);
                         //Rotate box based on signal orientation to proper signal.
-                        boxRelativeCenter.rotate(signalGroup.axis.rotation);
+                        boxRelativeCenter.rotate(signalGroup.axis.yRotation);
 
                         //Add delta from controller to intersection center.
                         boxRelativeCenter.add(intersectionCenterPoint).subtract(position);
@@ -221,7 +221,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
                         //Create bounding box and transform for it..
                         BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth / 2D, 1, 8);
-                        holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(signalGroup.axis.rotation);
+                        holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(signalGroup.axis.yRotation);
                         box.renderHolographic(holoboxTransform, null, signalGroup.direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (signalGroup.direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN));
                     }
                 }
@@ -388,7 +388,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                                     stateChangeRequested = true;
                                 } else {
                                     for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                                        Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).reOrigin(axis.rotation);
+                                        Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).reOrigin(axis.yRotation);
                                         if (adjustedPos.x > signalLineCenter.x - signalLineWidth / 2D && adjustedPos.x < signalLineCenter.x + signalLineWidth / 2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16) {
                                             //Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
                                             //Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
@@ -496,7 +496,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }
@@ -581,7 +581,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }
@@ -667,7 +667,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }

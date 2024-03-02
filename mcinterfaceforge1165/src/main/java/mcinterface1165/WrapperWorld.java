@@ -105,6 +105,7 @@ public class WrapperWorld extends AWrapperWorld {
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
+    private static Map<UUID, BuilderEntityRenderForwarder> playerFollowers = new HashMap<>();
     private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
     private final Set<BlockPos> knownAirBlocks = new HashSet<>();
 
@@ -984,7 +985,23 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
 
-                    if (mcPlayer.isAlive() && gunBuilder == null) {
+                    BuilderEntityRenderForwarder followerBuilder = playerFollowers.get(playerUUID);
+                    if (followerBuilder != null) {
+                        //Follower exists, check if world is the same and it is actually updating.
+                        //We check basic states, and then the watchdog bit that gets reset every tick.
+                        //This way if we're in the world, but not valid we will know.
+                        if (followerBuilder.level != mcPlayer.level || followerBuilder.playerFollowing != mcPlayer || !mcPlayer.isAlive() || !followerBuilder.isAlive() || followerBuilder.idleTickCounter == 20) {
+                            //Follower is not linked.  Remove it and re-create in code below.
+                            followerBuilder.remove();
+                            playerFollowers.remove(playerUUID);
+                            ticksSincePlayerJoin.remove(playerUUID);
+                            followerBuilder = null;
+                        } else {
+                            ++followerBuilder.idleTickCounter;
+                        }
+                    }
+
+                    if (mcPlayer.isAlive() && (gunBuilder == null || followerBuilder == null)) {
                         //Some follower doesn't exist.  Check if player has been present for 3 seconds and spawn it.
                         int totalTicksWaited = 0;
                         if (ticksSincePlayerJoin.containsKey(playerUUID)) {
@@ -999,6 +1016,14 @@ public class WrapperWorld extends AWrapperWorld {
                                 EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
                                 playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
                                 entity.addPartsPostAddition(playerWrapper, newData);
+                            }
+
+                            //Spawn follower.
+                            if (followerBuilder == null) {
+                                followerBuilder = new BuilderEntityRenderForwarder(mcPlayer);
+                                followerBuilder.loadedFromSavedNBT = true;
+                                playerFollowers.put(playerUUID, followerBuilder);
+                                world.addFreshEntity(followerBuilder);
                             }
 
                             //If the player is new, add handbooks.

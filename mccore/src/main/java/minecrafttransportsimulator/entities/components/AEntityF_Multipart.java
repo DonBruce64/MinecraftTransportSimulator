@@ -28,7 +28,6 @@ import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -175,6 +174,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
             recalculatePartSlots();
         }
+
+        //Update the part list, this will re-create any linkings on us.
+        updatePartList();
     }
 
     @Override
@@ -284,7 +286,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //False->True change, try to grab a part.
             Point3D partAnchor = partDef.pos.copy().rotate(orientation).add(position);
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.getStack().getItem()).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     partToTransfer.entityOn.removePart(partToTransfer, false, null);
                     partToTransfer.linkToEntity(this, partDef);
                     addPart(partToTransfer, false);
@@ -297,7 +299,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
             if (currentPart.definition.generic.canBePlacedOnGround) {
                 Point3D partAnchor = new Point3D();
-                AItemPart currentPartItem = (AItemPart) currentPart.getStack().getItem();
+                AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
                     //This keeps us from checking things really far away for no reason.
                     if (entity.encompassingBox.isPointInside(currentPart.position, PART_TRANSFER_GROWTH)) {
@@ -373,54 +375,61 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Called to get all hitboxes hit by the passed-in projectile.  No processing is done at this time, this only lets
      * the bullet know if it WILL hit this entity.  Returns null if no boxes collided, not an empty collection.
      */
-    public Collection<BoundingBox> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds) {
+    public Collection<BoundingBox> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds, boolean isBullet) {
         if (encompassingBox.intersects(movementBounds)) {
             //Get all collision boxes and check if we hit any of them.
             //Sort them by distance for later.
             TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
-            for (BoundingBox box : allDamageCollisionBoxes) {
-                if (!allPartSlotBoxes.containsKey(box)) {
-                    Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
-                    if (delta != null) {
-                        double boxDistance = delta.distanceTo(pathStart);
-                        boolean addBox = true;
-                        if (box.groupDef != null) {
-                            //Don't add boxes within the same group.
-                            Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
-                            while (iterator.hasNext()) {
-                                Entry<Double, BoundingBox> entry = iterator.next();
-                                BoundingBox otherBox = entry.getValue();
-                                if (otherBox.groupDef == box.groupDef) {
-                                    //If we have more armor, remove the prior box since it won't stop the bullet as much.
-                                    //Otherwise, just use closest box.
-                                    if (box.definition.armorThickness != 0) {
-                                        if (box.definition.armorThickness > otherBox.definition.armorThickness) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    } else {
-                                        if (entry.getKey() > boxDistance) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        if (addBox) {
-                            hitBoxes.put(delta.distanceTo(pathStart), box);
-                        }
-                    }
-                }
+            populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allDamageCollisionBoxes);
+            if (isBullet) {
+                populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allBulletCollisionBoxes);
             }
             if (!hitBoxes.isEmpty()) {
                 return hitBoxes.values();
             }
         }
         return null;
+    }
+
+    private void populateHitBoxesInSet(Point3D pathStart, Point3D pathEnd, TreeMap<Double, BoundingBox> hitBoxes, List<BoundingBox> boxesToCheck) {
+        for (BoundingBox box : boxesToCheck) {
+            if (!allPartSlotBoxes.containsKey(box)) {
+                Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
+                if (delta != null) {
+                    double boxDistance = delta.distanceTo(pathStart);
+                    boolean addBox = true;
+                    if (box.groupDef != null) {
+                        //Don't add boxes within the same group.
+                        Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            Entry<Double, BoundingBox> entry = iterator.next();
+                            BoundingBox otherBox = entry.getValue();
+                            if (otherBox.groupDef == box.groupDef) {
+                                //If we have more armor, remove the prior box since it won't stop the bullet as much.
+                                //Otherwise, just use closest box.
+                                if (box.definition.armorThickness != 0) {
+                                    if (box.definition.armorThickness > otherBox.definition.armorThickness) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                } else {
+                                    if (entry.getKey() > boxDistance) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (addBox) {
+                        hitBoxes.put(delta.distanceTo(pathStart), box);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -467,10 +476,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR, null));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR, null);
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
@@ -495,14 +504,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE, null));
                             bullet.waitingOnActionPacket = true;
                             return EntityBullet.HitType.VEHICLE;
                         }
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE, null);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }
@@ -529,19 +538,23 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperItemStack getStack() {
         //Add data to the stack we return.  We need to remember the parts we have on us, even in item form.
+        //Just don't add default data or our UUID, that needs to be fresh.
         IWrapperItemStack stack = super.getStack();
-        stack.setData(save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        IWrapperNBT stackData = save(InterfaceManager.coreInterface.getNewNBTWrapper());
+        stackData.deleteData(UNIQUE_UUID_TAG_NAME);
+        IWrapperNBT freshData = InterfaceManager.coreInterface.getNewNBTWrapper();
+        cachedItem.populateDefaultData(freshData);
+        freshData.getAllNames().forEach(name -> stackData.deleteData(name));
+        if (!stackData.getAllNames().isEmpty()) {
+            stack.setData(stackData);
+        }
         return stack;
     }
 
     @Override
     public void updateText(LinkedHashMap<String, String> textLines) {
         super.updateText(textLines);
-        allParts.forEach(part -> {
-            for (Entry<JSONText, String> textEntry : part.text.entrySet()) {
-                textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
-            }
-        });
+        parts.forEach(part -> part.updateText(textLines));
     }
 
     @Override
@@ -681,9 +694,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partsInSlots.add(null);
             }
 
-            boolean newEntity = data.getString("uniqueUUID").isEmpty();
             for (int i = 0; i < definition.parts.size(); ++i) {
-                if (newEntity) {
+                if (!data.getBoolean("spawnedDefaultParts")) {
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
@@ -840,11 +852,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * list should occur here, not in {@link #updateAllpartList()}.
      */
     public void updatePartList() {
-        parts.forEach(APart::updatePartList);
-
         //Clear camera list in prep for new entries from other areas.
         cameras.clear();
         cameraEntities.clear();
+
+        parts.forEach(APart::updatePartList);
     }
 
     /**
@@ -856,6 +868,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (APart part : parts) {
             if (part.allDamageCollisionBoxes.contains(box)) {
                 if (part.damageCollisionBoxes.contains(box)) {
+                    return part;
+                } else {
+                    return part.getPartWithBox(box);
+                }
+            } else if (part.allBulletCollisionBoxes.contains(box)) {
+                if (part.bulletCollisionBoxes.contains(box)) {
                     return part;
                 } else {
                     return part.getPartWithBox(box);
@@ -1090,6 +1108,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
+        data.setBoolean("spawnedDefaultParts", true);
         for (APart part : parts) {
             //Don't save the part if it's not valid or a fake part.
             if (part.isValid && !part.isFake()) {

@@ -93,7 +93,7 @@ public class PartGroundDevice extends APart {
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
             IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            ((ItemPartGroundDevice) getStack().getItem()).populateDefaultData(fakeData);
+            ((ItemPartGroundDevice) cachedItem).populateDefaultData(fakeData);
             fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
             entityOn.addPart(fakePart, false);
         }
@@ -102,7 +102,7 @@ public class PartGroundDevice extends APart {
     @Override
     public void attack(Damage damage) {
         super.attack(damage);
-        if (!damage.isWater && (damage.isExplosion || Math.random() < 0.5 || outOfHealth)) {
+        if (!damage.isWater && (outOfHealth || damage.isExplosion || (damage.damgeSource != null && Math.random() < 0.5))) {
             setFlatState(true);
         }
     }

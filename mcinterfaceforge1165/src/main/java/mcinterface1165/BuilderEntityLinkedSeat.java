@@ -63,7 +63,9 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                         rider = WrapperEntity.getWrapperFor(riders.get(0));
                         entity.setRider(rider, true);
                     }
-                } else if (dismountedRider) {
+                } else if (rider != null && riders.isEmpty()) {
+                    remove(); //This is for crappy server OSes that don't call the removePassenger() function.
+                }else if (dismountedRider) {
                     remove();
                 }
             }

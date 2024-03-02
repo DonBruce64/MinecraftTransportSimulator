@@ -86,7 +86,11 @@ public class PackMaterialComponent {
         } else {
             //Get main materials.
             if (includeMain) {
-                itemTexts.addAll(item.definition.general.materialLists.get(recipeIndex));
+            	if(item.definition.general.materialLists.isEmpty()) {
+                	lastErrorMessage = "This item is missing a general material list!  For material lists, you need to use double-nested brackets like [[]] for a blank recipe, not [].  Crafting will be disabled in survival mode.  Report this to the pack author!";
+                    return null;
+                }
+            	itemTexts.addAll(item.definition.general.materialLists.get(recipeIndex));
             }
 
             //Get subType materials, if required.
@@ -95,6 +99,9 @@ public class PackMaterialComponent {
                 currentSubName = subItem.subDefinition.subName;
                 if (subItem.subDefinition.extraMaterialLists.size() != item.definition.general.materialLists.size()) {
                     lastErrorMessage = "This item has a mis-matched number of normal materialLists (" + item.definition.general.materialLists.size() + ") and extraMaterialLists (" + subItem.subDefinition.extraMaterialLists.size() + ") for " + item.definition.packID + ":" + item.definition.systemName + currentSubName + ".  Crafting will be disabled in survival mode.  Report this to the pack author!";
+                    return null;
+                }else if(subItem.subDefinition.extraMaterialLists.isEmpty()) {
+                	lastErrorMessage = "This item is missing a definition material list!  For material lists, you need to use double-nested brackets like [[]] for a blank recipe, not [].  Crafting will be disabled in survival mode.  Report this to the pack author!";
                     return null;
                 }
                 itemTexts.addAll(subItem.subDefinition.extraMaterialLists.get(recipeIndex));

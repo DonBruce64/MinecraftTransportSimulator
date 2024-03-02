@@ -143,6 +143,7 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
+
     public void deleteVertices(RenderableObject object) {
         GL11.glDeleteLists(object.cachedVertexIndex, 1);
     }
