@@ -532,16 +532,18 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
-                //Set camera offset point for later.
-                renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
-
-                //Flip the buffer set to the next one prior to rendering.
-                onBufferSet2 = !onBufferSet2;
-
-                //Set the stack variables and render.
-                matrixStack = stack;
-                renderBuffer = buffer;
-                doRenderCall(false, partialTicks);
+            	if(builder.playerFollowing == Minecraft.getInstance().player) {
+	                //Set camera offset point for later.
+	                renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
+	
+	                //Flip the buffer set to the next one prior to rendering.
+	                onBufferSet2 = !onBufferSet2;
+	
+	                //Set the stack variables and render.
+	                matrixStack = stack;
+	                renderBuffer = buffer;
+	                doRenderCall(false, partialTicks);
+            	}
             }
         });
 
