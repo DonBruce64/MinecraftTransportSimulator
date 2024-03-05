@@ -272,7 +272,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentDragCoefficient = definition.motorized.dragCoefficient;
         currentBallastVolume = definition.motorized.ballastVolume;
         currentWaterBallastFactor = definition.motorized.waterBallastFactor;
-        currentDownForce = definition.motorized.downForce;
+        currentSteeringForceIgnoration = definition.motorized.steeringForceIgnoresSpeed ? 1 : 0;
+        currentSteeringForceFactor = definition.motorized.steeringForceFactor;
         currentBrakingFactor = definition.motorized.brakingFactor;
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
@@ -312,8 +313,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     case "waterBallastFactor":
                         currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
-                    case "downForce":
-                        currentDownForce = adjustVariable(modifier, currentDownForce);
+                    case "steeringForceIgnoresSpeed":
+                    	currentSteeringForceIgnoration = adjustVariable(modifier, currentSteeringForceIgnoration);
+                        break;
+                    case "steeringForceFactor":
+                        currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
                         break;
                     case "brakingFactor":
                         currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor);
