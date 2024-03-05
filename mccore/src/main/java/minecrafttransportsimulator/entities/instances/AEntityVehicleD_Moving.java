@@ -354,7 +354,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     vectorDelta = 180 + vectorDelta;
                 }
             }
-            if (this.towedByConnection == null) {
+            /*if (this.towedByConnection == null) {
                 double overSteerForce = Math.max(velocity / 4, 1);
                 if (definition.motorized.overSteerAccel != 0) {
                     weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * currentOverSteer;
@@ -367,7 +367,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     weightTransfer = currentOverSteer;
                 }
                 rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
-            }
+            }*/
 
             //If we are offset, adjust our angle.
             if (Math.abs(vectorDelta) > 0.001) {
@@ -519,14 +519,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is opposite of the torque-based forces for control surfaces.
                 double turningForce = steeringAngle / turningDistance;
                 //Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
-                if (groundVelocity > 0.35D) {
-                    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentDownForce) - 0.35D));
-                }
+                /*if (groundVelocity > 0.35D) {
+                //    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentDownForce) - 0.35D));
+                }*/
                 //Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
                 //We need to take speed-factor into account here, as that will make us move different lengths per tick.
                 //Finally, we need to reduce this by a constant to get "proper" force..
-                return turningForce * groundVelocity * (speedFactor / 0.35D) / 2D;
+                return turningForce * (groundVelocity * (currentOverSteer + 1)) * (speedFactor / 0.35D) / 2D;
             }
         }
         return 0;
