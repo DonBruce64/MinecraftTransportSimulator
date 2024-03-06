@@ -94,11 +94,11 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
         public int gearSequenceDuration;
 
-        @JSONDescription("Set this to true if you want vehicles to ignore speed when accounting for steering force. Works in tandem with steeringForceFactor.")
+        @JSONDescription("Set this to true if you want vehicles to ignore speed, and instead call from steeringForceFactor for their current steering force. Otherwise by default, vehicles will gradually lose their ability to steer as they gain speed.")
         public boolean steeringForceIgnoresSpeed;
 
         @ModifiableValue
-        @JSONDescription("The amount of steering force output for cars, either based on current speed or as a whole. The value generally functions between 0 and 1 when steeringForceIgnoresSpeed is disabled, with 1 acting as full steering force at any speed whilst 0 results in normal MTS steering force. However if steeringForceIgnoresSpeed is enabled this variable defines the vehicle's steering force output regardless of its current forward velocity.")
+        @JSONDescription("The amount of steering force output for cars, based either on current speed or as a whole, dependent on steeringForceIgnoresSpeed for choosing between such behavior. By default a value of 0 results in default MTS steering forces, while 1 allows full steering force at any speed. However if steeringForceIgnoresSpeed is set to true then 0 will result in no steering force at any speed, with 1 otherwise resulting in the same handling.")
         public float steeringForceFactor;
 
         @ModifiableValue
