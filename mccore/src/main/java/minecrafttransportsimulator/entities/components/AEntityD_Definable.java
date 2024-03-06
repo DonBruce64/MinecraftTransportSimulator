@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -82,7 +83,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
      **/
-    protected final Map<String, ComputedVariable> computedVariables = new HashMap<>();
+    private final Map<String, ComputedVariable> computedVariables = new HashMap<>();
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
@@ -182,7 +183,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             //Load variables.
             for (String variableName : data.getStrings("variables")) {
-                getOrCreateVariable(variableName).setTo(data.getDouble(variableName), false);
+                addVariable(new ComputedVariable(this, variableName, data));
             }
         } else {
             //Only set initial text/variables on initial placement.
@@ -194,10 +195,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
 
             if (definition.initialVariables != null) {
-                for (String variable : definition.initialVariables) {
-                    getOrCreateVariable(variable).setTo(1D, false);
-                }
+                definition.initialVariables.forEach(variable -> {
+                    ComputedVariable newVariable = new ComputedVariable(this, variable, null);
+                    newVariable.setTo(1, false);
+                    addVariable(newVariable);
+                });
             }
+        }
+
+        if(definition.variableModifiers != null) {
+            definition.variableModifiers.forEach(modifier -> addVariable(new ComputedVariable(this, modifier.variable, null)));
         }
     }
 
@@ -303,7 +310,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(0,  false));
                 }
                 if (testSubDef.constants != null) {
-                    testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(1,  false));
+                    testSubDef.constants.forEach(constant -> {
+                        ComputedVariable newVariable = new ComputedVariable(this, constant, null);
+                        newVariable.setTo(1, false);
+                        addVariable(newVariable);
+                    });
                 }
                 subDefinition = testSubDef;
                 cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
@@ -1015,8 +1026,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void resetVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
         if (computedVar != null) {
-            computedVar.needsReset = true;
+            computedVar.reset();
         }
+    }
+
+    public void resetVariablesMatchingFunction(Function<ComputedVariable, Boolean> function) {
+        computedVariables.values().forEach(computedVar -> {
+            if (function.apply(computedVar)) {
+                computedVar.reset();
+            }
+        });
     }
 
     public boolean containsVariable(String variable) {

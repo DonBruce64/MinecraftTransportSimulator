@@ -528,7 +528,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
 
         //Clear connection variables, since our connections have changed and those affect them.
-        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getKey().startsWith("connection"));
+        resetVariablesMatchingFunction(variable -> variable.variableKey.startsWith("connection"));
 
         //Handle connection update requests.
         if (!world.isClient()) {
@@ -554,7 +554,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
         }
         
-        computedVariables.entrySet().removeIf(mapEntry -> mapEntry.getKey().startsWith("connection"));
+        resetVariablesMatchingFunction(variable -> variable.variableKey.startsWith("connection"));
 
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));

@@ -30,13 +30,15 @@ public class ComputedVariable {
     private final boolean changesOnPartialTicks;
     private final boolean randomVariable;
     private final boolean isInverted;
+    private final boolean isConstant;
     private long lastTickChecked;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/
     public double currentValue;
     /**True if {@link #currentValue} is greater than 1, false otherwise.  Used for quicker boolean operations.**/
     public boolean isActive;
     /**Flag for external systems to allow resetting this CV.  Doesn't do any logic, but external systems can use this for state-resets.
-     * The reason this flag is here is so if this CV is referenced on multiple entities, each can do their own resetting logic.**/
+     * The reason this flag is here is so if this CV is referenced on multiple entities, each can do their own resetting logic.
+     * Only set by calling {@link #reset()}, never by manually setting the flag.**/
     public boolean needsReset;
 
     /**Constructor for variables with logic that can change each tick or frame.**/
@@ -47,6 +49,7 @@ public class ComputedVariable {
         this.changesOnPartialTicks = changesOnPartialTicks;
         this.randomVariable = variable.startsWith("random");
         this.isInverted = variable.startsWith("!");
+        this.isConstant = variable.startsWith("#");
     }
 
     /**Constructor for variables with no logic, and instead maintained state.**/
@@ -101,26 +104,32 @@ public class ComputedVariable {
     }
 
     public final void setTo(double value, boolean sendPacket) {
-        currentValue = value;
-        isActive = isInverted ? currentValue == 0 : currentValue > 0;
-        if (sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
+        if (!isConstant) {
+            currentValue = value;
+            isActive = isInverted ? currentValue == 0 : currentValue > 0;
+            if (sendPacket) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
+            }
         }
     }
     
     public final void adjustBy(double value, boolean sendPacket) {
-        currentValue += value;
-        isActive = isInverted ? currentValue == 0 : currentValue > 0;
-        if (sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
+        if (!isConstant) {
+            currentValue += value;
+            isActive = isInverted ? currentValue == 0 : currentValue > 0;
+            if (sendPacket) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
+            }
         }
     }
 
     public final void toggle(boolean sendPacket) {
-        currentValue = currentValue > 0 ? 0 : 1;
-        isActive = isInverted ? currentValue == 0 : currentValue > 0;
-        if (sendPacket) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
+        if (!isConstant) {
+            currentValue = currentValue > 0 ? 0 : 1;
+            isActive = isInverted ? currentValue == 0 : currentValue > 0;
+            if (sendPacket) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
+            }
         }
     }
 
@@ -128,24 +137,31 @@ public class ComputedVariable {
      * Returns true if the value was changed, false if not due to clamps.
      */
     public final boolean increment(double incrementValue, double minValue, double maxValue, boolean sendPacket) {
-        double newValue = currentValue + incrementValue;
-        if (minValue != 0 || maxValue != 0) {
-            if (newValue < minValue) {
-                newValue = minValue;
-            } else if (newValue > maxValue) {
-                newValue = maxValue;
+        if (!isConstant) {
+            double newValue = currentValue + incrementValue;
+            if (minValue != 0 || maxValue != 0) {
+                if (newValue < minValue) {
+                    newValue = minValue;
+                } else if (newValue > maxValue) {
+                    newValue = maxValue;
+                }
+            }
+            if (newValue != currentValue) {
+                incrementValue = newValue - currentValue;
+                currentValue = newValue;
+                isActive = isInverted ? currentValue == 0 : currentValue > 0;
+                if (sendPacket) {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
+                }
+                return true;
             }
         }
-        if (newValue != currentValue) {
-        	incrementValue = newValue - currentValue;
-            currentValue = newValue;
-            isActive = isInverted ? currentValue == 0 : currentValue > 0;
-            if (sendPacket) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
-            }
-            return true;
-        } else {
-            return false;
+        return false;
+    }
+
+    public final void reset() {
+        if (!isConstant) {
+            needsReset = true;
         }
     }
 
