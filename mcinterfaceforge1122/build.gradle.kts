@@ -2,6 +2,7 @@ plugins {
     id("gg.essential.loom")
     id("dev.architectury.architectury-pack200")
     id("com.github.johnrengelman.shadow")
+    id("io.github.juuxel.loom-vineflower")
 }
 
 val jeiVersion: String by project

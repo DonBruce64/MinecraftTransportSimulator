@@ -45,12 +45,6 @@ subprojects {
         repositories {
             maven("https://dvs1.progwml6.com/files/maven/") // JEI
         }
-
-        // dependencies {
-        //     // Fix Loom runs
-        //     annotationProcessor("com.google.guava:guava:32.1.2-jre")
-        //     annotationProcessor("com.google.code.gson:gson:2.8.9")
-        // }
     }
 
     java {

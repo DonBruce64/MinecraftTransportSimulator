@@ -1,6 +1,6 @@
 plugins {
     id("gg.essential.loom")
-    id("dev.architectury.architectury-pack200")
+    id("io.github.juuxel.loom-vineflower")
 }
 
 // These values come from project properties (gradle.properties)
@@ -15,7 +15,6 @@ loom {
         isIdeConfigGenerated = true
     }
     forge {
-        pack200Provider.set(dev.architectury.pack200.java.Pack200Adapter())
         mixinConfig(mixinConfig)
     }
     @Suppress("UnstableApiUsage")

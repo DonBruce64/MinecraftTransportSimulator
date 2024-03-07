@@ -1,16 +1,18 @@
 rootProject.name = "Immersive Vehicles"
 
 pluginManagement {
-    pluginManagement {
-        repositories {
-            maven("https://maven.architectury.dev/") // Architectury
-            maven("https://maven.fabricmc.net") // Fabric
-            maven("https://maven.minecraftforge.net/") // MinecraftForge
-            maven("https://repo.spongepowered.org/maven") // Mixin repo
-            maven("https://repo.sk1er.club/repository/maven-releases/") // Essential
-            mavenCentral()
-            gradlePluginPortal()
-        }
+    repositories {
+        maven("https://maven.architectury.dev/") // Architectury
+        maven("https://maven.fabricmc.net") // Fabric
+        maven("https://maven.minecraftforge.net/") // MinecraftForge
+        maven("https://repo.spongepowered.org/maven") // Mixin repo
+        maven("https://repo.sk1er.club/repository/maven-releases/") // Essential
+        mavenCentral()
+        gradlePluginPortal()
+    }
+
+    plugins {
+        id("io.github.juuxel.loom-vineflower") version "1.11.0"
     }
 
     resolutionStrategy {
