@@ -69,7 +69,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
     //Properties
     @ModifiedValue
-    public float currentSteeringForceIgnoration;
+    public float currentSteeringForceIgnoresSpeed;
     @ModifiedValue
     public float currentSteeringForceFactor;
     @ModifiedValue
@@ -521,9 +521,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is opposite of the torque-based forces for control surfaces.
                 double turningForce = steeringAngle / turningDistance;
                 //Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
-                if (groundVelocity > 0.35D && currentSteeringForceIgnoration == 0) {
+                if (groundVelocity > 0.35D && currentSteeringForceIgnoresSpeed == 0) {
                     turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentSteeringForceFactor) - 0.35D));
-                } else if (currentSteeringForceIgnoration != 0) {
+                } else if (currentSteeringForceIgnoresSpeed != 0) {
                     turningForce *= currentSteeringForceFactor;
                 }
                 //Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
