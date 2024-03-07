@@ -882,7 +882,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("slip"):
                 return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
             case ("slip_understeer"):
-                return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(getTurningForce()) / 10)));
+                return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10)));
             case ("gear_present"):
                 return definition.motorized.gearSequenceDuration != 0 ? 1 : 0;
             case ("gear_moving"):
