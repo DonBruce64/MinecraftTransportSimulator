@@ -410,8 +410,8 @@ public class VehicleGroundDeviceBox {
             isAbleToDoGroundOperationsLiquid = false;
         }
 
-        //Add ground devices to the list.
-        if (groundedGroundDevices != null && isAbleToDoGroundOperations) {
+        //Add ground devices to the list, but only if we aren't using liquid ground devices.
+        if (groundedGroundDevices != null && isAbleToDoGroundOperations && !isAbleToDoGroundOperationsLiquid) {
             groundedGroundDevices.addAll(groundDevices);
         }
     }
