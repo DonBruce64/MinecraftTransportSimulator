@@ -1,74 +1,106 @@
+import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import kotlin.io.path.moveTo
-import kotlin.io.path.ExperimentalPathApi
 
-
-plugins {
-    java
-    kotlin("jvm") version "1.7.20"
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-}
-
-subprojects {
-    apply(plugin = "java")
-}
-
-var modVersion: String = project.property("global_version").toString()
-
-//var modVersion: String = providers.gradleProperty("global_version")
+var modVersion: String = project.properties["globalVersion"].toString()
+version = modVersion
 
 var mcCore = project(":mccore")
 var mcInterfaceForge1122 = project(":mcinterfaceforge1122")
 var mcInterfaceForge1165 = project(":mcinterfaceforge1165")
 
-tasks.register("buildCore") {
-    dependsOn(mcCore.tasks.build)
-    doLast {
-        moveToOut(mcCore, "core")
+plugins {
+    // We want java-library because it gives you the normal Java extension
+    // but adds library functions like api for dependencies
+    id("java-library")
+}
+
+// Anything in this closure is applied to all projects
+// Note: This is not called in time to apply the above java-library plugin
+allprojects {
+    repositories {
+        mavenCentral()
     }
 }
 
-tasks.register("buildForge1122") {
-    doFirst { preBuild() }
-    doLast {
-        moveToOut(mcInterfaceForge1122, "1.12.2")
+// Anything in this closure is applied to all subprojects
+subprojects {
+    apply(plugin = "java-library")
+
+    // Set the version for all subprojects
+    version = if (project.name == "mccore") {
+        "Core-${rootProject.properties["globalVersion"]}"
+    } else {
+        "${project.properties["mcVersion"]}-${rootProject.properties["globalVersion"]}"
     }
-    dependsOn(mcInterfaceForge1122.tasks.build)
-}
 
-tasks.register("buildForge1165") {
-    doFirst { preBuild() }
-    doLast {
-        moveToOut(mcInterfaceForge1165, "1.16.5")
+    // Don't apply any of this to core
+    if (project.name != "mccore") {
+        sourceSets.main {
+            output.resourcesDir = file("$buildDir/classes/java/main")
+        }
+
+        repositories {
+            maven("https://dvs1.progwml6.com/files/maven/") // JEI
+        }
     }
-    dependsOn(mcInterfaceForge1165.tasks.build)
+
+    java {
+        withSourcesJar()
+    }
+
+    tasks {
+        // Set compiler properties
+        withType<JavaCompile> {
+            sourceCompatibility = "1.8"
+            targetCompatibility = "1.8"
+            options.encoding = "UTF-8"
+            options.release.set(8)
+            options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
+        }
+
+        // Make the jars have the correct name
+        withType<Jar> {
+            duplicatesStrategy = DuplicatesStrategy.WARN
+            archiveBaseName.set(rootProject.name)
+        }
+    }
 }
 
-tasks.register("buildForgeAll") {
-    dependsOn(tasks.getByName("buildForge1122"))
-    dependsOn(tasks.getByName("buildForge1165"))
+// MTS build tasks
+tasks {
+    val buildCore = register("buildCore") {
+        group = "mts"
+        dependsOn(mcCore.tasks.getByName("build"))
+    }
+
+    val buildForge1122 = register<JavaCompile>("buildForge1122") {
+        group = "mts"
+        doLast { moveToOut(mcInterfaceForge1122) }
+        dependsOn(buildCore, mcInterfaceForge1122.tasks.getByName("build"))
+    }
+
+    val buildForge1165 = register<JavaCompile>("buildForge1165") {
+        group = "mts"
+        doLast { moveToOut(mcInterfaceForge1165) }
+        dependsOn(buildCore, mcInterfaceForge1165.tasks.getByName("build"))
+    }
+
+    register<JavaCompile>("buildForgeAll") {
+        group = "mts"
+        dependsOn(buildCore, buildForge1122, buildForge1165)
+    }
 }
 
-@OptIn(ExperimentalPathApi::class)
-fun moveToOut(subProject: Project, versionStr: String) {
+val outPath: Path = Paths.get("${project.projectDir.canonicalPath}/out/")
+
+// Puts all jars into an easily accessible directory
+fun moveToOut(subProject: Project) {
     val jarName = "Immersive Vehicles-${subProject.version}.jar"
+    if (!outPath.exists()) outPath.createDirectories()
+    println(outPath.exists())
     Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
-        .moveTo(Paths.get("${project.projectDir.canonicalPath}/out/$jarName"), true)
-}
-
-fun preBuild() {
-    // Could probably be better somehow, but I'm not sure how
-    project.projectDir.canonicalFile.walk()
-        .filter { it.name == "gradle.properties" || it.name == "mcmod.info" || it.name == "InterfaceLoader.java" }
-        .forEach { it.writeText(it.readText()
-            .replace(Regex("mod_version=(.+)"), "mod_version=$modVersion")
-            .replace(Regex("\"version\": \"[^\"]*\""), "\"version\": \"$modVersion\"")
-            .replace(Regex("MODVER = \"[^\"]*\";"), "MODVER = \"$modVersion\";")) }
+        .moveTo(Paths.get(outPath.toString(), jarName), true)
 }
