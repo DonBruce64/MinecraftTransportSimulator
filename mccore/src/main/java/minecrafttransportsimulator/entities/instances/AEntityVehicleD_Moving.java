@@ -424,7 +424,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * device calculations should be applied due to said devices being in
      * contact with the ground.
      */
-    protected float getSkiddingForce() {
+    private float getSkiddingForce() {
         float skiddingFactor = 0;
         //First check grounded ground devices.
         for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
@@ -530,7 +530,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
                 //We need to take speed-factor into account here, as that will make us move different lengths per tick.
                 //Finally, we need to reduce this by a constant to get "proper" force..
-                return turningForce * (groundVelocity * (currentOverSteer + 1)) * (speedFactor / 0.35D) / 2D;
+                return turningForce * groundVelocity * (speedFactor / 0.35D) / 2D;
             }
         }
         return 0;
