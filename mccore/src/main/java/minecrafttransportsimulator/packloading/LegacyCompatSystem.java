@@ -364,6 +364,7 @@ public final class LegacyCompatSystem {
         //Change downForce's name to steeringForceFactor
         if (definition.motorized.downForce != 0) {
             definition.motorized.steeringForceFactor = definition.motorized.downForce;
+            definition.motorized.downForce = 0;
         }
 
         //Add hookup variables if we are a trailer and don't have them.
