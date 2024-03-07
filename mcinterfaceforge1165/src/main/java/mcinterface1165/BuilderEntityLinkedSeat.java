@@ -76,6 +76,10 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 try {
                     entity = worldWrapper.getEntity(lastLoadedNBT.getUUID("entityUUID"));
                     loadedFromSavedNBT = true;
+                    if (entity == null) {
+                        InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
+                        remove();
+                    }
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
