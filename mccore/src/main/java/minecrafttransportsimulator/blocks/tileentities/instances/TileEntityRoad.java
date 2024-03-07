@@ -168,7 +168,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
             //Finally, spawn component drops.
             for (RoadComponent componentType : RoadComponent.values()) {
-                if (components.containsKey(componentType)) {
+                if (componentType != definition.road.type && components.containsKey(componentType)) {
                     world.spawnItemStack(components.get(componentType).getNewStack(null), position);
                 }
             }
