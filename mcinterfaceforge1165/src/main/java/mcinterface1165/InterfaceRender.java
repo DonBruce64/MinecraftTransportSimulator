@@ -242,7 +242,10 @@ public class InterfaceRender implements IInterfaceRender {
             //with bound buffers due to matrix differences.
             Map<Object, BufferData> map = buffers.get(object);
             if (map != null) {
-                removedRenders.add(map.remove(objectAssociatedTo));
+                BufferData buffer = map.remove(objectAssociatedTo);
+                if (buffer != null) {
+                    removedRenders.add(buffer);
+                }
             }
     	}
     }
