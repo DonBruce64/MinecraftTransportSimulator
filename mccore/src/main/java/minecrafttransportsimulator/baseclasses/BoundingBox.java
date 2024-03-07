@@ -315,7 +315,7 @@ public class BoundingBox {
             wireframeRenderable.color.setTo(color);
         }
         wireframeRenderable.setWireframeBoundingBox(this);
-        wireframeRenderable.render();
+        wireframeRenderable.render(null);
     }
 
     /**
@@ -333,6 +333,6 @@ public class BoundingBox {
         }
         holographicRenderable.color.setTo(color);
         holographicRenderable.setHolographicBoundingBox(this);
-        holographicRenderable.render();
+        holographicRenderable.render(null);
     }
 }

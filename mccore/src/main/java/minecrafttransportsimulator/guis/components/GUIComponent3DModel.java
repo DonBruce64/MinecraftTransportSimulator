@@ -118,15 +118,15 @@ public class GUIComponent3DModel extends AGUIComponent {
             object.texture = textureLocation;
             object.ignoreWorldShading = true;
             object.disableLighting = renderBright;
-            object.render();
+            object.render(gui);
         }
     }
 
     /**
      * Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
      */
-    public static void clearModelCaches() {
-        modelParsedObjects.values().forEach(RenderableObject::destroy);
+    public static void clearModelCaches(AGUIBase gui) {
+        modelParsedObjects.values().forEach(renderable -> renderable.destroy(gui));
         modelParsedObjects.clear();
     }
 }
