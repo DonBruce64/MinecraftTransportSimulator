@@ -392,8 +392,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             
             //Clear rendering assignments.
             if (world.isClient() && definition.rendering.modelType != ModelType.NONE) {
-                for (RenderableModelObject modelObject : objectLists.get(definition.getModelLocation(subDefinition))) {
-                    InterfaceManager.renderingInterface.deleteVertices(modelObject.object, this);
+                List<RenderableModelObject> objectList = objectLists.get(definition.getModelLocation(subDefinition));
+                if (objectList != null) {
+                    for (RenderableModelObject modelObject : objectList) {
+                        InterfaceManager.renderingInterface.deleteVertices(modelObject.object, this);
+                    }
                 }
             }
         }
