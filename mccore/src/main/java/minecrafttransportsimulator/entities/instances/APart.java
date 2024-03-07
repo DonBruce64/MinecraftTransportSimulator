@@ -564,6 +564,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
+        if (variable.equals("engine_magneto")) {
+            System.out.println(this);
+        }
         if (entityOn == null) {
             //We don't have the entity set yet if we're constructing, defer to later.
             return new ComputedVariable(this, variable, partialTicks -> {
@@ -599,22 +602,28 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     default: {
                         ComputedVariable computedVariable = super.createComputedVariable(variable, false);
                         if (computedVariable == null) {
-                            //Not a part variable.  Check ourselves, then any entities we are on, up to the top-most parent.
-                            System.out.println("NULL VARIABLE RETURNED FOR " + variable + " ON " + definition.systemName);
-                            AEntityF_Multipart<?> testEntity = this;
+                            //Not a part variable.  Check any entities we are on, up to the top-most parent.
+                            AEntityF_Multipart<?> testEntity = entityOn;
                             while (testEntity != null) {
-                                System.out.println("CHECKING " + testEntity.definition.systemName);
                                 if (testEntity.containsVariable(variable)) {
-                                    System.out.println("FOUND VARIABLE");
+                                    //Variable exists, get as-is.
                                     return testEntity.getOrCreateVariable(variable);
-                                } else if (testEntity instanceof APart) {
-                                    testEntity = ((APart) testEntity).entityOn;
                                 } else {
-                                    testEntity = null;
+                                    //Try to create the variable, it might be a dynamic variable property.
+                                    computedVariable = testEntity.createComputedVariable(variable, false);
+                                    if (computedVariable == null && testEntity instanceof APart) {
+                                        testEntity = ((APart) testEntity).entityOn;
+                                    } else {
+                                        testEntity = null;
+                                    }
                                 }
                             }
-                            System.out.println("DID NOT FIND VARIABLE ANYWHERE?");
-                            return ComputedVariable.ZERO_VARIABLE;
+                            if (computedVariable != null) {
+                                return computedVariable;
+                            } else {
+                                System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
+                                return ComputedVariable.ZERO_VARIABLE;
+                            }
                         } else {
                             return computedVariable;
                         }

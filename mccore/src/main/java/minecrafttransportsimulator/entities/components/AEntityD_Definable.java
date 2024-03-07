@@ -1011,7 +1011,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * so don't keep a static reference to the variable unless you don't have to worry about state-changes.
      */
     public ComputedVariable getOrCreateVariable(String variable) {
-        ComputedVariable computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable, true));
+        ComputedVariable computedVar = computedVariables.get(variable);
+        if (computedVar == null) {
+            if (variable.startsWith("!")) {
+                //FIXME this won't work for built-in variables, I think we need to make inversion logic here or something?
+                computedVar = createComputedVariable(variable.substring("!".length()), true);
+            } else {
+                computedVar = createComputedVariable(variable, true);
+            }
+            computedVariables.put(variable, computedVar);
+        }
         if (computedVar.needsReset) {
             computedVariables.remove(variable);
             computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable, true));

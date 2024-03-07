@@ -528,6 +528,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
 
         //Clear connection variables, since our connections have changed and those affect them.
+        //FIXME this won't reset part variables, only those on us.
         resetVariablesMatchingFunction(variable -> variable.variableKey.startsWith("connection"));
 
         //Handle connection update requests.
