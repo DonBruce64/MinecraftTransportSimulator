@@ -94,16 +94,16 @@ public class VehicleGroundDeviceCollection {
      */
     public int getNumberBoxesInLiquid() {
         int count = 0;
-        if (frontLeftGDB.isCollidedLiquid || frontLeftGDB.isGroundedLiquid) {
+        if (frontLeftGDB.isUsingLiquidBoxes && (frontLeftGDB.isCollided || frontLeftGDB.isGrounded)) {
             ++count;
         }
-        if (frontRightGDB.isCollidedLiquid || frontRightGDB.isGroundedLiquid) {
+        if (frontRightGDB.isUsingLiquidBoxes && (frontRightGDB.isCollided || frontRightGDB.isGrounded)) {
             ++count;
         }
-        if (rearLeftGDB.isCollidedLiquid || rearLeftGDB.isGroundedLiquid) {
+        if (rearLeftGDB.isUsingLiquidBoxes && (rearLeftGDB.isCollided || rearLeftGDB.isGrounded)) {
             ++count;
         }
-        if (rearRightGDB.isCollidedLiquid || rearRightGDB.isGroundedLiquid) {
+        if (rearRightGDB.isUsingLiquidBoxes && (rearRightGDB.isCollided || rearRightGDB.isGrounded)) {
             ++count;
         }
         return count;
