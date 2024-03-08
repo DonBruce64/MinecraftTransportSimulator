@@ -394,7 +394,7 @@ public class VehicleGroundDeviceBox {
         }
 
         //Add ground devices to the list, but only if we can do ground operations.
-        if (groundedGroundDevices != null && isAbleToDoGroundOperations && !isUsingLiquidBoxes) {
+        if (groundedGroundDevices != null && isAbleToDoGroundOperations) {
             groundedGroundDevices.addAll(groundDevices);
         }
     }
@@ -413,7 +413,7 @@ public class VehicleGroundDeviceBox {
             }
         }
 
-        if (!isAbleToDoGroundOperations && (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty())) {
+        if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
             return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false, false);
         }
         return true;
