@@ -9,10 +9,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Basic explosion class.  Used to make instances of explosions to apply in the world.
@@ -48,7 +48,7 @@ public class Explosion {
     private final JSONBullet bullet;
     private final List<Point3D> positionsWithBlocksToBreak = new ArrayList<>();
 
-    private final JSONConfigLanguage.LanguageEntry language;
+    private final LanguageSystem.LanguageEntry language;
 
     private final IWrapperEntity entityResponsible;
 
@@ -64,7 +64,7 @@ public class Explosion {
         this.bullet = null;
         strengthDecayStartRadius = 0;
         strengthDecayEndRadius = damageDecayEndRadius;
-        language = JSONConfigLanguage.DEATH_EXPLOSION_NULL;
+        language = LanguageSystem.DEATH_EXPLOSION_NULL;
         entityResponsible = null;
     }
 
@@ -81,7 +81,7 @@ public class Explosion {
         damageDecayEndRadius = bullet.bullet.blastDamageRadiusMax;
         strengthDecayStartRadius = bullet.bullet.blaskStrengthRadiusDecay;
         strengthDecayEndRadius = bullet.bullet.blastStrengthRadiusMax;
-        language = JSONConfigLanguage.DEATH_EXPLOSION_PLAYER;
+        language = LanguageSystem.DEATH_EXPLOSION_PLAYER;
         this.entityResponsible = entityResponsible;
     }
 
