@@ -496,26 +496,6 @@ public class PartGun extends APart {
                     }
                 }
             }
-
-            //If we are a client, this is where we get our bullets.
-            if (clientNextBullet != null) {
-                reloadingBullet = clientNextBullet;
-                reloadTimeRemaining = definition.gun.reloadTime;
-                clientNextBullet = null;
-            }
-
-            //If we are reloading, decrement the reloading timer.
-            //If we are done reloading, add the new bullets.
-            //This comes after the reloading block as we need a 0/1 state-change for the various animations,
-            //so at some point the reload time needs to hit 0.
-            if (reloadTimeRemaining > 0) {
-                --reloadTimeRemaining;
-            } else if (reloadingBullet != null) {
-                loadedBullet = reloadingBullet;
-                lastLoadedBullet = loadedBullet;
-                bulletsLeft += reloadingBullet.definition.bullet.quantity;
-                reloadingBullet = null;
-            }
         } else {
             //Inactive gun, set as such and set to default position if we have one.
             state = GunState.INACTIVE;
@@ -524,6 +504,27 @@ public class PartGun extends APart {
             if (resetPosition) {
                 handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
             }
+        }
+
+        //If we are a client, this is where we get our bullets.
+        if (clientNextBullet != null) {
+            reloadingBullet = clientNextBullet;
+            reloadTimeRemaining = definition.gun.reloadTime;
+            clientNextBullet = null;
+        }
+
+        //If we are reloading, decrement the reloading timer.
+        //If we are done reloading, add the new bullets.
+        //This comes after the reloading block as we need a 0/1 state-change for the various animations,
+        //so at some point the reload time needs to hit 0.
+        //This is something we do regardless of active status, since even inactive guns can have bullets put into them.
+        if (reloadTimeRemaining > 0) {
+            --reloadTimeRemaining;
+        } else if (reloadingBullet != null) {
+            loadedBullet = reloadingBullet;
+            lastLoadedBullet = loadedBullet;
+            bulletsLeft += reloadingBullet.definition.bullet.quantity;
+            reloadingBullet = null;
         }
 
         //Increment or decrement windup.
