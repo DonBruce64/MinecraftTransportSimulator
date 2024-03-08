@@ -2,6 +2,7 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
@@ -143,6 +144,16 @@ public abstract class AWrapperWorld extends EntityManager {
      * Only non-hostile mobs that are not already riding an entity will be loaded.
      */
     public abstract void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad);
+
+    /**
+     * Adds to the map a list of all item entities within the passed-in bounds.
+     */
+    public abstract void populateItemStackEntities(Map<IWrapperItemStack, IWrapperEntity> map, BoundingBox b);
+
+    /**
+     * Removes the specified item stack entity from the world.
+     */
+    public abstract void removeItemStackEntity(IWrapperEntity entity);
 
     /**
      * Returns true if the chunk that contains the position is loaded.

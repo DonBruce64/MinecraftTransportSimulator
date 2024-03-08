@@ -11,8 +11,10 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -22,6 +24,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 public class PartEffector extends APart {
 
     private final List<IWrapperItemStack> drops = new ArrayList<>();
+    private final Map<IWrapperItemStack, IWrapperEntity> entityItems = new HashMap<>();
 
     //Variables used for drills.
     public int blocksBroken;
@@ -46,6 +49,7 @@ public class PartEffector extends APart {
         activatedThisTick = false;
         if (isActive && !world.isClient() && !outOfHealth) {
             drops.clear();
+            entityItems.clear();
             blockFlooredPositionsBrokeThisTick.clear();
             for (BoundingBox box : entityCollisionBoxes) {
                 switch (definition.effector.type) {
@@ -170,6 +174,12 @@ public class PartEffector extends APart {
                             ++placerDelay;
                         }
                     }
+                    case COLLECTOR: {
+                        //Populate item list for later.
+                        world.populateItemStackEntities(entityItems, box);
+                        drops.addAll(entityItems.keySet());
+                        break;
+                    }
                 }
 
                 //Handle any drops we got from our effector.
@@ -179,6 +189,15 @@ public class PartEffector extends APart {
                         IWrapperItemStack dropStack = iterator.next();
                         for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+                                //For collectors, we can only add the whole stack, not a partial stack.
+                                //Therefore, we need to simulate the addition first to make sure things fit.
+                                if (definition.effector.type == EffectorComponentType.COLLECTOR) {
+                                    if (((PartInteractable) part).inventory.addStack(dropStack, dropStack.getSize(), false)) {
+                                        activatedThisTick = true;
+                                        world.removeItemStackEntity(entityItems.get(dropStack));
+                                    }
+                                }
+                                //Do actual addition.
                                 if (((PartInteractable) part).inventory.addStack(dropStack)) {
                                     iterator.remove();
                                     break;
@@ -188,8 +207,11 @@ public class PartEffector extends APart {
                     }
 
                     //Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-                    for (IWrapperItemStack dropStack : drops) {
-                        world.spawnItemStack(dropStack, position);
+                    //Don't do this for collectors, since those items are actually entities that weren't collected.
+                    if (definition.effector.type != EffectorComponentType.COLLECTOR) {
+                        for (IWrapperItemStack dropStack : drops) {
+                            world.spawnItemStack(dropStack, position);
+                        }
                     }
                     drops.clear();
                 }

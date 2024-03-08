@@ -384,6 +384,18 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public void populateItemStackEntities(Map<IWrapperItemStack, IWrapperEntity> map, BoundingBox box) {
+        for (ItemEntity entity : world.getEntitiesOfClass(ItemEntity.class, WrapperWorld.convert(box))) {
+            map.put(new WrapperItemStack(entity.getItem()), new WrapperEntity(entity));
+        }
+    }
+
+    @Override
+    public void removeItemStackEntity(IWrapperEntity entity) {
+        ((WrapperEntity) entity).entity.kill();
+    }
+
+    @Override
     public boolean chunkLoaded(Point3D position) {
         return world.isLoaded(new BlockPos(position.x, position.y, position.z));
     }

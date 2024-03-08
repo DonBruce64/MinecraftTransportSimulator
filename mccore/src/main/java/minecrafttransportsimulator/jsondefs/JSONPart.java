@@ -599,7 +599,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Removes blocks matching the parameters from the world when touched.")
         DRILL,
         @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
-        PLACER;
+        PLACER,
+        @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
+        COLLECTOR;
     }
 
     @Deprecated
