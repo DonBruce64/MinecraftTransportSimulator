@@ -272,7 +272,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentDragCoefficient = definition.motorized.dragCoefficient;
         currentBallastVolume = definition.motorized.ballastVolume;
         currentWaterBallastFactor = definition.motorized.waterBallastFactor;
-        currentDownForce = definition.motorized.downForce;
+        currentSteeringForceIgnoresSpeed = definition.motorized.steeringForceIgnoresSpeed ? 1 : 0;
+        currentSteeringForceFactor = definition.motorized.steeringForceFactor;
         currentBrakingFactor = definition.motorized.brakingFactor;
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
@@ -312,8 +313,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     case "waterBallastFactor":
                         currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
-                    case "downForce":
-                        currentDownForce = adjustVariable(modifier, currentDownForce);
+                    case "steeringForceIgnoresSpeed":
+                    	currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
+                        break;
+                    case "steeringForceFactor":
+                        currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
                         break;
                     case "brakingFactor":
                         currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor);
@@ -877,6 +881,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return (rotation.angles.x) / 0.15F * 25F;
             case ("slip"):
                 return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
+            case ("slip_understeer"):
+                return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10)));
             case ("gear_present"):
                 return definition.motorized.gearSequenceDuration != 0 ? 1 : 0;
             case ("gear_moving"):
