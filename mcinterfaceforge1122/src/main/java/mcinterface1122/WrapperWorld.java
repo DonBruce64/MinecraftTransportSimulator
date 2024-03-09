@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -431,9 +432,9 @@ public class WrapperWorld extends AWrapperWorld {
         Vec3d start = new Vec3d(position.x, position.y, position.z);
         RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
         if (trace != null) {
-            BlockPos pos = trace.getBlockPos();
-            if (pos != null) {
-                return new BlockHitResult(new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(trace.sideHit.name()));
+            BlockPos blockPos = trace.getBlockPos();
+            if (blockPos != null) {
+                return new BlockHitResult(new Point3D(blockPos.getX(), blockPos.getY(), blockPos.getZ()), new Point3D(trace.hitVec.x, trace.hitVec.y, trace.hitVec.z), Axis.valueOf(trace.sideHit.name()));
             }
         }
         return null;
@@ -728,16 +729,16 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void setToFire(BlockHitResult hitResult) {
-        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).offset(EnumFacing.valueOf(hitResult.side.name()));
+    public void setToFire(Point3D position, Axis side) {
+        BlockPos blockpos = new BlockPos(position.x, position.y, position.z).offset(EnumFacing.valueOf(side.name()));
         if (world.isAirBlock(blockpos)&&ConfigSystem.settings.general.blockBreakage.value) {
             world.setBlockState(blockpos, Blocks.FIRE.getDefaultState());
         }
     }
 
     @Override
-    public void extinguish(BlockHitResult hitResult) {
-        world.extinguishFire(null, new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z), EnumFacing.valueOf(hitResult.side.name()));
+    public void extinguish(Point3D position, Axis side) {
+        world.extinguishFire(null, new BlockPos(position.x, position.y, position.z), EnumFacing.valueOf(side.name()));
     }
 
     @SuppressWarnings("deprecation")

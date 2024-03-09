@@ -2,7 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import java.util.Locale;
 
-import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
+import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;

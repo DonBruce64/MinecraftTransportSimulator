@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
@@ -52,17 +53,17 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
-        Point3D intersection = null;
+        BoundingBoxHitResult intersection = null;
         for (BoundingBox testBox : boxes) {
-            Point3D testIntersection = testBox.getIntersectionPoint(start, end);
+            BoundingBoxHitResult testIntersection = testBox.getIntersection(start, end);
             if (testIntersection != null) {
-                if (intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)) {
+                if (intersection == null || start.isFirstCloserThanSecond(testIntersection.position, intersection.position)) {
                     intersection = testIntersection;
                 }
             }
         }
         if (intersection != null) {
-            return Optional.of(new Vector3d(intersection.x, intersection.y, intersection.z));
+            return Optional.of(new Vector3d(intersection.position.x, intersection.position.y, intersection.position.z));
         } else {
             return Optional.empty();
         }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
@@ -308,16 +309,20 @@ public abstract class AWrapperWorld extends EntityManager {
      * Sets the block at the passed-in position to fire.
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
+     * @param position TODO
+     * @param side TODO
      */
-    public abstract void setToFire(BlockHitResult hitResult);
+    public abstract void setToFire(Point3D position, Axis side);
 
     /**
      * Extinguishes the block at the passed-in position if it's fire.
      * If it is not fire, then the block is not modified.
      * Note that the position assumes the block hit is the one that is on fire,
      * not that the fire itself was hit.  This is because fire blocks do not have collision.
+     * @param position TODO
+     * @param side TODO
      */
-    public abstract void extinguish(BlockHitResult hitResult);
+    public abstract void extinguish(Point3D position, Axis side);
 
     /**
      * Tries to place the item as a block at the passed-in position.
@@ -386,17 +391,4 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns an explosion of the specified strength at the passed-in point.
      */
     public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
-
-    /**
-     * Class for hitting on blocks.
-     */
-    public static class BlockHitResult {
-        public final Point3D position;
-        public final Axis side;
-
-        public BlockHitResult(Point3D position, Axis side) {
-            this.position = position;
-            this.side = side;
-        }
-    }
 }

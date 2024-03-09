@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -190,9 +191,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
                     Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
-                    Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition), false);
-                    if (hitBoxes != null) {
-                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitBoxes);
+                    Collection<BoundingBoxHitResult> hitResults = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition), false);
+                    if (hitResults != null) {
+                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitResults);
                     }
                 }
             }

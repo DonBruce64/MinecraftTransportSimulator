@@ -111,6 +111,39 @@ public abstract class ABlockBase {
             }
             return Axis.NONE;
         }
+
+        public static Axis getFromVector(Point3D vector) {
+            //Get the magnitude in the XZ plane, then compare it to the Y axis.
+            //If abs Y is greater, then we are up/down.
+            double xzVector = Math.hypot(vector.x, vector.z);
+            double length = Math.hypot(xzVector, vector.y);
+            xzVector /= length;
+            double yVector = vector.y / length;
+            if (yVector > 0) {
+                if (yVector > xzVector) {
+                    return Axis.UP;
+                }
+            } else {
+                if (-yVector > xzVector) {
+                    return Axis.DOWN;
+                }
+            }
+
+            //Not up or down, must be a sided axis.  Just check XZ.
+            if (vector.x < 0) {
+                if (vector.z < 0) {
+                    return -vector.x > -vector.z ? WEST : NORTH;
+                } else {
+                    return -vector.x > vector.z ? WEST : SOUTH;
+                }
+            } else {
+                if (vector.z < 0) {
+                    return vector.x > -vector.z ? EAST : NORTH;
+                } else {
+                    return vector.x > vector.z ? EAST : SOUTH;
+                }
+            }
+        }
     }
 
     /**

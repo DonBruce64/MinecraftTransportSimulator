@@ -3,11 +3,11 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**
@@ -18,20 +18,24 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 public class PacketEntityBulletHitBlock extends APacketBase {
     private final UUID gunID;
     private final int bulletNumber;
-    private final BlockHitResult hitResult;
+    private final Point3D blockPosition;
+    private final Axis blockSide;
 
-    public PacketEntityBulletHitBlock(PartGun gun, int bulletNumber, BlockHitResult hitResult) {
+    public PacketEntityBulletHitBlock(PartGun gun, int bulletNumber, Point3D blockPosition, Axis blockSide) {
         super(null);
         this.gunID = gun.uniqueUUID;
         this.bulletNumber = bulletNumber;
-        this.hitResult = hitResult;
+        this.blockPosition = blockPosition;
+        this.blockSide = blockSide;
+
     }
 
     public PacketEntityBulletHitBlock(ByteBuf buf) {
         super(buf);
         this.gunID = readUUIDFromBuffer(buf);
         this.bulletNumber = buf.readInt();
-        this.hitResult = new BlockHitResult(readPoint3dFromBuffer(buf), ABlockBase.Axis.values()[buf.readByte()]);
+        this.blockPosition = readPoint3dFromBuffer(buf);
+        this.blockSide = Axis.values()[buf.readByte()];
     }
 
     @Override
@@ -39,12 +43,12 @@ public class PacketEntityBulletHitBlock extends APacketBase {
         super.writeToBuffer(buf);
         writeUUIDToBuffer(gunID, buf);
         buf.writeInt(bulletNumber);
-        writePoint3dToBuffer(hitResult.position, buf);
-        buf.writeByte(hitResult.side.ordinal());
+        writePoint3dToBuffer(blockPosition, buf);
+        buf.writeByte(blockSide.ordinal());
     }
 
     @Override
     public void handle(AWrapperWorld world) {
-        EntityBullet.performBlockHitLogic(world.getBulletGun(gunID), bulletNumber, hitResult);
+        EntityBullet.performBlockHitLogic(world.getBulletGun(gunID), bulletNumber, blockPosition, blockSide);
     }
 }

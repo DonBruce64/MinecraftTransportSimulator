@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
@@ -71,12 +72,12 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
             orientation.set(entitySpawning.orientation);
             helperTransform.set(orientation);
-        }else if (definition.spawningOrientation == ParticleSpawningOrientation.BLOCK) {
+        } else if (definition.spawningOrientation == ParticleSpawningOrientation.FACING) {
         	if(entitySpawning instanceof EntityBullet) {
         		EntityBullet bullet = (EntityBullet) entitySpawning;
-        		if(bullet.blockHit != null) {
+                if (bullet.sideHit != Axis.NONE) {
         			helperRotation.setToZero().rotateX(-90);        			
-        			orientation.set(bullet.blockHit.side.facingRotation).multiplyTranspose(helperRotation);
+                    orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
         			helperTransform.set(orientation);
         		}else {
         			this.killBadParticle = true;

@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -160,11 +159,11 @@ public class EntityManager {
                 //Could have hit this multipart, check if and what we did via raytracing.
                 for (BoundingBox box : multipart.allInteractionBoxes) {
                     if (box.intersects(vectorBounds)) {
-                        Point3D intersectionPoint = box.getIntersectionPoint(startPoint, endPoint);
+                        BoundingBoxHitResult intersectionPoint = box.getIntersection(startPoint, endPoint);
                         if (intersectionPoint != null) {
-                            if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint, closestResult.point)) {
+                            if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint.position, closestResult.position)) {
                                 APart part = multipart.getPartWithBox(box);
-                                closestResult = new EntityInteractResult(part != null ? part : multipart, box, intersectionPoint);
+                                closestResult = new EntityInteractResult(part != null ? part : multipart, box, intersectionPoint.position);
                             }
                         }
                     }
@@ -190,21 +189,6 @@ public class EntityManager {
         if (entity instanceof EntityBullet) {
             EntityBullet bullet = (EntityBullet) entity;
             bulletMap.get(bullet.gun.uniqueUUID).remove(bullet.bulletNumber);
-        }
-    }
-
-    /**
-     * Helper class for interact return data.
-     */
-    public static class EntityInteractResult {
-        public final AEntityE_Interactable<?> entity;
-        public final BoundingBox box;
-        public final Point3D point;
-
-        private EntityInteractResult(AEntityE_Interactable<?> entity, BoundingBox box, Point3D point) {
-            this.entity = entity;
-            this.box = box;
-            this.point = point;
         }
     }
 }

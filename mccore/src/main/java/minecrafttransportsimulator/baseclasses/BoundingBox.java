@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
@@ -237,24 +238,27 @@ public class BoundingBox {
      * If so, then a new point is returned on the first point of intersection (outer bounds).  If the
      * line created by the two points does not intersect this box, null is returned.
      */
-    public Point3D getIntersectionPoint(Point3D start, Point3D end) {
+    public BoundingBoxHitResult getIntersection(Point3D start, Point3D end) {
         //First check minX.
         Point3D intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
+        Axis hitSide = Axis.WEST;
 
         //Now get maxX.
-        Point3D secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
-
         //If minX is null, or if maxX is not null, and is closer to the start point than minX, it's our new intersection.
+        //Basically, we're getting the X- intersection here.
+        Point3D secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.EAST;
         }
 
         //Now check minY.
-        secondIntersection = getYPlaneCollision(start, end, globalCenter.y - heightRadius);
-
         //If we don't have a valid intersection, or minY is closer than the current intersection, it's our new intersection.
+        //This makes us chose between minY and X at this point.
+        secondIntersection = getYPlaneCollision(start, end, globalCenter.y - heightRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.DOWN;
         }
 
         //You should be able to see what we're doing here now, yes?
@@ -262,16 +266,19 @@ public class BoundingBox {
         secondIntersection = getYPlaneCollision(start, end, globalCenter.y + heightRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.UP;
         }
         secondIntersection = getZPlaneCollision(start, end, globalCenter.z - depthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.NORTH;
         }
         secondIntersection = getZPlaneCollision(start, end, globalCenter.z + depthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.SOUTH;
         }
-        return intersection;
+        return intersection != null ? new BoundingBoxHitResult(this, intersection, hitSide) : null;
     }
 
     /**

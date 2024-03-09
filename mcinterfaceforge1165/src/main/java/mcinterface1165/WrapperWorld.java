@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -463,9 +464,10 @@ public class WrapperWorld extends AWrapperWorld {
         Vector3d start = new Vector3d(position.x, position.y, position.z);
         BlockRayTraceResult trace = world.clip(new RayTraceContext(start, start.add(delta.x, delta.y, delta.z), RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
         if (trace.getType() != RayTraceResult.Type.MISS) {
-            BlockPos pos = trace.getBlockPos();
-            if (pos != null) {
-                return new BlockHitResult(new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(trace.getDirection().name()));
+            BlockPos blockPos = trace.getBlockPos();
+            if (blockPos != null) {
+                Vector3d pos = trace.getLocation();
+                return new BlockHitResult(new Point3D(blockPos.getX(), blockPos.getY(), blockPos.getZ()), new Point3D(pos.x, pos.y, pos.z), Axis.valueOf(trace.getDirection().name()));
             }
         }
         return null;
@@ -748,16 +750,16 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void setToFire(BlockHitResult hitResult) {
-        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+    public void setToFire(Point3D position, Axis side) {
+        BlockPos blockpos = new BlockPos(position.x, position.y, position.z).relative(Direction.valueOf(side.name()));
         if (world.isEmptyBlock(blockpos) && ConfigSystem.settings.general.blockBreakage.value) {
             world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
         }
     }
 
     @Override
-    public void extinguish(BlockHitResult hitResult) {
-        BlockPos blockpos = new BlockPos(hitResult.position.x, hitResult.position.y, hitResult.position.z).relative(Direction.valueOf(hitResult.side.name()));
+    public void extinguish(Point3D position, Axis side) {
+        BlockPos blockpos = new BlockPos(position.x, position.y, position.z).relative(Direction.valueOf(side.name()));
         if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
             world.removeBlock(blockpos, false);
         }

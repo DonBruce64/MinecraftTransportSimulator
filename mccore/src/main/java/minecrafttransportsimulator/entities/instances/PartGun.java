@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -24,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -779,9 +779,9 @@ public class PartGun extends APart {
             //If we have any manual bullets, do tracking for them.
             if (!activeManualBullets.isEmpty()) {
                 Point3D laserStart = controller.getPosition().copy();
-                AWrapperWorld.BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
+                BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
                 if (laserHit != null) {
-                    targetPosition.set(laserHit.position);
+                    targetPosition.set(laserHit.hitPosition);
                 } else {
                     targetPosition.set(laserStart).add(controller.getLineOfSight(1024));
                 }
