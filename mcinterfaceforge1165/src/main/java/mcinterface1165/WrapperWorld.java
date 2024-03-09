@@ -507,15 +507,20 @@ public class WrapperWorld extends AWrapperWorld {
     public double getHeight(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         //Need to go down till we find a block.
+        boolean bottomSlab = false;
         while (pos.getY() > 0) {
             if (!world.isEmptyBlock(pos)) {
-                //Adjust up since we need to be above the top block. 
+                //Check for a slab, since this affects distance.
+                BlockState state = world.getBlockState(pos);
+                bottomSlab = state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.BOTTOM;
+
+                //Adjust up since we need to be above the top block.
                 pos = pos.above();
                 break;
             }
             pos = pos.below();
         }
-        return position.y - pos.getY();
+        return bottomSlab ? position.y - (pos.getY() - 0.5) : position.y - pos.getY();
     }
 
     @Override
