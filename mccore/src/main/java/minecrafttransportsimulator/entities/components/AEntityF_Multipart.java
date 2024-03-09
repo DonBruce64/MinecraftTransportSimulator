@@ -697,7 +697,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             for (int i = 0; i < definition.parts.size(); ++i) {
-                if (!data.getBoolean("spawnedDefaultParts")) {
+                //Use a try-catch for parts in case they've changed since this entity was last placed.
+                //Don't want crashes due to pack updates.
+                try {
+                    IWrapperNBT partData = data.getData("part_" + i);
+                    if (partData != null) {
+                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                    }
+                } catch (Exception e) {
+                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                    e.printStackTrace();
+                }
+
+                //If we haven't spawned defaults, do so now.  We also check if we have no parts, since older version didn't set this boolean.
+                //The only way this will cause issues is if someone removes all parts from a multipart, including defaults, and it loads in.
+                //But nobody is kooky enough to do that, now are they?
+                if (!data.getBoolean("spawnedDefaultParts") && parts.isEmpty()) {
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
@@ -716,18 +731,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                     if (partDef.defaultPart != null) {
                         addDefaultPart(partDef.defaultPart, i, placingPlayer, definition);
-                    }
-                } else {
-                    //Use a try-catch for parts in case they've changed since this entity was last placed.
-                    //Don't want crashes due to pack updates.
-                    try {
-                        IWrapperNBT partData = data.getData("part_" + i);
-                        if (partData != null) {
-                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
-                        }
-                    } catch (Exception e) {
-                        InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
-                        e.printStackTrace();
                     }
                 }
             }
