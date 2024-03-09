@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -83,7 +81,7 @@ public class PartGun extends APart {
     public ItemBullet lastLoadedBullet;
     private ItemBullet reloadingBullet;
     public ItemBullet clientNextBullet;
-    private final Random randomGenerator = new Random();
+    private final Random randomGenerator;
 
     //These variables are used during firing and will be reset on loading.
     public GunState state;
@@ -210,15 +208,9 @@ public class PartGun extends APart {
         }
         if (data.getBoolean("savedSeed")) {
             long randomSeed = (((long) data.getInteger("randomSeedPart1")) << 32) | (data.getInteger("randomSeedPart2") & 0xffffffffL);
-            try {
-                Field randomSeedFeild = Random.class.getDeclaredField("seed");
-                randomSeedFeild.setAccessible(true);
-                AtomicLong randomSeedObject = (AtomicLong) randomSeedFeild.get(randomGenerator);
-                randomSeedObject.set(randomSeed);
-            } catch (Exception e) {
-                //Nope, we'll never get here!
-                e.printStackTrace();
-            }
+            randomGenerator = new Random(randomSeed);
+        } else {
+            randomGenerator = new Random();
         }
 
         //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
@@ -1237,18 +1229,10 @@ public class PartGun extends APart {
             data.setString("reloadingBulletPack", reloadingBullet.definition.packID);
             data.setString("reloadingBulletName", reloadingBullet.definition.systemName);
         }
-        try {
-            Field randomSeedFeild = Random.class.getDeclaredField("seed");
-            randomSeedFeild.setAccessible(true);
-            AtomicLong randomSeedObject = (AtomicLong) randomSeedFeild.get(randomGenerator);
-            long randomSeed = randomSeedObject.get();
-            data.setBoolean("savedSeed", true);
-            data.setInteger("randomSeedPart1", (int) (randomSeed >> 32));
-            data.setInteger("randomSeedPart2", (int) randomSeed);
-        } catch (Exception e) {
-            //Nope, we'll never get here!
-            e.printStackTrace();
-        }
+        long randomSeed = randomGenerator.nextLong();
+        data.setBoolean("savedSeed", true);
+        data.setInteger("randomSeedPart1", (int) (randomSeed >> 32));
+        data.setInteger("randomSeedPart2", (int) randomSeed);
         return data;
     }
 
