@@ -581,7 +581,7 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
 
-        @JSONDescription("The delay, in ticks, between placer placing operations.  Used to cut down on placement spam for some applications.")
+        @JSONDescription("The delay, in ticks, between placer, and dropper, placing operations.  Used to cut down on placement spam for some applications.")
         public int placerDelay;
     }
 
@@ -601,7 +601,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
         PLACER,
         @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
-        COLLECTOR;
+        COLLECTOR,
+        @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
+        DROPPER;
     }
 
     @Deprecated

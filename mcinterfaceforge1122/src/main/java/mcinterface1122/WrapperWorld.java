@@ -350,9 +350,12 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void populateItemStackEntities(Map<IWrapperItemStack, IWrapperEntity> map, BoundingBox box) {
-        for (EntityItem entity : world.getEntitiesWithinAABB(EntityItem.class, WrapperWorld.convert(box))) {
-            map.put(new WrapperItemStack(entity.getItem()), new WrapperEntity(entity));
+    public void populateItemStackEntities(Map<IWrapperEntity, IWrapperItemStack> map, BoundingBox box) {
+        for (EntityItem mcEntity : world.getEntitiesWithinAABB(EntityItem.class, WrapperWorld.convert(box))) {
+            IWrapperEntity entity = WrapperEntity.getWrapperFor(mcEntity);
+            if (!map.containsKey(entity)) {
+                map.put(entity, new WrapperItemStack(mcEntity.getItem()));
+            }
         }
     }
 

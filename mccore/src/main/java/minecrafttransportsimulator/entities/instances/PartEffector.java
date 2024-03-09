@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -24,7 +25,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 public class PartEffector extends APart {
 
     private final List<IWrapperItemStack> drops = new ArrayList<>();
-    private final Map<IWrapperItemStack, IWrapperEntity> entityItems = new HashMap<>();
+    private final Map<IWrapperEntity, IWrapperItemStack> entityItems = new HashMap<>();
 
     //Variables used for drills.
     public int blocksBroken;
@@ -167,6 +168,9 @@ public class PartEffector extends APart {
                                             }
                                         }
                                     }
+                                    if(activatedThisTick) {
+                                        break;
+                                    }
                                 }
                             }
                             placerDelay = 0;
@@ -177,8 +181,36 @@ public class PartEffector extends APart {
                     case COLLECTOR: {
                         //Populate item list for later.
                         world.populateItemStackEntities(entityItems, box);
-                        drops.addAll(entityItems.keySet());
+                        drops.addAll(entityItems.values());
                         break;
+                    }
+                    case DROPPER: {
+                        if (placerDelay == definition.effector.placerDelay) {
+                            world.populateItemStackEntities(entityItems, box);
+                            if(entityItems.isEmpty()) {
+                              //Place the first item found.
+                                for (APart part : linkedParts) {
+                                    if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE && part.isActive && part.definition.interactable.feedsVehicles) {
+                                        EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+                                        for (int i = 0; i < inventory.getSize(); ++i) {
+                                            IWrapperItemStack stack = inventory.getStack(i);
+                                            if (!stack.isEmpty()) {
+                                                IWrapperItemStack stackToDrop = stack.split(1);
+                                                world.spawnItemStack(stackToDrop, box.globalCenter);
+                                                activatedThisTick = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if(activatedThisTick) {
+                                        break;
+                                    }
+                                }
+                            }
+                            placerDelay = 0;
+                        } else {
+                            ++placerDelay;
+                        }
                     }
                 }
 
@@ -194,7 +226,11 @@ public class PartEffector extends APart {
                                 if (definition.effector.type == EffectorComponentType.COLLECTOR) {
                                     if (((PartInteractable) part).inventory.addStack(dropStack, dropStack.getSize(), false)) {
                                         activatedThisTick = true;
-                                        world.removeItemStackEntity(entityItems.get(dropStack));
+                                        for(Entry<IWrapperEntity, IWrapperItemStack> entry : entityItems.entrySet()) {
+                                            if(entry.getValue() == dropStack) {
+                                                world.removeItemStackEntity(entry.getKey());
+                                            }
+                                        }
                                     }
                                 }
                                 //Do actual addition.

@@ -148,7 +148,7 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Adds to the map a list of all item entities within the passed-in bounds.
      */
-    public abstract void populateItemStackEntities(Map<IWrapperItemStack, IWrapperEntity> map, BoundingBox b);
+    public abstract void populateItemStackEntities(Map<IWrapperEntity, IWrapperItemStack> map, BoundingBox b);
 
     /**
      * Removes the specified item stack entity from the world.
