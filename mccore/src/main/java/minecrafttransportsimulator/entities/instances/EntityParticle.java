@@ -36,6 +36,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
     private static final RotationMatrix helperRotation = new RotationMatrix();
     private static final Point3D helperPoint = new Point3D();
+    private static final ColorRGB helperColor = new ColorRGB();
     private static final Map<String, FloatBuffer> parsedParticleBuffers = new HashMap<>();
     private static final Random particleRandom = new Random();
 
@@ -241,7 +242,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
         this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, false);
         if (definition.transparency != 0 || definition.toTransparency != 0) {
-            renderable.alpha = definition.transparency;
+            renderable.setAlpha(definition.transparency);
         }
 
         renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
@@ -435,20 +436,21 @@ public class EntityParticle extends AEntityC_Renderable {
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         if (definition.toTransparency != 0) {
-            renderable.alpha = interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks);
+            renderable.setAlpha(interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks));
         } else {
-            renderable.alpha = definition.transparency != 0 ? definition.transparency : 1.0F;
+            renderable.setAlpha(definition.transparency != 0 ? definition.transparency : 1.0F);
         }
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
-            renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime;
+            renderable.setAlpha(renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime);
         }
         if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             renderable.isTranslucent = blendingEnabled;
             if (staticColor == null) {
                 float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
-                renderable.color.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
-                renderable.color.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
-                renderable.color.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
+                helperColor.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
+                helperColor.green = interpolate(startColor.green, endColor.green, colorDelta, true, partialTicks);
+                helperColor.blue = interpolate(startColor.blue, endColor.blue, colorDelta, true, partialTicks);
+                renderable.setColor(helperColor);
             }
             renderable.transform.set(transform);
             double totalScale;

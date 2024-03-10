@@ -57,13 +57,14 @@ public class RenderableObject {
     public final String name;
     public String texture;
     public final ColorRGB color;
+    public float alpha = 1.0F;
     public FloatBuffer vertices;
     public final boolean cacheVertices;
 
+    public boolean changedSinceLastRender;
     public boolean isTranslucent;
     public int cachedVertexIndex = -1;
     public int worldLightValue;
-    public float alpha = 1.0F;
     public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();
     /**
@@ -163,6 +164,20 @@ public class RenderableObject {
             return this.texture.equals(otherProperties.texture) && this.color.equals(otherProperties.color);
         } else {
             return false;
+        }
+    }
+
+    public void setAlpha(float alpha) {
+        if (this.alpha != alpha) {
+            this.alpha = alpha;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setColor(ColorRGB color) {
+        if (!this.color.equals(color)) {
+            this.color.setTo(color);
+            this.changedSinceLastRender = true;
         }
     }
 

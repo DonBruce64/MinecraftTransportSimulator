@@ -155,6 +155,11 @@ public class InterfaceRender implements IInterfaceRender {
             	BufferData data = buffers.computeIfAbsent(object, k -> new HashMap<>()).computeIfAbsent(objectAssociatedTo, k1 -> new BufferData(renderType, object));
 
                 //Make sure data is ready, if not, init it.
+                if (object.changedSinceLastRender) {
+                    data.builder.clear();
+                    data.isReady = false;
+                    object.changedSinceLastRender = false;
+                }
                 if (!data.isReady) {
                     int index = 0;
                     data.builder.begin(GL11.GL_QUADS, renderType.format());

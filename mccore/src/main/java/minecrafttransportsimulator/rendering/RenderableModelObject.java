@@ -169,7 +169,7 @@ public class RenderableModelObject {
                         //Model that's actually a beam, render it with beam lighting/blending. 
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                         object.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
-                        object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+                        object.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
                         object.render(entity);
                     } else if (blendingEnabled == object.isTranslucent) {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
@@ -178,12 +178,12 @@ public class RenderableModelObject {
                         //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
                         if (blendingEnabled && objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
                             if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
-                                object.alpha = 0;
+                                object.setAlpha(0);
                             } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
                                 //Need >= here instead of above for things where min/max clamps are equal.
-                                object.alpha = 1;
+                                object.setAlpha(1);
                             } else {
-                                object.alpha = (float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin);
+                                object.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
                             }
                         }
                         object.render(entity);
@@ -396,8 +396,8 @@ public class RenderableModelObject {
 
             colorObject.worldLightValue = object.worldLightValue;
             colorObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
-            colorObject.color.setTo(color);
-            colorObject.alpha = lightLevel;
+            colorObject.setColor(color);
+            colorObject.setAlpha(lightLevel);
             colorObject.transform.set(object.transform);
             colorObject.render(entity);
 
@@ -433,8 +433,8 @@ public class RenderableModelObject {
                     flareObject.isTranslucent = true;
                     flareObject.worldLightValue = object.worldLightValue;
                     flareObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
-                    flareObject.color.setTo(color);
-                    flareObject.alpha = blendableBrightness;
+                    flareObject.setColor(color);
+                    flareObject.setAlpha(blendableBrightness);
                     flareObject.transform.set(object.transform);
                     flareObject.render(entity);
                 }
@@ -445,8 +445,8 @@ public class RenderableModelObject {
                     beamObject.worldLightValue = object.worldLightValue;
                     beamObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
                     beamObject.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
-                    beamObject.color.setTo(color);
-                    beamObject.alpha = blendableBrightness;
+                    beamObject.setColor(color);
+                    beamObject.setAlpha(blendableBrightness);
                     beamObject.transform.set(object.transform);
                     beamObject.render(entity);
                 }

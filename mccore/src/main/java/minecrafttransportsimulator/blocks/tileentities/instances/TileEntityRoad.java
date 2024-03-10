@@ -467,12 +467,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 }
                 RenderableObject object = componentRenderables.get(component);
                 if (isActive()) {
-                    object.color.setTo(ColorRGB.WHITE);
-                    object.alpha = 1.0F;
+                    object.setColor(ColorRGB.WHITE);
+                    object.setAlpha(1.0F);
                     object.isTranslucent = false;
                 } else {
-                    object.color.setTo(ColorRGB.GREEN);
-                    object.alpha = 0.5F;
+                    object.setColor(ColorRGB.GREEN);
+                    object.setAlpha(0.5F);
                     object.isTranslucent = true;
                 }
                 if (dynamicCurve != null) {

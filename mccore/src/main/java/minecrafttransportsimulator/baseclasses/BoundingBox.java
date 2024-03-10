@@ -319,7 +319,7 @@ public class BoundingBox {
         wireframeRenderable.transform.applyTranslation(helperPoint);
         if (color != null) {
             //Override default color with set color.
-            wireframeRenderable.color.setTo(color);
+            wireframeRenderable.setColor(color);
         }
         wireframeRenderable.setWireframeBoundingBox(this);
         wireframeRenderable.render(null);
@@ -338,7 +338,7 @@ public class BoundingBox {
         if (offset != null) {
             holographicRenderable.transform.applyTranslation(offset);
         }
-        holographicRenderable.color.setTo(color);
+        holographicRenderable.setColor(color);
         holographicRenderable.setHolographicBoundingBox(this);
         holographicRenderable.render(null);
     }
