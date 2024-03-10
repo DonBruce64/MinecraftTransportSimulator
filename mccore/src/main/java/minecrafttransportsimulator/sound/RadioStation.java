@@ -237,57 +237,66 @@ public class RadioStation {
      * was an error.
      */
     private boolean playFromInternet() {
-        try {
-            //Create a URL and open a connection.
-            URL urlObj = new URL(url);
-            URLConnection connection = urlObj.openConnection();
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+        int tryCount = 0;
+        String errorString = null;
+        do {
+            try {
+                //Create a URL and open a connection.
+                URL urlObj = new URL(url);
+                URLConnection connection = urlObj.openConnection();
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
-            //Verify stream is actually an HTTP stream.
-            String contentType = connection.getHeaderField("Content-Type");
-            if (contentType == null) {
-                displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
+                //Verify stream is actually an HTTP stream.
+                connection.connect();
+                String contentType = connection.getContentType();
+                if (contentType == null) {
+                    errorString = "ERROR: No content-type header found.  Contact the mod author for more information.";
+                } else {
+                    //Check to make sure stream isn't an invalid type.
+                    switch (contentType) {
+                        case ("audio/mpeg"):
+                        case ("application/ogg"):
+                            break;
+                        case ("audio/x-wav"):
+                            displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author.";
+                            return false;
+                        case ("audio/flac"):
+                            displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author.";
+                            return false;
+                        default: {
+                            if (contentType.startsWith("audio")) {
+                                displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
+                                return false;
+                            } else {
+                                errorString = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
+                                continue; //Could be a bad packet with text or something.
+                            }
+                        }
+                    }
+
+                    //Parse out information from header.
+                    displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
+                    displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
+                    displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
+                    displayText += "\nBuffers:";
+
+                    //Create a thread to start up the sound once the parsing is done.
+                    //This keeps us from blocking the main thread.
+                    decoder = null;
+                    decoderThread = new DecoderThread(this, contentType, connection);
+                    decoderThread.start();
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
                 return false;
             }
+        } while (++tryCount < 5 && errorString != null);
 
-            //Check to make sure stream isn't an invalid type.
-            switch (contentType) {
-                case ("audio/mpeg"):
-                case ("application/ogg"):
-                    break;
-                case ("audio/x-wav"):
-                    displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author.";
-                    return false;
-                case ("audio/flac"):
-                    displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author.";
-                    return false;
-                default: {
-                    if (contentType.startsWith("audio")) {
-                        displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
-                    } else {
-                        displayText = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
-                    }
-                    return false;
-                }
-            }
-
-            //Parse out information from header.
-            displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
-            displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
-            displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
-            displayText += "\nBuffers:";
-
-            //Create a thread to start up the sound once the parsing is done.
-            //This keeps us from blocking the main thread.
-            decoder = null;
-            decoderThread = new DecoderThread(this, contentType, connection);
-            decoderThread.start();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
-            return false;
-        }
+        //We must have failed too many times, so false return.
+        displayText = errorString;
+        return false;
     }
 
     /**

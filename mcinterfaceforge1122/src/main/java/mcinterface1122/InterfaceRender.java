@@ -2,8 +2,8 @@ package mcinterface1122;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
@@ -169,57 +169,71 @@ public class InterfaceRender implements IInterfaceRender {
         if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
             //Parse the texture, get the OpenGL integer that represents this texture, and save it.
             //FAR less jank than using MC's resource system.
-            try {
-                URL url = new URL(textureURL);
-                URLConnection connection = url.openConnection();
+            //We try a few times here since sources can do dumb things.
+            List<String> validContentTypes = new ArrayList<>();
+            for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
+                validContentTypes.add("image/" + imageSuffix);
+            }
+            int tryCount = 0;
+            String errorString = null;
+            do {
                 try {
-                    List<String> validContentTypes = new ArrayList<>();
-                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                        validContentTypes.add("image/" + imageSuffix);
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    if (validContentTypes.contains(contentType)) {
-                        if (contentType.endsWith("gif")) {
-                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
-                            reader.setInput(stream);
-                            ParsedGIF gif = GIFParser.parseGIF(reader);
-                            if (gif != null) {
-                                animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
-                                for (GIFImageFrame frame : gif.frames.values()) {
-                                    int glTexturePointer = TextureUtil.glGenTextures();
-                                    TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
-                                    gifFrameIndexes.put(frame, glTexturePointer);
+                    URL url = new URL(textureURL);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    try {
+                        connection.setRequestProperty("accept", "image/*");
+                        connection.connect();
+                        String contentType = connection.getContentType();
+                        if (validContentTypes.contains(contentType)) {
+                            if (contentType.endsWith("gif")) {
+                                ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
+                                ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
+                                reader.setInput(stream);
+                                ParsedGIF gif = GIFParser.parseGIF(reader);
+                                if (gif != null) {
+                                    Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
+                                    for (GIFImageFrame frame : gif.frames.values()) {
+                                        int glTexturePointer = TextureUtil.glGenTextures();
+                                        TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
+                                        gifFrameIndexes.put(frame, glTexturePointer);
+                                    }
+                                    animatedGIFs.put(textureURL, gif);
+                                    animatedGIFFrames.put(gif, gifFrameIndexes);
+                                    return null;
+                                } else {
+                                    errorString = "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
                                 }
-                                animatedGIFFrames.put(gif, gifFrameIndexes);
                             } else {
-                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
+                                BufferedImage bufferedImage = TextureUtil.readBufferedImage(url.openStream());
+                                if (bufferedImage != null) {
+                                    int glTexturePointer = TextureUtil.glGenTextures();
+                                    TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedImage, false, false);
+                                    onlineTextures.put(textureURL, glTexturePointer);
+                                    return null;
+                                } else {
+                                    errorString = "Got a correct image type, but was missing data for the image.  Likely partial data sent by the server source, try again later.";
+                                }
                             }
                         } else {
-                            BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
-                            int glTexturePointer = TextureUtil.glGenTextures();
-                            TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-                            onlineTextures.put(textureURL, glTexturePointer);
+                            errorString = "Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+                            for (String validType : validContentTypes) {
+                                errorString += (validType + ", ");
+                            }
                         }
-                    } else {
-                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
-                        for (String validType : validContentTypes) {
-                            errorString.append(validType).append(", ");
-                        }
-                        onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                        return errorString.toString();
+                    } catch (Exception e) {
+                        errorString = "Could not parse images.  Error was: " + e.getMessage();
                     }
                 } catch (Exception e) {
                     onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                    e.printStackTrace();
-                    return "Could not parse images.  Error was: " + e.getMessage();
+                    errorString = "Could not open URL for processing.  Error was: " + e.getMessage();
                 }
-            } catch (Exception e) {
+            } while (++tryCount < 10 && errorString != null);
+
+            //Set missing texture if we failed to get anything.
+            if (errorString != null) {
                 onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                e.printStackTrace();
-                return "Could not open URL for processing.  Error was: " + e.getMessage();
             }
+            return errorString;
         }
         return null;
     }
