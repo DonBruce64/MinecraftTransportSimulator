@@ -696,6 +696,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partsInSlots.add(null);
             }
 
+            boolean hasNoParts = parts.isEmpty();
             for (int i = 0; i < definition.parts.size(); ++i) {
                 //Use a try-catch for parts in case they've changed since this entity was last placed.
                 //Don't want crashes due to pack updates.
@@ -712,7 +713,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //If we haven't spawned defaults, do so now.  We also check if we have no parts, since older version didn't set this boolean.
                 //The only way this will cause issues is if someone removes all parts from a multipart, including defaults, and it loads in.
                 //But nobody is kooky enough to do that, now are they?
-                if (!data.getBoolean("spawnedDefaultParts") && parts.isEmpty()) {
+                if (!data.getBoolean("spawnedDefaultParts") && hasNoParts) {
                     //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
                     //the value will be set before spawning in any conditional parts.
                     if (definition.constantValues != null) {
