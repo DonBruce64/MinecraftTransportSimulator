@@ -218,6 +218,11 @@ class WrapperNBT implements IWrapperNBT {
     }
 
     @Override
+    public boolean hasData(String name) {
+        return tag.contains(name);
+    }
+
+    @Override
     public void deleteData(String name) {
         tag.remove(name);
     }

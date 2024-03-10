@@ -166,7 +166,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         if (definition.rendering != null && definition.rendering.textObjects != null) {
             for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                 JSONText textDef = definition.rendering.textObjects.get(i);
-                text.put(textDef, newlyCreated ? textDef.defaultText : data.getString("textLine" + i));
+                text.put(textDef, data.hasData("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
             }
         }
 

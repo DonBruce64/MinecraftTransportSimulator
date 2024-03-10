@@ -78,6 +78,8 @@ public interface IWrapperNBT {
 
     void setData(String name, IWrapperNBT value);
 
+    boolean hasData(String name);
+
     void deleteData(String name);
 
     /**
