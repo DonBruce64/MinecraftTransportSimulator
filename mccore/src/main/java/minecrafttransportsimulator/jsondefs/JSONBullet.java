@@ -64,7 +64,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
         public float blastStrengthRadiusMax;
 
         @JSONDescription("Inside this radius from the explosion, full damage is dealt. Damage begins decaying here.")
-        public float blaskStrengthRadiusDecay;
+        public float blastStrengthRadiusDecay;
 
         @JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
         public float armorPenetration;
