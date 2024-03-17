@@ -56,9 +56,8 @@ public class GUIPackExporter extends AGUIBase {
         addComponent(packImportButton = new GUIComponentButton(this, guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-            	JSONParser.doPreImportWork();
+            	JSONParser.doImports();
                 debug.setText(JSONParser.importAllJSONs(false));
-                JSONParser.doPostImportWork();
             }
         });
         //Add control buttons.

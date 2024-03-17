@@ -335,9 +335,8 @@ public class InterfaceInput implements IInterfaceInput {
             new GUIConfig();
         } else if (ConfigSystem.settings.general.devMode.value && importKey.isPressed()) {
             IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            JSONParser.doPreImportWork();
+            JSONParser.doImports();
             clientPlayer.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
-            JSONParser.doPostImportWork();
         }
     }
 }
