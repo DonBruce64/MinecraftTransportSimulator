@@ -309,8 +309,6 @@ public abstract class AWrapperWorld extends EntityManager {
      * Sets the block at the passed-in position to fire.
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
-     * @param position TODO
-     * @param side TODO
      */
     public abstract void setToFire(Point3D position, Axis side);
 
@@ -319,8 +317,6 @@ public abstract class AWrapperWorld extends EntityManager {
      * If it is not fire, then the block is not modified.
      * Note that the position assumes the block hit is the one that is on fire,
      * not that the fire itself was hit.  This is because fire blocks do not have collision.
-     * @param position TODO
-     * @param side TODO
      */
     public abstract void extinguish(Point3D position, Axis side);
 
