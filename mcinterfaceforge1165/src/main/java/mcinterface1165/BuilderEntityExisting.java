@@ -3,6 +3,7 @@ package mcinterface1165;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
@@ -14,7 +15,9 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -121,6 +124,44 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                         }
                     }
                     entity.world.endProfiling();
+
+                    if (entity instanceof EntityVehicleF_Physics) {
+                        EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                        if (vehicle.applyHotloads) {
+                            if (!level.isClientSide) {
+                                AWrapperWorld entityWorld = entity.world;
+
+                                Map<UUID, UUID> playersRidingSeats = new HashMap<>();
+                                vehicle.allParts.forEach(part -> {
+                                    if (part.rider != null) {
+                                        //playersRidingSeats.put(part.uniqueUUID, part.rider.getID());
+                                        //part.rider.setRiding(null);
+                                    }
+                                });
+
+                                IWrapperNBT data = entity.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                                entity.remove();
+                                vehicle = new EntityVehicleF_Physics(entityWorld, null, data);
+                                vehicle.addPartsPostAddition(null, data);
+                                entityWorld.addEntity(vehicle);
+
+                                vehicle.allParts.forEach(part -> {
+                                    UUID riderID = playersRidingSeats.get(part.uniqueUUID);
+                                    if (riderID != null) {
+                                        //entityWorld.getExternalEntity(riderID).setRiding(part);
+                                    }
+                                });
+
+                                entity = vehicle;
+                            } else {
+                                entity.remove();
+                                entity = null;
+                                loadedFromSavedNBT = false;
+                                loadFromSavedNBT = false;
+                                needDataFromServer = true;
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -138,7 +179,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     lastLoadedNBT = null;
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
+                    e.printStackTrace();
                     remove();
                 }
             }

@@ -56,7 +56,6 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -688,32 +687,15 @@ public class JSONParser {
         }
     }
 
-    private static final Map<AWrapperWorld, List<IWrapperNBT>> vehicleData = new HashMap<>();
-    public static void doPreImportWork() {
-        //Kill all vehicles, since part linkings can get fouled here.
-    	vehicleData.clear();
+    public static void doImports() {
         for(AWrapperWorld world : AWrapperWorld.worlds) {
             for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-            	if(!world.isClient()) {
-            		vehicleData.computeIfAbsent(world, k -> new ArrayList<>()).add(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-            	}
-            	vehicle.remove();
+                vehicle.applyHotloads = true;
             }
     	}
     	
     	//Clear object lists before changing definitions.
         AEntityD_Definable.objectLists.clear();
-	}
-    
-    public static void doPostImportWork() {
-        //Re-create all removed vehicles.
-    	vehicleData.forEach((world, dataList) -> {
-    		dataList.forEach(data -> {
-    			EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, null, data);
-                vehicle.addPartsPostAddition(null, data);
-                world.spawnEntity(vehicle);
-    		});
-    	});
 	}
 
     @Retention(RetentionPolicy.RUNTIME)

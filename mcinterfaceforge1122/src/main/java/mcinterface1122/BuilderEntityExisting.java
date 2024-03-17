@@ -18,7 +18,9 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -120,6 +122,26 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                             World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
                         }
                     }
+
+                    if (entity instanceof EntityVehicleF_Physics) {
+                        if (((EntityVehicleF_Physics) entity).applyHotloads) {
+                            if (!world.isRemote) {
+                                AWrapperWorld entityWorld = entity.world;
+                                IWrapperNBT data = entity.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                                entity.remove();
+                                EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(entityWorld, null, data);
+                                vehicle.addPartsPostAddition(null, data);
+                                entityWorld.addEntity(vehicle);
+                                entity = vehicle;
+                            } else {
+                                entity.remove();
+                                entity = null;
+                                loadedFromSavedNBT = false;
+                                loadFromSavedNBT = false;
+                                needDataFromServer = true;
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -137,7 +159,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     lastLoadedNBT = null;
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
+                    e.printStackTrace();
                     setDead();
                 }
             }
