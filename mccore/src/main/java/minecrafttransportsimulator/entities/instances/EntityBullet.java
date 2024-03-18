@@ -591,9 +591,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!gun.world.isClient()) {
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
                 gun.world.extinguish(blockPosition, blockSide);
-            } else {
+            } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
                 float hardnessHit = gun.world.getBlockHardness(blockPosition);
-                if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
+                if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
                     gun.world.destroyBlock(blockPosition, true);
                 } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
                     //Couldn't break block, but we might be able to set it on fire.
@@ -616,7 +616,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
 
         //Spawn an explosion if we are an explosive bullet on the server.
-        if (!gun.world.isClient() && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
+        if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
             float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
             gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
         }

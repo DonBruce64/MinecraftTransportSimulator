@@ -32,10 +32,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, vehicles can only be picked up in creative mode.");
         public JSONConfigEntry<Boolean> keyRequiredToStartVehicles = new JSONConfigEntry<>(false, "If true, vehicles can only be started if the player has the key in their hand.");
-        public JSONConfigEntry<Boolean> blockBreakage = new JSONConfigEntry<>(true, "Whether or not vehicles and guns can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks, and guns won't break blocks when they hit them.  This will also disable explosive block breakage (though not explosions themselves) and prevent incendiary bullets from setting blocks on fire.");
-        public JSONConfigEntry<Boolean> vehicleDestruction = new JSONConfigEntry<>(true, "Whether or not vehicles can be destroyed by ramming into blocks at high speeds.  Set this to false if you don't like loosing vehicles to badly-placed walls.");
         public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
-        public JSONConfigEntry<Boolean> creativeDamage = new JSONConfigEntry<>(false, "If true, damage from vehicles and guns will be applied to creative players.");
         public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
         public JSONConfigEntry<Boolean> doLegacyLightCompats = new JSONConfigEntry<>(true, "If true, legacy compatibility code will be performed on all models to make their lights work with newer versions.  This code will significantly slow down boot times due to needing to parse all models on boot, however, packs may not have functional lights without it.  Choose wisely if you want speed or features.");
         public JSONConfigEntry<Boolean> useHSV = new JSONConfigEntry<>(false, "If enabled, the MTS dev mode will export color values as HSV instead of hex.");
@@ -83,7 +80,12 @@ public class JSONConfigSettings {
     }
 
     public static class ConfigDamage {
-        public JSONConfigEntry<Boolean> explosions = new JSONConfigEntry<>(true, "Whether or not vehicles explode when crashed or shot down.");
+        public JSONConfigEntry<Boolean> bulletBlockBreaking = new JSONConfigEntry<>(true, "Whether or not bullets/bombs can break blocks when they hit them.  This will also disable explosive block breakage (though not explosions themselves) and prevent incendiary bullets from setting blocks on fire.");
+        public JSONConfigEntry<Boolean> bulletExplosions = new JSONConfigEntry<>(true, "Whether or not bullets/bombs will blow up.  This does not disable block breakage, but it will pretty much nerf all block mass-destruction weapons.");
+        public JSONConfigEntry<Boolean> vehicleBlockBreaking = new JSONConfigEntry<>(true, "Whether or not vehicles can break blocks when they run into them.  If false, vehicles will simply stop when they hit blocks.");
+        public JSONConfigEntry<Boolean> vehicleDestruction = new JSONConfigEntry<>(true, "Whether or not vehicles can be destroyed by ramming into blocks at high speeds.  Set this to false if you don't like loosing vehicles to badly-placed walls.");
+        public JSONConfigEntry<Boolean> vehicleExplosions = new JSONConfigEntry<>(true, "Whether or not vehicles explode when crashed or shot down.  If this is false, vehicles will simply poof when they crash.");
+        public JSONConfigEntry<Boolean> creativePlayerDamage = new JSONConfigEntry<>(false, "If true, damage from vehicles and guns will be applied to creative players.  Not sure why you'd want this, but it's here.");
         public JSONConfigEntry<Boolean> wheelBreakage = new JSONConfigEntry<>(true, "Whether or not wheels can be broken (go flat).");
         public JSONConfigEntry<Boolean> wheelDamageIgnoreVelocity = new JSONConfigEntry<>(false, "Whether or not velocity is ignored when calculating wheel damage.");
         public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(false, "Whether or not non-IV things can damage vehicles.  This is normally false, as external damage is a hassle for most people, but can be true if you want other mod's guns to be able to attack vehicles in addition to IV's.");

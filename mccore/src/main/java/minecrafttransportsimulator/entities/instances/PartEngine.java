@@ -1078,7 +1078,7 @@ public class PartEngine extends APart {
     }
 
     protected void explodeEngine() {
-        if (ConfigSystem.settings.damage.explosions.value) {
+        if (ConfigSystem.settings.damage.vehicleExplosions.value) {
             world.spawnExplosion(position, 1F, true);
         } else {
             world.spawnExplosion(position, 0F, false);

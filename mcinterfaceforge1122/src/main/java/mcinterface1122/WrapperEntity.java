@@ -388,7 +388,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.ignoreCooldown && entity instanceof EntityLivingBase) {
             entity.hurtResistantTime = 0;
         }
-        if (ConfigSystem.settings.general.creativeDamage.value) {
+        if (ConfigSystem.settings.damage.creativePlayerDamage.value) {
             newSource.setDamageAllowedInCreativeMode();
         }
         entity.attackEntityFrom(newSource, (float) damage.amount);

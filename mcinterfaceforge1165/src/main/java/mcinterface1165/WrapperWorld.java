@@ -773,7 +773,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void setToFire(Point3D position, Axis side) {
         BlockPos blockpos = new BlockPos(position.x, position.y, position.z).relative(Direction.valueOf(side.name()));
-        if (world.isEmptyBlock(blockpos) && ConfigSystem.settings.general.blockBreakage.value) {
+        if (world.isEmptyBlock(blockpos)) {
             world.setBlockAndUpdate(blockpos, Blocks.FIRE.defaultBlockState());
         }
     }
@@ -981,7 +981,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames&&ConfigSystem.settings.general.blockBreakage.value, ConfigSystem.settings.general.blockBreakage.value ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
+        world.explode(null, location.x, location.y, location.z, (float) strength, flames, Explosion.Mode.DESTROY);
     }
 
     /**

@@ -389,7 +389,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.ignoreCooldown && entity instanceof LivingEntity) {
             entity.invulnerableTime = 0;
         }
-        if (ConfigSystem.settings.general.creativeDamage.value) {
+        if (ConfigSystem.settings.damage.creativePlayerDamage.value) {
             newSource.bypassInvul();
         }
         entity.hurt(newSource, (float) damage.amount);

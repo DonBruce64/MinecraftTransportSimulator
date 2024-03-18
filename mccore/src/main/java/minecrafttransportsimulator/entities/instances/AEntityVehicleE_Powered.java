@@ -214,7 +214,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         //Oh, and add explosions.  Because those are always fun.
         //Note that this is done after spawning all parts here and in the super call,
         //so although all parts are DROPPED, not all parts may actually survive the explosion.
-        if (ConfigSystem.settings.damage.explosions.value) {
+        if (ConfigSystem.settings.damage.vehicleExplosions.value) {
             double explosivePower = 0;
             for (APart part : allParts) {
                 if (part instanceof PartInteractable) {

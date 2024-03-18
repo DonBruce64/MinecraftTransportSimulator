@@ -944,7 +944,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
-                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, ConfigSystem.settings.general.blockBreakage.value)) {
+                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
                     return true;
                 }
                 clearedCache = true;
@@ -975,7 +975,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 for (Point3D blockPosition : box.collidingBlockPositions) {
                     float blockHardness = world.getBlockHardness(blockPosition);
                     if (!world.isBlockLiquid(blockPosition)) {
-                        if (ConfigSystem.settings.general.blockBreakage.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
+                        if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
                             hardnessHitThisBox += blockHardness;
                             if (collisionMotion.y > -0.01) {
                                 //Don't want to blow up from falling fast.
@@ -998,7 +998,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 //If we hit too many blocks.  Either remove part this is a box on, or destroy us.
-                if (ConfigSystem.settings.general.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
+                if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
                     if (!world.isClient()) {
                         APart partHit = getPartWithBox(box);
                         if (partHit != null) {
