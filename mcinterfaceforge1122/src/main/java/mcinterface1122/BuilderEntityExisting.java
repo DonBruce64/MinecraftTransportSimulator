@@ -18,9 +18,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -120,26 +118,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                         //Make sure the collision bounds for MC are big enough to collide with this entity.
                         if (World.MAX_ENTITY_RADIUS < interactable.encompassingBox.widthRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.heightRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.depthRadius) {
                             World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
-                        }
-                    }
-
-                    if (entity instanceof EntityVehicleF_Physics) {
-                        if (((EntityVehicleF_Physics) entity).applyHotloads) {
-                            if (!world.isRemote) {
-                                AWrapperWorld entityWorld = entity.world;
-                                IWrapperNBT data = entity.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                                entity.remove();
-                                EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(entityWorld, null, data);
-                                vehicle.addPartsPostAddition(null, data);
-                                entityWorld.addEntity(vehicle);
-                                entity = vehicle;
-                            } else {
-                                entity.remove();
-                                entity = null;
-                                loadedFromSavedNBT = false;
-                                loadFromSavedNBT = false;
-                                needDataFromServer = true;
-                            }
                         }
                     }
                 }

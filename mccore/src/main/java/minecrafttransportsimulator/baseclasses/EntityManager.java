@@ -18,14 +18,17 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
- * Class that manages entities in a world or other area.
+ * Class that manages entities in a world.
  * This class has various lists and methods for querying the entities.
  *
  * @author don_bruce
  */
-public class EntityManager {
+public abstract class EntityManager {
     public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
@@ -33,6 +36,11 @@ public class EntityManager {
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<IWrapperNBT> hotloadedData = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<UUID, UUID> hotloadedRiderIDs = new ConcurrentHashMap<>();
+    private int hotloadCountdown;
+
+    public abstract AWrapperWorld getWorld();
 
     /**
      * Adds the entity to the world.  This will make it get update ticks and be rendered
@@ -136,12 +144,53 @@ public class EntityManager {
     public void tickAll() {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                //TODO make this generic by referencing the d-level class and putting inits in items.
+                if (entity instanceof EntityVehicleF_Physics) {
+                    EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                    if (vehicle.applyHotloads) {
+                        if (!entity.world.isClient()) {
+                            //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
+                            vehicle.allParts.forEach(part -> {
+                                if (part.rider != null) {
+                                    hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
+                                    part.removeRider();
+                                }
+                            });
+
+                            //Now store data for countdown and remove entity.
+                            hotloadedData.add(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                            vehicle.remove();
+                            hotloadCountdown = 20;
+                        } else {
+                            vehicle.remove();
+                        }
+                        //Don't do futher logic with the hotload applied.
+                        continue;
+                    }
+                }
+
                 entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
                 entity.update();
                 if (entity instanceof AEntityD_Definable) {
                     ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
                 }
                 entity.world.endProfiling();
+            }
+        }
+
+        if (hotloadCountdown > 0) {
+            if (--hotloadCountdown == 10) {
+                hotloadedData.forEach(data -> {
+                    EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, data);
+                    vehicle.addPartsPostAddition(null, data);
+                    vehicle.world.spawnEntity(vehicle);
+                });
+                hotloadedData.clear();
+            } else if (hotloadCountdown == 0) {
+                hotloadedRiderIDs.forEach((seatID, riderID) -> {
+                    getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
+                });
+                hotloadedRiderIDs.clear();
             }
         }
     }
