@@ -40,6 +40,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
      **/
     private boolean dismountedRider;
 
+    private int ticksWithoutRider;
+
     public BuilderEntityLinkedSeat(EntityType<? extends BuilderEntityLinkedSeat> eType, World world) {
         super(BuilderEntityLinkedSeat.E_TYPE3.get(), world);
     }
@@ -68,10 +70,16 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                         rider = WrapperEntity.getWrapperFor(riders.get(0));
                         entity.setRider(rider, true);
                     }
+                } else if (dismountedRider) {
+                    //Need to delay this by a few ticks on the client, since this is seen on clients before servers and this
+                    //will cause packet de-sync errors in the logs if we use this all the time.
+                    if (!level.isClientSide || ++ticksWithoutRider == 10) {
+                        remove();
+                    }
                 } else if (rider != null && riders.isEmpty()) {
-                    remove(); //This is for crappy server OSes that don't call the removePassenger() function.
-                }else if (dismountedRider) {
-                    remove();
+                    if (!level.isClientSide || ++ticksWithoutRider == 10) {
+                        remove();
+                    }
                 }
             }
         } else if(entityUUID != null){
