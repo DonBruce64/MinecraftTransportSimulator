@@ -79,7 +79,7 @@ public class Explosion {
         this.bullet = bullet;
         damageDecayStartRadius = bullet.bullet.blastDamageRadiusDecay;
         damageDecayEndRadius = bullet.bullet.blastDamageRadiusMax;
-        strengthDecayStartRadius = bullet.bullet.blaskStrengthRadiusDecay;
+        strengthDecayStartRadius = bullet.bullet.blastStrengthRadiusDecay;
         strengthDecayEndRadius = bullet.bullet.blastStrengthRadiusMax;
         language = LanguageSystem.DEATH_EXPLOSION_PLAYER;
         this.entityResponsible = entityResponsible;
