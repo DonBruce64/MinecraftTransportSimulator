@@ -174,11 +174,11 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public void setConnection(EntityVehicleF_Physics newVehicle) {
         if (newVehicle != null) {
             newVehicle.beingFueled = true;
+            fuelDispensedThisConnection = 0;
         } else if (connectedVehicle != null) {
             connectedVehicle.beingFueled = false;
         }
         connectedVehicle = newVehicle;
-        fuelDispensedThisConnection = 0;
     }
 
     protected abstract boolean hasFuel();
