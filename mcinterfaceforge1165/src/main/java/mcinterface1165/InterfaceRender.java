@@ -8,10 +8,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
@@ -85,10 +87,11 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
 
-    private static Map<String, RenderType> renderTypes = new HashMap<>();
-    private static Map<RenderableObject, Map<Object, BufferData>> buffers = new HashMap<>();
-    private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
-    private static ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
+    private static final Map<String, RenderType> renderTypes = new HashMap<>();
+    private static final Map<RenderableObject, Map<Object, BufferData>> buffers = new HashMap<>();
+    private static final Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
+    private static final Set<RenderableObject> changedRenders = new HashSet<>();
 
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
@@ -158,7 +161,7 @@ public class InterfaceRender implements IInterfaceRender {
                 if (object.changedSinceLastRender) {
                     data.builder.clear();
                     data.isReady = false;
-                    object.changedSinceLastRender = false;
+                    changedRenders.add(object);
                 }
                 if (!data.isReady) {
                     int index = 0;
@@ -530,6 +533,8 @@ public class InterfaceRender implements IInterfaceRender {
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
+            changedRenders.clear();
+
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
             for (AEntityC_Renderable entity : allEntities) {
@@ -547,6 +552,10 @@ public class InterfaceRender implements IInterfaceRender {
             //Now do the actual render.
             world.beginProfiling("MTSRendering_Execution", false);
             renderBuffers();
+
+            if (!changedRenders.isEmpty()) {
+                changedRenders.forEach(render -> render.changedSinceLastRender = false);
+            }
             world.endProfiling();
         }
     }
