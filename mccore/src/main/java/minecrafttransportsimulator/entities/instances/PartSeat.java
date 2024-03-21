@@ -287,7 +287,7 @@ public final class PartSeat extends APart {
         for (APart part : vehicleOn.allParts) {
             if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
                 otherController = true;
-                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
+                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && part.placementDefinition.isController) {
                     otherCreativeController = true;
                     break;
                 }
