@@ -309,7 +309,6 @@ public class RenderableObject {
      * references will be kept in that mode and no objects will have their vertices buffered.
      */
     public void destroy(Object objectAssociatedTo) {
-        vertices = null;
         InterfaceManager.renderingInterface.deleteVertices(this, objectAssociatedTo);
     }
 }

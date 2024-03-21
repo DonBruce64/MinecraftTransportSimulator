@@ -40,6 +40,8 @@ class WrapperNBT implements IWrapperNBT {
     public void setBoolean(String name, boolean value) {
         if(value) {
             tag.setBoolean(name, value);
+        } else {
+            tag.removeTag(name);
         }
     }
 
@@ -52,6 +54,8 @@ class WrapperNBT implements IWrapperNBT {
     public void setInteger(String name, int value) {
         if(value != 0) {
             tag.setInteger(name, value);
+        } else {
+            tag.removeTag(name);
         }
     }
 
@@ -64,6 +68,8 @@ class WrapperNBT implements IWrapperNBT {
     public void setDouble(String name, double value) {
         if(value != 0) {
             tag.setDouble(name, value);
+        } else {
+            tag.removeTag(name);
         }
     }
 
