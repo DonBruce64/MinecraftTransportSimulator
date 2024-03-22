@@ -14,7 +14,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -41,6 +43,7 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean actuallyThirdPerson;
     private static boolean changedCameraState;
     private static boolean changeCameraRequest;
+    private static int ticksToCullingWarning = 200;
     private static BuilderEntityRenderForwarder activeFollower;
     private static int ticksSincePlayerJoin;
 
@@ -207,6 +210,15 @@ public class InterfaceClient implements IInterfaceClient {
                         if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
                             if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
                                 new GUIPackMissing();
+                            }
+                        }
+                    }
+
+                    //Complain about Universal Tweaks mod at 10 second mark.
+                    if (ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("universaltweaks")) {
+                        if (ticksToCullingWarning > 0) {
+                            if (--ticksToCullingWarning == 0) {
+                                player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT UNIVERSAL TWEAKS MOD IS PRESENT.  THIS MOD CULLS IV VEHICLES UNLESS \"Entity Desync\" IS SET TO FALSE IN THE UNIVERSAL TWEAKS CONFIG.");
                             }
                         }
                     }
