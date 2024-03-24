@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -14,8 +15,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
     private float lightLevel;
 
-    public TileEntityPole_StreetLight(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data) {
-        super(core, placingPlayer, axis, data);
+    public TileEntityPole_StreetLight(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
+        super(core, placingPlayer, axis, item, data);
     }
 
     @Override

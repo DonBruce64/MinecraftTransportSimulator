@@ -6,6 +6,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * IWrapper for interfacing with NBT data.  This pares down a few of the method to ones
@@ -16,6 +20,31 @@ import minecrafttransportsimulator.baseclasses.Point3D;
  * @author don_bruce
  */
 public interface IWrapperNBT {
+
+    /**Helper method to compare data which allows null objects.  Prevents excess code for null checks.**/
+    public static boolean isDataEqual(IWrapperNBT data1, IWrapperNBT data2) {
+        if (data1 == null) {
+            return data2 == null;
+        } else if (data2 == null) {
+            return data1 == null;
+        } else {
+            return data1.equals(data2);
+        }
+    }
+
+    /**
+     * Helper method to remove all UUID tags from NBT.
+     * Required when saving things as items because UUID data is only for things in the world.
+     */
+    public default void deleteAllUUIDTags() {
+        deleteEntry(AEntityA_Base.UNIQUE_UUID_TAG_NAME);
+        getAllNames().forEach(name -> {
+            IWrapperNBT data2 = getData(name);
+            if (data2 != null) {
+                data2.deleteAllUUIDTags();
+            }
+        });
+    }
 
     boolean getBoolean(String name);
 
@@ -42,6 +71,17 @@ public interface IWrapperNBT {
     UUID getUUID(String name);
 
     void setUUID(String name, UUID value);
+
+    @SuppressWarnings("unchecked")
+    default <ItemPackActual extends AItemPack<?>> ItemPackActual getPackItem() {
+        return (ItemPackActual) PackParser.getItem(getString("packID"), getString("systemName"), getString("subName"));
+    }
+
+    default void setPackItem(AJSONMultiModelProvider definition, String subName) {
+        setString("packID", definition.packID);
+        setString("systemName", definition.systemName);
+        setString("subName", subName);
+    }
 
     List<IWrapperItemStack> getStacks(int count);
 
@@ -71,16 +111,11 @@ public interface IWrapperNBT {
      **/
     IWrapperNBT getData(String name);
 
-    /**
-     * Returns the data, or a new data structure if it doesn't exist.
-     **/
-    IWrapperNBT getDataOrNew(String name);
-
     void setData(String name, IWrapperNBT value);
 
-    boolean hasData(String name);
+    boolean hasKey(String name);
 
-    void deleteData(String name);
+    void deleteEntry(String name);
 
     /**
      * Returns all key-tag names in this tag.

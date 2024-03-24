@@ -201,13 +201,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         //First check to see if we need to set this key's entity.
                         IWrapperItemStack stack = player.getHeldStack();
                         IWrapperNBT data = stack.getData();
-                        UUID keyVehicleUUID = data.getUUID("vehicle");
+                        UUID keyVehicleUUID = data != null ? data.getUUID("vehicle") : null;
                         if (keyVehicleUUID == null) {
                             //Check if we are the owner before making this a valid key.
                             if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_NOTOWNER));
                             } else {
                                 keyVehicleUUID = vehicle.uniqueUUID;
+                                data = InterfaceManager.coreInterface.getNewNBTWrapper();
                                 data.setUUID("vehicle", keyVehicleUUID);
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_BIND));

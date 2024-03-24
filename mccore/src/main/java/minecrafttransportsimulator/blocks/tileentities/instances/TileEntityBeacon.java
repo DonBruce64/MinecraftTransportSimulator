@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -23,8 +24,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class TileEntityBeacon extends TileEntityDecor {
     public NavBeacon currentBeacon;
 
-    public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
     }
 
     @Override

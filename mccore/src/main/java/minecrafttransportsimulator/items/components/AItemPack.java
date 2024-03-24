@@ -116,18 +116,10 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
     }
 
     /**
-     * Helper method to populate default data.
-     */
-    public void populateDefaultData(IWrapperNBT data) {
-        data.setString("packID", definition.packID);
-        data.setString("systemName", definition.systemName);
-    }
-
-    /**
      * Returns true if the item needs repair, false if not.
      */
     public boolean needsRepair(IWrapperNBT data) {
-        return data.getDouble(AEntityE_Interactable.DAMAGE_VARIABLE) > 0;
+        return data != null && data.getDouble(AEntityE_Interactable.DAMAGE_VARIABLE) > 0;
     }
 
     /**

@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -132,13 +133,17 @@ public class PartEngine extends APart {
     public static final float LOW_OIL_PRESSURE = 40F;
     public static final float MAX_SHIFT_SPEED = 0.35F;
 
-    public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.running = data.getBoolean("running");
-        this.hours = data.getDouble(HOURS_VARIABLE);
-        this.rpm = data.getDouble("rpm");
-        this.temp = data.getDouble("temp");
-        this.pressure = data.getDouble("pressure");
+    public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEngine item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        if (data != null) {
+            this.running = data.getBoolean("running");
+            this.hours = data.getDouble(HOURS_VARIABLE);
+            this.rpm = data.getDouble("rpm");
+            this.temp = data.getDouble("temp");
+            this.pressure = data.getDouble("pressure");
+            this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
+        }
+
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
                 ++reverseGears;
@@ -183,7 +188,6 @@ public class PartEngine extends APart {
         if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
             setVariable(GEAR_VARIABLE, 1);
         }
-        this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
     }
 
     @Override

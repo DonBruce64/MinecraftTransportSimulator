@@ -27,7 +27,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -678,10 +678,10 @@ public class WrapperWorld extends AWrapperWorld {
                         if (block instanceof ABlockBaseTileEntity) {
                             BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
                             IWrapperNBT data = stack.getData();
-                            if (item instanceof AItemPack) {
-                                ((AItemPack<JSONDefinition>) item).populateDefaultData(data);
+                            if (data != null) {
+                                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
                             }
-                            builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data);
+                            builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, (AItemSubTyped<?>) item, data);
                             addEntity(builderTile.tileEntity);
                         }
                         //Shrink stack as we placed this block.
@@ -998,10 +998,8 @@ public class WrapperWorld extends AWrapperWorld {
                         if (++totalTicksWaited == 60) {
                             //Spawn gun.
                             IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
-                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                            EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, null);
                             playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                            entity.addPartsPostAddition(playerWrapper, newData);
 
                             //If the player is new, also add handbooks.
                             if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {

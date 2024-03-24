@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -27,8 +28,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     public static final String ACTIVATED_VARIABLE = "activated";
     private float lightLevel;
 
-    public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
         //If we are on a slab, we go down to match it.
         if (world.isBlockBelowBottomSlab(position)) {
             this.position.y -= 0.5D;

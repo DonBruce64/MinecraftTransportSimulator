@@ -12,6 +12,7 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartEffector;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -38,9 +39,11 @@ public class PartEffector extends APart {
     //Variables used for placers.
     private int placerDelay;
 
-    public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.blocksBroken = data.getInteger("blocksBroken");
+    public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        if (data != null) {
+            this.blocksBroken = data.getInteger("blocksBroken");
+        }
     }
 
     @Override

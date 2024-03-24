@@ -25,7 +25,7 @@ public class ItemPartPropeller extends AItemPart {
 
     @Override
     public PartPropeller createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartPropeller(entity, placingPlayer, packVehicleDef, partData);
+        return new PartPropeller(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override

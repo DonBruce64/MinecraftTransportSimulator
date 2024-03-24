@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -30,18 +31,28 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public boolean isCreative;
     public UUID placingPlayerID;
 
-    public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data); 
-        this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 6);
-        this.paymentItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory2"), 18);
-        world.addEntity(fuelItems);
-        world.addEntity(paymentItems);
-        for (int i = 0; i < fuelItems.getSize(); ++i) {
-            this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
+    public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        if (data != null) {
+            this.fuelItems = new EntityInventoryContainer(world, data.getData("inventory"), 6);
+            this.paymentItems = new EntityInventoryContainer(world, data.getData("inventory2"), 18);
+            world.addEntity(fuelItems);
+            world.addEntity(paymentItems);
+            for (int i = 0; i < fuelItems.getSize(); ++i) {
+                this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
+            }
+            this.fuelPurchased = data.getInteger("fuelPurchased");
+            this.fuelDispensedThisPurchase = data.getDouble("fuelDispensedThisPurchase");
+            this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
+        } else {
+            this.fuelItems = new EntityInventoryContainer(world, null, 6);
+            this.paymentItems = new EntityInventoryContainer(world, null, 18);
+            world.addEntity(fuelItems);
+            world.addEntity(paymentItems);
+            for (int i = 0; i < fuelItems.getSize(); ++i) {
+                this.fuelAmounts.add(0);
+            }
         }
-        this.fuelPurchased = data.getInteger("fuelPurchased");
-        this.fuelDispensedThisPurchase = data.getDouble("fuelDispensedThisPurchase");
-        this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
     }
 
     @Override

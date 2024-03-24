@@ -98,7 +98,8 @@ public class BuilderTileEntity extends TileEntity implements ITickableTileEntity
                         WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                         Point3D position = new Point3D(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
                         ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
-                        setTileEntity(block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT)));
+                        IWrapperNBT data = new WrapperNBT(lastLoadedNBT);
+                        setTileEntity(block.createTileEntity(worldWrapper, position, null, data.getPackItem(), data));
                         tileEntity.world.addEntity(tileEntity);
                         loadedFromSavedNBT = true;
                         lastLoadedNBT = null;

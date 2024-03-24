@@ -27,7 +27,7 @@ public class ItemPartGun extends AItemPart {
 
     @Override
     public PartGun createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartGun(entity, placingPlayer, packVehicleDef, partData);
+        return new PartGun(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class ItemPartGun extends AItemPart {
     @Override
     public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
         super.registerEntities(entityMap);
-        entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlayerGun(world, placingPlayer, data));
+        entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, data) -> new EntityPlayerGun(world, null, data));
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

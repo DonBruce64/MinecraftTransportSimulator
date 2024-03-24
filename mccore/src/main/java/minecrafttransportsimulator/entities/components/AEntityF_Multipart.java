@@ -24,6 +24,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -124,8 +125,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     private EntityPlacedPart placedPart;
     private int placeTimer;
 
-    public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data == null) {
+            //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
+            //the value will be set before any subsequent logic occurs.
+            if (definition.constantValues != null) {
+                variables.putAll(definition.constantValues);
+            }
+        }
+
+        //Init part slots.
+        if (definition.parts != null) {
+            while (partsInSlots.size() < definition.parts.size()) {
+                partsInSlots.add(null);
+            }
+        }
     }
 
     @Override
@@ -543,10 +558,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         //Just don't add default data or our UUID, that needs to be fresh.
         IWrapperItemStack stack = super.getStack();
         IWrapperNBT stackData = save(InterfaceManager.coreInterface.getNewNBTWrapper());
-        stackData.deleteData(UNIQUE_UUID_TAG_NAME);
+        stackData.deleteAllUUIDTags();
+
         IWrapperNBT freshData = InterfaceManager.coreInterface.getNewNBTWrapper();
-        cachedItem.populateDefaultData(freshData);
-        freshData.getAllNames().forEach(name -> stackData.deleteData(name));
+        freshData.setPackItem(definition, subDefinition.subName);
+        freshData.getAllNames().forEach(name -> stackData.deleteEntry(name));
+
         if (!stackData.getAllNames().isEmpty()) {
             stack.setData(stackData);
         }
@@ -689,36 +706,21 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * this multipart exists in the world.  And, if it is a part, it has been added to the multipart it is a part of.
      */
     public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        //Init part lookup list and add parts.
         if (definition.parts != null) {
-            //Need to init slots first, just in case we reference them on sub-part linking logic.
             for (int i = 0; i < definition.parts.size(); ++i) {
-                partsInSlots.add(null);
-            }
-
-            boolean hasNoParts = parts.isEmpty();
-            for (int i = 0; i < definition.parts.size(); ++i) {
-                //Use a try-catch for parts in case they've changed since this entity was last placed.
-                //Don't want crashes due to pack updates.
-                try {
-                    IWrapperNBT partData = data.getData("part_" + i);
-                    if (partData != null) {
-                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                if (data != null) {
+                    //Use a try-catch for parts in case they've changed since this entity was last placed.
+                    //Don't want crashes due to pack updates.
+                    try {
+                        IWrapperNBT partData = data.getData("part_" + i);
+                        if (partData != null) {
+                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                        }
+                    } catch (Exception e) {
+                        InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
-                    e.printStackTrace();
-                }
-
-                //If we haven't spawned defaults, do so now.  We also check if we have no parts, since older version didn't set this boolean.
-                //The only way this will cause issues is if someone removes all parts from a multipart, including defaults, and it loads in.
-                //But nobody is kooky enough to do that, now are they?
-                if (!data.getBoolean("spawnedDefaultParts") && hasNoParts) {
-                    //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
-                    //the value will be set before spawning in any conditional parts.
-                    if (definition.constantValues != null) {
-                        variables.putAll(definition.constantValues);
-                    }
+                } else {
                     //Add default parts.  We need to do this after we actually create this part so its slots are valid.
                     //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                     JSONPartDefinition partDef = definition.parts.get(i);
@@ -753,7 +755,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (partsInSlots.get(slotIndex) == null && (bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, !newPartDef.bypassSlotMinMax))) {
             //Part is not already present, and is valid, add it.
             IWrapperNBT partData = stack.getData();
-            partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
             if (alignTone) {
                 partToAdd.updateTone(false);

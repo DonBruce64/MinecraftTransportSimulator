@@ -14,6 +14,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -60,8 +61,8 @@ public class TileEntitySignalController extends TileEntityDecor {
      **/
     public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<>();
 
-    public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
         initializeController(data);
     }
 
@@ -144,7 +145,7 @@ public class TileEntitySignalController extends TileEntityDecor {
         //Got saved lane info.
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
-                intersectionProperties.put(axis, new IntersectionProperties(data.getDataOrNew(axis.name() + "properties")));
+                intersectionProperties.put(axis, new IntersectionProperties(data.getData(axis.name() + "properties")));
             }
         }
 
@@ -165,9 +166,9 @@ public class TileEntitySignalController extends TileEntityDecor {
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
                 Set<SignalGroup> signalSet = new HashSet<>();
-                signalSet.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
-                signalSet.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
-                signalSet.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
+                signalSet.add(new SignalGroupCenter(axis, data.getData(axis.name() + SignalDirection.CENTER.name())));
+                signalSet.add(new SignalGroupLeft(axis, data.getData(axis.name() + SignalDirection.LEFT.name())));
+                signalSet.add(new SignalGroupRight(axis, data.getData(axis.name() + SignalDirection.RIGHT.name())));
                 signalGroups.put(axis, signalSet);
             }
         }
@@ -236,7 +237,9 @@ public class TileEntitySignalController extends TileEntityDecor {
         data.setBoolean("timedMode", timedMode);
         data.setString("mainDirectionAxis", mainDirectionAxis.name());
 
-        data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
+        if (intersectionCenterPoint != null) {
+            data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
+        }
 
         for (Axis axis : intersectionProperties.keySet()) {
             if (intersectionProperties.containsKey(axis)) {
@@ -270,12 +273,14 @@ public class TileEntitySignalController extends TileEntityDecor {
         public double centerOffset;
 
         public IntersectionProperties(IWrapperNBT data) {
-            this.centerLaneCount = data.getInteger("centerLaneCount");
-            this.leftLaneCount = data.getInteger("leftLaneCount");
-            this.rightLaneCount = data.getInteger("rightLaneCount");
-            this.roadWidth = data.getDouble("roadWidth");
-            this.centerDistance = data.getDouble("centerDistance");
-            this.centerOffset = data.getDouble("centerOffset");
+            if (data != null) {
+                this.centerLaneCount = data.getInteger("centerLaneCount");
+                this.leftLaneCount = data.getInteger("leftLaneCount");
+                this.rightLaneCount = data.getInteger("rightLaneCount");
+                this.roadWidth = data.getDouble("roadWidth");
+                this.centerDistance = data.getDouble("centerDistance");
+                this.centerOffset = data.getDouble("centerOffset");
+            }
         }
 
         public IWrapperNBT getData() {
@@ -313,17 +318,21 @@ public class TileEntitySignalController extends TileEntityDecor {
             this.isMainSignal = axis.equals(mainDirectionAxis) || axis.equals(mainDirectionAxis.getOpposite());
 
             //Get saved light status.
-            String currentLightName = data.getString("currentLight");
-            if (!currentLightName.isEmpty()) {
-                currentLight = LightType.valueOf(currentLightName);
+            if (data != null) {
+                String currentLightName = data.getString("currentLight");
+                if (!currentLightName.isEmpty()) {
+                    currentLight = LightType.valueOf(currentLightName);
+                } else {
+                    currentLight = getRedLight();
+                }
+                String requestedLightName = data.getString("requestedLight");
+                if (!requestedLightName.isEmpty()) {
+                    requestedLight = LightType.valueOf(requestedLightName);
+                }
+                currentCooldown = data.getInteger("currentCooldown");
             } else {
                 currentLight = getRedLight();
             }
-            String requestedLightName = data.getString("requestedLight");
-            if (!requestedLightName.isEmpty()) {
-                requestedLight = LightType.valueOf(requestedLightName);
-            }
-            currentCooldown = data.getInteger("currentCooldown");
 
             //Create hitbox bounds.
             IntersectionProperties properties = intersectionProperties.get(axis);

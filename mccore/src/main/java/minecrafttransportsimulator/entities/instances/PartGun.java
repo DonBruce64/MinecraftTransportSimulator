@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -126,8 +127,8 @@ public class PartGun extends APart {
     private static final int RAYTRACE_DISTANCE = 750;
     private static final double DEFAULT_CONE_ANGLE = 2.0;
 
-    public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
+    public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
 
         //Set min/max yaw/pitch angles based on our definition and the entity definition.
         //If the entity definition min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
@@ -188,36 +189,42 @@ public class PartGun extends APart {
         this.resetPosition = definition.gun.resetPosition || placementDefinition.resetPosition;
 
         //Load saved data.
-        this.state = GunState.values()[data.getInteger("state")];
-        this.bulletsFired = data.getInteger("bulletsFired");
-        this.bulletsLeft = data.getInteger("bulletsLeft");
-        this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-        this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
-        this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
-        String loadedBulletPack = data.getString("loadedBulletPack");
-        if (!loadedBulletPack.isEmpty()) {
-            String loadedBulletName = data.getString("loadedBulletName");
-            this.loadedBullet = PackParser.getItem(loadedBulletPack, loadedBulletName);
-            this.lastLoadedBullet = loadedBullet;
-        }
-        String reloadingBulletPack = data.getString("reloadingBulletPack");
-        if (!reloadingBulletPack.isEmpty()) {
-            String reloadingBulletName = data.getString("reloadingBulletName");
-            this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
-            reloadTimeRemaining = definition.gun.reloadTime;
-        }
-        if (data.getBoolean("savedSeed")) {
-            long randomSeed = (((long) data.getInteger("randomSeedPart1")) << 32) | (data.getInteger("randomSeedPart2") & 0xffffffffL);
-            randomGenerator = new Random(randomSeed);
+        if (data != null) {
+            this.state = GunState.values()[data.getInteger("state")];
+            this.bulletsFired = data.getInteger("bulletsFired");
+            this.bulletsLeft = data.getInteger("bulletsLeft");
+            this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
+            this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
+            String loadedBulletPack = data.getString("loadedBulletPack");
+            if (!loadedBulletPack.isEmpty()) {
+                String loadedBulletName = data.getString("loadedBulletName");
+                this.loadedBullet = PackParser.getItem(loadedBulletPack, loadedBulletName);
+                this.lastLoadedBullet = loadedBullet;
+            }
+            //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
+            //This prevents pack changes from locking guns.
+            if (loadedBullet == null) {
+                bulletsLeft = 0;
+            }
+
+            String reloadingBulletPack = data.getString("reloadingBulletPack");
+            if (!reloadingBulletPack.isEmpty()) {
+                String reloadingBulletName = data.getString("reloadingBulletName");
+                this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
+                reloadTimeRemaining = definition.gun.reloadTime;
+            }
+            if (data.getBoolean("savedSeed")) {
+                long randomSeed = (((long) data.getInteger("randomSeedPart1")) << 32) | (data.getInteger("randomSeedPart2") & 0xffffffffL);
+                randomGenerator = new Random(randomSeed);
+            } else {
+                randomGenerator = new Random();
+            }
         } else {
+            this.state = GunState.INACTIVE;
+            this.internalOrientation = new RotationMatrix();
             randomGenerator = new Random();
         }
-
-        //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
-        //This prevents pack changes from locking guns.
-        if (loadedBullet == null) {
-            bulletsLeft = 0;
-        }
+        this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
     }
 
     @Override

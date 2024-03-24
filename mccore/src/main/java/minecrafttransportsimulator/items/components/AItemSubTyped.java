@@ -30,10 +30,4 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
             Collections.addAll(tooltipLines, text.split("\n"));
         }
     }
-
-    @Override
-    public void populateDefaultData(IWrapperNBT data) {
-        super.populateDefaultData(data);
-        data.setString("subName", subDefinition.subName);
-    }
 }

@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -118,15 +119,20 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
 
-    public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
         this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
-        this.locked = data.getBoolean("locked");
-        this.totalPathDelta = data.getDouble("totalPathDelta");
-        this.prevTotalPathDelta = totalPathDelta;
-        this.serverDeltaM = data.getPoint3d("serverDeltaM");
-        this.serverDeltaR = data.getPoint3d("serverDeltaR");
-        this.serverDeltaP = data.getDouble("serverDeltaP");
+        if (data != null) {
+            this.locked = data.getBoolean("locked");
+            this.totalPathDelta = data.getDouble("totalPathDelta");
+            this.prevTotalPathDelta = totalPathDelta;
+            this.serverDeltaM = data.getPoint3d("serverDeltaM");
+            this.serverDeltaR = data.getPoint3d("serverDeltaR");
+            this.serverDeltaP = data.getDouble("serverDeltaP");
+        } else {
+            this.serverDeltaM = new Point3D();
+            this.serverDeltaR = new Point3D();
+        }
         this.clientDeltaM = serverDeltaM.copy();
         this.clientDeltaR = serverDeltaR.copy();
         this.clientDeltaP = serverDeltaP;

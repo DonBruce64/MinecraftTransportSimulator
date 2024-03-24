@@ -51,7 +51,7 @@ public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntity
     protected boolean handle(AWrapperWorld world, TileEntityPole pole, IWrapperPlayer player) {
         if (data != null) {
             //Player clicked with a component.  Add it.
-            pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data));
+            pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data.getPackItem(), data));
         } else {
             pole.changeComponent(axis, null);
         }

@@ -9,7 +9,6 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -210,12 +209,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public WrapperNBT getData(String name) {
-        return tag.contains(name) ? new WrapperNBT(tag.getCompound(name)) : null;
-    }
-
-    @Override
-    public IWrapperNBT getDataOrNew(String name) {
-        return tag.contains(name) ? new WrapperNBT(tag.getCompound(name)) : InterfaceManager.coreInterface.getNewNBTWrapper();
+        return tag.contains(name, 10) ? new WrapperNBT(tag.getCompound(name)) : null;
     }
 
     @Override
@@ -224,12 +218,12 @@ class WrapperNBT implements IWrapperNBT {
     }
 
     @Override
-    public boolean hasData(String name) {
+    public boolean hasKey(String name) {
         return tag.contains(name);
     }
 
     @Override
-    public void deleteData(String name) {
+    public void deleteEntry(String name) {
         tag.remove(name);
     }
 

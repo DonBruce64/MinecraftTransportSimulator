@@ -97,18 +97,29 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      **/
     public AEntityB_Existing(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, data);
-        this.position = data.getPoint3d("position");
-        this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+        if (data != null) {
+            this.position = data.getPoint3d("position");
+            this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+            this.motion = data.getPoint3d("motion");
+            this.zoomLevel = data.getInteger("zoomLevel");
+            this.cameraIndex = data.getInteger("cameraIndex");
+        } else {
+            this.position = new Point3D();
+            this.orientation = new RotationMatrix();
+            this.motion = new Point3D();
+        }
+
         this.prevPosition = position.copy();
         this.prevOrientation = new RotationMatrix().set(orientation);
-        this.motion = data.getPoint3d("motion");
         this.prevMotion = motion.copy();
-        this.zoomLevel = data.getInteger("zoomLevel");
-        this.cameraIndex = data.getInteger("cameraIndex");
-
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
+
         if (hasRadio()) {
-            this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
+            if (data != null) {
+                this.radio = new EntityRadio(this, data.getData("radio"));
+            } else {
+                this.radio = new EntityRadio(this, null);
+            }
             world.addEntity(radio);
         } else {
             this.radio = null;

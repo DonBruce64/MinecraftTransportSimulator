@@ -30,7 +30,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     private boolean needToFindGround = true;
 
     public EntityPlacedPart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+        super(world, placingPlayer, null, data);
     }
 
     @Override

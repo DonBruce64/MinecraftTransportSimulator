@@ -57,7 +57,7 @@ import minecrafttransportsimulator.systems.LanguageSystem;
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     //Static variables based on core definition.
     public BezierCurve dynamicCurve;
-    public final List<RoadLane> lanes;
+    public final List<RoadLane> lanes = new ArrayList<>();
 
     //Dynamic variables based on states.
     private boolean isActive;
@@ -68,43 +68,50 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     public final List<Point3D> collisionBlockOffsets;
     public final List<Point3D> collidingBlockOffsets;
 
-    public TileEntityRoad(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntityRoad(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemRoadComponent item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
 
         //Set the bounding box.
         this.boundingBox.heightRadius = definition.road.collisionHeight / 16D / 2D;
         this.boundingBox.globalCenter.y += boundingBox.heightRadius;
 
-        //Get the active state.
-        this.isActive = data.getBoolean("isActive");
-
-        //Load components back in.  Our core component will always be our definition.
-        for (RoadComponent componentType : RoadComponent.values()) {
-            String packID = data.getString("packID" + componentType.name());
-            if (!packID.isEmpty()) {
-                String systemName = data.getString("systemName" + componentType.name());
-                ItemRoadComponent newComponent = PackParser.getItem(packID, systemName);
-                components.put(componentType, newComponent);
-            }
-        }
+        //Set core road component.
         components.put(definition.road.type, (ItemRoadComponent) getStack().getItem());
 
-        //Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
-        this.lanes = new ArrayList<>();
-        Point3D startingOffset = data.getPoint3d("startingOffset");
-        Point3D endingOffset = data.getPoint3d("endingOffset");
-        if (!endingOffset.isZero()) {
-            this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, new RotationMatrix().setToAngles(data.getPoint3d("startingAngles")), new RotationMatrix().setToAngles(data.getPoint3d("endingAngles")));
+        //Load from data.
+        if (data != null) {
+            //Get the active state.
+            this.isActive = data.getBoolean("isActive");
+
+            //Load components back in.  Our core component will always be our definition.
+            for (RoadComponent componentType : RoadComponent.values()) {
+                String packID = data.getString("packID" + componentType.name());
+                if (!packID.isEmpty()) {
+                    String systemName = data.getString("systemName" + componentType.name());
+                    ItemRoadComponent newComponent = PackParser.getItem(packID, systemName);
+                    components.put(componentType, newComponent);
+                }
+            }
+
+            //Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
+            Point3D startingOffset = data.getPoint3d("startingOffset");
+            Point3D endingOffset = data.getPoint3d("endingOffset");
+            if (!endingOffset.isZero()) {
+                this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, new RotationMatrix().setToAngles(data.getPoint3d("startingAngles")), new RotationMatrix().setToAngles(data.getPoint3d("endingAngles")));
+            }
+
+            //If we have points for collision due to use creating collision blocks, load them now.
+            this.collisionBlockOffsets = data.getPoint3dsCompact("collisionBlockOffsets");
+            this.collidingBlockOffsets = data.getPoint3dsCompact("collidingBlockOffsets");
+        } else {
+            this.collisionBlockOffsets = new ArrayList<>();
+            this.collidingBlockOffsets = new ArrayList<>();
         }
 
         //Don't generate lanes for inactive roads.
         if (isActive()) {
             generateLanes(data);
         }
-
-        //If we have points for collision due to use creating collision blocks, load them now.
-        this.collisionBlockOffsets = data.getPoint3dsCompact("collisionBlockOffsets");
-        this.collidingBlockOffsets = data.getPoint3dsCompact("collidingBlockOffsets");
     }
 
     @Override

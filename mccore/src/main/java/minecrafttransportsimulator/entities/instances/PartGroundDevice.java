@@ -62,9 +62,9 @@ public class PartGroundDevice extends APart {
     private final Point3D prevLocalOffset;
     public PartGroundDeviceFake fakePart;
 
-    public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.isFlat = data.getBoolean(FLAT_VARIABLE);
+    public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        this.isFlat = data != null && data.getBoolean(FLAT_VARIABLE);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
@@ -92,9 +92,7 @@ public class PartGroundDevice extends APart {
             //Need to swap placement for fake part so it uses the offset.
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
-            IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            ((ItemPartGroundDevice) cachedItem).populateDefaultData(fakeData);
-            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
+            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
             entityOn.addPart(fakePart, false);
         }
     }

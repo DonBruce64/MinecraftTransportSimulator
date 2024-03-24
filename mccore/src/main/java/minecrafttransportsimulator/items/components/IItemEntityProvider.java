@@ -5,7 +5,6 @@ import java.util.Map;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**
  * Interface for items that create entities when used.
@@ -22,6 +21,6 @@ public interface IItemEntityProvider {
     void registerEntities(Map<String, IItemEntityFactory> entityMap);
 
     public static interface IItemEntityFactory {
-        AEntityB_Existing createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data);
+        AEntityB_Existing restoreEntityFromData(AWrapperWorld world, IWrapperNBT data);
     }
 }

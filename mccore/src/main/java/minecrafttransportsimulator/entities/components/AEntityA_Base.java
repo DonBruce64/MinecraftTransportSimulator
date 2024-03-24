@@ -15,7 +15,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
  * Note that all entities of this type never "load" saved data.  Rather, they are created from it.
  * This means that there is no method call to load properties from data. Instead, data required
  * for loading will be passed-in to the constructor.  This data should be used to create the entity
- * in its loaded state.  For saving, which can happen multiple times in the entity's lifetime,
+ * in its loaded state.  If, however, the entity is brand new and hasn't been saved, this parameter
+ * will be null, so keep this in mind.  For saving, which can happen multiple times in the entity's lifetime,
  * {@link #save(IWrapperNBT)} is called.  All data required in the constructor should be saved there.
  *
  * @author don_bruce
@@ -34,11 +35,6 @@ public abstract class AEntityA_Base {
      **/
     public boolean isValid = true;
     /**
-     * Returns true if this entity was newly created and not loaded from saved data.  More formally, it checks if the {@link #uniqueUUID} was not stored in the data, or if the data was null.
-     * In this case, we know that the data was not valid for the entity and thus the entity has to have been created without data.
-     **/
-    public final boolean newlyCreated;
-    /**
      * Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of update cycles.
      **/
     public long ticksExisted;
@@ -47,17 +43,8 @@ public abstract class AEntityA_Base {
 
     public AEntityA_Base(AWrapperWorld world, IWrapperNBT data) {
         this.world = world;
-        this.newlyCreated = data == null || data.getUUID(UNIQUE_UUID_TAG_NAME) == null;
-
-        //Get the map of entities we belong to.
-        if (shouldSync() && !newlyCreated) {
-            //Check to make sure we aren't a duplicate.
-            UUID savedUUID = data.getUUID(UNIQUE_UUID_TAG_NAME);
-            if (!world.isClient() && world.getEntity(savedUUID) != null) {
-                this.uniqueUUID = UUID.randomUUID();
-            } else {
-                this.uniqueUUID = savedUUID;
-            }
+        if (shouldSync() && data != null && data.hasKey(UNIQUE_UUID_TAG_NAME)) {
+            this.uniqueUUID = data.getUUID(UNIQUE_UUID_TAG_NAME);
         } else {
             this.uniqueUUID = UUID.randomUUID();
         }

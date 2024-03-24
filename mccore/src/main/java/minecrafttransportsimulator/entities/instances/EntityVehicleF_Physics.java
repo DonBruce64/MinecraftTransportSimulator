@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -155,9 +156,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
     private final Point3D rotorRotation = new Point3D();//degrees
 
-    public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+    public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data != null) {
+            this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+        }
     }
 
     @Override

@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
@@ -39,28 +40,30 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
     public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
-    public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        //Load towing data.
-        IWrapperNBT towData = data.getData("towedByConnection");
-        if (towData != null) {
-            this.savedTowedByConnection = new TowingConnection(towData);
-        }
-
-        int towingConnectionCount = data.getInteger("towingConnectionCount");
-        for (int i = 0; i < towingConnectionCount; ++i) {
-            towData = data.getData("towingConnection" + i);
+    public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data != null) {
+            //Load towing data.
+            IWrapperNBT towData = data.getData("towedByConnection");
             if (towData != null) {
-                this.savedTowingConnections.add(new TowingConnection(towData));
+                this.savedTowedByConnection = new TowingConnection(towData);
             }
-        }
 
-        //Load disabled connections.
-        towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
-        for (int i = 0; i < towingConnectionCount; ++i) {
-            towData = data.getData("disconnectedTowingConnection" + i);
-            if (towData != null) {
-                this.savedDisconnectedTowingConnections.add(new TowingConnection(towData));
+            int towingConnectionCount = data.getInteger("towingConnectionCount");
+            for (int i = 0; i < towingConnectionCount; ++i) {
+                towData = data.getData("towingConnection" + i);
+                if (towData != null) {
+                    this.savedTowingConnections.add(new TowingConnection(towData));
+                }
+            }
+
+            //Load disabled connections.
+            towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
+            for (int i = 0; i < towingConnectionCount; ++i) {
+                towData = data.getData("disconnectedTowingConnection" + i);
+                if (towData != null) {
+                    this.savedDisconnectedTowingConnections.add(new TowingConnection(towData));
+                }
             }
         }
     }

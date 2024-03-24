@@ -98,7 +98,7 @@ public interface IWrapperItemStack {
 
     /**
      * Returns the data from the stack.
-     * If there is no data, then a new NBT tag is returned.
+     * If there is no data, then null is returned.
      * If the data is modified, {@link #setData(AIWrapperNBT)} should
      * be called as new NBT tags generated from this method aren't linked
      * to the stack by default.  It also ensures proper states when

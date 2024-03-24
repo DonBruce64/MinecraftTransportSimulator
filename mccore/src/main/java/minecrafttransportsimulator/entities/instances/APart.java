@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -91,8 +92,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private AnimationSwitchbox internalMovementSwitchbox;
     private static boolean checkingLinkedParts;
 
-    public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn.world, placingPlayer, data);
+    public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
+        super(entityOn.world, placingPlayer, item, data);
         this.localOffset = placementDefinition.pos.copy();
         this.localOrientation = new RotationMatrix();
         this.zeroReferenceOrientation = new RotationMatrix();

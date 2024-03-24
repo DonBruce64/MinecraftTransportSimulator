@@ -8,7 +8,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipe;
@@ -139,7 +138,7 @@ public class WrapperItemStack implements IWrapperItemStack {
 
     @Override
     public IWrapperNBT getData() {
-        return stack.hasTag() ? new WrapperNBT(stack.getTag().copy()) : InterfaceManager.coreInterface.getNewNBTWrapper();
+        return stack.hasTag() ? new WrapperNBT(stack.getTag().copy()) : null;
     }
 
     @Override

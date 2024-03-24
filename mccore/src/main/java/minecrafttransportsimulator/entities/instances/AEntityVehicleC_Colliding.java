@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -39,8 +40,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
      */
     public final double speedFactor;
 
-    public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
         this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value) * ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
         double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
         scale.set(vehicleScale, vehicleScale, vehicleScale);

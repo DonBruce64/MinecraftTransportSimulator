@@ -30,7 +30,7 @@ public class ItemPartGroundDevice extends AItemPart {
 
     @Override
     public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData);
+        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override
@@ -57,13 +57,13 @@ public class ItemPartGroundDevice extends AItemPart {
     }
 
     public boolean needsRepair(IWrapperNBT data) {
-        return super.needsRepair(data) || data.getBoolean(PartGroundDevice.FLAT_VARIABLE);
+        return super.needsRepair(data) || (data != null && data.getBoolean(PartGroundDevice.FLAT_VARIABLE));
     }
 
     @Override
     public void repair(IWrapperNBT data) {
         super.repair(data);
-        data.deleteData(PartGroundDevice.FLAT_VARIABLE);
+        data.deleteEntry(PartGroundDevice.FLAT_VARIABLE);
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

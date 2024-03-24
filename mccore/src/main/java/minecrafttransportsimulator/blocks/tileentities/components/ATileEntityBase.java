@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -26,8 +27,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     private float lastLightLevel;
     private final Point3D blockPosition;
 
-    public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
         //Offset the position of this tile to be centered in the blocks 0->1 space.
         //This allows for better rotation code and simpler models.
         //We need to save the actual position though so we don't constantly offset.

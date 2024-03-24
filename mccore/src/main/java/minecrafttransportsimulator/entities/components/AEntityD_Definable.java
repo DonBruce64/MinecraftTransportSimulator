@@ -155,28 +155,36 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Constructor for synced entities
      **/
-    public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+    public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, data);
-        String subName = data.getString("subName");
-        AItemSubTyped<JSONDefinition> item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), subName);
-        this.definition = item != null ? item.definition : generateDefaultDefinition();
-        updateSubDefinition(subName);
+        if (item != null) {
+            this.definition = item.definition;
+            updateSubDefinition(item.subDefinition.subName);
+        } else {
+            this.definition = generateDefaultDefinition();
+            updateSubDefinition("");
+        }
 
-        //Load text.
-        if (definition.rendering != null && definition.rendering.textObjects != null) {
-            for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
-                JSONText textDef = definition.rendering.textObjects.get(i);
-                text.put(textDef, data.hasData("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
+        //Load data, or use defaults.
+        if (data != null) {
+            //Load text.
+            if (definition.rendering != null && definition.rendering.textObjects != null) {
+                for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
+                    JSONText textDef = definition.rendering.textObjects.get(i);
+                    text.put(textDef, data.hasKey("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
+                }
             }
-        }
 
-        //Load variables.
-        for (String variableName : data.getStrings("variables")) {
-            variables.put(variableName, data.getDouble(variableName));
-        }
-        if (newlyCreated && definition.initialVariables != null) {
-            for (String variable : definition.initialVariables) {
-                variables.put(variable, 1D);
+            //Load variables.
+            for (String variableName : data.getStrings("variables")) {
+                variables.put(variableName, data.getDouble(variableName));
+            }
+        } else {
+            //Only set initial variables on initial placement.
+            if (definition.initialVariables != null) {
+                for (String variable : definition.initialVariables) {
+                    variables.put(variable, 1D);
+                }
             }
         }
     }
@@ -184,10 +192,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Constructor for un-synced entities.  Allows for specification of position/motion/angles.
      **/
-    public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem) {
+    public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> item) {
         super(world, position, motion, angles);
-        this.definition = creatingItem.definition;
-        updateSubDefinition(creatingItem.subDefinition.subName);
+        this.definition = item.definition;
+        updateSubDefinition(item.subDefinition.subName);
     }
 
     @Override
@@ -1235,9 +1243,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setString("packID", definition.packID);
-        data.setString("systemName", definition.systemName);
-        data.setString("subName", subDefinition.subName);
+        data.setPackItem(definition, subDefinition.subName);
         if (!text.isEmpty()) {
             int lineNumber = 0;
             for (String textLine : text.values()) {

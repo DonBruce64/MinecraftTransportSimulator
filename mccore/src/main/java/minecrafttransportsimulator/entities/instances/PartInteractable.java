@@ -6,6 +6,7 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -29,28 +30,44 @@ public final class PartInteractable extends APart {
     public EntityVehicleF_Physics linkedVehicle;
     public Set<IWrapperPlayer> playersInteracting = new HashSet<>();
 
-    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        if (definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
-            this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
-            this.inventory = furnace;
-            world.addEntity(furnace);
-        } else {
-            this.furnace = null;
-            if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
-                this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
+    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        switch (definition.interactable.interactionType) {
+            case FURNACE: {
+                this.furnace = new EntityFurnace(world, data != null ? data.getData("furnace") : null, definition.interactable);
+                this.inventory = furnace;
+                this.tank = null;
+                world.addEntity(furnace);
+                break;
+            }
+            case CRATE: {
+                this.furnace = null;
+                this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
+                this.tank = null;
                 world.addEntity(inventory);
-            } else {
+                break;
+            }
+            case BARREL: {
+                this.furnace = null;
                 this.inventory = null;
+                this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, (int) (definition.interactable.inventoryUnits * 10000));
+                world.addEntity(tank);
+                break;
+            }
+            case JERRYCAN: {
+                if (data != null) {
+                    this.jerrycanFluid = data.getString("jerrycanFluid");
+                } else {
+                    this.jerrycanFluid = "";
+                }
+                //No break statement here, fall-down to default to null things.
+            }
+            default: {
+                this.furnace = null;
+                this.inventory = null;
+                this.tank = null;
             }
         }
-        if (definition.interactable.interactionType.equals(InteractableComponentType.BARREL)) {
-            this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), (int) (definition.interactable.inventoryUnits * 10000));
-            world.addEntity(tank);
-        } else {
-            this.tank = null;
-        }
-        this.jerrycanFluid = data.getString("jerrycanFluid");
     }
 
     @Override

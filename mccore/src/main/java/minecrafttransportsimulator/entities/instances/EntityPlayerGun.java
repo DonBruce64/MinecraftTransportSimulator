@@ -44,14 +44,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     public PartGun activeGun;
 
     public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        //Get the player spawning us.
-        if (placingPlayer != null) {
-            //Newly-spawned entity.
-            this.player = placingPlayer;
-            position.set(player.getPosition());
-            prevPosition.set(position);
-        } else {
+        super(world, placingPlayer, null, data);
+        if (data != null) {
             //Saved entity.  Either on the server or client.
             //Get player via saved NBT.  If the player isn't found, we're not valid.
             UUID playerUUID = data.getUUID("playerUUID");
@@ -68,6 +62,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 this.player = null;
                 return;
             }
+        } else {
+            //Newly-spawned entity.
+            this.player = placingPlayer;
+            position.set(player.getPosition());
+            prevPosition.set(position);
         }
 
         //Don't load duplicates.  However, do ensure if we replace a gun we remove it.

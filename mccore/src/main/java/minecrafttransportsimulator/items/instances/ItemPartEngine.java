@@ -28,7 +28,7 @@ public class ItemPartEngine extends AItemPart {
 
     @Override
     public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartEngine(entity, placingPlayer, packVehicleDef, partData);
+        return new PartEngine(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class ItemPartEngine extends AItemPart {
     }
 
     public boolean needsRepair(IWrapperNBT data) {
-        return super.needsRepair(data) || data.getDouble(PartEngine.HOURS_VARIABLE) > 0;
+        return super.needsRepair(data) || (data != null && data.getDouble(PartEngine.HOURS_VARIABLE) > 0);
     }
 
     @Override

@@ -18,7 +18,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.packloading.PackParser;
 
 public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implements IItemBlock {
 
@@ -54,17 +53,16 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
          * Helper method to create a component for the passed-in pole.  Does not add the component
          * to the pole, only creates it.
          */
-        public static ATileEntityPole_Component createComponent(TileEntityPole pole, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data) {
-            ItemPoleComponent item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
+        public static ATileEntityPole_Component createComponent(TileEntityPole pole, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
             switch (item.definition.pole.type) {
                 case CORE:
-                    return new TileEntityPole_Core(pole, placingPlayer, axis, data);
+                    return new TileEntityPole_Core(pole, placingPlayer, axis, item, data);
                 case TRAFFIC_SIGNAL:
-                    return new TileEntityPole_TrafficSignal(pole, placingPlayer, axis, data);
+                    return new TileEntityPole_TrafficSignal(pole, placingPlayer, axis, item, data);
                 case STREET_LIGHT:
-                    return new TileEntityPole_StreetLight(pole, placingPlayer, axis, data);
+                    return new TileEntityPole_StreetLight(pole, placingPlayer, axis, item, data);
                 case SIGN:
-                    return new TileEntityPole_Sign(pole, placingPlayer, axis, data);
+                    return new TileEntityPole_Sign(pole, placingPlayer, axis, item, data);
             }
             //We'll never get here.
             return null;

@@ -28,7 +28,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -683,7 +683,6 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONMultiModelProvider> boolean setBlock(ABlockBase block, Point3D position, IWrapperPlayer playerWrapper, Axis axis) {
         if (!world.isClientSide) {
             BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
@@ -705,10 +704,10 @@ public class WrapperWorld extends AWrapperWorld {
                         if (block instanceof ABlockBaseTileEntity) {
                             BuilderTileEntity builderTile = (BuilderTileEntity) world.getBlockEntity(pos);
                             IWrapperNBT data = stack.getData();
-                            if (item instanceof AItemPack) {
-                                ((AItemPack<JSONDefinition>) item).populateDefaultData(data);
+                            if (data != null) {
+                                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
                             }
-                            builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data));
+                            builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, (AItemSubTyped<?>) item, data));
                             addEntity(builderTile.tileEntity);
                         }
                         //Shrink stack as we placed this block.
@@ -1031,13 +1030,11 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                         if (++totalTicksWaited == 60) {
                             IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(mcPlayer);
-                            IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
 
                             //Spawn gun.
                             if (gunBuilder == null) {
-                                EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
+                                EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, null);
                                 playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
-                                entity.addPartsPostAddition(playerWrapper, newData);
                             }
 
                             //Spawn follower.

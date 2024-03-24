@@ -13,6 +13,7 @@ import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -43,9 +44,11 @@ public final class PartSeat extends APart {
     public int gunIndex;
     public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
 
-    public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
+    public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartSeat item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        if (data != null) {
+            this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
+        }
     }
 
     @Override

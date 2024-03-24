@@ -17,6 +17,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -158,21 +159,34 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     protected int lastSnapConnectionTried = 0;
     protected boolean bypassConnectionPacket;
 
-    public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
         
         //Parse variables out now to prevent variables from activating that use them.
         damageAmount = getVariable(DAMAGE_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
-        //Load instruments.  If we are new, create the default ones.
+        //Load instruments, or create the default ones.
         if (definition.instruments != null) {
             //Need to init lists.
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 instruments.add(null);
                 instrumentRenderables.add(null);
             }
-            if (newlyCreated) {
+
+            if (data != null) {
+                for (int i = 0; i < definition.instruments.size(); ++i) {
+                    String instrumentPackID = data.getString("instrument" + i + "_packID");
+                    String instrumentSystemName = data.getString("instrument" + i + "_systemName");
+                    if (!instrumentPackID.isEmpty()) {
+                        ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
+                        //Check to prevent loading of faulty instruments due to updates.
+                        if (instrument != null) {
+                            addInstrument(instrument, i);
+                        }
+                    }
+                }
+            } else {
                 for (JSONInstrumentDefinition packInstrument : definition.instruments) {
                     if (packInstrument.defaultInstrument != null) {
                         try {
@@ -188,18 +202,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                             }
                         } catch (IndexOutOfBoundsException e) {
                             placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\""));
-                        }
-                    }
-                }
-            } else {
-                for (int i = 0; i < definition.instruments.size(); ++i) {
-                    String instrumentPackID = data.getString("instrument" + i + "_packID");
-                    String instrumentSystemName = data.getString("instrument" + i + "_systemName");
-                    if (!instrumentPackID.isEmpty()) {
-                        ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
-                        //Check to prevent loading of faulty instruments due to updates.
-                        if (instrument != null) {
-                            addInstrument(instrument, i);
                         }
                     }
                 }

@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -49,9 +50,9 @@ public class PartPropeller extends APart {
 
     public static final int MIN_DYNAMIC_PITCH = 45;
 
-    public PartPropeller(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.currentPitch = definition.propeller.pitch;
+    public PartPropeller(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartPropeller item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        this.currentPitch = data != null ? data.getInteger("currentPitch") : definition.propeller.pitch;
 
         //Rotors need different collision box bounds as they are pointed upwards.
         double propellerRadius = definition.propeller.diameter * 0.0254D / 2D;
@@ -252,5 +253,12 @@ public class PartPropeller extends APart {
             torque.add(localOffset.crossProduct(propellerForce));
         }
         return propellerForceValue;
+    }
+
+    @Override
+    public IWrapperNBT save(IWrapperNBT data) {
+        super.save(data);
+        data.setInteger("currentPitch", currentPitch);
+        return data;
     }
 }
