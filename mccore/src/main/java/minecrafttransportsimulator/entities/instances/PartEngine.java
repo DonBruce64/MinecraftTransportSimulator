@@ -283,7 +283,7 @@ public class PartEngine extends APart {
 
             //Add cooling for ambient temp.
             ambientTemp = (25 * world.getTemperature(position) + 5) * ConfigSystem.settings.general.engineBiomeTempFactor.value;
-            coolingFactor = (0.001 + vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+            coolingFactor = 0.001 * currentCoolingCoefficient - (currentSuperchargerEfficiency / 1000F) * (rpm / 2000F) + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
             temp -= (temp - ambientTemp) * coolingFactor;
 
             //Check to see if electric or hand starter can keep running.
@@ -451,7 +451,7 @@ public class PartEngine extends APart {
                         }
 
                         //Add temp based on engine speed.
-                        temp += Math.max(0, (7 * (1 + 10 * currentSuperchargerEfficiency) * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
+                        temp += Math.max(0, (7 * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
 
                         //Adjust oil pressure based on RPM and leak status.
                         pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (pressure / LOW_OIL_PRESSURE));
