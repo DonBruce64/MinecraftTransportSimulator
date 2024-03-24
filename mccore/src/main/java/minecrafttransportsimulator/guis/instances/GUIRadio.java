@@ -167,7 +167,7 @@ public class GUIRadio extends AGUIBase {
         }
 
         //Station display box.
-        addComponent(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, 45, radio.displayText, ColorRGB.WHITE, 150));
+        addComponent(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 95, 220, 55, radio.displayText, ColorRGB.WHITE, 150));
 
         //Add equalizer screen buttons.
         addComponent(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, 20, "BACK") {

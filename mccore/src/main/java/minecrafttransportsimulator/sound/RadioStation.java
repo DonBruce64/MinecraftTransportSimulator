@@ -37,11 +37,13 @@ public class RadioStation {
     //Runtime variables.
     //Due to how the mp3 parser works, we can only have one equalizer per station.
     public String displayText = "";
+    public String infoText = "";
     public final Equalizer equalizer;
     private final List<Integer> activeBuffers = new ArrayList<>();
     private volatile LinkingThread linkingThread;
     private volatile DecoderThread decoderThread;
     private volatile IStreamDecoder decoder;
+    private volatile int faultedDecodes;
 
     public RadioStation(int index, boolean randomOrder) {
         this.source = RadioSources.LOCAL;
@@ -120,7 +122,12 @@ public class RadioStation {
         if (!playingRadios.isEmpty() || !queuedRadios.isEmpty()) {
             if (linkingThread == null && decoderThread == null && decoder == null) {
                 //Need to start trying to do playback since we don't have any threads.
-                startPlayback();
+                if (faultedDecodes < 5) {
+                    startPlayback();
+                } else {
+                    //Clear out radios since we can't get this station.
+
+                }
             } else if (decoderThread == null && decoder != null) {
                 //Have an active and ready decoder, start decoding.
                 int freeBufferIndex = 0;
@@ -277,7 +284,7 @@ public class RadioStation {
 
                     //Verify stream is actually an HTTP stream.
                     connection.connect();
-                    station.displayText = "QUERYING - TRY #" + tryCount;
+                    station.displayText = "CONNECTING - TRY #" + tryCount;
                     String contentType = connection.getContentType();
                     if (contentType == null) {
                         errorString = "ERROR: No content-type header found.  Contact the mod author for more information.";
@@ -307,10 +314,10 @@ public class RadioStation {
                         }
 
                         //Parse out information from header.
-                        station.displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
-                        station.displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
-                        station.displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
-                        station.displayText += "\nBuffers:";
+                        station.infoText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
+                        station.infoText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
+                        station.infoText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
+                        station.infoText += "\nBuffers:";
 
                         //Create a thread to start up the sound once the parsing is done.
                         //This keeps us from blocking the main thread.
@@ -360,30 +367,39 @@ public class RadioStation {
         @Override
         public void run() {
             //Act based on our stream type.
-            try {
-                if (contentConnection != null) {
-                    switch (contentType) {
-                        case ("audio/mpeg"):
-                            station.decoder = new MP3Decoder(contentConnection.getInputStream(), station.equalizer);
-                            break;
-                        case ("application/ogg"):
-                            station.decoder = new OGGDecoder(contentConnection.getInputStream());
-                            break;
+            int tryCount = 0;
+            do {
+                try {
+                    station.displayText = "BUFFERING - TRY #" + tryCount;
+                    if (contentConnection != null) {
+                        switch (contentType) {
+                            case ("audio/mpeg"):
+                                station.decoder = new MP3Decoder(contentConnection.getInputStream(), station.equalizer);
+                                break;
+                            case ("application/ogg"):
+                                station.decoder = new OGGDecoder(contentConnection.getInputStream());
+                                break;
+                        }
+                    } else {
+                        station.decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
                     }
-                } else {
-                    station.decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
+                    //Prime the buffers before setting the thread to null.
+                    //This prevents the buffers from running out from starting too quickly.
+                    //Because this is in a thread, it also saves on processing power.
+                    for (byte i = 0; i < 5; ++i) {
+                        station.generateBufferIndex();
+                    }
+                    //Done starting decoding, note ourselves as dead and update text.
+                    station.decoderThread = null;
+                    station.displayText = station.infoText;
+                    return;
+                } catch (Exception e) {
+                    //e.printStackTrace();
                 }
-                //Prime the buffers before setting the thread to null.
-                //This prevents the buffers from running out from starting too quickly.
-                //Because this is in a thread, it also saves on processing power.
-                for (byte i = 0; i < 5; ++i) {
-                    station.generateBufferIndex();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //Done starting decoding, note ourselves as dead.
-            station.decoderThread = null;
+            } while (++tryCount < 5);
+            station.displayText = "ERROR: Was able to connect to URL but not open stream.  Try again later?";
+            //Something is wrong with the radio station, abort all radio playback.
+            station.queuedRadios.clear();
         }
     }
 }
