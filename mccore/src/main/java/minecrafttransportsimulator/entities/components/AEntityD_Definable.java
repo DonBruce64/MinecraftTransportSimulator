@@ -1013,9 +1013,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public ComputedVariable getOrCreateVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
         if (computedVar == null) {
-            if (variable.startsWith("!")) {
-                //FIXME this won't work for built-in variables, I think we need to make inversion logic here or something?
-                computedVar = createComputedVariable(variable.substring("!".length()), true);
+            if (variable.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+                //Get the normal variable, and then reference the inverted internal variable instead.
+                computedVar = createComputedVariable(variable.substring(ComputedVariable.INVERTED_PREFIX.length()), true).invertedVariable;
             } else {
                 computedVar = createComputedVariable(variable, true);
             }

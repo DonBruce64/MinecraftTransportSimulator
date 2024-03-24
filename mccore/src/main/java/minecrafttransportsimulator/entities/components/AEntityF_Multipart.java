@@ -479,8 +479,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Iterate through our parts to find the index of the pack def for the part we want.
             String partType = variable.substring(0, variable.indexOf("_"));
-            if (partType.startsWith("!")) {
-                partType = partType.substring("!".length());
+            if (partType.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+                partType = partType.substring(ComputedVariable.INVERTED_PREFIX.length());
             }
             int partNumber = ComputedVariable.getVariableNumber(variable);
             String partVariable = variable.substring(0, variable.lastIndexOf("_"));
