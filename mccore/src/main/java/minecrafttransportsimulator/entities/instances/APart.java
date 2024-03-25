@@ -571,7 +571,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //We don't have the entity set yet if we're constructing, defer to later.
             return new ComputedVariable(this, variable, partialTicks -> {
                 //Reset ourselves since we should have a value now that we're being asked for one.
-                //Whatever is calling this will detect this and will re-init us to whatever we should be.
                 resetVariable(variable);
                 return 0;
             }, false);
@@ -602,7 +601,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     default: {
                         ComputedVariable computedVariable = super.createComputedVariable(variable, false);
                         if (computedVariable == null) {
-                            //Not a part variable.  Check any entities we are on, up to the top-most parent.
+                            //Not a basic part variable or something that the core classes make.
+                            //Check any entities we are on, up to the top-most parent.
                             AEntityF_Multipart<?> testEntity = entityOn;
                             while (testEntity != null) {
                                 if (testEntity.containsVariable(variable)) {
@@ -622,7 +622,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                                 return computedVariable;
                             } else {
                                 System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
-                                return ComputedVariable.ZERO_VARIABLE;
+                                return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
                             }
                         } else {
                             return computedVariable;

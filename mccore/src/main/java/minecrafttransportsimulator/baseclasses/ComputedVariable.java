@@ -28,19 +28,15 @@ public class ComputedVariable {
     public final String variableKey;
     /**The entity this variable is defined on.**/
     public final AEntityD_Definable<?> entity;
-    private final ComputedVariableOperator function;
-    private final boolean changesOnPartialTicks;
-    private final boolean randomVariable;
-    private final boolean isConstant;
+    private ComputedVariableOperator function;
+    private boolean changesOnPartialTicks;
+    private boolean randomVariable;
+    private boolean isConstant;
     private long lastTickChecked;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/
     public double currentValue;
     /**True if {@link #currentValue} is greater than 1, false otherwise.  Used for quicker boolean operations.**/
     public boolean isActive;
-    /**Flag for external systems to allow resetting this CV.  Doesn't do any logic, but external systems can use this for state-resets.
-     * The reason this flag is here is so if this CV is referenced on multiple entities, each can do their own resetting logic.
-     * Only set by calling {@link #reset()}, never by manually setting the flag.**/
-    public boolean needsReset;
     /**Internal variable for the inverted state of this variable.  Is read-only since we just set its states when ours change.
      * Is null on the inverted variable itself.**/
     public final ComputedVariable invertedVariable;
@@ -54,9 +50,6 @@ public class ComputedVariable {
         this.randomVariable = variable.startsWith("random");
         this.isConstant = variable.startsWith(CONSTANT_PREFIX);
         this.invertedVariable = variable.startsWith(INVERTED_PREFIX) ? null : new ComputedVariable(entity, INVERTED_PREFIX + variable, null);
-        if (invertedVariable != null) {
-            entity.addVariable(invertedVariable);
-        }
     }
 
     /**Constructor for variables with no logic, and instead maintained state.**/
@@ -99,6 +92,13 @@ public class ComputedVariable {
         }
     }
 
+    public final void setFunctionTo(ComputedVariable other) {
+        this.function = other.function;
+        this.isConstant = other.isConstant;
+        this.changesOnPartialTicks = other.changesOnPartialTicks;
+        this.randomVariable = other.randomVariable;
+    }
+
     public final double getValue() {
         return computeValue(0);
     }
@@ -124,6 +124,8 @@ public class ComputedVariable {
             if (sendPacket) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
             }
+        } else {
+            throw new IllegalStateException("TRIED TO SET A VALUE TO CONSTANT VARIABLE " + variableKey + " ON ENTITY " + entity);
         }
     }
     
@@ -133,6 +135,8 @@ public class ComputedVariable {
             if (sendPacket) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
             }
+        } else {
+            throw new IllegalStateException("TRIED TO SET A VALUE TO CONSTANT VARIABLE " + variableKey + " ON ENTITY " + entity);
         }
     }
 
@@ -142,6 +146,8 @@ public class ComputedVariable {
             if (sendPacket) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
             }
+        } else {
+            throw new IllegalStateException("TRIED TO SET A VALUE TO CONSTANT VARIABLE " + variableKey + " ON ENTITY " + entity);
         }
     }
 
@@ -166,14 +172,10 @@ public class ComputedVariable {
                 }
                 return true;
             }
+        } else {
+            throw new IllegalStateException("TRIED TO SET A VALUE TO CONSTANT VARIABLE " + variableKey + " ON ENTITY " + entity);
         }
         return false;
-    }
-
-    public final void reset() {
-        if (!isConstant) {
-            needsReset = true;
-        }
     }
 
     public final void saveToNBT(List<String> savedNames, IWrapperNBT data) {

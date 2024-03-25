@@ -932,7 +932,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }, false);
                 } else {
                     //Either a hard-coded value, or one we are wrapping.  No logic required.
-                    return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
+                    //Double-check we don't already have this variable.  If we do, we don't need to re-create it.
+                    ComputedVariable existingVariable = computedVariables.get(variable);
+                    if (existingVariable != null) {
+                        return existingVariable;
+                    } else {
+                        return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
+                    }
                 }
             }
         }
@@ -1023,28 +1029,27 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
             computedVariables.put(variable, computedVar);
         }
-        if (computedVar.needsReset) {
-            computedVariables.remove(variable);
-            computedVar = computedVariables.computeIfAbsent(variable, key -> createComputedVariable(variable, true));
-        }
         return computedVar;
     }
     
     public void addVariable(ComputedVariable variable) {
         computedVariables.put(variable.variableKey, variable);
+        if (variable.invertedVariable != null) {
+            computedVariables.put(variable.invertedVariable.variableKey, variable.invertedVariable);
+        }
     }
     
     public void resetVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
         if (computedVar != null) {
-            computedVar.reset();
+            computedVar.setFunctionTo(getOrCreateVariable(variable));
         }
     }
 
     public void resetVariablesMatchingFunction(Function<ComputedVariable, Boolean> function) {
         computedVariables.values().forEach(computedVar -> {
             if (function.apply(computedVar)) {
-                computedVar.reset();
+                resetVariable(computedVar.variableKey);
             }
         });
     }
