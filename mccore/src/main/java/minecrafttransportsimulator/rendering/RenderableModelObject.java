@@ -474,7 +474,6 @@ public class RenderableModelObject {
         //Make a duplicate set of vertices with an offset for the color rendering.
         RenderableObject offsetObject = new RenderableObject("color", "mts:textures/rendering/light.png", new ColorRGB(), FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
         float[] vertexData = new float[8];
-
         while (parsedObject.vertices.hasRemaining()) {
             parsedObject.vertices.get(vertexData);
             offsetObject.vertices.put(vertexData, 0, 5);
@@ -482,7 +481,6 @@ public class RenderableModelObject {
             offsetObject.vertices.put(vertexData[6] + vertexData[1] * COLOR_OFFSET);
             offsetObject.vertices.put(vertexData[7] + vertexData[2] * COLOR_OFFSET);
         }
-
         parsedObject.vertices.rewind();
         offsetObject.normalizeUVs();
         offsetObject.vertices.flip();
@@ -519,22 +517,22 @@ public class RenderableModelObject {
                 //Get the current UV points.
                 switch (j) {
                     case (0):
-                    case (3):
-                        newVertex[3] = 0.0F;
-                        newVertex[4] = 0.0F;
-                        break;
-                    case (1):
-                        newVertex[3] = 0.0F;
+                    case (3)://Bottom-right
+                        newVertex[3] = 1.0F;
                         newVertex[4] = 1.0F;
+                        break;
+                    case (1)://Top-right
+                        newVertex[3] = 1.0F;
+                        newVertex[4] = 0.0F;
                         break;
                     case (2):
-                    case (4):
-                        newVertex[3] = 1.0F;
-                        newVertex[4] = 1.0F;
-                        break;
-                    case (5):
-                        newVertex[3] = 1.0F;
+                    case (4)://Top-left
+                        newVertex[3] = 0.0F;
                         newVertex[4] = 0.0F;
+                        break;
+                    case (5)://Bottom-left
+                        newVertex[3] = 0.0F;
+                        newVertex[4] = 1.0F;
                         break;
                 }
 

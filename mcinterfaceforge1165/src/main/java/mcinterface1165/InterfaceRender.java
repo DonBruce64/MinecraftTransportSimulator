@@ -64,13 +64,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
@@ -79,7 +74,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  *
  * @author don_bruce
  */
-@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
     private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
@@ -500,6 +494,7 @@ public class InterfaceRender implements IInterfaceRender {
                     matrixStack = stack;
                     renderBuffer = buffer;
                     doRenderCall(false, partialTicks);
+                    doRenderCall(true, partialTicks);
                 }
             }
         });
@@ -508,24 +503,6 @@ public class InterfaceRender implements IInterfaceRender {
         //If we don't, the game crashes when trying to render them.
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityExisting.E_TYPE2.get(), manager -> new BlankRender<BuilderEntityExisting>(manager));
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
-    }
-    
-    @SubscribeEvent
-    public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
-        //If the buffer is null, bail, it should be set before-hand from the normal render, but might not be.
-        //This can happen if the follower hasn't been rendered yet.
-        if (renderBuffer != null) {
-            MatrixStack stack = event.getMatrixStack();
-            float partialTicks = event.getPartialTicks();
-
-            //Set camera offfset point for later.
-            Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-            renderCameraOffset.set(position.x, position.y, position.z);
-            
-            ///Set the stack variables and render.
-            matrixStack = stack;
-            doRenderCall(true, partialTicks);
-        }
     }
 
     private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
@@ -634,8 +611,8 @@ public class InterfaceRender implements IInterfaceRender {
             //stateBuilder.setFogState(NO_FOG);
             //No layering.
             //stateBuilder.setLayeringState(NO_LAYERING);
-            //Target depends on blending.
-            stateBuilder.setOutputState(object.isTranslucent ? TRANSLUCENT_TARGET : MAIN_TARGET);
+            //Target is always main.
+            //stateBuilder.setOutputState(MAIN_TARGET);
             //Default texture is fine.
             //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
             //Not sure what this does, but it should be fine as-is?
