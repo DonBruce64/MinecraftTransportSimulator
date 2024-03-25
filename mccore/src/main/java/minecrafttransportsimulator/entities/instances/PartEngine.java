@@ -283,7 +283,11 @@ public class PartEngine extends APart {
 
             //Add cooling for ambient temp.
             ambientTemp = (25 * world.getTemperature(position) + 5) * ConfigSystem.settings.general.engineBiomeTempFactor.value;
-            coolingFactor = 0.001 * currentCoolingCoefficient - (currentSuperchargerEfficiency / 1000F) * (rpm / 2000F) + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+            if (running) {
+                coolingFactor = 0.001 * currentCoolingCoefficient - (currentSuperchargerEfficiency / 1000F) * (rpm / 2000F) + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+            } else {
+                coolingFactor = 0.001 * currentCoolingCoefficient + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+            }
             temp -= (temp - ambientTemp) * coolingFactor;
 
             //Check to see if electric or hand starter can keep running.
