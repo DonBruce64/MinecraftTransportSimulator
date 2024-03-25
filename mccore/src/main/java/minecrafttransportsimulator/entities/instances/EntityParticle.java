@@ -245,8 +245,6 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.setAlpha(definition.transparency);
         }
 
-        renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
-        renderable.ignoreWorldShading = definition.model == null || definition.isBright;
         if (definition.type == ParticleType.BREAK) {
             if (world.isAir(position)) {
                 //Don't spawn break particles in the air, they're null textures.
@@ -467,7 +465,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 totalScale *= (maxAge - ticksExisted) / (float) definition.fadeScaleTime;
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
-            renderable.worldLightValue = worldLightValue;
+            renderable.setLighting(worldLightValue, definition.type.equals(ParticleType.FLAME) || definition.isBright, definition.model == null || definition.isBright);
             renderable.render(null);//No vertex caching for particles
         }
     }

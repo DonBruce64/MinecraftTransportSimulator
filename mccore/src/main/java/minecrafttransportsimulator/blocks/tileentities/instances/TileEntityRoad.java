@@ -488,7 +488,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 } else {
                     object.transform.set(transform);
                 }
-                object.worldLightValue = worldLightValue;
+                object.setLighting(worldLightValue, false, false);
                 object.render(this);
             }
 

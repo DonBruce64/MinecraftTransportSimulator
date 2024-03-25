@@ -166,7 +166,7 @@ public abstract class AGUIComponent {
             mutableTooltipRenderable.vertices.flip();
 
             //Don't take into account lighting.
-            mutableTooltipRenderable.disableLighting = true;
+            mutableTooltipRenderable.setLighting(0, true, true);
 
             //Do the actual rendering.
             mutableTooltipRenderable.transform.setTranslation(0, 0, textPosition.z + 25);

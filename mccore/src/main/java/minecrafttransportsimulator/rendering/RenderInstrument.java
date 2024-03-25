@@ -118,9 +118,7 @@ public final class RenderInstrument {
 
                         //Set points to the variables here and render them.
                         //If the shape is lit, disable lighting for blending.
-                        renderObject.worldLightValue = entity.worldLightValue;
-                        renderObject.ignoreWorldShading = onGUI;
-                        renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.client.renderingSettings.brightLights.value;
+                        renderObject.setLighting(entity.worldLightValue, component.lightUpTexture && lightsOn && ConfigSystem.client.renderingSettings.brightLights.value, onGUI);
                         renderComponentFromState(component);
                     }
                 }

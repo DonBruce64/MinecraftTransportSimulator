@@ -655,8 +655,7 @@ public class RenderText {
             //Prior to rendering we need to scale the font objects to their requested scale, multiplied by their internal scale factor.
             //After this, we apply the known-constant adjustmentOffset, which will itself be scaled.
             for (RenderableObject object : activeRenderObjects) {
-                object.worldLightValue = worldLightValue;
-                object.disableLighting = renderLit;
+                object.setLighting(worldLightValue, renderLit, false);
                 object.transform.set(transform);
                 if (rotation != null) {
                     object.transform.applyRotation(rotation);

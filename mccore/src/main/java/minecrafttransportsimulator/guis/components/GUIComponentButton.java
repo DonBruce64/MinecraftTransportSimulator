@@ -147,9 +147,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
             }
 
             if (currentRenderable.isTranslucent == blendingEnabled) {
-                currentRenderable.ignoreWorldShading = true;
-                currentRenderable.worldLightValue = gui.worldLightValue;
-                currentRenderable.disableLighting = renderBright || ignoreGUILightingState;
+                currentRenderable.setLighting(gui.worldLightValue, renderBright || ignoreGUILightingState, true);
                 currentRenderable.transform.setTranslation(position);
                 currentRenderable.render(null);
             }

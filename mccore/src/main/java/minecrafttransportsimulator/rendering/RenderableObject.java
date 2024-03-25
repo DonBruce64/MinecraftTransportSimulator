@@ -64,9 +64,10 @@ public class RenderableObject {
     public boolean changedSinceLastRender;
     public boolean isTranslucent;
     public int cachedVertexIndex = -1;
-    public int worldLightValue;
     public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();
+
+    public int worldLightValue;
     /**
      * Completely disables or enables lighting of this object.
      * This disables both the system lighting (OpenGL) and internal lighting (lightmap).
@@ -177,6 +178,28 @@ public class RenderableObject {
     public void setColor(ColorRGB color) {
         if (!this.color.equals(color)) {
             this.color.setTo(color);
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setLighting(int worldLightValue, boolean disableLighting, boolean ignoreWorldShading) {
+        if (this.worldLightValue != worldLightValue) {
+            this.worldLightValue = worldLightValue;
+            this.changedSinceLastRender = true;
+        }
+        if (this.disableLighting != disableLighting) {
+            this.disableLighting = disableLighting;
+            this.changedSinceLastRender = true;
+        }
+        if (this.ignoreWorldShading != ignoreWorldShading) {
+            this.ignoreWorldShading = ignoreWorldShading;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setBlending(boolean enableBrightBlending) {
+        if (this.enableBrightBlending != enableBrightBlending) {
+            this.enableBrightBlending = enableBrightBlending;
             this.changedSinceLastRender = true;
         }
     }
