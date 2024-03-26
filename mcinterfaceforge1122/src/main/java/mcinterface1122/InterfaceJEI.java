@@ -37,6 +37,7 @@ public class InterfaceJEI implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
         //Check all pack items for benches.
+        benchCategories.clear();
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
             if (packItem instanceof ItemDecor) {
                 ItemDecor benchItem = (ItemDecor) packItem;
