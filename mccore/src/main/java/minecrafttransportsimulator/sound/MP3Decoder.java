@@ -114,7 +114,8 @@ public class MP3Decoder implements IStreamDecoder {
                     break;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
+                break;
             }
         }
 
