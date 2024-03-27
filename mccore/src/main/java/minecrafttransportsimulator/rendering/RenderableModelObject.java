@@ -193,6 +193,7 @@ public class RenderableModelObject {
                 if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
                     //Active tread.  Do tread-path rendering instead of normal model.
                     if (!blendingEnabled) {
+                        object.setLighting(entity.worldLightValue, false, false);
                         doTreadRendering((PartGroundDevice) entity, partialTicks);
                     }
                 } else {
