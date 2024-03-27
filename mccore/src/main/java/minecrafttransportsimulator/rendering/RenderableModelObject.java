@@ -482,7 +482,7 @@ public class RenderableModelObject {
                 }
             }
 
-            coverObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, false);
+            coverObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0, false);
             coverObject.transform.set(object.transform);
             coverObject.render(entity);
         }
@@ -491,6 +491,7 @@ public class RenderableModelObject {
     private static RenderableObject generateColors(RenderableObject parsedObject) {
         //Make a duplicate set of vertices with an offset for the color rendering.
         RenderableObject offsetObject = new RenderableObject("color", "mts:textures/rendering/light.png", new ColorRGB(), FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
+        offsetObject.isTranslucent = true;
         float[] vertexData = new float[8];
         while (parsedObject.vertices.hasRemaining()) {
             parsedObject.vertices.get(vertexData);
@@ -525,6 +526,7 @@ public class RenderableModelObject {
     private static RenderableObject generateFlares(List<JSONLightBlendableComponent> flareDefs) {
         //6 vertices per flare due to triangle rendering.
         RenderableObject flareObject = new RenderableObject("flares", "mts:textures/rendering/lensflare.png", new ColorRGB(), FloatBuffer.allocate(flareDefs.size() * 6 * 8), false);
+        flareObject.isTranslucent = true;
         for (JSONLightBlendableComponent flareDef : flareDefs) {
             //Get the matrix  that is needed to rotate points to the normalized vector.
             RotationMatrix rotation = new RotationMatrix().setToVector(flareDef.axis, false);
@@ -581,6 +583,7 @@ public class RenderableModelObject {
         //Number of cone faces is equal to the number of segments for beams.
         //We render two beams.  One inner and one outer.
         RenderableObject beamObject = new RenderableObject("beams", "mts:textures/rendering/lightbeam.png", new ColorRGB(), FloatBuffer.allocate(beamDefs.size() * 2 * BEAM_SEGMENTS * 3 * 8), false);
+        beamObject.isTranslucent = true;
         for (JSONLightBlendableComponent beamDef : beamDefs) {
             //Get the matrix that is needed to rotate points to the normalized vector.
             RotationMatrix rotation = new RotationMatrix().setToVector(beamDef.axis, false);
