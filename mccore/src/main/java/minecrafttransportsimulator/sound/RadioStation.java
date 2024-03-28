@@ -85,11 +85,15 @@ public class RadioStation {
             activeBuffers.add(bufferIndex);
 
             //Update station buffer counts and return buffer index.
-            displayText = displayText.substring(0, displayText.indexOf("Buffers:") + "Buffers:".length());
-            for (byte i = 0; i < activeBuffers.size(); ++i) {
-                displayText += "X";
+            int bufferTextIndex = displayText.indexOf("Buffers:");
+            if (bufferTextIndex != -1) {
+                displayText = displayText.substring(0, bufferTextIndex + "Buffers:".length());
+                for (byte i = 0; i < activeBuffers.size(); ++i) {
+                    displayText += "X";
+                }
+            } else {
+                displayText = "DISPLAY MALFUNCTION!\nTURN RADIO OFF AND ON TO RESET!";
             }
-
             return bufferIndex;
         }
         return 0;
