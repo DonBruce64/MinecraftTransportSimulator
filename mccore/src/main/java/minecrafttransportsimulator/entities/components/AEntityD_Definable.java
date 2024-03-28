@@ -682,30 +682,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
                 
                 //Finally, play the sound if all checks were true.
-                if (shouldSoundStartPlaying) {
-                    //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
-                    boolean isSoundPlaying = false;
-                    if (soundDef.looping) {
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
-                                isSoundPlaying = true;
-                                break;
-                            }
-                        }
+                SoundInstance playingSound = null;
+                for (SoundInstance sound : sounds) {
+                    if (sound.soundDef == soundDef) {
+                        playingSound = sound;
+                        break;
                     }
-                    if (!isSoundPlaying) {
+                }
+                if (shouldSoundStartPlaying) {
+                    //Sound should play.
+                    //If we aren't playing, or are playing but aren't a looping sound, update.
+                    if (playingSound == null || !soundDef.looping) {
                         InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
                     }
                 } else {
-                    if (soundDef.looping) {
+                    if (soundDef.looping && playingSound != null) {
                         //If sound is playing, stop it.
                         //Non-looping sounds are trigger-based and will stop on their own.
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
-                                sound.stopSound = true;
-                                break;
-                            }
-                        }
+                        playingSound.stopSound = true;
                     }
 
                     //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
@@ -714,8 +708,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                 //Sound should be playing.  If it's part of the sound list, update properties.
                 //Sounds may not be in the list if they have just been queued and haven't started yet.
+                //Try to get the sound provided by this def, and update it. 
+                //Note that multiple sounds might be for the same def if they played close enough together.
                 for (SoundInstance sound : sounds) {
-                    if (sound != null && sound.soundName.equals(soundDef.name)) {
+                    if (sound.soundDef == soundDef) {
                         //Adjust volume.
                         SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
                         boolean definedVolume = false;

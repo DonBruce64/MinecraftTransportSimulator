@@ -7,8 +7,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONSound {
-    @JSONRequired
-    @JSONDescription("The name for this sound.  This tells MTS where to find it.  Format is packID:soundName.  All sounds should be located in the 'sounds' folder as the first folder underneath your main pack folder.")
+    @JSONDescription("The name for this sound.  This tells MTS where to find it.  Format is packID:soundName.  All sounds should be located in the 'sounds' folder as the first folder underneath your main pack folder.  Not required if soundVariations is set.")
     public String name;
 
     @JSONDescription("A list of sounds to play instead of the main sound.  If this is present, then one of these at random will be played each time this sound is played rather than the normal sound.  Note that a paramter for name is still required to allow the audio system to track this sound, and should be unique to the entity this is defined on.")
