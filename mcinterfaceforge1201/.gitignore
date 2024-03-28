@@ -1,5 +1,6 @@
 # common
 run
+runServer
 build
 .gradle
 
@@ -13,15 +14,8 @@ bin
 .settings
 
 # idea
+out
 *.ipr
 *.iws
 *.iml
 .idea
-
-# vscode
-.vscode
-
-# don't want compiled jars in the repo
-out
-mcinterfaceforge1182
-mcinterfaceforge1192

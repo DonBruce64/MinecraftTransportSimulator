@@ -1,0 +1,16 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {"item": "mts:mts.decorbench"},
+        "title": {"translate": "advancements.mts.decorbench.title"},
+        "description": {"translate": "advancements.mts.decorbench.description"}
+    },
+    "criteria": {
+        "has_decorbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.decorbench"}]
+            }
+        }
+    }
+}

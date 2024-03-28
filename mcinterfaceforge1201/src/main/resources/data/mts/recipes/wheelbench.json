@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "a  ",
+        "abb",
+        "cbb"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "tag": "minecraft:planks"
+        },
+        "c": {
+            "item": "minecraft:anvil"
+        }
+    },
+    "result": {
+        "item": "mts:mts.wheelbench"
+    }
+}

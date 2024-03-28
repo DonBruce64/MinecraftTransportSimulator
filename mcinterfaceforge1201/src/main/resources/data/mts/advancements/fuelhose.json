@@ -1,0 +1,16 @@
+{
+    "parent": "mts:seatbench",
+    "display": {
+        "icon": {"item": "mts:mts.fuelhose"},
+        "title": {"translate": "advancements.mts.fuelhose.title"},
+        "description": {"translate": "advancements.mts.fuelhose.description"}
+    },
+    "criteria": {
+        "has_fuelhose": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.fuelhose"}]
+            }
+        }
+    }
+}
