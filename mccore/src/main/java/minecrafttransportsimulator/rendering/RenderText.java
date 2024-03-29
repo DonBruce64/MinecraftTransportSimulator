@@ -55,7 +55,7 @@ public class RenderText {
         if (!text.isEmpty()) {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(position);
-            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue);
+            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue, true);
         }
     }
 
@@ -71,7 +71,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit(), entity.worldLightValue);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit(), entity.worldLightValue, false);
         }
     }
 
@@ -322,7 +322,7 @@ public class RenderText {
             this.charTopOffset = charTopOffset;
         }
 
-        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue) {
+        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue, boolean onGUI) {
             //Clear out the active object list as it was set last pass.
             for (RenderableObject object : activeRenderObjects) {
                 object.vertices.clear();
@@ -655,7 +655,7 @@ public class RenderText {
             //Prior to rendering we need to scale the font objects to their requested scale, multiplied by their internal scale factor.
             //After this, we apply the known-constant adjustmentOffset, which will itself be scaled.
             for (RenderableObject object : activeRenderObjects) {
-                object.setLighting(worldLightValue, renderLit, false);
+                object.setLighting(worldLightValue, renderLit, onGUI);
                 object.transform.set(transform);
                 if (rotation != null) {
                     object.transform.applyRotation(rotation);
