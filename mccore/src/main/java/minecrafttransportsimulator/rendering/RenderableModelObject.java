@@ -200,7 +200,7 @@ public class RenderableModelObject {
                     //Set object states and render.
                     if (blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()) {
                         //Model that's actually a beam, render it with beam lighting/blending. 
-                        object.setLighting(entity.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, false);
+                        object.setLighting(entity.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, true);
                         object.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
                         object.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
                         object.render(entity);
