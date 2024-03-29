@@ -149,19 +149,33 @@ public class RadioStation {
                 //If we removed a buffer, or if we don't have any playing radios, start our radios.
                 //This syncs new radios if we are playing one, and starts new radios if we aren't.
                 if ((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()) {
-                    for (EntityRadio radio : queuedRadios) {
-                        radio.start();
-                        InterfaceManager.soundInterface.addRadioSound(radio.getPlayingSound(), activeBuffers);
-                        playingRadios.add(radio);
+                    Iterator<EntityRadio> iterator = queuedRadios.iterator();
+                    while (iterator.hasNext()) {
+                        EntityRadio radio = iterator.next();
+                        //Only start radios in range.
+                        if (radio.position.isDistanceToCloserThan(InterfaceManager.clientInterface.getClientPlayer().getPosition(), SoundInstance.DEFAULT_MAX_DISTANCE)) {
+                            radio.start();
+                            InterfaceManager.soundInterface.addRadioSound(radio.getPlayingSound(), activeBuffers);
+                            playingRadios.add(radio);
+                            iterator.remove();
+                        }
                     }
-                    queuedRadios.clear();
                 }
 
                 //If we have less than 5 buffers, try to get another one.
                 if (activeBuffers.size() < 5) {
                     int newIndex = generateBufferIndex();
-                    if (newIndex != 0) {
-                        for (EntityRadio radio : playingRadios) {
+                    if (newIndex != 0 && !playingRadios.isEmpty()) {
+                        Iterator<EntityRadio> iterator = playingRadios.iterator();
+                        while (iterator.hasNext()) {
+                            EntityRadio radio = iterator.next();
+                            //If the radio isn't in rage, stop playing it.
+                            //Just kill the sound, since the stop command is for the stop button and it won't restart.
+                            if (!radio.position.isDistanceToCloserThan(InterfaceManager.clientInterface.getClientPlayer().getPosition(), SoundInstance.DEFAULT_MAX_DISTANCE)) {
+                                radio.getPlayingSound().stopSound = true;
+                                queuedRadios.add(radio);
+                                iterator.remove();
+                            }
                             InterfaceManager.soundInterface.bindBuffer(radio.getPlayingSound(), newIndex);
                         }
                     }
