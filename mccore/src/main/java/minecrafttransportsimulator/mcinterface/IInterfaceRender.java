@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**
@@ -54,14 +55,16 @@ public interface IInterfaceRender {
     void deleteVertices(RenderableObject object, Object objectAssociatedTo);
 
     /**
-     * Downloads the passed-in texture to be parsed and bound.  The texture is downloaded from the
-     * URL and then added to the texture rendering system.  The integer of the The instance
-     * of the texture is cached in this class once created for later use, so feel free to not
-     * cache the string URL that is passed-in.  If the texture downloading was successful, null is
-     * returned.  Otherwise, an error message is returned.  Use the new texture by setting 
-     * {@link RenderableObject#texture} to the URL.
+     * Binds a URL texture to a stream containing an image.  Pass in a null stream to bind the missing texture to this URL.
+     * Returns true if the texture was bound, false if it couldn't be.
      */
-    String downloadURLTexture(String textureURL);
+    boolean bindURLTexture(String textureURL, InputStream strea);
+
+    /**
+     * Binds a URL GIF that was downloaded.
+     * Returns true if the texture was bound, false if it couldn't be.
+     */
+    boolean bindURLGIF(String textureURL, ParsedGIF gif);
 
     /**
      * Returns an integer that represents the lighting state at the position.

@@ -4,8 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,8 +15,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
@@ -35,7 +31,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.GIFParser;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableObject;
@@ -264,69 +259,44 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public String downloadURLTexture(String textureURL) {
-        if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
-            //Parse the texture, get the OpenGL integer that represents this texture, and save it.
-            //FAR less jank than using MC's resource system.
+    public boolean bindURLTexture(String textureURL, InputStream stream) {
+        if (stream != null) {
             try {
-                URL url = new URL(textureURL);
-                URLConnection connection = url.openConnection();
-                try {
-                    List<String> validContentTypes = new ArrayList<>();
-                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                        validContentTypes.add("image/" + imageSuffix);
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    if (validContentTypes.contains(contentType)) {
-                        if (contentType.endsWith("gif")) {
-                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
-                            reader.setInput(stream);
-                            ParsedGIF gif = GIFParser.parseGIF(reader);
-                            if (gif != null) {
-                                animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, ResourceLocation> gifFrameIndexes = new HashMap<>();
-                                for (GIFImageFrame frame : gif.frames.values()) {
-                                    BufferedImage frameBuffer = frame.getImage();
-                                    ByteArrayOutputStream frameArrayStream = new ByteArrayOutputStream();
-                                    ImageIO.write(frameBuffer, "gif", frameArrayStream);
-                                    InputStream frameStream = new ByteArrayInputStream(frameArrayStream.toByteArray());
-
-                                    NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, frameStream);
-                                    DynamicTexture texture = new DynamicTexture(image);
-                                    ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-gif", texture);
-                                    gifFrameIndexes.put(frame, textureLocation);
-                                }
-                                animatedGIFFrames.put(gif, gifFrameIndexes);
-                            } else {
-                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
-                            }
-                        } else {
-                            NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, url.openStream());
-                            DynamicTexture texture = new DynamicTexture(image);
-                            ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-url", texture);
-                            onlineTextures.put(textureURL, textureLocation);
-                        }
-                    } else {
-                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
-                        for (String validType : validContentTypes) {
-                            errorString.append(validType).append(", ");
-                        }
-                        onlineTextures.put(textureURL, null);
-                        return errorString.toString();
-                    }
-                } catch (Exception e) {
-                    onlineTextures.put(textureURL, null);
-                    e.printStackTrace();
-                    return "Could not parse images.  Error was: " + e.getMessage();
-                }
+                NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, stream);
+                DynamicTexture texture = new DynamicTexture(image);
+                ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-url", texture);
+                onlineTextures.put(textureURL, textureLocation);
+                return true;
             } catch (Exception e) {
-                onlineTextures.put(textureURL, null);
-                e.printStackTrace();
-                return "Could not open URL for processing.  Error was: " + e.getMessage();
+                return false;
+            }
+        } else {
+            onlineTextures.put(textureURL, null);
+            return true;
+        }
+    }
+
+    @Override
+    public boolean bindURLGIF(String textureURL, ParsedGIF gif) {
+        Map<GIFImageFrame, ResourceLocation> gifFrameIndexes = new HashMap<>();
+        for (GIFImageFrame frame : gif.frames.values()) {
+            try {
+                BufferedImage frameBuffer = frame.getImage();
+                ByteArrayOutputStream frameArrayStream = new ByteArrayOutputStream();
+                ImageIO.write(frameBuffer, "gif", frameArrayStream);
+                InputStream frameStream = new ByteArrayInputStream(frameArrayStream.toByteArray());
+
+                NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, frameStream);
+                DynamicTexture texture = new DynamicTexture(image);
+                ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-gif", texture);
+                gifFrameIndexes.put(frame, textureLocation);
+            } catch (Exception e) {
+                return false;
             }
         }
-        return null;
+        animatedGIFs.put(textureURL, gif);
+        animatedGIFFrames.put(gif, gifFrameIndexes);
+        return true;
     }
 
     /**

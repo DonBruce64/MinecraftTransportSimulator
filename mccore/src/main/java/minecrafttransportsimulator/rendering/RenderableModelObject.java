@@ -1,12 +1,21 @@
 package minecrafttransportsimulator.rendering;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -22,6 +31,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -56,6 +66,11 @@ public class RenderableModelObject {
     private static final float BEAM_OFFSET = -0.15F;
     private static final int BEAM_SEGMENTS = 40;
 
+    private final Set<String> downloadingTextures = new HashSet<>();
+    private final Set<String> downloadedTextures = new HashSet<>();
+    private static final Map<String, String> erroredTextures = new HashMap<>();
+    private static boolean errorTextureBound;
+
     public RenderableModelObject(String modelLocation, RenderableObject object) {
         super();
         this.modelLocation = modelLocation;
@@ -88,6 +103,12 @@ public class RenderableModelObject {
             colorObject = generateColors(object);
             coverObject = generateCovers(object);
         }
+
+        //Bind the error texture if we haven't already.
+        if (!errorTextureBound) {
+            InterfaceManager.renderingInterface.bindURLTexture("ERROR", null);
+            errorTextureBound = true;
+        }
     }
 
     /**
@@ -116,11 +137,6 @@ public class RenderableModelObject {
                     object.transform.multiply(switchbox.netMatrix);
                 }
 
-                //Set our standard texture, provided we're not a window.
-                if (!isWindow) {
-                    object.texture = entity.getTexture();
-                }
-
                 //If we are a online texture, bind that one rather than our own.
                 if (isOnlineTexture) {
                     //Get the texture from the text objects of the entity.
@@ -129,17 +145,34 @@ public class RenderableModelObject {
                         JSONText textDef = textEntry.getKey();
                         if (textDef.fieldName != null && object.name.contains(textDef.fieldName)) {
                             String textValue = entity.text.get(textDef);
-                            if (!textValue.isEmpty() && !textValue.contains(" ")) {
-                                String errorString = InterfaceManager.renderingInterface.downloadURLTexture(textValue);
-                                if (errorString != null) {
-                                    textEntry.setValue(errorString);
-                                } else {
-                                    object.texture = textValue;
-                                }
+                            if (erroredTextures.containsKey(textValue)) {
+                                //Error in texture downloading, set fault data before continuing.
+                                textEntry.setValue(erroredTextures.get(textValue));
+                            }
+                            if (textValue.startsWith("ERROR")) {
+                                //Texture didn't download, set to error texture.
+                                object.texture = "ERROR";
+                            } else if (downloadedTextures.contains(textValue)) {
+                                //Good to render, set texture to object and go.
+                                object.texture = textValue;
+                            } else if (downloadingTextures.contains(textValue)) {
+                                //Still downloading, skip rendering.
+                                return;
+                            } else if (textValue.isEmpty()) {
+                                //Don't render since we don't have any text bound here.
+                                return;
+                            } else {
+                                //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
+                                new ConnectorThread(textValue, this).run();
+                                downloadingTextures.add(textValue);
+                                return;
                             }
                             break;
                         }
                     }
+                } else if (!isWindow) {
+                    //Set our standard texture, provided we're not a window.
+                    object.texture = entity.getTexture();
                 }
 
                 //If we are a light, get the actual light level as calculated.
@@ -229,17 +262,6 @@ public class RenderableModelObject {
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
             return false;
-        }
-        //Online textures only render if the field has text.
-        if (isOnlineTexture) {
-            for (JSONText textDef : entity.text.keySet()) {
-                if (textDef.fieldName != null && object.name.contains(textDef.fieldName)) {
-                    if (entity.text.get(textDef).isEmpty()) {
-                        return false;
-                    }
-                    break;
-                }
-            }
         }
         //If the light only has solid components, and we aren't translucent, don't render on the blending pass.
         if (lightDef != null && blendingEnabled && !object.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
@@ -836,5 +858,88 @@ public class RenderableModelObject {
             }
         }
         return points;
+    }
+
+    /**
+     * Custom URL downloader class to prevent blocking of the main thread when downloading textures
+     * and to give more time for the downloader to run.
+     *
+     * @author don_bruce
+     */
+    private static class ConnectorThread extends Thread {
+        private final String urlString;
+        private final RenderableModelObject objectOn;
+
+        public ConnectorThread(String urlString, RenderableModelObject objectOn) {
+            this.urlString = urlString;
+            this.objectOn = objectOn;
+        }
+
+        @Override
+        public void run() {
+            //Parse the texture out into an InputStream, if possible, and bind it.
+            //FAR less jank than using MC's resource system.
+            //We try a few times here since sources can do dumb things.
+            int tryCount = 0;
+            String errorString = null;
+            do {
+                try {
+                    URL urlObject = new URL(urlString);
+                    HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
+                    try {
+                        connection.connect();
+                        String contentType = connection.getContentType();
+                        String[] typeParams = contentType.split("/");
+                        if (typeParams[0].equals("text")) {
+                            errorString = "ERROR: Found only text at the URL.  This is not a direct image link, or you don't have permission to view this image (hosted behind a login).";
+                        } else {
+                            Iterator<ImageReader> iterator = ImageIO.getImageReadersByFormatName(typeParams[1]);
+                            if (iterator.hasNext()) {
+                                ImageReader reader = iterator.next();
+                                if (typeParams[1].equals("gif")) {
+                                    ImageInputStream stream = ImageIO.createImageInputStream(connection.getInputStream());
+                                    reader.setInput(stream);
+                                    ParsedGIF gif = GIFParser.parseGIF(reader);
+                                    if (gif != null) {
+                                        if (InterfaceManager.renderingInterface.bindURLGIF(urlString, gif)) {
+                                            objectOn.downloadedTextures.add(urlString);
+                                            objectOn.downloadingTextures.remove(urlString);
+                                            return;
+                                        } else {
+                                            errorString = "ERROR: Could not parse GIF due to an internal MC-system interface error.  Contact the mod author!";
+                                        }
+                                    } else {
+                                        errorString = "ERROR: Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
+                                    }
+                                } else {
+                                    if (InterfaceManager.renderingInterface.bindURLTexture(urlString, connection.getInputStream())) {
+                                        objectOn.downloadedTextures.add(urlString);
+                                        objectOn.downloadingTextures.remove(urlString);
+                                        return;
+                                    } else {
+                                        errorString = "ERROR: Got a correct image type, but was missing data for the image?  Likely partial data sent by the server source, try again later.";
+                                    }
+                                }
+                            } else {
+                                errorString = "ERROR: Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+                                for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
+                                    errorString += ("image/" + imageSuffix + ", ");
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        errorString = "ERROR: Could not parse images.  Error was: " + e.getMessage();
+                    }
+                } catch (Exception e) {
+                    errorString = "ERROR: Could not open URL for processing.  Error was: " + e.getMessage();
+                }
+            } while (++tryCount < 10);
+
+            //Set missing texture if we failed to get anything.
+            InterfaceManager.renderingInterface.bindURLTexture(urlString, null);
+            erroredTextures.put(urlString, errorString);
+            objectOn.downloadingTextures.remove(urlString);
+            objectOn.downloadedTextures.add(urlString);
+        }
     }
 }
