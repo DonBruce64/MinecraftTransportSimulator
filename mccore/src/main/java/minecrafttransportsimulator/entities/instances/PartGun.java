@@ -223,6 +223,16 @@ public class PartGun extends APart {
             this.state = GunState.INACTIVE;
             this.internalOrientation = new RotationMatrix();
             randomGenerator = new Random();
+            if (definition.gun.preloadedBullet != null) {
+                String[] splitName = definition.gun.preloadedBullet.split(":");
+                this.loadedBullet = PackParser.getItem(splitName[0], splitName[1]);
+                this.lastLoadedBullet = loadedBullet;
+                if (loadedBullet != null) {
+                    bulletsLeft = loadedBullet.definition.bullet.quantity;
+                } else {
+                    InterfaceManager.coreInterface.logError("Tried to load preloaded bullet " + definition.gun.preloadedBullet + " into gun " + definition + " but couldn't because the bullet doesn't exist.  Report this to the pack author!");
+                }
+            }
         }
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
     }

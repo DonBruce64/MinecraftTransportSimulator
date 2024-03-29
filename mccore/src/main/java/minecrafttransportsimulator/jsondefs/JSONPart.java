@@ -463,6 +463,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
         public double lockMaxAngle;
 
+        @JSONDescription("The bullet that should be loaded into this gun on spawning.  Useful for single-use weapons, especially hand-helds.  Format is packID:bulletName.")
+        public String preloadedBullet;
+
         @JSONRequired(dependentField = "handHeld", dependentValues = {"true"})
         @JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
         public Point3D handHeldNormalOffset;
