@@ -1,6 +1,7 @@
 package mcinterface1165;
 
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -22,6 +23,10 @@ import net.minecraftforge.fml.RegistryObject;
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     public static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
 
+    /**
+     * UUID of entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
+    private UUID entityUUID;
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
@@ -69,23 +74,21 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     remove();
                 }
             }
-        } else {
-            //If we have NBT, and don't have an entity, try to get it.
-            if (loadFromSavedNBT) {
+        } else if(entityUUID != null){
+        	if(tickCount < 100) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
-                try {
-                    entity = worldWrapper.getEntity(lastLoadedNBT.getUUID("entityUUID"));
-                    loadedFromSavedNBT = true;
-                    if (entity == null) {
-                        InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
-                        remove();
-                    }
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
-                    remove();
-                }
+        		entity = worldWrapper.getEntity(entityUUID);
+        	}else {
+        		InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
+                remove();
+        	}
+        }else if (loadFromSavedNBT) {
+            entityUUID = lastLoadedNBT.getUUID("entityUUID");
+            if(entityUUID == null) {
+            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
+                remove();
             }
+            loadedFromSavedNBT = true;
         }
     }
 

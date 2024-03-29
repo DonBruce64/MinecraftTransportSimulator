@@ -1,6 +1,7 @@
 package mcinterface1122;
 
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -25,6 +26,10 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 @EventBusSubscriber
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
 
+    /**
+     * UUID of entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
+    private UUID entityUUID;
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
@@ -73,7 +78,25 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     setDead();
                 }
             }
-        } else {
+        } else if(entityUUID != null){
+        	if(ticksExisted < 100) {
+                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+        		entity = worldWrapper.getEntity(entityUUID);
+        	}else {
+        		InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
+                setDead();
+        	}
+        }else if (loadFromSavedNBT) {
+            entityUUID = lastLoadedNBT.getUniqueId("entityUUID");
+            if(entityUUID == null) {
+            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
+                setDead();
+            }
+            loadedFromSavedNBT = true;
+        }
+        
+        
+        else {
             //If we have NBT, and haven't loaded it, do so now.
             if (!loadedFromSavedNBT && loadFromSavedNBT) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
