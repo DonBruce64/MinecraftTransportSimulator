@@ -74,23 +74,17 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     @Override
     public boolean interact(IWrapperPlayer player) {
         if (player.isHoldingItemType(ItemComponentType.PAINT_GUN)) {
-            //Don't do decor actions if we are holding a paint gun.
             return false;
-        } else if (definition.decor.crafting != null) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
-        } else if (!text.isEmpty()) {
-            if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking()) {
+        } else if (player.isHoldingItemType(ItemComponentType.WRENCH)) {
+            if (player.isSneaking() && !text.isEmpty()) {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
             }
-            else {
-            		setVariable(CLICKED_VARIABLE, 1);
-            		toggleVariable(ACTIVATED_VARIABLE);
-            		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-            		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
-            	 }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
         } else {
+            if (definition.decor.crafting != null) {
+                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
+            }
             setVariable(CLICKED_VARIABLE, 1);
             toggleVariable(ACTIVATED_VARIABLE);
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
