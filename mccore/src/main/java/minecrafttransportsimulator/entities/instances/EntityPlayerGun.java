@@ -41,6 +41,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     private int hotbarSelected = -1;
     private IWrapperItemStack gunStack;
     private boolean didGunFireLastTick;
+    private boolean gunBeingRemoved;
     public PartGun activeGun;
 
     public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -109,14 +110,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         super.update();
         //Make sure player is still valid and haven't left the server.
         if (player != null && player.isValid()) {
-        	//Check if the player is specator, if so, we don't do any gun logic.
-        	if(player.isSpectator()) {
-        		if (activeGun != null) {
-                    saveGun(true);
-                }
-        		return;
-        	}
-        	
             //Set our position to the player's position.  We may update this later if we have a gun.
             //We can't update position without the gun as it has an offset defined in it.
             position.set(player.getPosition());
@@ -135,6 +128,21 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 }	
             }
 
+            //Check if the player is specator, if so, we don't do any gun logic.
+            if (player.isSpectator()) {
+                if (activeGun != null) {
+                    saveGun(true);
+                }
+                return;
+            }
+
+            //If the gun was in the removal process, do the removal now.
+            if (gunBeingRemoved) {
+                gunBeingRemoved = false;
+                removePart(activeGun, true, null);
+                activeGun = null;
+            }
+
             //If we have a gun, but the player's held stack is null, get it now.
             //This happens if we load a gun as a saved part.
             if (activeGun != null && gunStack == null) {
@@ -149,19 +157,23 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 if (activeGun != null && gunStack == null) {
                     //Either the player's held item changed, or the pack did.
                     //Held gun is invalid, so don't use or save it.
-                    removePart(activeGun, true, null);
-                    activeGun = null;
+                    gunBeingRemoved = true;
+                    return;
                 }
+            }
+            //Check to make sure if we had a gun, that it didn't change.
+            AItemBase heldItem = player.getHeldItem();
+            ItemPartGun heldGun = heldItem instanceof ItemPartGun ? (ItemPartGun) heldItem : null;
+            if (activeGun != null && (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex())) {
+                if (!world.isClient()) {
+                    saveGun(true);
+                } else {
+                    activeGun.isHandHeldGunEquipped = false;
+                }
+                return;
             }
 
             if (!world.isClient()) {
-                //Check to make sure if we had a gun, that it didn't change.
-                AItemBase heldItem = player.getHeldItem();
-                ItemPartGun heldGun = heldItem instanceof ItemPartGun ? (ItemPartGun) heldItem : null;
-                if (activeGun != null && (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex())) {
-                    saveGun(true);
-                }
-
                 //If we don't have a gun yet, try to get the current one if the player is holding one.
                 if (activeGun == null && heldGun != null) {
                     if (heldGun.definition.gun.handHeld) {
@@ -229,6 +241,12 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                     }
                 }
 
+                //Set the equipped state.  We need to make sure that the gun has been ticked at least once for this to work.
+                //The first tick will update all animations, which are required to see a 0 before a 1 to do a transition.
+                if (activeGun.ticksExisted == 1) {
+                    activeGun.isHandHeldGunEquipped = true;
+                }
+
                 //Set/unset camera index if we need to.
                 if (activeGun.isHandHeldGunAimed || activeGun.definition.gun.forceHandheldCameras) {
                     if (cameraIndex == 0 && cameras.size() > 0) {
@@ -244,11 +262,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Don't update post movement, as the gun will crash on update.
             remove();
             return;
-        }
-
-        //If we have a gun, and the player is spectating, don't allow the gun to render.
-        if (activeGun != null) {
-            activeGun.isInvisible = player != null && player.isSpectator();
         }
     }
 
@@ -310,8 +323,9 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
-            removePart(activeGun, true, null);
-            activeGun = null;
+            gunBeingRemoved = true;
+            activeGun.isHandHeldGunEquipped = false;
+            return;
         }
     }
 

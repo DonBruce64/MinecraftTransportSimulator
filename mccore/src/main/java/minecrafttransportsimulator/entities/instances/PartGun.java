@@ -91,6 +91,7 @@ public class PartGun extends APart {
     public boolean firedThisCheck;
     public boolean playerHoldingTrigger;
     public boolean isHandHeldGunAimed;
+    public boolean isHandHeldGunEquipped;
     public boolean isRunningInCoaxialMode;
     private int camOffset;
     private int cooldownTimeRemaining;
@@ -1135,6 +1136,8 @@ public class PartGun extends APart {
                 return entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0;
             case ("gun_inhand_aiming"):
                 return isHandHeldGunAimed ? 1 : 0;
+            case ("gun_inhand_equipped"):
+                return isHandHeldGunEquipped ? 1 : 0;
             case ("gun_controller_firstperson"):
                 return InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0;
             case ("gun_active"):
