@@ -837,11 +837,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
             case ("road_angle_rear"):
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
-
-            case ("jetThrust"):
-                return thrustForceValue;
-
-
             //Vehicle state cases.
             case("autopilot_present"):
                 return definition.motorized.hasAutopilot ? 1 : 0;
