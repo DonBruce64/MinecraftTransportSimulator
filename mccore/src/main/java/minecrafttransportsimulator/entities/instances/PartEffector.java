@@ -180,6 +180,7 @@ public class PartEffector extends APart {
                         } else {
                             ++placerDelay;
                         }
+                        break;
                     }
                     case COLLECTOR: {
                         //Populate item list for later.
@@ -214,12 +215,13 @@ public class PartEffector extends APart {
                         } else {
                             ++placerDelay;
                         }
+                        break;
                     }
                     case SPRAYER: {
-                        //Just spray block below..
-                        ++box.globalCenter.y;
-                        world.hydrateBlock(box.globalCenter);
+                        //Just spray block below.
                         --box.globalCenter.y;
+                        world.hydrateBlock(box.globalCenter);
+                        ++box.globalCenter.y;
                         break;
                     }
                 }
