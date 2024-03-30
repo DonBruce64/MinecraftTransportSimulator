@@ -609,7 +609,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
         COLLECTOR,
         @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
-        DROPPER;
+        DROPPER,
+        @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
+        SPRAYER;
     }
 
     @Deprecated

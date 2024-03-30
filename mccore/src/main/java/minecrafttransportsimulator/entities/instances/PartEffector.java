@@ -215,6 +215,13 @@ public class PartEffector extends APart {
                             ++placerDelay;
                         }
                     }
+                    case SPRAYER: {
+                        //Just spray block below..
+                        ++box.globalCenter.y;
+                        world.hydrateBlock(box.globalCenter);
+                        --box.globalCenter.y;
+                        break;
+                    }
                 }
 
                 //Handle any drops we got from our effector.

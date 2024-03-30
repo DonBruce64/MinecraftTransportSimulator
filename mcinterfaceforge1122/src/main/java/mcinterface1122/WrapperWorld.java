@@ -41,8 +41,12 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockColored;
+import net.minecraft.block.BlockConcretePowder;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDirt;
+import net.minecraft.block.BlockFarmland;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
@@ -891,6 +895,32 @@ public class WrapperWorld extends AWrapperWorld {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public boolean hydrateBlock(Point3D position) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        if (block == Blocks.LAVA) {
+            if (state.getValue(BlockLiquid.LEVEL) == 0) {
+                world.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState());
+                return true;
+            } else {
+                world.setBlockState(pos, Blocks.COBBLESTONE.getDefaultState());
+                return true;
+            }
+        } else if (block == Blocks.CONCRETE_POWDER) {
+            world.setBlockState(pos, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, state.getValue(BlockConcretePowder.COLOR)), 3);
+            return true;
+        } else if (block == Blocks.FARMLAND) {
+            int moisture = state.getValue(BlockFarmland.MOISTURE);
+            if (moisture < 7) {
+                world.setBlockState(pos, state.withProperty(BlockFarmland.MOISTURE, 7), 2);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
