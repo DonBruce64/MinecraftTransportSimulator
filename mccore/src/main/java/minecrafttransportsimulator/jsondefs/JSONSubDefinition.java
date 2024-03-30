@@ -7,6 +7,9 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONSubDefinition {
+    @JSONDescription("Set to true to hide this item on creative tabs.")
+    public boolean hideOnCreativeTab;
+
     @JSONRequired
     @JSONDescription("This text value will be appended to the JSON filename to get the name of the component.  This name is then used to tell MTS the name of the texture and item to use when rendering this component.  Remember, the subName is APPENDED to the JSON file name.  If you name your textures off the sub name MTS will not be able to find them!  If you are making a single-variant model you can leave this field blank, but it must be present otherwise MTS will crash on load.")
     public String subName;

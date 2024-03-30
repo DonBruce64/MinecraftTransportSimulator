@@ -17,6 +17,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFlu
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
@@ -113,7 +114,8 @@ public class InterfaceLoader {
 
                     //Check if the creative tab is set/created.
                     //The only except is for "invisible" parts of the core mod, these are internal.
-                    if (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")) {
+                    boolean hideOnCreativeTab = item.definition.general.hideOnCreativeTab || (item instanceof AItemSubTyped && ((AItemSubTyped<?>) item).subDefinition.hideOnCreativeTab);
+                    if (!hideOnCreativeTab && (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible"))) {
                         String tabID = item.getCreativeTabID();
                         if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                             JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
