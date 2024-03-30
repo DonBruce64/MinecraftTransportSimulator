@@ -267,12 +267,17 @@ public class InterfaceClient implements IInterfaceClient {
                             Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
                             actuallyFirstPerson = false;
                             actuallyThirdPerson = true;
+                        } else if (actuallyThirdPerson) {
+                            Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
+                            actuallyFirstPerson = false;
+                            actuallyThirdPerson = false;
                         } else {
                             Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
                             actuallyFirstPerson = true;
                             actuallyThirdPerson = false;
                         }
                         changeCameraRequest = false;
+                        changedCameraState = true;
                     }
                 }
                 world.endProfiling();

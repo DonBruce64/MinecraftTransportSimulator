@@ -290,12 +290,17 @@ public class InterfaceClient implements IInterfaceClient {
                             Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
                             actuallyFirstPerson = false;
                             actuallyThirdPerson = true;
+                        } else if (actuallyThirdPerson) {
+                            Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
+                            actuallyFirstPerson = false;
+                            actuallyThirdPerson = false;
                         } else {
                             Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
                             actuallyFirstPerson = true;
                             actuallyThirdPerson = false;
                         }
                         changeCameraRequest = false;
+                        changedCameraState = true;
                     }
                 }
                 world.endProfiling();
