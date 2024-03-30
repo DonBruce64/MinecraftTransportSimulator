@@ -946,7 +946,7 @@ public class PartGun extends APart {
     public boolean tryToReload(ItemBullet item) {
         //Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
         //Also don't fill bullets if we are currently reloading bullets.
-        if (item.definition.bullet != null) {
+        if (!definition.gun.blockReloading && item.definition.bullet != null) {
             boolean isNewBulletValid = item.definition.bullet.diameter == definition.gun.diameter && item.definition.bullet.caseLength >= definition.gun.minCaseLength && item.definition.bullet.caseLength <= definition.gun.maxCaseLength;
             if (reloadingBullet == null && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) {
                 //Make sure we don't over-fill the gun.

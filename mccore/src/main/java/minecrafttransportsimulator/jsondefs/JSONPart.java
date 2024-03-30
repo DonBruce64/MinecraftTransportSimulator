@@ -379,6 +379,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
+        @JSONDescription("If set, then this gun will never be able to be reloaded.  Useful for single-use weapons.")
+        public boolean blockReloading;
+
         @JSONDescription("Whether this cun can lock on to targets, regardless of whether the loaded bullet is guided.")
         public boolean canLockTargets;
 
