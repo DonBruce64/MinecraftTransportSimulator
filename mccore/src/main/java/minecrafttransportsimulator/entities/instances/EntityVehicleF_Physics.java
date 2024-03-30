@@ -12,6 +12,8 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -88,6 +90,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @DerivedValue
     public double autopilotSetting;
     public double airDensity;
+    public double seaLevel = ConfigSystem.settings.general.seaLevel.value;
     public static final String AUTOPILOT_VALUE_VARIABLE = "autopilot";
     public static final String AUTOPILOT_ACTIVE_VARIABLE = "autopilot_active";
     public static final String AUTOLEVEL_VARIABLE = "auto_level";
@@ -404,7 +407,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set moments and air density.
-            airDensity = 1.225 * Math.pow(2, -position.y / (500D * world.getMaxHeight() / 256D));
+            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / (500D * world.getMaxHeight() / 256D));
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
@@ -821,7 +824,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("roll"):
                 return orientation.angles.z;
             case ("altitude"):
-                return position.y;
+                return position.y - seaLevel;
             case ("speed"):
                 return indicatedSpeed;
             case ("speed_scaled"):
@@ -834,6 +837,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
             case ("road_angle_rear"):
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
+
+            case ("jetThrust"):
+                return thrustForceValue;
+
 
             //Vehicle state cases.
             case("autopilot_present"):
