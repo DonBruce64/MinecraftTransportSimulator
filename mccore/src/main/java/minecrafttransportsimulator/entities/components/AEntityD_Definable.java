@@ -847,6 +847,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.getLightBrightness(position, true);
             case ("terrain_distance"):
                 return world.getHeight(position);
+            case ("posX"):
+                return position.x;
+            case ("posY"):
+                return position.y;
+            case ("posZ"):
+                return position.z;
             case ("inliquid"):
                 return world.isBlockLiquid(position) ? 1 : 0;
             case ("config_simplethrottle"):
