@@ -81,7 +81,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                 default:
                     return false;
             }
-            InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(interactable, player, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(interactable, player, true));
         }
         return true;
     }

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -246,6 +247,7 @@ public final class ControlSystem {
                 AGUIBase.activeInputGUI.close();
             } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
                 new GUIRadio(vehicle.radio);
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(vehicle, InterfaceManager.clientInterface.getClientPlayer(), true));
             }
         }
     }

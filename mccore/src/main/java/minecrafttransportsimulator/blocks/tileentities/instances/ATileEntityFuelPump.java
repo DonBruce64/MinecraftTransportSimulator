@@ -16,6 +16,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -109,6 +110,8 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         //Check if the item is a wrench, and the player can configure this pump.
         if (player.isHoldingItemType(ItemComponentType.WRENCH) && (player.getID().equals(placingPlayerID) || player.isOP())) {
             player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP_CONFIG));
+            playersInteracting.add(player);
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             return true;
         }
 
@@ -123,6 +126,8 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             }
             if (haveEmptySlot) {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
+                playersInteracting.add(player);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             } else {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_FULLITEMS));
             }

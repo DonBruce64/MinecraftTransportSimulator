@@ -10,6 +10,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
 /**
  * Chest tile entity.
@@ -48,6 +49,8 @@ public class TileEntityChest extends TileEntityDecor {
     @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
+        playersInteracting.add(player);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
         return true;
     }
 

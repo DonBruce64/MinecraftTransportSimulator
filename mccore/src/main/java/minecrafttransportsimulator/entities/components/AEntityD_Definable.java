@@ -41,6 +41,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -137,6 +138,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
 
     /**
+     * List of players interacting with this entity via a GUI.
+     **/
+    public final Set<IWrapperPlayer> playersInteracting = new HashSet<>();
+
+    /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
      **/
     public AItemPack<JSONDefinition> cachedItem;
@@ -214,6 +220,28 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         if (world.isClient()) {
             spawnParticles(0);
         }
+
+        //Verify interacting players are still interacting.
+        //Server checks if players are still valid, client checks if current player doesn't have a GUI open.
+        //This handles players disconnecting or TPing away from this entity without closing their GUI first.
+        if (!playersInteracting.isEmpty()) {
+            if (world.isClient()) {
+                IWrapperPlayer thisClient = InterfaceManager.clientInterface.getClientPlayer();
+                if (playersInteracting.contains(thisClient) && !InterfaceManager.clientInterface.isGUIOpen()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(this, thisClient, false));
+                    playersInteracting.remove(thisClient);
+                }
+            } else {
+                for (IWrapperPlayer player : playersInteracting) {
+                    if (!player.isValid() || !player.getWorld().equals(world)) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(this, player, false));
+                        playersInteracting.remove(player);
+                        break;
+                    }
+                }
+            }
+        }
+
         //Only update radar once a second, and only if we requested it via variables.
         if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
             Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
@@ -855,6 +883,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return position.z;
             case ("inliquid"):
                 return world.isBlockLiquid(position) ? 1 : 0;
+            case ("player_interacting"):
+                return !playersInteracting.isEmpty() ? 1 : 0;
             case ("config_simplethrottle"):
                 return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
             case ("config_innerwindows"):
