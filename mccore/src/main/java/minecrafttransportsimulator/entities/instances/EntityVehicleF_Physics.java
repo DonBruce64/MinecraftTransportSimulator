@@ -822,6 +822,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return orientation.angles.z;
             case ("altitude"):
                 return position.y;
+            case ("posX"):
+                return position.x;
+            case ("posZ"):
+                return position.z;
             case ("speed"):
                 return indicatedSpeed;
             case ("speed_scaled"):
