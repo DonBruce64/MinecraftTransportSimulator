@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -46,6 +47,7 @@ public class GUIPartBench extends AGUIBase {
     private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<>();
 
     //Init variables.
+    private final AEntityD_Definable<?> entity;
     private final JSONCraftingBench definition;
     private final IWrapperPlayer player;
 
@@ -95,8 +97,9 @@ public class GUIPartBench extends AGUIBase {
     private AItemPack<? extends AJSONItem> nextSubItem;
     boolean displayVehicleInfo = false;
 
-    public GUIPartBench(JSONCraftingBench definition) {
+    public GUIPartBench(AEntityD_Definable<?> entity, JSONCraftingBench definition) {
         super();
+        this.entity = entity;
         this.definition = definition;
         this.player = InterfaceManager.clientInterface.getClientPlayer();
         if (lastOpenedItem.containsKey(definition)) {
@@ -245,7 +248,7 @@ public class GUIPartBench extends AGUIBase {
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
-                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(player, currentItem, recipeIndex, viewingRepair));
+                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(entity, player, currentItem, recipeIndex, viewingRepair));
             }
         });
 

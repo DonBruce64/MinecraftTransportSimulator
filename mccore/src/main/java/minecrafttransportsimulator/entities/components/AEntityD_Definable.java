@@ -141,6 +141,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * List of players interacting with this entity via a GUI.
      **/
     public final Set<IWrapperPlayer> playersInteracting = new HashSet<>();
+    public boolean playerCraftedItem;
 
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
@@ -241,6 +242,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
         }
+        playerCraftedItem = false;
 
         //Only update radar once a second, and only if we requested it via variables.
         if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
@@ -885,6 +887,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.isBlockLiquid(position) ? 1 : 0;
             case ("player_interacting"):
                 return !playersInteracting.isEmpty() ? 1 : 0;
+            case ("player_crafteditem"):
+                return playerCraftedItem ? 1 : 0;
             case ("config_simplethrottle"):
                 return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
             case ("config_innerwindows"):

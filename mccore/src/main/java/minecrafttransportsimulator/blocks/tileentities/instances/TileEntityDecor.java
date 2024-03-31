@@ -28,6 +28,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     public static final String CLICKED_VARIABLE = "clicked";
     public static final String ACTIVATED_VARIABLE = "activated";
     private float lightLevel;
+    public boolean craftedItem;
 
     public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -56,7 +57,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         updateVariableModifiers();
 
         super.update();
-        //Reset clicked state.
+        //Reset clicked state and crafted item.
         setVariable(CLICKED_VARIABLE, 0);
     }
 

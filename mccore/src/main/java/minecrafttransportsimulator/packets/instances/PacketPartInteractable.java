@@ -67,7 +67,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
         } else {
             switch (interactable.definition.interactable.interactionType) {
                 case CRAFTING_BENCH: {
-                    new GUIPartBench(interactable.definition.interactable.crafting);
+                    new GUIPartBench(interactable, interactable.definition.interactable.crafting);
                     break;
                 }
                 case CRATE: {

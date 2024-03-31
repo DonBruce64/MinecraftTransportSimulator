@@ -1,13 +1,14 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.packets.components.APacketPlayer;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 
 /**
@@ -18,13 +19,13 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
  *
  * @author don_bruce
  */
-public class PacketPlayerCraftItem extends APacketPlayer {
+public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Definable<?>, IWrapperPlayer> {
     private final AItemPack<?> itemToCraft;
     private final int recipeIndex;
     private final boolean forRepair;
 
-    public PacketPlayerCraftItem(IWrapperPlayer player, AItemPack<?> itemToCraft, int recipeIndex, boolean forRepair) {
-        super(player);
+    public PacketPlayerCraftItem(AEntityD_Definable<?> entity, IWrapperPlayer player, AItemPack<?> itemToCraft, int recipeIndex, boolean forRepair) {
+        super(entity, player);
         this.itemToCraft = itemToCraft;
         this.recipeIndex = recipeIndex;
         this.forRepair = forRepair;
@@ -46,33 +47,39 @@ public class PacketPlayerCraftItem extends APacketPlayer {
     }
 
     @Override
-    public void handle(AWrapperWorld world, IWrapperPlayer player) {
-        IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair, false))) {
-            //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
-            if (forRepair) {
-                //Find the repair item and fix it.
-                int repairIndex = inventory.getRepairIndex(itemToCraft);
-                if (repairIndex != -1) {
-                    IWrapperItemStack stack = inventory.getStack(repairIndex);
-                    AItemPack<?> item = (AItemPack<?>) stack.getItem();
-                    IWrapperNBT stackData = stack.getData();
-                    item.repair(stackData);
-                    stack.setData(stackData);
+    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
+        if (!world.isClient()) {
+            IWrapperInventory inventory = player.getInventory();
+            if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair, false))) {
+                //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
+                if (forRepair) {
+                    //Find the repair item and fix it.
+                    int repairIndex = inventory.getRepairIndex(itemToCraft);
+                    if (repairIndex != -1) {
+                        IWrapperItemStack stack = inventory.getStack(repairIndex);
+                        AItemPack<?> item = (AItemPack<?>) stack.getItem();
+                        IWrapperNBT stackData = stack.getData();
+                        item.repair(stackData);
+                        stack.setData(stackData);
 
-                    if (!player.isCreative()) {
-                        inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                        if (!player.isCreative()) {
+                            inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                        }
+                        inventory.setStack(stack, repairIndex);
+                        return true;
                     }
-                    inventory.setStack(stack, repairIndex);
-                }
-            } else {
-                //Check we can add the stack before removing materials.
-                if (inventory.addStack(itemToCraft.getNewStack(null))) {
-                    if (!player.isCreative()) {
-                        inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                } else {
+                    //Check we can add the stack before removing materials.
+                    if (inventory.addStack(itemToCraft.getNewStack(null))) {
+                        if (!player.isCreative()) {
+                            inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                        }
+                        return true;
                     }
                 }
             }
         }
+        entity.playerCraftedItem = true;
+        return false;
     }
 }
