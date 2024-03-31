@@ -191,6 +191,8 @@ public class JSONParticle {
         BUBBLE,
         @JSONDescription("The standard block breakage particle. The block texture to use will always be the block below this particle when first spawned.")
         BREAK,
+        @JSONDescription("A casing particle.  This renders the model/texture as defined on the bullet in the gun that spawns this.")
+        CASING,
         @JSONDescription("A generic particle.  This has no movement by default, so you will have to specify it.")
         GENERIC
     }
