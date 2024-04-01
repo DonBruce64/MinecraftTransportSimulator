@@ -20,6 +20,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
@@ -41,7 +42,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractableInteract;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -237,6 +237,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableSet.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableToggle.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInteract.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInteractGUI.class);
 
         //Bullet packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitGeneric.class);
@@ -269,7 +270,6 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGroundDevice.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractable.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractableInteract.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartSeat.class);
 
         //Player packets.

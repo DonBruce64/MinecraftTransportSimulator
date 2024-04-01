@@ -4,6 +4,7 @@
     "package": "mcinterface1165.mixin",
     "compatibilityLevel": "JAVA_8",
 		"mixins": [
+				"common.ConcretePowderBlockMixin",
 				"common.EntityMixin",
 				"common.MinecraftMixin"
 		],

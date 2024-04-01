@@ -51,6 +51,7 @@ public class EntityParticle extends AEntityC_Renderable {
     private ColorRGB startColor;
     private ColorRGB endColor;
     private final ColorRGB staticColor;
+    private final String model;
     private final RenderableObject renderable;
 
     //Runtime variables.
@@ -179,11 +180,23 @@ public class EntityParticle extends AEntityC_Renderable {
             }
         }
 
+        String model = definition.model;
         final String texture;
         if (definition.texture != null) {
             texture = definition.texture;
         } else if (definition.type == ParticleType.BREAK) {
             texture = RenderableObject.GLOBAL_TEXTURE_NAME;
+        } else if (definition.type == ParticleType.CASING) {
+            texture = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingTexture;
+            model = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingModel;
+            if (texture == null) {
+                //Not supposed to be spawning any casings for this bullet.
+                this.textureIsTranslucent = false;
+                this.renderable = null;
+                this.model = null;
+                this.killBadParticle = true;
+                return;
+            }
         } else if (definition.type == ParticleType.SMOKE) {
             textureList = new ArrayList<String>();
             for (int i = 0; i <= 11; ++i) {
@@ -215,12 +228,13 @@ public class EntityParticle extends AEntityC_Renderable {
         }
         this.textureIsTranslucent = texture.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 
+        this.model = model;
         FloatBuffer buffer;
-        if (definition.model != null) {
-            FloatBuffer totalModel = parsedParticleBuffers.get(definition.model);
+        if (model != null) {
+            FloatBuffer totalModel = parsedParticleBuffers.get(model);
             if (totalModel == null) {
-                String modelDomain = definition.model.substring(0, definition.model.indexOf(':'));
-                String modelPath = definition.model.substring(modelDomain.length() + 1);
+                String modelDomain = model.substring(0, model.indexOf(':'));
+                String modelPath = model.substring(modelDomain.length() + 1);
                 List<RenderableObject> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath);
                 int totalVertices = 0;
                 for (RenderableObject parsedObject : parsedObjects) {
@@ -231,7 +245,7 @@ public class EntityParticle extends AEntityC_Renderable {
                     totalModel.put(parsedObject.vertices);
                 }
                 totalModel.flip();
-                parsedParticleBuffers.put(definition.model, totalModel);
+                parsedParticleBuffers.put(model, totalModel);
             }
             buffer = totalModel;
         } else {
@@ -254,7 +268,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
                 setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
             }
-        } else if (definition.model == null) {
+        } else if (model == null) {
             setParticleTextureBounds(0, 1, 0, 1);
         }
         updateOrientation();
@@ -441,7 +455,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
             renderable.setAlpha(renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime);
         }
-        if (!((definition.model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
+        if (!((model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
             renderable.isTranslucent = blendingEnabled;
             if (staticColor == null) {
                 float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
@@ -465,7 +479,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 totalScale *= (maxAge - ticksExisted) / (float) definition.fadeScaleTime;
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
-            renderable.setLighting(worldLightValue, definition.type.equals(ParticleType.FLAME) || definition.isBright, definition.model == null || definition.isBright);
+            renderable.setLighting(worldLightValue, definition.type.equals(ParticleType.FLAME) || definition.isBright, model == null || definition.isBright);
             renderable.render(null);//No vertex caching for particles
         }
     }

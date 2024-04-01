@@ -71,7 +71,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
                 new GUIPaintGun((AEntityD_Definable<?>) entity, player);
                 break;
             case PART_BENCH:
-                new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting);
+                new GUIPartBench((AEntityD_Definable<?>) entity, ((TileEntityDecor) entity).definition.decor.crafting);
                 break;
             case RADIO:
                 new GUIRadio((EntityRadio) entity);

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import mcinterface1165.mixin.common.ConcretePowderBlockMixin;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -44,6 +45,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.BushBlock;
+import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.block.CropsBlock;
 import net.minecraft.block.FarmlandBlock;
 import net.minecraft.block.IGrowable;
@@ -905,6 +907,32 @@ public class WrapperWorld extends AWrapperWorld {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public boolean hydrateBlock(Point3D position) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        if (block == Blocks.LAVA) {
+            if (world.getFluidState(pos).isSource()) {
+                world.setBlockAndUpdate(pos, Blocks.OBSIDIAN.defaultBlockState());
+                return true;
+            } else {
+                world.setBlockAndUpdate(pos, Blocks.COBBLESTONE.defaultBlockState());
+                return true;
+            }
+        } else if (block instanceof ConcretePowderBlock) {
+            world.setBlockAndUpdate(pos, ((ConcretePowderBlockMixin) block).getConcrete());
+            return true;
+        } else if (block == Blocks.FARMLAND) {
+            int moisture = state.getValue(FarmlandBlock.MOISTURE);
+            if (moisture < 7) {
+                world.setBlockAndUpdate(pos, state.setValue(FarmlandBlock.MOISTURE, 7));
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

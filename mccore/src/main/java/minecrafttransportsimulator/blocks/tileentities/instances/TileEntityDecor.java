@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
@@ -27,6 +28,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     public static final String CLICKED_VARIABLE = "clicked";
     public static final String ACTIVATED_VARIABLE = "activated";
     private float lightLevel;
+    public boolean craftedItem;
 
     public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -55,7 +57,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         updateVariableModifiers();
 
         super.update();
-        //Reset clicked state.
+        //Reset clicked state and crafted item.
         setVariable(CLICKED_VARIABLE, 0);
     }
 
@@ -74,23 +76,21 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     @Override
     public boolean interact(IWrapperPlayer player) {
         if (player.isHoldingItemType(ItemComponentType.PAINT_GUN)) {
-            //Don't do decor actions if we are holding a paint gun.
             return false;
-        } else if (definition.decor.crafting != null) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
-        } else if (!text.isEmpty()) {
-            if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking()) {
+        } else if (player.isHoldingItemType(ItemComponentType.WRENCH)) {
+            if (player.isSneaking() && !text.isEmpty()) {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+                playersInteracting.add(player);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            else {
-            		setVariable(CLICKED_VARIABLE, 1);
-            		toggleVariable(ACTIVATED_VARIABLE);
-            		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-            		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
-            	 }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
         } else {
+            if (definition.decor.crafting != null) {
+                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
+                playersInteracting.add(player);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
+            }
             setVariable(CLICKED_VARIABLE, 1);
             toggleVariable(ACTIVATED_VARIABLE);
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));

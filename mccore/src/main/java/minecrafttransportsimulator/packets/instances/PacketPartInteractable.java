@@ -67,7 +67,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
         } else {
             switch (interactable.definition.interactable.interactionType) {
                 case CRAFTING_BENCH: {
-                    new GUIPartBench(interactable.definition.interactable.crafting);
+                    new GUIPartBench(interactable, interactable.definition.interactable.crafting);
                     break;
                 }
                 case CRATE: {
@@ -81,7 +81,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                 default:
                     return false;
             }
-            InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(interactable, player, true));
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(interactable, player, true));
         }
         return true;
     }

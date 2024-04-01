@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -15,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractableInteract;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -28,7 +24,6 @@ public final class PartInteractable extends APart {
     public String jerrycanFluid;
     public PartInteractable linkedPart;
     public EntityVehicleF_Physics linkedVehicle;
-    public Set<IWrapperPlayer> playersInteracting = new HashSet<>();
 
     public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -193,26 +188,6 @@ public final class PartInteractable extends APart {
                 }
             }
         }
-        
-        //Verify interacting players are still interacting.
-        //Server checks if players are still interacting, client checks if current player doesn't have a GUI open.
-        if (!playersInteracting.isEmpty()) {
-            if (world.isClient()) {
-                IWrapperPlayer thisClient = InterfaceManager.clientInterface.getClientPlayer();
-                if (playersInteracting.contains(thisClient) && !InterfaceManager.clientInterface.isGUIOpen()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(this, thisClient, false));
-                    playersInteracting.remove(thisClient);
-                }
-            } else {
-                for (IWrapperPlayer player : playersInteracting) {
-                    if (!player.isValid() || !player.getWorld().equals(world)) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(this, player, false));
-                        playersInteracting.remove(player);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -317,9 +292,6 @@ public final class PartInteractable extends APart {
                 } else {
                     return 0;
                 }
-            }
-            case ("interactable_active"): {
-                return !playersInteracting.isEmpty() ? 1 : 0;
             }
         }
 

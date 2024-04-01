@@ -371,6 +371,12 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract boolean removeSnow(Point3D position);
 
     /**
+     * Tries to hydrate the block at the passed-in position.
+     * Returns true if it was hydrated.
+     */
+    public abstract boolean hydrateBlock(Point3D position);
+
+    /**
      * Attempts to insert a stack-item into the block that is at the specified
      * position-offset.  The position is of the block wanting to insert the item,
      * not the block to insert the item into.  Returns true if the stack was inserted.

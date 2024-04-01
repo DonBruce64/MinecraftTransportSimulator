@@ -5,6 +5,8 @@ import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
 /**
  * Radio tile entity.
@@ -32,7 +34,13 @@ public class TileEntityRadio extends TileEntityDecor {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        return radio.interact(player);
+        if (radio.interact(player)) {
+            playersInteracting.add(player);
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

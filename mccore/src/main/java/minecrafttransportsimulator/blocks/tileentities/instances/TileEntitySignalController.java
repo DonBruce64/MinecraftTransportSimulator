@@ -20,6 +20,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
 /**
  * Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -117,6 +118,8 @@ public class TileEntitySignalController extends TileEntityDecor {
     @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.SIGNAL_CONTROLLER));
+        playersInteracting.add(player);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
         return true;
     }
 
