@@ -33,7 +33,8 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisi
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -62,8 +63,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     //Dynamic variables based on states.
     private boolean isActive;
     public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<>();
-    public final Map<RoadComponent, RenderableObject> componentRenderables = new HashMap<>();
-    public final List<RenderableObject> devRenderables = new ArrayList<>();
+    public final Map<RoadComponent, RenderableData> componentRenderables = new HashMap<>();
+    public final List<RenderableData> devRenderables = new ArrayList<>();
     public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<>();
     public final List<Point3D> collisionBlockOffsets;
     public final List<Point3D> collidingBlockOffsets;
@@ -148,8 +149,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     @Override
     public void remove() {
         super.remove();
-        for (RenderableObject object : componentRenderables.values()) {
-            object.destroy(this);
+        for (RenderableData object : componentRenderables.values()) {
+            object.destroy();
         }
     }
 
@@ -341,30 +342,31 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     ItemRoadComponent componentItem = components.get(component);
                     switch (component) {
                         case CORE_STATIC: {
-                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
+                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
                             int totalVertices = 0;
-                            for (RenderableObject object : parsedModel) {
+                            for (RenderableVertices object : parsedModel) {
                                 totalVertices += object.vertices.capacity();
                             }
 
                             //Cache the model now that we know how big it is.
                             FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
-                            for (RenderableObject object : parsedModel) {
+                            for (RenderableVertices object : parsedModel) {
                                 totalModel.put(object.vertices);
                             }
                             totalModel.flip();
-                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subDefinition), new ColorRGB(), totalModel, true));
+                            RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), totalModel, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
+                            componentRenderables.put(component, renderable);
                             break;
                         }
                         case CORE_DYNAMIC: {
                             //Get model and convert to a single buffer of vertices.
-                            List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
+                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
                             int totalVertices = 0;
-                            for (RenderableObject object : parsedModel) {
+                            for (RenderableVertices object : parsedModel) {
                                 totalVertices += object.vertices.capacity();
                             }
                             FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
-                            for (RenderableObject object : parsedModel) {
+                            for (RenderableVertices object : parsedModel) {
                                 parsedVertices.put(object.vertices);
                             }
                             parsedVertices.flip();
@@ -467,20 +469,19 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 convertedVertices.put(segmentVertex);
                             }
                             convertedVertices.flip();
-                            componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subDefinition), new ColorRGB(), convertedVertices, true));
+                            RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
+                            componentRenderables.put(component, renderable);
                             break;
                         }
                     }
                 }
-                RenderableObject object = componentRenderables.get(component);
+                RenderableData object = componentRenderables.get(component);
                 if (isActive()) {
                     object.setColor(ColorRGB.WHITE);
                     object.setAlpha(1.0F);
-                    object.isTranslucent = false;
                 } else {
                     object.setColor(ColorRGB.GREEN);
                     object.setAlpha(0.5F);
-                    object.isTranslucent = true;
                 }
                 if (dynamicCurve != null) {
                     object.transform.setTranslation(dynamicCurve.startPos.copy().subtract(position));
@@ -488,8 +489,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 } else {
                     object.transform.set(transform);
                 }
-                object.setLighting(worldLightValue, false, false);
-                object.render(this);
+                object.setLightValue(worldLightValue);
+                object.render();
             }
 
             //If we are inactive render the blocking blocks and the main block.
@@ -531,9 +532,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 generateDevElements(this);
             }
             Point3D invertedPosition = position.copy().invert();
-            for (RenderableObject renderable : devRenderables) {
+            for (RenderableData renderable : devRenderables) {
                 renderable.transform.setTranslation(invertedPosition).multiply(transform);
-                renderable.render(this);
+                renderable.render();
             }
         }
     }
@@ -543,22 +544,25 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         Point3D point1 = new Point3D();
         Point3D point2 = new Point3D();
         RotationMatrix rotation;
-        RenderableObject curveObject;
+        RenderableData renderable;
         if (road.dynamicCurve != null) {
             //Render actual curve.
-            curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength * 10));
-            for (float f = 0; curveObject.vertices.hasRemaining(); f += 0.1) {
+            int numberLines = (int) (road.dynamicCurve.pathLength * 10);
+            RenderableVertices vertexObject = new RenderableVertices(numberLines);
+            for (float f = 0; --numberLines > 0; f += 0.1) {
                 road.dynamicCurve.setPointToPositionAt(point1, f);
                 rotation = road.dynamicCurve.getRotationAt(f);
                 point2.set(0, 1, 0).rotate(rotation).add(point1);
-                curveObject.addLine(point1, point2);
+                vertexObject.addLine(point1, point2);
             }
-            curveObject.vertices.flip();
-            road.devRenderables.add(curveObject);
+            renderable = new RenderableData(vertexObject);
+            renderable.setColor(ColorRGB.GREEN);
+            road.devRenderables.add(renderable);
 
             //Render the border bounds.
-            curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength * 10));
-            for (float f = 0; curveObject.vertices.hasRemaining(); f += 0.1) {
+            numberLines = (int) (road.dynamicCurve.pathLength * 10);
+            vertexObject = new RenderableVertices(numberLines);
+            for (float f = 0; --numberLines > 0; f += 0.1) {
                 road.dynamicCurve.setPointToPositionAt(point1, f);
                 rotation = road.dynamicCurve.getRotationAt(f);
                 point1.set(road.definition.road.roadWidth, 0, 0);
@@ -568,44 +572,48 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
                 road.dynamicCurve.offsetPointByPositionAt(point1, f);
                 road.dynamicCurve.offsetPointByPositionAt(point2, f);
-                curveObject.addLine(point1, point2);
+                vertexObject.addLine(point1, point2);
             }
-            curveObject.vertices.flip();
-            road.devRenderables.add(curveObject);
+            renderable = new RenderableData(vertexObject);
+            renderable.setColor(ColorRGB.CYAN);
+            road.devRenderables.add(renderable);
         }
 
         //Now render the lane curve segments.
         for (RoadLane lane : road.lanes) {
             for (BezierCurve laneCurve : lane.curves) {
                 //Render the curve bearing indicator
-                curveObject = new RenderableObject(ColorRGB.RED, 2);
+                RenderableVertices vertexObject = new RenderableVertices(2);
 
                 //Render vertical segment.
                 rotation = laneCurve.getRotationAt(0);
                 laneCurve.setPointToPositionAt(point1, 0);
                 point2.set(0, 3, 0).rotate(rotation).add(point1);
-                curveObject.addLine(point1, point2);
+                vertexObject.addLine(point1, point2);
 
                 //Render 1-unit path delta.
                 point1.set(point2);
                 rotation = laneCurve.getRotationAt(1);
                 point1.set(0, 3, 0).rotate(rotation);
                 laneCurve.offsetPointByPositionAt(point1, 1);
-                curveObject.addLine(point1, point2);
+                vertexObject.addLine(point1, point2);
 
-                curveObject.vertices.flip();
-                road.devRenderables.add(curveObject);
+                renderable = new RenderableData(vertexObject);
+                renderable.setColor(ColorRGB.RED);
+                road.devRenderables.add(renderable);
 
                 //Render all the points on the curve.
-                curveObject = new RenderableObject(ColorRGB.YELLOW, (int) (laneCurve.pathLength * 10));
-                for (float f = 0; curveObject.vertices.hasRemaining(); f += 0.1) {
+                int numberLines = (int) (laneCurve.pathLength * 10);
+                vertexObject = new RenderableVertices(numberLines);
+                for (float f = 0; --numberLines > 0; f += 0.1) {
                     laneCurve.setPointToPositionAt(point1, f);
                     rotation = laneCurve.getRotationAt(f);
                     point2.set(0, 1, 0).rotate(rotation).add(point1);
-                    curveObject.addLine(point1, point2);
+                    vertexObject.addLine(point1, point2);
                 }
-                curveObject.vertices.flip();
-                road.devRenderables.add(curveObject);
+                renderable = new RenderableData(vertexObject);
+                renderable.setColor(ColorRGB.YELLOW);
+                road.devRenderables.add(renderable);
             }
         }
 
@@ -618,7 +626,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     if (otherRoad != null) {
                         RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
                         if (otherLane != null) {
-                            curveObject = new RenderableObject(ColorRGB.PINK, 3);
+                            RenderableVertices vertexObject = new RenderableVertices(1);
 
                             //Get the connection point.
                             currentCurve.setPointToPositionAt(point1, 0.5F);
@@ -626,9 +634,11 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             point2.set(0, 2.0, 0).rotate(rotation).add(point1);
 
                             //Render marker.
-                            curveObject.addLine(point1, point2);
-                            curveObject.vertices.flip();
-                            road.devRenderables.add(curveObject);
+                            vertexObject.addLine(point1, point2);
+
+                            renderable = new RenderableData(vertexObject);
+                            renderable.setColor(ColorRGB.PINK);
+                            road.devRenderables.add(renderable);
                         }
                     }
                 }
@@ -642,7 +652,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     if (otherRoad != null) {
                         RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
                         if (otherLane != null) {
-                            curveObject = new RenderableObject(ColorRGB.ORANGE, 3);
+                            RenderableVertices vertexObject = new RenderableVertices(1);
 
                             //Get the connection point.
                             currentCurve.setPointToPositionAt(point1, currentCurve.pathLength - 0.5F);
@@ -650,9 +660,11 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             point2.set(0, 2.0, 0).rotate(rotation).add(point1);
 
                             //Render marker.
-                            curveObject.addLine(point1, point2);
-                            curveObject.vertices.flip();
-                            road.devRenderables.add(curveObject);
+                            vertexObject.addLine(point1, point2);
+
+                            renderable = new RenderableData(vertexObject);
+                            renderable.setColor(ColorRGB.ORANGE);
+                            road.devRenderables.add(renderable);
                         }
                     }
                 }

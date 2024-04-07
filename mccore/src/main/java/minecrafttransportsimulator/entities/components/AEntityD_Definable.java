@@ -133,9 +133,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
 
     /**
-     * Object lists for models parsed in for this class.  Maps are keyed by the model name.
+     * Object lists for models parsed for this entity.
      **/
-    private static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
+    private List<RenderableModelObject> objectList;
 
     /**
      * List of players interacting with this entity via a GUI.
@@ -429,12 +429,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             groundersOnRadar.clear();
             
             //Clear rendering assignments.
-            if (world.isClient() && definition.rendering.modelType != ModelType.NONE) {
-                List<RenderableModelObject> objectList = objectLists.get(definition.getModelLocation(subDefinition));
+            if (world.isClient()) {
                 if (objectList != null) {
-                    for (RenderableModelObject modelObject : objectList) {
-                        InterfaceManager.renderingInterface.deleteVertices(modelObject.object, this);
-                    }
+                    objectList.forEach(object -> object.destroy());
                 }
             }
         }
@@ -457,7 +454,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the texture that should be bound to this entity for the passed-in object from the model.
+     * Returns the texture that should be bound to this entity for rendering.
      * This may change between render passes, but only ONE texture may be used for any given object render
      * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
@@ -1225,15 +1222,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Parse model if it hasn't been already.
         world.beginProfiling("MainModel", false);
-        String modelLocation = definition.getModelLocation(subDefinition);
-        if (!objectLists.containsKey(modelLocation)) {
-            objectLists.put(modelLocation, AModelParser.generateRenderables(this));
+        if (objectList == null) {
+            objectList = AModelParser.generateRenderables(this);
         }
 
         //Render model object individually.
-        for (RenderableModelObject modelObject : objectLists.get(modelLocation)) {
-            modelObject.render(this, transform, blendingEnabled, partialTicks);
-        }
+        objectList.forEach(modelObject -> modelObject.render(this, transform, blendingEnabled, partialTicks));
 
         //Render any static text.
         world.beginProfiling("MainText", false);
@@ -1268,12 +1262,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
             if (entity.definition.rendering.modelType != ModelType.NONE) {
                 entity.animationsInitialized = false;
-                for (RenderableModelObject modelObject : objectLists.get(entity.definition.getModelLocation(entity.subDefinition))) {
-                    modelObject.destroy(entity);
+                if (entity.objectList != null) {
+                    entity.objectList.forEach(object -> object.destroy());
+                    entity.objectList = null;
                 }
             }
         }
-        objectLists.clear();
     }
 
     @Override

@@ -22,7 +22,9 @@ import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**
@@ -32,18 +34,17 @@ import minecrafttransportsimulator.sound.SoundInstance;
  * @author don_bruce
  */
 public class EntityParticle extends AEntityC_Renderable {
-    private static final FloatBuffer STANDARD_RENDER_BUFFER = generateStandardBuffer();
+    private static final RenderableVertices STANDARD_PARTICLE_SPRITE = RenderableVertices.createSprite(1, null, null);
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
     private static final RotationMatrix helperRotation = new RotationMatrix();
     private static final Point3D helperPoint = new Point3D();
     private static final ColorRGB helperColor = new ColorRGB();
-    private static final Map<String, FloatBuffer> parsedParticleBuffers = new HashMap<>();
+    private static final Map<String, RenderableVertices> parsedParticleModels = new HashMap<>();
     private static final Random particleRandom = new Random();
 
     //Constant properties.
     private final AEntityC_Renderable entitySpawning;
     private final JSONParticle definition;
-    private final boolean textureIsTranslucent;
     private final int maxAge;
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
@@ -52,10 +53,10 @@ public class EntityParticle extends AEntityC_Renderable {
     private ColorRGB endColor;
     private final ColorRGB staticColor;
     private final String model;
-    private final RenderableObject renderable;
+    private final RenderableData renderable;
 
     //Runtime variables.
-    private boolean killBadParticle;
+    private final boolean killBadParticle;
     private boolean touchingBlocks;
     private float timeOfNextTexture;
     private int textureIndex;
@@ -69,7 +70,14 @@ public class EntityParticle extends AEntityC_Renderable {
 
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox switchbox) {
         super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
+        this.entitySpawning = entitySpawning;
+        this.definition = definition;
+        this.maxAge = generateMaxAge();
+        boundingBox.widthRadius = definition.hitboxSize / 2D;
+        boundingBox.heightRadius = boundingBox.widthRadius;
+        boundingBox.depthRadius = boundingBox.widthRadius;
 
+        //Set initial position.
         helperTransform.resetTransforms();
         if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
             orientation.set(entitySpawning.orientation);
@@ -82,7 +90,13 @@ public class EntityParticle extends AEntityC_Renderable {
                     orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
         			helperTransform.set(orientation);
         		}else {
+                    //Nothing for bullet to hit, block spawning.
+                    this.initialVelocity = null;
+                    this.staticColor = null;
+                    this.renderable = null;
+                    this.model = null;
         			this.killBadParticle = true;
+                    return;
         		}
         	}
         }
@@ -141,57 +155,33 @@ public class EntityParticle extends AEntityC_Renderable {
             motion.add(helperPoint);
         }
         initialVelocity = motion.copy();
+        updateOrientation();
 
-        this.entitySpawning = entitySpawning;
-        this.definition = definition;
-        boundingBox.widthRadius = definition.hitboxSize / 2D;
-        boundingBox.heightRadius = boundingBox.widthRadius;
-        boundingBox.depthRadius = boundingBox.widthRadius;
-        this.maxAge = generateMaxAge();
-        if (definition.color != null) {
-            if (definition.toColor != null) {
-                this.startColor = definition.color;
-                this.endColor = definition.toColor;
-                this.timeOfNextColor = maxAge;
+        //Now that position is set, check to make sure we aren't an invalid particle.
+        if (definition.type == ParticleType.BREAK) {
+            if (!world.isAir(position)) {
+                //Don't spawn break particles in the air, they're null textures.
                 this.staticColor = null;
-            } else {
-                this.staticColor = definition.color;
-            }
-        } else {
-            if (definition.colorList != null) {
-                if (definition.randomColor) {
-                    colorIndex = particleRandom.nextInt(definition.colorList.size());
-                }
-                startColor = definition.colorList.get(colorIndex);
-                if (colorIndex + 1 < definition.colorList.size()) {
-                    endColor = definition.colorList.get(colorIndex + 1);
-                } else {
-                    endColor = definition.colorList.get(0);
-                }
-
-                if (definition.colorDelays != null) {
-                    timeOfNextColor = definition.colorDelays.get(colorDelayIndex);
-                } else {
-                    timeOfNextColor = maxAge;
-                }
-                this.staticColor = null;
-            } else {
-                this.staticColor = ColorRGB.WHITE;
+                this.renderable = null;
+                this.model = null;
+                this.killBadParticle = true;
+                return;
             }
         }
 
+        //Set model and texture.
         String model = definition.model;
         final String texture;
         if (definition.texture != null) {
             texture = definition.texture;
         } else if (definition.type == ParticleType.BREAK) {
-            texture = RenderableObject.GLOBAL_TEXTURE_NAME;
+            texture = RenderableData.GLOBAL_TEXTURE_NAME;
         } else if (definition.type == ParticleType.CASING) {
             texture = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingTexture;
             model = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingModel;
             if (texture == null) {
                 //Not supposed to be spawning any casings for this bullet.
-                this.textureIsTranslucent = false;
+                this.staticColor = null;
                 this.renderable = null;
                 this.model = null;
                 this.killBadParticle = true;
@@ -226,52 +216,84 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase(Locale.ROOT) + ".png";
         }
-        this.textureIsTranslucent = texture.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 
         this.model = model;
-        FloatBuffer buffer;
-        if (model != null) {
-            FloatBuffer totalModel = parsedParticleBuffers.get(model);
-            if (totalModel == null) {
-                String modelDomain = model.substring(0, model.indexOf(':'));
-                String modelPath = model.substring(modelDomain.length() + 1);
-                List<RenderableObject> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath);
+        if (this.model != null) {
+            RenderableVertices parsedModel = parsedParticleModels.computeIfAbsent(this.model, k -> {
+                String modelDomain = this.model.substring(0, this.model.indexOf(':'));
+                String modelPath = this.model.substring(modelDomain.length() + 1);
+                List<RenderableVertices> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath);
                 int totalVertices = 0;
-                for (RenderableObject parsedObject : parsedObjects) {
+                for (RenderableVertices parsedObject : parsedObjects) {
                     totalVertices += parsedObject.vertices.capacity();
                 }
-                totalModel = FloatBuffer.allocate(totalVertices);
-                for (RenderableObject parsedObject : parsedObjects) {
-                    totalModel.put(parsedObject.vertices);
+                FloatBuffer totalBuffer = FloatBuffer.allocate(totalVertices);
+                for (RenderableVertices parsedObject : parsedObjects) {
+                    totalBuffer.put(parsedObject.vertices);
                 }
-                totalModel.flip();
-                parsedParticleBuffers.put(model, totalModel);
-            }
-            buffer = totalModel;
+                totalBuffer.flip();
+                return new RenderableVertices("PARTICLE_3D", totalBuffer, false);
+            });
+            this.renderable = new RenderableData(parsedModel, texture);
+        } else if (definition.type == ParticleType.BREAK) {
+            //Need to generate a new vertex buffer since break particles have varying UVs.
+            RenderableVertices vertexObject = RenderableVertices.createSprite(1, null, null);
+            this.renderable = new RenderableData(vertexObject, texture);
+            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
+            vertexObject.setTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
         } else {
-            buffer = FloatBuffer.allocate(STANDARD_RENDER_BUFFER.capacity());
-            buffer.put(STANDARD_RENDER_BUFFER);
-            STANDARD_RENDER_BUFFER.rewind();
-            buffer.flip();
+            //Basic particle, use standard buffer.
+            this.renderable = new RenderableData(STANDARD_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
         }
-        this.renderable = new RenderableObject("particle", texture, staticColor != null ? staticColor : new ColorRGB(), buffer, false);
+        renderable.setTexture(texture);
+
+        //Set color.
+        if (definition.color != null) {
+            if (definition.toColor != null) {
+                this.startColor = definition.color;
+                this.endColor = definition.toColor;
+                this.timeOfNextColor = maxAge;
+                this.staticColor = null;
+            } else {
+                this.staticColor = definition.color;
+                renderable.setColor(staticColor);
+            }
+        } else {
+            if (definition.colorList != null) {
+                if (definition.randomColor) {
+                    colorIndex = particleRandom.nextInt(definition.colorList.size());
+                }
+                startColor = definition.colorList.get(colorIndex);
+                if (colorIndex + 1 < definition.colorList.size()) {
+                    endColor = definition.colorList.get(colorIndex + 1);
+                } else {
+                    endColor = definition.colorList.get(0);
+                }
+
+                if (definition.colorDelays != null) {
+                    timeOfNextColor = definition.colorDelays.get(colorDelayIndex);
+                } else {
+                    timeOfNextColor = maxAge;
+                }
+                this.staticColor = null;
+            } else {
+                this.staticColor = ColorRGB.WHITE;
+            }
+        }
+
+        //Set alpha.
         if (definition.transparency != 0 || definition.toTransparency != 0) {
             renderable.setAlpha(definition.transparency);
         }
 
-        if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(position)) {
-                //Don't spawn break particles in the air, they're null textures.
-                killBadParticle = true;
-                return;
-            } else {
-                float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
-                setParticleTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
-            }
+        //Set lighting mode.
+        if (definition.type.equals(ParticleType.FLAME) || definition.isBright) {
+            renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         } else if (model == null) {
-            setParticleTextureBounds(0, 1, 0, 1);
+            renderable.setLightMode(LightingMode.IGNORE_ORIENTATION_LIGHTING);
         }
-        updateOrientation();
+
+        this.killBadParticle = false;
     }
 
     @Override
@@ -447,6 +469,8 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
+        //First set alpha, then check translucent.
+        //We could change it this update cycle.
         if (definition.toTransparency != 0) {
             renderable.setAlpha(interpolate(definition.transparency, definition.toTransparency, (ticksExisted + partialTicks) / maxAge, true, partialTicks));
         } else {
@@ -455,8 +479,8 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
             renderable.setAlpha(renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime);
         }
-        if (!((model == null || textureIsTranslucent || renderable.alpha < 1.0) ^ blendingEnabled)) {
-            renderable.isTranslucent = blendingEnabled;
+
+        if (renderable.isTranslucent == blendingEnabled) {
             if (staticColor == null) {
                 float colorDelta = (ticksExisted + partialTicks - timeOfCurrentColor) / (timeOfNextColor - timeOfCurrentColor);
                 helperColor.red = interpolate(startColor.red, endColor.red, colorDelta, true, partialTicks);
@@ -479,8 +503,8 @@ public class EntityParticle extends AEntityC_Renderable {
                 totalScale *= (maxAge - ticksExisted) / (float) definition.fadeScaleTime;
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
-            renderable.setLighting(worldLightValue, definition.type.equals(ParticleType.FLAME) || definition.isBright, model == null || definition.isBright);
-            renderable.render(null);//No vertex caching for particles
+            renderable.setLightValue(worldLightValue);
+            renderable.render();
         }
     }
 
@@ -540,85 +564,5 @@ public class EntityParticle extends AEntityC_Renderable {
     private float interpolate(float start, float end, float factor, boolean clamp, float partialTicks) {
         float value = start + (end - start) * factor;
         return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
-    }
-
-    private void setParticleTextureBounds(float u, float U, float v, float V) {
-        for (int i = 0; i < 6; ++i) {
-            switch (i) {
-                case (0):
-                case (3): {//Bottom-right
-                    renderable.vertices.put(i * 8 + 3, U);
-                    renderable.vertices.put(i * 8 + 4, V);
-                    break;
-                }
-                case (1): {//Top-right
-                    renderable.vertices.put(i * 8 + 3, U);
-                    renderable.vertices.put(i * 8 + 4, v);
-                    break;
-                }
-                case (2):
-                case (4): {//Top-left
-                    renderable.vertices.put(i * 8 + 3, u);
-                    renderable.vertices.put(i * 8 + 4, v);
-                    break;
-                }
-                case (5): {//Bottom-left
-                    renderable.vertices.put(i * 8 + 3, u);
-                    renderable.vertices.put(i * 8 + 4, V);
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
-     * Helper method to generate a standard buffer to be used for all particles as a
-     * starting buffer.  Saves computation when creating particles.  Particle is assumed
-     * to have a size of 1x1 with UV-spanning 0->1.
-     */
-    private static FloatBuffer generateStandardBuffer() {
-        FloatBuffer buffer = FloatBuffer.allocate(6 * 8);
-        for (int i = 0; i < 6; ++i) {
-            //Normal is always 0, 0, 1.
-            buffer.put(0);
-            buffer.put(0);
-            buffer.put(1);
-            switch (i) {
-                case (0):
-                case (3): {//Bottom-right
-                    buffer.put(1);
-                    buffer.put(1);
-                    buffer.put(0.5F);
-                    buffer.put(-0.5F);
-                    break;
-                }
-                case (1): {//Top-right
-                    buffer.put(1);
-                    buffer.put(0);
-                    buffer.put(0.5F);
-                    buffer.put(0.5F);
-                    break;
-                }
-                case (2):
-                case (4): {//Top-left
-                    buffer.put(0);
-                    buffer.put(0);
-                    buffer.put(-0.5F);
-                    buffer.put(0.5F);
-                    break;
-                }
-                case (5): {//Bottom-left
-                    buffer.put(0);
-                    buffer.put(1);
-                    buffer.put(-0.5F);
-                    buffer.put(-0.5F);
-                    break;
-                }
-            }
-            //Z is always 0.
-            buffer.put(0);
-        }
-        buffer.flip();
-        return buffer;
     }
 }

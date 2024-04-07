@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
  */
 public abstract class AModelParser {
     private static final Map<String, AModelParser> parsers = new HashMap<>();
+    private static final Map<String, List<RenderableVertices>> parsedVertices = new HashMap<>();
     public static final String WINDOW_OBJECT_NAME = "window";
     public static final String ONLINE_TEXTURE_OBJECT_NAME = "url";
     public static final String TRANSLUCENT_OBJECT_NAME = "translucent";
@@ -41,19 +42,22 @@ public abstract class AModelParser {
     /**
      * Parses the model at the passed-in location. The return value is a list of objects parsed.
      */
-    protected abstract List<RenderableObject> parseModelInternal(String modelLocation);
+    protected abstract List<RenderableVertices> parseModelInternal(String modelLocation);
 
     /**
      * Attempts to obtain the parser for the passed-in modelLocation.  After this, the model
      * is parsed and returned.  If no parser is found, an exception is thrown.
+     * If the model has already been parsed, a cached copy is returned.
      */
-    public static List<RenderableObject> parseModel(String modelLocation) {
-        AModelParser parser = parsers.get(modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
-        if (parser != null) {
-            return parser.parseModelInternal(modelLocation);
-        } else {
-            throw new IllegalArgumentException("No parser found for model format of " + modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
-        }
+    public static List<RenderableVertices> parseModel(String modelLocation) {
+        return parsedVertices.computeIfAbsent(modelLocation, k -> {
+            AModelParser parser = parsers.get(modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
+            if (parser != null) {
+                return parser.parseModelInternal(modelLocation);
+            } else {
+                throw new IllegalArgumentException("No parser found for model format of " + modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
+            }
+        });
     }
 
     /**
@@ -65,8 +69,8 @@ public abstract class AModelParser {
     public static List<RenderableModelObject> generateRenderables(AEntityD_Definable<?> entity) {
         String modelLocation = entity.definition.getModelLocation(entity.subDefinition);
         List<RenderableModelObject> modelObjects = new ArrayList<>();
-        for (RenderableObject parsedObject : parseModel(modelLocation)) {
-            modelObjects.add(new RenderableModelObject(modelLocation, parsedObject));
+        for (RenderableVertices parsedObject : parseModel(modelLocation)) {
+            modelObjects.add(new RenderableModelObject(entity, parsedObject));
         }
         return modelObjects;
     }

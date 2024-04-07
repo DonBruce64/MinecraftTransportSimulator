@@ -50,7 +50,7 @@ public class GUIFuelPump extends AGUIInventory {
         int xOffset = 8;
         for (int i = 0; i < pump.fuelItems.getSize(); ++i) {
             IWrapperItemStack stack = pump.fuelItems.getStack(i);
-            GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22 * (i % (pump.fuelItems.getSize() / 2)), true) {
+            GUIComponentButton itemButton = new GUIComponentButton(this, guiLeft + xOffset, guiTop + 12 + 22 * (i % (pump.fuelItems.getSize() / 2)), true) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     if (configuring) {
@@ -76,7 +76,7 @@ public class GUIFuelPump extends AGUIInventory {
             fuelComponents.add(itemIcon);
             fuelItems.add(itemIcon);
 
-            GUIComponentTextBox fuelAmount = new GUIComponentTextBox(itemButton.constructedX + itemButton.width + 4, itemButton.constructedY, 50, String.valueOf(pump.fuelAmounts.get(i))) {
+            GUIComponentTextBox fuelAmount = new GUIComponentTextBox(this, itemButton.constructedX + itemButton.width + 4, itemButton.constructedY, 50, String.valueOf(pump.fuelAmounts.get(i))) {
                 @Override
                 public boolean isTextValid(String newText) {
                     //Only allow whole numbers.
@@ -104,7 +104,7 @@ public class GUIFuelPump extends AGUIInventory {
         int buttonOffset = interactableSlotButtons.size();
         int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - pump.paymentItems.getSize()) * GUIComponentButton.ITEM_BUTTON_SIZE / 9 / 2;
         for (byte i = 0; i < pump.paymentItems.getSize(); ++i) {
-            GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 9), guiTop + 52 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 9), true) {
+            GUIComponentButton itemButton = new GUIComponentButton(this, guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 9), guiTop + 52 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 9), true) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     int index = interactableSlotButtons.indexOf(this) - buttonOffset;

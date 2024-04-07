@@ -7,7 +7,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
@@ -24,8 +23,8 @@ public final class ModelParserOBJ extends AModelParser {
     }
 
     @Override
-    protected List<RenderableObject> parseModelInternal(String modelLocation) {
-        List<RenderableObject> objectList = new ArrayList<>();
+    protected List<RenderableVertices> parseModelInternal(String modelLocation) {
+        List<RenderableVertices> objectList = new ArrayList<>();
         BufferedReader reader;
         try {
             reader = new BufferedReader(new InputStreamReader(InterfaceManager.coreInterface.getPackResource(modelLocation)));
@@ -115,7 +114,7 @@ public final class ModelParserOBJ extends AModelParser {
         }
     }
 
-    private static void compileVertexArray(List<RenderableObject> objectList, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName) {
+    private static void compileVertexArray(List<RenderableVertices> objectList, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName) {
         if (objectName == null) {
             InterfaceManager.coreInterface.logError("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
             objectName = "model";
@@ -169,7 +168,7 @@ public final class ModelParserOBJ extends AModelParser {
                 compiledBuffer.put(vertexList.get(vertexData[0]));
             }
             compiledBuffer.flip();
-            objectList.add(new RenderableObject(objectName, null, ColorRGB.WHITE, compiledBuffer, true));
+            objectList.add(new RenderableVertices(objectName, compiledBuffer, true));
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
         }

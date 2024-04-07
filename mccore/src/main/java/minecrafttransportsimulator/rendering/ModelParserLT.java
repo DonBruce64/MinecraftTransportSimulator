@@ -6,7 +6,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
@@ -24,8 +23,8 @@ public final class ModelParserLT extends AModelParser {
     }
 
     @Override
-    protected List<RenderableObject> parseModelInternal(String modelLocation) {
-        List<RenderableObject> objectList = new ArrayList<>();
+    protected List<RenderableVertices> parseModelInternal(String modelLocation) {
+        List<RenderableVertices> objectList = new ArrayList<>();
         InputStream stream;
         try {
             stream = InterfaceManager.coreInterface.getPackResource(modelLocation);
@@ -113,7 +112,11 @@ public final class ModelParserLT extends AModelParser {
                         }
                     }
                 }
-                RenderableObject newObject = new RenderableObject("little_tiles_generated", RenderableObject.GLOBAL_TEXTURE_NAME, new ColorRGB(tile.tile.color), buffer, false);
+                //This could be supported in the future, but right now it ain't since vertices shouln't hold color data, since it's wasteful.
+                //Stupid MC with stupid color packing....
+                //new ColorRGB(tile.tile.color)
+                buffer.flip();
+                RenderableVertices newObject = new RenderableVertices("little_tiles_generated", buffer, true);
                 objectList.add(newObject);
             }
 

@@ -169,7 +169,7 @@ public class GUIPanel extends AGUIBase {
             AGUIComponent newComponent = null;
             String text = null;
             if (panelComponent.specialComponent == null) {
-                newComponent = new GUIPanelButton(panelComponent) {
+                newComponent = new GUIPanelButton(this, panelComponent) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         if (panelComponent.clickAction != null) {
@@ -189,7 +189,7 @@ public class GUIPanel extends AGUIBase {
                 switch (panelComponent.specialComponent) {
                     case CAR_LIGHT: {
                         if (vehicle.definition.motorized.hasRunningLights || vehicle.definition.motorized.hasHeadlights) {
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
@@ -218,7 +218,7 @@ public class GUIPanel extends AGUIBase {
                     }
                     case TURN_SIGNAL: {
                         if (vehicle.definition.motorized.hasTurnSignals) {
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
@@ -281,14 +281,14 @@ public class GUIPanel extends AGUIBase {
                         if (!vehicle.engines.isEmpty()) {
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
                                 if (!populatedSingleEngineControl) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
                                     text = "ENGINE";
                                     populatedSingleEngineControl = true;
                                 }
                             } else {
                                 PartEngine engine = getEngineBySwitchIndex(engineControlIndex++);
                                 if (engine != null) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
                                     text = "ENGINE";
                                 }
                             }
@@ -299,14 +299,14 @@ public class GUIPanel extends AGUIBase {
                         if (!vehicle.engines.isEmpty()) {
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
                                 if (!populatedSingleEngineMag) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
                                     text = "MAG";
                                     populatedSingleEngineMag = true;
                                 }
                             } else {
                                 PartEngine engine = getEngineBySwitchIndex(engineMagIndex++);
                                 if (engine != null) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
                                     text = "MAG";
                                 }
                             }
@@ -317,14 +317,14 @@ public class GUIPanel extends AGUIBase {
                         if (!vehicle.engines.isEmpty()) {
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
                                 if (!populatedSingleEngineStarter) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, null);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
                                     text = "START";
                                     populatedSingleEngineStarter = true;
                                 }
                             } else {
                                 PartEngine engine = getEngineBySwitchIndex(engineStarterIndex++);
                                 if (engine != null) {
-                                    newComponent = new GUIPanelEngineButton(panelComponent, engine);
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
                                     text = "START";
                                 }
                             }
@@ -335,7 +335,7 @@ public class GUIPanel extends AGUIBase {
                         if (trailerSwitchDefs.size() > trailerIndex) {
                             SwitchEntry switchDef = trailerSwitchDefs.get(trailerIndex++);
                             text = switchDef.connectionGroup.groupName;
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
@@ -359,7 +359,7 @@ public class GUIPanel extends AGUIBase {
                     }
                     case BEACON_BOX: {
                         if (vehicle.definition.motorized.hasRadioNav || ConfigSystem.settings.general.allPlanesWithNav.value) {
-                            beaconBox = new GUIComponentTextBox(guiLeft + (int) panelComponent.pos.x, guiTop + (int) panelComponent.pos.y, panelComponent.width, panelComponent.height, vehicle.selectedBeaconName, ColorRGB.WHITE, 5, (int) panelComponent.textureStart.x, (int) panelComponent.textureStart.y, panelComponent.width, panelComponent.height) {
+                            beaconBox = new GUIComponentTextBox(this, guiLeft + (int) panelComponent.pos.x, guiTop + (int) panelComponent.pos.y, panelComponent.width, panelComponent.height, vehicle.selectedBeaconName, ColorRGB.WHITE, 5, (int) panelComponent.textureStart.x, (int) panelComponent.textureStart.y, panelComponent.width, panelComponent.height) {
                                 @Override
                                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                                     super.handleKeyTyped(typedChar, typedCode, control);
@@ -374,17 +374,17 @@ public class GUIPanel extends AGUIBase {
                         break;
                     }
                     case ROLL_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
                         text = "ROLL TRIM";
                         break;
                     }
                     case PITCH_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE, 0.1, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE, 0.1, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM);
                         text = "PITCH TRIM";
                         break;
                     }
                     case YAW_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_RUDDER_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_RUDDER_TRIM);
                         text = "YAW TRIM";
                         break;
                     }
@@ -393,7 +393,7 @@ public class GUIPanel extends AGUIBase {
                 if (buttonVariable != null) {
                     //Need this to make complier shut up.
                     final String finalVar = buttonVariable;
-                    newComponent = new GUIPanelButton(panelComponent) {
+                    newComponent = new GUIPanelButton(this, panelComponent) {
                         @Override
                         public void onClicked(boolean leftSide) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, finalVar));
@@ -561,8 +561,8 @@ public class GUIPanel extends AGUIBase {
     private abstract class GUIPanelButton extends GUIComponentButton {
         protected final JSONPanelComponent component;
 
-        private GUIPanelButton(JSONPanelComponent component) {
-            super(guiLeft + (int) component.pos.x, guiTop + (int) component.pos.y, component.width, component.height, (int) component.textureStart.x, (int) component.textureStart.y, component.width, component.height);
+        private GUIPanelButton(AGUIBase gui, JSONPanelComponent component) {
+            super(gui, guiLeft + (int) component.pos.x, guiTop + (int) component.pos.y, component.width, component.height, (int) component.textureStart.x, (int) component.textureStart.y, component.width, component.height);
             this.component = component;
 
             //Auto-add us when created to the appropriate objects.
@@ -579,8 +579,8 @@ public class GUIPanel extends AGUIBase {
     private class GUIPanelEngineButton extends GUIPanelButton {
         private final PartEngine engine;
 
-        private GUIPanelEngineButton(JSONPanelComponent component, PartEngine engine) {
-            super(component);
+        private GUIPanelEngineButton(AGUIBase gui, JSONPanelComponent component, PartEngine engine) {
+            super(gui, component);
             this.engine = engine;
         }
 
@@ -684,8 +684,8 @@ public class GUIPanel extends AGUIBase {
         private boolean appliedTrimThisRender;
         private boolean trimCycleVar;
 
-        private GUIPanelTrimButton(JSONPanelComponent component, String trimVariable, double leftIncrement, double bounds) {
-            super(component);
+        private GUIPanelTrimButton(AGUIBase gui, JSONPanelComponent component, String trimVariable, double leftIncrement, double bounds) {
+            super(gui, component);
             this.trimVariable = trimVariable;
             this.leftIncrement = leftIncrement;
             this.bounds = bounds;

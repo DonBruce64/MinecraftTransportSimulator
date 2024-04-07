@@ -9,7 +9,9 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -34,8 +36,8 @@ public class BoundingBox {
     public final Point3D globalCenter;
     public final Point3D currentCollisionDepth;
     public final List<Point3D> collidingBlockPositions = new ArrayList<>();
-    private RenderableObject wireframeRenderable;
-    private RenderableObject holographicRenderable;
+    private RenderableData wireframeRenderable;
+    private RenderableData holographicRenderable;
     private final Point3D tempGlobalCenter;
 
     public double widthRadius;
@@ -145,24 +147,6 @@ public class BoundingBox {
             heightRadius = entity.scale.y * definition.height / 2D;
             depthRadius = entity.scale.z * definition.width / 2D;
         }
-    }
-
-    /**
-     * Returns the edge points for this box.
-     * Order is the 4 -x points, then the 4 +x.
-     * Y is -y for two, +y for two.
-     * Z alternates each point.
-     */
-    public float[][] getEdgePoints() {
-        float[][] points = new float[8][];
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                for (int k = 0; k < 2; ++k) {
-                    points[i * 4 + j * 2 + k] = new float[]{(float) (i == 0 ? -widthRadius : +widthRadius), (float) (j == 0 ? -heightRadius : +heightRadius), (float) (k == 0 ? -depthRadius : +depthRadius)};
-                }
-            }
-        }
-        return points;
     }
 
     /**
@@ -288,26 +272,25 @@ public class BoundingBox {
      */
     public void renderWireframe(AEntityC_Renderable entity, TransformationMatrix transform, Point3D offset, ColorRGB color) {
         if (wireframeRenderable == null) {
-            final ColorRGB boxColor;
+            wireframeRenderable = new RenderableData(new RenderableVertices(false));
             if (definition != null) {
                 if (definition.variableName != null) {
                     //Green for boxes that activate variables.
-                    boxColor = ColorRGB.GREEN;
+                    wireframeRenderable.setColor(ColorRGB.GREEN);
                 } else if (groupDef != null && groupDef.isForBullets) {
                     //Orange for bullet collisions.
-                    boxColor = ColorRGB.ORANGE;
+                    wireframeRenderable.setColor(ColorRGB.ORANGE);
                 } else if (groupDef != null && !groupDef.isInterior) {
                     //Red for block collisions.
-                    boxColor = ColorRGB.RED;
+                    wireframeRenderable.setColor(ColorRGB.RED);
                 } else {
                     //Black for general collisions.
-                    boxColor = ColorRGB.BLACK;
+                    wireframeRenderable.setColor(ColorRGB.BLACK);
                 }
             } else {
                 //Not a defined collision box.  Must be an interaction box.  Yellow.
-                boxColor = ColorRGB.YELLOW;
+                wireframeRenderable.setColor(ColorRGB.YELLOW);
             }
-            this.wireframeRenderable = new RenderableObject(new ColorRGB(boxColor.rgbInt), false);
         }
         wireframeRenderable.transform.set(transform);
         helperPoint.set(globalCenter);
@@ -321,8 +304,8 @@ public class BoundingBox {
             //Override default color with set color.
             wireframeRenderable.setColor(color);
         }
-        wireframeRenderable.setWireframeBoundingBox(this);
-        wireframeRenderable.render(null);
+        wireframeRenderable.setBoxBounds(this, true);
+        wireframeRenderable.render();
     }
 
     /**
@@ -332,14 +315,15 @@ public class BoundingBox {
      */
     public void renderHolographic(TransformationMatrix transform, Point3D offset, ColorRGB color) {
         if (holographicRenderable == null) {
-            holographicRenderable = new RenderableObject(new ColorRGB(), true);
+            holographicRenderable = new RenderableData(new RenderableVertices(true), "mts:textures/rendering/holobox.png");
+            holographicRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         }
         holographicRenderable.transform.set(transform);
         if (offset != null) {
             holographicRenderable.transform.applyTranslation(offset);
         }
         holographicRenderable.setColor(color);
-        holographicRenderable.setHolographicBoundingBox(this);
-        holographicRenderable.render(null);
+        holographicRenderable.setBoxBounds(this, false);
+        holographicRenderable.render();
     }
 }

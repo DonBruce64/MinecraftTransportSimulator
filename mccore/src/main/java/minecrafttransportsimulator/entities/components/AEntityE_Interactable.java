@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -37,7 +35,8 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -127,7 +126,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Similar to {@link #instruments}, except this is the renderable bits for them.  There's one entry for each component,
      * with text being a null entry as text components render via the text rendering system.
      */
-    public final List<List<RenderableObject>> instrumentRenderables = new ArrayList<>();
+    public final List<List<RenderableData>> instrumentRenderables = new ArrayList<>();
 
     /**
      * Maps instrument components to their respective switchboxes.
@@ -474,12 +473,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      */
     public void addInstrument(ItemInstrument instrument, int slot) {
         instruments.set(slot, instrument);
-        List<RenderableObject> renderables = new ArrayList<>();
+        List<RenderableData> renderables = new ArrayList<>();
         for (JSONInstrumentComponent component : instrument.definition.components) {
             if (component.textObject != null) {
                 renderables.add(null);
             } else {
-                renderables.add(new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6 * 8), false));
+                renderables.add(new RenderableData(RenderableVertices.createSprite(1, null, null)));
             }
             if (component.animations != null) {
                 instrumentComponentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));

@@ -39,13 +39,13 @@ public class GUIBooklet extends AGUIBase {
         //Page navigation buttons.
         //We auto-calculate the texture size from here based on the GUI size.
         //This is needed to tell the buttons what texture size they are using.
-        addComponent(leftButton = new GUIComponentButton(guiLeft + 20, guiTop + 150, 20, 20, 0, 196, 20, 20) {
+        addComponent(leftButton = new GUIComponentButton(this, guiLeft + 20, guiTop + 150, 20, 20, 0, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 --booklet.pageNumber;
             }
         });
-        addComponent(rightButton = new GUIComponentButton(guiLeft + booklet.definition.booklet.textureWidth - 40, guiTop + 150, 20, 20, 20, 196, 20, 20) {
+        addComponent(rightButton = new GUIComponentButton(this, guiLeft + booklet.definition.booklet.textureWidth - 40, guiTop + 150, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 ++booklet.pageNumber;
@@ -75,7 +75,7 @@ public class GUIBooklet extends AGUIBase {
             int leftSideOffset = guiLeft + 20;
             int rightSideOffset = guiLeft + booklet.definition.booklet.textureWidth / 2 + 20;
             for (int i = 0; i < booklet.definition.booklet.pages.size(); ++i) {
-                GUIComponentButton contentsHyperlink = new GUIComponentButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10 * (i % 10), 110, 10, (i + 1) + ": " + booklet.languagePageTitle.get(i).getCurrentValue(), false, booklet.definition.booklet.pages.get(i).pageText.get(0).color, false) {
+                GUIComponentButton contentsHyperlink = new GUIComponentButton(this, i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10 * (i % 10), 110, 10, (i + 1) + ": " + booklet.languagePageTitle.get(i).getCurrentValue(), false, booklet.definition.booklet.pages.get(i).pageText.get(0).color, false) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         booklet.pageNumber = contentsButtons.indexOf(this) + 2;
@@ -86,7 +86,7 @@ public class GUIBooklet extends AGUIBase {
             }
 
             //Button on other pages to go back to TOC.
-            addComponent(contentsButton = new GUIComponentButton(leftButton.constructedX + leftButton.width, guiTop + 150, 20, 20, 40, 196, 20, 20) {
+            addComponent(contentsButton = new GUIComponentButton(this, leftButton.constructedX + leftButton.width, guiTop + 150, 20, 20, 40, 196, 20, 20) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     booklet.pageNumber = 1;

@@ -37,7 +37,7 @@ public class GUIFurnace extends AGUIInventory {
         interactableSlotButtons.clear();
         interactableSlotIcons.clear();
 
-        GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 51, guiTop + 20, false) {
+        GUIComponentButton smeltingItemButton = new GUIComponentButton(this, guiLeft + 51, guiTop + 20, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
@@ -50,7 +50,7 @@ public class GUIFurnace extends AGUIInventory {
         addComponent(smeltingItemIcon);
         interactableSlotIcons.add(smeltingItemIcon);
 
-        GUIComponentButton smeltedItemButton = new GUIComponentButton(guiLeft + 110, guiTop + 21, false) {
+        GUIComponentButton smeltedItemButton = new GUIComponentButton(this, guiLeft + 110, guiTop + 21, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
@@ -64,7 +64,7 @@ public class GUIFurnace extends AGUIInventory {
         interactableSlotIcons.add(smeltedItemIcon);
 
         if (furnace.definition.furnaceType.equals(FurnaceComponentType.STANDARD)) {
-            GUIComponentButton fuelItemButton = new GUIComponentButton(guiLeft + 79, guiTop + 53, false) {
+            GUIComponentButton fuelItemButton = new GUIComponentButton(this, guiLeft + 79, guiTop + 53, false) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
@@ -91,13 +91,13 @@ public class GUIFurnace extends AGUIInventory {
                 backplaneOffset = 67;
                 break;
         }
-        addComponent(new GUIComponentCutout(guiLeft + 61, guiTop + 53, 54, 18, 176, backplaneOffset));
+        addComponent(new GUIComponentCutout(this, guiLeft + 61, guiTop + 53, 54, 18, 176, backplaneOffset));
 
         //Add the flame section that displays how much fuel the furnace has.
-        addComponent(this.fuelIcon = new GUIComponentCutout(guiLeft + 81, guiTop + 38, 14, 14, 176, 0));
+        addComponent(this.fuelIcon = new GUIComponentCutout(this, guiLeft + 81, guiTop + 38, 14, 14, 176, 0));
 
         //Add the arrow section that displays how far along the smelting operation is.
-        addComponent(this.smeltingProgress = new GUIComponentCutout(guiLeft + 77, guiTop + 20, 24, 17, 176, 14));
+        addComponent(this.smeltingProgress = new GUIComponentCutout(this, guiLeft + 77, guiTop + 20, 24, 17, 176, 14));
     }
 
     @Override

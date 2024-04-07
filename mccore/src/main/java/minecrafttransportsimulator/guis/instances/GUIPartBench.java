@@ -121,7 +121,7 @@ public class GUIPartBench extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
         //Create pack navigation section.
-        addComponent(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20) {
+        addComponent(prevPackButton = new GUIComponentButton(this, guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = prevPack;
@@ -131,7 +131,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, 20, 60, 196, 20, 20) {
+        addComponent(nextPackButton = new GUIComponentButton(this, guiLeft + 243, guiTop + 11, 20, 20, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = nextPack;
@@ -145,7 +145,7 @@ public class GUIPartBench extends AGUIBase {
         addComponent(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 
         //Create part navigation section.
-        addComponent(prevPartButton = new GUIComponentButton(prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20) {
+        addComponent(prevPartButton = new GUIComponentButton(this, prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevItem;
@@ -154,7 +154,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextPartButton = new GUIComponentButton(nextPackButton.constructedX, nextPackButton.constructedY + nextPackButton.height, 20, 20, 60, 196, 20, 20) {
+        addComponent(nextPartButton = new GUIComponentButton(this, nextPackButton.constructedX, nextPackButton.constructedY + nextPackButton.height, 20, 20, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextItem;
@@ -168,14 +168,14 @@ public class GUIPartBench extends AGUIBase {
         addComponent(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 
         //Create color navigation section.
-        addComponent(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20) {
+        addComponent(prevColorButton = new GUIComponentButton(this, guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevSubItem;
                 updateNames();
             }
         });
-        addComponent(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, 15, 60, 196, 20, 20) {
+        addComponent(nextColorButton = new GUIComponentButton(this, guiLeft + 245, guiTop + 131, 20, 15, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextSubItem;
@@ -185,7 +185,7 @@ public class GUIPartBench extends AGUIBase {
         addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, LanguageSystem.GUI_PART_BENCH_COLOR.getCurrentValue(), TextAlignment.CENTERED, 1.0F).setComponent(nextColorButton));
 
         //Create recipe selection button.
-        addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {
+        addComponent(nextRecipeButton = new GUIComponentButton(this, guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 if (++recipeIndex == currentItem.definition.general.materialLists.size()) {
@@ -200,7 +200,7 @@ public class GUIPartBench extends AGUIBase {
         craftingItemBackgrounds.clear();
         for (byte i = 0; i < 7 * 2; ++i) {
             GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 7), guiTop + 20 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 7), 1.0F);
-            GUIComponentCutout itemBackground = new GUIComponentCutout(craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
+            GUIComponentCutout itemBackground = new GUIComponentCutout(this, craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
             itemBackground.visible = false;
             addComponent(craftingItem);
             addComponent(itemBackground);
@@ -213,13 +213,13 @@ public class GUIPartBench extends AGUIBase {
         addComponent(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 
         //Create the info switching button.
-        addComponent(vehicleInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20) {
+        addComponent(vehicleInfoButton = new GUIComponentButton(this, guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 displayVehicleInfo = true;
             }
         });
-        addComponent(vehicleDescriptionButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 80, 196, 20, 20) {
+        addComponent(vehicleDescriptionButton = new GUIComponentButton(this, guiLeft + 147, guiTop + 159, 20, 20, 80, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 displayVehicleInfo = false;
@@ -227,7 +227,7 @@ public class GUIPartBench extends AGUIBase {
         });
 
         //Create the crafting switching button.
-        addComponent(repairCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20) {
+        addComponent(repairCraftingButton = new GUIComponentButton(this, guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = true;
@@ -235,7 +235,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(normalCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20) {
+        addComponent(normalCraftingButton = new GUIComponentButton(this, guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = false;
@@ -245,7 +245,7 @@ public class GUIPartBench extends AGUIBase {
         });
 
         //Create the confirm button.
-        addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
+        addComponent(confirmButton = new GUIComponentButton(this, guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(entity, player, currentItem, recipeIndex, viewingRepair));

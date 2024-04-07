@@ -65,7 +65,7 @@ public class GUIPaintGun extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
         //Create color navigation section.
-        addComponent(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, 40, 196, 20, 20) {
+        addComponent(prevColorButton = new GUIComponentButton(this, guiLeft + 38, guiTop + 135, 20, 20, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevSubItem;
@@ -73,7 +73,7 @@ public class GUIPaintGun extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextColorButton = new GUIComponentButton(guiLeft + 160, guiTop + 135, 20, 20, 60, 196, 20, 20) {
+        addComponent(nextColorButton = new GUIComponentButton(this, guiLeft + 160, guiTop + 135, 20, 20, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextSubItem;
@@ -81,7 +81,7 @@ public class GUIPaintGun extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 233, guiTop + 100, 20, 20, 80, 196, 20, 20) {
+        addComponent(nextRecipeButton = new GUIComponentButton(this, guiLeft + 233, guiTop + 100, 20, 20, 80, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
@@ -97,7 +97,7 @@ public class GUIPaintGun extends AGUIBase {
         craftingItemBackgrounds.clear();
         for (byte i = 0; i < 4 * 2; ++i) {
             GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 4), guiTop + 26 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 4), 1.0F);
-            GUIComponentCutout itemBackground = new GUIComponentCutout(craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
+            GUIComponentCutout itemBackground = new GUIComponentCutout(this, craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
             itemBackground.visible = false;
             addComponent(craftingItem);
             addComponent(itemBackground);
@@ -109,7 +109,7 @@ public class GUIPaintGun extends AGUIBase {
         addComponent(modelRender = new GUIComponent3DModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
 
         //Create the confirm button.
-        addComponent(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20) {
+        addComponent(confirmButton = new GUIComponentButton(this, guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityColorChange(entity, player, currentItem, recipeIndex));

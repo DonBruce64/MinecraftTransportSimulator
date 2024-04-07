@@ -1,13 +1,14 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.FloatBuffer;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Base class for all components.  Contains basic common variables to all rendering.
@@ -33,8 +34,9 @@ public abstract class AGUIComponent {
     public boolean visible = true;
     public boolean ignoreGUILightingState;
     public String text;
-    protected RenderableObject renderable;
-    private static final RenderableObject mutableTooltipRenderable = new RenderableObject("gui_tooltip", AGUIBase.STANDARD_TEXTURE_NAME, ColorRGB.WHITE, FloatBuffer.allocate(9 * 6 * 8), false);
+    protected RenderableData renderable;
+    private static final RenderableVertices mutableTooltipVertices = RenderableVertices.createSprite(9, null, null);
+    private static final RenderableData mutableTooltipRenderable = new RenderableData(mutableTooltipVertices, AGUIBase.STANDARD_TEXTURE_NAME);
     private static final Point3D mutableTooltipPosition = new Point3D();
 
     protected static final int TEXT_DEFAULT_ZOFFSET = 200;
@@ -45,8 +47,13 @@ public abstract class AGUIComponent {
     private static final int TOOLTIP_SECTION_BORDER = 3;
     private static final int TOOLTIP_SECTION_WIDTH_OFFSET = 100;
     private static final int TOOLTIP_SECTION_HEIGHT_OFFSET = 196;
-    private static final int TOOLTIP_TEXTURE_WIDTH = 256;
-    private static final int TOOLTIP_TEXTURE_HEIGHT = 256;
+    private static final float TOOLTIP_TEXTURE_WIDTH = 256;//Float to force floating-point division in math.
+    private static final float TOOLTIP_TEXTURE_HEIGHT = 256;
+
+    static {
+        //Don't take into account lighting.
+        mutableTooltipRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+    }
 
     public AGUIComponent(int x, int y, int width, int height) {
         this.constructedX = x;
@@ -139,38 +146,34 @@ public abstract class AGUIComponent {
                 yOffset = mouseY - actualStringHeight - 2 * TOOLTIP_BORDER_PADDING;
             }
 
-            //Render the 4 corners, and then the 4 edge bits.  This prevents stretching.
-            mutableTooltipRenderable.vertices.clear();
+            //Render the 4 corners, and the 4 edge bits, and then the center.  This prevents stretching.
             int horizontalSegmentSize = actualStringWidth + 2 * TOOLTIP_BORDER_PADDING;
             int verticalSegmentSize = actualStringHeight + 2 * TOOLTIP_BORDER_PADDING;
+            
             //Top-left.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(0, xOffset, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET / TOOLTIP_TEXTURE_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
             //Top-right.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(1, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
             //Bottom-left.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(2, xOffset, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT) / TOOLTIP_TEXTURE_HEIGHT);
             //Bottom-right.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(3, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT) / TOOLTIP_TEXTURE_HEIGHT);
 
             //Top-center.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -yOffset, horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(4, xOffset + TOOLTIP_SECTION_BORDER, -yOffset, horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
             //Bottom-center.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(5, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT) / TOOLTIP_TEXTURE_HEIGHT);
             //Left-center.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(6, xOffset, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
             //Right-center.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+            mutableTooltipVertices.setSpriteProperties(7, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
 
             //Center-center.
-            gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
-            mutableTooltipRenderable.vertices.flip();
-
-            //Don't take into account lighting.
-            mutableTooltipRenderable.setLighting(0, true, true);
+            mutableTooltipVertices.setSpriteProperties(8, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2 * TOOLTIP_SECTION_BORDER, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
 
             //Do the actual rendering.
             mutableTooltipRenderable.transform.setTranslation(0, 0, textPosition.z + 25);
-            mutableTooltipRenderable.render(null);
+            mutableTooltipRenderable.render();
 
             //Need to move tooltip text by -y to account for inverted coords.
             mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);

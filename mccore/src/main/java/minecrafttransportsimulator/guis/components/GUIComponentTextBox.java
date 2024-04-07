@@ -26,16 +26,16 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     private final int maxTextLength;
     private String flashText;
 
-    public GUIComponentTextBox(int x, int y, int width, String text) {
-        this(x, y, width, 20, text, ColorRGB.WHITE, 32);
+    public GUIComponentTextBox(AGUIBase gui, int x, int y, int width, String text) {
+        this(gui, x, y, width, 20, text, ColorRGB.WHITE, 32);
     }
 
-    public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength) {
-        this(x, y, width, height, text, fontColor, maxTextLength, AGUIBase.STANDARD_COLOR_WIDTH_OFFSET, AGUIBase.STANDARD_BLACK_HEIGHT_OFFSET, AGUIBase.STANDARD_COLOR_WIDTH, AGUIBase.STANDARD_COLOR_HEIGHT);
+    public GUIComponentTextBox(AGUIBase gui, int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength) {
+        this(gui, x, y, width, height, text, fontColor, maxTextLength, AGUIBase.STANDARD_COLOR_WIDTH_OFFSET, AGUIBase.STANDARD_BLACK_HEIGHT_OFFSET, AGUIBase.STANDARD_COLOR_WIDTH, AGUIBase.STANDARD_COLOR_HEIGHT);
     }
 
-    public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
-        super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+    public GUIComponentTextBox(AGUIBase gui, int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
+        super(gui, x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
         this.textPosition.set(position.x + 4, position.y - (height >= 20 ? 5 : 1 + height / 10), textPosition.z);
         this.fontColor = fontColor;
         this.maxTextLength = maxTextLength;

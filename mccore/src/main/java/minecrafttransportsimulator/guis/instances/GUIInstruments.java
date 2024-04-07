@@ -74,13 +74,13 @@ public class GUIInstruments extends AGUIBase {
         super.setupComponents();
 
         //Create the prior and next pack buttons.
-        addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false) {
+        addComponent(prevPackButton = new GUIComponentButton(this, guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = playerInstruments.lowerKey(currentPack);
             }
         });
-        addComponent(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE, false) {
+        addComponent(nextPackButton = new GUIComponentButton(this, guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = playerInstruments.higherKey(currentPack);
@@ -92,7 +92,7 @@ public class GUIInstruments extends AGUIBase {
         instrumentSlots.clear();
         instrumentSlotIcons.clear();
         for (byte i = 0; i < 36; ++i) {
-            GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 2), false) {
+            GUIComponentButton instrumentButton = new GUIComponentButton(this, guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 2), false) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
@@ -112,7 +112,7 @@ public class GUIInstruments extends AGUIBase {
         addComponent(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
         //Create the clear button and background.
-        addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2 * GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, LanguageSystem.GUI_INSTRUMENTS_CLEAR.getCurrentValue(), true, ColorRGB.WHITE, false) {
+        addComponent(clearButton = new GUIComponentButton(this, guiLeft + getWidth() - 2 * GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, 2 * GUIComponentButton.ITEM_BUTTON_SIZE, LanguageSystem.GUI_INSTRUMENTS_CLEAR.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
@@ -120,10 +120,10 @@ public class GUIInstruments extends AGUIBase {
                 selectedInstrumentDefinition = null;
             }
         });
-        addComponent(new GUIComponentCutout(clearButton.constructedX, clearButton.constructedY, clearButton.width, clearButton.height, 448, 0, 64, 64));
+        addComponent(new GUIComponentCutout(this, clearButton.constructedX, clearButton.constructedY, clearButton.width, clearButton.height, 448, 0, 64, 64));
 
         //Create the HUD selection button.
-        addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_MAIN.getCurrentValue(), true, ColorRGB.WHITE, false) {
+        addComponent(hudButton = new GUIComponentButton(this, guiLeft, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_MAIN.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 hudSelected = true;
@@ -134,7 +134,7 @@ public class GUIInstruments extends AGUIBase {
         });
 
         //Create the panel selection button.
-        addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_PANEL.getCurrentValue(), true, ColorRGB.WHITE, false) {
+        addComponent(panelButton = new GUIComponentButton(this, guiLeft + getWidth() - 100, guiTop - 20, 100, 20, LanguageSystem.GUI_INSTRUMENTS_PANEL.getCurrentValue(), true, ColorRGB.WHITE, false) {
             @Override
             public void onClicked(boolean leftSide) {
                 hudSelected = false;
@@ -167,7 +167,7 @@ public class GUIInstruments extends AGUIBase {
             List<InstrumentSlotBlock> instrumentBlocks = new ArrayList<>();
             for (JSONInstrumentDefinition packInstrument : entity.definition.instruments) {
                 if (hudSelected ^ packInstrument.placeOnPanel) {
-                    instrumentBlocks.add(new InstrumentSlotBlock(guiLeft, guiTop, entity, packInstrument));
+                    instrumentBlocks.add(new InstrumentSlotBlock(this, guiLeft, guiTop, entity, packInstrument));
                 }
             }
             entityInstrumentBlocks.put(entity, instrumentBlocks);
@@ -283,19 +283,19 @@ public class GUIInstruments extends AGUIBase {
         private final GUIComponentCutout blank;
         private final GUIComponentCutout selectorOverlay;
 
-        private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, JSONInstrumentDefinition definition) {
+        private InstrumentSlotBlock(AGUIBase gui, int guiLeft, int guiTop, AEntityE_Interactable<?> entity, JSONInstrumentDefinition definition) {
             this.definition = definition;
             int instrumentRadius = (int) (64F * definition.hudScale);
             addComponent(this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity, entity.definition.instruments.indexOf(definition)));
-            addComponent(this.button = new GUIComponentButton(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius) {
+            addComponent(this.button = new GUIComponentButton(gui, guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     selectedEntity = entity;
                     selectedInstrumentDefinition = definition;
                 }
             });
-            addComponent(this.blank = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius, 448, 0, 64, 64));
-            addComponent(this.selectorOverlay = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius, 448, 64, 64, 64));
+            addComponent(this.blank = new GUIComponentCutout(gui, guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius, 448, 0, 64, 64));
+            addComponent(this.selectorOverlay = new GUIComponentCutout(gui, guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2 * instrumentRadius, 2 * instrumentRadius, 448, 64, 64, 64));
         }
     }
 }

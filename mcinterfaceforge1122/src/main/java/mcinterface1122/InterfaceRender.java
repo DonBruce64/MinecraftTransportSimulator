@@ -25,7 +25,8 @@ import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -58,7 +59,8 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
-    private static final Map<RenderableObject, Set<Object>> objectMap = new HashMap<>();
+    private static final Map<RenderableVertices, Set<RenderableData>> objectMap = new HashMap<>();
+    private static final Map<RenderableVertices, Integer> cachedIndexMap = new HashMap<>();
     protected static int lastRenderPassActualPass;
 
     @Override
@@ -92,66 +94,66 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void renderVertices(RenderableObject object, Object objectAssociatedTo) {
-        if (object.disableLighting) {
+    public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
+        if (data.lightingMode.disableWorldLighting || data.vertexObject.isLines) {
             setLightingState(false);
         }
-        if (object.ignoreWorldShading) {
+        if (data.lightingMode.disableTextureShadows) {
             setSystemLightingState(false);
         }
-        if (object.enableBrightBlending) {
+        if (data.enableBrightBlending) {
             setBlendBright(true);
         }
-        if (object.texture != null) {
-            bindTexture(object.texture);
+        if (data.texture != null) {
+            bindTexture(data.texture);
         } else {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
-        GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-        if (!object.disableLighting) {
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, object.worldLightValue % 65536, object.worldLightValue / 65536);
+        GlStateManager.color(data.color.red, data.color.green, data.color.blue, data.alpha);
+        if (!data.lightingMode.disableWorldLighting && !data.vertexObject.isLines) {
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, data.worldLightValue % 65536, data.worldLightValue / 65536);
         }
 
         GL11.glPushMatrix();
-        applyTransformOpenGL(object.transform);
-        if (object.cacheVertices) {
+        applyTransformOpenGL(data.transform);
+        if (data.vertexObject.cacheVertices) {
         	//Add entity to the rendering mapping once rendered.
-            objectMap.computeIfAbsent(object, k -> new HashSet<>()).add(objectAssociatedTo);
-            if (object.cachedVertexIndex == -1) {
-                object.cachedVertexIndex = GL11.glGenLists(1);
-                GL11.glNewList(object.cachedVertexIndex, GL11.GL_COMPILE);
-                renderVertices(object.vertices);
+            objectMap.computeIfAbsent(data.vertexObject, k -> new HashSet<>()).add(data);
+            int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {
+                int newIndex = GL11.glGenLists(1);
+                GL11.glNewList(newIndex, GL11.GL_COMPILE);
+                renderVertices(data.vertexObject.vertices);
                 GL11.glEndList();
-            }
-            GL11.glCallList(object.cachedVertexIndex);
-        } else if (object.isLines) {
-            renderLines(object.vertices);
+                return newIndex;
+            });
+            GL11.glCallList(cachedVertexIndex);
+        } else if (data.vertexObject.isLines) {
+            renderLines(data.vertexObject.vertices);
         } else {
-            renderVertices(object.vertices);
+            renderVertices(data.vertexObject.vertices);
         }
         GL11.glPopMatrix();
 
-        if (object.texture == null) {
+        if (data.texture == null) {
             GL11.glEnable(GL11.GL_TEXTURE_2D);
         }
-        if (object.disableLighting || object.ignoreWorldShading) {
+        if (data.lightingMode.disableWorldLighting || data.lightingMode.disableTextureShadows || data.vertexObject.isLines) {
             setLightingState(true);
         }
-        if (object.enableBrightBlending) {
+        if (data.enableBrightBlending) {
             setBlendBright(false);
         }
     }
 
     @Override
-    public void deleteVertices(RenderableObject object, Object objectAssociatedTo) {
-    	if(object.cacheVertices) {
-	    	//Only delete display list if no entities are using it.
-	    	Set<Object> set = objectMap.get(object);
+    public void deleteVertices(RenderableData data) {
+        if (data.vertexObject.cacheVertices) {
+            //Only delete display list if no data objects are using it.
+            Set<RenderableData> set = objectMap.get(data.vertexObject);
             if (set != null) {
-                set.remove(objectAssociatedTo);
+                set.remove(data);
                 if (set.isEmpty()) {
-                    GL11.glDeleteLists(object.cachedVertexIndex, 1);
-                    object.cachedVertexIndex = -1;
+                    GL11.glDeleteLists(cachedIndexMap.remove(data.vertexObject), 1);
                 }
             }
     	}
@@ -267,7 +269,7 @@ public class InterfaceRender implements IInterfaceRender {
         } else if (onlineTextures.containsKey(textureLocation)) {
             //Online texture.
             GlStateManager.bindTexture(onlineTextures.get(textureLocation));
-        } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
+        } else if (textureLocation.equals(RenderableData.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         } else {

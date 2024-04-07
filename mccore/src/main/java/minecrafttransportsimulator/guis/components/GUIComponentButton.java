@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.FloatBuffer;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
@@ -30,55 +30,77 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     public boolean enabled = true;
     public boolean isDynamicTexture;
     public final ColorRGB textColor;
-    protected RenderableObject renderable2;
-    protected RenderableObject renderable2L;
-    protected RenderableObject renderable3;
-    protected RenderableObject renderable3L;
+    protected RenderableData renderable2;
+    protected RenderableData renderable2L;
+    protected RenderableData renderable3;
+    protected RenderableData renderable3L;
 
     /**
      * A Simple button with a rendered string in grey and center-aligned.
      **/
-    public GUIComponentButton(int x, int y, int width, int height, String text) {
-        this(x, y, width, height, text, true, ColorRGB.DARK_GRAY, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT);
+    public GUIComponentButton(AGUIBase gui, int x, int y, int width, int height, String text) {
+        this(gui, x, y, width, height, text, true, ColorRGB.DARK_GRAY, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT);
     }
 
     /**
      * A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui if the final parameter is true.
      **/
-    public GUIComponentButton(int x, int y, boolean renderBackground) {
-        this(x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, renderBackground ? 194 : 0, 0, renderBackground ? ITEM_BUTTON_SIZE : 0, renderBackground ? ITEM_BUTTON_SIZE : 0);
+    public GUIComponentButton(AGUIBase gui, int x, int y, boolean renderBackground) {
+        this(gui, x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, renderBackground ? 194 : 0, 0, renderBackground ? ITEM_BUTTON_SIZE : 0, renderBackground ? ITEM_BUTTON_SIZE : 0);
     }
 
     /**
      * A button without texture or text.  Useful when you want a button for something that needs to render as another component.
      **/
-    public GUIComponentButton(int x, int y, int width, int height) {
-        this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, 0, 0, 0, 0);
+    public GUIComponentButton(AGUIBase gui, int x, int y, int width, int height) {
+        this(gui, x, y, width, height, "", true, ColorRGB.DARK_GRAY, 0, 0, 0, 0);
     }
 
     /**
      * A button made to render with custom button textures.  Does not render font, but does provide additional parameters for the size of the button.
      **/
-    public GUIComponentButton(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
-        this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+    public GUIComponentButton(AGUIBase gui, int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
+        this(gui, x, y, width, height, "", true, ColorRGB.DARK_GRAY, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
     }
 
     /**
      * A complex button with custom height, text alignment, and text color.
      */
-    public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, boolean renderBackground) {
-        this(x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, renderBackground ? DEFAULT_BUTTON_SECTION_WIDTH : 0, renderBackground ? DEFAULT_BUTTON_SECTION_HEIGHT : 0);
+    public GUIComponentButton(AGUIBase gui, int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, boolean renderBackground) {
+        this(gui, x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, renderBackground ? DEFAULT_BUTTON_SECTION_WIDTH : 0, renderBackground ? DEFAULT_BUTTON_SECTION_HEIGHT : 0);
     }
 
     /**
      * A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.
      **/
-    private GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
-        super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+    private GUIComponentButton(AGUIBase gui, int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
+        super(gui, x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
         this.textPosition.set(centeredText ? position.x + width / 2 : position.x, position.y - (height - 8) / 2, textPosition.z);
         this.text = text;
         this.centeredText = centeredText;
         this.textColor = textColor;
+        if (textureSectionWidth != 0 && textureSectionHeight != 0) {
+            for (int i = 0; i < (isDynamicTexture ? 1 : 3); ++i) {
+                int textureHeightStart = textureYOffset + i * textureSectionHeight;
+                RenderableVertices vertexObject = RenderableVertices.createSprite(3, null, null);
+                if (i == 0) {
+                    setOffsetVertices(gui, textureHeightStart, vertexObject);
+                    renderable = new RenderableData(vertexObject, gui.getTexture());
+                    renderableL = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
+                    renderableL.setTransucentOverride();
+                } else if (i == 1) {
+                    setOffsetVertices(gui, textureHeightStart, vertexObject);
+                    renderable2 = new RenderableData(vertexObject, gui.getTexture());
+                    renderable2L = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
+                    renderable2L.setTransucentOverride();
+                } else {
+                    setOffsetVertices(gui, textureHeightStart, vertexObject);
+                    renderable3 = new RenderableData(vertexObject, gui.getTexture());
+                    renderable3L = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
+                    renderable3L.setTransucentOverride();
+                }
+            }
+        }
     }
 
     /**
@@ -114,25 +136,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     @Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         if (textureSectionWidth != 0 && textureSectionHeight != 0) {
-            if (renderable == null) {
-                for (int i = 0; i < (isDynamicTexture ? 1 : 3); ++i) {
-                    int textureUStart = textureYOffset + i * textureSectionHeight;
-                    FloatBuffer buffer = generateOffsetBuffer(gui, textureUStart);
-
-                    if (i == 0) {
-                        renderable = new RenderableObject("gui_button_disabled", gui.getTexture(), ColorRGB.WHITE, buffer, false);
-                        renderableL = new RenderableObject("gui_button_disabled", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
-                    } else if (i == 1) {
-                        renderable2 = new RenderableObject("gui_button_normal", gui.getTexture(), ColorRGB.WHITE, buffer, false);
-                        renderable2L = new RenderableObject("gui_button_normal", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
-                    } else {
-                        renderable3 = new RenderableObject("gui_button_highlight", gui.getTexture(), ColorRGB.WHITE, buffer, false);
-                        renderable3L = new RenderableObject("gui_button_highlight", gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX), ColorRGB.WHITE, buffer, false);
-                    }
-                }
-            }
-
-            RenderableObject currentRenderable;
+            RenderableData currentRenderable;
             if (enabled && !isDynamicTexture) {
                 if (isMouseInBounds(mouseX, mouseY)) {//Highlighted
                     currentRenderable = renderLitTexture ? renderable3L : renderable3;
@@ -142,14 +146,16 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
             } else {//Disabled, or dynamic texture.
                 currentRenderable = renderLitTexture ? renderableL : renderable;
                 if (isDynamicTexture) {
-                    currentRenderable.vertices = generateOffsetBuffer(gui, textureYOffset);
+                    setOffsetVertices(gui, textureYOffset, currentRenderable.vertexObject);
                 }
             }
 
             if (currentRenderable.isTranslucent == blendingEnabled) {
-                currentRenderable.setLighting(gui.worldLightValue, renderBright || ignoreGUILightingState, true);
+                currentRenderable.setTexture(renderLitTexture ? gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX) : gui.getTexture());
+                currentRenderable.setLightValue(gui.worldLightValue);
+                currentRenderable.setLightMode(renderBright || ignoreGUILightingState ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
                 currentRenderable.transform.setTranslation(position);
-                currentRenderable.render(null);
+                currentRenderable.render();
             }
         }
     }
@@ -159,15 +165,12 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
         RenderText.drawText(text, null, textPosition, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, renderTextLit || ignoreGUILightingState, worldLightValue);
     }
 
-    private FloatBuffer generateOffsetBuffer(AGUIBase gui, int textureUStart) {
-        FloatBuffer buffer = FloatBuffer.allocate(3 * 8 * 6);
+    private void setOffsetVertices(AGUIBase gui, int textureHeightStart, RenderableVertices vertexObject) {
         //Left border.
-        gui.addRenderToBuffer(buffer, 0, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        vertexObject.setSpriteProperties(0, 0, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset / (float) gui.getTextureWidth(), textureHeightStart / (float) gui.getTextureHeight(), (textureXOffset + DEFAULT_BUTTON_SECTION_BORDER) / (float) gui.getTextureWidth(), (textureHeightStart + textureSectionHeight) / (float) gui.getTextureHeight());
         //Center stretched segment.
-        gui.addRenderToBuffer(buffer, DEFAULT_BUTTON_SECTION_BORDER, 0, width - 2 * DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+        vertexObject.setSpriteProperties(1, DEFAULT_BUTTON_SECTION_BORDER, 0, width - 2 * DEFAULT_BUTTON_SECTION_BORDER, height, (textureXOffset + DEFAULT_BUTTON_SECTION_BORDER) / (float) gui.getTextureWidth(), textureHeightStart / (float) gui.getTextureHeight(), (textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER) / (float) gui.getTextureWidth(), (textureHeightStart + textureSectionHeight) / (float) gui.getTextureHeight());
         //Right border.
-        gui.addRenderToBuffer(buffer, width - DEFAULT_BUTTON_SECTION_BORDER, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
-        buffer.flip();
-        return buffer;
+        vertexObject.setSpriteProperties(2, width - DEFAULT_BUTTON_SECTION_BORDER, 0, DEFAULT_BUTTON_SECTION_BORDER, height, (textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER) / (float) gui.getTextureWidth(), textureHeightStart / (float) gui.getTextureHeight(), (textureXOffset + textureSectionWidth) / (float) gui.getTextureWidth(), (textureHeightStart + textureSectionHeight) / (float) gui.getTextureHeight());
     }
 }

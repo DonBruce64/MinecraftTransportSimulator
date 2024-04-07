@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +31,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponen
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -43,70 +43,117 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class RenderableModelObject {
-    protected final String modelLocation;
-    public final RenderableObject object;
+    public final RenderableData renderable;
     private final boolean isWindow;
     private final boolean isOnlineTexture;
-    private final RenderableObject interiorWindowObject;
-    private RenderableObject colorObject;
-    private RenderableObject coverObject;
-    private final Map<JSONLight, RenderableObject> flareObjects = new HashMap<>();
-    private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<>();
+    private final JSONAnimatedObject objectDef;
+    private final JSONLight lightDef;
+    private final AnimationSwitchbox switchbox;
+    private final RenderableData interiorWindowRenderable;
+    private final RenderableData colorRenderable;
+    private final RenderableData flareRenderable;
+    private final RenderableData beamRenderable;
+    private final RenderableData coverRenderable;
+    private final List<Double[]> treadPoints;
 
-    /**
-     * Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
-     * This can be shared for two different treads of the same spacing as they render the same.
-     **/
-    private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<>();
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
-    private static final float COLOR_OFFSET = RenderableObject.Z_BUFFER_OFFSET;
-    private static final float FLARE_OFFSET = COLOR_OFFSET + RenderableObject.Z_BUFFER_OFFSET;
-    private static final float COVER_OFFSET = FLARE_OFFSET + RenderableObject.Z_BUFFER_OFFSET;
-    private static final float BEAM_OFFSET = -0.15F;
-    private static final int BEAM_SEGMENTS = 40;
+    private static final float COLOR_OFFSET = RenderableVertices.Z_BUFFER_OFFSET;
+    private static final float FLARE_OFFSET = COLOR_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
+    private static final float COVER_OFFSET = FLARE_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
 
     private final Set<String> downloadingTextures = new HashSet<>();
     private final Set<String> downloadedTextures = new HashSet<>();
+    private static final String ERROR_TEXTURE_NAME = "ERROR";
     private static final Map<String, String> erroredTextures = new HashMap<>();
     private static boolean errorTextureBound;
 
-    public RenderableModelObject(String modelLocation, RenderableObject object) {
+    public RenderableModelObject(AEntityD_Definable<?> entity, RenderableVertices vertexObject) {
         super();
-        this.modelLocation = modelLocation;
-        this.isWindow = object.name.toLowerCase(Locale.ROOT).contains(AModelParser.WINDOW_OBJECT_NAME);
-        this.isOnlineTexture = object.name.toLowerCase(Locale.ROOT).startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || object.name.toLowerCase(Locale.ROOT).endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
+        this.isWindow = vertexObject.name.toLowerCase(Locale.ROOT).contains(AModelParser.WINDOW_OBJECT_NAME);
+        this.isOnlineTexture = vertexObject.name.toLowerCase(Locale.ROOT).startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || vertexObject.name.toLowerCase(Locale.ROOT).endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
+        this.objectDef = entity.animatedObjectDefinitions.get(vertexObject.name);
+        this.lightDef = entity.lightObjectDefinitions.get(vertexObject.name);
+        this.switchbox = entity.animatedObjectSwitchboxes.get(vertexObject.name);
 
         //If we are a window, split the model into two parts.  The first will be the exterior which will
         //be our normal model, the second will be a new, inverted, interior model.
         if (isWindow) {
-            this.object = new RenderableObject(object.name, "mts:textures/rendering/glass.png", object.color, object.vertices, false);
-            this.object.normalizeUVs();
-            this.interiorWindowObject = new RenderableObject(object.name + "_interior", "mts:textures/rendering/glass.png", object.color, FloatBuffer.allocate(object.vertices.capacity()), false);
-            float[] vertexSet = new float[8];
-            for (int i = object.vertices.capacity() - 8; i >= 0; i -= 8) {
-                object.vertices.get(vertexSet);
-                interiorWindowObject.vertices.position(i);
-                interiorWindowObject.vertices.put(vertexSet);
-            }
-            object.vertices.rewind();
-            interiorWindowObject.vertices.position(0);
-            interiorWindowObject.vertices.limit(object.vertices.limit());
+            this.renderable = new RenderableData(vertexObject, "mts:textures/rendering/glass.png");
+            renderable.vertexObject.setTextureBounds(0, 1, 0, 1);
+            this.interiorWindowRenderable = new RenderableData(vertexObject.createBackface(), "mts:textures/rendering/glass.png");
         } else {
-            this.object = object;
-            this.interiorWindowObject = null;
+            this.renderable = new RenderableData(vertexObject);
+            this.interiorWindowRenderable = null;
         }
 
-        //If we are a light object, create color and cover points.
-        //We may not use these, but it saves on processing later as we don't need to re-parse the model.
-        if (object.name.startsWith("&")) {
-            colorObject = generateColors(object);
-            coverObject = generateCovers(object);
+        //Create light objects.
+        if (lightDef != null) {
+            if (lightDef.emissive) {
+                this.colorRenderable = new RenderableData(vertexObject.createOverlay(COLOR_OFFSET), "mts:textures/rendering/light.png");
+            } else {
+                this.colorRenderable = null;
+            }
+            if (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
+                List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
+                List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
+                for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
+                    if (component.flareHeight > 0) {
+                        flareDefs.add(component);
+                    }
+                    if (component.beamDiameter > 0) {
+                        beamDefs.add(component);
+                    }
+                }
+                if (!flareDefs.isEmpty()) {
+                    List<TransformationMatrix> flareTransforms = new ArrayList<>();
+                    List<Point3D> flareNormals = new ArrayList<>();
+                    for (JSONLightBlendableComponent flareDef : flareDefs) {
+                        //Get the matrix  that is needed to rotate points to the normalized vector.
+                        TransformationMatrix transform = new TransformationMatrix();
+                        transform.applyTranslation(flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos));
+                        transform.applyRotation(new RotationMatrix().setToVector(flareDef.axis, false));
+                        transform.applyScaling(flareDef.flareWidth, flareDef.flareHeight, 1);
+                        flareTransforms.add(transform);
+                        flareNormals.add(flareDef.axis);
+                    }
+                    this.flareRenderable = new RenderableData(RenderableVertices.createSprite(flareDefs.size(), flareTransforms, flareNormals), "mts:textures/rendering/lensflare.png");
+                    flareRenderable.setTransucentOverride();
+                } else {
+                    this.flareRenderable = null;
+                }
+                if (!beamDefs.isEmpty()) {
+                    this.beamRenderable = new RenderableData(RenderableVertices.createLightBeams(beamDefs), "mts:textures/rendering/lightbeam.png");
+                    beamRenderable.setTransucentOverride();
+                } else {
+                    this.beamRenderable = null;
+                }
+            } else {
+                this.flareRenderable = null;
+                this.beamRenderable = null;
+            }
+            if (lightDef.covered) {
+                this.coverRenderable = new RenderableData(renderable.vertexObject.createOverlay(COVER_OFFSET), "mts:textures/rendering/glass.png");
+            } else {
+                this.coverRenderable = null;
+            }
+        } else {
+            this.colorRenderable = null;
+            this.flareRenderable = null;
+            this.beamRenderable = null;
+            this.coverRenderable = null;
+        }
+
+        //If we are a tread, create tread points.
+        if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
+            this.treadPoints = generateTreads((PartGroundDevice) entity);
+        } else {
+            this.treadPoints = null;
         }
 
         //Bind the error texture if we haven't already.
         if (!errorTextureBound) {
-            InterfaceManager.renderingInterface.bindURLTexture("ERROR", null);
+            InterfaceManager.renderingInterface.bindURLTexture(ERROR_TEXTURE_NAME, null);
             errorTextureBound = true;
         }
     }
@@ -118,131 +165,154 @@ public class RenderableModelObject {
     public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
-        JSONAnimatedObject objectDef = entity.animatedObjectDefinitions.get(object.name);
-        JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
-        if (shouldRender(entity, objectDef, lightDef, blendingEnabled, partialTicks)) {
-            AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(object.name);
-            if (objectDef == null || objectDef.blendedAnimations || switchbox == null || switchbox.runSwitchbox(partialTicks, false)) {
-                //If we are a blended animation object, run the switchbox.
-                //We won't have done this in the IF statement.
-                if (objectDef != null && objectDef.blendedAnimations && switchbox != null) {
-                    switchbox.runSwitchbox(partialTicks, false);
+        if (shouldRender(entity, objectDef, lightDef, switchbox, blendingEnabled, partialTicks)) {
+            //If we are a online texture, bind that one rather than our own.
+            //We do this first since we don't need to calculate other stuff if we aren't rendering.
+            if (isOnlineTexture) {
+                //Get the texture from the text objects of the entity.
+                //If we don't have anything set, we just use the existing texture.
+                for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
+                    JSONText textDef = textEntry.getKey();
+                    if (textDef.fieldName != null && renderable.vertexObject.name.contains(textDef.fieldName)) {
+                        String textValue = entity.text.get(textDef);
+                        if (erroredTextures.containsKey(textValue)) {
+                            //Error in texture downloading, set fault data before continuing.
+                            textEntry.setValue(erroredTextures.get(textValue));
+                        }
+                        if (textValue.startsWith(ERROR_TEXTURE_NAME)) {
+                            //Texture didn't download, set to error texture.
+                            renderable.setTexture(ERROR_TEXTURE_NAME);
+                        } else if (downloadedTextures.contains(textValue)) {
+                            //Good to render, set texture to object and go.
+                            renderable.setTexture(textValue);
+                        } else if (downloadingTextures.contains(textValue)) {
+                            //Still downloading, skip rendering.
+                            return;
+                        } else if (textValue.isEmpty()) {
+                            //Don't render since we don't have any text bound here.
+                            return;
+                        } else {
+                            //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
+                            new ConnectorThread(textValue, this).run();
+                            downloadingTextures.add(textValue);
+                            return;
+                        }
+                        break;
+                    }
+                }
+            } else if (!isWindow) {
+                //Set our standard texture, provided we're not a window.
+                //This allows the entity to dynamically change its texture.
+                renderable.setTexture(entity.getTexture());
+            }
+
+            //If we are a light, get the actual light level as calculated.
+            //We do this here as there's no reason to calculate this if we're not gonna render.
+            float lightLevel;
+            if (lightDef != null) {
+                lightLevel = entity.lightBrightnessValues.get(lightDef);
+                if (lightDef.isElectric && entity instanceof EntityVehicleF_Physics) {
+                    //Light start dimming at 10V, then go dark at 3V.
+                    double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
+                    if (electricPower < 3) {
+                        lightLevel = 0;
+                    } else if (electricPower < 10) {
+                        lightLevel *= (electricPower - 3) / 7D;
+                    }
+                }
+            } else {
+                lightLevel = 0;
+            }
+
+            //Apply transforms.
+            renderable.transform.set(transform);
+            if (switchbox != null) {
+                renderable.transform.multiply(switchbox.netMatrix);
+            }
+
+            //Do rendering based on object properties.
+            if (treadPoints != null) {
+                //Active tread.  Do tread-path rendering instead of normal model.
+                renderable.setLightValue(entity.worldLightValue);
+                doTreadRendering((PartGroundDevice) entity, partialTicks);
+            } else {
+                //Set object states and render.
+                if (lightDef != null && lightDef.isBeam) {
+                    //Model that's actually a beam, render it with beam lighting/blending. 
+                    renderable.setLightValue(entity.worldLightValue);
+                    renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                    renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+                    renderable.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
+                    renderable.render();
+                } else {
+                    //Do normal rendering.
+                    renderable.setLightValue(entity.worldLightValue);
+                    renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 && lightDef != null && !lightDef.emissive && !lightDef.isBeam ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                    renderable.render();
+
+                    //Render interior window if we have one.
+                    if (interiorWindowRenderable != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
+                        interiorWindowRenderable.setLightValue(renderable.worldLightValue);
+                        interiorWindowRenderable.transform.set(renderable.transform);
+                        interiorWindowRenderable.render();
+                    }
                 }
 
-                float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
-                object.transform.set(transform);
+                //Check if we are a light that's not a beam.  If so, do light-specific rendering.
+                if (lightDef != null && !lightDef.isBeam) {
+                    ColorRGB color = entity.lightColorValues.get(lightDef);
+                    if (colorRenderable != null && lightLevel > 0) {
+                        //Color renderable might or might not be translucent depending on current alpha state.
+                        colorRenderable.setAlpha(lightLevel);
+                        if (blendingEnabled == colorRenderable.isTranslucent) {
+                            colorRenderable.setLightValue(renderable.worldLightValue);
+                            colorRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
+                            colorRenderable.setColor(color);
+                            colorRenderable.transform.set(renderable.transform);
+                            colorRenderable.render();
+                        }
+                    }
 
-                //Apply switchbox transform, if we have one.
-                if (switchbox != null) {
-                    object.transform.multiply(switchbox.netMatrix);
+                    //Flares and beams are always rendered on the blended pass since they need to do alpha blending.
+                    if (blendingEnabled && lightLevel > 0) {
+                        //Light flares or beams detected on blended render pass.
+                        //First render all flares, then render all beams.
+                        float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+                        if (blendableBrightness > 0) {
+                            if (flareRenderable != null) {
+                                flareRenderable.setLightValue(renderable.worldLightValue);
+                                flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                                flareRenderable.setColor(color);
+                                flareRenderable.setAlpha(blendableBrightness);
+                                flareRenderable.transform.set(renderable.transform);
+                                flareRenderable.render();
+                            }
+                            if (beamRenderable != null && entity.shouldRenderBeams()) {
+                                beamRenderable.setLightValue(renderable.worldLightValue);
+                                beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                                beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+                                beamRenderable.setColor(color);
+                                beamRenderable.setAlpha(blendableBrightness);
+                                beamRenderable.transform.set(renderable.transform);
+                                beamRenderable.render();
+                            }
+                        }
+                    }
+                    if (!blendingEnabled && coverRenderable != null) {
+                        //Light cover detected on solid render pass.
+                        coverRenderable.setLightValue(renderable.worldLightValue);
+                        coverRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                        coverRenderable.transform.set(renderable.transform);
+                        coverRenderable.render();
+                    }
                 }
 
-                //If we are a online texture, bind that one rather than our own.
-                if (isOnlineTexture) {
-                    //Get the texture from the text objects of the entity.
-                    //If we don't have anything set, we just use the existing texture.
+                //Render text on this object.  Only do this on the solid pass.
+                if (!blendingEnabled) {
                     for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
                         JSONText textDef = textEntry.getKey();
-                        if (textDef.fieldName != null && object.name.contains(textDef.fieldName)) {
-                            String textValue = entity.text.get(textDef);
-                            if (erroredTextures.containsKey(textValue)) {
-                                //Error in texture downloading, set fault data before continuing.
-                                textEntry.setValue(erroredTextures.get(textValue));
-                            }
-                            if (textValue.startsWith("ERROR")) {
-                                //Texture didn't download, set to error texture.
-                                object.texture = "ERROR";
-                            } else if (downloadedTextures.contains(textValue)) {
-                                //Good to render, set texture to object and go.
-                                object.texture = textValue;
-                            } else if (downloadingTextures.contains(textValue)) {
-                                //Still downloading, skip rendering.
-                                return;
-                            } else if (textValue.isEmpty()) {
-                                //Don't render since we don't have any text bound here.
-                                return;
-                            } else {
-                                //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
-                                new ConnectorThread(textValue, this).run();
-                                downloadingTextures.add(textValue);
-                                return;
-                            }
-                            break;
-                        }
-                    }
-                } else if (!isWindow) {
-                    //Set our standard texture, provided we're not a window.
-                    object.texture = entity.getTexture();
-                }
-
-                //If we are a light, get the actual light level as calculated.
-                //We do this here as there's no reason to calculate this if we're not gonna render.
-                if (lightDef != null) {
-                    lightLevel = entity.lightBrightnessValues.get(lightDef);
-                    if (lightDef.isElectric && entity instanceof EntityVehicleF_Physics) {
-                        //Light start dimming at 10V, then go dark at 3V.
-                        double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
-                        if (electricPower < 3) {
-                            lightLevel = 0;
-                        } else if (electricPower < 10) {
-                            lightLevel *= (electricPower - 3) / 7D;
-                        }
-                    }
-                }
-
-                if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
-                    //Active tread.  Do tread-path rendering instead of normal model.
-                    if (!blendingEnabled) {
-                        object.setLighting(entity.worldLightValue, false, false);
-                        doTreadRendering((PartGroundDevice) entity, partialTicks);
-                    }
-                } else {
-                    //Set object states and render.
-                    if (blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()) {
-                        //Model that's actually a beam, render it with beam lighting/blending. 
-                        object.setLighting(entity.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, true);
-                        object.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                        object.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
-                        object.render(entity);
-                    } else if (blendingEnabled == object.isTranslucent) {
-                        //Either solid texture on solid pass, or translucent texture on blended pass.
-                        //Need to disable light-mapping from daylight if we are a light-up texture.
-                        int value = object.worldLightValue;
-                        object.setLighting(entity.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam, false);
-                        if (value != object.worldLightValue) {
-                            System.out.println("CHANGED LIGHTING ON " + entity + " AND MODEL " + object.name + "  AT POS " + entity.position + " FROM " + value + " TO " + object.worldLightValue);
-                        }
-                        //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
-                        if (blendingEnabled && objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-                            if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
-                                object.setAlpha(0);
-                            } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
-                                //Need >= here instead of above for things where min/max clamps are equal.
-                                object.setAlpha(1);
-                            } else {
-                                object.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
-                            }
-                        }
-                        object.render(entity);
-                        if (interiorWindowObject != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
-                            interiorWindowObject.setLighting(object.worldLightValue, false, false);
-                            interiorWindowObject.transform.set(object.transform);
-                            interiorWindowObject.render(entity);
-                        }
-                    }
-
-                    //Check if we are a light that's not a beam.  If so, do light-specific rendering.
-                    if (lightDef != null && !lightDef.isBeam) {
-                        doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
-                    }
-
-                    //Render text on this object.  Only do this on the solid pass.
-                    if (!blendingEnabled) {
-                        for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
-                            JSONText textDef = textEntry.getKey();
-                            if (object.name.equals(textDef.attachedTo)) {
-                                RenderText.draw3DText(textEntry.getValue(), entity, object.transform, textDef, false);
-                            }
+                        if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
+                            RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false);
                         }
                     }
                 }
@@ -254,14 +324,29 @@ public class RenderableModelObject {
      * Call to destroy this renderable object.  This should be done prior to re-parsing the model
      * as it allows for the freeing of OpenGL resources.
      */
-    public void destroy(AEntityD_Definable<?> entity) {
-        object.destroy(entity);
-        treadPoints.remove(modelLocation);
+    public void destroy() {
+        renderable.destroy();
     }
 
-    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, JSONLight lightDef, boolean blendingEnabled, float partialTicks) {
+    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, JSONLight lightDef, AnimationSwitchbox switchbox, boolean blendingEnabled, float partialTicks) {
+        //First set dynamic alpha if we have it, since this dictates translucent state.
+        if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
+            if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
+                renderable.setAlpha(0);
+            } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
+                //Need >= here instead of above for things where min/max clamps are equal.
+                renderable.setAlpha(1);
+            } else {
+                renderable.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
+            }
+        }
+
         //Translucent only renders on blended pass.
-        if (object.isTranslucent && !blendingEnabled) {
+        if (renderable.isTranslucent && !blendingEnabled) {
+            return false;
+        }
+        //Treads only render on solid passes.
+        if (treadPoints != null && blendingEnabled) {
             return false;
         }
         //Block windows if we have them disabled.
@@ -269,42 +354,36 @@ public class RenderableModelObject {
             return false;
         }
         //If the light only has solid components, and we aren't translucent, don't render on the blending pass.
-        if (lightDef != null && blendingEnabled && !object.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
+        if (lightDef != null && blendingEnabled && !renderable.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
+            return false;
+        }
+        //If we are a beam object, make sure we're only rendering on the translucent pass with beams enabled.
+        if (lightDef != null && lightDef.isBeam && (!blendingEnabled || !entity.shouldRenderBeams() || entity.lightBrightnessValues.get(lightDef) == 0)) {
             return false;
         }
         //If we have an applyAfter, and that object isn't being rendered, don't render us either.
         if (objectDef != null) {
             if (objectDef.applyAfter != null) {
-                AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(objectDef.applyAfter);
-                if (switchbox == null) {
-                    throw new IllegalArgumentException("Was told to applyAfter the object " + objectDef.applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + " for the object " + object.name + ", but there aren't any animations to applyAfter!");
+                AnimationSwitchbox applyAfterSwitchbox = entity.animatedObjectSwitchboxes.get(objectDef.applyAfter);
+                if (applyAfterSwitchbox == null) {
+                    throw new IllegalArgumentException("Was told to applyAfter the object " + objectDef.applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + " for the object " + renderable.vertexObject.name + ", but there aren't any animations to applyAfter!");
                 }
+                return applyAfterSwitchbox.runSwitchbox(partialTicks, false);
+            }
+        }
+        //If we have a switchbox, run it once, and if it returns false for a non-blended object, don't render.
+        if (switchbox != null) {
+            if (objectDef.blendedAnimations) {
+                switchbox.runSwitchbox(partialTicks, false);
+            } else {
                 return switchbox.runSwitchbox(partialTicks, false);
             }
         }
-
+        //No false conditions, return true.
         return true;
     }
 
     private void doTreadRendering(PartGroundDevice tread, float partialTicks) {
-        String treadPathModel = tread.entityOn.definition.getModelLocation(tread.entityOn.subDefinition);
-        Map<Integer, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
-        if (treadPointsMap == null) {
-            treadPointsMap = new HashMap<>();
-        }
-        Map<Float, List<Double[]>> treadPointsSubMap = treadPointsMap.get(tread.placementSlot);
-        if (treadPointsSubMap == null) {
-            treadPointsSubMap = new HashMap<>();
-        }
-        List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
-
-        if (points == null) {
-            points = generateTreads(tread.entityOn, treadPathModel, treadPointsSubMap, tread);
-            treadPointsSubMap.put(tread.definition.ground.spacing, points);
-            treadPointsMap.put(tread.placementSlot, treadPointsSubMap);
-            treadPoints.put(treadPathModel, treadPointsMap);
-        }
-
         //Render the treads along their points.
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
@@ -323,12 +402,12 @@ public class RenderableModelObject {
         //Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
         //We need to undo the offset of the tread part for this routine.
         if (!(tread.entityOn instanceof APart)) {
-            object.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
+            renderable.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
         }
 
         //Add initial translation for the first point
-        point = points.get(0);
-        object.transform.applyTranslation(0, point[0], point[1]);
+        point = treadPoints.get(0);
+        renderable.transform.applyTranslation(0, point[0], point[1]);
 
         //Get cycle index for later.
         boolean[] renderIndexes = null;
@@ -343,21 +422,21 @@ public class RenderableModelObject {
             renderIndexes = new boolean[treadCycleCount];
             for (int i = 0; i < treadCycleCount; ++i) {
                 String treadObject = tread.definition.ground.treadOrder.get(i);
-                renderIndexes[(i + treadCycleIndex) % treadCycleCount] = treadObject.equals(object.name);
+                renderIndexes[(i + treadCycleIndex) % treadCycleCount] = treadObject.equals(renderable.vertexObject.name);
             }
         }
 
         //Now transform all points.
-        for (int i = 0; i < points.size() - 1; ++i) {
+        for (int i = 0; i < treadPoints.size() - 1; ++i) {
             //Update variables.
             //If we're at the last point, set the next point to the first point.
             //Also adjust angle delta, as it'll likely be almost 360 and needs to be adjusted for this.
-            point = points.get(i);
-            if (i == points.size() - 1) {
-                nextPoint = points.get(0);
+            point = treadPoints.get(i);
+            if (i == treadPoints.size() - 1) {
+                nextPoint = treadPoints.get(0);
                 angleDelta = (nextPoint[2] + 360) - point[2];
             } else {
-                nextPoint = points.get(i + 1);
+                nextPoint = treadPoints.get(i + 1);
                 angleDelta = nextPoint[2] - point[2];
             }
             yDelta = nextPoint[0] - point[0];
@@ -374,7 +453,7 @@ public class RenderableModelObject {
             //Check if we should render this object as a link in this position.
             //This is normally true, but for patterns we need to only render in specific spots.
             if (renderIndexes != null && !renderIndexes[i % renderIndexes.length]) {
-                object.transform.applyTranslation(0, yDelta, zDelta);
+                renderable.transform.applyTranslation(0, yDelta, zDelta);
                 continue;
             }
 
@@ -382,7 +461,7 @@ public class RenderableModelObject {
             //This is determined by partial ticks and actual tread position.
             //Once there, render the tread.  Then translate the remainder of the way to prepare
             //to render the next tread.
-            object.transform.applyTranslation(0, yDelta * treadMovementPercentage, zDelta * treadMovementPercentage);
+            renderable.transform.applyTranslation(0, yDelta * treadMovementPercentage, zDelta * treadMovementPercentage);
 
             //If there's no rotation to the point, and no delta between points, don't do rotation.  That's just extra math.
             //Do note that the model needs to be rotated 180 on the X-axis due to all our points
@@ -393,271 +472,32 @@ public class RenderableModelObject {
                 //coordinate system.  To combat this, we translate like normal, but then push a
                 //stack and rotate prior to rendering.  This keeps us from having to do another
                 //rotation to get the old coordinate system back.
-                treadPathBaseTransform.set(object.transform);
+                treadPathBaseTransform.set(renderable.transform);
                 treadRotation.setToAxisAngle(1, 0, 0, point[2] + angleDelta * treadMovementPercentage);
-                object.transform.applyRotation(treadRotation);
-                object.render(tread);
-                object.transform.set(treadPathBaseTransform);
+                renderable.transform.applyRotation(treadRotation);
+                renderable.render();
+                renderable.transform.set(treadPathBaseTransform);
             } else {
                 //Just render as normal as we didn't rotate.
-                object.render(tread);
+                renderable.render();
             }
 
             //Add remaining translation.
-            object.transform.applyTranslation(0, yDelta * (1 - treadMovementPercentage), zDelta * (1 - treadMovementPercentage));
+            renderable.transform.applyTranslation(0, yDelta * (1 - treadMovementPercentage), zDelta * (1 - treadMovementPercentage));
         }
     }
 
-    private void doLightRendering(AEntityD_Definable<?> entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled) {
-        if (blendingEnabled && lightLevel > 0 && lightDef.emissive) {
-            //Light color detected on blended render pass.
-            if (colorObject == null) {
-                for (RenderableObject testObject : AModelParser.parseModel(modelLocation)) {
-                    if (object.name.equals(testObject.name)) {
-                        colorObject = generateColors(testObject);
-                        break;
-                    }
-                }
-            }
-
-            colorObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, true);
-            colorObject.setColor(color);
-            colorObject.setAlpha(lightLevel);
-            colorObject.transform.set(object.transform);
-            colorObject.render(entity);
-
-        }
-        if (blendingEnabled && lightLevel > 0 && lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
-            //Light flares or beams detected on blended render pass.
-            //First render all flares, then render all beams.
-            float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
-            if (blendableBrightness > 0) {
-                RenderableObject flareObject = flareObjects.get(lightDef);
-                RenderableObject beamObject = beamObjects.get(lightDef);
-                if (flareObject == null && beamObject == null) {
-                    List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
-                    List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
-                    for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
-                        if (component.flareHeight > 0) {
-                            flareDefs.add(component);
-                        }
-                        if (component.beamDiameter > 0) {
-                            beamDefs.add(component);
-                        }
-                    }
-                    if (!flareDefs.isEmpty()) {
-                        flareObjects.put(lightDef, flareObject = generateFlares(flareDefs));
-                    }
-                    if (!beamDefs.isEmpty()) {
-                        beamObjects.put(lightDef, beamObject = generateBeams(beamDefs));
-                    }
-                }
-
-                //Render all flares.
-                if (flareObject != null) {
-                    flareObject.isTranslucent = true;
-                    flareObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, true);
-                    flareObject.setColor(color);
-                    flareObject.setAlpha(blendableBrightness);
-                    flareObject.transform.set(object.transform);
-                    flareObject.render(entity);
-                }
-
-                //Render all beams.
-                if (beamObject != null && entity.shouldRenderBeams()) {
-                    beamObject.isTranslucent = true;
-                    beamObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value, true);
-                    beamObject.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                    beamObject.setColor(color);
-                    beamObject.setAlpha(blendableBrightness);
-                    beamObject.transform.set(object.transform);
-                    beamObject.render(entity);
-                }
-            }
-        }
-        if (!blendingEnabled && lightDef.covered) {
-            //Light cover detected on solid render pass.
-            if (coverObject == null) {
-                for (RenderableObject testObject : AModelParser.parseModel(modelLocation)) {
-                    if (object.name.equals(testObject.name)) {
-                        coverObject = generateCovers(testObject);
-                        break;
-                    }
-                }
-            }
-
-            coverObject.setLighting(object.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0, false);
-            coverObject.transform.set(object.transform);
-            coverObject.render(entity);
-        }
-    }
-
-    private static RenderableObject generateColors(RenderableObject parsedObject) {
-        //Make a duplicate set of vertices with an offset for the color rendering.
-        RenderableObject offsetObject = new RenderableObject("color", "mts:textures/rendering/light.png", new ColorRGB(), FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
-        offsetObject.isTranslucent = true;
-        float[] vertexData = new float[8];
-        while (parsedObject.vertices.hasRemaining()) {
-            parsedObject.vertices.get(vertexData);
-            offsetObject.vertices.put(vertexData, 0, 5);
-            offsetObject.vertices.put(vertexData[5] + vertexData[0] * COLOR_OFFSET);
-            offsetObject.vertices.put(vertexData[6] + vertexData[1] * COLOR_OFFSET);
-            offsetObject.vertices.put(vertexData[7] + vertexData[2] * COLOR_OFFSET);
-        }
-        parsedObject.vertices.rewind();
-        offsetObject.normalizeUVs();
-        offsetObject.vertices.flip();
-        return offsetObject;
-    }
-
-    private static RenderableObject generateCovers(RenderableObject parsedObject) {
-        //Make a duplicate set of vertices with an offset for the cover rendering.
-        RenderableObject offsetObject = new RenderableObject("cover", "mts:textures/rendering/glass.png", parsedObject.color, FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
-        float[] vertexData = new float[8];
-        while (parsedObject.vertices.hasRemaining()) {
-            parsedObject.vertices.get(vertexData);
-            offsetObject.vertices.put(vertexData, 0, 5);
-            offsetObject.vertices.put(vertexData[5] + vertexData[0] * COVER_OFFSET);
-            offsetObject.vertices.put(vertexData[6] + vertexData[1] * COVER_OFFSET);
-            offsetObject.vertices.put(vertexData[7] + vertexData[2] * COVER_OFFSET);
-        }
-        parsedObject.vertices.rewind();
-        offsetObject.normalizeUVs();
-        offsetObject.vertices.flip();
-        return offsetObject;
-    }
-
-    private static RenderableObject generateFlares(List<JSONLightBlendableComponent> flareDefs) {
-        //6 vertices per flare due to triangle rendering.
-        RenderableObject flareObject = new RenderableObject("flares", "mts:textures/rendering/lensflare.png", new ColorRGB(), FloatBuffer.allocate(flareDefs.size() * 6 * 8), false);
-        flareObject.isTranslucent = true;
-        for (JSONLightBlendableComponent flareDef : flareDefs) {
-            //Get the matrix  that is needed to rotate points to the normalized vector.
-            RotationMatrix rotation = new RotationMatrix().setToVector(flareDef.axis, false);
-            Point3D vertexOffset = new Point3D();
-            Point3D centerOffset = flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos);
-            for (int j = 0; j < 6; ++j) {
-                float[] newVertex = new float[8];
-                //Get the current UV points.
-                switch (j) {
-                    case (0):
-                    case (3)://Bottom-right
-                        newVertex[3] = 1.0F;
-                        newVertex[4] = 1.0F;
-                        break;
-                    case (1)://Top-right
-                        newVertex[3] = 1.0F;
-                        newVertex[4] = 0.0F;
-                        break;
-                    case (2):
-                    case (4)://Top-left
-                        newVertex[3] = 0.0F;
-                        newVertex[4] = 0.0F;
-                        break;
-                    case (5)://Bottom-left
-                        newVertex[3] = 0.0F;
-                        newVertex[4] = 1.0F;
-                        break;
-                }
-
-                //Based on the UVs and the axis for the flare, calculate the vertices.
-                vertexOffset.x = newVertex[3] == 0.0 ? -flareDef.flareWidth / 2D : flareDef.flareWidth / 2D;
-                vertexOffset.y = newVertex[4] == 0.0 ? flareDef.flareHeight / 2D : -flareDef.flareHeight / 2D;
-                vertexOffset.z = 0;
-                vertexOffset.rotate(rotation).add(centerOffset);
-                newVertex[5] = (float) vertexOffset.x;
-                newVertex[6] = (float) vertexOffset.y;
-                newVertex[7] = (float) vertexOffset.z;
-
-                //Set normals to the normal axis in the JSON.
-                newVertex[0] = (float) flareDef.axis.x;
-                newVertex[1] = (float) flareDef.axis.y;
-                newVertex[2] = (float) flareDef.axis.z;
-
-                //Add the actual vertex.
-                flareObject.vertices.put(newVertex);
-            }
-        }
-        flareObject.vertices.flip();
-        return flareObject;
-    }
-
-    private static RenderableObject generateBeams(List<JSONLightBlendableComponent> beamDefs) {
-        //3 vertices per cone-face, each share the same center point.
-        //Number of cone faces is equal to the number of segments for beams.
-        //We render two beams.  One inner and one outer.
-        RenderableObject beamObject = new RenderableObject("beams", "mts:textures/rendering/lightbeam.png", new ColorRGB(), FloatBuffer.allocate(beamDefs.size() * 2 * BEAM_SEGMENTS * 3 * 8), false);
-        beamObject.isTranslucent = true;
-        for (JSONLightBlendableComponent beamDef : beamDefs) {
-            //Get the matrix that is needed to rotate points to the normalized vector.
-            RotationMatrix rotation = new RotationMatrix().setToVector(beamDef.axis, false);
-            Point3D vertexOffset = new Point3D();
-            Point3D centerOffset = beamDef.axis.copy().scale(BEAM_OFFSET).add(beamDef.pos);
-            //Go from negative to positive to render both beam-faces in the same loop.
-            for (int j = -BEAM_SEGMENTS; j < BEAM_SEGMENTS; ++j) {
-                for (int k = 0; k < 3; ++k) {
-                    float[] newVertex = new float[8];
-                    //Get the current UV points.
-                    //Point 0 is always the center of the beam, 1 and 2 are the outer points.
-                    switch (k % 3) {
-                        case (0):
-                            newVertex[3] = 0.0F;
-                            newVertex[4] = 0.0F;
-                            break;
-                        case (1):
-                            newVertex[3] = 0.0F;
-                            newVertex[4] = 1.0F;
-                            break;
-                        case (2):
-                            newVertex[3] = 1.0F;
-                            newVertex[4] = 1.0F;
-                            break;
-                    }
-
-                    //Based on the UVs and the axis for the beam, calculate the vertices.
-                    double currentAngleRad;
-                    if (j < 0) {
-                        currentAngleRad = newVertex[3] == 0.0F ? 2D * Math.PI * ((j + 1) / (double) BEAM_SEGMENTS) : 2D * Math.PI * (j / (double) BEAM_SEGMENTS);
-                    } else {
-                        currentAngleRad = newVertex[3] == 0.0F ? 2D * Math.PI * (j / (double) BEAM_SEGMENTS) : 2D * Math.PI * ((j + 1) / (double) BEAM_SEGMENTS);
-                    }
-                    if (newVertex[4] == 0.0) {
-                        vertexOffset.set(0, 0, 0);
-                    } else {
-                        vertexOffset.x = beamDef.beamDiameter / 2F * Math.cos(currentAngleRad);
-                        vertexOffset.y = beamDef.beamDiameter / 2F * Math.sin(currentAngleRad);
-                        vertexOffset.z = beamDef.beamLength;
-                    }
-                    vertexOffset.rotate(rotation).add(centerOffset);
-                    newVertex[5] = (float) vertexOffset.x;
-                    newVertex[6] = (float) vertexOffset.y;
-                    newVertex[7] = (float) vertexOffset.z;
-
-                    //Don't care about normals for beam rendering as it's a blending face, so we just set them to 0.
-                    newVertex[0] = 0F;
-                    newVertex[1] = 0F;
-                    newVertex[2] = 0F;
-
-                    //Add the actual vertex.
-                    beamObject.vertices.put(newVertex);
-                }
-            }
-        }
-        beamObject.vertices.flip();
-        return beamObject;
-    }
-
-    private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread) {
+    private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(PartGroundDevice tread) {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
-        List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0)));
+        List<RenderableVertices> parsedModel = AModelParser.parseModel(tread.entityOn.definition.getModelLocation(tread.entityOn.definition.definitions.get(0)));
         List<TreadRoller> rollers = new ArrayList<>();
         if (tread.placementDefinition.treadPath == null) {
-            throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo + "!");
+            throw new IllegalArgumentException("No tread path found for part slot on " + tread.entityOn + "!");
         }
         for (String rollerName : tread.placementDefinition.treadPath) {
             boolean foundRoller = false;
-            for (RenderableObject modelObject : parsedModel) {
+            for (RenderableVertices modelObject : parsedModel) {
                 if (modelObject.name.equals(rollerName)) {
                     rollers.add(new TreadRoller(modelObject));
                     foundRoller = true;
@@ -665,7 +505,7 @@ public class RenderableModelObject {
                 }
             }
             if (!foundRoller) {
-                throw new IllegalArgumentException("Could not create tread path for " + entityTreadAttachedTo + " Due to missing roller " + rollerName + " in the model!");
+                throw new IllegalArgumentException("Could not create tread path for " + tread.entityOn + " Due to missing roller " + rollerName + " in the model!");
             }
         }
 
