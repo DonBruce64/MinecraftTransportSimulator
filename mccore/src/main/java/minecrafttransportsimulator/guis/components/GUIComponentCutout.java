@@ -50,7 +50,6 @@ public class GUIComponentCutout extends AGUIComponent {
         renderable = new RenderableData(vertexObject, gui.getTexture());
         if (gui.getTexture() != null) {
             renderableL = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
-            renderableL.setTransucentOverride();
         }
     }
 

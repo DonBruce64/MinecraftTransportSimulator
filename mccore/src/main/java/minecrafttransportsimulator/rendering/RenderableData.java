@@ -30,10 +30,10 @@ public class RenderableData {
 
     public final RenderableVertices vertexObject;
     public String texture;
-    public final ColorRGB color;
-    public float alpha;
+    public final ColorRGB color = new ColorRGB();
+    public float alpha = 1.0F;
     public int worldLightValue;
-    public LightingMode lightingMode;
+    public LightingMode lightingMode = LightingMode.NORMAL;
     public boolean enableBrightBlending;
     public boolean isTranslucent;
 
@@ -47,12 +47,10 @@ public class RenderableData {
 
     public RenderableData(RenderableVertices vertexObject, String texture) {
         this.vertexObject = vertexObject;
-        this.texture = texture;
-        this.color = new ColorRGB();
-        color.setTo(ColorRGB.WHITE);
-        this.alpha = 1.0F;
-        this.lightingMode = LightingMode.NORMAL;
-        this.isTranslucent = vertexObject.isTranslucent;
+        if (texture != null) {
+            setTexture(texture);
+        }
+        setColor(ColorRGB.WHITE);
     }
 
     public RenderableData(RenderableVertices vertexObject) {

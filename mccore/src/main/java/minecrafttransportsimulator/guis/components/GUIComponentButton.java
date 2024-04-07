@@ -87,17 +87,14 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
                     setOffsetVertices(gui, textureHeightStart, vertexObject);
                     renderable = new RenderableData(vertexObject, gui.getTexture());
                     renderableL = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
-                    renderableL.setTransucentOverride();
                 } else if (i == 1) {
                     setOffsetVertices(gui, textureHeightStart, vertexObject);
                     renderable2 = new RenderableData(vertexObject, gui.getTexture());
                     renderable2L = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
-                    renderable2L.setTransucentOverride();
                 } else {
                     setOffsetVertices(gui, textureHeightStart, vertexObject);
                     renderable3 = new RenderableData(vertexObject, gui.getTexture());
                     renderable3L = new RenderableData(vertexObject, gui.getTexture().replace(NORMAL_SUFFIX, LIT_SUFFIX));
-                    renderable3L.setTransucentOverride();
                 }
             }
         }
