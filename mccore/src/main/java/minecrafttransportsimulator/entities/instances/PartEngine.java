@@ -109,6 +109,8 @@ public class PartEngine extends APart {
     private double prevEngineRotation;
     private double driveshaftRotation;
     private double prevDriveshaftRotation;
+    private double currentJetPowerFactor;
+    private double currentBypassRatio;
     private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
     private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
     private final List<PartPropeller> linkedPropellers = new ArrayList<>();
@@ -780,6 +782,9 @@ public class PartEngine extends APart {
         currentIsAutomatic = definition.engine.isAutomatic ? 1 : 0;
         currentWearFactor = definition.engine.engineWearFactor;
         currentWinddownRate = definition.engine.engineWinddownRate;
+        currentJetPowerFactor = definition.engine.jetPowerFactor;
+        currentBypassRatio = definition.engine.bypassRatio;
+
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -841,6 +846,12 @@ public class PartEngine extends APart {
                         break;
                     case "engineWinddownRate":
                         currentWinddownRate = adjustVariable(modifier, currentWinddownRate);
+                        break;
+                    case "jetPowerFactor":
+                        currentJetPowerFactor = adjustVariable(modifier,(float) currentJetPowerFactor);
+                        break;
+                    case "bypassRatio":
+                        currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -1214,7 +1225,7 @@ public class PartEngine extends APart {
         engineForce.set(0D, 0D, 0D);
         engineForceValue = 0;
         //First get wheel forces, if we have friction to do so.
-        if (definition.engine.jetPowerFactor == 0 && wheelFriction != 0) {
+        if (currentJetPowerFactor == 0 && wheelFriction != 0) {
             double wheelForce;
             //If running, use the friction of the wheels to determine the new speed.
             if (running || electricStarterEngaged) {
@@ -1269,21 +1280,21 @@ public class PartEngine extends APart {
 
         //If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
         //Propellers max out at about 25 force, so use that to determine this force.
-        if (definition.engine.jetPowerFactor > 0 && running) {
+        if (currentJetPowerFactor > 0 && running) {
             //First we need the air density (sea level 1.225) so we know how much air we are moving.
             //We then multiply that by the RPM and the fuel consumption to get the raw power produced
             //by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
             //Note that due to a lack of jet physics formulas available, this is "hacky math".
             double safeRPMFactor = rpm / currentMaxSafeRPM;
-            double coreContribution = Math.max(10 * vehicleOn.airDensity * currentFuelConsumption * safeRPMFactor - definition.engine.bypassRatio, 0);
+            double coreContribution = Math.max(10 * vehicleOn.airDensity * currentFuelConsumption * safeRPMFactor - currentBypassRatio, 0);
 
             //The fan portion is calculated similarly to how propellers are calculated.
             //This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
             //Again, this is "hacky math", as for some reason there's no data on fan pitches.
             //In this case, however, we don't care about the fuelConsumption as that's only used by the core.
             double fanVelocityFactor = (0.0254 * 250 * rpm / 60 / 20 - engineAxialVelocity) / 200D;
-            double fanContribution = 10 * vehicleOn.airDensity * safeRPMFactor * fanVelocityFactor * definition.engine.bypassRatio;
-            double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * definition.engine.jetPowerFactor;
+            double fanContribution = 10 * vehicleOn.airDensity * safeRPMFactor * fanVelocityFactor * currentBypassRatio;
+            double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * currentJetPowerFactor;
 
             //Add the jet force to the engine.  Use the engine rotation to define the power vector.
             engineForceValue += thrust;
