@@ -49,15 +49,23 @@ public abstract class AModelParser {
      * is parsed and returned.  If no parser is found, an exception is thrown.
      * If the model has already been parsed, a cached copy is returned.
      */
-    public static List<RenderableVertices> parseModel(String modelLocation) {
-        return parsedVertices.computeIfAbsent(modelLocation, k -> {
+    public static List<RenderableVertices> parseModel(String modelLocation, boolean returnCached) {
+        List<RenderableVertices> vertices = null;
+        if (returnCached) {
+            vertices = parsedVertices.get(modelLocation);
+        }
+        if (vertices == null) {
             AModelParser parser = parsers.get(modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
             if (parser != null) {
-                return parser.parseModelInternal(modelLocation);
+                vertices = parser.parseModelInternal(modelLocation);
+                if (returnCached) {
+                    parsedVertices.put(modelLocation, vertices);
+                }
             } else {
                 throw new IllegalArgumentException("No parser found for model format of " + modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
             }
-        });
+        }
+        return vertices;
     }
 
     /**
@@ -69,7 +77,7 @@ public abstract class AModelParser {
     public static List<RenderableModelObject> generateRenderables(AEntityD_Definable<?> entity) {
         String modelLocation = entity.definition.getModelLocation(entity.subDefinition);
         List<RenderableModelObject> modelObjects = new ArrayList<>();
-        for (RenderableVertices parsedObject : parseModel(modelLocation)) {
+        for (RenderableVertices parsedObject : parseModel(modelLocation, true)) {
             modelObjects.add(new RenderableModelObject(entity, parsedObject));
         }
         return modelObjects;

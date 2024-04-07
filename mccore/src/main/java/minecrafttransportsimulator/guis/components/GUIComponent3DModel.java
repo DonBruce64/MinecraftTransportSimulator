@@ -62,7 +62,7 @@ public class GUIComponent3DModel extends AGUIComponent {
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         if (!blendingEnabled && modelLocation != null) {
             if (!modelParsedObjects.containsKey(modelLocation)) {
-                List<RenderableVertices> parsedObjects = AModelParser.parseModel(modelLocation);
+                List<RenderableVertices> parsedObjects = AModelParser.parseModel(modelLocation, false);
                 //Remove any windows and "commented" objects from the model.  We don't want to render those.
                 parsedObjects.removeIf(object -> object.name.toLowerCase(Locale.ROOT).contains("window") || object.name.startsWith("#"));
 

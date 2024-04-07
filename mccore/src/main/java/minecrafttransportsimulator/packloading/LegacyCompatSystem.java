@@ -2373,7 +2373,7 @@ public final class LegacyCompatSystem {
         }
 
         try {
-            List<RenderableVertices> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0)));
+            List<RenderableVertices> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0)), true);
 
             //If we don't have lights, check for them.
             if (definition.rendering.lightObjects == null) {

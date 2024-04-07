@@ -481,7 +481,7 @@ public class RenderableModelObject {
     private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(PartGroundDevice tread) {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
-        List<RenderableVertices> parsedModel = AModelParser.parseModel(tread.entityOn.definition.getModelLocation(tread.entityOn.definition.definitions.get(0)));
+        List<RenderableVertices> parsedModel = AModelParser.parseModel(tread.entityOn.definition.getModelLocation(tread.entityOn.definition.definitions.get(0)), true);
         List<TreadRoller> rollers = new ArrayList<>();
         if (tread.placementDefinition.treadPath == null) {
             throw new IllegalArgumentException("No tread path found for part slot on " + tread.entityOn + "!");

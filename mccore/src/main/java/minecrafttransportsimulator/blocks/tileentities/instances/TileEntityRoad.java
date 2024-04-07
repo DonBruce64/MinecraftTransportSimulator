@@ -342,7 +342,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                     ItemRoadComponent componentItem = components.get(component);
                     switch (component) {
                         case CORE_STATIC: {
-                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
+                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition), true);
                             int totalVertices = 0;
                             for (RenderableVertices object : parsedModel) {
                                 totalVertices += object.vertices.capacity();
@@ -360,7 +360,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                         }
                         case CORE_DYNAMIC: {
                             //Get model and convert to a single buffer of vertices.
-                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition));
+                            List<RenderableVertices> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subDefinition), true);
                             int totalVertices = 0;
                             for (RenderableVertices object : parsedModel) {
                                 totalVertices += object.vertices.capacity();

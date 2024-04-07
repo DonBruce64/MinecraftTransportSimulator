@@ -222,7 +222,7 @@ public class EntityParticle extends AEntityC_Renderable {
             RenderableVertices parsedModel = parsedParticleModels.computeIfAbsent(this.model, k -> {
                 String modelDomain = this.model.substring(0, this.model.indexOf(':'));
                 String modelPath = this.model.substring(modelDomain.length() + 1);
-                List<RenderableVertices> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath);
+                List<RenderableVertices> parsedObjects = AModelParser.parseModel("/assets/" + modelDomain + "/" + modelPath, true);
                 int totalVertices = 0;
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalVertices += parsedObject.vertices.capacity();
