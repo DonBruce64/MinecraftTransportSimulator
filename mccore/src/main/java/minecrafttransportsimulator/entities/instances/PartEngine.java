@@ -1221,14 +1221,6 @@ public class PartEngine extends APart {
         return partialTicks != 0 ? prevDriveshaftRotation + (driveshaftRotation - prevDriveshaftRotation) * partialTicks : driveshaftRotation;
     }
 
-    public double getJetPowerFactor() {
-        return currentJetPowerFactor;
-    }
-
-    public double getBypassRatio() {
-        return currentBypassRatio;
-    }
-
     public double addToForceOutput(Point3D force, Point3D torque) {
         engineForce.set(0D, 0D, 0D);
         engineForceValue = 0;
@@ -1302,7 +1294,7 @@ public class PartEngine extends APart {
             //In this case, however, we don't care about the fuelConsumption as that's only used by the core.
             double fanVelocityFactor = (0.0254 * 250 * rpm / 60 / 20 - engineAxialVelocity) / 200D;
             double fanContribution = 10 * vehicleOn.airDensity * safeRPMFactor * fanVelocityFactor * currentBypassRatio;
-            double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * getJetPowerFactor();
+            double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * currentJetPowerFactor;
 
             //Add the jet force to the engine.  Use the engine rotation to define the power vector.
             engineForceValue += thrust;
