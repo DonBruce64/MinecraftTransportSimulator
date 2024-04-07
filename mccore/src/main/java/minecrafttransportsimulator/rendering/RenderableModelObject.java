@@ -165,7 +165,7 @@ public class RenderableModelObject {
     public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
-        if (shouldRender(entity, objectDef, lightDef, switchbox, blendingEnabled, partialTicks)) {
+        if (shouldRender(entity, blendingEnabled, partialTicks)) {
             //If we are a online texture, bind that one rather than our own.
             //We do this first since we don't need to calculate other stuff if we aren't rendering.
             if (isOnlineTexture) {
@@ -328,7 +328,7 @@ public class RenderableModelObject {
         renderable.destroy();
     }
 
-    private boolean shouldRender(AEntityD_Definable<?> entity, JSONAnimatedObject objectDef, JSONLight lightDef, AnimationSwitchbox switchbox, boolean blendingEnabled, float partialTicks) {
+    private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
         //First set dynamic alpha if we have it, since this dictates translucent state.
         if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
             if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
@@ -360,16 +360,6 @@ public class RenderableModelObject {
         //If we are a beam object, make sure we're only rendering on the translucent pass with beams enabled.
         if (lightDef != null && lightDef.isBeam && (!blendingEnabled || !entity.shouldRenderBeams() || entity.lightBrightnessValues.get(lightDef) == 0)) {
             return false;
-        }
-        //If we have an applyAfter, and that object isn't being rendered, don't render us either.
-        if (objectDef != null) {
-            if (objectDef.applyAfter != null) {
-                AnimationSwitchbox applyAfterSwitchbox = entity.animatedObjectSwitchboxes.get(objectDef.applyAfter);
-                if (applyAfterSwitchbox == null) {
-                    throw new IllegalArgumentException("Was told to applyAfter the object " + objectDef.applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + " for the object " + renderable.vertexObject.name + ", but there aren't any animations to applyAfter!");
-                }
-                return applyAfterSwitchbox.runSwitchbox(partialTicks, false);
-            }
         }
         //If we have a switchbox, run it once, and if it returns false for a non-blended object, don't render.
         if (switchbox != null) {
