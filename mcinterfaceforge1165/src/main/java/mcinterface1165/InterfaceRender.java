@@ -621,11 +621,9 @@ public class InterfaceRender implements IInterfaceRender {
      */
     private static final RenderState.TransparencyState PROPER_TRANSLUCENT_TRANSPARENCY = new RenderState.TransparencyState("proper_translucent_transparency", () -> {
         RenderSystem.enableBlend();
-        RenderSystem.depthMask(false);
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
     }, () -> {
         RenderSystem.disableBlend();
-        RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
     });
 
