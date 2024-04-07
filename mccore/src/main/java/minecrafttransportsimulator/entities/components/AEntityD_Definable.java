@@ -235,7 +235,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             } else {
                 for (IWrapperPlayer player : playersInteracting) {
                     if (!player.isValid() || !player.getWorld().equals(world)) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(this, player, false));
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, false));
                         playersInteracting.remove(player);
                         break;
                     }
