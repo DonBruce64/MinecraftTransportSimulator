@@ -740,7 +740,9 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        float sunLight = (world.getBrightness(LightType.SKY, pos) - world.getSkyDarken()) / 15F;
+        //Sunlight never goes below 11 in this version, so we factor the darkening.
+        float darkenFactor = 15 * world.getSkyDarken() / 11F;
+        float sunLight = (world.getBrightness(LightType.SKY, pos) - darkenFactor) / 15F;
         float blockLight = calculateBlock ? world.getBrightness(LightType.BLOCK, pos) / 15F : 0.0F;
         return Math.max(sunLight, blockLight);
     }

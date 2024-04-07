@@ -277,6 +277,7 @@ public class RenderableModelObject {
                     if (blendingEnabled && lightLevel > 0) {
                         //Light flares or beams detected on blended render pass.
                         //First render all flares, then render all beams.
+
                         float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
                         if (blendableBrightness > 0) {
                             if (flareRenderable != null) {
