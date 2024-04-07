@@ -207,7 +207,11 @@ public class RenderableModelObject {
                     } else if (blendingEnabled == object.isTranslucent) {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
                         //Need to disable light-mapping from daylight if we are a light-up texture.
+                        int value = object.worldLightValue;
                         object.setLighting(entity.worldLightValue, ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam, false);
+                        if (value != object.worldLightValue) {
+                            System.out.println("CHANGED LIGHTING ON " + entity + " AND MODEL " + object.name + "  AT POS " + entity.position + " FROM " + value + " TO " + object.worldLightValue);
+                        }
                         //Also adjust alpha to visibility, if we are on a blended pass and have a switchbox.
                         if (blendingEnabled && objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
                             if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {

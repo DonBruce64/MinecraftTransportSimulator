@@ -12,18 +12,8 @@ import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
- * Class designed to represent a renderable object.  Said object has at minimum some
- * geometry, though this can be a cached set of vertices or a hard-coded saved set.
- * It may also have a texture, though this texture may be a single solid white sheet
- * for shader-compatible solid rendering.  In this case, the color will be specified,
- * and should be used to change the color prior to rendering.  Various other properties
- * exist for lighting/blending.  In all cases, similar renderable objects should be
- * grouped together and batch-rendered for efficiency.  The primary grouping should be
- * texture, as this prevents re-binds.  Secondary should be color.  Lighting will usually
- * dictate when the object can render rather than in what order (solid vs translucent pass).
- * To assist with this, the equals() method checks texture and color and, if they are identical,
- * returns true.  This allows for said objects to be used as map-keys for easier grouping.
- * Note that this does NOT include the actual vertex data in this equality check.
+ * Class designed to represent a set of vertices.  Said object has at minimum some geometry. 
+ * This can be a cached set of  vertices or a hard-coded saved set.
  * <p>
  * For said vertex data, the data order is as follows:
  *  <ul>
@@ -53,44 +43,21 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public class RenderableObject {
     public static final float Z_BUFFER_OFFSET = 0.0002F;
+    public static final int VERTEX_BUFFER_SIZE = 8;
+    public static final int VERTEX_BUFFER_NX_OFFSET = 0;
+    public static final int VERTEX_BUFFER_NY_OFFSET = 1;
+    public static final int VERTEX_BUFFER_NZ_OFFSET = 2;
+    public static final int VERTEX_BUFFER_U_OFFSET = 3;
+    public static final int VERTEX_BUFFER_V_OFFSET = 4;
+    public static final int VERTEX_BUFFER_X_OFFSET = 5;
+    public static final int VERTEX_BUFFER_Y_OFFSET = 6;
+    public static final int VERTEX_BUFFER_Z_OFFSET = 7;
 
     public final String name;
-    public String texture;
-    public final ColorRGB color;
-    public float alpha = 1.0F;
     public FloatBuffer vertices;
     public final boolean cacheVertices;
-
-    public boolean changedSinceLastRender;
-    public boolean isTranslucent;
-    public int cachedVertexIndex = -1;
     public boolean isLines = false;
     public final TransformationMatrix transform = new TransformationMatrix();
-
-    public int worldLightValue;
-    /**
-     * Completely disables or enables lighting of this object.
-     * This disables both the system lighting (OpenGL) and internal lighting (lightmap).
-     */
-    public boolean disableLighting;
-    /**
-     * Enables or disables OpenGL lighting for this object.
-     * This effectively prevents OpenGL lighting calculations on textures.
-     * Do note that the normal internal lightmapping will still be applied.
-     * This essentially prevents shadow creation on models based on their face
-     * orientation relative to the main light "source".
-     */
-    public boolean ignoreWorldShading;
-    /**
-     * Sets the blend state to bright.  This does special blending
-     * when blending is enabled.  Therefore, it only has an effect on translucent objects.
-     */
-    public boolean enableBrightBlending;
-
-    /**
-     * The Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.
-     **/
-    public static final String GLOBAL_TEXTURE_NAME = "GLOBAL";
 
     private static final int[][] FACE_POINT_INDEXES = new int[][]{
             //X-axis.
@@ -133,7 +100,7 @@ public class RenderableObject {
         this.texture = texture;
         this.color = color;
         this.cacheVertices = cacheVertices;
-        this.isTranslucent = name.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || (texture != null && (texture.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || texture.endsWith(GUIComponentCutout.LIT_SUFFIX)));
+        this.isTranslucent = name.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || ());
         this.vertices = vertices;
         transform.resetTransforms();
     }
@@ -165,42 +132,6 @@ public class RenderableObject {
             return this.texture.equals(otherProperties.texture) && this.color.equals(otherProperties.color);
         } else {
             return false;
-        }
-    }
-
-    public void setAlpha(float alpha) {
-        if (this.alpha != alpha) {
-            this.alpha = alpha;
-            this.changedSinceLastRender = true;
-        }
-    }
-
-    public void setColor(ColorRGB color) {
-        if (!this.color.equals(color)) {
-            this.color.setTo(color);
-            this.changedSinceLastRender = true;
-        }
-    }
-
-    public void setLighting(int worldLightValue, boolean disableLighting, boolean ignoreWorldShading) {
-        if (this.worldLightValue != worldLightValue) {
-            this.worldLightValue = worldLightValue;
-            this.changedSinceLastRender = true;
-        }
-        if (this.disableLighting != disableLighting) {
-            this.disableLighting = disableLighting;
-            this.changedSinceLastRender = true;
-        }
-        if (this.ignoreWorldShading != ignoreWorldShading) {
-            this.ignoreWorldShading = ignoreWorldShading;
-            this.changedSinceLastRender = true;
-        }
-    }
-
-    public void setBlending(boolean enableBrightBlending) {
-        if (this.enableBrightBlending != enableBrightBlending) {
-            this.enableBrightBlending = enableBrightBlending;
-            this.changedSinceLastRender = true;
         }
     }
 

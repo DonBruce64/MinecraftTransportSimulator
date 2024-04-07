@@ -123,7 +123,7 @@ public class InterfaceRender implements IInterfaceRender {
     }
     
     @Override
-    public void renderVertices(RenderableObject object, Object objectAssociatedTo) {
+    public void renderVertices(RenderableObject object, Object objecAssociatedTo) {
         matrixStack.pushPose();
         Matrix4f matrix4f = convertMatrix4f(object.transform);
         MatrixStack.Entry stackEntry = matrixStack.last();
@@ -596,8 +596,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     private static class RenderData {
-        final Matrix4f matrix;
-        final VertexBuffer buffer;
+        private final Matrix4f matrix;
+        private final VertexBuffer buffer;
 
         private RenderData(Matrix4f matrix, VertexBuffer buffer) {
             this.matrix = new Matrix4f(matrix);
