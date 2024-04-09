@@ -342,8 +342,8 @@ public class RenderableModelObject {
             }
         }
 
-        //Translucent only renders on blended pass.
-        if (renderable.isTranslucent && !blendingEnabled) {
+        //Solid only on solid pass, translucent only on blended pass.
+        if (renderable.isTranslucent != blendingEnabled) {
             return false;
         }
         //Treads only render on solid passes.
