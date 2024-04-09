@@ -153,6 +153,7 @@ public class InterfaceRender implements IInterfaceRender {
             if (set != null) {
                 set.remove(data);
                 if (set.isEmpty()) {
+                    objectMap.remove(data.vertexObject);
                     GL11.glDeleteLists(cachedIndexMap.remove(data.vertexObject), 1);
                 }
             }
