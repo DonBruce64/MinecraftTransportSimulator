@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -36,7 +37,7 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<IWrapperNBT> hotloadedData = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<IWrapperNBT, ItemVehicle> hotloadedData = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, UUID> hotloadedRiderIDs = new ConcurrentHashMap<>();
     private int hotloadCountdown;
 
@@ -156,9 +157,9 @@ public abstract class EntityManager {
                                     part.removeRider();
                                 }
                             });
-
+                            
                             //Now store data for countdown and remove entity.
-                            hotloadedData.add(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                            hotloadedData.put(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) vehicle.cachedItem);
                             vehicle.remove();
                             hotloadCountdown = 20;
                         } else {
@@ -168,7 +169,7 @@ public abstract class EntityManager {
                         continue;
                     }
                 }
-
+                
                 entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
                 entity.update();
                 if (entity instanceof AEntityD_Definable) {
@@ -177,11 +178,11 @@ public abstract class EntityManager {
                 entity.world.endProfiling();
             }
         }
-
+        
         if (hotloadCountdown > 0) {
             if (--hotloadCountdown == 10) {
-                hotloadedData.forEach(data -> {
-                    EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, data);
+                hotloadedData.forEach((data, item) -> {
+                    EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
                     vehicle.addPartsPostAddition(null, data);
                     vehicle.world.spawnEntity(vehicle);
                 });
