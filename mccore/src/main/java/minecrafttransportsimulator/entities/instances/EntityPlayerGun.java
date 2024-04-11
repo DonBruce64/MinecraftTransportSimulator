@@ -123,7 +123,17 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             motion.set(player.getVelocity());
 
             //Get the current gun.
-            activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+            activeGun = null;
+            if(!parts.isEmpty()) {
+                APart part = parts.get(0);
+                if(part instanceof PartGun) {
+                	activeGun = (PartGun) part;
+                }else {
+                	InterfaceManager.coreInterface.logError("Found a part on a player gun that wasn't a gun!  This shouldn't ever happen...");
+                	remove();
+                	return;
+                }	
+            }
 
             //If we have a gun, but the player's held stack is null, get it now.
             //This happens if we load a gun as a saved part.
