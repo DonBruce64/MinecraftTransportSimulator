@@ -83,7 +83,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static RenderState.TextureState BLOCK_STATE;
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
-    private static Point3D renderCameraOffset = new Point3D();
+    public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
 
@@ -454,10 +454,7 @@ public class InterfaceRender implements IInterfaceRender {
                     renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
 
                     //Set the stack variables and render.
-                    matrixStack = stack;
-                    renderBuffer = buffer;
-                    doRenderCall(false, partialTicks);
-                    doRenderCall(true, partialTicks);
+                    doRenderCall(stack, buffer, false, partialTicks);
                 }
             }
         });
@@ -468,7 +465,9 @@ public class InterfaceRender implements IInterfaceRender {
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
     }
 
-    private static void doRenderCall(boolean blendingEnabled, float partialTicks) {
+    public static void doRenderCall(MatrixStack stack, IRenderTypeBuffer buffer, boolean blendingEnabled, float partialTicks) {
+        matrixStack = stack;
+        renderBuffer = buffer;
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {

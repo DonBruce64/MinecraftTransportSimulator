@@ -94,6 +94,9 @@ public class RenderableModelObject {
             } else {
                 this.colorRenderable = null;
             }
+            if (lightDef.isBeam) {
+                renderable.setTransucentOverride();
+            }
             if (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
                 List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
                 List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
@@ -206,8 +209,24 @@ public class RenderableModelObject {
                 renderable.setTexture(entity.getTexture());
             }
 
-            //If we are a light, get the actual light level as calculated.
-            //We do this here as there's no reason to calculate this if we're not gonna render.
+            //Now set dynamic alpha if we have it, since this dictates translucent state.
+            if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
+                if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
+                    renderable.setAlpha(0);
+                } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
+                    //Need >= here instead of above for things where min/max clamps are equal.
+                    renderable.setAlpha(1);
+                } else {
+                    renderable.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
+                }
+            }
+
+            //If we aren't on the right pass for our main object, and we don't have lights, skip further calcs.
+            if (renderable.isTranslucent != blendingEnabled && lightDef == null) {
+                return;
+            }
+
+            //If we are a light, get lightLevel for later.
             float lightLevel;
             if (lightDef != null) {
                 lightLevel = entity.lightBrightnessValues.get(lightDef);
@@ -230,91 +249,92 @@ public class RenderableModelObject {
                 renderable.transform.multiply(switchbox.netMatrix);
             }
 
-            //Do rendering based on object properties.
+            //Do main rendering based on object properties.
             if (treadPoints != null) {
                 //Active tread.  Do tread-path rendering instead of normal model.
                 renderable.setLightValue(entity.worldLightValue);
                 doTreadRendering((PartGroundDevice) entity, partialTicks);
             } else {
                 //Set object states and render.
-                if (lightDef != null && lightDef.isBeam) {
-                    //Model that's actually a beam, render it with beam lighting/blending. 
-                    renderable.setLightValue(entity.worldLightValue);
-                    renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                    renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                    renderable.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
-                    renderable.render();
-                } else {
-                    //Do normal rendering.
-                    renderable.setLightValue(entity.worldLightValue);
-                    renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 && lightDef != null && !lightDef.emissive && !lightDef.isBeam ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                    renderable.render();
+                if (renderable.isTranslucent == blendingEnabled) {
+                    if (lightDef != null && lightDef.isBeam) {
+                        //Model that's actually a beam, render it with beam lighting/blending. 
+                        renderable.setLightValue(entity.worldLightValue);
+                        renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                        renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+                        renderable.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
+                        renderable.render();
+                    } else {
+                        //Do normal rendering.
+                        renderable.setLightValue(entity.worldLightValue);
+                        renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                        renderable.render();
 
-                    //Render interior window if we have one.
-                    if (interiorWindowRenderable != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
-                        interiorWindowRenderable.setLightValue(renderable.worldLightValue);
-                        interiorWindowRenderable.transform.set(renderable.transform);
-                        interiorWindowRenderable.render();
+                        //Render interior window if we have one.
+                        if (interiorWindowRenderable != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
+                            interiorWindowRenderable.setLightValue(renderable.worldLightValue);
+                            interiorWindowRenderable.transform.set(renderable.transform);
+                            interiorWindowRenderable.render();
+                        }
+                    }
+                }
+            }
+
+            //Check if we are a light that's not a beam.  If so, do light-specific rendering.
+            if (lightDef != null && !lightDef.isBeam) {
+                ColorRGB color = entity.lightColorValues.get(lightDef);
+                if (colorRenderable != null && lightLevel > 0) {
+                    //Color renderable might or might not be translucent depending on current alpha state.
+                    colorRenderable.setAlpha(lightLevel);
+                    if (blendingEnabled == colorRenderable.isTranslucent) {
+                        colorRenderable.setLightValue(renderable.worldLightValue);
+                        colorRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
+                        colorRenderable.setColor(color);
+                        colorRenderable.transform.set(renderable.transform);
+                        colorRenderable.render();
                     }
                 }
 
-                //Check if we are a light that's not a beam.  If so, do light-specific rendering.
-                if (lightDef != null && !lightDef.isBeam) {
-                    ColorRGB color = entity.lightColorValues.get(lightDef);
-                    if (colorRenderable != null && lightLevel > 0) {
-                        //Color renderable might or might not be translucent depending on current alpha state.
-                        colorRenderable.setAlpha(lightLevel);
-                        if (blendingEnabled == colorRenderable.isTranslucent) {
-                            colorRenderable.setLightValue(renderable.worldLightValue);
-                            colorRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
-                            colorRenderable.setColor(color);
-                            colorRenderable.transform.set(renderable.transform);
-                            colorRenderable.render();
+                //Flares and beams are always rendered on the blended pass since they need to do alpha blending.
+                if (blendingEnabled && lightLevel > 0) {
+                    //Light flares or beams detected on blended render pass.
+                    //First render all flares, then render all beams.
+                    float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+                    if (blendableBrightness > 0) {
+                        if (flareRenderable != null) {
+                            flareRenderable.setLightValue(renderable.worldLightValue);
+                            flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                            flareRenderable.setColor(color);
+                            flareRenderable.setAlpha(blendableBrightness);
+                            flareRenderable.transform.set(renderable.transform);
+                            flareRenderable.render();
                         }
-                    }
-
-                    //Flares and beams are always rendered on the blended pass since they need to do alpha blending.
-                    if (blendingEnabled && lightLevel > 0) {
-                        //Light flares or beams detected on blended render pass.
-                        //First render all flares, then render all beams.
-
-                        float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
-                        if (blendableBrightness > 0) {
-                            if (flareRenderable != null) {
-                                flareRenderable.setLightValue(renderable.worldLightValue);
-                                flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                                flareRenderable.setColor(color);
-                                flareRenderable.setAlpha(blendableBrightness);
-                                flareRenderable.transform.set(renderable.transform);
-                                flareRenderable.render();
-                            }
-                            if (beamRenderable != null && entity.shouldRenderBeams()) {
-                                beamRenderable.setLightValue(renderable.worldLightValue);
-                                beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                                beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                                beamRenderable.setColor(color);
-                                beamRenderable.setAlpha(blendableBrightness);
-                                beamRenderable.transform.set(renderable.transform);
-                                beamRenderable.render();
-                            }
+                        if (beamRenderable != null && entity.shouldRenderBeams()) {
+                            beamRenderable.setLightValue(renderable.worldLightValue);
+                            beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                            beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+                            beamRenderable.setColor(color);
+                            beamRenderable.setAlpha(blendableBrightness);
+                            beamRenderable.transform.set(renderable.transform);
+                            beamRenderable.render();
                         }
-                    }
-                    if (!blendingEnabled && coverRenderable != null) {
-                        //Light cover detected on solid render pass.
-                        coverRenderable.setLightValue(renderable.worldLightValue);
-                        coverRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                        coverRenderable.transform.set(renderable.transform);
-                        coverRenderable.render();
                     }
                 }
+                if (!blendingEnabled && coverRenderable != null) {
+                    //Light cover detected on solid render pass.
+                    coverRenderable.setLightValue(renderable.worldLightValue);
+                    coverRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                    coverRenderable.transform.set(renderable.transform);
+                    coverRenderable.render();
+                }
+            }
 
-                //Render text on this object.  Only do this on the solid pass.
-                if (!blendingEnabled) {
-                    for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
-                        JSONText textDef = textEntry.getKey();
-                        if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
-                            RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false);
-                        }
+            //Render text on this object.  Only do this on the solid pass.
+            if (!blendingEnabled) {
+                for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
+                    JSONText textDef = textEntry.getKey();
+                    if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
+                        RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false);
                     }
                 }
             }
@@ -330,36 +350,12 @@ public class RenderableModelObject {
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
-        //First set dynamic alpha if we have it, since this dictates translucent state.
-        if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-            if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
-                renderable.setAlpha(0);
-            } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
-                //Need >= here instead of above for things where min/max clamps are equal.
-                renderable.setAlpha(1);
-            } else {
-                renderable.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
-            }
-        }
-
-        //Solid only on solid pass, translucent only on blended pass.
-        if (renderable.isTranslucent != blendingEnabled) {
-            return false;
-        }
         //Treads only render on solid passes.
         if (treadPoints != null && blendingEnabled) {
             return false;
         }
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
-            return false;
-        }
-        //If the light only has solid components, and we aren't translucent, don't render on the blending pass.
-        if (lightDef != null && blendingEnabled && !renderable.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())) {
-            return false;
-        }
-        //If we are a beam object, make sure we're only rendering on the translucent pass with beams enabled.
-        if (lightDef != null && lightDef.isBeam && (!blendingEnabled || !entity.shouldRenderBeams() || entity.lightBrightnessValues.get(lightDef) == 0)) {
             return false;
         }
         //If we have a switchbox, run it once, and if it returns false for a non-blended object, don't render.

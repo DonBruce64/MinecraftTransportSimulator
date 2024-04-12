@@ -14,7 +14,8 @@
 				"client.ListenerMixin",
 				"client.SimpleReloadableResourceManagerMixin",
 				"client.BipedModelMixin",
-				"client.VillagerModelMixin"
+				"client.VillagerModelMixin",
+				"client.WorldRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1
