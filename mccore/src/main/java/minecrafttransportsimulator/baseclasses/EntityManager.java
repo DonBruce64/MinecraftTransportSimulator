@@ -37,7 +37,8 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<IWrapperNBT, ItemVehicle> hotloadedData = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<IWrapperNBT, ItemVehicle> hotloadedVehicles = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<IWrapperNBT> hotloadedPlacedParts = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<UUID, UUID> hotloadedRiderIDs = new ConcurrentHashMap<>();
     private int hotloadCountdown;
 
@@ -146,24 +147,30 @@ public abstract class EntityManager {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
                 //TODO make this generic by referencing the d-level class and putting inits in items.
-                if (entity instanceof EntityVehicleF_Physics) {
-                    EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-                    if (vehicle.applyHotloads) {
+                if (entity instanceof AEntityD_Definable) {
+                	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+                    if (definable.applyHotloads) {
                         if (!entity.world.isClient()) {
                             //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
-                            vehicle.allParts.forEach(part -> {
-                                if (part.rider != null) {
-                                    hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
-                                    part.removeRider();
-                                }
-                            });
+                        	if(entity instanceof AEntityF_Multipart) {
+	                            ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
+	                                if (part.rider != null) {
+	                                    hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
+	                                    part.removeRider();
+	                                }
+	                            });
+                        	}
                             
                             //Now store data for countdown and remove entity.
-                            hotloadedData.put(vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) vehicle.cachedItem);
-                            vehicle.remove();
+                        	if(entity instanceof EntityVehicleF_Physics) {
+                        		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
+                        	}else if(entity instanceof EntityPlacedPart) {
+                        		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                        	}
+                            definable.remove();
                             hotloadCountdown = 20;
                         } else {
-                            vehicle.remove();
+                        	definable.remove();
                         }
                         //Don't do futher logic with the hotload applied.
                         continue;
@@ -181,12 +188,18 @@ public abstract class EntityManager {
         
         if (hotloadCountdown > 0) {
             if (--hotloadCountdown == 10) {
-                hotloadedData.forEach((data, item) -> {
+                hotloadedVehicles.forEach((data, item) -> {
                     EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
                     vehicle.addPartsPostAddition(null, data);
                     vehicle.world.spawnEntity(vehicle);
                 });
-                hotloadedData.clear();
+                hotloadedVehicles.clear();
+                hotloadedPlacedParts.forEach(data-> {
+                    EntityPlacedPart placedPart = new EntityPlacedPart(getWorld(), null, data);
+                    placedPart.addPartsPostAddition(null, data);
+                    placedPart.world.spawnEntity(placedPart);
+                });
+                hotloadedPlacedParts.clear();
             } else if (hotloadCountdown == 0) {
                 hotloadedRiderIDs.forEach((seatID, riderID) -> {
                     getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));

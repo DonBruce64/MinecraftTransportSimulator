@@ -153,7 +153,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             return position.isFirstCloserThanSecond(o1.position, o2.position) ? -1 : 1;
         }
 
-    };;
+    };
+    
+    public boolean applyHotloads;
 
     /**
      * Constructor for synced entities

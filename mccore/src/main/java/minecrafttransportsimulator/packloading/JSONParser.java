@@ -38,6 +38,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
@@ -691,6 +692,9 @@ public class JSONParser {
         for(AWrapperWorld world : AWrapperWorld.worlds) {
             for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                 vehicle.applyHotloads = true;
+            }
+            for (EntityPlacedPart placedPart : world.getEntitiesOfType(EntityPlacedPart.class)) {
+            	placedPart.applyHotloads = true;
             }
     	}
     	

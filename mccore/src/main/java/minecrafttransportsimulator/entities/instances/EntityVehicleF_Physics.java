@@ -81,7 +81,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public static final String FLAPS_VARIABLE = "flaps_setpoint";
 
     //External state control.
-    public boolean applyHotloads;
     public boolean turningLeft;
     public boolean turningRight;
     public byte turningCooldown;
