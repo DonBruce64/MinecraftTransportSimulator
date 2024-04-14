@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -49,6 +50,7 @@ import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.IGrowable;
+import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -431,6 +433,14 @@ public class WrapperWorld extends AWrapperWorld {
                 return material;
             }
         }
+    }
+    
+    @Override
+    public ColorRGB getBlockColor(Point3D position) {
+    	BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        IBlockState state = world.getBlockState(pos);
+        MapColor mcColor = state.getMapColor(world, pos);
+        return new ColorRGB(mcColor.colorValue);
     }
 
     @Override

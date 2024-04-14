@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -181,6 +182,11 @@ public abstract class AWrapperWorld extends EntityManager {
      * Returns the material of the block.
      */
     public abstract BlockMaterial getBlockMaterial(Point3D position);
+    
+    /**
+     * Returns the color of the block as determined by map coloring.
+     */
+    public abstract ColorRGB getBlockColor(Point3D position);
 
     /**
      * Returns a list of block drops for the block at the passed-in position.

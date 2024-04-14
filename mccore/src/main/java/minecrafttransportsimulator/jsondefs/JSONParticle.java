@@ -15,6 +15,9 @@ public class JSONParticle {
 
     @JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
     public boolean spawnEveryTick;
+    
+    @JSONDescription("If true, the particle will use the block color of the block it is spawned from.  Valid only on break type particles.")
+    public boolean useBlockColor;
 
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;

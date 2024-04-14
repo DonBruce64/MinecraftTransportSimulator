@@ -14,6 +14,7 @@ import java.util.UUID;
 import mcinterface1165.mixin.common.ConcretePowderBlockMixin;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -51,6 +52,7 @@ import net.minecraft.block.FarmlandBlock;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialColor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
@@ -462,6 +464,14 @@ public class WrapperWorld extends AWrapperWorld {
                 return material;
             }
         }
+    }
+    
+    @Override
+    public ColorRGB getBlockColor(Point3D position) {
+    	BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockState state = world.getBlockState(pos);
+        MaterialColor mcColor = state.getMapColor(world, pos);
+        return new ColorRGB(mcColor.col);
     }
 
     @Override

@@ -248,7 +248,9 @@ public class EntityParticle extends AEntityC_Renderable {
         renderable.setTexture(texture);
 
         //Set color.
-        if (definition.color != null) {
+        if(definition.useBlockColor) {
+        	this.staticColor = world.getBlockColor(position);
+        }else if (definition.color != null) {
             if (definition.toColor != null) {
                 this.startColor = definition.color;
                 this.endColor = definition.toColor;
@@ -256,7 +258,6 @@ public class EntityParticle extends AEntityC_Renderable {
                 this.staticColor = null;
             } else {
                 this.staticColor = definition.color;
-                renderable.setColor(staticColor);
             }
         } else {
             if (definition.colorList != null) {
@@ -279,6 +280,9 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 this.staticColor = ColorRGB.WHITE;
             }
+        }
+        if(staticColor != null) {
+            renderable.setColor(staticColor);
         }
 
         //Set alpha.
