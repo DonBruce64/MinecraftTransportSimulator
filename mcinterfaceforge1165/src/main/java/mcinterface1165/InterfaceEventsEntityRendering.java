@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
@@ -70,7 +71,7 @@ public class InterfaceEventsEntityRendering {
                 //Camera adjustments occur backwards here.  Reverse order in the matrix.
                 //Also need to reverse sign of Y, since that's backwards in MC.
                 cameraAdjustedOrientation.convertToAngles();
-                if (!InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
+                if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.THIRD_PERSON_INVERTED) {
                     //Inverted third-person needs roll and pich flipped due to the opposite perspective.
                     //It also needs the camera rotated 180 in the Y to face the other direction.
                     event.setRoll((float) -cameraAdjustedOrientation.angles.z);
@@ -103,7 +104,7 @@ public class InterfaceEventsEntityRendering {
         }
 
         //If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
-        if ((event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR || event.getType() == RenderGameOverlayEvent.ElementType.FOOD || event.getType() == RenderGameOverlayEvent.ElementType.HEALTH || event.getType() == RenderGameOverlayEvent.ElementType.ARMOR || event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) && (InterfaceManager.clientInterface.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)) {
+        if ((event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR || event.getType() == RenderGameOverlayEvent.ElementType.FOOD || event.getType() == RenderGameOverlayEvent.ElementType.HEALTH || event.getType() == RenderGameOverlayEvent.ElementType.ARMOR || event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) && (InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)) {
             IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
             AEntityB_Existing ridingEntity = player.getEntityRiding();
             if (ridingEntity instanceof PartSeat && ((PartSeat) ridingEntity).placementDefinition.isController) {

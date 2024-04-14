@@ -33,6 +33,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -1135,7 +1136,7 @@ public class PartGun extends APart {
             case ("gun_inhand_aiming"):
                 return isHandHeldGunAimed ? 1 : 0;
             case ("gun_controller_firstperson"):
-                return InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.inFirstPerson() ? 1 : 0;
+                return InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0;
             case ("gun_active"):
                 return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
             case ("gun_firing"):

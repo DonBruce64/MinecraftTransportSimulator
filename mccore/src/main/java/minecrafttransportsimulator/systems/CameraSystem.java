@@ -71,7 +71,7 @@ public class CameraSystem {
         runningCustomCameras = false;
 
         //Do custom camera operations, if we have one.
-        if (InterfaceManager.clientInterface.inFirstPerson() && cameraProvider != null) {
+        if (cameraProvider != null) {
             JSONCameraObject camera = cameraProvider.activeCamera;
             if (camera != null) {
                 AnimationSwitchbox switchbox = cameraProvider.activeCameraSwitchbox;
@@ -147,5 +147,17 @@ public class CameraSystem {
             //Not doing any camera changes.
             return false;
         }
+    }
+    
+    public static enum CameraMode{
+    	FIRST_PERSON(false),
+    	THIRD_PERSON(true),
+    	THIRD_PERSON_INVERTED(true);
+    	
+    	public final boolean thirdPerson;
+    	
+    	private CameraMode(boolean thirdPerson) {
+    		this.thirdPerson = thirdPerson;
+    	}
     }
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
  * Interface to the MC client instance.  This class has methods used for determining
@@ -57,27 +58,14 @@ public interface IInterfaceClient {
     boolean isGUIOpen();
 
     /**
-     * Returns true if the game is in first-person mode.
+     * Returns the camera mode.
      */
-    boolean inFirstPerson();
+    CameraMode getCameraMode();
 
     /**
-     * Returns true if the game is in third-person mode.
-     * Does not return true for inverted third-person mode.
+     * Sets the camera mode.
      */
-    boolean inThirdPerson();
-
-    /**
-     * Returns true if the camera mode was switched from last render.
-     * This is here because some mods will change the camera for rendering,
-     * and we need to know if the state-change is a switch, or an internal one.
-     */
-    boolean changedCameraState();
-
-    /**
-     * Toggles first-person mode.  This is essentially the same operation as the F5 key.
-     */
-    void toggleFirstPerson();
+    void setCameraMode(CameraMode mode);
 
     /**
      * Returns the camera-zero default zoom distance.  This can vary from 0 to 4 depending on

@@ -19,11 +19,13 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
@@ -72,6 +74,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean turnsWithSteer;
     public boolean isSpare;
     public boolean isMirrored;
+    private boolean requestedForcedCamera;
     private boolean playerHoldingWrenchLastTick;
     private boolean playerHoldingWrench;
     private boolean playerHoldingScrewdriverLastTick;
@@ -180,6 +183,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void update() {
         super.update();
         isInvisible = partOn != null ? partOn.isInvisible : false;
+        
+        //Update forced camera mode if we are supposed to be forcing it.
+        //We need to one-shot this though to ensure that we don't sent infinite packets.
+        if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
+        }else if(requestedForcedCamera && activeCamera != null) {
+        	requestedForcedCamera = false;
+        }
 
         //Update tool state.
         if (world.isClient()) {

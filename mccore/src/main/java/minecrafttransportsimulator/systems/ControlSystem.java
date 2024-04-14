@@ -145,21 +145,7 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartSeat(sittingSeat, SeatAction.ZOOM_OUT));
             }
             if (changeView.isPressed()) {
-                InterfaceManager.clientInterface.toggleFirstPerson();
-            }
-            if (InterfaceManager.clientInterface.changedCameraState()) {
-                //If we don't have custom cameras on our seat, and we're in inverted third-person, request them.
-                //If we do have custom cameras on our seat, and we're in normal third-person, request another, and go back to first-person.
-                if (sittingSeat.cameraIndex == 0 && !InterfaceManager.clientInterface.inFirstPerson() && !InterfaceManager.clientInterface.inThirdPerson()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
-                } else if (sittingSeat.cameraIndex != 0 && InterfaceManager.clientInterface.inThirdPerson()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
-                    InterfaceManager.clientInterface.toggleFirstPerson();
-                }
-            }
-            if (sittingSeat.placementDefinition.forceCameras && InterfaceManager.clientInterface.inFirstPerson()) {
-                //Make sure we don't go to first-person without a camera set if we are supposed to force it.
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
+            	InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
             }
         }
     }

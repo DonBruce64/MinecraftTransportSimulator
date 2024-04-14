@@ -20,6 +20,7 @@ import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -45,10 +46,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class InterfaceClient implements IInterfaceClient {
-    private static boolean actuallyFirstPerson;
-    private static boolean actuallyThirdPerson;
-    private static boolean changedCameraState;
-    private static boolean changeCameraRequest;
+    private static CameraMode actualCameraMode;
+    private static CameraMode cameraModeRequest;
     private static int ticksToCullingWarning = 200;
 
     @Override
@@ -102,23 +101,13 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public boolean inFirstPerson() {
-        return actuallyFirstPerson;
+    public CameraMode getCameraMode() {
+        return actualCameraMode;
     }
 
     @Override
-    public boolean inThirdPerson() {
-        return actuallyThirdPerson;
-    }
-
-    @Override
-    public boolean changedCameraState() {
-        return changedCameraState && !changeCameraRequest;
-    }
-
-    @Override
-    public void toggleFirstPerson() {
-        changeCameraRequest = true;
+    public void setCameraMode(CameraMode mode) {
+        cameraModeRequest = mode;
     }
 
     @Override
@@ -275,32 +264,41 @@ public class InterfaceClient implements IInterfaceClient {
                         gun.update();
                         gun.doPostUpdateLogic();
                     }
+                    
+                    //Handle camera requests.
+                    if(cameraModeRequest != null) {
+                    	switch(cameraModeRequest) {
+	                    	case FIRST_PERSON:{
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
+	                    		break;
+	                    	}
+	                    	case THIRD_PERSON:{
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
+	                    		break;
+	                    	}
+	                    	case THIRD_PERSON_INVERTED:{
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
+	                    		break;
+	                    	}
+                    	}
+                    	cameraModeRequest = null;
+                    }
 
-                    changedCameraState = false;
-                    if (actuallyFirstPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON) {
-                        changedCameraState = true;
-                        actuallyFirstPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.FIRST_PERSON;
-                    }
-                    if (actuallyThirdPerson ^ Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK) {
-                        changedCameraState = true;
-                        actuallyThirdPerson = Minecraft.getInstance().options.getCameraType() == PointOfView.THIRD_PERSON_BACK;
-                    }
-                    if (changeCameraRequest) {
-                        if (actuallyFirstPerson) {
-                            Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
-                            actuallyFirstPerson = false;
-                            actuallyThirdPerson = true;
-                        } else if (actuallyThirdPerson) {
-                            Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
-                            actuallyFirstPerson = false;
-                            actuallyThirdPerson = false;
-                        } else {
-                            Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
-                            actuallyFirstPerson = true;
-                            actuallyThirdPerson = false;
-                        }
-                        changeCameraRequest = false;
-                        changedCameraState = true;
+                    //Update camera state, since this can change depending on tick if we check during renders.
+                    PointOfView cameraModeEnum  = Minecraft.getInstance().options.getCameraType();
+                    switch(cameraModeEnum) {
+                    	case FIRST_PERSON:{
+                    		actualCameraMode = CameraMode.FIRST_PERSON;
+                    		break;
+                    	}
+                    	case THIRD_PERSON_BACK:{
+                    		actualCameraMode = CameraMode.THIRD_PERSON;
+                    		break;
+                    	}
+                    	case THIRD_PERSON_FRONT:{
+                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+                    		break;
+                    	}
                     }
                 }
                 world.endProfiling();

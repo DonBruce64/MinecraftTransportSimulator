@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -59,6 +60,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public JSONCameraObject activeCamera;
     public AEntityD_Definable<?> activeCameraEntity;
     public AnimationSwitchbox activeCameraSwitchbox;
+    private CameraMode lastCameraMode;
 
     /**
      * The position of the eyes of the rider.  This is slightly different than the return for 
@@ -175,7 +177,22 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     //No active cameras found, set index to 0 to disable and go back to normal rendering.
                     cameraIndex = 0;
                     activeCamera = null;
+                    if(lastCameraMode != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+                    	InterfaceManager.clientInterface.setCameraMode(lastCameraMode);
+                    	lastCameraMode = null;
+                    }
                 }
+            }
+            
+            //If we just got to an active camera, store last camera mode and change to first-person if required.
+            //If we have an active camera, force first-person if we don't have it.
+            if(activeCamera != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+            	if(lastCameraMode == null) {
+            		lastCameraMode = InterfaceManager.clientInterface.getCameraMode();
+            	}
+            	if(InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
+            		InterfaceManager.clientInterface.setCameraMode(CameraMode.FIRST_PERSON);
+            	}
             }
         }
 
@@ -243,18 +260,19 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             //If we are a client, and aren't running a custom camera, and are in third-person, adjust zoom.
             if (world.isClient()) {
                 prevRiderCameraPosition.set(riderCameraPosition);
-                if (!CameraSystem.runningCustomCameras && !InterfaceManager.clientInterface.inFirstPerson()) {
+                CameraMode cameraMode = InterfaceManager.clientInterface.getCameraMode();
+                if (!CameraSystem.runningCustomCameras && cameraMode != CameraMode.FIRST_PERSON) {
                     riderCameraPosition.set(riderEyePosition);
 
                     //Adjust eye position to account for zoom settings.
                     int zoomRequired = 4 + zoomLevel;
-                    riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
+                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
                     riderEyePosition.add(riderTempPoint);
 
                     //Check if camera should be where eyes are, or somewhere different.
                     int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
                     if (zoomRequired != cameraZoomRequired) {
-                        riderTempPoint.set(0, 0, InterfaceManager.clientInterface.inThirdPerson() ? -cameraZoomRequired : cameraZoomRequired).rotate(rider.getOrientation());
+                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(rider.getOrientation());
                         riderCameraPosition.add(riderTempPoint);
                     } else {
                         riderCameraPosition.add(riderTempPoint);
