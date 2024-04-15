@@ -18,6 +18,9 @@ public class JSONParticle {
     
     @JSONDescription("If true, the particle will use the block color of the block it is spawned from.  Valid only on break type particles.")
     public boolean useBlockColor;
+    
+    @JSONDescription("If true, the particle will use the block properties from the ground below it, no matter how far down the ground is, vs the properties of the block at the position it is at.")
+    public boolean getBlockPropertiesFromGround;
 
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;

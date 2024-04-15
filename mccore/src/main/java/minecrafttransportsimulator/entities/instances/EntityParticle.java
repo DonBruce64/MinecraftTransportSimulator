@@ -217,6 +217,13 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase(Locale.ROOT) + ".png";
         }
 
+        Point3D blockCheckPosition;
+        if(definition.getBlockPropertiesFromGround) {
+        	//Center of block for safety of FPEs.
+        	blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
+    	}else {
+    		blockCheckPosition = position;
+    	}
         this.model = model;
         if (this.model != null) {
             RenderableVertices parsedModel = parsedParticleModels.computeIfAbsent(this.model, k -> {
@@ -239,7 +246,7 @@ public class EntityParticle extends AEntityC_Renderable {
             //Need to generate a new vertex buffer since break particles have varying UVs.
             RenderableVertices vertexObject = RenderableVertices.createSprite(1, null, null);
             this.renderable = new RenderableData(vertexObject, texture);
-            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
+            float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, blockCheckPosition);
             vertexObject.setTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
         } else {
             //Basic particle, use standard buffer.
@@ -249,7 +256,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set color.
         if(definition.useBlockColor) {
-        	this.staticColor = world.getBlockColor(position);
+        	this.staticColor = world.getBlockColor(blockCheckPosition);
         }else if (definition.color != null) {
             if (definition.toColor != null) {
                 this.startColor = definition.color;
