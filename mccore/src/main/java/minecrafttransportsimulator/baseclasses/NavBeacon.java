@@ -48,7 +48,7 @@ public class NavBeacon {
 
             IWrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
             if (beaconListing != null) {
-                beaconListing.deleteData(name);
+                beaconListing.deleteEntry(name);
                 world.setData(BEACON_LISTING_KEY, beaconListing);
             }
         }

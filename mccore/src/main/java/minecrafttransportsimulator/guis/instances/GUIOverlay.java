@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
+import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -89,7 +89,7 @@ public class GUIOverlay extends AGUIBase {
                 JSONPartDefinition packVehicleDef = null;
                 for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activePartSlotBoxes.entrySet()) {
                     BoundingBox box = boxEntry.getKey();
-                    if (box.getIntersectionPoint(startPosition, endPosition) != null) {
+                    if (box.getIntersection(startPosition, endPosition) != null) {
                         if (mousedOverBox == null || (box.globalCenter.distanceTo(startPosition) < mousedOverBox.globalCenter.distanceTo(startPosition))) {
                             mousedOverBox = box;
                             packVehicleDef = boxEntry.getValue();

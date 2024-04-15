@@ -21,6 +21,9 @@ public abstract class AJSONItem extends AJSONBase {
     public General general;
 
     public static class General {
+        @JSONDescription("Set to true to hide this item on creative tabs.")
+        public boolean hideOnCreativeTab;
+
         @JSONDescription("The name of this content.  Will be displayed in item form.  Note that if the content is a type that has a set of definitions, then this name is ignored and the appropriate definition name is used instead.")
         public String name;
 

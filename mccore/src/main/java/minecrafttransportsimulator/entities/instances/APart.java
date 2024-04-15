@@ -10,9 +10,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -24,6 +23,8 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -71,6 +72,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean turnsWithSteer;
     public boolean isSpare;
     public boolean isMirrored;
+    private boolean playerHoldingWrenchLastTick;
+    private boolean playerHoldingWrench;
+    private boolean playerHoldingScrewdriverLastTick;
+    private boolean playerHoldingScrewdriver;
+
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.
@@ -86,8 +92,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private AnimationSwitchbox internalMovementSwitchbox;
     private static boolean checkingLinkedParts;
 
-    public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn.world, placingPlayer, data);
+    public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
+        super(entityOn.world, placingPlayer, item, data);
         this.localOffset = placementDefinition.pos.copy();
         this.localOrientation = new RotationMatrix();
         this.zeroReferenceOrientation = new RotationMatrix();
@@ -163,12 +169,28 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (definition.generic.activeAnimations != null) {
             internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
         }
+
+        //Add parent constants.
+        if (placementDefinition.constantValues != null) {
+            variables.putAll(placementDefinition.constantValues);
+        }
     }
 
     @Override
     public void update() {
         super.update();
-        isInvisible = false;
+        isInvisible = partOn != null ? partOn.isInvisible : false;
+
+        //Update tool state.
+        if (world.isClient()) {
+            playerHoldingWrenchLastTick = playerHoldingWrench;
+            playerHoldingScrewdriverLastTick = playerHoldingScrewdriver;
+            playerHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
+            playerHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
+            if (playerHoldingWrenchLastTick ^ playerHoldingWrench || playerHoldingScrewdriverLastTick ^ playerHoldingScrewdriver) {
+                forceCollisionUpdateThisTick = true;
+            }
+        }
 
         //Update active state.
         isActive = partOn != null ? partOn.isActive : true;
@@ -208,7 +230,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //First apply part slot animation translation and rotation.
         //This will rotate us to our proper slot position.
-        if (placementMovementSwitchbox != null) {
+        if (!isInvisible && placementMovementSwitchbox != null) {
             isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
             //Offset needs to move according to full transform.
             //This is because these coords are from what we are on.
@@ -291,12 +313,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed. This can only be done on the client.
         if (world.isClient()) {
-	    	boolean isHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
-	    	boolean isHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
-	
-	        if (isHoldingWrench || isHoldingScrewdriver) {
+            if (playerHoldingWrench || playerHoldingScrewdriver) {
 	            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
-	            if ((isHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (isHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
+                if ((playerHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (playerHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
 	                allInteractionBoxes.removeAll(interactionBoxes);
 	                return;
 	            }
@@ -320,8 +339,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
-            if (masterEntity.locked) {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+            if (vehicleOn != null && vehicleOn.locked) {
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
                 if (player.getInventory().addStack(getStack())) {
                     entityOn.removePart(this, true, null);
@@ -336,7 +355,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
-                if (ConfigSystem.settings.damage.explosions.value) {
+                if (ConfigSystem.settings.damage.vehicleExplosions.value) {
                     world.spawnExplosion(position, 1F, true);
                 } else {
                     world.spawnExplosion(position, 0F, false);
@@ -359,11 +378,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         super.updatePartList();
         linkedParts.clear();
         addLinkedPartsToList(linkedParts, APart.class);
-    }
-
-    @Override
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        return entityOn.getOwnerState(player);
     }
 
     @Override
@@ -569,6 +583,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 return 1;
             case ("part_ismirrored"):
                 return isMirrored ? 1 : 0;
+            case ("part_isonfront"):
+                return placementDefinition.pos.z > 0 ? 1 : 0;
             case ("part_isspare"):
                 return isSpare ? 1 : 0;
             case ("part_onvehicle"):
@@ -609,8 +625,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
-        return super.disableRendering(partialTicks) || isFake() || isInvisible;
+    public boolean disableRendering() {
+        return super.disableRendering() || isFake() || isInvisible;
     }
 
     @Override

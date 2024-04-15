@@ -66,7 +66,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.rendering.TreadRoller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -361,9 +361,10 @@ public final class LegacyCompatSystem {
             definition.motorized.hasCruiseControl = false;
         }
 
-        //If downforce is greater than 1, set it to 0.5 to prevent spinny vehicles.
-        if (definition.motorized.downForce > 1) {
-            definition.motorized.downForce = 0.5F;
+        //Change downForce's name to steeringForceFactor
+        if (definition.motorized.downForce != 0) {
+            definition.motorized.steeringForceFactor = definition.motorized.downForce;
+            definition.motorized.downForce = 0;
         }
 
         //Add hookup variables if we are a trailer and don't have them.
@@ -799,11 +800,13 @@ public final class LegacyCompatSystem {
                 definition.ground.frictionModifiers = new LinkedHashMap<>();
                 definition.ground.frictionModifiers.put(BlockMaterial.SNOW, -0.2F);
                 definition.ground.frictionModifiers.put(BlockMaterial.ICE, -0.2F);
-                if (!definition.ground.isTread) {
-                    definition.ground.frictionModifiers.put(BlockMaterial.DIRT_WET, -0.1F);
-                    definition.ground.frictionModifiers.put(BlockMaterial.SAND_WET, -0.1F);
-                    definition.ground.frictionModifiers.put(BlockMaterial.NORMAL_WET, -0.1F);
-                }
+            } else {
+                definition.ground.frictionModifiers.remove(BlockMaterial.DIRT_WET);
+                definition.ground.frictionModifiers.remove(BlockMaterial.SAND_WET);
+                definition.ground.frictionModifiers.remove(BlockMaterial.NORMAL_WET);
+            }
+            if (definition.ground.wetFrictionPenalty == 0 && !definition.ground.isTread) {
+                definition.ground.wetFrictionPenalty = -0.1F;
             }
         }
 
@@ -2370,12 +2373,12 @@ public final class LegacyCompatSystem {
         }
 
         try {
-            List<RenderableObject> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0)));
+            List<RenderableVertices> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0)), true);
 
             //If we don't have lights, check for them.
             if (definition.rendering.lightObjects == null) {
                 definition.rendering.lightObjects = new ArrayList<>();
-                for (RenderableObject object : parsedModel) {
+                for (RenderableVertices object : parsedModel) {
                     if (object.name.contains("&")) {
                         JSONLight lightDef = new JSONLight();
                         lightDef.objectName = object.name;
@@ -2555,7 +2558,7 @@ public final class LegacyCompatSystem {
                                 lightDef.blendableComponents.add(blendable);
                             }
                         }
-
+                        object.vertices.rewind();
                         definition.rendering.lightObjects.add(lightDef);
                     }
                 }
@@ -2565,7 +2568,7 @@ public final class LegacyCompatSystem {
             //We need to convert them into the new path system.
             List<String> leftRollers = new ArrayList<>();
             List<String> rightRollers = new ArrayList<>();
-            for (RenderableObject object : parsedModel) {
+            for (RenderableVertices object : parsedModel) {
                 if (object.name.toLowerCase(Locale.ROOT).contains("roller")) {
                     //Add roller to roller lists.
                     if (object.name.toLowerCase(Locale.ROOT).startsWith("l") || object.name.toLowerCase(Locale.ROOT).startsWith("$l")) {
@@ -2630,9 +2633,9 @@ public final class LegacyCompatSystem {
 
                     if (!animationPresent) {
                         //Get the model object for the roller.
-                        RenderableObject rollerObject = null;
+                        RenderableVertices rollerObject = null;
                         TreadRoller roller = null;
-                        for (RenderableObject object : parsedModel) {
+                        for (RenderableVertices object : parsedModel) {
                             if (object.name.equals(rollerName)) {
                                 rollerObject = object;
                                 roller = new TreadRoller(object);

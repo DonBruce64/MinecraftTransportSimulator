@@ -9,7 +9,6 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -38,7 +37,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setBoolean(String name, boolean value) {
-        tag.setBoolean(name, value);
+        if(value) {
+            tag.setBoolean(name, value);
+        } else {
+            tag.removeTag(name);
+        }
     }
 
     @Override
@@ -48,7 +51,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setInteger(String name, int value) {
-        tag.setInteger(name, value);
+        if(value != 0) {
+            tag.setInteger(name, value);
+        } else {
+            tag.removeTag(name);
+        }
     }
 
     @Override
@@ -58,7 +65,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setDouble(String name, double value) {
-        tag.setDouble(name, value);
+        if(value != 0) {
+            tag.setDouble(name, value);
+        } else {
+            tag.removeTag(name);
+        }
     }
 
     @Override
@@ -131,9 +142,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setPoint3d(String name, Point3D value) {
-        setDouble(name + "x", value.x);
-        setDouble(name + "y", value.y);
-        setDouble(name + "z", value.z);
+        if (!value.isZero()) {
+            setDouble(name + "x", value.x);
+            setDouble(name + "y", value.y);
+            setDouble(name + "z", value.z);
+        }
     }
 
     @Override
@@ -165,9 +178,11 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setPoint3dCompact(String name, Point3D value) {
-        setInteger(name + "x", (int) Math.floor(value.x));
-        setInteger(name + "y", (int) Math.floor(value.y));
-        setInteger(name + "z", (int) Math.floor(value.z));
+        if (!value.isZero()) {
+            setInteger(name + "x", (int) Math.floor(value.x));
+            setInteger(name + "y", (int) Math.floor(value.y));
+            setInteger(name + "z", (int) Math.floor(value.z));
+        }
     }
 
     @Override
@@ -194,12 +209,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public WrapperNBT getData(String name) {
-        return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : null;
-    }
-
-    @Override
-    public IWrapperNBT getDataOrNew(String name) {
-        return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : InterfaceManager.coreInterface.getNewNBTWrapper();
+        return tag.hasKey(name, 10) ? new WrapperNBT(tag.getCompoundTag(name)) : null;
     }
 
     @Override
@@ -208,7 +218,12 @@ class WrapperNBT implements IWrapperNBT {
     }
 
     @Override
-    public void deleteData(String name) {
+    public boolean hasKey(String name) {
+        return tag.hasKey(name);
+    }
+
+    @Override
+    public void deleteEntry(String name) {
         tag.removeTag(name);
     }
 

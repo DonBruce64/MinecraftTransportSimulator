@@ -12,6 +12,7 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -20,15 +21,15 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -44,6 +45,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -115,16 +117,32 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<>();
 
     //Constants
-    private static final float PART_SLOT_HITBOX_WIDTH = 0.75F;
-    private static final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
+    private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
+    private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.5F;
+    private static final float PART_SLOT_GROUND_HITBOX_WIDTH = 0.75F;
+    private static final float PART_SLOT_GROUND_HITBOX_HEIGHT = 2.25F;
     private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
 
     private APart partToPlace;
     private EntityPlacedPart placedPart;
     private int placeTimer;
 
-    public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data == null) {
+            //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
+            //the value will be set before any subsequent logic occurs.
+            if (definition.constantValues != null) {
+                variables.putAll(definition.constantValues);
+            }
+        }
+
+        //Init part slots.
+        if (definition.parts != null) {
+            while (partsInSlots.size() < definition.parts.size()) {
+                partsInSlots.add(null);
+            }
+        }
     }
 
     @Override
@@ -174,6 +192,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
             recalculatePartSlots();
         }
+
+        //Update the part list, this will re-create any linkings on us.
+        updatePartList();
     }
 
     @Override
@@ -216,12 +237,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subDefinition, false)) {
                             //Are there any doors blocking us from clicking this part?
                             if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
-                                //Part matches.  Add the box.  Set the box bounds to the generic box, or the
-                                //special bounds of the generic part if we're holding one.
+                                //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one.
                                 BoundingBox box = partSlotBoxEntry.getKey();
-                                box.widthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width / 2D : PART_SLOT_HITBOX_WIDTH / 2D) * scale.x;
-                                box.heightRadius = (heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height / 2D : PART_SLOT_HITBOX_HEIGHT / 2D) * scale.y;
-                                box.depthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width / 2D : PART_SLOT_HITBOX_WIDTH / 2D) * scale.z;
+                                if (heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
+                                    box.widthRadius = heldPart.definition.generic.width / 2D;
+                                    box.heightRadius = heldPart.definition.generic.height / 2D;
+                                    box.depthRadius = heldPart.definition.generic.width / 2D;
+                                }
                                 activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
                                 forceCollisionUpdateThisTick = true;
                                 if(this instanceof APart) {
@@ -283,7 +305,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //False->True change, try to grab a part.
             Point3D partAnchor = partDef.pos.copy().rotate(orientation).add(position);
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.getStack().getItem()).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     partToTransfer.entityOn.removePart(partToTransfer, false, null);
                     partToTransfer.linkToEntity(this, partDef);
                     addPart(partToTransfer, false);
@@ -296,7 +318,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
             if (currentPart.definition.generic.canBePlacedOnGround) {
                 Point3D partAnchor = new Point3D();
-                AItemPart currentPartItem = (AItemPart) currentPart.getStack().getItem();
+                AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
                     //This keeps us from checking things really far away for no reason.
                     if (entity.encompassingBox.isPointInside(currentPart.position, PART_TRANSFER_GROWTH)) {
@@ -372,54 +394,61 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Called to get all hitboxes hit by the passed-in projectile.  No processing is done at this time, this only lets
      * the bullet know if it WILL hit this entity.  Returns null if no boxes collided, not an empty collection.
      */
-    public Collection<BoundingBox> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds) {
+    public Collection<BoundingBoxHitResult> getHitBoxes(Point3D pathStart, Point3D pathEnd, BoundingBox movementBounds, boolean isBullet) {
         if (encompassingBox.intersects(movementBounds)) {
             //Get all collision boxes and check if we hit any of them.
             //Sort them by distance for later.
-            TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
-            for (BoundingBox box : allDamageCollisionBoxes) {
-                if (!allPartSlotBoxes.containsKey(box)) {
-                    Point3D delta = box.getIntersectionPoint(pathStart, pathEnd);
-                    if (delta != null) {
-                        double boxDistance = delta.distanceTo(pathStart);
-                        boolean addBox = true;
-                        if (box.groupDef != null) {
-                            //Don't add boxes within the same group.
-                            Iterator<Entry<Double, BoundingBox>> iterator = hitBoxes.entrySet().iterator();
-                            while (iterator.hasNext()) {
-                                Entry<Double, BoundingBox> entry = iterator.next();
-                                BoundingBox otherBox = entry.getValue();
-                                if (otherBox.groupDef == box.groupDef) {
-                                    //If we have more armor, remove the prior box since it won't stop the bullet as much.
-                                    //Otherwise, just use closest box.
-                                    if (box.definition.armorThickness != 0) {
-                                        if (box.definition.armorThickness > otherBox.definition.armorThickness) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    } else {
-                                        if (entry.getKey() > boxDistance) {
-                                            iterator.remove();
-                                        } else {
-                                            addBox = false;
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        if (addBox) {
-                            hitBoxes.put(delta.distanceTo(pathStart), box);
-                        }
-                    }
-                }
+            TreeMap<Double, BoundingBoxHitResult> hitBoxes = new TreeMap<>();
+            populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allDamageCollisionBoxes);
+            if (isBullet) {
+                populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allBulletCollisionBoxes);
             }
             if (!hitBoxes.isEmpty()) {
                 return hitBoxes.values();
             }
         }
         return null;
+    }
+
+    private void populateHitBoxesInSet(Point3D pathStart, Point3D pathEnd, TreeMap<Double, BoundingBoxHitResult> hitBoxes, List<BoundingBox> boxesToCheck) {
+        for (BoundingBox box : boxesToCheck) {
+            if (!allPartSlotBoxes.containsKey(box)) {
+                BoundingBoxHitResult hitResult = box.getIntersection(pathStart, pathEnd);
+                if (hitResult != null) {
+                    double boxDistance = hitResult.position.distanceTo(pathStart);
+                    boolean addBox = true;
+                    if (box.groupDef != null) {
+                        //Don't add boxes within the same group.
+                        Iterator<Entry<Double, BoundingBoxHitResult>> iterator = hitBoxes.entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            Entry<Double, BoundingBoxHitResult> entry = iterator.next();
+                            BoundingBoxHitResult otherHitEntry = entry.getValue();
+                            if (otherHitEntry.box.groupDef == box.groupDef) {
+                                //If we have more armor, remove the prior box since it won't stop the bullet as much.
+                                //Otherwise, just use closest box.
+                                if (box.definition.armorThickness != 0) {
+                                    if (box.definition.armorThickness > otherHitEntry.box.definition.armorThickness) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                } else {
+                                    if (entry.getKey() > boxDistance) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (addBox) {
+                        hitBoxes.put(boxDistance, hitResult);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -429,36 +458,37 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Also note that unlike {@link #attack(Damage)}, this method functions both on client and servers, though you must only
      * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
      */
-    public EntityBullet.HitType attackProjectile(Damage damage, EntityBullet bullet, Collection<BoundingBox> hitBoxes) {
-            //Check all boxes for armor and see if we penetrated them.
-        for (BoundingBox hitBox : hitBoxes) {
-            APart hitPart = getPartWithBox(hitBox);
+    public EntityBullet.HitType attackProjectile(Damage damage, EntityBullet bullet, Collection<BoundingBoxHitResult> hitBoxes) {
+        //FIXME need to get the side here for bullet particles.
+        //Check all boxes for armor and see if we penetrated them.
+        for (BoundingBoxHitResult hitEntry : hitBoxes) {
+            APart hitPart = getPartWithBox(hitEntry.box);
             AEntityF_Multipart<?> hitEntity = hitPart != null ? hitPart : this;
 
             //First check if we need to reduce health of the hitbox.
             boolean hitOperationalHitbox = false;
-            if (hitBox.groupDef != null && hitBox.groupDef.health != 0 && !damage.isWater) {
-                String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitBox.groupDef) + 1) + "_damage";
+            if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.health != 0 && !damage.isWater) {
+                String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage";
                 double currentDamage = hitEntity.getVariable(variableName);
                 if (bullet != null) {
-                    bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health + "  ATTACKED FOR: " + damage.amount);
+                    bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitEntry.box.groupDef.health + "  ATTACKED FOR: " + damage.amount);
                 }
 
                 //This is a server-only action that does NOT cause us to stop processing.
                 //Send off packet to damage the health hitbox (or damage directly on server) and continue as if we didn't hit anything.
                 if (world.isClient()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitBox, damage.amount));
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitEntry.box, damage.amount));
                 } else {
-                    hitEntity.damageCollisionBox(hitBox, damage.amount);
+                    hitEntity.damageCollisionBox(hitEntry.box, damage.amount);
                 }
                 hitOperationalHitbox = true;
             }
 
             //Check armor pen and see if we hit too much and need to stop processing.
-            if (hitBox.definition != null && (hitBox.definition.armorThickness != 0 || hitBox.definition.heatArmorThickness != 0)) {
+            if (hitEntry.box.definition != null && (hitEntry.box.definition.armorThickness != 0 || hitEntry.box.definition.heatArmorThickness != 0)) {
                 hitOperationalHitbox = true;
                 if (bullet != null) {
-                    double armorThickness = hitBox.definition != null ? (bullet.definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
+                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.definition.heatArmorThickness != 0 ? hitEntry.box.definition.heatArmorThickness : hitEntry.box.definition.armorThickness) : 0;
                     double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
                     bullet.armorPenetrated += armorThickness;
                     bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
@@ -466,10 +496,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitBox.globalCenter, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
@@ -486,22 +516,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     //Didn't hit health or armor, must have hit something we can damage.
                     //Need to re-create damage object to reference this hitbox.
                     //Remove bullet if we are applying damage to a core group, or a part that forwards damage.
-                    damage = new Damage(bullet.gun, hitBox, damage.amount);
-                    boolean applyDamage = ((hitBox.groupDef != null && (hitBox.groupDef.health == 0 || damage.isWater)) || hitPart != null);
+                    damage = new Damage(bullet.gun, hitEntry.box, damage.amount);
+                    boolean applyDamage = ((hitEntry.box.groupDef != null && (hitEntry.box.groupDef.health == 0 || damage.isWater)) || hitPart != null);
                     boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
 
                     bullet.displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) hitEntity.damageAmount);
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE));
                             bullet.waitingOnActionPacket = true;
                             return EntityBullet.HitType.VEHICLE;
                         }
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, damage.box.globalCenter, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }
@@ -528,19 +558,25 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperItemStack getStack() {
         //Add data to the stack we return.  We need to remember the parts we have on us, even in item form.
+        //Just don't add default data or our UUID, that needs to be fresh.
         IWrapperItemStack stack = super.getStack();
-        stack.setData(save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        IWrapperNBT stackData = save(InterfaceManager.coreInterface.getNewNBTWrapper());
+        stackData.deleteAllUUIDTags();
+
+        IWrapperNBT freshData = InterfaceManager.coreInterface.getNewNBTWrapper();
+        freshData.setPackItem(definition, subDefinition.subName);
+        freshData.getAllNames().forEach(name -> stackData.deleteEntry(name));
+
+        if (!stackData.getAllNames().isEmpty()) {
+            stack.setData(stackData);
+        }
         return stack;
     }
 
     @Override
     public void updateText(LinkedHashMap<String, String> textLines) {
         super.updateText(textLines);
-        allParts.forEach(part -> {
-            for (Entry<JSONText, String> textEntry : part.text.entrySet()) {
-                textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
-            }
-        });
+        parts.forEach(part -> part.updateText(textLines));
     }
 
     @Override
@@ -572,6 +608,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Part was removed during updates, remove from the part listing.
                 removePart(part, true, iterator);
             } else {
+                //If the part needs updated collision, we will too, since our encompassing box could be affected.
+                if (part.forceCollisionUpdateThisTick) {
+                    forceCollisionUpdateThisTick = true;
+                }
                 part.doPostUpdateLogic();
             }
         }
@@ -669,36 +709,24 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * this multipart exists in the world.  And, if it is a part, it has been added to the multipart it is a part of.
      */
     public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        //Init part lookup list and add parts.
         if (definition.parts != null) {
-            //Need to init slots first, just in case we reference them on sub-part linking logic.
             for (int i = 0; i < definition.parts.size(); ++i) {
-                partsInSlots.add(null);
-            }
-
-            boolean newEntity = data.getString("uniqueUUID").isEmpty();
-            for (int i = 0; i < definition.parts.size(); ++i) {
-                //Use a try-catch for parts in case they've changed since this entity was last placed.
-                //Don't want crashes due to pack updates.
-                try {
-                    IWrapperNBT partData = data.getData("part_" + i);
-                    if (partData != null) {
-                        addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true);
+                if (data != null) {
+                    //Use a try-catch for parts in case they've changed since this entity was last placed.
+                    //Don't want crashes due to pack updates.
+                    try {
+                        IWrapperNBT partData = data.getData("part_" + i);
+                        if (partData != null) {
+                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                        }
+                    } catch (Exception e) {
+                        InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
-                    e.printStackTrace();
-                }
-
-                //Add default parts.  We need to do this after we actually create this part so its slots are valid.
-                //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
-                JSONPartDefinition partDef = definition.parts.get(i);
-                if (newEntity) {
-                    //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
-                    //the value will be set before spawning in any conditional parts.
-                    if (definition.constantValues != null) {
-                        variables.putAll(definition.constantValues);
-                    }
+                } else {
+                    //Add default parts.  We need to do this after we actually create this part so its slots are valid.
+                    //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
+                    JSONPartDefinition partDef = definition.parts.get(i);
                     if (partDef.conditionalDefaultParts != null) {
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
                             if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
@@ -724,14 +752,16 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * and a packet is sent to all clients to inform them of this change.
      * This method returns the part if it was added, null if it wasn't.
      */
-    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex, boolean bypassSlotChecks) {
+    public APart addPartFromStack(IWrapperItemStack stack, IWrapperPlayer playerAdding, int slotIndex, boolean bypassSlotChecks, boolean alignTone) {
         JSONPartDefinition newPartDef = definition.parts.get(slotIndex);
         AItemPart partItem = (AItemPart) stack.getItem();
         if (partsInSlots.get(slotIndex) == null && (bypassSlotChecks || partItem.isPartValidForPackDef(newPartDef, subDefinition, !newPartDef.bypassSlotMinMax))) {
             //Part is not already present, and is valid, add it.
             IWrapperNBT partData = stack.getData();
-            partItem.populateDefaultData(partData);
             APart partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData);
+            if (alignTone) {
+                partToAdd.updateTone(false);
+            }
             addPart(partToAdd, true);
             partToAdd.addPartsPostAddition(playerAdding, partData);
             return partToAdd;
@@ -746,7 +776,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * will create the part on clients, which you will always want to do unless you are transferring a part.
      */
     public void addPart(APart part, boolean sendPacket) {
-        parts.add(part);
+        //If the part is a seat, add it at the end of the list, since other parts might affect its movement.
+        //If the part isn't a seat, add to the start so we assure its before any seats.
+        //If we don't, update order with seated riders might get fouled.
+        if (part instanceof PartSeat) {
+            parts.add(part);
+        } else {
+            parts.add(0, part);
+        }
         if (!part.isFake()) {
             partsInSlots.set(part.placementSlot, part);
 
@@ -825,11 +862,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * list should occur here, not in {@link #updateAllpartList()}.
      */
     public void updatePartList() {
-        parts.forEach(APart::updatePartList);
-
         //Clear camera list in prep for new entries from other areas.
         cameras.clear();
         cameraEntities.clear();
+
+        parts.forEach(APart::updatePartList);
     }
 
     /**
@@ -841,6 +878,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (APart part : parts) {
             if (part.allDamageCollisionBoxes.contains(box)) {
                 if (part.damageCollisionBoxes.contains(box)) {
+                    return part;
+                } else {
+                    return part.getPartWithBox(box);
+                }
+            } else if (part.allBulletCollisionBoxes.contains(box)) {
+                if (part.bulletCollisionBoxes.contains(box)) {
                     return part;
                 } else {
                     return part.getPartWithBox(box);
@@ -864,16 +907,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
-                    APart addedPart = addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false);
-	                if (addedPart != null) {
-	                    //Set the default tone for the part, if it requests one and we can provide one.
-	                    addedPart.updateTone(false);
-	                }
+                    addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false, true);
 	            } catch (NullPointerException e) {
-	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, JSONConfigLanguage.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 	            }
 	        } catch (IndexOutOfBoundsException e) {
-	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, JSONConfigLanguage.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
 	        }
     	}
     }
@@ -890,7 +929,19 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
-                BoundingBox newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_HITBOX_WIDTH / 2D, PART_SLOT_HITBOX_HEIGHT / 2D, PART_SLOT_HITBOX_WIDTH / 2D, false);
+                boolean isForGroundDevices = false;
+                for (String type : partDef.types) {
+                    if (type.startsWith("ground_")) {
+                        isForGroundDevices = true;
+                        break;
+                    }
+                }
+                BoundingBox newSlotBox;
+                if (isForGroundDevices) {
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_GROUND_HITBOX_WIDTH / 2D, PART_SLOT_GROUND_HITBOX_HEIGHT / 2D, PART_SLOT_GROUND_HITBOX_WIDTH / 2D, false);
+                } else {
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false);
+                }
                 partSlotBoxes.put(newSlotBox, partDef);
             }
         }
@@ -997,8 +1048,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        super.renderBoundingBoxes(transform);
-        encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+        //Override default rendering to disable de-activated boxes from rendering.
+        for (BoundingBox box : interactionBoxes) {
+            if (allInteractionBoxes.contains(box)) {
+                if (boundingBox == box) {
+                    box.renderWireframe(this, transform, null, ColorRGB.GRAY);
+                } else {
+                    box.renderWireframe(this, transform, null, null);
+                }
+            }
+        }
+        for (BoundingBox box : bulletCollisionBoxes) {
+            box.renderWireframe(this, transform, null, null);
+        }
+        if (System.currentTimeMillis() % 1000 > 500) {
+            encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+        }
     }
 
     @Override
@@ -1012,9 +1077,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
             if (heldPart != null || holdingScanner) {
                 if (holdingScanner) {
-                    for (BoundingBox box : activePartSlotBoxes.keySet()) {
+                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activePartSlotBoxes.entrySet()) {
+                        BoundingBox box = slotEntry.getKey();
+                        JSONPartDefinition slotDef = slotEntry.getValue();
                         Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
+                        boolean isImportant = false;
+                        for(String slotType : slotDef.types) {
+                            if(slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
+                                isImportant = true;
+                                break;
+                            }
+                        }
+                        box.renderHolographic(transform, boxCenterDelta, isImportant ? ColorRGB.YELLOW : ColorRGB.DARK_GRAY);
                     }
                 } else {
                     for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()) {
@@ -1056,6 +1130,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
+        data.setBoolean("spawnedDefaultParts", true);
         for (APart part : parts) {
             //Don't save the part if it's not valid or a fake part.
             if (part.isValid && !part.isFake()) {

@@ -7,12 +7,12 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemPartGun extends AItemPart {
 
@@ -27,22 +27,22 @@ public class ItemPartGun extends AItemPart {
 
     @Override
     public PartGun createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartGun(entity, placingPlayer, packVehicleDef, partData);
+        return new PartGun(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_DIAMETER.value + definition.gun.diameter);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_CASERANGE.value + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_FIREDELAY.value + definition.gun.fireDelay);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_MUZZLEVELOCITY.value + definition.gun.muzzleVelocity);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_CAPACITY.value + definition.gun.capacity);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_DIAMETER.getCurrentValue() + definition.gun.diameter);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_CASERANGE.getCurrentValue() + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_FIREDELAY.getCurrentValue() + definition.gun.fireDelay);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_MUZZLEVELOCITY.getCurrentValue() + definition.gun.muzzleVelocity);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_CAPACITY.getCurrentValue() + definition.gun.capacity);
         if (definition.gun.autoReload) {
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_AUTORELOAD.value);
+            tooltipLines.add(LanguageSystem.ITEMINFO_GUN_AUTORELOAD.getCurrentValue());
         }
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_YAWRANGE.value + definition.gun.minYaw + "-" + definition.gun.maxYaw);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_PITCHRANGE.value + definition.gun.minPitch + "-" + definition.gun.maxPitch);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_YAWRANGE.getCurrentValue() + definition.gun.minYaw + "-" + definition.gun.maxYaw);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GUN_PITCHRANGE.getCurrentValue() + definition.gun.minPitch + "-" + definition.gun.maxPitch);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class ItemPartGun extends AItemPart {
     @Override
     public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
         super.registerEntities(entityMap);
-        entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlayerGun(world, placingPlayer, data));
+        entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, data) -> new EntityPlayerGun(world, null, data));
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

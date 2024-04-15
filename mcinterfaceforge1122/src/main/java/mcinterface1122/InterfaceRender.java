@@ -2,21 +2,17 @@ package mcinterface1122;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
+import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
@@ -27,10 +23,10 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.GIFParser;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -63,6 +59,8 @@ public class InterfaceRender implements IInterfaceRender {
     private static float lastLightmapX;
     private static float lastLightmapY;
     private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
+    private static final Map<RenderableVertices, Set<RenderableData>> objectMap = new HashMap<>();
+    private static final Map<RenderableVertices, Integer> cachedIndexMap = new HashMap<>();
     protected static int lastRenderPassActualPass;
 
     @Override
@@ -96,115 +94,101 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public void renderVertices(RenderableObject object) {
-        if (object.disableLighting) {
+    public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
+        if (data.lightingMode.disableWorldLighting || data.vertexObject.isLines) {
             setLightingState(false);
         }
-        if (object.ignoreWorldShading) {
+        if (data.lightingMode.disableTextureShadows) {
             setSystemLightingState(false);
         }
-        if (object.enableBrightBlending) {
+        if (data.enableBrightBlending) {
             setBlendBright(true);
         }
-        if (object.texture != null) {
-            bindTexture(object.texture);
+        if (data.texture != null) {
+            bindTexture(data.texture);
         } else {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
-        GlStateManager.color(object.color.red, object.color.green, object.color.blue, object.alpha);
-        if (!object.disableLighting) {
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, object.worldLightValue % 65536, object.worldLightValue / 65536);
+        GlStateManager.color(data.color.red, data.color.green, data.color.blue, data.alpha);
+        if (!data.lightingMode.disableWorldLighting && !data.vertexObject.isLines) {
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, data.worldLightValue % 65536, data.worldLightValue / 65536);
         }
 
         GL11.glPushMatrix();
-        applyTransformOpenGL(object.transform);
-        if (object.cacheVertices) {
-            if (object.cachedVertexIndex == -1) {
-                object.cachedVertexIndex = cacheVertices(object.vertices);
-                object.vertices = null;
-            }
-            GL11.glCallList(object.cachedVertexIndex);
-        } else if (object.isLines) {
-            renderLines(object.vertices);
+        applyTransformOpenGL(data.transform);
+        if (data.vertexObject.cacheVertices) {
+        	//Add entity to the rendering mapping once rendered.
+            objectMap.computeIfAbsent(data.vertexObject, k -> new HashSet<>()).add(data);
+            int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {
+                int newIndex = GL11.glGenLists(1);
+                GL11.glNewList(newIndex, GL11.GL_COMPILE);
+                renderVertices(data.vertexObject.vertices);
+                GL11.glEndList();
+                return newIndex;
+            });
+            GL11.glCallList(cachedVertexIndex);
+        } else if (data.vertexObject.isLines) {
+            renderLines(data.vertexObject.vertices);
         } else {
-            renderVertices(object.vertices);
+            renderVertices(data.vertexObject.vertices);
         }
         GL11.glPopMatrix();
 
-        if (object.texture == null) {
+        if (data.texture == null) {
             GL11.glEnable(GL11.GL_TEXTURE_2D);
         }
-        if (object.disableLighting || object.ignoreWorldShading) {
+        if (data.lightingMode.disableWorldLighting || data.lightingMode.disableTextureShadows || data.vertexObject.isLines) {
             setLightingState(true);
         }
-        if (object.enableBrightBlending) {
+        if (data.enableBrightBlending) {
             setBlendBright(false);
         }
     }
 
     @Override
-    public void deleteVertices(RenderableObject object) {
-        GL11.glDeleteLists(object.cachedVertexIndex, 1);
+    public void deleteVertices(RenderableData data) {
+        if (data.vertexObject.cacheVertices) {
+            //Only delete display list if no data objects are using it.
+            Set<RenderableData> set = objectMap.get(data.vertexObject);
+            if (set != null) {
+                set.remove(data);
+                if (set.isEmpty()) {
+                    objectMap.remove(data.vertexObject);
+                    GL11.glDeleteLists(cachedIndexMap.remove(data.vertexObject), 1);
+                }
+            }
+    	}
     }
 
     @Override
-    public String downloadURLTexture(String textureURL) {
-        if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
-            //Parse the texture, get the OpenGL integer that represents this texture, and save it.
-            //FAR less jank than using MC's resource system.
+    public boolean bindURLTexture(String textureURL, InputStream stream) {
+        if (stream != null) {
             try {
-                URL url = new URL(textureURL);
-                URLConnection connection = url.openConnection();
-                try {
-                    List<String> validContentTypes = new ArrayList<>();
-                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                        validContentTypes.add("image/" + imageSuffix);
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    if (validContentTypes.contains(contentType)) {
-                        if (contentType.endsWith("gif")) {
-                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
-                            reader.setInput(stream);
-                            ParsedGIF gif = GIFParser.parseGIF(reader);
-                            if (gif != null) {
-                                animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
-                                for (GIFImageFrame frame : gif.frames.values()) {
-                                    int glTexturePointer = TextureUtil.glGenTextures();
-                                    TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
-                                    gifFrameIndexes.put(frame, glTexturePointer);
-                                }
-                                animatedGIFFrames.put(gif, gifFrameIndexes);
-                            } else {
-                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
-                            }
-                        } else {
-                            BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
-                            int glTexturePointer = TextureUtil.glGenTextures();
-                            TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-                            onlineTextures.put(textureURL, glTexturePointer);
-                        }
-                    } else {
-                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
-                        for (String validType : validContentTypes) {
-                            errorString.append(validType).append(", ");
-                        }
-                        onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                        return errorString.toString();
-                    }
-                } catch (Exception e) {
-                    onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                    e.printStackTrace();
-                    return "Could not parse images.  Error was: " + e.getMessage();
-                }
+                BufferedImage image = TextureUtil.readBufferedImage(stream);
+                int glTexturePointer = TextureUtil.glGenTextures();
+                TextureUtil.uploadTextureImageAllocate(glTexturePointer, image, false, false);
+                onlineTextures.put(textureURL, glTexturePointer);
+                return true;
             } catch (Exception e) {
-                onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                e.printStackTrace();
-                return "Could not open URL for processing.  Error was: " + e.getMessage();
+                return false;
             }
+        } else {
+            onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+            return false;
         }
-        return null;
+    }
+
+    @Override
+    public boolean bindURLGIF(String textureURL, ParsedGIF gif) {
+        Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
+        for (GIFImageFrame frame : gif.frames.values()) {
+            int glTexturePointer = TextureUtil.glGenTextures();
+            TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
+            gifFrameIndexes.put(frame, glTexturePointer);
+        }
+        animatedGIFs.put(textureURL, gif);
+        animatedGIFFrames.put(gif, gifFrameIndexes);
+        return true;
     }
 
     @Override
@@ -248,20 +232,6 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     * Caches the vertices in some form for quick rendering.  This form is version-dependent,
-     * but no matter which version is used, the returned value is assured to be unique for each
-     * call to this function.  Note that the vertex format is expected to be the same as what 
-     * is in {@link RenderableObject}
-     */
-    private static int cacheVertices(FloatBuffer vertices) {
-        int displayListIndex = GL11.glGenLists(1);
-        GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-        renderVertices(vertices);
-        GL11.glEndList();
-        return displayListIndex;
-    }
-
-    /**
      * Applies an OpenGL transform to the current pipeline based on the
      * passed-in matrix.
      */
@@ -300,7 +270,7 @@ public class InterfaceRender implements IInterfaceRender {
         } else if (onlineTextures.containsKey(textureLocation)) {
             //Online texture.
             GlStateManager.bindTexture(onlineTextures.get(textureLocation));
-        } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
+        } else if (textureLocation.equals(RenderableData.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         } else {
@@ -416,7 +386,7 @@ public class InterfaceRender implements IInterfaceRender {
      * of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
      */
     @SubscribeEvent
-    public static void on(RenderWorldLastEvent event) {
+    public static void onIVRenderLast(RenderWorldLastEvent event) {
         //Enable lighting as pass -1 has that disabled.
         RenderHelper.enableStandardItemLighting();
         setLightingState(true);

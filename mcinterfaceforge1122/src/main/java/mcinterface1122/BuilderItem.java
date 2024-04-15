@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -251,7 +252,8 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
 
             //First check if the creative tab is set/created.
             //The only except is for "invisible" parts of the core mod, these are internal.
-            if (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")) {
+            boolean hideOnCreativeTab = item.definition.general.hideOnCreativeTab || (item instanceof AItemSubTyped && ((AItemSubTyped<?>) item).subDefinition.hideOnCreativeTab);
+            if (!hideOnCreativeTab && (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible"))) {
                 String tabID = item.getCreativeTabID();
                 if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                     JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);

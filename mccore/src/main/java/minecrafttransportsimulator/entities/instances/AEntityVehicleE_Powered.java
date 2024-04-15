@@ -7,13 +7,16 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * This class adds engine components for vehicles, such as fuel, throttle,
@@ -60,7 +63,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double electricFlow;
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
-    public EntityFluidTank fuelTank;
+    public final EntityFluidTank fuelTank;
 
     //Engines.
     public final List<PartEngine> engines = new ArrayList<>();
@@ -69,20 +72,21 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public final List<EntityBullet> missilesIncoming = new ArrayList<>();
     public final List<AEntityD_Definable<?>> radarsTracking = new ArrayList<>();
 
-    public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
 
-        //Load simple variables.
-        this.electricPower = data.getDouble("electricPower");
-        this.selectedBeaconName = data.getString("selectedBeaconName");
-        this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
-        this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
-        world.addEntity(fuelTank);
-
-        if (newlyCreated) {
-            //Set initial electrical power.
-            electricPower = 12;
+        if (data != null) {
+            //Load simple variables.
+            this.electricPower = data.getDouble("electricPower");
+            this.selectedBeaconName = data.getString("selectedBeaconName");
+            this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
+            this.fuelTank = new EntityFluidTank(world, data.getData("fuelTank"), definition.motorized.fuelCapacity);
+        } else {
+            this.electricPower = 12;
+            this.selectedBeaconName = "";
+            this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
+        world.addEntity(fuelTank);
     }
 
     @Override
@@ -210,7 +214,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         //Oh, and add explosions.  Because those are always fun.
         //Note that this is done after spawning all parts here and in the super call,
         //so although all parts are DROPPED, not all parts may actually survive the explosion.
-        if (ConfigSystem.settings.damage.explosions.value) {
+        if (ConfigSystem.settings.damage.vehicleExplosions.value) {
             double explosivePower = 0;
             for (APart part : allParts) {
                 if (part instanceof PartInteractable) {
@@ -227,6 +231,38 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     @Override
     public double getMass() {
         return super.getMass() + fuelTank.getMass();
+    }
+
+    @Override
+    public void addPartsPostAddition(IWrapperPlayer placingPlayer, IWrapperNBT data) {
+        super.addPartsPostAddition(placingPlayer, data);
+        //If we have a default fuel, add it now as we SHOULD have an engine to tell
+        //us what fuel type we will need to add.
+        if (data == null && definition.motorized.defaultFuelQty > 0) {
+            for (APart part : allParts) {
+                if (part instanceof PartEngine) {
+                    String mostPotentFluid = "";
+                    //If the engine is electric, just use the electric fuel type.
+                    if (part.definition.engine.type == EngineType.ELECTRIC) {
+                        mostPotentFluid = PartEngine.ELECTRICITY_FUEL;
+                    } else {
+                        //Get the most potent fuel for the vehicle from the fuel configs.
+                        for (String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()) {
+                            if (InterfaceManager.coreInterface.isFluidValid(fluidName)) {
+                                if (mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)) {
+                                    mostPotentFluid = fluidName;
+                                }
+                            }
+                        }
+                    }
+                    fuelTank.manuallySet(mostPotentFluid, definition.motorized.defaultFuelQty);
+                    break;
+                }
+            }
+            if (fuelTank.getFluid().isEmpty() && placingPlayer != null) {
+                placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.SYSTEM_DEBUG, "A defaultFuelQty was specified for: " + definition.packID + ":" + definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.  Vehicle will be spawned without fuel and engine."));
+            }
+        }
     }
 
     @Override
@@ -286,12 +322,13 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             return true;
         } else {
             if (player.isHoldingItemType(ItemComponentType.KEY)) {
-                if (uniqueUUID.equals(player.getHeldStack().getData().getUUID("vehicle"))) {
+                IWrapperNBT data = player.getHeldStack().getData();
+                if (data != null && uniqueUUID.equals(data.getUUID("vehicle"))) {
                     return true;
                 }
             }
             if (world.isClient()) {
-                player.displayChatMessage(JSONConfigLanguage.INTERACT_VEHICLE_NEEDKEY);
+                player.displayChatMessage(LanguageSystem.INTERACT_VEHICLE_NEEDKEY);
             }
             return false;
         }

@@ -16,12 +16,12 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelClickAction;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelComponent;
 import minecrafttransportsimulator.jsondefs.JSONPanel.SpecialComponent;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -30,6 +30,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -69,7 +70,7 @@ public class GUIPanel extends AGUIBase {
         if (panel != null) {
             return panel;
         } else {
-            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
+            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Could not display the requested panel " + vehicle.definition.motorized.panel + ". Report this to the pack author!  Default panel will be used.");
             if (vehicle.definition.motorized.isAircraft) {
                 return PackParser.getPackPanel(InterfaceManager.coreModID, "default_plane");
             } else {
@@ -156,6 +157,9 @@ public class GUIPanel extends AGUIBase {
         componentButtons.clear();
         labels.clear();
 
+        boolean populatedSingleEngineControl = false;
+        boolean populatedSingleEngineMag = false;
+        boolean populatedSingleEngineStarter = false;
         int engineControlIndex = 0;
         int engineMagIndex = 0;
         int engineStarterIndex = 0;
@@ -165,7 +169,7 @@ public class GUIPanel extends AGUIBase {
             AGUIComponent newComponent = null;
             String text = null;
             if (panelComponent.specialComponent == null) {
-                newComponent = new GUIPanelButton(panelComponent) {
+                newComponent = new GUIPanelButton(this, panelComponent) {
                     @Override
                     public void onClicked(boolean leftSide) {
                         if (panelComponent.clickAction != null) {
@@ -185,7 +189,7 @@ public class GUIPanel extends AGUIBase {
                 switch (panelComponent.specialComponent) {
                     case CAR_LIGHT: {
                         if (vehicle.definition.motorized.hasRunningLights || vehicle.definition.motorized.hasHeadlights) {
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
@@ -214,13 +218,13 @@ public class GUIPanel extends AGUIBase {
                     }
                     case TURN_SIGNAL: {
                         if (vehicle.definition.motorized.hasTurnSignals) {
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     if (leftSide) {
-                                        vehicle.toggleVariable(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE);
+                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
                                     } else {
-                                        vehicle.toggleVariable(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE);
+                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
                                     }
                                 }
 
@@ -275,64 +279,55 @@ public class GUIPanel extends AGUIBase {
                     }
                     case ENGINE_CONTROL: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineControlIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineControlIndex = 1;
+                                if (!populatedSingleEngineControl) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
+                                    text = "ENGINE";
+                                    populatedSingleEngineControl = true;
                                 }
-                            } else if (engineControlIndex < vehicle.engines.size()) {
-                                engine = vehicle.engines.get(engineControlIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineControlIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
+                                    text = "ENGINE";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "ENGINE";
                         }
                         break;
                     }
                     case ENGINE_ON: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineMagIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineMagIndex = 1;
+                                if (!populatedSingleEngineMag) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
+                                    text = "MAG";
+                                    populatedSingleEngineMag = true;
                                 }
-                            } else if (vehicle.engines.size() > engineMagIndex) {
-                                engine = vehicle.engines.get(engineMagIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineMagIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
+                                    text = "MAG";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "MAG";
                         }
                         break;
                     }
                     case ENGINE_START: {
                         if (!vehicle.engines.isEmpty()) {
-                            PartEngine engine;
                             if (vehicle.definition.motorized.hasSingleEngineControl) {
-                                if (engineStarterIndex == 1) {
-                                    //Don't make more than one single-engine switch.
-                                    break;
-                                } else {
-                                    engine = null;
-                                    engineStarterIndex = 1;
+                                if (!populatedSingleEngineStarter) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, null);
+                                    text = "START";
+                                    populatedSingleEngineStarter = true;
                                 }
-                            } else if (vehicle.engines.size() > engineStarterIndex) {
-                                engine = vehicle.engines.get(engineStarterIndex++);
                             } else {
-                                break;
+                                PartEngine engine = getEngineBySwitchIndex(engineStarterIndex++);
+                                if (engine != null) {
+                                    newComponent = new GUIPanelEngineButton(this, panelComponent, engine);
+                                    text = "START";
+                                }
                             }
-                            newComponent = new GUIPanelEngineButton(panelComponent, engine);
-                            text = "START";
                         }
                         break;
                     }
@@ -340,7 +335,7 @@ public class GUIPanel extends AGUIBase {
                         if (trailerSwitchDefs.size() > trailerIndex) {
                             SwitchEntry switchDef = trailerSwitchDefs.get(trailerIndex++);
                             text = switchDef.connectionGroup.groupName;
-                            newComponent = new GUIPanelButton(panelComponent) {
+                            newComponent = new GUIPanelButton(this, panelComponent) {
                                 @Override
                                 public void onClicked(boolean leftSide) {
                                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
@@ -364,7 +359,7 @@ public class GUIPanel extends AGUIBase {
                     }
                     case BEACON_BOX: {
                         if (vehicle.definition.motorized.hasRadioNav || ConfigSystem.settings.general.allPlanesWithNav.value) {
-                            beaconBox = new GUIComponentTextBox(guiLeft + (int) panelComponent.pos.x, guiTop + (int) panelComponent.pos.y, panelComponent.width, panelComponent.height, vehicle.selectedBeaconName, ColorRGB.WHITE, 5, (int) panelComponent.textureStart.x, (int) panelComponent.textureStart.y, panelComponent.width, panelComponent.height) {
+                            beaconBox = new GUIComponentTextBox(this, guiLeft + (int) panelComponent.pos.x, guiTop + (int) panelComponent.pos.y, panelComponent.width, panelComponent.height, vehicle.selectedBeaconName, ColorRGB.WHITE, 5, (int) panelComponent.textureStart.x, (int) panelComponent.textureStart.y, panelComponent.width, panelComponent.height) {
                                 @Override
                                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                                     super.handleKeyTyped(typedChar, typedCode, control);
@@ -379,17 +374,17 @@ public class GUIPanel extends AGUIBase {
                         break;
                     }
                     case ROLL_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
                         text = "ROLL TRIM";
                         break;
                     }
                     case PITCH_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE, 0.1, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE, 0.1, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM);
                         text = "PITCH TRIM";
                         break;
                     }
                     case YAW_TRIM: {
-                        newComponent = new GUIPanelTrimButton(panelComponent, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_RUDDER_TRIM);
+                        newComponent = new GUIPanelTrimButton(this, panelComponent, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE, -0.1, EntityVehicleF_Physics.MAX_RUDDER_TRIM);
                         text = "YAW TRIM";
                         break;
                     }
@@ -398,7 +393,7 @@ public class GUIPanel extends AGUIBase {
                 if (buttonVariable != null) {
                     //Need this to make complier shut up.
                     final String finalVar = buttonVariable;
-                    newComponent = new GUIPanelButton(panelComponent) {
+                    newComponent = new GUIPanelButton(this, panelComponent) {
                         @Override
                         public void onClicked(boolean leftSide) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, finalVar));
@@ -508,6 +503,41 @@ public class GUIPanel extends AGUIBase {
         return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : definition.panel.texture;
     }
 
+    private PartEngine getEngineBySwitchIndex(int index) {
+        int engineIndex = 0;
+        JSONPartDefinition engineDef = null;
+        for (JSONPartDefinition partDef : vehicle.definition.parts) {
+            for (String partType : partDef.types) {
+                if (partType.startsWith("engine_")) {
+                    if (engineIndex++ == index) {
+                        engineDef = partDef;
+                    }
+                    break;
+                }
+            }
+            if (engineDef != null) {
+                break;
+            }
+        }
+        if (engineDef != null) {
+            for (APart part : vehicle.parts) {
+                if (part.placementDefinition == engineDef) {
+                    return (PartEngine) part;
+                }
+            }
+        } else {
+            //Didn't find engineDef in main parts, check other parts.
+            for (APart part : vehicle.parts) {
+                if (part instanceof PartEngine && !vehicle.parts.contains(part)) {
+                    if (engineIndex++ == index) {
+                        return (PartEngine) part;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private void handleClickAction(JSONPanelClickAction action) {
         switch (action.action) {
             case INCREMENT: {
@@ -531,8 +561,8 @@ public class GUIPanel extends AGUIBase {
     private abstract class GUIPanelButton extends GUIComponentButton {
         protected final JSONPanelComponent component;
 
-        private GUIPanelButton(JSONPanelComponent component) {
-            super(guiLeft + (int) component.pos.x, guiTop + (int) component.pos.y, component.width, component.height, (int) component.textureStart.x, (int) component.textureStart.y, component.width, component.height);
+        private GUIPanelButton(AGUIBase gui, JSONPanelComponent component) {
+            super(gui, guiLeft + (int) component.pos.x, guiTop + (int) component.pos.y, component.width, component.height, (int) component.textureStart.x, (int) component.textureStart.y, component.width, component.height);
             this.component = component;
 
             //Auto-add us when created to the appropriate objects.
@@ -549,8 +579,8 @@ public class GUIPanel extends AGUIBase {
     private class GUIPanelEngineButton extends GUIPanelButton {
         private final PartEngine engine;
 
-        private GUIPanelEngineButton(JSONPanelComponent component, PartEngine engine) {
-            super(component);
+        private GUIPanelEngineButton(AGUIBase gui, JSONPanelComponent component, PartEngine engine) {
+            super(gui, component);
             this.engine = engine;
         }
 
@@ -654,8 +684,8 @@ public class GUIPanel extends AGUIBase {
         private boolean appliedTrimThisRender;
         private boolean trimCycleVar;
 
-        private GUIPanelTrimButton(JSONPanelComponent component, String trimVariable, double leftIncrement, double bounds) {
-            super(component);
+        private GUIPanelTrimButton(AGUIBase gui, JSONPanelComponent component, String trimVariable, double leftIncrement, double bounds) {
+            super(gui, component);
             this.trimVariable = trimVariable;
             this.leftIncrement = leftIncrement;
             this.bounds = bounds;

@@ -18,6 +18,7 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
  * @author don_bruce
  */
 public class EntityInventoryContainer extends AEntityA_Base implements IInventoryProvider {
+    private static final IWrapperNBT blankData = InterfaceManager.coreInterface.getNewNBTWrapper();
     private final List<IWrapperItemStack> inventory;
     private final int stackSize;
 
@@ -27,7 +28,12 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
 
     public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots, int stackSize) {
         super(world, data);
-        this.inventory = data.getStacks(maxSlots);
+        if (data != null) {
+            this.inventory = data.getStacks(maxSlots);
+        } else {
+            //Load from blank data to ensure we populate empty stacks.
+            this.inventory = blankData.getStacks(maxSlots);
+        }
         this.stackSize = stackSize;
     }
 

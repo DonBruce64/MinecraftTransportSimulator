@@ -1,5 +1,6 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -40,6 +43,7 @@ public class InterfaceClient implements IInterfaceClient {
     private static boolean actuallyThirdPerson;
     private static boolean changedCameraState;
     private static boolean changeCameraRequest;
+    private static int ticksToCullingWarning = 200;
     private static BuilderEntityRenderForwarder activeFollower;
     private static int ticksSincePlayerJoin;
 
@@ -54,8 +58,10 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public boolean usingDefaultLanguage() {
-        return Minecraft.getMinecraft().gameSettings.language.equals("en_us");
+    public List<String> getAllLanguages() {
+        List<String> list = new ArrayList<>();
+        Minecraft.getMinecraft().getLanguageManager().getLanguages().forEach(language -> list.add(language.getLanguageCode()));
+        return list;
     }
 
     @Override
@@ -189,7 +195,7 @@ public class InterfaceClient implements IInterfaceClient {
      * not being called on clients.
      */
     @SubscribeEvent
-    public static void on(TickEvent.ClientTickEvent event) {
+    public static void onIVClientTick(TickEvent.ClientTickEvent event) {
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
@@ -204,6 +210,15 @@ public class InterfaceClient implements IInterfaceClient {
                         if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
                             if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
                                 new GUIPackMissing();
+                            }
+                        }
+                    }
+
+                    //Complain about Universal Tweaks mod at 10 second mark.
+                    if (ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("universaltweaks")) {
+                        if (ticksToCullingWarning > 0) {
+                            if (--ticksToCullingWarning == 0) {
+                                player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT UNIVERSAL TWEAKS MOD IS PRESENT.  THIS MOD CULLS IV VEHICLES UNLESS \"Entity Desync\" IS SET TO FALSE IN THE UNIVERSAL TWEAKS CONFIG.");
                             }
                         }
                     }

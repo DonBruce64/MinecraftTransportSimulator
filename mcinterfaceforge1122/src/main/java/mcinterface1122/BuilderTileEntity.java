@@ -82,7 +82,8 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
                         WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
                         Point3D position = new Point3D(pos.getX(), pos.getY(), pos.getZ());
                         ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
-                        tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
+                        IWrapperNBT data = new WrapperNBT(lastLoadedNBT);
+                        tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, data.getPackItem(), data);
                         tileEntity.world.addEntity(tileEntity);
                         loadedFromSavedNBT = true;
                         lastLoadedNBT = null;

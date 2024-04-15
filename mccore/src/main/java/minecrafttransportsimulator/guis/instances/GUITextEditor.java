@@ -16,11 +16,11 @@ import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class GUITextEditor extends AGUIBase {
     //Buttons.
@@ -90,7 +90,7 @@ public class GUITextEditor extends AGUIBase {
                 GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
                 addComponent(label);
                 int textRowsRequired = 1 + 5 * textObject.maxLength / boxWidth;
-                GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.constructedY + 10, boxWidth, 12 * textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
+                GUIComponentTextBox box = new GUIComponentTextBox(this, guiLeft + 20, label.constructedY + 10, boxWidth, 12 * textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
                 addComponent(box);
                 textInputBoxes.put(textObject.fieldName, box);
                 currentOffset += box.height + 12;
@@ -98,7 +98,7 @@ public class GUITextEditor extends AGUIBase {
         }
 
         //Add the confirm button.
-        addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value) {
+        addComponent(confirmButton = new GUIComponentButton(this, guiLeft + 150, guiTop + 15, 80, 20, LanguageSystem.GUI_CONFIRM.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 LinkedHashMap<String, String> packetTextLines = new LinkedHashMap<String, String>();

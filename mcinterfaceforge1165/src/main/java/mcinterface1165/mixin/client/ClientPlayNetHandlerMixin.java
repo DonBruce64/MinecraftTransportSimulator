@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import mcinterface1165.BuilderEntityExisting;
 import mcinterface1165.BuilderEntityLinkedSeat;
+import mcinterface1165.BuilderEntityRenderForwarder;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.play.ClientPlayNetHandler;
@@ -33,7 +34,7 @@ public abstract class ClientPlayNetHandlerMixin {
     public void inject_handleAddEntity(SSpawnObjectPacket packet, CallbackInfo ci) {
         int typeID = Registry.ENTITY_TYPE.getId(packet.getType());
         EntityType<?> type = Registry.ENTITY_TYPE.byId(typeID);
-        if (type == BuilderEntityExisting.E_TYPE2.get() || type == BuilderEntityLinkedSeat.E_TYPE3.get()) {
+        if (type == BuilderEntityExisting.E_TYPE2.get() || type == BuilderEntityLinkedSeat.E_TYPE3.get() || type == BuilderEntityRenderForwarder.E_TYPE4.get()) {
             Entity entity = EntityType.create(typeID, minecraft.level);
             if (entity != null) {
                 int i = packet.getId();

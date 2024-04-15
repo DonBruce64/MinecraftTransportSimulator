@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import mcinterface1165.InterfaceRender;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -16,6 +17,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderTypeBuffers;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 
 @Mixin(WorldRenderer.class)
 public abstract class WorldRendererMixin {
@@ -23,18 +25,15 @@ public abstract class WorldRendererMixin {
     private RenderTypeBuffers renderBuffers;
 
     /**
-     * Need this to force our own rendering in the world.  We could create a fake entity, but that causes issue with
-     * various systems and spawning and other mods.  Just easier to grab the stack and forward at the right time.
+     * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
+     * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
      */
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderTypeBuffers;bufferSource()Lnet/minecraft/client/renderer/IRenderTypeBuffer$Impl;"))
-    public void inject_renderLevelSolid(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
-        IRenderTypeBuffer.Impl irendertypebuffer$impl = renderBuffers.bufferSource();
-        InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, false, pPartialTicks);
-    }
-
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void inject_renderLevelBlended(MatrixStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, ActiveRenderInfo pActiveRenderInfo, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         IRenderTypeBuffer.Impl irendertypebuffer$impl = renderBuffers.bufferSource();
+        //Set camera offset point for later.
+        Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
         InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, true, pPartialTicks);
     }
 }

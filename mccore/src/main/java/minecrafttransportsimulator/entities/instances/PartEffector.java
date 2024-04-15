@@ -6,13 +6,17 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPartEffector;
+import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -22,9 +26,11 @@ import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 public class PartEffector extends APart {
 
     private final List<IWrapperItemStack> drops = new ArrayList<>();
+    private final Map<IWrapperEntity, IWrapperItemStack> entityItems = new HashMap<>();
 
     //Variables used for drills.
     public int blocksBroken;
+    public boolean activatedThisTick;
     private final Point3D flooredCenter = new Point3D();
     private final Map<BoundingBox, Point3D> boxLastPositionsFloored = new HashMap<>();
     private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<>();
@@ -33,17 +39,21 @@ public class PartEffector extends APart {
     //Variables used for placers.
     private int placerDelay;
 
-    public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.blocksBroken = data.getInteger("blocksBroken");
+    public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        if (data != null) {
+            this.blocksBroken = data.getInteger("blocksBroken");
+        }
     }
 
     @Override
     public void update() {
         super.update();
         //If we are active, do effector things.  Only do these on the server, clients get packets.
+        activatedThisTick = false;
         if (isActive && !world.isClient() && !outOfHealth) {
             drops.clear();
+            entityItems.clear();
             blockFlooredPositionsBrokeThisTick.clear();
             for (BoundingBox box : entityCollisionBoxes) {
                 switch (definition.effector.type) {
@@ -56,6 +66,7 @@ public class PartEffector extends APart {
                                     IWrapperItemStack stack = inventory.getStack(i);
                                     if (world.fertilizeBlock(box.globalCenter, stack)) {
                                         inventory.removeFromSlot(i, 1);
+                                        activatedThisTick = true;
                                         break;
                                     }
                                 }
@@ -65,7 +76,11 @@ public class PartEffector extends APart {
                     }
                     case HARVESTER: {
                         //Harvest drops, and add to inventories.
-                        drops.addAll(world.harvestBlock(box.globalCenter));
+                        List<IWrapperItemStack> drops = world.harvestBlock(box.globalCenter);
+                        if (!drops.isEmpty()) {
+                            drops.addAll(world.harvestBlock(box.globalCenter));
+                            activatedThisTick = true;
+                        }
                         break;
                     }
                     case PLANTER: {
@@ -77,6 +92,7 @@ public class PartEffector extends APart {
                                     IWrapperItemStack stack = inventory.getStack(i);
                                     if (world.plantBlock(box.globalCenter, stack)) {
                                         inventory.removeFromSlot(i, 1);
+                                        activatedThisTick = true;
                                         break;
                                     }
                                 }
@@ -86,6 +102,7 @@ public class PartEffector extends APart {
                     }
                     case PLOW: {
                         if (world.plowBlock(box.globalCenter)) {
+                            activatedThisTick = true;
                             //Harvest blocks on top of this block in case they need to be dropped.
                             List<IWrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
                             if (!harvestedDrops.isEmpty()) {
@@ -99,7 +116,9 @@ public class PartEffector extends APart {
                         break;
                     }
                     case SNOWPLOW: {
-                        world.removeSnow(box.globalCenter);
+                        if (world.removeSnow(box.globalCenter)) {
+                            activatedThisTick = true;
+                        }
                         break;
                     }
                     case DRILL: {
@@ -122,8 +141,9 @@ public class PartEffector extends APart {
                                         if (++blocksBroken == definition.effector.drillDurability) {
                                             remove();
                                         } else {
-                                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this));
+                                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this, true));
                                         }
+                                        activatedThisTick = true;
                                     } else {
                                         boxTimeSpentAtPosition.put(box, timeSpentBreaking + 1);
                                     }
@@ -146,9 +166,13 @@ public class PartEffector extends APart {
                                             IWrapperItemStack stack = inventory.getStack(i);
                                             if (world.placeBlock(box.globalCenter, stack)) {
                                                 inventory.removeFromSlot(i, 1);
+                                                activatedThisTick = true;
                                                 break;
                                             }
                                         }
+                                    }
+                                    if(activatedThisTick) {
+                                        break;
                                     }
                                 }
                             }
@@ -156,6 +180,49 @@ public class PartEffector extends APart {
                         } else {
                             ++placerDelay;
                         }
+                        break;
+                    }
+                    case COLLECTOR: {
+                        //Populate item list for later.
+                        world.populateItemStackEntities(entityItems, box);
+                        drops.addAll(entityItems.values());
+                        break;
+                    }
+                    case DROPPER: {
+                        if (placerDelay == definition.effector.placerDelay) {
+                            world.populateItemStackEntities(entityItems, box);
+                            if(entityItems.isEmpty()) {
+                              //Place the first item found.
+                                for (APart part : linkedParts) {
+                                    if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE && part.isActive && part.definition.interactable.feedsVehicles) {
+                                        EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+                                        for (int i = 0; i < inventory.getSize(); ++i) {
+                                            IWrapperItemStack stack = inventory.getStack(i);
+                                            if (!stack.isEmpty()) {
+                                                IWrapperItemStack stackToDrop = stack.split(1);
+                                                world.spawnItemStack(stackToDrop, box.globalCenter);
+                                                activatedThisTick = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if(activatedThisTick) {
+                                        break;
+                                    }
+                                }
+                            }
+                            placerDelay = 0;
+                        } else {
+                            ++placerDelay;
+                        }
+                        break;
+                    }
+                    case SPRAYER: {
+                        //Just spray block below.
+                        --box.globalCenter.y;
+                        world.hydrateBlock(box.globalCenter);
+                        ++box.globalCenter.y;
+                        break;
                     }
                 }
 
@@ -166,6 +233,19 @@ public class PartEffector extends APart {
                         IWrapperItemStack dropStack = iterator.next();
                         for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+                                //For collectors, we can only add the whole stack, not a partial stack.
+                                //Therefore, we need to simulate the addition first to make sure things fit.
+                                if (definition.effector.type == EffectorComponentType.COLLECTOR) {
+                                    if (((PartInteractable) part).inventory.addStack(dropStack, dropStack.getSize(), false)) {
+                                        activatedThisTick = true;
+                                        for(Entry<IWrapperEntity, IWrapperItemStack> entry : entityItems.entrySet()) {
+                                            if(entry.getValue() == dropStack) {
+                                                world.removeItemStackEntity(entry.getKey());
+                                            }
+                                        }
+                                    }
+                                }
+                                //Do actual addition.
                                 if (((PartInteractable) part).inventory.addStack(dropStack)) {
                                     iterator.remove();
                                     break;
@@ -175,11 +255,17 @@ public class PartEffector extends APart {
                     }
 
                     //Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-                    for (IWrapperItemStack dropStack : drops) {
-                        world.spawnItemStack(dropStack, position);
+                    //Don't do this for collectors, since those items are actually entities that weren't collected.
+                    if (definition.effector.type != EffectorComponentType.COLLECTOR) {
+                        for (IWrapperItemStack dropStack : drops) {
+                            world.spawnItemStack(dropStack, position);
+                        }
                     }
                     drops.clear();
                 }
+            }
+            if (activatedThisTick) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this, false));
             }
         }
     }
@@ -189,6 +275,8 @@ public class PartEffector extends APart {
         switch (variable) {
             case ("effector_active"):
                 return isActive ? 1 : 0;
+            case ("effector_operated"):
+                return activatedThisTick ? 1 : 0;
             case ("effector_drill_broken"):
                 return blocksBroken;
             case ("effector_drill_max"):

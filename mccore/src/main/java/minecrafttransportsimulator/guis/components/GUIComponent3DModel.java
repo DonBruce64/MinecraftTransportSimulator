@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Custom #D model render class.  This allows for rendering a parsed model into a GUI.
@@ -28,7 +29,7 @@ public class GUIComponent3DModel extends AGUIComponent {
     /**
      * Parsed vertex indexes.  Keyed by model name.
      */
-    private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<>();
+    private static final Map<String, RenderableData> modelParsedObjects = new HashMap<>();
     private static final Map<String, Float> modelScalingFactors = new HashMap<>();
     private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setToAxisAngle(0, 1, 0, -45).multiply(new RotationMatrix().setToAxisAngle(0.70712, 0, -0.70712, 35.264));
 
@@ -61,7 +62,7 @@ public class GUIComponent3DModel extends AGUIComponent {
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
         if (!blendingEnabled && modelLocation != null) {
             if (!modelParsedObjects.containsKey(modelLocation)) {
-                List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
+                List<RenderableVertices> parsedObjects = AModelParser.parseModel(modelLocation, false);
                 //Remove any windows and "commented" objects from the model.  We don't want to render those.
                 parsedObjects.removeIf(object -> object.name.toLowerCase(Locale.ROOT).contains("window") || object.name.startsWith("#"));
 
@@ -74,7 +75,7 @@ public class GUIComponent3DModel extends AGUIComponent {
                 float minZ = 999;
                 float maxZ = -999;
                 int totalVertices = 0;
-                for (RenderableObject parsedObject : parsedObjects) {
+                for (RenderableVertices parsedObject : parsedObjects) {
                     totalVertices += parsedObject.vertices.capacity();
                     for (int i = 0; i < parsedObject.vertices.capacity(); i += 8) {
                         float xCoord = parsedObject.vertices.get(i + 5);
@@ -93,40 +94,39 @@ public class GUIComponent3DModel extends AGUIComponent {
 
                 //Cache the model now that we know how big it is.
                 FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
-                for (RenderableObject parsedObject : parsedObjects) {
+                for (RenderableVertices parsedObject : parsedObjects) {
                     totalModel.put(parsedObject.vertices);
                 }
                 totalModel.flip();
-                RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
-                modelParsedObjects.put(modelLocation, combinedObject);
+                RenderableData renderable = new RenderableData(new RenderableVertices("GUI_3D_MODEL", totalModel, true), textureLocation);
+                modelParsedObjects.put(modelLocation, renderable);
             }
-            RenderableObject object = modelParsedObjects.get(modelLocation);
-            object.transform.resetTransforms();
-            object.transform.setTranslation(position);
+            RenderableData renderable = modelParsedObjects.get(modelLocation);
+            renderable.transform.resetTransforms();
+            renderable.transform.setTranslation(position);
             if (isometric) {
-                object.transform.applyRotation(ISOMETRIC_ROTATION);
+                renderable.transform.applyRotation(ISOMETRIC_ROTATION);
             }
             if (spin) {
-                object.transform.applyRotation(new RotationMatrix().setToAxisAngle(0, 1, 0, (36 * System.currentTimeMillis() / 1000) % 360));
+                renderable.transform.applyRotation(new RotationMatrix().setToAxisAngle(0, 1, 0, (36 * System.currentTimeMillis() / 1000) % 360));
             }
             if (!staticScaling) {
                 scale = modelScalingFactors.get(modelLocation);
             }
             double totalScale = scale * scaleFactor;
-            object.worldLightValue = gui.worldLightValue;
-            object.transform.applyScaling(totalScale, totalScale, totalScale);
-            object.texture = textureLocation;
-            object.ignoreWorldShading = true;
-            object.disableLighting = renderBright;
-            object.render();
+            renderable.setLightValue(gui.worldLightValue);
+            renderable.setLightMode(renderBright ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
+            renderable.transform.applyScaling(totalScale, totalScale, totalScale);
+            renderable.setTexture(textureLocation);
+            renderable.render();
         }
     }
 
     /**
      * Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
      */
-    public static void clearModelCaches() {
-        modelParsedObjects.values().forEach(RenderableObject::destroy);
+    public static void clearModelCaches(AGUIBase gui) {
+        modelParsedObjects.values().forEach(renderable -> renderable.destroy());
         modelParsedObjects.clear();
     }
 }

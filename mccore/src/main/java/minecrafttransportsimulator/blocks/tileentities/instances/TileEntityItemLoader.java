@@ -6,6 +6,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoa
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -17,9 +18,9 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
     private final EntityInventoryContainer inventory;
     private static final int LOADING_RATE = 10;
 
-    public TileEntityItemLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
-        this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits * 9));
+    public TileEntityItemLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.decor.inventoryUnits * 9));
         world.addEntity(inventory);
     }
 

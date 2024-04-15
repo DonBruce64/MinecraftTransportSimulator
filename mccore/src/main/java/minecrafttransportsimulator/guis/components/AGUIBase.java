@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -48,6 +47,12 @@ public abstract class AGUIBase {
     }
 
     public AGUIBase() {
+        //Remove old GUI if we are replacing one.
+        activeGUIs.forEach(gui -> {
+            if (gui.getClass() == this.getClass()) {
+                gui.close();
+            }
+        });
         activeGUIs.add(this);
         if (capturesPlayer()) {
             activeInputGUI = this;
@@ -80,65 +85,9 @@ public abstract class AGUIBase {
     public void setupComponents() {
         components.clear();
         if (renderBackgroundFullTexture()) {
-            addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight()));
+            addComponent(this.background = new GUIComponentCutout(this, guiLeft, guiTop, getWidth(), getHeight()));
         } else {
-            addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
-        }
-    }
-
-    /**
-     * Adds a rendered square of texture to the passed-in buffer based on the passed-in parameters.
-     */
-    public void addRenderToBuffer(FloatBuffer buffer, int offsetX, int offsetY, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight) {
-        //First convert to 0->1 UV space.
-        u = u / textureWidth;
-        U = U / textureWidth;
-        v = v / textureHeight;
-        V = V / textureHeight;
-
-        //Now populate the buffer.
-        for (int i = 0; i < 6; ++i) {
-            //Normals will always be 0, 0, 1.
-            buffer.put(0.0F);
-            buffer.put(0.0F);
-            buffer.put(1.0F);
-
-            //Texture and vertex X/Y are based on vertex index.
-            switch (i) {
-                case (0):
-                case (3): {//Bottom-right
-                    buffer.put(U);
-                    buffer.put(V);
-                    buffer.put(offsetX + width);
-                    buffer.put(offsetY - height);
-                    break;
-                }
-                case (1): {//Top-right
-                    buffer.put(U);
-                    buffer.put(v);
-                    buffer.put(offsetX + width);
-                    buffer.put(offsetY);
-                    break;
-                }
-                case (2):
-                case (4): {//Top-left
-                    buffer.put(u);
-                    buffer.put(v);
-                    buffer.put(offsetX);
-                    buffer.put(offsetY);
-                    break;
-                }
-                case (5): {//Bottom-left
-                    buffer.put(u);
-                    buffer.put(V);
-                    buffer.put(offsetX);
-                    buffer.put(offsetY - height);
-                    break;
-                }
-            }
-
-            //Vertex z is always 0.
-            buffer.put(0.0F);
+            addComponent(this.background = new GUIComponentCutout(this, guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
         }
     }
 
@@ -269,7 +218,7 @@ public abstract class AGUIBase {
                 InterfaceManager.clientInterface.closeGUI();
                 InterfaceManager.inputInterface.setGUIControls(false);
             }
-            GUIComponent3DModel.clearModelCaches();
+            GUIComponent3DModel.clearModelCaches(this);
         }
     }
 

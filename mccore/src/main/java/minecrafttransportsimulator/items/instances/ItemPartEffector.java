@@ -17,7 +17,7 @@ public class ItemPartEffector extends AItemPart {
 
     @Override
     public PartEffector createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartEffector(entity, placingPlayer, packVehicleDef, partData);
+        return new PartEffector(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

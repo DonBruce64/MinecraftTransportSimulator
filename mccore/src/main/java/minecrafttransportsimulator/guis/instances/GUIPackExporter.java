@@ -49,22 +49,22 @@ public class GUIPackExporter extends AGUIBase {
         super.setupComponents();
         int buttonWidth = 350 / 4;
         int buttonOffset = -(350 - getWidth()) / 2;
-        addComponent(packExportButton = new GUIComponentButton(guiLeft + buttonOffset, guiTop, buttonWidth, 20, "EXPORT PACKS") {
+        addComponent(packExportButton = new GUIComponentButton(this, guiLeft + buttonOffset, guiTop, buttonWidth, 20, "EXPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
                 debug.setText(JSONParser.exportAllJSONs());
             }
         });
-        addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
+        addComponent(packImportButton = new GUIComponentButton(this, guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-                debug.setText(JSONParser.importAllJSONs());
+                debug.setText(JSONParser.importAllJSONs(false));
                 JSONParser.applyImports(vehicleClicked.world);
                 InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
             }
         });
         //Add control buttons.
-        addComponent(modelRenderButton = new GUIComponentButton(guiLeft + 2 * buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "MODEL RENDER") {
+        addComponent(modelRenderButton = new GUIComponentButton(this, guiLeft + 2 * buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "MODEL RENDER") {
             @Override
             public void onClicked(boolean leftSide) {
                 modelRenderButton.visible = false;
@@ -81,14 +81,14 @@ public class GUIPackExporter extends AGUIBase {
                 }
             }
         });
-        addComponent(this.packEditorButton = new GUIComponentButton(guiLeft + 3 * buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "PACK EDITOR") {
+        addComponent(this.packEditorButton = new GUIComponentButton(this, guiLeft + 3 * buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "PACK EDITOR") {
             @Override
             public void onClicked(boolean leftSide) {
                 new GUIPackEditor();
             }
         });
 
-        addComponent(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, 20, "BACK") {
+        addComponent(backButton = new GUIComponentButton(this, guiLeft + 20, guiTop + 140, 60, 20, "BACK") {
             @Override
             public void onClicked(boolean leftSide) {
                 modelRenderButton.visible = true;
@@ -105,7 +105,7 @@ public class GUIPackExporter extends AGUIBase {
                 }
             }
         });
-        addComponent(confirmButton = new GUIComponentButton(guiLeft + 100, guiTop + 140, 60, 20, "CONFIRM") {
+        addComponent(confirmButton = new GUIComponentButton(this, guiLeft + 100, guiTop + 140, 60, 20, "CONFIRM") {
             @Override
             public void onClicked(boolean leftSide) {
                 try {
@@ -121,7 +121,7 @@ public class GUIPackExporter extends AGUIBase {
         });
 
         //Create debug output box.
-        addComponent(debug = new GUIComponentTextBox(guiLeft + buttonOffset, guiTop + 20, 350, getHeight() - 20, "", ColorRGB.WHITE, 1200));
+        addComponent(debug = new GUIComponentTextBox(this, guiLeft + buttonOffset, guiTop + 20, 350, getHeight() - 20, "", ColorRGB.WHITE, 1200));
 
         //Create data entry boxes and labels.
         dataEntryBoxes.clear();
@@ -129,7 +129,7 @@ public class GUIPackExporter extends AGUIBase {
         int currentRow = 15;
         for (byte i = 0; i < 5; ++i) {
             int height = i < 2 ? 40 : 10;
-            GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
+            GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(this, guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
             GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setComponent(dataEntryBox);
             dataEntryBoxes.add(dataEntryBox);
             dataEntryLabels.add(dataEntryLabel);

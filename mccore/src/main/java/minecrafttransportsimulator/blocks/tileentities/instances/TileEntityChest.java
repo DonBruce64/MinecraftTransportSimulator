@@ -3,12 +3,14 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
 /**
  * Chest tile entity.
@@ -19,9 +21,9 @@ public class TileEntityChest extends TileEntityDecor {
 
     public final EntityInventoryContainer inventory;
 
-    public TileEntityChest(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
-        this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits * 9F), definition.decor.inventoryStackSize > 0 ? definition.decor.inventoryStackSize : 64);
+    public TileEntityChest(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.decor.inventoryUnits * 9F), definition.decor.inventoryStackSize > 0 ? definition.decor.inventoryStackSize : 64);
         world.addEntity(inventory);
     }
 
@@ -47,6 +49,8 @@ public class TileEntityChest extends TileEntityDecor {
     @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
+        playersInteracting.add(player);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
         return true;
     }
 

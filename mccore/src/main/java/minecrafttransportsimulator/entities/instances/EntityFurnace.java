@@ -30,12 +30,14 @@ public class EntityFurnace extends EntityInventoryContainer {
 
     public EntityFurnace(AWrapperWorld world, IWrapperNBT data, JSONPartInteractable definition) {
         super(world, data, 3);
-        this.ticksAddedOfFuel = data.getInteger("ticksAddedOfFuel");
-        this.ticksLeftOfFuel = data.getInteger("ticksLeftOfFuel");
-        this.ticksNeededToSmelt = data.getInteger("ticksNeededToSmelt");
-        this.ticksLeftToSmelt = data.getInteger("ticksLeftToSmelt");
-        this.powerToDrawPerTick = data.getDouble("powerToDrawPerTick");
         this.definition = definition;
+        if (data != null) {
+            this.ticksAddedOfFuel = data.getInteger("ticksAddedOfFuel");
+            this.ticksLeftOfFuel = data.getInteger("ticksLeftOfFuel");
+            this.ticksNeededToSmelt = data.getInteger("ticksNeededToSmelt");
+            this.ticksLeftToSmelt = data.getInteger("ticksLeftToSmelt");
+            this.powerToDrawPerTick = data.getDouble("powerToDrawPerTick");
+        }
     }
 
     @Override

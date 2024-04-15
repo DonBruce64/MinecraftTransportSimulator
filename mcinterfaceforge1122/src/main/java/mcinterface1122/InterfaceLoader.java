@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -29,7 +30,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.12.0";
+    public static final String MODVER = "22.14.2";
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 	
 	@EventHandler
@@ -50,8 +51,8 @@ public final class InterfaceLoader {
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
-
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+	    
+	LOGGER.info("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
@@ -72,6 +73,9 @@ public final class InterfaceLoader {
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
+
+        //Init language system.
+        LanguageSystem.init();
     }
 
     @EventHandler
@@ -80,7 +84,10 @@ public final class InterfaceLoader {
         InterfacePacket.init();
 
         if (event.getSide().isClient()) {
-            //Init keybinds if we're on the client.
+            //Populate language system names.
+            LanguageSystem.populateNames();
+
+            //Init keybinds.
             InterfaceManager.inputInterface.initConfigKey();
 
             //Also put all liquids into the config file for use by modpack makers.

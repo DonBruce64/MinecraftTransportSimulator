@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -19,7 +20,6 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -32,6 +32,7 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
@@ -46,6 +47,7 @@ public class GUIPartBench extends AGUIBase {
     private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<>();
 
     //Init variables.
+    private final AEntityD_Definable<?> entity;
     private final JSONCraftingBench definition;
     private final IWrapperPlayer player;
 
@@ -95,8 +97,9 @@ public class GUIPartBench extends AGUIBase {
     private AItemPack<? extends AJSONItem> nextSubItem;
     boolean displayVehicleInfo = false;
 
-    public GUIPartBench(JSONCraftingBench definition) {
+    public GUIPartBench(AEntityD_Definable<?> entity, JSONCraftingBench definition) {
         super();
+        this.entity = entity;
         this.definition = definition;
         this.player = InterfaceManager.clientInterface.getClientPlayer();
         if (lastOpenedItem.containsKey(definition)) {
@@ -118,7 +121,7 @@ public class GUIPartBench extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
         //Create pack navigation section.
-        addComponent(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20) {
+        addComponent(prevPackButton = new GUIComponentButton(this, guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = prevPack;
@@ -128,7 +131,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, 20, 60, 196, 20, 20) {
+        addComponent(nextPackButton = new GUIComponentButton(this, guiLeft + 243, guiTop + 11, 20, 20, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentPack = nextPack;
@@ -142,7 +145,7 @@ public class GUIPartBench extends AGUIBase {
         addComponent(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 
         //Create part navigation section.
-        addComponent(prevPartButton = new GUIComponentButton(prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20) {
+        addComponent(prevPartButton = new GUIComponentButton(this, prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevItem;
@@ -151,7 +154,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(nextPartButton = new GUIComponentButton(nextPackButton.constructedX, nextPackButton.constructedY + nextPackButton.height, 20, 20, 60, 196, 20, 20) {
+        addComponent(nextPartButton = new GUIComponentButton(this, nextPackButton.constructedX, nextPackButton.constructedY + nextPackButton.height, 20, 20, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextItem;
@@ -165,24 +168,24 @@ public class GUIPartBench extends AGUIBase {
         addComponent(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 
         //Create color navigation section.
-        addComponent(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20) {
+        addComponent(prevColorButton = new GUIComponentButton(this, guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = prevSubItem;
                 updateNames();
             }
         });
-        addComponent(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, 15, 60, 196, 20, 20) {
+        addComponent(nextColorButton = new GUIComponentButton(this, guiLeft + 245, guiTop + 131, 20, 15, 60, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 currentItem = nextSubItem;
                 updateNames();
             }
         });
-        addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setComponent(nextColorButton));
+        addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, LanguageSystem.GUI_PART_BENCH_COLOR.getCurrentValue(), TextAlignment.CENTERED, 1.0F).setComponent(nextColorButton));
 
         //Create recipe selection button.
-        addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {
+        addComponent(nextRecipeButton = new GUIComponentButton(this, guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 if (++recipeIndex == currentItem.definition.general.materialLists.size()) {
@@ -197,7 +200,7 @@ public class GUIPartBench extends AGUIBase {
         craftingItemBackgrounds.clear();
         for (byte i = 0; i < 7 * 2; ++i) {
             GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 7), guiTop + 20 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 7), 1.0F);
-            GUIComponentCutout itemBackground = new GUIComponentCutout(craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
+            GUIComponentCutout itemBackground = new GUIComponentCutout(this, craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
             itemBackground.visible = false;
             addComponent(craftingItem);
             addComponent(itemBackground);
@@ -210,13 +213,13 @@ public class GUIPartBench extends AGUIBase {
         addComponent(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 
         //Create the info switching button.
-        addComponent(vehicleInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20) {
+        addComponent(vehicleInfoButton = new GUIComponentButton(this, guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 displayVehicleInfo = true;
             }
         });
-        addComponent(vehicleDescriptionButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 80, 196, 20, 20) {
+        addComponent(vehicleDescriptionButton = new GUIComponentButton(this, guiLeft + 147, guiTop + 159, 20, 20, 80, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 displayVehicleInfo = false;
@@ -224,7 +227,7 @@ public class GUIPartBench extends AGUIBase {
         });
 
         //Create the crafting switching button.
-        addComponent(repairCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20) {
+        addComponent(repairCraftingButton = new GUIComponentButton(this, guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = true;
@@ -232,7 +235,7 @@ public class GUIPartBench extends AGUIBase {
                 updateNames();
             }
         });
-        addComponent(normalCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20) {
+        addComponent(normalCraftingButton = new GUIComponentButton(this, guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = false;
@@ -242,10 +245,10 @@ public class GUIPartBench extends AGUIBase {
         });
 
         //Create the confirm button.
-        addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
+        addComponent(confirmButton = new GUIComponentButton(this, guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
-                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(player, currentItem, recipeIndex, viewingRepair));
+                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(entity, player, currentItem, recipeIndex, viewingRepair));
             }
         });
 
@@ -271,7 +274,8 @@ public class GUIPartBench extends AGUIBase {
 
         vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
         vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
-        repairCraftingButton.visible = !viewingRepair && currentItem != null && currentItem.definition.general.repairMaterialLists != null && !currentItem.definition.general.repairMaterialLists.isEmpty();
+        repairCraftingButton.visible = !viewingRepair && currentItem != null;
+        repairCraftingButton.enabled = repairCraftingButton.visible && currentItem.definition.general.repairMaterialLists != null && !currentItem.definition.general.repairMaterialLists.isEmpty();
         normalCraftingButton.visible = viewingRepair;
         partInfo.visible = !displayVehicleInfo;
         vehicleInfo.visible = displayVehicleInfo;
@@ -545,17 +549,17 @@ public class GUIPartBench extends AGUIBase {
 
         //Combine translated header and info text together into a single string and return.
         String totalInformation = "";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + vehicleDefinition.motorized.emptyMass + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + vehicleDefinition.motorized.fuelCapacity + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + controllers + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + passengers + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + cargo + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + mixed + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_WEIGHT.getCurrentValue() + vehicleDefinition.motorized.emptyMass + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_FUEL.getCurrentValue() + vehicleDefinition.motorized.fuelCapacity + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_CONTROLLERS.getCurrentValue() + controllers + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_PASSENGERS.getCurrentValue() + passengers + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_CARGO.getCurrentValue() + cargo + "\n";
+        totalInformation += LanguageSystem.GUI_PART_BENCH_MIXED.getCurrentValue() + mixed + "\n";
         if (minFuelConsumption != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + minFuelConsumption + "-" + maxFuelConsumption + "\n";
+            totalInformation += LanguageSystem.GUI_PART_BENCH_ENGINE.getCurrentValue() + minFuelConsumption + "-" + maxFuelConsumption + "\n";
         }
         if (minWheelSize != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + minWheelSize + "-" + maxWheelSize + "\n";
+            totalInformation += LanguageSystem.GUI_PART_BENCH_WHEEL.getCurrentValue() + minWheelSize + "-" + maxWheelSize + "\n";
         }
         return totalInformation;
     }

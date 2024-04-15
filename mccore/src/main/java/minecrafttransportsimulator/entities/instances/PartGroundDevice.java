@@ -2,10 +2,9 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -15,6 +14,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * A ground device is simply a part of a vehicle that touches the ground.
@@ -41,11 +42,13 @@ public class PartGroundDevice extends APart {
 
     //Internal properties
     @ModifiedValue
-    private float currentMotiveFriction;
+    public float currentMotiveFriction;
     @ModifiedValue
-    private float currentLateralFriction;
+    public float currentLateralFriction;
     @ModifiedValue
     private float currentHeight;
+    private final Point3D groundPosition = new Point3D();
+    private BlockMaterial materialBelow;
     public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
@@ -57,11 +60,11 @@ public class PartGroundDevice extends APart {
     private boolean prevActive = true;
     private final Point3D zeroReferencePosition;
     private final Point3D prevLocalOffset;
-    private PartGroundDeviceFake fakePart;
+    public PartGroundDeviceFake fakePart;
 
-    public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.isFlat = data.getBoolean(FLAT_VARIABLE);
+    public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        this.isFlat = data != null && data.getBoolean(FLAT_VARIABLE);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
@@ -89,9 +92,7 @@ public class PartGroundDevice extends APart {
             //Need to swap placement for fake part so it uses the offset.
             JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
             fakePlacementDef.pos.z += getLongPartOffset();
-            IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
-            ((ItemPartGroundDevice) getStack().getItem()).populateDefaultData(fakeData);
-            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
+            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, (ItemPartGroundDevice) getStack().getItem(), null);
             entityOn.addPart(fakePart, false);
         }
     }
@@ -99,7 +100,7 @@ public class PartGroundDevice extends APart {
     @Override
     public void attack(Damage damage) {
         super.attack(damage);
-        if (!damage.isWater && (damage.isExplosion || Math.random() < 0.5 || outOfHealth)) {
+        if (!damage.isWater && (outOfHealth || damage.isExplosion || (damage.damgeSource != null && Math.random() < 0.5))) {
             setFlatState(true);
         }
     }
@@ -168,12 +169,25 @@ public class PartGroundDevice extends APart {
                         wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value * vehicleOn.currentMass / 1000F;
                     }
                     IWrapperEntity controller = vehicleOn.getController();
-                    LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_WHEEL_PLAYER : JSONConfigLanguage.DEATH_WHEEL_NULL;
+                    LanguageEntry language = controller != null ? LanguageSystem.DEATH_WHEEL_PLAYER : LanguageSystem.DEATH_WHEEL_NULL;
                     Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
                     vehicleOn.world.attackEntities(wheelDamage, null, false);
                     boundingBox.widthRadius -= 0.25;
                     boundingBox.depthRadius -= 0.25;
                 }
+
+                //Check for material below.
+                groundPosition.set(position);
+                groundPosition.y -= getHeight() / 2D;
+                double yPositionFraction = groundPosition.y % 1;
+                if (1 - yPositionFraction < -groundDetectionOffset.y) {
+                    //We are within a detection offset below a block.  Could be FPE, so ceiling us.
+                    groundPosition.y = Math.ceil(groundPosition.y) - 1;
+                } else {
+                    //We are above a block, but not close to the top, floor to use current block position.
+                    groundPosition.y = Math.floor(groundPosition.y) - 1;
+                }
+                materialBelow = world.getBlockMaterial(groundPosition);
             } else {
                 if (!drivenLastTick) {
                     if (vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn) {
@@ -187,8 +201,10 @@ public class PartGroundDevice extends APart {
                 if (animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)) {
                     animateAsOnGround = false;
                 }
+                materialBelow = null;
             }
             prevAngularPosition = angularPosition;
+
             //Invert rotation for all ground devices except treads.
             if (isMirrored && !definition.ground.isTread) {
                 angularPosition -= angularVelocity;
@@ -202,8 +218,19 @@ public class PartGroundDevice extends APart {
 
     @Override
     protected void updateVariableModifiers() {
-        currentMotiveFriction = definition.ground.motiveFriction;
-        currentLateralFriction = definition.ground.lateralFriction;
+        float frictionLoss = getFrictionLoss();
+        currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
+        currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
+        if (isFlat) {
+            currentMotiveFriction /= 10;
+            currentLateralFriction /= 10;
+        }
+        if (currentMotiveFriction < 0) {
+            currentMotiveFriction = 0;
+        }
+        if (currentLateralFriction < 0) {
+            currentLateralFriction = 0;
+        }
         currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
         //Adjust current variables to modifiers, if any exist.
@@ -246,6 +273,13 @@ public class PartGroundDevice extends APart {
                 return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
             case ("ground_distance"):
                 return world.getHeight(zeroReferencePosition);
+        }
+        if (variable.startsWith("ground_blockmaterial")) {
+            if (materialBelow != null) {
+                return materialBelow.name().equals(variable.substring("ground_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
+            }
         }
 
         return super.getRawVariableValue(variable, partialTicks);
@@ -290,20 +324,6 @@ public class PartGroundDevice extends APart {
         }
     }
 
-    public float getFrictionLoss() {
-        Point3D groundPosition = position.copy().add(0, -1, 0);
-        if (!world.isAir(groundPosition)) {
-            Float modifier = definition.ground.frictionModifiers.get(world.getBlockMaterial(groundPosition));
-            if (modifier == null) {
-                return world.getBlockSlipperiness(groundPosition) - 0.6F;
-            } else {
-                return world.getBlockSlipperiness(groundPosition) - 0.6F - modifier;
-            }
-        } else {
-            return 0;
-        }
-    }
-
     public double getDesiredAngularVelocity() {
         if (vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)) {
             if (vehicleOn.skidSteerActive) {
@@ -326,12 +346,22 @@ public class PartGroundDevice extends APart {
         }
     }
 
-    public float getMotiveFriction() {
-        return !isFlat ? currentMotiveFriction : currentMotiveFriction / 10F;
-    }
-
-    public float getLateralFriction() {
-        return !isFlat ? currentLateralFriction : currentLateralFriction / 10F;
+    private float getFrictionLoss() {
+        if (!world.isAir(groundPosition)) {
+            float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
+            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
+            if (modifier != null) {
+                penalty -= modifier;
+            }
+            groundPosition.y += 1;
+            if (world.getRainStrength(groundPosition) > 0) {
+                penalty += definition.ground.wetFrictionPenalty;
+            }
+            groundPosition.y -= 1;
+            return penalty;
+        } else {
+            return 0;
+        }
     }
 
     public float getLongPartOffset() {

@@ -94,9 +94,12 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
         public int gearSequenceDuration;
 
+        @JSONDescription("Set this to true if you want vehicles to ignore speed, and instead call from steeringForceFactor for their current steering force. Otherwise by default, vehicles will gradually lose their ability to steer as they gain speed.")
+        public boolean steeringForceIgnoresSpeed;
+
         @ModifiableValue
-        @JSONDescription("The amount of steering force output for cars. The value functions between 0 and 1, with 1 being full steering force at any speed and 0 being normal MTS steering force.")
-        public float downForce;
+        @JSONDescription("The amount of steering force output for cars, based either on current speed or as a whole, dependent on steeringForceIgnoresSpeed for choosing between such behavior. By default a value of 0 results in default MTS steering forces, while 1 allows full steering force at any speed. However if steeringForceIgnoresSpeed is set to true then 0 will result in no steering force at any speed, with 1 otherwise resulting in the same handling.")
+        public float steeringForceFactor;
 
         @ModifiableValue
         @JSONDescription("A value dictating the oversteer force of a vehicle when skidding.")
@@ -207,6 +210,8 @@ public class JSONVehicle extends AJSONPartProvider {
         public boolean isFrontWheelDrive;
         @Deprecated
         public boolean isRearWheelDrive;
+        @Deprecated
+        public float downForce;
         @Deprecated
         public String hornSound;
         @Deprecated

@@ -44,7 +44,7 @@ public abstract class AGUIInventory extends AGUIBase {
         playerSlotIcons.clear();
         int yOffset = getPlayerInventoryOffset();
         for (byte i = 0; i < 36; ++i) {
-            GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 9), guiTop + yOffset, false) {
+            GUIComponentButton itemButton = new GUIComponentButton(this, guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 9), guiTop + yOffset, false) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     handlePlayerItemClick(playerSlotButtons.indexOf(this));

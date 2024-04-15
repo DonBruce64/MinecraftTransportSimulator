@@ -36,8 +36,8 @@ public class EntityRadio extends AEntityB_Existing {
     public EntityRadio(AEntityB_Existing provider, IWrapperNBT data) {
         super(provider.world, null, data);
         this.provider = provider;
-        if (world.isClient()) {
-            if (data.getBoolean("savedRadio")) {
+        if (data != null) {
+            if (world.isClient()) {
                 changeSource(RadioSources.values()[data.getInteger("currentSource")]);
                 changeVolume(data.getInteger("volume"));
                 this.preset = data.getInteger("preset");
@@ -50,11 +50,12 @@ public class EntityRadio extends AEntityB_Existing {
                     }
                 }
             } else {
-                changeSource(RadioSources.LOCAL);
-                changeVolume(10);
+                setProperties(RadioSources.values()[data.getInteger("currentSource")], data.getInteger("volume"), data.getInteger("preset"), data.getBoolean("randomOrder"), data.getString("currentURL"));
             }
         } else {
-            setProperties(RadioSources.values()[data.getInteger("currentSource")], data.getInteger("volume"), data.getInteger("preset"), data.getBoolean("randomOrder"), data.getString("currentURL"));
+            changeSource(RadioSources.LOCAL);
+            changeVolume(10);
+            this.currentURL = "";
         }
     }
 
@@ -210,7 +211,6 @@ public class EntityRadio extends AEntityB_Existing {
         super.save(data);
         data.setInteger("currentSource", currentSource.ordinal());
         data.setInteger("volume", volume);
-        data.setBoolean("savedRadio", true);
         data.setBoolean("randomOrder", randomOrder);
         data.setInteger("preset", preset);
         data.setString("currentURL", currentURL);

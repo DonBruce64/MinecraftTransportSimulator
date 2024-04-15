@@ -5,6 +5,7 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -122,31 +123,17 @@ class WrapperAABBCollective extends AxisAlignedBB {
         //Check all the bounding boxes for collision to see if we hit one of them.
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
-        Point3D intersection = null;
-        EnumFacing sideHit = null;
+        BoundingBoxHitResult intersection = null;
         for (BoundingBox testBox : boxes) {
-            Point3D testIntersection = testBox.getIntersectionPoint(start, end);
+            BoundingBoxHitResult testIntersection = testBox.getIntersection(start, end);
             if (testIntersection != null) {
-                if (intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)) {
+                if (intersection == null || start.isFirstCloserThanSecond(testIntersection.position, intersection.position)) {
                     intersection = testIntersection;
-                    if (testIntersection.x == testBox.globalCenter.x - testBox.widthRadius) {
-                        sideHit = EnumFacing.WEST;
-                    } else if (testIntersection.x == testBox.globalCenter.x + testBox.widthRadius) {
-                        sideHit = EnumFacing.EAST;
-                    } else if (testIntersection.y == testBox.globalCenter.y - testBox.heightRadius) {
-                        sideHit = EnumFacing.UP;
-                    } else if (testIntersection.y == testBox.globalCenter.y + testBox.heightRadius) {
-                        sideHit = EnumFacing.DOWN;
-                    } else if (testIntersection.z == testBox.globalCenter.z - testBox.depthRadius) {
-                        sideHit = EnumFacing.NORTH;
-                    } else {
-                        sideHit = EnumFacing.SOUTH;
-                    }
                 }
             }
         }
         if (intersection != null) {
-            return new RayTraceResult(new Vec3d(intersection.x, intersection.y, intersection.z), sideHit);
+            return new RayTraceResult(new Vec3d(intersection.position.x, intersection.position.y, intersection.position.z), EnumFacing.valueOf(intersection.side.name()));
         } else {
             return null;
         }

@@ -66,11 +66,12 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
 
     /**
      * Called to render this entity.  This is the setup method that sets states to the appropriate values.
-     * After this, the main model rendering method is called.
+     * After this, the main model rendering method is called.  Note that this is called from a ConcurrentLinkedQueue.
+     * Therefore, static "helper" variables will just clobber things, so don't use them!
      */
     public final void render(boolean blendingEnabled, float partialTicks) {
         //If we need to render, do so now.
-        if (!disableRendering(partialTicks)) {
+        if (!disableRendering()) {
 
             //Get interpolated orientation if required.
             world.beginProfiling("RenderSetup", true);
@@ -119,7 +120,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     /**
      * If rendering needs to be skipped for any reason, return true here.
      */
-    protected boolean disableRendering(float partialTicks) {
+    protected boolean disableRendering() {
         //Don't render on the first tick, as we might have not created some variables yet.
         return ticksExisted == 0;
     }

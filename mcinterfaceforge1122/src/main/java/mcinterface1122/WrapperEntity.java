@@ -79,7 +79,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public boolean isValid() {
-        return entity != null && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0);
+        return entity != null && !entity.isDead;
     }
 
     @Override
@@ -360,13 +360,13 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.language == null) {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
-        DamageSource newSource = new EntityDamageSource(damage.language.value, damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
+        DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
             public ITextComponent getDeathMessage(EntityLivingBase player) {
                 if (damage.entityResponsible != null) {
-                    return new TextComponentString(String.format(damage.language.value, player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
+                    return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
                 } else {
-                    return new TextComponentString(String.format(damage.language.value, player.getDisplayName().getFormattedText()));
+                    return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText()));
                 }
             }
         };
@@ -388,7 +388,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.ignoreCooldown && entity instanceof EntityLivingBase) {
             entity.hurtResistantTime = 0;
         }
-        if (ConfigSystem.settings.general.creativeDamage.value) {
+        if (ConfigSystem.settings.damage.creativePlayerDamage.value) {
             newSource.setDamageAllowedInCreativeMode();
         }
         entity.attackEntityFrom(newSource, (float) damage.amount);
@@ -429,7 +429,7 @@ public class WrapperEntity implements IWrapperEntity {
      * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
+    public static void onIVWorldUnload(WorldEvent.Unload event) {
         if (event.getWorld().isRemote) {
             entityClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
         } else {

@@ -7,7 +7,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
 
 public abstract class AJSONMultiModelProvider extends AJSONItem {
 
@@ -56,7 +56,7 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
             case OBJ:
                 return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + subDefinition.subName);
             case LITTLETILES:
-                return RenderableObject.GLOBAL_TEXTURE_NAME;
+                return RenderableData.GLOBAL_TEXTURE_NAME;
             case NONE:
                 return null;
         }

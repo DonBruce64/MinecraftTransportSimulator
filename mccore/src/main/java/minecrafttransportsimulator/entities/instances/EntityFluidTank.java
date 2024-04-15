@@ -24,8 +24,12 @@ public class EntityFluidTank extends AEntityA_Base {
     public EntityFluidTank(AWrapperWorld world, IWrapperNBT data, int maxLevel) {
         super(world, data);
         this.maxLevel = maxLevel;
-        this.currentFluid = data.getString("currentFluid");
-        this.fluidLevel = data.getDouble("fluidLevel");
+        if (data != null) {
+            this.currentFluid = data.getString("currentFluid");
+            this.fluidLevel = data.getDouble("fluidLevel");
+        } else {
+            this.currentFluid = "";
+        }
     }
 
     @Override

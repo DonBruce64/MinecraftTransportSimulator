@@ -7,8 +7,8 @@ import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.Fu
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -18,13 +18,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEntityFluidTankProvider {
     private final EntityFluidTank tank;
 
-    public TileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
-        this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity) {
+    public TileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, definition.decor.fuelCapacity) {
             @Override
             public double fill(String fluid, double maxAmount, boolean doFill) {
                 double amountFilled = maxAmount;
@@ -64,9 +65,12 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
         if (item instanceof ItemPartInteractable) {
             ItemPartInteractable interactable = (ItemPartInteractable) item;
             if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
-                IWrapperNBT data = stack.getData();
-                if (data.getString("jerrycanFluid").isEmpty()) {
-                    if (tank.getFluidLevel() >= 1000) {
+                if (tank.getFluidLevel() >= 1000) {
+                    IWrapperNBT data = stack.getData();
+                    if (data == null) {
+                        data = InterfaceManager.coreInterface.getNewNBTWrapper();
+                    }
+                    if (data.getString("jerrycanFluid").isEmpty()) {
                         data.setString("jerrycanFluid", tank.getFluid());
                         stack.setData(data);
                         tank.drain(tank.getFluid(), 1000, true);
@@ -114,7 +118,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                 setConnection(null);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_EMPTY));
                 }
             }
         }

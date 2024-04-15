@@ -44,14 +44,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     public PartGun activeGun;
 
     public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        //Get the player spawning us.
-        if (placingPlayer != null) {
-            //Newly-spawned entity.
-            this.player = placingPlayer;
-            position.set(player.getPosition());
-            prevPosition.set(position);
-        } else {
+        super(world, placingPlayer, null, data);
+        if (data != null) {
             //Saved entity.  Either on the server or client.
             //Get player via saved NBT.  If the player isn't found, we're not valid.
             UUID playerUUID = data.getUUID("playerUUID");
@@ -68,6 +62,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 this.player = null;
                 return;
             }
+        } else {
+            //Newly-spawned entity.
+            this.player = placingPlayer;
+            position.set(player.getPosition());
+            prevPosition.set(position);
         }
 
         //Don't load duplicates.  However, do ensure if we replace a gun we remove it.
@@ -110,13 +109,31 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         super.update();
         //Make sure player is still valid and haven't left the server.
         if (player != null && player.isValid()) {
+        	//Check if the player is specator, if so, we don't do any gun logic.
+        	if(player.isSpectator()) {
+        		if (activeGun != null) {
+                    saveGun(true);
+                }
+        		return;
+        	}
+        	
             //Set our position to the player's position.  We may update this later if we have a gun.
             //We can't update position without the gun as it has an offset defined in it.
             position.set(player.getPosition());
             motion.set(player.getVelocity());
 
             //Get the current gun.
-            activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+            activeGun = null;
+            if(!parts.isEmpty()) {
+                APart part = parts.get(0);
+                if(part instanceof PartGun) {
+                	activeGun = (PartGun) part;
+                }else {
+                	InterfaceManager.coreInterface.logError("Found a part on a player gun that wasn't a gun!  This shouldn't ever happen...");
+                	remove();
+                	return;
+                }	
+            }
 
             //If we have a gun, but the player's held stack is null, get it now.
             //This happens if we load a gun as a saved part.
@@ -149,7 +166,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 if (activeGun == null && heldGun != null) {
                     if (heldGun.definition.gun.handHeld) {
                         gunStack = player.getHeldStack();
-                        addPartFromStack(gunStack, player, 0, true);
+                        addPartFromStack(gunStack, player, 0, true, false);
                         hotbarSelected = player.getHotbarIndex();
                     }
                 }
@@ -299,7 +316,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
+    public boolean disableRendering() {
         //Don't render the player gun entity.  Only render the gun itself.
         return true;
     }

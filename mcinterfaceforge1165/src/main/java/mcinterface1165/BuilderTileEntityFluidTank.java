@@ -48,12 +48,14 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
                 if (currentFluidAmount > 0) {
                     //Pump out fluid to handler below, if we have one.
                     TileEntity teBelow = level.getBlockEntity(getBlockPos().below());
-                    IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP).orElse(null);
-                    if (teBelow != null && fluidHandler != null) {
-                        int amountDrained = fluidHandler.fill(getFluid(), FluidAction.EXECUTE);
-                        if (amountDrained > 0 && currentFluidAmount == getFluidAmount()) {
-                            //Need to drain from our tank as the system didn't do this.
-                            drain(amountDrained, FluidAction.EXECUTE);
+                    if (teBelow != null) {
+                        IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP).orElse(null);
+                        if (fluidHandler != null) {
+                            int amountDrained = fluidHandler.fill(getFluid(), FluidAction.EXECUTE);
+                            if (amountDrained > 0 && currentFluidAmount == getFluidAmount()) {
+                                //Need to drain from our tank as the system didn't do this.
+                                drain(amountDrained, FluidAction.EXECUTE);
+                            }
                         }
                     }
                 }
@@ -115,7 +117,7 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
         if (getFluidAmount() > 0) {
             return this.drain(new FluidStack(getFluid().getFluid(), maxDrain), doDrain);
         }
-        return null;
+        return FluidStack.EMPTY;
     }
 
     @Override

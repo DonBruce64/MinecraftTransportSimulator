@@ -67,7 +67,7 @@ public class GUIRadio extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
         //Source selector block.
-        addComponent(offButton = new GUIComponentButton(guiLeft + 20, guiTop + 25, 55, 15, "OFF") {
+        addComponent(offButton = new GUIComponentButton(this, guiLeft + 20, guiTop + 25, 55, 15, "OFF") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio));
@@ -75,21 +75,21 @@ public class GUIRadio extends AGUIBase {
             }
         });
         addComponent(new GUIComponentLabel(offButton.constructedX + offButton.width / 2, offButton.constructedY - 10, ColorRGB.BLACK, "SOURCE", TextAlignment.CENTERED, 1.0F).setComponent(offButton));
-        addComponent(localButton = new GUIComponentButton(offButton.constructedX, offButton.constructedY + offButton.height, offButton.width, offButton.height, "PC") {
+        addComponent(localButton = new GUIComponentButton(this, offButton.constructedX, offButton.constructedY + offButton.height, offButton.width, offButton.height, "PC") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.LOCAL));
                 teachMode = false;
             }
         });
-        addComponent(remoteButton = new GUIComponentButton(offButton.constructedX, localButton.constructedY + localButton.height, offButton.width, offButton.height, "INTERNET") {
+        addComponent(remoteButton = new GUIComponentButton(this, offButton.constructedX, localButton.constructedY + localButton.height, offButton.width, offButton.height, "INTERNET") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.INTERNET));
                 teachMode = false;
             }
         });
-        addComponent(serverButton = new GUIComponentButton(offButton.constructedX, remoteButton.constructedY + remoteButton.height, offButton.width, offButton.height, "SERVER") {
+        addComponent(serverButton = new GUIComponentButton(this, offButton.constructedX, remoteButton.constructedY + remoteButton.height, offButton.width, offButton.height, "SERVER") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.SERVER));
@@ -98,14 +98,14 @@ public class GUIRadio extends AGUIBase {
         });
 
         //Ordered/shuffle buttons.
-        addComponent(orderedButton = new GUIComponentButton(offButton.constructedX + offButton.width, offButton.constructedY, offButton.width, offButton.height, "ORDERED") {
+        addComponent(orderedButton = new GUIComponentButton(this, offButton.constructedX + offButton.width, offButton.constructedY, offButton.width, offButton.height, "ORDERED") {
             @Override
             public void onClicked(boolean leftSide) {
                 orderedButton.enabled = false;
                 shuffleButton.enabled = true;
             }
         });
-        addComponent(shuffleButton = new GUIComponentButton(orderedButton.constructedX, orderedButton.constructedY + orderedButton.height, orderedButton.width, orderedButton.height, "SHUFFLE") {
+        addComponent(shuffleButton = new GUIComponentButton(this, orderedButton.constructedX, orderedButton.constructedY + orderedButton.height, orderedButton.width, orderedButton.height, "SHUFFLE") {
             @Override
             public void onClicked(boolean leftSide) {
                 orderedButton.enabled = true;
@@ -115,7 +115,7 @@ public class GUIRadio extends AGUIBase {
         orderedButton.enabled = false;
 
         //Internet set button.
-        addComponent(setButton = new GUIComponentButton(shuffleButton.constructedX, shuffleButton.constructedY + shuffleButton.height, shuffleButton.width, shuffleButton.height, "SET URL") {
+        addComponent(setButton = new GUIComponentButton(this, shuffleButton.constructedX, shuffleButton.constructedY + shuffleButton.height, shuffleButton.width, shuffleButton.height, "SET URL") {
             @Override
             public void onClicked(boolean leftSide) {
                 if (teachMode) {
@@ -131,20 +131,20 @@ public class GUIRadio extends AGUIBase {
         });
 
         //Volume controls.
-        addComponent(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.constructedY, 30, 20, "UP") {
+        addComponent(volUpButton = new GUIComponentButton(this, guiLeft + 205, offButton.constructedY, 30, 20, "UP") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, radio.volume + 1));
             }
         });
-        addComponent(volDnButton = new GUIComponentButton(volUpButton.constructedX, volUpButton.constructedY + volUpButton.height, volUpButton.width, 20, "DN") {
+        addComponent(volDnButton = new GUIComponentButton(this, volUpButton.constructedX, volUpButton.constructedY + volUpButton.height, volUpButton.width, 20, "DN") {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, radio.volume - 1));
             }
         });
-        addComponent(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.constructedY, 25, 40, "", ColorRGB.WHITE, 32));
-        addComponent(equalizerButton = new GUIComponentButton(volumeDisplay.constructedX, volumeDisplay.constructedY + volumeDisplay.height, volumeDisplay.width + volDnButton.width, volUpButton.height, "EQ") {
+        addComponent(volumeDisplay = new GUIComponentTextBox(this, guiLeft + 180, volUpButton.constructedY, 25, 40, "", ColorRGB.WHITE, 32));
+        addComponent(equalizerButton = new GUIComponentButton(this, volumeDisplay.constructedX, volumeDisplay.constructedY + volumeDisplay.height, volumeDisplay.width + volDnButton.width, volUpButton.height, "EQ") {
             @Override
             public void onClicked(boolean leftSide) {
                 equalizerMode = true;
@@ -156,7 +156,7 @@ public class GUIRadio extends AGUIBase {
         presetButtons.clear();
         int x = 25;
         for (byte i = 1; i < 7; ++i) {
-            presetButtons.add(new GUIComponentButton(guiLeft + x, guiTop + 155, 35, 20, String.valueOf(i)) {
+            presetButtons.add(new GUIComponentButton(this, guiLeft + x, guiTop + 155, 35, 20, String.valueOf(i)) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     presetButtonClicked(this);
@@ -167,16 +167,16 @@ public class GUIRadio extends AGUIBase {
         }
 
         //Station display box.
-        addComponent(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, 45, radio.displayText, ColorRGB.WHITE, 150));
+        addComponent(stationDisplay = new GUIComponentTextBox(this, guiLeft + 20, guiTop + 95, 220, 55, radio.displayText, ColorRGB.WHITE, 150));
 
         //Add equalizer screen buttons.
-        addComponent(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, 20, "BACK") {
+        addComponent(equalizerBackButton = new GUIComponentButton(this, guiLeft + 40, guiTop + 162, 80, 20, "BACK") {
             @Override
             public void onClicked(boolean leftSide) {
                 equalizerMode = false;
             }
         });
-        addComponent(equalizerResetButton = new GUIComponentButton(guiLeft + getWidth() - 80 - 40, guiTop + 162, 80, 20, "RESET") {
+        addComponent(equalizerResetButton = new GUIComponentButton(this, guiLeft + getWidth() - 80 - 40, guiTop + 162, 80, 20, "RESET") {
             @Override
             public void onClicked(boolean leftSide) {
                 for (int i = 0; i < radio.currentStation.equalizer.getBandCount(); ++i) {
@@ -193,10 +193,10 @@ public class GUIRadio extends AGUIBase {
         int startingOffset = (getWidth() - (bandsToShow - 1) * bandButtonSize) / 2;
         for (int i = 0; i < bandsToShow; ++i) {
             int centerXOffset = guiLeft + startingOffset + bandButtonSize * i;
-            GUIComponentButton bandUpButton = new GUIComponentEqualizerButton(centerXOffset - bandButtonSize / 2, guiTop + 20, true);
-            GUIComponentButton bandDownButton = new GUIComponentEqualizerButton(centerXOffset - bandButtonSize / 2, guiTop + 140, false);
-            GUIComponentCutout sliderBand = new GUIComponentCutout(centerXOffset - 2, bandUpButton.constructedY + bandUpButton.height, 4, 100, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
-            GUIComponentCutout slider = new GUIComponentCutout(centerXOffset - 4, guiTop + 90 - 4, 8, 8, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_RED_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
+            GUIComponentButton bandUpButton = new GUIComponentEqualizerButton(this, centerXOffset - bandButtonSize / 2, guiTop + 20, true);
+            GUIComponentButton bandDownButton = new GUIComponentEqualizerButton(this, centerXOffset - bandButtonSize / 2, guiTop + 140, false);
+            GUIComponentCutout sliderBand = new GUIComponentCutout(this, centerXOffset - 2, bandUpButton.constructedY + bandUpButton.height, 4, 100, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
+            GUIComponentCutout slider = new GUIComponentCutout(this, centerXOffset - 4, guiTop + 90 - 4, 8, 8, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_RED_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
             equalizerButtons.add(bandUpButton);
             equalizerButtons.add(bandDownButton);
             equalizerSliderBands.add(sliderBand);
@@ -296,8 +296,8 @@ public class GUIRadio extends AGUIBase {
     private class GUIComponentEqualizerButton extends GUIComponentButton {
         private final boolean increment;
 
-        public GUIComponentEqualizerButton(int x, int y, boolean increment) {
-            super(x, y, bandButtonSize, bandButtonSize, increment ? "/\\" : "\\/");
+        public GUIComponentEqualizerButton(AGUIBase gui, int x, int y, boolean increment) {
+            super(gui, x, y, bandButtonSize, bandButtonSize, increment ? "/\\" : "\\/");
             this.increment = increment;
         }
 

@@ -11,10 +11,8 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Base class for part items.  Contains methods on what part to spawn from
@@ -34,9 +32,7 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
             if (!world.isClient()) {
                 position.add(0.5, 0, 0.5).add(axis.xOffset, axis.yOffset, axis.zOffset);
                 double yRotation = Math.round((player.getYaw() + 180) / 90) * 90 % 360;
-                IWrapperItemStack heldStack = player.getHeldStack();
-                IWrapperNBT data = heldStack.getData();
-                placeOnGround(world, player, position, yRotation, data);
+                placeOnGround(world, player, position, yRotation, player.getHeldStack().getData());
 
                 //Decrement stack if we are not in creative.
                 if (!player.isCreative()) {
@@ -51,27 +47,24 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
 
     @Override
     public void registerEntities(Map<String, IItemEntityFactory> entityMap) {
-        entityMap.put(EntityPlacedPart.class.getSimpleName(), (world, placingPlayer, data) -> new EntityPlacedPart(world, placingPlayer, data));
+        entityMap.put(EntityPlacedPart.class.getSimpleName(), (world, data) -> new EntityPlacedPart(world, null, data));
     }
 
     /**
      * Helper method to place the part in the world when clicked by a player.
      */
-    public APart placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
+    public void placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
         //Construct the class, add ourselves as a part, and spawn.
-        IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
-        EntityPlacedPart entity = new EntityPlacedPart(world, player, placerData);
-        entity.addPartsPostAddition(player, placerData);
-        
-        populateDefaultData(data);
-        APart newPart = entity.addPartFromStack(getNewStack(data), player, 0, true);
-
+        if (data != null) {
+            data.deleteAllUUIDTags(); //Do this just in case this is an older item.
+        }
+        EntityPlacedPart entity = new EntityPlacedPart(world, player, null);
+        entity.addPartFromStack(getNewStack(data), player, 0, true, false);
         entity.position.set(position);
         entity.prevPosition.set(position);
         entity.orientation.setToAngles(new Point3D(0, yRotation, 0));
         entity.prevOrientation.set(entity.orientation);
         entity.world.spawnEntity(entity);
-        return newPart;
     }
 
     /**

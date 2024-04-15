@@ -8,6 +8,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -157,7 +158,7 @@ public interface IInventoryProvider {
         int qtyFound = 0;
         for (int i = 0; i < getSize(); ++i) {
             IWrapperItemStack stack = getStack(i);
-            if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || referenceStack.getData().equals(stack.getData()))) {
+            if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || IWrapperNBT.isDataEqual(referenceStack.getData(), stack.getData()))) {
                 qtyFound += stack.getSize();
             }
         }
@@ -165,7 +166,7 @@ public interface IInventoryProvider {
             qtyToRemove = -qtyToRemove;
             for (int i = 0; i < getSize(); ++i) {
                 IWrapperItemStack stack = getStack(i);
-                if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || referenceStack.getData().equals(stack.getData()))) {
+                if (InterfaceManager.coreInterface.isOredictMatch(stack, referenceStack) && (!checkNBT || IWrapperNBT.isDataEqual(referenceStack.getData(), stack.getData()))) {
                     qtyToRemove = stack.add(qtyToRemove);
                     setStack(stack, i);
                 }

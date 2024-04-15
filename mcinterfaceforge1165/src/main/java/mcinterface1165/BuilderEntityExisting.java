@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -128,7 +129,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                 try {
                     WrapperNBT data = new WrapperNBT(lastLoadedNBT);
-                    entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, data);
+                    entity = entityMap.get(lastLoadedNBT.getString("entityid")).restoreEntityFromData(worldWrapper, data);
                     if (entity instanceof AEntityF_Multipart) {
                         ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
                     }
@@ -197,9 +198,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Some projectiles may call their attacking code before updating their positions.
                     //We do raytracing here to catch this movement.
                     Point3D endPosition = attackerPosition.copy().add(mcMovement.x, mcMovement.y, mcMovement.z);
-                    Collection<BoundingBox> hitBoxes = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition));
-                    if (hitBoxes != null) {
-                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitBoxes);
+                    Collection<BoundingBoxHitResult> hitResults = multipart.getHitBoxes(attackerPosition, endPosition, new BoundingBox(attackerPosition, endPosition), false);
+                    if (hitResults != null) {
+                        multipart.attackProjectile(new Damage(amount, null, null, playerSource, null), null, hitResults);
                     }
                 }
             }
@@ -261,7 +262,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      * in {@link #attackEntityFrom(DamageSource, float)} to tell the system which part to attack.
      */
     @SubscribeEvent
-    public static void on(ExplosionEvent.Detonate event) {
+    public static void onIVExplode(ExplosionEvent.Detonate event) {
         if (!event.getWorld().isClientSide) {
             lastExplosionPosition = new Point3D(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
         }

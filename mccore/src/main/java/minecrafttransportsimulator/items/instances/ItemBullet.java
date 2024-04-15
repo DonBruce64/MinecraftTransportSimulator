@@ -5,9 +5,9 @@ import java.util.List;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet> {
 
@@ -21,25 +21,25 @@ public class ItemBullet extends AItemSubTyped<JSONBullet> {
         for (BulletType type : definition.bullet.types) {
             switch (type) {
                 case ARMOR_PIERCING:
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_ARMOR_PIERCING.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_TYPE_ARMOR_PIERCING.getCurrentValue());
                     break;
                 case EXPLOSIVE:
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_EXPLOSIVE.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_TYPE_EXPLOSIVE.getCurrentValue());
                     break;
                 case INCENDIARY:
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_INCENDIARY.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_TYPE_INCENDIARY.getCurrentValue());
                     break;
                 case WATER:
-                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_WATER.value);
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_TYPE_WATER.getCurrentValue());
                     break;
             }
 
         }
         if (definition.bullet.pellets > 0)
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PELLETS.value + definition.bullet.pellets);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_DIAMETER.value + definition.bullet.diameter);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_CASELENGTH.value + definition.bullet.caseLength);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PENETRATION.value + definition.bullet.armorPenetration);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_QUANTITY.value + definition.bullet.quantity);
+            tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_PELLETS.getCurrentValue() + definition.bullet.pellets);
+        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_DIAMETER.getCurrentValue() + definition.bullet.diameter);
+        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_CASELENGTH.getCurrentValue() + definition.bullet.caseLength);
+        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_PENETRATION.getCurrentValue() + definition.bullet.armorPenetration);
+        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_QUANTITY.getCurrentValue() + definition.bullet.quantity);
     }
 }

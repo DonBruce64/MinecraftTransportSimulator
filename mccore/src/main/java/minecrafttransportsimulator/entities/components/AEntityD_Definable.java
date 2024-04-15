@@ -8,15 +8,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -38,6 +41,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -85,6 +89,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
+    private final Set<JSONSound> soundDefFalseLastCheck = new HashSet<>();
     private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
     private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<>();
     private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<>();
@@ -128,9 +133,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
 
     /**
-     * Object lists for models parsed in for this class.  Maps are keyed by the model name.
+     * Object lists for models parsed for this entity.
      **/
-    protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
+    private List<RenderableModelObject> objectList;
+
+    /**
+     * List of players interacting with this entity via a GUI.
+     **/
+    public final Set<IWrapperPlayer> playersInteracting = new HashSet<>();
+    public boolean playerCraftedItem;
 
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
@@ -151,28 +162,36 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Constructor for synced entities
      **/
-    public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+    public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, data);
-        String subName = data.getString("subName");
-        AItemSubTyped<JSONDefinition> item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), subName);
-        this.definition = item != null ? item.definition : generateDefaultDefinition();
-        updateSubDefinition(subName);
+        if (item != null) {
+            this.definition = item.definition;
+            updateSubDefinition(item.subDefinition.subName);
+        } else {
+            this.definition = generateDefaultDefinition();
+            updateSubDefinition("");
+        }
 
-        //Load text.
-        if (definition.rendering != null && definition.rendering.textObjects != null) {
-            for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
-                JSONText textDef = definition.rendering.textObjects.get(i);
-                text.put(textDef, newlyCreated ? textDef.defaultText : data.getString("textLine" + i));
+        //Load data, or use defaults.
+        if (data != null) {
+            //Load text.
+            if (definition.rendering != null && definition.rendering.textObjects != null) {
+                for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
+                    JSONText textDef = definition.rendering.textObjects.get(i);
+                    text.put(textDef, data.hasKey("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
+                }
             }
-        }
 
-        //Load variables.
-        for (String variableName : data.getStrings("variables")) {
-            variables.put(variableName, data.getDouble(variableName));
-        }
-        if (newlyCreated && definition.initialVariables != null) {
-            for (String variable : definition.initialVariables) {
-                variables.put(variable, 1D);
+            //Load variables.
+            for (String variableName : data.getStrings("variables")) {
+                variables.put(variableName, data.getDouble(variableName));
+            }
+        } else {
+            //Only set initial variables on initial placement.
+            if (definition.initialVariables != null) {
+                for (String variable : definition.initialVariables) {
+                    variables.put(variable, 1D);
+                }
             }
         }
     }
@@ -180,10 +199,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Constructor for un-synced entities.  Allows for specification of position/motion/angles.
      **/
-    public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem) {
+    public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> item) {
         super(world, position, motion, angles);
-        this.definition = creatingItem.definition;
-        updateSubDefinition(creatingItem.subDefinition.subName);
+        this.definition = item.definition;
+        updateSubDefinition(item.subDefinition.subName);
     }
 
     @Override
@@ -199,6 +218,32 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             initializeAnimations();
             animationsInitialized = true;
         }
+        if (world.isClient()) {
+            spawnParticles(0);
+        }
+
+        //Verify interacting players are still interacting.
+        //Server checks if players are still valid, client checks if current player doesn't have a GUI open.
+        //This handles players disconnecting or TPing away from this entity without closing their GUI first.
+        if (!playersInteracting.isEmpty()) {
+            if (world.isClient()) {
+                IWrapperPlayer thisClient = InterfaceManager.clientInterface.getClientPlayer();
+                if (playersInteracting.contains(thisClient) && !InterfaceManager.clientInterface.isGUIOpen()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(this, thisClient, false));
+                    playersInteracting.remove(thisClient);
+                }
+            } else {
+                for (IWrapperPlayer player : playersInteracting) {
+                    if (!player.isValid() || !player.getWorld().equals(world)) {
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, false));
+                        playersInteracting.remove(player);
+                        break;
+                    }
+                }
+            }
+        }
+        playerCraftedItem = false;
+
         //Only update radar once a second, and only if we requested it via variables.
         if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
             Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
@@ -379,14 +424,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void remove() {
         if (isValid) {
             super.remove();
-            //Stop all playing sounds.
-            for (SoundInstance sound : sounds) {
-                sound.stopSound = true;
-            }
-
             //Clear radars.
             aircraftOnRadar.clear();
             groundersOnRadar.clear();
+            
+            //Clear rendering assignments.
+            if (world.isClient()) {
+                if (objectList != null) {
+                    objectList.forEach(object -> object.destroy());
+                }
+            }
         }
     }
 
@@ -407,7 +454,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the texture that should be bound to this entity for the passed-in object from the model.
+     * Returns the texture that should be bound to this entity for rendering.
      * This may change between render passes, but only ONE texture may be used for any given object render
      * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
@@ -619,63 +666,67 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (JSONSound soundDef : allSoundDefs) {
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
-                //First check if we are in the right view to play.
-                AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
-                boolean playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
-                boolean hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                boolean shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
-                boolean anyClockMovedThisUpdate = false;
+            	//First check the animated conditionals, since those drive on/off state.
+            	AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
+                boolean shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
+                    
+                //If we aren't a looping or repeating sound, check if we were true last check.
+                //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.
+                if (!soundDef.looping && !soundDef.forceSound) {
+                    if (shouldSoundStartPlaying) {
+                        if (!soundDefFalseLastCheck.remove(soundDef)) {
+                            shouldSoundStartPlaying = false;
+                        }
+                    } else {
+                        soundDefFalseLastCheck.add(soundDef);
+                    }
+                }
+                
+                //Now that we know if we are enabled, check if the player has the right viewpoint.
+                AEntityB_Existing entityRiding = null;
+                boolean playerRidingThisEntity = false;
+                boolean hasOpenTop = false;
+                if(shouldSoundStartPlaying) {
+		            entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
+		            AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+		            playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+		            hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+		            shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) ? !soundDef.isExterior : !soundDef.isInterior;
+                }
 
                 //Next, check the distance.
                 double distance = 0;
-                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
-                if (shouldSoundStartPlaying) {
-                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                    if (soundDef.maxDistance != soundDef.minDistance) {
-                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
-                    } else {
-                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
-                    }
-                }
-
-                //Next, check animations.
-                if (shouldSoundStartPlaying) {
-                    AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-                    shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
-                    anyClockMovedThisUpdate = activeSwitchbox.anyClockMovedThisUpdate;
-                }
-
-                //If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
-                //If we didn't, then we shouldn't play, even if all states are true.
-                if (shouldSoundStartPlaying && !soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate) {
-                    shouldSoundStartPlaying = false;
+                if(shouldSoundStartPlaying) {
+	                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
+	                if (shouldSoundStartPlaying) {
+	                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+	                    if (soundDef.maxDistance != soundDef.minDistance) {
+	                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
+	                    } else {
+	                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
+	                    }
+	                }
                 }
                 
-                if (shouldSoundStartPlaying) {
-                    //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
-                    boolean isSoundPlaying = false;
-                    if (soundDef.looping) {
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
-                                isSoundPlaying = true;
-                                break;
-                            }
-                        }
+                //Finally, play the sound if all checks were true.
+                SoundInstance playingSound = null;
+                for (SoundInstance sound : sounds) {
+                    if (sound.soundDef == soundDef) {
+                        playingSound = sound;
+                        break;
                     }
-                    if (!isSoundPlaying) {
+                }
+                if (shouldSoundStartPlaying) {
+                    //Sound should play.
+                    //If we aren't playing, or are playing but aren't a looping sound, update.
+                    if (playingSound == null || !soundDef.looping) {
                         InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
                     }
                 } else {
-                    if (soundDef.looping) {
+                    if (soundDef.looping && playingSound != null) {
                         //If sound is playing, stop it.
                         //Non-looping sounds are trigger-based and will stop on their own.
-                        for (SoundInstance sound : sounds) {
-                            if (sound.soundDef == null ? sound.soundName.equals(soundDef.name) : sound.soundDef == soundDef) {
-                                sound.stopSound = true;
-                                break;
-                            }
-                        }
+                        playingSound.stopSound = true;
                     }
 
                     //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
@@ -684,13 +735,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                 //Sound should be playing.  If it's part of the sound list, update properties.
                 //Sounds may not be in the list if they have just been queued and haven't started yet.
+                //Try to get the sound provided by this def, and update it. 
+                //Note that multiple sounds might be for the same def if they played close enough together.
                 for (SoundInstance sound : sounds) {
-                    if (sound != null && sound.soundName.equals(soundDef.name)) {
+                    if (sound.soundDef == soundDef) {
                         //Adjust volume.
-                        if (soundDef.pos != null) {
-                            //Change distance to actual distance since this will be different.
-                            distance = sound.position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                        }
                         SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
                         boolean definedVolume = false;
                         if (volumeSwitchbox != null) {
@@ -807,6 +856,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.getTime();
             case ("random"):
                 return Math.random();
+            case ("random_flip"):
+                return Math.random() < 0.5 ? 0 : 1;
             case ("rain_strength"):
                 return (int) world.getRainStrength(position);
             case ("rain_sin"): {
@@ -823,8 +874,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.getLightBrightness(position, true);
             case ("terrain_distance"):
                 return world.getHeight(position);
+            case ("posX"):
+                return position.x;
+            case ("posY"):
+                return position.y;
+            case ("posZ"):
+                return position.z;
             case ("inliquid"):
                 return world.isBlockLiquid(position) ? 1 : 0;
+            case ("player_interacting"):
+                return !playersInteracting.isEmpty() ? 1 : 0;
+            case ("player_crafteditem"):
+                return playerCraftedItem ? 1 : 0;
             case ("config_simplethrottle"):
                 return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
             case ("config_innerwindows"):
@@ -852,43 +913,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             return 0;
         }
 
-        //Check if this is a radar variable.
-        if (variable.startsWith("radar_")) {
-            String[] parsedVariable = variable.split("_");
-            List<EntityVehicleF_Physics> radarList;
-            switch (parsedVariable[1]) {
-                case ("aircraft"):
-                    radarList = aircraftOnRadar;
-                    break;
-                case ("ground"):
-                    radarList = groundersOnRadar;
-                    break;
-                default:
-                    //Can't continue, as we expect non-null.
-                    return 0;
+        //Check if this is a blockmaterial_x variable.
+        if (variable.startsWith("blockmaterial_")) {
+            BlockMaterial material = world.getBlockMaterial(position);
+            if (material != null) {
+                return material.name().equals(variable.substring("blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
             }
-            int index = Integer.parseInt(parsedVariable[2]);
-            if (index < radarList.size()) {
-                AEntityB_Existing contact = radarList.get(index);
-                switch (parsedVariable[3]) {
-                    case ("distance"):
-                        return contact.position.distanceTo(position);
-                    case ("direction"):
-                        double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
-                        while (delta < -180)
-                            delta += 360;
-                        while (delta > 180)
-                            delta -= 360;
-                        return delta;
-                    case ("speed"):
-                        return contact.velocity;
-                    case ("altitude"):
-                        return contact.position.y;
-                    case ("angle"):
-                        return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
-                }
+        } else if (variable.startsWith("terrain_blockmaterial_")) {
+            double height = world.getHeight(position) + 1;
+            position.y -= height;
+            BlockMaterial material = world.getBlockMaterial(position);
+            position.y += height;
+            if (material != null) {
+                return material.name().equals(variable.substring("terrain_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
+            } else {
+                return 0;
             }
-            return 0;
         }
 
         //Check if this is a generic variable.  This contains lights in most cases.
@@ -1180,15 +1222,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Parse model if it hasn't been already.
         world.beginProfiling("MainModel", false);
-        String modelLocation = definition.getModelLocation(subDefinition);
-        if (!objectLists.containsKey(modelLocation)) {
-            objectLists.put(modelLocation, AModelParser.generateRenderables(this));
+        if (objectList == null) {
+            objectList = AModelParser.generateRenderables(this);
         }
 
         //Render model object individually.
-        for (RenderableModelObject modelObject : objectLists.get(modelLocation)) {
-            modelObject.render(this, transform, blendingEnabled, partialTicks);
-        }
+        objectList.forEach(modelObject -> modelObject.render(this, transform, blendingEnabled, partialTicks));
 
         //Render any static text.
         world.beginProfiling("MainText", false);
@@ -1211,21 +1250,21 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     @Override
-    protected boolean disableRendering(float partialTicks) {
+    protected boolean disableRendering() {
         //Don't render if we don't have a model.
-        return super.disableRendering(partialTicks) || definition.rendering.modelType.equals(ModelType.NONE);
+        return super.disableRendering() || definition.rendering.modelType.equals(ModelType.NONE);
     }
 
     /**
-     * Called externally to reset all caches for all renders.
+     * Called externally to reset all caches for all objects and animations on all entities.
      */
-    public static void clearObjectCaches(AJSONMultiModelProvider definition) {
-        for (JSONSubDefinition subDef : definition.definitions) {
-            String modelLocation = definition.getModelLocation(subDef);
-            List<RenderableModelObject> resetObjects = objectLists.remove(modelLocation);
-            if (resetObjects != null) {
-                for (RenderableModelObject modelObject : resetObjects) {
-                    modelObject.destroy();
+    public static void resetModelsAndAnimations(AWrapperWorld world) {
+        for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+            if (entity.definition.rendering.modelType != ModelType.NONE) {
+                entity.animationsInitialized = false;
+                if (entity.objectList != null) {
+                    entity.objectList.forEach(object -> object.destroy());
+                    entity.objectList = null;
                 }
             }
         }
@@ -1234,16 +1273,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setString("packID", definition.packID);
-        data.setString("systemName", definition.systemName);
-        data.setString("subName", subDefinition.subName);
-        int lineNumber = 0;
-        for (String textLine : text.values()) {
-            data.setString("textLine" + lineNumber++, textLine);
+        data.setPackItem(definition, subDefinition.subName);
+        if (!text.isEmpty()) {
+            int lineNumber = 0;
+            for (String textLine : text.values()) {
+                data.setString("textLine" + lineNumber++, textLine);
+            }
         }
-        data.setStrings("variables", variables.keySet());
-        for (String variableName : variables.keySet()) {
-            data.setDouble(variableName, variables.get(variableName));
+        if (!variables.isEmpty()) {
+            data.setStrings("variables", variables.keySet());
+            for (String variableName : variables.keySet()) {
+                data.setDouble(variableName, variables.get(variableName));
+            }
         }
         return data;
     }

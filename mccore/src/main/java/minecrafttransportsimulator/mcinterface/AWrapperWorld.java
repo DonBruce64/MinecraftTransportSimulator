@@ -2,9 +2,12 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -144,6 +147,16 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad);
 
     /**
+     * Adds to the map a list of all item entities within the passed-in bounds.
+     */
+    public abstract void populateItemStackEntities(Map<IWrapperEntity, IWrapperItemStack> map, BoundingBox b);
+
+    /**
+     * Removes the specified item stack entity from the world.
+     */
+    public abstract void removeItemStackEntity(IWrapperEntity entity);
+
+    /**
      * Returns true if the chunk that contains the position is loaded.
      */
     public abstract boolean chunkLoaded(Point3D position);
@@ -169,6 +182,11 @@ public abstract class AWrapperWorld extends EntityManager {
      * Returns the material of the block.
      */
     public abstract BlockMaterial getBlockMaterial(Point3D position);
+    
+    /**
+     * Returns the color of the block as determined by map coloring.
+     */
+    public abstract ColorRGB getBlockColor(Point3D position);
 
     /**
      * Returns a list of block drops for the block at the passed-in position.
@@ -221,7 +239,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
      * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
      * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
-     * collisionDepth be set for that axis.
+     * collisionDepth be set for that axis.  Note that leaves are never checked in this code.
      */
     public abstract void updateBoundingBoxCollisions(BoundingBox box, Point3D collisionMotion, boolean ignoreIfGreater);
 
@@ -229,9 +247,9 @@ public abstract class AWrapperWorld extends EntityManager {
      * Checks the passed-in bounding box for collisions with other blocks.  Returns true if they collided,
      * false if they did not.  This is a bulk method designed to handle multiple checks in a row.  As such,
      * it stores a listing of known air blocks.  If a block has been checked before and is air, it is ignored.
-     * To reset this list, pass in clearCache.
+     * To reset this list, pass in clearCache.  Note that leaves are ignored, but can be broken if requested.
      */
-    public abstract boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache);
+    public abstract boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache, boolean breakLeaves);
 
     /**
      * Returns the current redstone power at the passed-in position.
@@ -309,7 +327,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
      */
-    public abstract void setToFire(BlockHitResult hitResult);
+    public abstract void setToFire(Point3D position, Axis side);
 
     /**
      * Extinguishes the block at the passed-in position if it's fire.
@@ -317,7 +335,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * Note that the position assumes the block hit is the one that is on fire,
      * not that the fire itself was hit.  This is because fire blocks do not have collision.
      */
-    public abstract void extinguish(BlockHitResult hitResult);
+    public abstract void extinguish(Point3D position, Axis side);
 
     /**
      * Tries to place the item as a block at the passed-in position.
@@ -354,8 +372,15 @@ public abstract class AWrapperWorld extends EntityManager {
 
     /**
      * Tries to remove any snow at the passed-in position.
+     * Returns true if snow was removed.
      */
-    public abstract void removeSnow(Point3D position);
+    public abstract boolean removeSnow(Point3D position);
+
+    /**
+     * Tries to hydrate the block at the passed-in position.
+     * Returns true if it was hydrated.
+     */
+    public abstract boolean hydrateBlock(Point3D position);
 
     /**
      * Attempts to insert a stack-item into the block that is at the specified
@@ -385,17 +410,4 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns an explosion of the specified strength at the passed-in point.
      */
     public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
-
-    /**
-     * Class for hitting on blocks.
-     */
-    public static class BlockHitResult {
-        public final Point3D position;
-        public final Axis side;
-
-        public BlockHitResult(Point3D position, Axis side) {
-            this.position = position;
-            this.side = side;
-        }
-    }
 }

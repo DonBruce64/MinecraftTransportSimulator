@@ -2,9 +2,11 @@ package mcinterface1165;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFlu
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemFood;
@@ -26,6 +29,7 @@ import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Food;
@@ -33,6 +37,7 @@ import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -49,15 +54,17 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.12.0";
+    public static final String MODVER = "22.14.2";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
+    public static Set<String> packIDs = new HashSet<>();
 
 
     public InterfaceLoader() {
         gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPostConstruction);
     }
 
     /**Need to defer init until post-mod construction, as in this version
@@ -100,6 +107,9 @@ public class InterfaceLoader {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
 
+        //Set pack IDs.
+        packIDs.addAll(PackParser.getAllPackIDs());
+
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
         //which blocks we need to register.
@@ -110,7 +120,8 @@ public class InterfaceLoader {
 
                     //Check if the creative tab is set/created.
                     //The only except is for "invisible" parts of the core mod, these are internal.
-                    if (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")) {
+                    boolean hideOnCreativeTab = item.definition.general.hideOnCreativeTab || (item instanceof AItemSubTyped && ((AItemSubTyped<?>) item).subDefinition.hideOnCreativeTab);
+                    if (!hideOnCreativeTab && (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible"))) {
                         String tabID = item.getCreativeTabID();
                         if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
                             JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
@@ -128,6 +139,9 @@ public class InterfaceLoader {
                 }
             }
         }
+
+        //Init the language system for the created items.
+        LanguageSystem.init();
 
         //Register all items in our wrapper map.
         for (Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()) {
@@ -178,11 +192,6 @@ public class InterfaceLoader {
             BuilderBlock.blockMap.put(collisionBlock, wrapper);
         }
 
-        //If we are on the client, create models.
-        if (isClient) {
-            InterfaceEventsModelLoader.init();
-        }
-
         //Register the TEs.  Has to be done last to ensure block maps are populated.
         List<BuilderBlock> normalBlocks = new ArrayList<>();
         List<BuilderBlock> fluidBlocks = new ArrayList<>();
@@ -211,6 +220,7 @@ public class InterfaceLoader {
         //Init entities.
         BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_existing"));
         BuilderEntityLinkedSeat.E_TYPE3 = ABuilderEntityBase.ENTITIES.register("builder_seat", () -> EntityType.Builder.<BuilderEntityLinkedSeat>of(BuilderEntityLinkedSeat::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_seat"));
+        BuilderEntityRenderForwarder.E_TYPE4 = ABuilderEntityBase.ENTITIES.register("builder_rendering", () -> EntityType.Builder.<BuilderEntityRenderForwarder>of(BuilderEntityRenderForwarder::new, EntityClassification.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_rendering"));
 
         //Iterate over all pack items and find those that spawn entities.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
@@ -226,7 +236,17 @@ public class InterfaceLoader {
             //Init keybinds if we're on the client.
             InterfaceManager.inputInterface.initConfigKey();
 
-            //Also put all liquids into the config file for use by modpack makers.
+            //Save modified config.
+            ConfigSystem.saveToDisk();
+        }
+    }
+
+    public void onPostConstruction(FMLLoadCompleteEvent event) {
+        //Populate language system, since we now know we have a language class.
+        if (FMLEnvironment.dist.isClient()) {
+            LanguageSystem.populateNames();
+
+            //Put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
             //Save modified config.

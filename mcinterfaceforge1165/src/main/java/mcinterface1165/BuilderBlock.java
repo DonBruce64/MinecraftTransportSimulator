@@ -38,7 +38,6 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -167,10 +166,10 @@ public class BuilderBlock extends Block {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void spawnAfterBreak(BlockState state, ServerWorld world, BlockPos pos, ItemStack stack) {
+    public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
         //Forward the breaking call to the block to allow for breaking logic.
         block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
-        super.spawnAfterBreak(state, world, pos, stack);
+        super.onRemove(state, world, pos, newState, isMoving);
     }
 
     @Override

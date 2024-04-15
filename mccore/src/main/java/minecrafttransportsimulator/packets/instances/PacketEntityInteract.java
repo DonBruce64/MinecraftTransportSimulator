@@ -10,16 +10,18 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Packet used to interact with entities.  Initially sent from clients to the server
@@ -59,7 +61,8 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperPlayer player) {
-        PlayerOwnerState ownerState = entity.getOwnerState(player);
+        EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
+        PlayerOwnerState ownerState = vehicle != null ? vehicle.getOwnerState(player) : PlayerOwnerState.OWNER;
         IWrapperItemStack heldStack = player.getHeldStack();
         AItemBase heldItem = heldStack.getItem();
 
@@ -74,11 +77,16 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                 if (slotEntry.getKey().localCenter.equals(hitBoxLocalCenter)) {
                     //Only owners can add parts.
                     if (ownerState.equals(PlayerOwnerState.USER)) {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
                     } else {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
                         if (heldItem instanceof AItemPart && !player.isSneaking()) {
-                            if (multipart.addPartFromStack(heldStack, player, multipart.definition.parts.indexOf(slotEntry.getValue()), false) != null && !player.isCreative()) {
+                            IWrapperNBT data = heldStack.getData();
+                            if (data != null) {
+                                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
+                                heldStack.setData(data);
+                            }
+                            if (multipart.addPartFromStack(heldStack, player, multipart.definition.parts.indexOf(slotEntry.getValue()), false, false) != null && !player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
                         }
@@ -98,8 +106,11 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             }
 
             if (hitBox == null) {
-                //Not sure how the heck this happened, but it did.
-                InterfaceManager.coreInterface.logError("Got a packet for interacting with an entity, but don't have a hitbox for it, so we can't interact?  Interacting with: " + entity.toString());
+                //Flag error if we clicked something that no longer exists.
+                //If this is an interact-release packet, don't worry about the error.
+                if (rightClick || leftClick) {
+                    InterfaceManager.coreInterface.logError("Got a packet for interacting with an entity, but don't have a hitbox for it, so we can't interact?  Interacting with: " + entity.toString());
+                }
                 return false;
             }
         }
@@ -121,10 +132,10 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
         //Check if we clicked a box with a variable attached.
         if (!leftClick && hitBox.definition != null && hitBox.definition.variableName != null) {
-            if (entity.locked) {
-                //Can't touch locked entities.
+            if (vehicle != null && vehicle.locked) {
+                //Can't touch locked vehicles.
                 if (rightClick) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                 }
             } else {
                 switch (hitBox.definition.variableType) {

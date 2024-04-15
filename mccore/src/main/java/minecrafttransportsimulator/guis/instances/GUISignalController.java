@@ -18,10 +18,10 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class GUISignalController extends AGUIBase {
 
@@ -69,7 +69,7 @@ public class GUISignalController extends AGUIBase {
         int rowSpacing = 2;
 
         //Main scan button.
-        addComponent(scanButton = new GUIComponentButton(leftTextOffset, topOffset, 220, 15, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCAN.value) {
+        addComponent(scanButton = new GUIComponentButton(this, leftTextOffset, topOffset, 220, 15, LanguageSystem.GUI_SIGNALCONTROLLER_SCAN.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 controller.componentLocations.clear();
@@ -128,46 +128,46 @@ public class GUISignalController extends AGUIBase {
         topOffset += scanButton.height + rowSpacing;
 
         //Scan center.
-        addComponent(scanCenterXText = new GUIComponentNumericTextBox(leftObjectOffset, topOffset, String.valueOf(controller.intersectionCenterPoint.x), 60) {
+        addComponent(scanCenterXText = new GUIComponentNumericTextBox(this, leftObjectOffset, topOffset, String.valueOf(controller.intersectionCenterPoint.x), 60) {
             @Override
             public void setVariable() {
                 controller.intersectionCenterPoint.x = getDoubleValue();
             }
         });
-        addComponent(scanCenterZText = new GUIComponentNumericTextBox(scanCenterXText.constructedX + scanCenterXText.width + 5, topOffset, String.valueOf(controller.intersectionCenterPoint.z), 60) {
+        addComponent(scanCenterZText = new GUIComponentNumericTextBox(this, scanCenterXText.constructedX + scanCenterXText.width + 5, topOffset, String.valueOf(controller.intersectionCenterPoint.z), 60) {
             @Override
             public void setVariable() {
                 controller.intersectionCenterPoint.z = getDoubleValue();
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANCENTER.value).setComponent(scanCenterXText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_SCANCENTER.getCurrentValue()).setComponent(scanCenterXText));
         topOffset += scanCenterXText.height + rowSpacing;
 
         //Scan distance.
-        addComponent(scanDistanceText = new GUIComponentNumericTextBox(leftObjectOffset, topOffset, "25"));
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANDISTANCE.value).setComponent(scanDistanceText));
+        addComponent(scanDistanceText = new GUIComponentNumericTextBox(this, leftObjectOffset, topOffset, "25"));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_SCANDISTANCE.getCurrentValue()).setComponent(scanDistanceText));
 
         //Found count.
-        addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + controller.componentLocations.size()));
+        addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_SCANFOUND.getCurrentValue() + controller.componentLocations.size()));
         topOffset += scanDistanceText.height + rowSpacing * 3;
 
         //RHD/LHD switch.
-        addComponent(driveSideButton = new GUIComponentButton(leftTextOffset, topOffset, 115, 15, controller.isRightHandDrive ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.value) {
+        addComponent(driveSideButton = new GUIComponentButton(this, leftTextOffset, topOffset, 115, 15, controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 controller.isRightHandDrive = !controller.isRightHandDrive;
-                this.text = controller.isRightHandDrive ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.value;
+                this.text = controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue();
                 controller.unsavedClientChangesPreset = true;
                 controller.initializeController(null);
             }
         });
 
         //Timed mode direction.
-        addComponent(cycleButton = new GUIComponentButton(middleObjectOffset, topOffset, 100, 15, controller.timedMode ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_TIMEMODE.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_TRIGGERMODE.value) {
+        addComponent(cycleButton = new GUIComponentButton(this, middleObjectOffset, topOffset, 100, 15, controller.timedMode ? LanguageSystem.GUI_SIGNALCONTROLLER_TIMEMODE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_TRIGGERMODE.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 controller.timedMode = !controller.timedMode;
-                this.text = controller.timedMode ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_TIMEMODE.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_TRIGGERMODE.value;
+                this.text = controller.timedMode ? LanguageSystem.GUI_SIGNALCONTROLLER_TIMEMODE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_TRIGGERMODE.getCurrentValue();
                 controller.unsavedClientChangesPreset = true;
                 controller.initializeController(null);
             }
@@ -175,7 +175,7 @@ public class GUISignalController extends AGUIBase {
         topOffset += cycleButton.height + rowSpacing;
 
         //Primary direction.
-        addComponent(directionButton = new GUIComponentButton(leftTextOffset, topOffset, 115, 15, JSONConfigLanguage.GUI_SIGNALCONTROLLER_PRIMARYAXIS.value + controller.mainDirectionAxis.name()) {
+        addComponent(directionButton = new GUIComponentButton(this, leftTextOffset, topOffset, 115, 15, LanguageSystem.GUI_SIGNALCONTROLLER_PRIMARYAXIS.getCurrentValue() + controller.mainDirectionAxis.name()) {
             @Override
             public void onClicked(boolean leftSide) {
                 switch (controller.mainDirectionAxis) {
@@ -192,74 +192,74 @@ public class GUISignalController extends AGUIBase {
                         controller.mainDirectionAxis = Axis.NORTH;
                         break;
                 }
-                this.text = JSONConfigLanguage.GUI_SIGNALCONTROLLER_PRIMARYAXIS.value + controller.mainDirectionAxis.name();
+                this.text = LanguageSystem.GUI_SIGNALCONTROLLER_PRIMARYAXIS.getCurrentValue() + controller.mainDirectionAxis.name();
                 controller.unsavedClientChangesPreset = true;
                 controller.initializeController(null);
             }
         });
 
         //Lane width defaults.
-        addComponent(laneWidthText = new GUIComponentNumericTextBox(middleObjectOffset + 60, topOffset, "4.0", 40));
-        addComponent(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_LANEWIDTH.value).setComponent(laneWidthText));
+        addComponent(laneWidthText = new GUIComponentNumericTextBox(this, middleObjectOffset + 60, topOffset, "4.0", 40));
+        addComponent(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_LANEWIDTH.getCurrentValue()).setComponent(laneWidthText));
         topOffset += 15 + rowSpacing * 3;
 
         //Time text.  These auto-forward their values.
-        addComponent(greenMainTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.greenMainTime / 20)) {
+        addComponent(greenMainTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.greenMainTime / 20)) {
             @Override
             public void setVariable() {
                 controller.greenMainTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENMAINTIME.value).setComponent(greenMainTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_GREENMAINTIME.getCurrentValue()).setComponent(greenMainTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
-        addComponent(greenCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.greenCrossTime / 20)) {
+        addComponent(greenCrossTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.greenCrossTime / 20)) {
             @Override
             public void setVariable() {
                 controller.greenCrossTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_GREENCROSSTIME.value).setComponent(greenCrossTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_GREENCROSSTIME.getCurrentValue()).setComponent(greenCrossTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
-        addComponent(yellowMainTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowMainTime / 20)) {
+        addComponent(yellowMainTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.yellowMainTime / 20)) {
             @Override
             public void setVariable() {
                 controller.yellowMainTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWMAINTIME.value).setComponent(yellowMainTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_YELLOWMAINTIME.getCurrentValue()).setComponent(yellowMainTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
-        addComponent(yellowCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowCrossTime / 20)) {
+        addComponent(yellowCrossTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.yellowCrossTime / 20)) {
             @Override
             public void setVariable() {
                 controller.yellowCrossTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_YELLOWCROSSTIME.value).setComponent(yellowCrossTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_YELLOWCROSSTIME.getCurrentValue()).setComponent(yellowCrossTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
-        addComponent(allRedTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.allRedTime / 20)) {
+        addComponent(allRedTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.allRedTime / 20)) {
             @Override
             public void setVariable() {
                 controller.allRedTime = getIntegerValue() * 20;
             }
         });
-        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_ALLREDTIME.value).setComponent(allRedTimeText));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_ALLREDTIME.getCurrentValue()).setComponent(allRedTimeText));
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT + rowSpacing * 4;
 
         //Change screen button.
-        addComponent(new GUIComponentButton(leftTextOffset, topOffset, 100, 20, onLaneScreen ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_LANESETTINGS.value) {
+        addComponent(new GUIComponentButton(this, leftTextOffset, topOffset, 100, 20, onLaneScreen ? LanguageSystem.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LANESETTINGS.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 onLaneScreen = !onLaneScreen;
-                this.text = onLaneScreen ? JSONConfigLanguage.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.value : JSONConfigLanguage.GUI_SIGNALCONTROLLER_LANESETTINGS.value;
+                this.text = onLaneScreen ? LanguageSystem.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LANESETTINGS.getCurrentValue();
             }
         });
 
         //Confirm button.
-        addComponent(new GUIComponentButton(guiLeft + getWidth() - 100, topOffset, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value) {
+        addComponent(new GUIComponentButton(this, guiLeft + getWidth() - 100, topOffset, 80, 20, LanguageSystem.GUI_CONFIRM.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketTileEntitySignalControllerChange(controller));
@@ -278,7 +278,7 @@ public class GUISignalController extends AGUIBase {
         lowerPropertyLabels.clear();
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
-                GUIComponentIntersectionProperties propertiesComponent = new GUIComponentIntersectionProperties(guiLeft, guiTop, leftTextOffset, topOffset, axis);
+                GUIComponentIntersectionProperties propertiesComponent = new GUIComponentIntersectionProperties(this, guiLeft, guiTop, leftTextOffset, topOffset, axis);
                 intersectionPropertyComponents.add(propertiesComponent);
                 leftTextOffset += incrementalLeftOffset;
                 if (leftTextOffset >= guiLeft + baseLeftOffset + 4 * incrementalLeftOffset) {
@@ -288,12 +288,12 @@ public class GUISignalController extends AGUIBase {
 
                 List<GUIComponentLabel> currentList = axis.blockBased ? upperPropertyLabels : lowerPropertyLabels;
                 if (currentList.isEmpty()) {
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_LEFTLANES.value, TextAlignment.LEFT_ALIGNED, 0.75F));
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_CENTERLANES.value, TextAlignment.LEFT_ALIGNED, 0.75F));
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_RIGHTLANES.value, TextAlignment.LEFT_ALIGNED, 0.75F));
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_ROADWIDTH.value, TextAlignment.LEFT_ALIGNED, 0.75F));
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_CENTERDIST.value, TextAlignment.LEFT_ALIGNED, 0.75F));
-                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_MEDIANDIST.value, TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_LEFTLANES.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_CENTERLANES.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTLANES.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_ROADWIDTH.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_CENTERDIST.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
+                    currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_MEDIANDIST.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F));
                     for (GUIComponentLabel label : currentList) {
                         addComponent(label);
                     }
@@ -305,7 +305,7 @@ public class GUISignalController extends AGUIBase {
     @Override
     public void setStates() {
         super.setStates();
-        trafficSignalCount.text = JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + controller.componentLocations.size();
+        trafficSignalCount.text = LanguageSystem.GUI_SIGNALCONTROLLER_SCANFOUND.getCurrentValue() + controller.componentLocations.size();
 
         scanButton.visible = !onLaneScreen;
         directionButton.visible = !onLaneScreen;
@@ -361,13 +361,13 @@ public class GUISignalController extends AGUIBase {
         private final boolean floatingPoint;
         private static final int NUMERIC_HEIGHT = 10;
 
-        public GUIComponentNumericTextBox(int x, int y, String text) {
-            super(x, y, 40, NUMERIC_HEIGHT, text, ColorRGB.WHITE, 5);
+        public GUIComponentNumericTextBox(AGUIBase gui, int x, int y, String text) {
+            super(gui, x, y, 40, NUMERIC_HEIGHT, text, ColorRGB.WHITE, 5);
             this.floatingPoint = false;
         }
 
-        public GUIComponentNumericTextBox(int x, int y, String text, int width) {
-            super(x, y, width, NUMERIC_HEIGHT, text, ColorRGB.WHITE, 7);
+        public GUIComponentNumericTextBox(AGUIBase gui, int x, int y, String text, int width) {
+            super(gui, x, y, width, NUMERIC_HEIGHT, text, ColorRGB.WHITE, 7);
             this.floatingPoint = true;
         }
 
@@ -414,42 +414,42 @@ public class GUISignalController extends AGUIBase {
         private final GUIComponentTextBox centerDistanceText;
         private final GUIComponentTextBox centerOffsetText;
 
-        private GUIComponentIntersectionProperties(int guiLeft, int guiTop, int leftOffset, int topOffset, Axis axis) {
+        private GUIComponentIntersectionProperties(AGUIBase gui, int guiLeft, int guiTop, int leftOffset, int topOffset, Axis axis) {
             this.axis = axis;
             IntersectionProperties properties = controller.intersectionProperties.get(axis);
             addComponent(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), TextAlignment.LEFT_ALIGNED, axis.blockBased ? 1.0F : 0.65F));
-            addComponent(leftLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 10, String.valueOf(properties.leftLaneCount)) {
+            addComponent(leftLaneText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 10, String.valueOf(properties.leftLaneCount)) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).leftLaneCount = getIntegerValue();
                 }
             });
 
-            addComponent(centerLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 20, String.valueOf(properties.centerLaneCount)) {
+            addComponent(centerLaneText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 20, String.valueOf(properties.centerLaneCount)) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).centerLaneCount = getIntegerValue();
                 }
             });
-            addComponent(rightLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 30, String.valueOf(properties.rightLaneCount)) {
+            addComponent(rightLaneText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 30, String.valueOf(properties.rightLaneCount)) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).rightLaneCount = getIntegerValue();
                 }
             });
-            addComponent(roadWidthText = new GUIComponentNumericTextBox(leftOffset, topOffset + 40, String.valueOf(properties.roadWidth), 40) {
+            addComponent(roadWidthText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 40, String.valueOf(properties.roadWidth), 40) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).roadWidth = getDoubleValue();
                 }
             });
-            addComponent(centerDistanceText = new GUIComponentNumericTextBox(leftOffset, topOffset + 50, String.valueOf(properties.centerDistance), 40) {
+            addComponent(centerDistanceText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 50, String.valueOf(properties.centerDistance), 40) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).centerDistance = getDoubleValue();
                 }
             });
-            addComponent(centerOffsetText = new GUIComponentNumericTextBox(leftOffset, topOffset + 60, String.valueOf(properties.centerOffset), 40) {
+            addComponent(centerOffsetText = new GUIComponentNumericTextBox(gui, leftOffset, topOffset + 60, String.valueOf(properties.centerOffset), 40) {
                 @Override
                 public void setVariable() {
                     controller.intersectionProperties.get(axis).centerOffset = getDoubleValue();

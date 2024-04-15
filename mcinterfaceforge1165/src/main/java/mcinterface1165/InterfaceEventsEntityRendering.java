@@ -58,7 +58,7 @@ public class InterfaceEventsEntityRendering {
      * Changes camera rotation to match custom rotation, and also gets custom position for custom cameras.
      */
     @SubscribeEvent
-    public static void on(CameraSetup event) {
+    public static void onIVCameraSetup(CameraSetup event) {
         ActiveRenderInfo info = event.getInfo();
         if (info.getEntity() instanceof PlayerEntity) {
             mcPlayer = (PlayerEntity) info.getEntity();
@@ -95,7 +95,7 @@ public class InterfaceEventsEntityRendering {
      * vehicle HUds, GUIs, camera overlays, etc.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Pre event) {
+    public static void onIVRenderOverlayPre(RenderGameOverlayEvent.Pre event) {
         //If we are rendering the custom camera overlay, block the crosshairs and the hotbar..
         if ((event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS || event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR) && CameraSystem.customCameraOverlay != null) {
             event.setCanceled(true);
@@ -141,7 +141,7 @@ public class InterfaceEventsEntityRendering {
      * Pre-post methods for adjusting entity angles while seated.
      */
     @SubscribeEvent
-    public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
+    public static void onIVRenderLivingPre(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
         LivingEntity entity = event.getEntity();
         WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
         AEntityB_Existing ridingEntity = entityWrapper.getEntityRiding();
@@ -170,10 +170,10 @@ public class InterfaceEventsEntityRendering {
             //Need to store these though, since they get used in other areas not during rendering and this will foul them.
             riderStoredHeadRot = entity.yHeadRot;
             riderStoredHeadRotO = entity.yHeadRotO;
-            entity.yHeadRot = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
-            entity.yHeadRotO = entity.yHeadRot;
             lastRiderPitch = entity.xRot;
             lastRiderPrevPitch = entity.xRotO;
+            entity.yHeadRot = (float) -ridingEntity.riderRelativeOrientation.convertToAngles().y;
+            entity.yHeadRotO = entity.yHeadRot;
             entity.xRot = (float) ridingEntity.riderRelativeOrientation.angles.x;
             entity.xRotO = entity.xRot;
 
@@ -221,14 +221,14 @@ public class InterfaceEventsEntityRendering {
      * Pre-post methods for adjusting entity angles while seated.
      */
     @SubscribeEvent
-    public static void on(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
+    public static void onIVRenderLivingPost(@SuppressWarnings("rawtypes") RenderLivingEvent.Post event) {
         if (needToPopMatrix) {
             event.getMatrixStack().popPose();
             LivingEntity entity = event.getEntity();
             entity.yHeadRot = riderStoredHeadRot;
             entity.yHeadRotO = riderStoredHeadRotO;
-            event.getEntity().xRot = lastRiderPitch;
-            event.getEntity().xRotO = lastRiderPrevPitch;
+            entity.xRot = lastRiderPitch;
+            entity.xRotO = lastRiderPrevPitch;
             needToPopMatrix = false;
         }
         if (heldStackHolder != null) {
@@ -243,7 +243,7 @@ public class InterfaceEventsEntityRendering {
      * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
      */
     @SubscribeEvent
-    public static void on(RenderHandEvent event) {
+    public static void onIVRenderHand(RenderHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);
@@ -251,7 +251,7 @@ public class InterfaceEventsEntityRendering {
     }
 
     @SubscribeEvent
-    public static void on(RenderArmEvent event) {
+    public static void onIVRenderArm(RenderArmEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getInstance().player.getUUID());
         if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
             event.setCanceled(true);

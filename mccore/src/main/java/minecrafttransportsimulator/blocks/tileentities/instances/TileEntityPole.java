@@ -38,20 +38,22 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
 
     private float maxTotalLightLevel;
 
-    public TileEntityPole(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntityPole(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemPoleComponent item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
 
         //Load components back in.
-        for (Axis axis : Axis.values()) {
-            IWrapperNBT componentData = data.getData(axis.name());
-            if (componentData != null) {
-                ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, placingPlayer, axis, componentData);
-                changeComponent(axis, newComponent);
-            } else if (axis.equals(Axis.NONE)) {
-                //Add our core component to the NONE axis.
-                //This is done for ease of rendering and lookup routines.
-                changeComponent(axis, PoleComponentType.createComponent(this, placingPlayer, axis, data));
+        if (data != null) {
+            for (Axis axis : Axis.values()) {
+                IWrapperNBT componentData = data.getData(axis.name());
+                if (componentData != null) {
+                    ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, placingPlayer, axis, componentData.getPackItem(), componentData);
+                    changeComponent(axis, newComponent);
+                }
             }
+        } else {
+            //Add our core component to the NONE axis.
+            //This is done for ease of rendering and lookup routines.
+            changeComponent(Axis.NONE, PoleComponentType.createComponent(this, placingPlayer, Axis.NONE, (ItemPoleComponent) cachedItem, data));
         }
     }
 
@@ -130,10 +132,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                 return true;
             } else if (heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.pole.type != PoleComponentType.CORE && !components.containsKey(axis)) {
                 //Player is holding component that could be added.  Try and do so.
-                ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-                IWrapperNBT stackData = heldStack.getData();
-                componentItem.populateDefaultData(stackData);
-                ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, player, axis, stackData);
+                ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, player, axis, (ItemPoleComponent) heldItem, heldStack.getData());
                 changeComponent(axis, newComponent);
                 if (!player.isCreative()) {
                     player.getInventory().removeStack(player.getHeldStack(), 1, false);
@@ -168,7 +167,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                 newComponent.position.set(position);
             } else {
                 //Update orientation to account for axis rotation.
-                newComponent.orientation.multiply(newAxis.rotation);
+                newComponent.orientation.multiply(newAxis.yRotation);
 
                 //Adjust position to new orientation.
                 newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotate(newComponent.orientation).add(position);
@@ -268,7 +267,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     }
 
     @Override
-    public boolean disableRendering(float partialTicks) {
+    public boolean disableRendering() {
         //We don't render poles themselves.  Just their components.
         return true;
     }

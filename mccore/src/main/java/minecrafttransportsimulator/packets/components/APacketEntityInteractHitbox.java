@@ -37,6 +37,11 @@ public abstract class APacketEntityInteractHitbox extends APacketEntity<AEntityE
                 return handle(world, entity, box);
             }
         }
+        for (BoundingBox box : entity.inactiveCollisionBoxes) {
+            if (box.localCenter.equals(hitBoxLocalCenter)) {
+                return handle(world, entity, box);
+            }
+        }
         //Not sure how the heck this happened, but it did.
         return false;
     }

@@ -7,8 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
+import minecrafttransportsimulator.items.instances.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -17,6 +16,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public class PartPropeller extends APart {
     private double currentRPM;
@@ -49,9 +50,9 @@ public class PartPropeller extends APart {
 
     public static final int MIN_DYNAMIC_PITCH = 45;
 
-    public PartPropeller(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        this.currentPitch = definition.propeller.pitch;
+    public PartPropeller(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartPropeller item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        this.currentPitch = data != null ? data.getInteger("currentPitch") : definition.propeller.pitch;
 
         //Rotors need different collision box bounds as they are pointed upwards.
         double propellerRadius = definition.propeller.diameter * 0.0254D / 2D;
@@ -177,7 +178,7 @@ public class PartPropeller extends APart {
             boundingBox.heightRadius += 0.2;
             boundingBox.depthRadius += 0.2;
             IWrapperEntity controller = vehicleOn.getController();
-            LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_PROPELLER_PLAYER : JSONConfigLanguage.DEATH_PROPELLER_NULL;
+            LanguageEntry language = controller != null ? LanguageSystem.DEATH_PROPELLER_PLAYER : LanguageSystem.DEATH_PROPELLER_NULL;
             Damage propellerDamage = new Damage(ConfigSystem.settings.damage.propellerDamageFactor.value * currentRPM / 500F, damageBounds, this, controller, language);
             world.attackEntities(propellerDamage, null, false);
             boundingBox.widthRadius -= 0.2;
@@ -249,9 +250,15 @@ public class PartPropeller extends APart {
             propellerForce.set(propellerAxisVector).scale(thrust);
             force.add(propellerForce);
             propellerForce.reOrigin(vehicleOn.orientation);
-            torque.y -= propellerForce.z * localOffset.x;
-            torque.z += propellerForce.y * localOffset.x;
+            torque.add(localOffset.crossProduct(propellerForce));
         }
         return propellerForceValue;
+    }
+
+    @Override
+    public IWrapperNBT save(IWrapperNBT data) {
+        super.save(data);
+        data.setInteger("currentPitch", currentPitch);
+        return data;
     }
 }

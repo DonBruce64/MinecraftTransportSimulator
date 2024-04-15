@@ -14,11 +14,13 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
 /**
  * Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -60,8 +62,8 @@ public class TileEntitySignalController extends TileEntityDecor {
      **/
     public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<>();
 
-    public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
+    public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
         initializeController(data);
     }
 
@@ -116,6 +118,8 @@ public class TileEntitySignalController extends TileEntityDecor {
     @Override
     public boolean interact(IWrapperPlayer player) {
         player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.SIGNAL_CONTROLLER));
+        playersInteracting.add(player);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
         return true;
     }
 
@@ -144,7 +148,7 @@ public class TileEntitySignalController extends TileEntityDecor {
         //Got saved lane info.
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
-                intersectionProperties.put(axis, new IntersectionProperties(data.getDataOrNew(axis.name() + "properties")));
+                intersectionProperties.put(axis, new IntersectionProperties(data.getData(axis.name() + "properties")));
             }
         }
 
@@ -165,9 +169,9 @@ public class TileEntitySignalController extends TileEntityDecor {
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
                 Set<SignalGroup> signalSet = new HashSet<>();
-                signalSet.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
-                signalSet.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
-                signalSet.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
+                signalSet.add(new SignalGroupCenter(axis, data.getData(axis.name() + SignalDirection.CENTER.name())));
+                signalSet.add(new SignalGroupLeft(axis, data.getData(axis.name() + SignalDirection.LEFT.name())));
+                signalSet.add(new SignalGroupRight(axis, data.getData(axis.name() + SignalDirection.RIGHT.name())));
                 signalGroups.put(axis, signalSet);
             }
         }
@@ -213,7 +217,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                         //Add 8 units to center on the box which is 16 units long.
                         boxRelativeCenter.add(0, 0, 8);
                         //Rotate box based on signal orientation to proper signal.
-                        boxRelativeCenter.rotate(signalGroup.axis.rotation);
+                        boxRelativeCenter.rotate(signalGroup.axis.yRotation);
 
                         //Add delta from controller to intersection center.
                         boxRelativeCenter.add(intersectionCenterPoint).subtract(position);
@@ -221,7 +225,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
                         //Create bounding box and transform for it..
                         BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth / 2D, 1, 8);
-                        holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(signalGroup.axis.rotation);
+                        holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(signalGroup.axis.yRotation);
                         box.renderHolographic(holoboxTransform, null, signalGroup.direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (signalGroup.direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN));
                     }
                 }
@@ -236,7 +240,9 @@ public class TileEntitySignalController extends TileEntityDecor {
         data.setBoolean("timedMode", timedMode);
         data.setString("mainDirectionAxis", mainDirectionAxis.name());
 
-        data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
+        if (intersectionCenterPoint != null) {
+            data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
+        }
 
         for (Axis axis : intersectionProperties.keySet()) {
             if (intersectionProperties.containsKey(axis)) {
@@ -270,12 +276,14 @@ public class TileEntitySignalController extends TileEntityDecor {
         public double centerOffset;
 
         public IntersectionProperties(IWrapperNBT data) {
-            this.centerLaneCount = data.getInteger("centerLaneCount");
-            this.leftLaneCount = data.getInteger("leftLaneCount");
-            this.rightLaneCount = data.getInteger("rightLaneCount");
-            this.roadWidth = data.getDouble("roadWidth");
-            this.centerDistance = data.getDouble("centerDistance");
-            this.centerOffset = data.getDouble("centerOffset");
+            if (data != null) {
+                this.centerLaneCount = data.getInteger("centerLaneCount");
+                this.leftLaneCount = data.getInteger("leftLaneCount");
+                this.rightLaneCount = data.getInteger("rightLaneCount");
+                this.roadWidth = data.getDouble("roadWidth");
+                this.centerDistance = data.getDouble("centerDistance");
+                this.centerOffset = data.getDouble("centerOffset");
+            }
         }
 
         public IWrapperNBT getData() {
@@ -313,17 +321,21 @@ public class TileEntitySignalController extends TileEntityDecor {
             this.isMainSignal = axis.equals(mainDirectionAxis) || axis.equals(mainDirectionAxis.getOpposite());
 
             //Get saved light status.
-            String currentLightName = data.getString("currentLight");
-            if (!currentLightName.isEmpty()) {
-                currentLight = LightType.valueOf(currentLightName);
+            if (data != null) {
+                String currentLightName = data.getString("currentLight");
+                if (!currentLightName.isEmpty()) {
+                    currentLight = LightType.valueOf(currentLightName);
+                } else {
+                    currentLight = getRedLight();
+                }
+                String requestedLightName = data.getString("requestedLight");
+                if (!requestedLightName.isEmpty()) {
+                    requestedLight = LightType.valueOf(requestedLightName);
+                }
+                currentCooldown = data.getInteger("currentCooldown");
             } else {
                 currentLight = getRedLight();
             }
-            String requestedLightName = data.getString("requestedLight");
-            if (!requestedLightName.isEmpty()) {
-                requestedLight = LightType.valueOf(requestedLightName);
-            }
-            currentCooldown = data.getInteger("currentCooldown");
 
             //Create hitbox bounds.
             IntersectionProperties properties = intersectionProperties.get(axis);
@@ -388,7 +400,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                                     stateChangeRequested = true;
                                 } else {
                                     for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                                        Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).reOrigin(axis.rotation);
+                                        Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).reOrigin(axis.yRotation);
                                         if (adjustedPos.x > signalLineCenter.x - signalLineWidth / 2D && adjustedPos.x < signalLineCenter.x + signalLineWidth / 2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16) {
                                             //Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
                                             //Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
@@ -496,7 +508,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }
@@ -581,7 +593,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }
@@ -667,7 +679,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         @Override
         protected boolean isSignalBlocking(SignalGroup otherSignal) {
-            switch (Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)) {
+            switch (Axis.getFromRotation(otherSignal.axis.yRotation.angles.y - axis.yRotation.angles.y, true)) {
                 case SOUTH: { //Same direction.
                     return false;
                 }

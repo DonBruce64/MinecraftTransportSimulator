@@ -321,6 +321,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much friction this part has for sideways movement. Used during turning operations to determine how much the vehicle will skid sideways when turning at speed.")
         public float lateralFriction;
 
+        @JSONDescription("How much friction this part looses when on wet surfaces.  Negative loses fruction, positive adds it.")
+        public float wetFrictionPenalty;
+
         @JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for longer parts like pontoons or helicopter landing skids.  Note that if this parameter is set in the vehicle JSON the vehicle value will override this value.  Since treads are normally vehicle-dependent in their size, it is recommended to NOT set this here for treads and use the vehicle parameter.")
         public float extraCollisionBoxOffset;
 
@@ -375,6 +378,9 @@ public class JSONPart extends AJSONPartProvider {
         
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
+
+        @JSONDescription("If set, then this gun will never be able to be reloaded.  Useful for single-use weapons.")
+        public boolean blockReloading;
 
         @JSONDescription("Whether this cun can lock on to targets, regardless of whether the loaded bullet is guided.")
         public boolean canLockTargets;
@@ -459,6 +465,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
         public double lockMaxAngle;
+
+        @JSONDescription("The bullet that should be loaded into this gun on spawning.  Useful for single-use weapons, especially hand-helds.  Format is packID:bulletName.")
+        public String preloadedBullet;
 
         @JSONRequired(dependentField = "handHeld", dependentValues = {"true"})
         @JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
@@ -578,7 +587,7 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
 
-        @JSONDescription("The delay, in ticks, between placer placing operations.  Used to cut down on placement spam for some applications.")
+        @JSONDescription("The delay, in ticks, between placer, and dropper, placing operations.  Used to cut down on placement spam for some applications.")
         public int placerDelay;
     }
 
@@ -596,7 +605,13 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Removes blocks matching the parameters from the world when touched.")
         DRILL,
         @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
-        PLACER;
+        PLACER,
+        @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
+        COLLECTOR,
+        @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
+        DROPPER,
+        @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
+        SPRAYER;
     }
 
     @Deprecated

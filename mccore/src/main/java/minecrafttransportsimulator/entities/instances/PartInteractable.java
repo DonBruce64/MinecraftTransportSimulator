@@ -1,13 +1,9 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -16,9 +12,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractableInteract;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public final class PartInteractable extends APart {
     public final EntityFurnace furnace;
@@ -27,35 +24,50 @@ public final class PartInteractable extends APart {
     public String jerrycanFluid;
     public PartInteractable linkedPart;
     public EntityVehicleF_Physics linkedVehicle;
-    public Set<IWrapperPlayer> playersInteracting = new HashSet<>();
 
-    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
-        super(entityOn, placingPlayer, placementDefinition, data);
-        if (definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
-            this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
-            this.inventory = furnace;
-            world.addEntity(furnace);
-        } else {
-            this.furnace = null;
-            if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
-                this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
+    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, item, data);
+        switch (definition.interactable.interactionType) {
+            case FURNACE: {
+                this.furnace = new EntityFurnace(world, data != null ? data.getData("furnace") : null, definition.interactable);
+                this.inventory = furnace;
+                this.tank = null;
+                world.addEntity(furnace);
+                break;
+            }
+            case CRATE: {
+                this.furnace = null;
+                this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
+                this.tank = null;
                 world.addEntity(inventory);
-            } else {
+                break;
+            }
+            case BARREL: {
+                this.furnace = null;
                 this.inventory = null;
+                this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, (int) (definition.interactable.inventoryUnits * 10000));
+                world.addEntity(tank);
+                break;
+            }
+            case JERRYCAN: {
+                if (data != null) {
+                    this.jerrycanFluid = data.getString("jerrycanFluid");
+                } else {
+                    this.jerrycanFluid = "";
+                }
+                //No break statement here, fall-down to default to null things.
+            }
+            default: {
+                this.furnace = null;
+                this.inventory = null;
+                this.tank = null;
             }
         }
-        if (definition.interactable.interactionType.equals(InteractableComponentType.BARREL)) {
-            this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), (int) (definition.interactable.inventoryUnits * 10000));
-            world.addEntity(tank);
-        } else {
-            this.tank = null;
-        }
-        this.jerrycanFluid = data.getString("jerrycanFluid");
     }
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (!masterEntity.locked) {
+        if (vehicleOn == null || !vehicleOn.locked) {
             if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
                 player.sendPacket(new PacketPartInteractable(this, player));
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {
@@ -67,7 +79,7 @@ public final class PartInteractable extends APart {
                 player.getHeldStack().interactWith(tank, player);
             }
         } else {
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
         }
         return true;
     }
@@ -75,7 +87,7 @@ public final class PartInteractable extends APart {
     @Override
     public LanguageEntry checkForRemoval() {
         if (!definition.interactable.canBeOpenedInHand && getMass() > definition.generic.mass) {
-            return JSONConfigLanguage.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
+            return LanguageSystem.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
         } else {
             return super.checkForRemoval();
         }
@@ -107,7 +119,11 @@ public final class PartInteractable extends APart {
             super.destroy(box);
             if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
-                world.spawnExplosion(position, explosivePower, true);
+                if (ConfigSystem.settings.damage.vehicleExplosions.value) {
+                    world.spawnExplosion(position, explosivePower, true);
+                } else {
+                    world.spawnExplosion(position, 0F, false);
+                }
             }
         } else {
             super.destroy(box);
@@ -134,14 +150,14 @@ public final class PartInteractable extends APart {
             EntityFluidTank linkedTank = null;
             LanguageEntry linkedMessage = null;
             if (linkedVehicle != null) {
-                if (!linkedVehicle.position.isDistanceToCloserThan(position, 16)) {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
+                if (!linkedVehicle.isValid || !linkedVehicle.position.isDistanceToCloserThan(position, 16)) {
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedVehicle.fuelTank;
                 }
             } else if (linkedPart != null) {
-                if (!linkedPart.position.isDistanceToCloserThan(position, 16)) {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
+                if (!linkedPart.isValid || !linkedPart.position.isDistanceToCloserThan(position, 16)) {
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_LINKDROPPED;
                 } else {
                     linkedTank = linkedPart.tank;
                 }
@@ -157,13 +173,13 @@ public final class PartInteractable extends APart {
                         if (amountToTransfer > 0) {
                             linkedTank.fill(fluidToTransfer, amountToTransfer, true);
                         } else {
-                            linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
+                            linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKEMPTY;
                         }
                     } else {
-                        linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKFULL;
+                        linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKFULL;
                     }
                 } else {
-                    linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
+                    linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKEMPTY;
                 }
             }
 
@@ -173,26 +189,6 @@ public final class PartInteractable extends APart {
                 linkedPart = null;
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
                     player.sendPacket(new PacketPlayerChatMessage(player, linkedMessage));
-                }
-            }
-        }
-        
-        //Verify interacting players are still interacting.
-        //Server checks if players are still interacting, client checks if current player doesn't have a GUI open.
-        if (!playersInteracting.isEmpty()) {
-            if (world.isClient()) {
-                IWrapperPlayer thisClient = InterfaceManager.clientInterface.getClientPlayer();
-                if (playersInteracting.contains(thisClient) && !InterfaceManager.clientInterface.isGUIOpen()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(this, thisClient, false));
-                    playersInteracting.remove(thisClient);
-                }
-            } else {
-                for (IWrapperPlayer player : playersInteracting) {
-                    if (!player.isValid() || !player.getWorld().equals(world)) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketPartInteractableInteract(this, player, false));
-                        playersInteracting.remove(player);
-                        break;
-                    }
                 }
             }
         }
@@ -300,9 +296,6 @@ public final class PartInteractable extends APart {
                 } else {
                     return 0;
                 }
-            }
-            case ("interactable_active"): {
-                return !playersInteracting.isEmpty() ? 1 : 0;
             }
         }
 

@@ -9,15 +9,17 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public EntityVehicleF_Physics connectedVehicle;
@@ -30,18 +32,28 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public boolean isCreative;
     public UUID placingPlayerID;
 
-    public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data); 
-        this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 6);
-        this.paymentItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory2"), 18);
-        world.addEntity(fuelItems);
-        world.addEntity(paymentItems);
-        for (int i = 0; i < fuelItems.getSize(); ++i) {
-            this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
+    public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        if (data != null) {
+            this.fuelItems = new EntityInventoryContainer(world, data.getData("inventory"), 6);
+            this.paymentItems = new EntityInventoryContainer(world, data.getData("inventory2"), 18);
+            world.addEntity(fuelItems);
+            world.addEntity(paymentItems);
+            for (int i = 0; i < fuelItems.getSize(); ++i) {
+                this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
+            }
+            this.fuelPurchased = data.getInteger("fuelPurchased");
+            this.fuelDispensedThisPurchase = data.getDouble("fuelDispensedThisPurchase");
+            this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
+        } else {
+            this.fuelItems = new EntityInventoryContainer(world, null, 6);
+            this.paymentItems = new EntityInventoryContainer(world, null, 18);
+            world.addEntity(fuelItems);
+            world.addEntity(paymentItems);
+            for (int i = 0; i < fuelItems.getSize(); ++i) {
+                this.fuelAmounts.add(0);
+            }
         }
-        this.fuelPurchased = data.getInteger("fuelPurchased");
-        this.fuelDispensedThisPurchase = data.getDouble("fuelDispensedThisPurchase");
-        this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
     }
 
     @Override
@@ -69,7 +81,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                 setConnection(null);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 25, 25, 25))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
                 }
                 return;
             }
@@ -79,7 +91,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                 setConnection(null);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_COMPLETE));
                 }
                 return;
             }
@@ -98,6 +110,8 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         //Check if the item is a wrench, and the player can configure this pump.
         if (player.isHoldingItemType(ItemComponentType.WRENCH) && (player.getID().equals(placingPlayerID) || player.isOP())) {
             player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP_CONFIG));
+            playersInteracting.add(player);
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             return true;
         }
 
@@ -112,15 +126,17 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             }
             if (haveEmptySlot) {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
+                playersInteracting.add(player);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_FULLITEMS));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_FULLITEMS));
             }
             return true;
         }
 
         //If we don't have anything in our buffer, don't try and connect anything.
         if (!hasFuel()) {
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOFUEL));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_NOFUEL));
             return true;
         }
 
@@ -141,32 +157,32 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             if (nearestVehicle != null) {
                 switch (checkPump(nearestVehicle)) {
                     case NOENGINE: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOENGINE));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_NOENGINE));
                         return true;
                     }
                     case VALID: {
                         setConnection(nearestVehicle);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, nearestVehicle));
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_CONNECT));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_CONNECT));
                         return true;
                     }
                     case INVALID: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGENGINES));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_WRONGENGINES));
                         return true;
                     }
                     case MISMATCH: {
-                        player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE, nearestVehicle.fuelTank.getFluid()));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_WRONGTYPE, nearestVehicle.fuelTank.getFluid()));
                         return true;
                     }
                 }
             } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
+                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
             }
         } else {
             //Connected vehicle exists, disconnect it.
             setConnection(null);
             InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_DISCONNECT));
+            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_DISCONNECT));
         }
         return true;
     }
@@ -174,11 +190,11 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public void setConnection(EntityVehicleF_Physics newVehicle) {
         if (newVehicle != null) {
             newVehicle.beingFueled = true;
+            fuelDispensedThisConnection = 0;
         } else if (connectedVehicle != null) {
             connectedVehicle.beingFueled = false;
         }
         connectedVehicle = newVehicle;
-        fuelDispensedThisConnection = 0;
     }
 
     protected abstract boolean hasFuel();

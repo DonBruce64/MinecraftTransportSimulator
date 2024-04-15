@@ -1,6 +1,7 @@
 package mcinterface1165;
 
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -22,6 +23,10 @@ import net.minecraftforge.fml.RegistryObject;
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     public static RegistryObject<EntityType<BuilderEntityLinkedSeat>> E_TYPE3;
 
+    /**
+     * UUID of entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
+    private UUID entityUUID;
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
@@ -57,34 +62,33 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 //If the rider dismounted us, just die.
                 List<Entity> riders = getPassengers();
                 if (rider == null && !riders.isEmpty()) {
-                    rider = WrapperEntity.getWrapperFor(riders.get(0));
-                    //Check if the entity has a rider, if so, set ourselves to it.
-                    //Otherwise, set it to ourselves.  We can get a rider here if we
-                    //load it from saved disk, or we might be given one if the entity is clicked.
-                    //Only set the rider loaded on the server though: clients will get packets.
                     if (entity.rider != null) {
                         rider = (WrapperEntity) entity.rider;
-                    } else if (!level.isClientSide) {
+                    } else {
+                        rider = WrapperEntity.getWrapperFor(riders.get(0));
                         entity.setRider(rider, true);
                     }
-                } else if (dismountedRider) {
+                } else if (rider != null && riders.isEmpty()) {
+                    remove(); //This is for crappy server OSes that don't call the removePassenger() function.
+                }else if (dismountedRider) {
                     remove();
                 }
             }
-        } else {
-            //If we have NBT, and haven't loaded it, do so now.
-            if (!loadedFromSavedNBT && loadFromSavedNBT) {
+        } else if(entityUUID != null){
+        	if(tickCount < 100) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
-                try {
-                    entity = worldWrapper.getEntity(lastLoadedNBT.getUUID("entityUUID"));
-                    loadedFromSavedNBT = true;
-                    lastLoadedNBT = null;
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
-                    remove();
-                }
+        		entity = worldWrapper.getEntity(entityUUID);
+        	}else {
+        		InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
+                remove();
+        	}
+        }else if (loadFromSavedNBT) {
+            entityUUID = lastLoadedNBT.getUUID("entityUUID");
+            if(entityUUID == null) {
+            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
+                remove();
             }
+            loadedFromSavedNBT = true;
         }
     }
 
@@ -121,7 +125,11 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     @Override
     protected void removePassenger(Entity passenger) {
         super.removePassenger(passenger);
-        dismountedRider = true;
+        //Need to check if we have ticked.  MC, on loading this entity, first dismounts all riders.
+        //This will cause IV to see a dismount when in actuality it's a loading sequence.
+        if (tickCount > 0) {
+            dismountedRider = true;
+        }
     }
 
     @Override

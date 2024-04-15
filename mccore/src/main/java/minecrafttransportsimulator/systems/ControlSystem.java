@@ -2,7 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import java.util.Locale;
 
-import minecrafttransportsimulator.baseclasses.EntityManager.EntityInteractResult;
+import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -17,12 +17,11 @@ import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -30,6 +29,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Class that handles all control operations.
@@ -247,6 +247,7 @@ public final class ControlSystem {
                 AGUIBase.activeInputGUI.close();
             } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
                 new GUIRadio(vehicle.radio);
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteractGUI(vehicle, InterfaceManager.clientInterface.getClientPlayer(), true));
             }
         }
     }
@@ -424,12 +425,12 @@ public final class ControlSystem {
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
                     //Otherwise send normal values if we are in neutral or forwards,
-                    //and invert controls if we are in a reverse gear.
+                    //and invert controls if we are in a reverse gear (and not using a shifter).
                     //Use only the first engine for this.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
-                    } else if (powered.engines.get(0).currentGear >= 0) {
+                    } else if (powered.engines.get(0).currentGear >= 0 || ConfigSystem.client.controlSettings.useShifter.value) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
                         //Send throttle over if throttle if cruise control is off, or if the throttle is pressed, or was released this check.
                         if (powered.autopilotSetting == 0 || throttleValue > 0 || throttlePressedLastCheck) {
@@ -441,16 +442,18 @@ public final class ControlSystem {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
                     }
 
-                    powered.engines.forEach(engine -> {
-                        //If we don't have velocity, and we have the appropriate control, shift.
-                        if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.DOWN_SHIFT_VARIABLE, 1));
-                        } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.UP_SHIFT_VARIABLE, 1));
-                        }
-                    });
+                    if (!ConfigSystem.client.controlSettings.useShifter.value) {
+                        powered.engines.forEach(engine -> {
+                            //If we don't have velocity, and we have the appropriate control, shift.
+                            if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.DOWN_SHIFT_VARIABLE, 1));
+                            } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE, 1));
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.UP_SHIFT_VARIABLE, 1));
+                            }
+                        });
+                    }
                 }
             } else {
                 //Check brake and gas and set to on or off.
@@ -489,52 +492,86 @@ public final class ControlSystem {
 
         //Check steering.  Don't check while on a road, since we auto-drive on those.
         if (!powered.lockedOnRoad) {
-            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+            controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput, ConfigSystem.client.controlSettings.steeringReturnRate.value);
         }
 
         //Check if we are shifting.
-        if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
+        if (ConfigSystem.client.controlSettings.useShifter.value) {
+            final int gearNumber;
+            if (ControlsJoystick.CAR_SHIFT_1.isPressed()) {
+                gearNumber = 1;
+            } else if (ControlsJoystick.CAR_SHIFT_2.isPressed()) {
+                gearNumber = 2;
+            } else if (ControlsJoystick.CAR_SHIFT_3.isPressed()) {
+                gearNumber = 3;
+            } else if (ControlsJoystick.CAR_SHIFT_4.isPressed()) {
+                gearNumber = 4;
+            } else if (ControlsJoystick.CAR_SHIFT_5.isPressed()) {
+                gearNumber = 5;
+            } else if (ControlsJoystick.CAR_SHIFT_6.isPressed()) {
+                gearNumber = 6;
+            } else if (ControlsJoystick.CAR_SHIFT_7.isPressed()) {
+                gearNumber = 7;
+            } else if (ControlsJoystick.CAR_SHIFT_8.isPressed()) {
+                gearNumber = 8;
+            } else if (ControlsJoystick.CAR_SHIFT_9.isPressed()) {
+                gearNumber = 9;
+            } else if (ControlsJoystick.CAR_SHIFT_R.isPressed()) {
+                gearNumber = 10;
+            } else {
+                gearNumber = 11;
+            }
             powered.engines.forEach(engine -> {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.GEAR_SHIFT_VARIABLE, gearNumber));
             });
         } else {
-            if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
+            if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
                 powered.engines.forEach(engine -> {
-                    if (engine.currentIsAutomatic != 0) {
-                        if (engine.currentGear < 0) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                        } else if (engine.currentGear == 0) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                });
+            } else {
+                if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
+                    powered.engines.forEach(engine -> {
+                        if (engine.currentIsAutomatic != 0) {
+                            if (engine.currentGear < 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else if (engine.currentGear == 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+                            }
+                        } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
                         }
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
-                    }
-                });
-            }
-            if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
-                powered.engines.forEach(engine -> {
-                    if (engine.currentIsAutomatic != 0) {
-                        if (engine.currentGear > 0) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                        } else if (engine.currentGear == 0) {
+                    });
+                }
+                if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
+                    powered.engines.forEach(engine -> {
+                        if (engine.currentIsAutomatic != 0) {
+                            if (engine.currentGear > 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else if (engine.currentGear == 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+                            }
+                        } else {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
                         }
-                    } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
-                    }
-                });
+                    });
+                }
             }
         }
 
         //Check if horn button is pressed.
-        if (ControlsKeyboard.CAR_HORN.isPressed() && !hornPressedLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+        if (ControlsKeyboard.CAR_HORN.isPressed()) {
+            if (!hornPressedLastCheck) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 1));
+            }
             hornPressedLastCheck = true;
         } else {
             hornPressedLastCheck = false;
         }
-        if (!ControlsKeyboard.CAR_HORN.isPressed() && !hornReleasedLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+        if (!ControlsKeyboard.CAR_HORN.isPressed()) {
+            if (!hornReleasedLastCheck) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.HORN_VARIABLE, 0));
+            }
             hornReleasedLastCheck = true;
         } else {
             hornReleasedLastCheck = false;
@@ -587,44 +624,44 @@ public final class ControlSystem {
      * @author don_bruce
      */
     public enum ControlsKeyboard {
-        AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
-        AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", JSONConfigLanguage.INPUT_YAW_R),
-        AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", JSONConfigLanguage.INPUT_YAW_L),
-        AIRCRAFT_PITCH_U(ControlsJoystick.AIRCRAFT_PITCH, false, "S", JSONConfigLanguage.INPUT_PITCH_U),
-        AIRCRAFT_PITCH_D(ControlsJoystick.AIRCRAFT_PITCH, false, "W", JSONConfigLanguage.INPUT_PITCH_D),
-        AIRCRAFT_ROLL_R(ControlsJoystick.AIRCRAFT_ROLL, false, "D", JSONConfigLanguage.INPUT_ROLL_R),
-        AIRCRAFT_ROLL_L(ControlsJoystick.AIRCRAFT_ROLL, false, "A", JSONConfigLanguage.INPUT_ROLL_L),
-        AIRCRAFT_THROTTLE_U(ControlsJoystick.AIRCRAFT_THROTTLE, false, "I", JSONConfigLanguage.INPUT_THROTTLE_U),
-        AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", JSONConfigLanguage.INPUT_THROTTLE_D),
-        AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", JSONConfigLanguage.INPUT_FLAPS_U),
-        AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", JSONConfigLanguage.INPUT_FLAPS_D),
-        AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", JSONConfigLanguage.INPUT_BRAKE),
-        AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", JSONConfigLanguage.INPUT_PANEL),
-        AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS", JSONConfigLanguage.INPUT_RADIO),
-        AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE", JSONConfigLanguage.INPUT_GUN_FIRE),
-        AIRCRAFT_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V", JSONConfigLanguage.INPUT_GUN_SWITCH),
-        AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR", JSONConfigLanguage.INPUT_ZOOM_I),
-        AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT", JSONConfigLanguage.INPUT_ZOOM_O),
-        AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT),
+        AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
+        AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
+        AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", LanguageSystem.INPUT_YAW_L),
+        AIRCRAFT_PITCH_U(ControlsJoystick.AIRCRAFT_PITCH, false, "S", LanguageSystem.INPUT_PITCH_U),
+        AIRCRAFT_PITCH_D(ControlsJoystick.AIRCRAFT_PITCH, false, "W", LanguageSystem.INPUT_PITCH_D),
+        AIRCRAFT_ROLL_R(ControlsJoystick.AIRCRAFT_ROLL, false, "D", LanguageSystem.INPUT_ROLL_R),
+        AIRCRAFT_ROLL_L(ControlsJoystick.AIRCRAFT_ROLL, false, "A", LanguageSystem.INPUT_ROLL_L),
+        AIRCRAFT_THROTTLE_U(ControlsJoystick.AIRCRAFT_THROTTLE, false, "I", LanguageSystem.INPUT_THROTTLE_U),
+        AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", LanguageSystem.INPUT_THROTTLE_D),
+        AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", LanguageSystem.INPUT_FLAPS_U),
+        AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", LanguageSystem.INPUT_FLAPS_D),
+        AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", LanguageSystem.INPUT_BRAKE),
+        AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
+        AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
+        AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
+        AIRCRAFT_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V", LanguageSystem.INPUT_GUN_SWITCH),
+        AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
+        AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
+        AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT),
 
-        CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
-        CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D", JSONConfigLanguage.INPUT_TURN_R),
-        CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A", JSONConfigLanguage.INPUT_TURN_L),
-        CAR_GAS(ControlsJoystick.CAR_GAS, false, "W", JSONConfigLanguage.INPUT_GAS),
-        CAR_BRAKE(ControlsJoystick.CAR_BRAKE, false, "S", JSONConfigLanguage.INPUT_BRAKE),
-        CAR_PANEL(ControlsJoystick.CAR_PANEL, true, "U", JSONConfigLanguage.INPUT_PANEL),
-        CAR_SHIFT_U(ControlsJoystick.CAR_SHIFT_U, true, "R", JSONConfigLanguage.INPUT_SHIFT_U),
-        CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F", JSONConfigLanguage.INPUT_SHIFT_D),
-        CAR_HORN(ControlsJoystick.CAR_HORN, false, "C", JSONConfigLanguage.INPUT_HORN),
-        CAR_RADIO(ControlsJoystick.CAR_RADIO, true, "MINUS", JSONConfigLanguage.INPUT_RADIO),
-        CAR_GUN_FIRE(ControlsJoystick.CAR_GUN_FIRE, false, "SPACE", JSONConfigLanguage.INPUT_GUN_FIRE),
-        CAR_GUN_SWITCH(ControlsJoystick.CAR_GUN_SWITCH, true, "V", JSONConfigLanguage.INPUT_GUN_SWITCH),
-        CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR", JSONConfigLanguage.INPUT_ZOOM_I),
-        CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT", JSONConfigLanguage.INPUT_ZOOM_O),
-        CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5", JSONConfigLanguage.INPUT_LIGHTS),
-        CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "NUMPAD4", JSONConfigLanguage.INPUT_TURNSIGNAL_L),
-        CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", JSONConfigLanguage.INPUT_TURNSIGNAL_R),
-        CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT);
+        CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
+        CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D", LanguageSystem.INPUT_TURN_R),
+        CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A", LanguageSystem.INPUT_TURN_L),
+        CAR_GAS(ControlsJoystick.CAR_GAS, false, "W", LanguageSystem.INPUT_GAS),
+        CAR_BRAKE(ControlsJoystick.CAR_BRAKE, false, "S", LanguageSystem.INPUT_BRAKE),
+        CAR_PANEL(ControlsJoystick.CAR_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
+        CAR_SHIFT_U(ControlsJoystick.CAR_SHIFT_U, true, "R", LanguageSystem.INPUT_SHIFT_U),
+        CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F", LanguageSystem.INPUT_SHIFT_D),
+        CAR_HORN(ControlsJoystick.CAR_HORN, false, "C", LanguageSystem.INPUT_HORN),
+        CAR_RADIO(ControlsJoystick.CAR_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
+        CAR_GUN_FIRE(ControlsJoystick.CAR_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
+        CAR_GUN_SWITCH(ControlsJoystick.CAR_GUN_SWITCH, true, "V", LanguageSystem.INPUT_GUN_SWITCH),
+        CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
+        CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
+        CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5", LanguageSystem.INPUT_LIGHTS),
+        CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "NUMPAD4", LanguageSystem.INPUT_TURNSIGNAL_L),
+        CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", LanguageSystem.INPUT_TURNSIGNAL_R),
+        CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT);
 
         public final boolean isMomentary;
         public final String systemName;
@@ -676,65 +713,75 @@ public final class ControlSystem {
     }
 
     public enum ControlsJoystick {
-        AIRCRAFT_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
-        AIRCRAFT_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
-        AIRCRAFT_YAW(true, false, JSONConfigLanguage.INPUT_YAW),
-        AIRCRAFT_PITCH(true, false, JSONConfigLanguage.INPUT_PITCH),
-        AIRCRAFT_ROLL(true, false, JSONConfigLanguage.INPUT_ROLL),
-        AIRCRAFT_THROTTLE(true, false, JSONConfigLanguage.INPUT_THROTTLE),
-        AIRCRAFT_BRAKE(true, false, JSONConfigLanguage.INPUT_BRAKE),
-        AIRCRAFT_BRAKE_DIGITAL(false, false, JSONConfigLanguage.INPUT_BRAKE),
-        AIRCRAFT_GEAR(false, true, JSONConfigLanguage.INPUT_GEAR),
-        AIRCRAFT_FLAPS_U(false, true, JSONConfigLanguage.INPUT_FLAPS_U),
-        AIRCRAFT_FLAPS_D(false, true, JSONConfigLanguage.INPUT_FLAPS_D),
-        AIRCRAFT_PANEL(false, true, JSONConfigLanguage.INPUT_PANEL),
-        AIRCRAFT_PARK(false, true, JSONConfigLanguage.INPUT_PARK),
-        AIRCRAFT_RADIO(false, true, JSONConfigLanguage.INPUT_RADIO),
-        AIRCRAFT_GUN_FIRE(false, false, JSONConfigLanguage.INPUT_GUN_FIRE),
-        AIRCRAFT_GUN_SWITCH(false, true, JSONConfigLanguage.INPUT_GUN_SWITCH),
-        AIRCRAFT_ZOOM_I(false, true, JSONConfigLanguage.INPUT_ZOOM_I),
-        AIRCRAFT_ZOOM_O(false, true, JSONConfigLanguage.INPUT_ZOOM_O),
-        AIRCRAFT_CHANGEVIEW(false, true, JSONConfigLanguage.INPUT_CHANGEVIEW),
-        AIRCRAFT_LOOK_L(false, false, JSONConfigLanguage.INPUT_LOOK_L),
-        AIRCRAFT_LOOK_R(false, false, JSONConfigLanguage.INPUT_LOOK_R),
-        AIRCRAFT_LOOK_U(false, false, JSONConfigLanguage.INPUT_LOOK_U),
-        AIRCRAFT_LOOK_D(false, false, JSONConfigLanguage.INPUT_LOOK_D),
-        AIRCRAFT_LOOK_A(false, false, JSONConfigLanguage.INPUT_LOOK_A),
-        AIRCRAFT_TRIM_YAW_R(false, false, JSONConfigLanguage.INPUT_TRIM_YAW_R),
-        AIRCRAFT_TRIM_YAW_L(false, false, JSONConfigLanguage.INPUT_TRIM_YAW_L),
-        AIRCRAFT_TRIM_PITCH_U(false, false, JSONConfigLanguage.INPUT_TRIM_PITCH_U),
-        AIRCRAFT_TRIM_PITCH_D(false, false, JSONConfigLanguage.INPUT_TRIM_PITCH_D),
-        AIRCRAFT_TRIM_ROLL_R(false, false, JSONConfigLanguage.INPUT_TRIM_ROLL_R),
-        AIRCRAFT_TRIM_ROLL_L(false, false, JSONConfigLanguage.INPUT_TRIM_ROLL_L),
-        AIRCRAFT_REVERSE(false, true, JSONConfigLanguage.INPUT_REVERSE),
-        AIRCRAFT_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT),
+        AIRCRAFT_MOD(false, false, LanguageSystem.INPUT_MOD),
+        AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
+        AIRCRAFT_YAW(true, false, LanguageSystem.INPUT_YAW),
+        AIRCRAFT_PITCH(true, false, LanguageSystem.INPUT_PITCH),
+        AIRCRAFT_ROLL(true, false, LanguageSystem.INPUT_ROLL),
+        AIRCRAFT_THROTTLE(true, false, LanguageSystem.INPUT_THROTTLE),
+        AIRCRAFT_BRAKE(true, false, LanguageSystem.INPUT_BRAKE),
+        AIRCRAFT_BRAKE_DIGITAL(false, false, LanguageSystem.INPUT_BRAKE),
+        AIRCRAFT_GEAR(false, true, LanguageSystem.INPUT_GEAR),
+        AIRCRAFT_FLAPS_U(false, true, LanguageSystem.INPUT_FLAPS_U),
+        AIRCRAFT_FLAPS_D(false, true, LanguageSystem.INPUT_FLAPS_D),
+        AIRCRAFT_PANEL(false, true, LanguageSystem.INPUT_PANEL),
+        AIRCRAFT_PARK(false, true, LanguageSystem.INPUT_PARK),
+        AIRCRAFT_RADIO(false, true, LanguageSystem.INPUT_RADIO),
+        AIRCRAFT_GUN_FIRE(false, false, LanguageSystem.INPUT_GUN_FIRE),
+        AIRCRAFT_GUN_SWITCH(false, true, LanguageSystem.INPUT_GUN_SWITCH),
+        AIRCRAFT_ZOOM_I(false, true, LanguageSystem.INPUT_ZOOM_I),
+        AIRCRAFT_ZOOM_O(false, true, LanguageSystem.INPUT_ZOOM_O),
+        AIRCRAFT_CHANGEVIEW(false, true, LanguageSystem.INPUT_CHANGEVIEW),
+        AIRCRAFT_LOOK_L(false, false, LanguageSystem.INPUT_LOOK_L),
+        AIRCRAFT_LOOK_R(false, false, LanguageSystem.INPUT_LOOK_R),
+        AIRCRAFT_LOOK_U(false, false, LanguageSystem.INPUT_LOOK_U),
+        AIRCRAFT_LOOK_D(false, false, LanguageSystem.INPUT_LOOK_D),
+        AIRCRAFT_LOOK_A(false, false, LanguageSystem.INPUT_LOOK_A),
+        AIRCRAFT_TRIM_YAW_R(false, false, LanguageSystem.INPUT_TRIM_YAW_R),
+        AIRCRAFT_TRIM_YAW_L(false, false, LanguageSystem.INPUT_TRIM_YAW_L),
+        AIRCRAFT_TRIM_PITCH_U(false, false, LanguageSystem.INPUT_TRIM_PITCH_U),
+        AIRCRAFT_TRIM_PITCH_D(false, false, LanguageSystem.INPUT_TRIM_PITCH_D),
+        AIRCRAFT_TRIM_ROLL_R(false, false, LanguageSystem.INPUT_TRIM_ROLL_R),
+        AIRCRAFT_TRIM_ROLL_L(false, false, LanguageSystem.INPUT_TRIM_ROLL_L),
+        AIRCRAFT_REVERSE(false, true, LanguageSystem.INPUT_REVERSE),
+        AIRCRAFT_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT),
 
-        CAR_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
-        CAR_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
-        CAR_TURN(true, false, JSONConfigLanguage.INPUT_TURN),
-        CAR_GAS(true, false, JSONConfigLanguage.INPUT_GAS),
-        CAR_BRAKE(true, false, JSONConfigLanguage.INPUT_BRAKE),
-        CAR_BRAKE_DIGITAL(false, false, JSONConfigLanguage.INPUT_BRAKE),
-        CAR_PANEL(false, true, JSONConfigLanguage.INPUT_PANEL),
-        CAR_SHIFT_U(false, true, JSONConfigLanguage.INPUT_SHIFT_U),
-        CAR_SHIFT_D(false, true, JSONConfigLanguage.INPUT_SHIFT_D),
-        CAR_HORN(false, false, JSONConfigLanguage.INPUT_HORN),
-        CAR_PARK(false, true, JSONConfigLanguage.INPUT_PARK),
-        CAR_RADIO(false, true, JSONConfigLanguage.INPUT_RADIO),
-        CAR_GUN_FIRE(false, false, JSONConfigLanguage.INPUT_GUN_FIRE),
-        CAR_GUN_SWITCH(false, true, JSONConfigLanguage.INPUT_GUN_SWITCH),
-        CAR_ZOOM_I(false, true, JSONConfigLanguage.INPUT_ZOOM_I),
-        CAR_ZOOM_O(false, true, JSONConfigLanguage.INPUT_ZOOM_O),
-        CAR_CHANGEVIEW(false, true, JSONConfigLanguage.INPUT_CHANGEVIEW),
-        CAR_LOOK_L(false, false, JSONConfigLanguage.INPUT_LOOK_L),
-        CAR_LOOK_R(false, false, JSONConfigLanguage.INPUT_LOOK_R),
-        CAR_LOOK_U(false, false, JSONConfigLanguage.INPUT_LOOK_U),
-        CAR_LOOK_D(false, false, JSONConfigLanguage.INPUT_LOOK_D),
-        CAR_LOOK_A(false, false, JSONConfigLanguage.INPUT_LOOK_A),
-        CAR_LIGHTS(false, true, JSONConfigLanguage.INPUT_LIGHTS),
-        CAR_TURNSIGNAL_L(false, true, JSONConfigLanguage.INPUT_TURNSIGNAL_L),
-        CAR_TURNSIGNAL_R(false, true, JSONConfigLanguage.INPUT_TURNSIGNAL_R),
-        CAR_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT);
+        CAR_MOD(false, false, LanguageSystem.INPUT_MOD),
+        CAR_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
+        CAR_TURN(true, false, LanguageSystem.INPUT_TURN),
+        CAR_GAS(true, false, LanguageSystem.INPUT_GAS),
+        CAR_BRAKE(true, false, LanguageSystem.INPUT_BRAKE),
+        CAR_BRAKE_DIGITAL(false, false, LanguageSystem.INPUT_BRAKE),
+        CAR_PANEL(false, true, LanguageSystem.INPUT_PANEL),
+        CAR_SHIFT_U(false, true, LanguageSystem.INPUT_SHIFT_U),
+        CAR_SHIFT_D(false, true, LanguageSystem.INPUT_SHIFT_D),
+        CAR_SHIFT_1(false, false, LanguageSystem.INPUT_SHIFT_1),
+        CAR_SHIFT_2(false, false, LanguageSystem.INPUT_SHIFT_2),
+        CAR_SHIFT_3(false, false, LanguageSystem.INPUT_SHIFT_3),
+        CAR_SHIFT_4(false, false, LanguageSystem.INPUT_SHIFT_4),
+        CAR_SHIFT_5(false, false, LanguageSystem.INPUT_SHIFT_5),
+        CAR_SHIFT_6(false, false, LanguageSystem.INPUT_SHIFT_6),
+        CAR_SHIFT_7(false, false, LanguageSystem.INPUT_SHIFT_7),
+        CAR_SHIFT_8(false, false, LanguageSystem.INPUT_SHIFT_8),
+        CAR_SHIFT_9(false, false, LanguageSystem.INPUT_SHIFT_9),
+        CAR_SHIFT_R(false, false, LanguageSystem.INPUT_SHIFT_R),
+        CAR_HORN(false, false, LanguageSystem.INPUT_HORN),
+        CAR_PARK(false, true, LanguageSystem.INPUT_PARK),
+        CAR_RADIO(false, true, LanguageSystem.INPUT_RADIO),
+        CAR_GUN_FIRE(false, false, LanguageSystem.INPUT_GUN_FIRE),
+        CAR_GUN_SWITCH(false, true, LanguageSystem.INPUT_GUN_SWITCH),
+        CAR_ZOOM_I(false, true, LanguageSystem.INPUT_ZOOM_I),
+        CAR_ZOOM_O(false, true, LanguageSystem.INPUT_ZOOM_O),
+        CAR_CHANGEVIEW(false, true, LanguageSystem.INPUT_CHANGEVIEW),
+        CAR_LOOK_L(false, false, LanguageSystem.INPUT_LOOK_L),
+        CAR_LOOK_R(false, false, LanguageSystem.INPUT_LOOK_R),
+        CAR_LOOK_U(false, false, LanguageSystem.INPUT_LOOK_U),
+        CAR_LOOK_D(false, false, LanguageSystem.INPUT_LOOK_D),
+        CAR_LOOK_A(false, false, LanguageSystem.INPUT_LOOK_A),
+        CAR_LIGHTS(false, true, LanguageSystem.INPUT_LIGHTS),
+        CAR_TURNSIGNAL_L(false, true, LanguageSystem.INPUT_TURNSIGNAL_L),
+        CAR_TURNSIGNAL_R(false, true, LanguageSystem.INPUT_TURNSIGNAL_R),
+        CAR_JS_INHIBIT(false, true, LanguageSystem.INPUT_JS_INHIBIT);
 
         public final boolean isAxis;
         public final boolean isMomentary;
@@ -816,12 +863,12 @@ public final class ControlSystem {
     }
 
     public enum ControlsKeyboardDynamic {
-        AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, JSONConfigLanguage.INPUT_PARK),
+        AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, LanguageSystem.INPUT_PARK),
 
-        CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_PARK),
-        CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SLOW),
-        CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SHIFT_N),
-        CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SHIFT_N);
+        CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_PARK),
+        CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SLOW),
+        CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N),
+        CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N);
 
         public final LanguageEntry language;
         public final ControlsKeyboard mainControl;

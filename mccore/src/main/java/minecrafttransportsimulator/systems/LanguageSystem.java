@@ -1,87 +1,214 @@
-package minecrafttransportsimulator.jsondefs;
+package minecrafttransportsimulator.systems;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackParser;
 
 /**
- * Config class for language interfacing.  This contains all default text strings, and will be loaded
- * by both the client and server.  When choosing a file to load, the current language suffix will be used
- * on clients, whereas servers will always use the default, english language.  If a file doesn't exist,
- * or is missing an entry, then the default value will be used instead.
+ * System for handling language translation.  This stores all language files found during boot,
+ * and references those files when requested.  This system also is responsible for exporting language
+ * files to a folder if requested.
  *
  * @author don_bruce
  */
-public class JSONConfigLanguage {
-    public Map<String, String> core = new LinkedHashMap<>();
-    public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<>();
-    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<>();
+public class LanguageSystem {
+    public static final Map<String, LanguageEntry> coreLanguageEntires = new LinkedHashMap<>();
+    private static final Map<String, Map<String, LanguageEntry>> packLanguageEntries = new LinkedHashMap<>();
+    private static boolean onClient;
+    private static File dumpToFolder;
 
-    public void populateEntries(boolean isClient) {
-        boolean overrideJSONWithDefinedValues = !isClient || InterfaceManager.clientInterface.usingDefaultLanguage();
-        //First populate core entries.
-        for (LanguageEntry entry : coreEntries.values()) {
-            if (!core.containsKey(entry.key) || overrideJSONWithDefinedValues) {
-                core.put(entry.key, entry.value);
-            } else {
-                entry.value = core.get(entry.key);
-            }
-        }
+    /**
+     * Called to init this system.  Must be called after all pack items are loaded, but
+     * before any pack item name references are used.
+     */
+    public static void init() {
 
-        //Populate pack entries.
+        //Init all packs, getting their language entries first.
         for (String packID : PackParser.getAllPackIDs()) {
-            Map<String, JSONItemEntry> packMap = packs.computeIfAbsent(packID, k -> new LinkedHashMap<>());
+            //Get all pack items and init their language objects.
+            Map<String, LanguageEntry> packMap = packLanguageEntries.computeIfAbsent(packID, k -> new LinkedHashMap<>());
             for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
-                String itemKey = packItem.getRegistrationName();
-                JSONItemEntry entry = packMap.get(itemKey);
-                if (entry == null) {
-                    entry = new JSONItemEntry();
-                    packMap.put(itemKey, entry);
-                }
+                String itemID = packItem.getRegistrationName();
                 String itemName = null;
+
                 if (packItem instanceof AItemSubTyped) {
-                    AItemSubTyped<?> subTyped = (AItemSubTyped<?>) packItem;
-                    for (JSONSubDefinition subDefinition : subTyped.definition.definitions) {
-                        if (subDefinition.subName.equals(subTyped.subDefinition.subName)) {
-                            itemName = subDefinition.name;
-                            break;
-                        }
+                    AItemSubTyped<?> subDefItem = (AItemSubTyped<?>) packItem;
+                    itemName = subDefItem.subDefinition.name;
+                    subDefItem.languageSubDescription = new LanguageEntry(subDefItem.subDefinition.description != null ? subDefItem.subDefinition.description : "");
+                    packMap.put(itemID + ".subDescription", subDefItem.languageSubDescription);
+
+                    //Description ignores subName, strip it and associate it if it already exists.
+                    String masterItemID = itemID.substring(0, itemID.length() - subDefItem.subDefinition.subName.length()) + ".description";
+                    LanguageEntry masterDescription = packMap.get(masterItemID);
+                    if (masterDescription == null) {
+                        masterDescription = new LanguageEntry(packItem.definition.general.description != null ? packItem.definition.general.description : "");
+                        packMap.put(masterItemID, masterDescription);
                     }
+                    packItem.languageDescription = masterDescription;
+                } else {
+                    packItem.languageDescription = new LanguageEntry(packItem.definition.general.description != null ? packItem.definition.general.description : "");
+                    packMap.put(itemID + ".description", packItem.languageDescription);
                 }
                 if (itemName == null) {
                     itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
                 }
-                String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-                if (!itemName.equals(entry.name) || !itemDescription.equals(entry.description) || overrideJSONWithDefinedValues) {
-                    if (entry.name == null || overrideJSONWithDefinedValues) {
-                        entry.name = itemName;
-                    }
-                    if (entry.description == null || overrideJSONWithDefinedValues) {
-                        entry.description = itemDescription;
+                packItem.languageName = new LanguageEntry(itemName);
+                packMap.put(itemID + ".name", packItem.languageName);
+
+                //If this is a book item, we need to add a section for all the components.
+                if (packItem instanceof ItemItem) {
+                    ItemItem packItemItem = (ItemItem) packItem;
+                    if (packItemItem.definition.booklet != null) {
+                        itemID += ".booklet";
+                        if (packItemItem.definition.booklet.titleText != null) {
+                            packItemItem.languageTitle = new ArrayList<>();
+                            for (int i = 0; i < packItemItem.definition.booklet.titleText.size(); ++i) {
+                                LanguageEntry language = new LanguageEntry(packItemItem.definition.booklet.titleText.get(i).defaultText);
+                                packItemItem.languageTitle.add(language);
+                                packMap.put(itemID + ".title.textline" + (i + 1), language);
+                            }
+                        }
+
+                        packItemItem.languagePageTitle = new ArrayList<>();
+                        packItemItem.languagePageText = new ArrayList<>();
+                        for (int i = 0; i < packItemItem.definition.booklet.pages.size(); ++i) {
+                            BookletPage page = packItemItem.definition.booklet.pages.get(i);
+                            if (page.title != null) {
+                                LanguageEntry language = new LanguageEntry(page.title);
+                                packItemItem.languagePageTitle.add(language);
+                                packMap.put(itemID + ".page" + (i + 1) + ".title", language);
+                            } else {
+                                packItemItem.languagePageTitle.add(null);
+                            }
+                            if (page.pageText != null) {
+                                List<LanguageEntry> languageList = new ArrayList<>();
+                                for (int j = 0; j < page.pageText.size(); ++j) {
+                                    LanguageEntry language = new LanguageEntry(page.pageText.get(j).defaultText);
+                                    languageList.add(language);
+                                    packMap.put(itemID + ".page" + (i + 1) + ".textline" + (j + i), language);
+                                }
+                                packItemItem.languagePageText.add(languageList);
+                            } else {
+                                packItemItem.languagePageText.add(null);
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    public static class LanguageEntry {
-        public final String key;
-        public String value;
+    /**
+     * Called to populate the names.  This has to happen after {@link #init(boolean)},
+     * but can be deffered until the game boots up and we can scan for language settings.
+     * This method only populates runtime values, not default code ones (en_us).  Those will 
+     * always be present, provided the init function has been called.  Only call this on clients
+     * where the language setting is used: servers will crash if language population is attempted.
+     */
+    public static void populateNames() {
+        //Populate pack language objects with text.
+        //Core entries, being static, will be initied on class init, so they'll be ready here too.
+        for (String packID : PackParser.getAllPackIDs()) {
+            Map<String, LanguageEntry> packMap = packLanguageEntries.get(packID);
+            for (String language : InterfaceManager.clientInterface.getAllLanguages()) {
+                String filePath = "/assets/" + packID + "/language/" + language;
+                InputStream languageStream = InterfaceManager.coreInterface.getPackResource(filePath);
+                if (languageStream != null) {
+                    JSONLanguageFile languageFile;
+                    try {
+                        languageFile = JSONParser.parseStream(languageStream, JSONLanguageFile.class, null, null);
+                        languageFile.entries.forEach((key, value) -> {
+                            LanguageEntry languageEntry = packMap.get(key);
+                            if (languageEntry != null) {
+                                languageEntry.values.put(language, value);
+                            }
+                            languageEntry = coreLanguageEntires.get(key);
+                            if (languageEntry != null) {
+                                languageEntry.values.put(language, value);
+                            }
+                        });
+                    } catch (IOException e) {
+                        InterfaceManager.coreInterface.logError("Could not load language file: " + filePath + "  Language for this language/pack will be disabled.  Report this to the pack author!");
+                    }
+                }
+            }
+        }
 
-        public LanguageEntry(String key, String defaultValue) {
-            this.key = key;
-            this.value = defaultValue;
-            coreEntries.put(key, this);
+        if (dumpToFolder != null) {
+            //We got a message from ConfigSystem to dump what we parsed, do so now.
+            try {
+                for (Entry<String, Map<String, LanguageEntry>> languagePacks : packLanguageEntries.entrySet()) {
+                    String packID = languagePacks.getKey();
+                    JSONLanguageFile jsonFileToWrite = new JSONLanguageFile();
+                    jsonFileToWrite.entries = new LinkedHashMap<>();
+                    languagePacks.getValue().forEach((key, languageEntry) -> jsonFileToWrite.entries.put(key, languageEntry.getDefaultValue()));
+                    if (packID.equals(InterfaceManager.coreModID)) {
+                        coreLanguageEntires.forEach((key, languageEntry) -> jsonFileToWrite.entries.put(key, languageEntry.getDefaultValue()));
+                    }
+                    dumpToFolder.mkdir();
+                    File packFolder = new File(dumpToFolder, packID);
+                    packFolder.mkdir();
+                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName()).toPath()));
+                }
+            } catch (Exception e) {
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to create template language files.  Report to the mod author!  Or, are you trying to do language stuff on servers?  Cause that's a bad idea...");
+            }
         }
     }
 
-    public static class JSONItemEntry {
-        public String name;
-        public String description;
+    public static void dumpToFolder(File folder) {
+        //Set dump folder for later, ConfigSystem runs before language setup as it has to run before pack parsing.
+        dumpToFolder = folder;
+    }
+
+    public static class LanguageEntry {
+        private static final String DEFAULT_LANGUAGE_KEY = "en_us";
+        public final Map<String, String> values = new HashMap<>();
+        public final String key;
+
+        public LanguageEntry(String defaultValue) {
+            values.put(DEFAULT_LANGUAGE_KEY, defaultValue);
+            this.key = null;
+        }
+
+        /**Used only for internal language entires.**/
+        private LanguageEntry(String key, String defaultValue) {
+            values.put(DEFAULT_LANGUAGE_KEY, defaultValue);
+            this.key = key;
+            coreLanguageEntires.put(key, this);
+        }
+
+        public String getCurrentValue() {
+            if (onClient) {
+                String value = values.get(InterfaceManager.clientInterface.getLanguageName());
+                return value != null ? value : getDefaultValue();
+            } else {
+                return getDefaultValue();
+            }
+        }
+
+        public String getDefaultValue() {
+            return values.get(DEFAULT_LANGUAGE_KEY);
+        }
+    }
+
+    public static class JSONLanguageFile {
+        public Map<String, String> entries;
     }
 
     //List of language entries are kept in this file, as it ensures we init them all when this class is loaded.
@@ -106,6 +233,7 @@ public class JSONConfigLanguage {
 
     public static final LanguageEntry GUI_CONFIRM = new LanguageEntry("gui.confirm", "CONFIRM");
     public static final LanguageEntry GUI_MASTERCONFIG = new LanguageEntry("gui.masterconfig", "Open configuration screen");
+    public static final LanguageEntry GUI_IMPORT = new LanguageEntry("gui.import", "Import Packs (Developers Only)");
 
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCAN = new LanguageEntry("gui.signalcontroller.scan", "Scan For Signals & Components");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCANDISTANCE = new LanguageEntry("gui.signalcontroller.scandistance", "Radius: ");
@@ -288,6 +416,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_DIAMETER = new LanguageEntry("iteminfo.ground_device.diameter", "Diameter: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION = new LanguageEntry("iteminfo.ground_device.motivefrictionmotivefriction", "Power friction: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_LATERALFRICTION = new LanguageEntry("iteminfo.ground_device.lateralfriction", "Turning friction: ");
+    public static final LanguageEntry ITEMINFO_GROUND_DEVICE_WETFRICTION = new LanguageEntry("iteminfo.ground_device.wetfriction", "Wet penalty: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS = new LanguageEntry("iteminfo.ground_device.frictionmodifiers", "Friction Modifiers: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE = new LanguageEntry("iteminfo.ground_device.rotatesonshaft_true", "Is a wheel");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE = new LanguageEntry("iteminfo.ground_device.rotatesonshaft_false", "Is NOT a wheel");
@@ -372,12 +501,22 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_SHIFT_U = new LanguageEntry("input.shift_u", "ShiftUp");
     public static final LanguageEntry INPUT_SHIFT_D = new LanguageEntry("input.shift_d", "ShiftDown");
     public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");
+    public static final LanguageEntry INPUT_SHIFT_1 = new LanguageEntry("input.shift_1", "Gear1");
+    public static final LanguageEntry INPUT_SHIFT_2 = new LanguageEntry("input.shift_2", "Gear2");
+    public static final LanguageEntry INPUT_SHIFT_3 = new LanguageEntry("input.shift_3", "Gear3");
+    public static final LanguageEntry INPUT_SHIFT_4 = new LanguageEntry("input.shift_4", "Gear4");
+    public static final LanguageEntry INPUT_SHIFT_5 = new LanguageEntry("input.shift_5", "Gear5");
+    public static final LanguageEntry INPUT_SHIFT_6 = new LanguageEntry("input.shift_6", "Gear6");
+    public static final LanguageEntry INPUT_SHIFT_7 = new LanguageEntry("input.shift_6", "Gear7");
+    public static final LanguageEntry INPUT_SHIFT_8 = new LanguageEntry("input.shift_6", "Gear8");
+    public static final LanguageEntry INPUT_SHIFT_9 = new LanguageEntry("input.shift_6", "Gear9");
+    public static final LanguageEntry INPUT_SHIFT_R = new LanguageEntry("input.shift_r", "GearR");
     public static final LanguageEntry INPUT_HORN = new LanguageEntry("input.horn", "Horn");
     public static final LanguageEntry INPUT_SLOW = new LanguageEntry("input.slow", "Slow");
     public static final LanguageEntry INPUT_LIGHTS = new LanguageEntry("input.lights", "Lights");
     public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
     public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 
-    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors. Sounds will not play.");
+    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. If you have Receiver Gun Mod, un-install it (there is no config for this incopatibility).  Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors. Sounds will not play.");
     public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s");
 }

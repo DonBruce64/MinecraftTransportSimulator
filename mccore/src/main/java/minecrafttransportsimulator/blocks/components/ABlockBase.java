@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.components;
 
+import java.util.HashMap;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -50,7 +52,8 @@ public abstract class ABlockBase {
         public final int xOffset;
         public final int yOffset;
         public final int zOffset;
-        public final RotationMatrix rotation;
+        public final RotationMatrix yRotation;
+        public final RotationMatrix facingRotation;
         public final boolean blockBased;
         public final boolean xzPlanar;
 
@@ -58,7 +61,8 @@ public abstract class ABlockBase {
             this.xOffset = xOffset;
             this.yOffset = yOffset;
             this.zOffset = zOffset;
-            this.rotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
+            this.yRotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
+            this.facingRotation = new RotationMatrix().setToVector(new Point3D(xOffset, yOffset, zOffset), true);
             this.blockBased = blockBased;
             this.xzPlanar = xzPlanar;
         }
@@ -101,26 +105,84 @@ public abstract class ABlockBase {
             }
             int degRotation = (checkDiagonals ? (int) (Math.round(rotation / 45) * 45) : (int) (Math.round(rotation / 90) * 90)) % 360;
             for (Axis axis : values()) {
-                if (axis.xzPlanar && axis.rotation.angles.y == degRotation) {
+                if (axis.xzPlanar && axis.yRotation.angles.y == degRotation) {
                     return axis;
                 }
             }
             return Axis.NONE;
         }
+
+        public static Axis getFromVector(Point3D vector) {
+            //Get the magnitude in the XZ plane, then compare it to the Y axis.
+            //If abs Y is greater, then we are up/down.
+            double xzVector = Math.hypot(vector.x, vector.z);
+            double length = Math.hypot(xzVector, vector.y);
+            xzVector /= length;
+            double yVector = vector.y / length;
+            if (yVector > 0) {
+                if (yVector > xzVector) {
+                    return Axis.UP;
+                }
+            } else {
+                if (-yVector > xzVector) {
+                    return Axis.DOWN;
+                }
+            }
+
+            //Not up or down, must be a sided axis.  Just check XZ.
+            if (vector.x < 0) {
+                if (vector.z < 0) {
+                    return -vector.x > -vector.z ? WEST : NORTH;
+                } else {
+                    return -vector.x > vector.z ? WEST : SOUTH;
+                }
+            } else {
+                if (vector.z < 0) {
+                    return vector.x > -vector.z ? EAST : NORTH;
+                } else {
+                    return vector.x > vector.z ? EAST : SOUTH;
+                }
+            }
+        }
     }
+
+    /**
+     * Map of block material names to their enums.  Used for faster lookups without exceptions via valueOf function.
+     */
+    public static final HashMap<String, BlockMaterial> blockMaterialEnumMap = new HashMap<>();
 
     /**
      * Enums for block material properties.  Not used by any of our blocks,
      * but instead are materials that blocks in the world may be made of.
      */
     public enum BlockMaterial {
-        NORMAL,
-        NORMAL_WET,
+        CLAY,
         DIRT,
-        DIRT_WET,
+        GLASS,
+        GRASS,
+        GRAVEL,
+        ICE,
+        LAVA,
+        LEAVES,
+        METAL,
         SAND,
-        SAND_WET,
         SNOW,
-        ICE
+        STONE,
+        WATER,
+        WOOD,
+        WOOL,
+        NORMAL,
+
+        //Don't use, these are old but are required here to parse old packs.
+        @Deprecated
+        DIRT_WET,
+        @Deprecated
+        SAND_WET,
+        @Deprecated
+        NORMAL_WET;
+
+        private BlockMaterial() {
+            blockMaterialEnumMap.put(name(), this);
+        }
     }
 }

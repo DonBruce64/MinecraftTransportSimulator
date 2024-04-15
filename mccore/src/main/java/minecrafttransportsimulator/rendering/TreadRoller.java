@@ -20,7 +20,7 @@ public class TreadRoller {
     public double endZ;
     public double endAngle;
 
-    public TreadRoller(RenderableObject object) {
+    public TreadRoller(RenderableVertices object) {
         //Calculate the center and radius from the model.
         float minY = 999;
         float maxY = -999;

@@ -32,7 +32,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> vehicleBeams = new JSONConfigEntry<>(true, "If false, beams on vehicles will not render.");
         public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<>(true, "If false, beams on blocks will not render.");
 
-        public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not do brightness blending and will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
+        public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 
         public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
@@ -49,11 +49,15 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> autostartEng = new JSONConfigEntry<>(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel or electrical system.");
         public JSONConfigEntry<Boolean> autoTrnSignals = new JSONConfigEntry<>(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
 
+        public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a shifter for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(true, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.  Hence it being the default.");
+
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 
 
+
         public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
+        public JSONConfigEntry<Double> steeringReturnRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RETURN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is NOT held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");

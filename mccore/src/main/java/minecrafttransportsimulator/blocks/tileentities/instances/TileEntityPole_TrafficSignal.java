@@ -4,6 +4,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.LightType;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
@@ -16,8 +17,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
     public TileEntitySignalController linkedController;
 
-    public TileEntityPole_TrafficSignal(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data) {
-        super(core, placingPlayer, axis, data);
+    public TileEntityPole_TrafficSignal(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
+        super(core, placingPlayer, axis, item, data);
     }
 
     @Override

@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -55,11 +54,11 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
                 tile.loadFromSavedNBT = true;
             }
         } else {
-            Entity entity = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID)).entity;
-            if (entity != null) {
+            WrapperEntity mcWrapper = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID));
+            if (mcWrapper != null && mcWrapper.entity != null) {
                 //Set last loaded NBT.
-                ((ABuilderEntityBase) entity).lastLoadedNBT = ((WrapperNBT) data).tag;
-                ((ABuilderEntityBase) entity).loadFromSavedNBT = true;
+                ((ABuilderEntityBase) mcWrapper.entity).lastLoadedNBT = ((WrapperNBT) data).tag;
+                ((ABuilderEntityBase) mcWrapper.entity).loadFromSavedNBT = true;
             }
         }
     }

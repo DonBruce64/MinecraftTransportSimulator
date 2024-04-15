@@ -90,25 +90,36 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
 
     //Internal sound variables.
     public final EntityRadio radio;
-    public List<SoundInstance> sounds = new ArrayList<>();
+    public List<SoundInstance> sounds = new ArrayList<>();//TODO make this a hashmap.
 
     /**
      * Constructor for synced entities
      **/
     public AEntityB_Existing(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, data);
-        this.position = data.getPoint3d("position");
-        this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+        if (data != null) {
+            this.position = data.getPoint3d("position");
+            this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+            this.motion = data.getPoint3d("motion");
+            this.zoomLevel = data.getInteger("zoomLevel");
+            this.cameraIndex = data.getInteger("cameraIndex");
+        } else {
+            this.position = new Point3D();
+            this.orientation = new RotationMatrix();
+            this.motion = new Point3D();
+        }
+
         this.prevPosition = position.copy();
         this.prevOrientation = new RotationMatrix().set(orientation);
-        this.motion = data.getPoint3d("motion");
         this.prevMotion = motion.copy();
-        this.zoomLevel = data.getInteger("zoomLevel");
-        this.cameraIndex = data.getInteger("cameraIndex");
-
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
+
         if (hasRadio()) {
-            this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
+            if (data != null) {
+                this.radio = new EntityRadio(this, data.getData("radio"));
+            } else {
+                this.radio = new EntityRadio(this, null);
+            }
             world.addEntity(radio);
         } else {
             this.radio = null;
@@ -448,8 +459,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (radio != null) {
             data.setData("radio", radio.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
-        data.setInteger("zoomLevel", zoomLevel);
-        data.setInteger("cameraIndex", cameraIndex);
+        if (!cameras.isEmpty()) {
+            data.setInteger("zoomLevel", zoomLevel);
+            data.setInteger("cameraIndex", cameraIndex);
+        }
         return data;
     }
 }

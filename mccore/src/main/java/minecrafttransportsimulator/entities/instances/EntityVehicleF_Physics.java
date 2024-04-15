@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -8,7 +9,9 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -65,6 +68,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
     public static final double RUDDER_DAMPEN_RATE = 2.0;
+    public static final double RUDDER_DAMPEN_RETURN_RATE = 4.0;
     public static final String RUDDER_INPUT_VARIABLE = "input_rudder";
     public static final String RUDDER_VARIABLE = "rudder";
     public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
@@ -84,6 +88,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @DerivedValue
     public double autopilotSetting;
     public double airDensity;
+    public double seaLevel = ConfigSystem.settings.general.seaLevel.value;
     public static final String AUTOPILOT_VALUE_VARIABLE = "autopilot";
     public static final String AUTOPILOT_ACTIVE_VARIABLE = "autopilot_active";
     public static final String AUTOLEVEL_VARIABLE = "auto_level";
@@ -153,9 +158,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
     private final Point3D rotorRotation = new Point3D();//degrees
 
-    public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+    public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data != null) {
+            this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+        }
     }
 
     @Override
@@ -270,7 +277,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentDragCoefficient = definition.motorized.dragCoefficient;
         currentBallastVolume = definition.motorized.ballastVolume;
         currentWaterBallastFactor = definition.motorized.waterBallastFactor;
-        currentDownForce = definition.motorized.downForce;
+        currentSteeringForceIgnoresSpeed = definition.motorized.steeringForceIgnoresSpeed ? 1 : 0;
+        currentSteeringForceFactor = definition.motorized.steeringForceFactor;
         currentBrakingFactor = definition.motorized.brakingFactor;
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
@@ -310,8 +318,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     case "waterBallastFactor":
                         currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
-                    case "downForce":
-                        currentDownForce = adjustVariable(modifier, currentDownForce);
+                    case "steeringForceIgnoresSpeed":
+                    	currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
+                        break;
+                    case "steeringForceFactor":
+                        currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
                         break;
                     case "brakingFactor":
                         currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor);
@@ -395,7 +406,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set moments and air density.
-            airDensity = 1.225 * Math.pow(2, -position.y / (500D * world.getMaxHeight() / 256D));
+            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / (500D * world.getMaxHeight() / 256D));
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
@@ -552,6 +563,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Add all forces to the main force matrix and apply them.
+            if (ConfigSystem.settings.general.maxFlightHeight.value > 0 && position.y > ConfigSystem.settings.general.maxFlightHeight.value) {
+                wingForce = 0;
+                thrustForce.y = 0;
+            }
             totalForce.set(0D, wingForce - elevatorForce, 0D).rotate(orientation);
             totalForce.add(thrustForce);
             totalForce.addScaled(normalizedVelocityVector, -dragForce);
@@ -583,7 +598,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     rotation.updateToAngles();
                 }
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(rotation).add(towedByConnection.towedEntity.position);
-            } else {
+            } else if (!towedByConnection.hitchPriorPosition.isZero()) {//Can't update on the first tick.
                 //Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
                 //Yaw is applied based on the current and next position of the truck's hookup.
                 //Motion is applied after yaw corrections to ensure the trailer follows the truck.
@@ -616,7 +631,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Update hookup position now that rotation is current.
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
             }
-            //Now get positional delta.  This assumes perfectly-aligned orientation.				
+            //Now get positional delta.  This assumes perfectly-aligned orientation.
             motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1 / speedFactor);
         } else {
             //Towed vehicle on a road with towing vehicle.  Just use same deltas.
@@ -816,7 +831,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("roll"):
                 return orientation.angles.z;
             case ("altitude"):
-                return position.y;
+                return position.y - seaLevel;
             case ("speed"):
                 return indicatedSpeed;
             case ("speed_scaled"):
@@ -824,13 +839,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("speed_factor"):
                 return speedFactor;
             case ("acceleration"):
-                double acceleration = motion.length() - prevMotion.length();
-                return acceleration > 0.025 || acceleration < -0.025 ? acceleration : 0;
+                return motion.length() - prevMotion.length();
             case ("road_angle_front"):
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
             case ("road_angle_rear"):
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
-
             //Vehicle state cases.
             case("autopilot_present"):
                 return definition.motorized.hasAutopilot ? 1 : 0;
@@ -864,6 +877,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return flapCurrentAngle;
             case ("flaps_moving"):
                 return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
+            case ("flaps_increasing"):
+                return flapCurrentAngle < flapDesiredAngle ? 1 : 0;
+            case ("flaps_decreasing"):
+                return flapCurrentAngle > flapDesiredAngle ? 1 : 0;
             case ("vertical_speed"):
                 return motion.y * speedFactor * 20;
             case ("lift_reserve"):
@@ -876,6 +893,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return (rotation.angles.x) / 0.15F * 25F;
             case ("slip"):
                 return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
+            case ("slip_understeer"):
+                return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10)));
             case ("gear_present"):
                 return definition.motorized.gearSequenceDuration != 0 ? 1 : 0;
             case ("gear_moving"):
@@ -918,28 +937,79 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     }
                 }
                 //Radar variables.
-                //Variable is in the form of radar_X_variablename.
                 if (variable.startsWith("radar_")) {
-                    String radarVariable = variable.substring(variable.lastIndexOf("_") + 1);
-                    int radarNumber = getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
-                    if (radarNumber != -1) {
-                        if (radarsTracking.size() <= radarNumber) {
-                            return 0;
-                        } else {
-                            switch (radarVariable) {
-                                case ("detected"):
-                                    return 1;
-                                case ("distance"):
-                                    return radarsTracking.get(radarNumber).position.distanceTo(position);
-                                case ("direction"): {
-                                    Point3D entityPos = radarsTracking.get(radarNumber).position;
-                                    return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
+                    String[] parsedVariable = variable.split("_");
+
+                    //First check if we are seeing with our own radar, or being seen.
+                    //Variable is in the form of radar_X_variablename for inbound, radar_X_Y_variablename for outbound.
+                    List<EntityVehicleF_Physics> radarList;
+                    switch (parsedVariable[1]) {
+                        case ("aircraft"): {
+                            radarList = aircraftOnRadar;
+                            break;
+                        }
+                        case ("ground"): {
+                            radarList = groundersOnRadar;
+                            break;
+                        }
+                        default: {
+                            //Inbound contact from another radar.
+                            switch (parsedVariable.length) {
+                                case 2: {
+                                    switch (parsedVariable[1]) {
+                                        case ("detected"):
+                                            return radarsTracking.isEmpty() ? 0 : 1;
+                                    }
+                                    break;
+                                }
+                                case 3: {
+                                    int radarNumber = Integer.parseInt(parsedVariable[1]) - 1;
+                                    if (radarsTracking.size() <= radarNumber) {
+                                        return 0;
+                                    } else {
+                                        switch (parsedVariable[2]) {
+                                            case ("detected"):
+                                                return 1;
+                                            case ("distance"):
+                                                return radarsTracking.get(radarNumber).position.distanceTo(position);
+                                            case ("direction"): {
+                                                Point3D entityPos = radarsTracking.get(radarNumber).position;
+                                                return Math.toDegrees(Math.atan2(-entityPos.z + position.z, -entityPos.x + position.x)) + 90 + orientation.angles.y;
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                            //Invalid inbound radar value, return 0.
+                            return 0;
                         }
-                    } else if (radarVariable.equals("detected")) {
-                        return radarsTracking.isEmpty() ? 0 : 1;
                     }
+
+                    //Outbound radar found, do logic.
+                    int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
+                    if (radarNumber < radarList.size()) {
+                        AEntityB_Existing contact = radarList.get(radarNumber);
+                        switch (parsedVariable[3]) {
+                            case ("distance"):
+                                return contact.position.distanceTo(position);
+                            case ("direction"):
+                                double delta = Math.toDegrees(Math.atan2(-contact.position.z + position.z, -contact.position.x + position.x)) + 90 + orientation.angles.y;
+                                while (delta < -180)
+                                    delta += 360;
+                                while (delta > 180)
+                                    delta -= 360;
+                                return delta;
+                            case ("speed"):
+                                return contact.velocity;
+                            case ("altitude"):
+                                return contact.position.y;
+                            case ("angle"):
+                                return -Math.toDegrees(Math.atan2(-contact.position.y + position.y, Math.hypot(-contact.position.z + position.z, -contact.position.x + position.x))) + orientation.angles.x;
+                        }
+                    }
+
+                    //Contact not found or bad variable, return 0.
+                    return 0;
                 }
             }
         }

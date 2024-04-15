@@ -1,30 +1,26 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -35,13 +31,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * Base entity class containing riders and their positions on this entity.  Used for
@@ -93,9 +90,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     /**
      * List of bounding boxes that should be used for damage collisions with this entity.
      * These can't be clicked by players, and can't be collided with, but can be attacked.
-     * By default, this includes all {@link #interactionBoxes} and {@link #bulletCollisionBoxes}.
+     * By default, this includes all {@link #interactionBoxes} but not {@link #bulletCollisionBoxes}
+     * since those can only be damaged by bullets specifically.
      **/
     public final Set<BoundingBox> damageCollisionBoxes = new HashSet<>();
+
+    /**
+     * List of inactive bounding boxes.  Used only on servers to allow them to handle packets
+     * from clients that may have a different set of active boxes than they have due to rendering.
+     **/
+    public final Set<BoundingBox> inactiveCollisionBoxes = new HashSet<>();
 
     /**
      * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
@@ -122,7 +126,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Similar to {@link #instruments}, except this is the renderable bits for them.  There's one entry for each component,
      * with text being a null entry as text components render via the text rendering system.
      */
-    public final List<List<RenderableObject>> instrumentRenderables = new ArrayList<>();
+    public final List<List<RenderableData>> instrumentRenderables = new ArrayList<>();
 
     /**
      * Maps instrument components to their respective switchboxes.
@@ -133,20 +137,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Maps instrument slot transforms to their respective switchboxes.
      **/
     public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<>();
-
-    /**
-     * Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
-     * their owners, or OP players (server admins).
-     **/
-    @DerivedValue
-    public boolean locked;
-    public static final String LOCKED_VARIABLE = "locked";
-
-    /**
-     * The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
-     * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
-     **/
-    public final UUID ownerUUID;
 
     /**
      * The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
@@ -168,19 +158,34 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     protected int lastSnapConnectionTried = 0;
     protected boolean bypassConnectionPacket;
 
-    public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        this.locked = data.getBoolean("locked");
-        this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
+    public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        
+        //Parse variables out now to prevent variables from activating that use them.
+        damageAmount = getVariable(DAMAGE_VARIABLE);
+        outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
-        //Load instruments.  If we are new, create the default ones.
+        //Load instruments, or create the default ones.
         if (definition.instruments != null) {
             //Need to init lists.
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 instruments.add(null);
                 instrumentRenderables.add(null);
             }
-            if (newlyCreated) {
+
+            if (data != null) {
+                for (int i = 0; i < definition.instruments.size(); ++i) {
+                    String instrumentPackID = data.getString("instrument" + i + "_packID");
+                    String instrumentSystemName = data.getString("instrument" + i + "_systemName");
+                    if (!instrumentPackID.isEmpty()) {
+                        ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
+                        //Check to prevent loading of faulty instruments due to updates.
+                        if (instrument != null) {
+                            addInstrument(instrument, i);
+                        }
+                    }
+                }
+            } else {
                 for (JSONInstrumentDefinition packInstrument : definition.instruments) {
                     if (packInstrument.defaultInstrument != null) {
                         try {
@@ -192,22 +197,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                     addInstrument(instrument, definition.instruments.indexOf(packInstrument));
                                 }
                             } catch (NullPointerException e) {
-                                placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.SYSTEM_DEBUG, "Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry."));
+                                placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry."));
                             }
                         } catch (IndexOutOfBoundsException e) {
-                            placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.SYSTEM_DEBUG, "Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\""));
-                        }
-                    }
-                }
-            } else {
-                for (int i = 0; i < definition.instruments.size(); ++i) {
-                    String instrumentPackID = data.getString("instrument" + i + "_packID");
-                    String instrumentSystemName = data.getString("instrument" + i + "_systemName");
-                    if (!instrumentPackID.isEmpty()) {
-                        ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
-                        //Check to prevent loading of faulty instruments due to updates.
-                        if (instrument != null) {
-                            addInstrument(instrument, i);
+                            placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\""));
                         }
                     }
                 }
@@ -288,7 +281,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         world.beginProfiling("EntityE_Level", true);
         //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
-        locked = isVariableActive(LOCKED_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
 
         world.endProfiling();
@@ -321,6 +313,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         interactionBoxes.clear();
         bulletCollisionBoxes.clear();
         damageCollisionBoxes.clear();
+        inactiveCollisionBoxes.clear();
 
         if (definition.collisionGroups != null) {
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
@@ -332,7 +325,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     animationsInitialized = false;
                     return;
                 }
-                if (groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health) {
+                if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage") < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
@@ -341,7 +334,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                 box.updateToEntity(this, box.globalCenter);
                             }
                         } else {
-                            //Don't let these boxes get added to the list.
+                            inactiveCollisionBoxes.addAll(collisionBoxes);
                             continue;
                         }
                     } else {
@@ -362,11 +355,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
         interactionBoxes.addAll(entityCollisionBoxes);
         damageCollisionBoxes.addAll(interactionBoxes);
-        damageCollisionBoxes.addAll(bulletCollisionBoxes);
     }
 
     /**
-     * Updates the encompassinb box.  This has to run after {@link #updateCollisionBoxes()} to ensure
+     * Updates the encompassing box.  This has to run after {@link #updateCollisionBoxes()} to ensure
      * we get all boxes for the encompassing box.
      */
     protected void updateEncompassingBox() {
@@ -481,12 +473,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      */
     public void addInstrument(ItemInstrument instrument, int slot) {
         instruments.set(slot, instrument);
-        List<RenderableObject> renderables = new ArrayList<>();
+        List<RenderableData> renderables = new ArrayList<>();
         for (JSONInstrumentComponent component : instrument.definition.components) {
             if (component.textObject != null) {
                 renderables.add(null);
             } else {
-                renderables.add(new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6 * 8), false));
+                renderables.add(new RenderableData(RenderableVertices.createSprite(1, null, null)));
             }
             if (component.animations != null) {
                 instrumentComponentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));
@@ -506,37 +498,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             }
             instrumentRenderables.set(slot, null);
         }
-    }
-
-    /**
-     * Locks or unlocks this entity.  Allows for supplemental logic.
-     * Call this ONLY on the server.
-     */
-    public void toggleLock() {
-        locked = !locked;
-        toggleVariable(LOCKED_VARIABLE);
-        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
-
-        //Check for doors to close on locking.
-        if (locked) {
-            Iterator<String> iterator = variables.keySet().iterator();
-            while (iterator.hasNext()) {
-                String variable = iterator.next();
-                if (variable.contains("door")) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
-                    iterator.remove();
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the owner state of the passed-in player, relative to this entity.
-     * Takes into account player OP status and {@link #ownerUUID}, if set.
-     */
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
-        return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
     }
 
     /**
@@ -619,11 +580,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("locked", locked);
-        if (ownerUUID != null) {
-            data.setUUID("ownerUUID", ownerUUID);
-        }
-
         if (definition.instruments != null) {
             for (int i = 0; i < definition.instruments.size(); ++i) {
                 ItemInstrument instrument = instruments.get(i);

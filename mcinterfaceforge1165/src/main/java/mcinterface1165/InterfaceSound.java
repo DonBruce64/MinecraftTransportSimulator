@@ -17,7 +17,6 @@ import org.lwjgl.openal.ALC;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IInterfaceSound;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -26,6 +25,7 @@ import minecrafttransportsimulator.sound.OGGDecoder;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -222,7 +222,7 @@ public class InterfaceSound implements IInterfaceSound {
                 if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                     AL10.alDeleteBuffers(dataBufferPointer);
                     if (++sourceGetFailures == 10) {
-                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
                         ///Kill off the sound that's furthest from the player to make room if we have a sound we can remove.
                         //This keeps the sounds going, even with limited slots.
                         if (!playingSounds.isEmpty()) {
@@ -274,7 +274,7 @@ public class InterfaceSound implements IInterfaceSound {
             AL10.alGenSources(sourceBuffer);
             if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                 if (++sourceGetFailures == 10) {
-                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
                 }
                 return;
             }
@@ -391,11 +391,26 @@ public class InterfaceSound implements IInterfaceSound {
         }
     }
 
+    public static void stopAllSounds() {
+        queuedSounds.clear();
+        for (SoundInstance sound : playingSounds) {
+            if (sound.radio != null) {
+                sound.radio.stop();
+            } else {
+                sound.stopSound = true;
+            }
+        }
+
+        //Mark world as un-paused and update sounds to stop the ones that were just removed.
+        isSystemPaused = false;
+        update();
+    }
+
     /**
      * Update all sounds every client tick.
      */
     @SubscribeEvent
-    public static void on(ClientTickEvent event) {
+    public static void onIVClientTick(ClientTickEvent event) {
         //Only do updates at the end of a phase to prevent double-updates.
         if (event.phase.equals(Phase.END)) {
             //We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
@@ -412,7 +427,7 @@ public class InterfaceSound implements IInterfaceSound {
      * Stop all sounds when the world is unloaded.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event) {
+    public static void onIVWorldUnload(WorldEvent.Unload event) {
         if (event.getWorld().isClientSide()) {
             queuedSounds.removeIf(soundInstance -> event.getWorld() == ((WrapperWorld) soundInstance.entity.world).world);
             for (SoundInstance sound : playingSounds) {

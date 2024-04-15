@@ -4,7 +4,9 @@ import java.io.InputStream;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -36,33 +38,35 @@ public interface IInterfaceRender {
     void renderItemModel(GUIComponentItem component);
 
     /**
-     * Renders the vertices stored in the passed-in {@link RenderableObject}.
-     * If the vertices should be cached per {@link RenderableObject#cacheVertices},
-     * then they are done so and a pointer-index is stored into {@link RenderableObject#cachedVertexIndex}.
-     * {@link RenderableObject#vertices} is then set to null to free memory.
-     * If the object is ever deleted, then {@link #deleteVertices(RenderableObject)}
-     * should be called to free up the respective GPU memory.
+     * Renders according to the set data.
+     * If the object is ever deleted, and {@link RenderableVertices#cacheVertices} is true,
+     * then {@link #deleteVertices(RenderableData)} should be called to free up the 
+     * respective GPU memory.  Calling this is not required if no caching is performed.
+     * If the state of the data has changed since the last render, pass in true for the boolean.
+     * This allows the rendering system to perform any re-caching as required.
      */
-    void renderVertices(RenderableObject object);
+    void renderVertices(RenderableData data, boolean changedSinceLastRender);
 
     /**
-     * Deletes the cached vertices associated with the specified {@link RenderableObject}.
+     * Deletes the cached vertices associated with the specified {@link RenderableData}.
      */
-    void deleteVertices(RenderableObject object);
+    void deleteVertices(RenderableData data);
 
     /**
-     * Downloads the passed-in texture to be parsed and bound.  The texture is downloaded from the
-     * URL and then added to the texture rendering system.  The integer of the The instance
-     * of the texture is cached in this class once created for later use, so feel free to not
-     * cache the string URL that is passed-in.  If the texture downloading was successful, null is
-     * returned.  Otherwise, an error message is returned.  Use the new texture by setting 
-     * {@link RenderableObject#texture} to the URL.
+     * Binds a URL texture to a stream containing an image.  Pass in a null stream to bind the missing texture to this URL.
+     * Returns true if the texture was bound, false if it couldn't be.
      */
-    String downloadURLTexture(String textureURL);
+    boolean bindURLTexture(String textureURL, InputStream strea);
+
+    /**
+     * Binds a URL GIF that was downloaded.
+     * Returns true if the texture was bound, false if it couldn't be.
+     */
+    boolean bindURLGIF(String textureURL, ParsedGIF gif);
 
     /**
      * Returns an integer that represents the lighting state at the position.
-     * This value is version-dependent, and should be stored in {@link RenderableObject#worldLightValue}
+     * This value is version-dependent, and should be stored in {@link RenderableData#worldLightValue}
      */
     int getLightingAtPosition(Point3D position);
 

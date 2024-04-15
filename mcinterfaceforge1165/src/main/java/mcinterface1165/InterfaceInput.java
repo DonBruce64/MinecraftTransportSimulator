@@ -13,11 +13,14 @@ import org.lwjgl.glfw.GLFW;
 
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketPackImport;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -34,6 +37,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
+    private static KeyBinding importKey;
     private static int lastScrollValue;
 
     //Joystick variables.
@@ -62,8 +66,10 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public void initConfigKey() {
-        configKey = new KeyBinding(JSONConfigLanguage.GUI_MASTERCONFIG.value, GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
+        configKey = new KeyBinding(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(configKey);
+        importKey = new KeyBinding(LanguageSystem.GUI_IMPORT.getCurrentValue(), GLFW.GLFW_KEY_UNKNOWN, InterfaceLoader.MODNAME);
+        ClientRegistry.registerKeyBinding(importKey);
     }
 
     @Override
@@ -77,20 +83,12 @@ public class InterfaceInput implements IInterfaceInput {
             Thread joystickThread = new Thread(() -> {
                 try {
                     joystickNameCounters.clear();
-                    if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.coreInterface.logError("Starting controller init.");
                     if (runningClassicMode) {
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Running classic mode.");
                         classicJoystickMap.clear();
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Found this many controllers: " + ControllerEnvironment.getDefaultEnvironment().getControllers().length);
                         for (Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
                             joystickEnabled = true;
                             if (joystick.getType() != null && !joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0) {
                                 String joystickName = joystick.getName();
-                                if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
                                 if (!joystickNameCounters.containsKey(joystickName)) {
@@ -101,8 +99,6 @@ public class InterfaceInput implements IInterfaceInput {
                             }
                         }
                     } else {
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Running modern mode.");
                         joystickMap.clear();
                         joystickAxisCounts.clear();
                         joystickHatCounts.clear();
@@ -112,8 +108,6 @@ public class InterfaceInput implements IInterfaceInput {
                             joystickEnabled = true;
                             if (GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
                                 String joystickName = GLFW.glfwGetJoystickName(i);
-                                if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
                                 if (!joystickNameCounters.containsKey(joystickName)) {
@@ -132,8 +126,6 @@ public class InterfaceInput implements IInterfaceInput {
 
                     //Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
                     Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
-                    if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.coreInterface.logError("Performing button validity checks.");
                     while (iterator.hasNext()) {
                         try {
                             Entry<String, ConfigJoystick> controllerEntry = iterator.next();
@@ -143,6 +135,7 @@ public class InterfaceInput implements IInterfaceInput {
                                 if (classicJoystickMap.containsKey(config.joystickName)) {
                                     if (classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex) {
                                         iterator.remove();
+                                        InterfaceManager.coreInterface.logError("Removed classic joystick with too low count.  Had " + classicJoystickMap.get(config.joystickName).getComponents().length + " requested " + config.buttonIndex);
                                     }
                                 }
                             } else {
@@ -150,10 +143,12 @@ public class InterfaceInput implements IInterfaceInput {
                                     if (control.isAxis) {
                                         if (joystickAxisCounts.get(config.joystickName) <= config.buttonIndex) {
                                             iterator.remove();
+                                            InterfaceManager.coreInterface.logError("Removed joystick with too low axis count.  Had " + joystickAxisCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                         }
                                     } else {
                                         if (joystickComponentCounts.get(config.joystickName) <= config.buttonIndex) {
                                             iterator.remove();
+                                            InterfaceManager.coreInterface.logError("Removed joystick with too low button count.  Had " + joystickComponentCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                         }
                                     }
                                 }
@@ -347,7 +342,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
-    public static void on(KeyInputEvent event) {
+    public static void onIVKeyInput(KeyInputEvent event) {
         //Check if we switched joystick modes.
         if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
             runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;
@@ -360,9 +355,14 @@ public class InterfaceInput implements IInterfaceInput {
             joystickLoadingAttempted = true;
         }
 
-        //Check if we pressed the config key.
+        //Check if we pressed the config or import key.
         if (configKey.isDown() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
+        } else if (ConfigSystem.settings.general.devMode.value && importKey.isDown()) {
+            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+            clientPlayer.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
+            JSONParser.applyImports(clientPlayer.getWorld());
+            InterfaceManager.packetInterface.sendToServer(new PacketPackImport());
         }
     }
 
@@ -370,7 +370,7 @@ public class InterfaceInput implements IInterfaceInput {
      * Gets mouse scroll data, since we have to register a listner, and MC already does this for us.
      */
     @SubscribeEvent
-    public static void on(GuiScreenEvent.MouseScrollEvent.Post event) {
+    public static void onIVMouseScroll(GuiScreenEvent.MouseScrollEvent.Post event) {
         if (InterfaceManager.clientInterface.isGUIOpen()) {
             lastScrollValue = (int) event.getScrollDelta();
             event.setCanceled(true);

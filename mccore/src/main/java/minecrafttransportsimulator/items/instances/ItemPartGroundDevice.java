@@ -2,18 +2,20 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemPartGroundDevice extends AItemPart {
 
@@ -28,43 +30,40 @@ public class ItemPartGroundDevice extends AItemPart {
 
     @Override
     public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData);
+        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, this, partData);
     }
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_DIAMETER.value + definition.ground.height);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION.value + definition.ground.motiveFriction);
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_LATERALFRICTION.value + definition.ground.lateralFriction);
-        StringBuilder modifierString = null;
-        int modifierCount = 0;
+        tooltipLines.add(LanguageSystem.ITEMINFO_GROUND_DEVICE_DIAMETER.getCurrentValue() + definition.ground.height);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION.getCurrentValue() + definition.ground.motiveFriction);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GROUND_DEVICE_LATERALFRICTION.getCurrentValue() + definition.ground.lateralFriction);
+        tooltipLines.add(LanguageSystem.ITEMINFO_GROUND_DEVICE_WETFRICTION.getCurrentValue() + definition.ground.wetFrictionPenalty);
+        Map<Float, String> frictionValues = new TreeMap<>();
         for (Entry<BlockMaterial, Float> modifier : definition.ground.frictionModifiers.entrySet()) {
-            if (modifierString == null) {
-                modifierString = new StringBuilder("\n");
-            } else {
-                if (++modifierCount == 2) {
-                    modifierCount = 0;
-                    modifierString.append("\n");
-                } else {
-                    modifierString.append(", ");
-                }
+            Float value = modifier.getValue();
+            if(!frictionValues.containsKey(value)) {
+                frictionValues.put(value, value + ": " + modifier.getKey().name().toLowerCase(Locale.ROOT));
+            }else {
+                frictionValues.put(value, frictionValues.get(value) + ", " + modifier.getKey().name().toLowerCase(Locale.ROOT));
             }
-            modifierString.append(modifier.getKey().name().toLowerCase(Locale.ROOT)).append(": ").append(modifier.getValue());
         }
-        tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + modifierString);
-        tooltipLines.add(definition.ground.isWheel ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.value);
-        tooltipLines.add(definition.ground.canFloat ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_CANFLOAT_FALSE.value);
+        
+        tooltipLines.add(LanguageSystem.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.getCurrentValue());
+        frictionValues.forEach((key, value) -> tooltipLines.add(value));
+        tooltipLines.add(definition.ground.isWheel ? LanguageSystem.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.getCurrentValue() : LanguageSystem.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.getCurrentValue());
+        tooltipLines.add(definition.ground.canFloat ? LanguageSystem.ITEMINFO_GROUND_DEVICE_CANFLOAT_TRUE.getCurrentValue() : LanguageSystem.ITEMINFO_GROUND_DEVICE_CANFLOAT_FALSE.getCurrentValue());
     }
 
     public boolean needsRepair(IWrapperNBT data) {
-        return super.needsRepair(data) || data.getBoolean(PartGroundDevice.FLAT_VARIABLE);
+        return super.needsRepair(data) || (data != null && data.getBoolean(PartGroundDevice.FLAT_VARIABLE));
     }
 
     @Override
     public void repair(IWrapperNBT data) {
         super.repair(data);
-        data.deleteData(PartGroundDevice.FLAT_VARIABLE);
+        data.deleteEntry(PartGroundDevice.FLAT_VARIABLE);
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

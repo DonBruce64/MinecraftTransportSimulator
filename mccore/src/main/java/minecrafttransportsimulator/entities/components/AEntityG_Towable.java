@@ -10,9 +10,8 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -21,6 +20,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Base entity class containing towing states and methods.
@@ -31,36 +32,38 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider> extends AEntityF_Multipart<JSONDefinition> {
     //Connection data.
     public TowingConnection towedByConnection;
-    public final List<TowingConnection> towingConnections = new ArrayList<>();
     private TowingConnection savedTowedByConnection;
+    public final List<TowingConnection> towingConnections = new ArrayList<>();
     private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> savedDisconnectedTowingConnections = new ArrayList<>();
 
     public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
-    public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
-        //Load towing data.
-        IWrapperNBT towData = data.getData("towedByConnection");
-        if (towData != null) {
-            this.savedTowedByConnection = new TowingConnection(towData);
-        }
-
-        int towingConnectionCount = data.getInteger("towingConnectionCount");
-        for (int i = 0; i < towingConnectionCount; ++i) {
-            towData = data.getData("towingConnection" + i);
+    public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
+        if (data != null) {
+            //Load towing data.
+            IWrapperNBT towData = data.getData("towedByConnection");
             if (towData != null) {
-                this.savedTowingConnections.add(new TowingConnection(towData));
+                this.savedTowedByConnection = new TowingConnection(towData);
             }
-        }
 
-        //Load disabled connections.
-        towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
-        for (int i = 0; i < towingConnectionCount; ++i) {
-            towData = data.getData("disconnectedTowingConnection" + i);
-            if (towData != null) {
-                this.savedDisconnectedTowingConnections.add(new TowingConnection(towData));
+            int towingConnectionCount = data.getInteger("towingConnectionCount");
+            for (int i = 0; i < towingConnectionCount; ++i) {
+                towData = data.getData("towingConnection" + i);
+                if (towData != null) {
+                    this.savedTowingConnections.add(new TowingConnection(towData));
+                }
+            }
+
+            //Load disabled connections.
+            towingConnectionCount = data.getInteger("disconnectedTowingConnectionCount");
+            for (int i = 0; i < towingConnectionCount; ++i) {
+                towData = data.getData("disconnectedTowingConnection" + i);
+                if (towData != null) {
+                    this.savedDisconnectedTowingConnections.add(new TowingConnection(towData));
+                }
             }
         }
     }
@@ -69,86 +72,86 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     public void update() {
         super.update();
         world.beginProfiling("EntityG_Level", true);
-        if (!world.isClient()) {
-            //Do validity checks for towing variables.  We could do this whenever we disconnect,
-            //but there are tons of ways this could happen.  The trailer could blow up, the 
-            //part-hitch could have been blown up, the trailer could have gotten wrenched, the
-            //part hitch could have gotten wrenched, etc.  And that doesn't even count what the
-            //thing towing us could have done! 
-            if (towedByConnection != null) {
-                if (!towedByConnection.towingEntity.isValid) {
-                    towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
-                }
-            }
-            if (!towingConnections.isEmpty()) {
-                //First functional expression here in the whole codebase, history in the making!
-                //Is what this used to say before we fixed things...
-                for (int i = 0; i < towingConnections.size(); ++i) {
-                    TowingConnection connection = towingConnections.get(i);
-                    if (!connection.towedEntity.isValid) {
-                        disconnectTrailer(i);
-                        --i;
-                    }
-                }
-            }
 
-            //See if we need to link connections.
-            //We need to wait on this in case the entity didn't load at the same time.
-            //That being said, it may be the vehicle we are loading is in another chunk.
-            //As such we wait only some time, and if we caon't find all entities, we remove
-            //them from the listing of entities to find.
-            //Only do this once a second, and if we hit 5 seconds, bail.
-            //We do this linking both ways, as we don't know if the towed vehicle or the towing vehicle will load first.
-            if (savedTowedByConnection != null) {
-                if (ticksExisted % 20 == 0) {
-                    if (ticksExisted <= 100) {
-                        if (savedTowedByConnection.initConnection(world)) {
-                            savedTowedByConnection.towingVehicle.connectTrailer(savedTowedByConnection);
-                        }
-                    } else {
-                        savedTowedByConnection = null;
-                        InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
-                    }
+        //Do validity checks for towing variables.  We could do this whenever we disconnect,
+        //but there are tons of ways this could happen.  The trailer could blow up, the 
+        //part-hitch could have been blown up, the trailer could have gotten wrenched, the
+        //part hitch could have gotten wrenched, etc.  And that doesn't even count what the
+        //thing towing us could have done! 
+        if (towedByConnection != null) {
+            if (!towedByConnection.towingEntity.isValid) {
+                towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
+            }
+        }
+        if (!towingConnections.isEmpty()) {
+            //First functional expression here in the whole codebase, history in the making!
+            //Is what this used to say before we fixed things...
+            for (int i = 0; i < towingConnections.size(); ++i) {
+                TowingConnection connection = towingConnections.get(i);
+                if (!connection.towedEntity.isValid) {
+                    disconnectTrailer(i);
+                    --i;
                 }
             }
-            if (!savedTowingConnections.isEmpty()) {
-                if (ticksExisted % 20 == 0) {
-                    if (ticksExisted <= 100) {
-                        for (int i = 0; i < savedTowingConnections.size(); ++i) {
-                            TowingConnection savedTowingConnection = savedTowingConnections.get(i);
-                            try {
-                                if (savedTowingConnection.initConnection(world)) {
-                                    connectTrailer(savedTowingConnection);
-                                    --i;
-                                }
-                            } catch (Exception e) {
-                                InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
-                            }
-                        }
-                    } else {
-                        savedTowingConnections.clear();
-                        InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+        }
+
+        //See if we need to link connections.
+        //We need to wait on this in case the entity didn't load at the same time.
+        //That being said, it may be the vehicle we are loading is in another chunk.
+        //As such we wait only some time, and if we caon't find all entities, we remove
+        //them from the listing of entities to find.
+        //Only do this once a second, and if we hit 5 seconds, bail.
+        //We do this linking both ways, as we don't know if the towed vehicle or the towing vehicle will load first.
+        if (savedTowedByConnection != null) {
+            if (ticksExisted % 20 == 0 && ticksExisted > 0) {
+                if (ticksExisted <= 100 || world.isClient()) {
+                    if (savedTowedByConnection.initConnection(world)) {
+                        savedTowedByConnection.towingVehicle.connectTrailer(savedTowedByConnection, false);
                     }
+                } else {
+                    savedTowedByConnection = null;
+                    InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
                 }
             }
-            if (!savedDisconnectedTowingConnections.isEmpty()) {
-                if (ticksExisted % 20 == 0) {
-                    if (ticksExisted <= 100) {
-                        for (int i = 0; i < savedDisconnectedTowingConnections.size(); ++i) {
-                            TowingConnection savedTowingConnection = savedDisconnectedTowingConnections.get(i);
-                            try {
-                                if (savedTowingConnection.initConnection(world)) {
-                                    disconnectedTowingConnections.add(savedTowingConnection);
-                                    --i;
-                                }
-                            } catch (Exception e) {
-                                InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
+        }
+
+        if (!savedTowingConnections.isEmpty()) {
+            if (ticksExisted % 20 == 0 && ticksExisted > 0) {
+                if (ticksExisted <= 100 || world.isClient()) {
+                    for (int i = 0; i < savedTowingConnections.size(); ++i) {
+                        TowingConnection savedTowingConnection = savedTowingConnections.get(i);
+                        try {
+                            if (savedTowingConnection.initConnection(world)) {
+                                connectTrailer(savedTowingConnection, false);
+                                --i;
                             }
+                        } catch (Exception e) {
+                            InterfaceManager.coreInterface.logError("Could not connect a trailer to the entity towing it.  Did the JSON or pack change?");
                         }
-                    } else {
-                        savedDisconnectedTowingConnections.clear();
-                        InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
+                } else {
+                    savedTowingConnections.clear();
+                    InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                }
+            }
+        }
+        if (!savedDisconnectedTowingConnections.isEmpty()) {
+            if (ticksExisted % 20 == 0) {
+                if (ticksExisted <= 100 || world.isClient()) {
+                    for (int i = 0; i < savedDisconnectedTowingConnections.size(); ++i) {
+                        TowingConnection savedTowingConnection = savedDisconnectedTowingConnections.get(i);
+                        try {
+                            if (savedTowingConnection.initConnection(world)) {
+                                disconnectedTowingConnections.add(savedTowingConnection);
+                                --i;
+                            }
+                        } catch (Exception e) {
+                            InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                        }
+                    }
+                } else {
+                    savedDisconnectedTowingConnections.clear();
+                    InterfaceManager.coreInterface.logError("Could not restore saved disconnected trailer(s) to the entity towing them.  Did the JSON or pack change?");
                 }
             }
         }
@@ -439,7 +442,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                                             boolean validType = hitchConnection.type.equals(hookupConnection.type);
                                             boolean validDistance = hitchPos.isDistanceToCloserThan(hookupPos, hitchConnection.distance);
                                             if (validType && validDistance) {
-                                                connectTrailer(new TowingConnection(hitchConnectionDefiner, hitchGroupIndex, hitchConnectionIndex, hookupConnectionDefiner, hookupGroupIndex, hookupConnectionIndex));
+                                                connectTrailer(new TowingConnection(hitchConnectionDefiner, hitchGroupIndex, hitchConnectionIndex, hookupConnectionDefiner, hookupGroupIndex, hookupConnectionIndex), true);
                                                 return TrailerConnectionResult.CONNECTED;
                                             } else if (validType) {
                                                 matchingConnection = true;
@@ -486,19 +489,25 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     /**
      * Method block for connecting a trailer to this entity.
      */
-    public void connectTrailer(TowingConnection connection) {
+    public void connectTrailer(TowingConnection connection, boolean notifyClient) {
         towingConnections.add(connection);
         connection.towedVehicle.towedByConnection = connection;
         connection.towingEntity.connectionGroupsIndexesInUse.add(connection.hitchGroupIndex);
         connection.towedEntity.connectionGroupsIndexesInUse.add(connection.hookupGroupIndex);
-        ((AEntityG_Towable<?>) connection.towedVehicle).savedTowedByConnection = null;
 
         //Need to set initial values to avoid bad-syncing.
         connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
         connection.hookupCurrentPosition.set(connection.hookupConnection.pos).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
+
+        //Clear saved connection from other vehicle, if we have it.  If we don't, we'll double-connect.
+        ((AEntityG_Towable<?>) connection.towedVehicle).savedTowedByConnection = null;
+        savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
+
+        //Handle connection update requests.
         if (!world.isClient()) {
-            savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connection));
+            if (notifyClient) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connection));
+            }
         } else if (AGUIBase.activeInputGUI instanceof GUIPanel) {
             ((GUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
         }
@@ -550,6 +559,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         for (TowingConnection towingEntry : towingConnections) {
             data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
+        for (TowingConnection towingEntry : savedTowingConnections) {
+            data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        }
         data.setInteger("towingConnectionCount", towingConnectionIndex);
 
         towingConnectionIndex = 0;
@@ -565,14 +577,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
      * Emum for easier functions for trailer connections.
      */
     private enum TrailerConnectionResult {
-        FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
-        ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
-        NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
-        TOOFAR(true, JSONConfigLanguage.INTERACT_TRAILER_TOOFAR),
-        WRONGHITCH(true, JSONConfigLanguage.INTERACT_TRAILER_WRONGHITCH),
-        MISMATCH(true, JSONConfigLanguage.INTERACT_TRAILER_MISMATCH),
-        CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
-        DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
+        FEEDBACK_LOOP(true, LanguageSystem.INTERACT_TRAILER_FEEDBACKLOOP),
+        ALREADY_TOWED(true, LanguageSystem.INTERACT_TRAILER_ALREADYTOWED),
+        NOTFOUND(true, LanguageSystem.INTERACT_TRAILER_NOTFOUND),
+        TOOFAR(true, LanguageSystem.INTERACT_TRAILER_TOOFAR),
+        WRONGHITCH(true, LanguageSystem.INTERACT_TRAILER_WRONGHITCH),
+        MISMATCH(true, LanguageSystem.INTERACT_TRAILER_MISMATCH),
+        CONNECTED(false, LanguageSystem.INTERACT_TRAILER_CONNECTED),
+        DISCONNECTED(false, LanguageSystem.INTERACT_TRAILER_DISCONNECTED);
 
         private final boolean skip;
         private final LanguageEntry language;

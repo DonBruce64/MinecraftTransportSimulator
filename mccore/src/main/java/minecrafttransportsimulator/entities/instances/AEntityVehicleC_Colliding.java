@@ -7,8 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -17,6 +16,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -39,8 +40,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
      */
     public final double speedFactor;
 
-    public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
+        super(world, placingPlayer, item, data);
         this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value) * ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
         double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
         scale.set(vehicleScale, vehicleScale, vehicleScale);
@@ -79,8 +80,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
         //Do part things before we call super, as that will remove the parts from this vehicle.
         IWrapperEntity controller = getController();
-        Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, null, JSONConfigLanguage.DEATH_CRASH_NULL);
-        LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
+        Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, null, LanguageSystem.DEATH_CRASH_NULL);
+        LanguageEntry language = controller != null ? LanguageSystem.DEATH_CRASH_PLAYER : LanguageSystem.DEATH_CRASH_NULL;
         Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, controller, language);
 
         //Damage riders.

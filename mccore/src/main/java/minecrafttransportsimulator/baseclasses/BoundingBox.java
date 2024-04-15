@@ -3,12 +3,15 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -33,8 +36,8 @@ public class BoundingBox {
     public final Point3D globalCenter;
     public final Point3D currentCollisionDepth;
     public final List<Point3D> collidingBlockPositions = new ArrayList<>();
-    private RenderableObject wireframeRenderable;
-    private RenderableObject holographicRenderable;
+    private RenderableData wireframeRenderable;
+    private RenderableData holographicRenderable;
     private final Point3D tempGlobalCenter;
 
     public double widthRadius;
@@ -147,24 +150,6 @@ public class BoundingBox {
     }
 
     /**
-     * Returns the edge points for this box.
-     * Order is the 4 -x points, then the 4 +x.
-     * Y is -y for two, +y for two.
-     * Z alternates each point.
-     */
-    public float[][] getEdgePoints() {
-        float[][] points = new float[8][];
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                for (int k = 0; k < 2; ++k) {
-                    points[i * 4 + j * 2 + k] = new float[]{(float) (i == 0 ? -widthRadius : +widthRadius), (float) (j == 0 ? -heightRadius : +heightRadius), (float) (k == 0 ? -depthRadius : +depthRadius)};
-                }
-            }
-        }
-        return points;
-    }
-
-    /**
      * Returns true if the passed-in point is inside this box.
      * Note that this returns true for points on the border, to allow use to use in
      * in conjunction with hit-scanning code to find out which box got hit-scanned.
@@ -237,24 +222,27 @@ public class BoundingBox {
      * If so, then a new point is returned on the first point of intersection (outer bounds).  If the
      * line created by the two points does not intersect this box, null is returned.
      */
-    public Point3D getIntersectionPoint(Point3D start, Point3D end) {
+    public BoundingBoxHitResult getIntersection(Point3D start, Point3D end) {
         //First check minX.
         Point3D intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
+        Axis hitSide = Axis.WEST;
 
         //Now get maxX.
-        Point3D secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
-
         //If minX is null, or if maxX is not null, and is closer to the start point than minX, it's our new intersection.
+        //Basically, we're getting the X- intersection here.
+        Point3D secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.EAST;
         }
 
         //Now check minY.
-        secondIntersection = getYPlaneCollision(start, end, globalCenter.y - heightRadius);
-
         //If we don't have a valid intersection, or minY is closer than the current intersection, it's our new intersection.
+        //This makes us chose between minY and X at this point.
+        secondIntersection = getYPlaneCollision(start, end, globalCenter.y - heightRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.DOWN;
         }
 
         //You should be able to see what we're doing here now, yes?
@@ -262,16 +250,19 @@ public class BoundingBox {
         secondIntersection = getYPlaneCollision(start, end, globalCenter.y + heightRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.UP;
         }
         secondIntersection = getZPlaneCollision(start, end, globalCenter.z - depthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.NORTH;
         }
         secondIntersection = getZPlaneCollision(start, end, globalCenter.z + depthRadius);
         if (secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))) {
             intersection = secondIntersection;
+            hitSide = Axis.SOUTH;
         }
-        return intersection;
+        return intersection != null ? new BoundingBoxHitResult(this, intersection, hitSide) : null;
     }
 
     /**
@@ -281,26 +272,25 @@ public class BoundingBox {
      */
     public void renderWireframe(AEntityC_Renderable entity, TransformationMatrix transform, Point3D offset, ColorRGB color) {
         if (wireframeRenderable == null) {
-            final ColorRGB boxColor;
+            wireframeRenderable = new RenderableData(new RenderableVertices(false));
             if (definition != null) {
                 if (definition.variableName != null) {
                     //Green for boxes that activate variables.
-                    boxColor = ColorRGB.GREEN;
+                    wireframeRenderable.setColor(ColorRGB.GREEN);
                 } else if (groupDef != null && groupDef.isForBullets) {
                     //Orange for bullet collisions.
-                    boxColor = ColorRGB.ORANGE;
+                    wireframeRenderable.setColor(ColorRGB.ORANGE);
                 } else if (groupDef != null && !groupDef.isInterior) {
                     //Red for block collisions.
-                    boxColor = ColorRGB.RED;
+                    wireframeRenderable.setColor(ColorRGB.RED);
                 } else {
                     //Black for general collisions.
-                    boxColor = ColorRGB.BLACK;
+                    wireframeRenderable.setColor(ColorRGB.BLACK);
                 }
             } else {
                 //Not a defined collision box.  Must be an interaction box.  Yellow.
-                boxColor = ColorRGB.YELLOW;
+                wireframeRenderable.setColor(ColorRGB.YELLOW);
             }
-            this.wireframeRenderable = new RenderableObject(new ColorRGB(boxColor.rgbInt), false);
         }
         wireframeRenderable.transform.set(transform);
         helperPoint.set(globalCenter);
@@ -312,9 +302,9 @@ public class BoundingBox {
         wireframeRenderable.transform.applyTranslation(helperPoint);
         if (color != null) {
             //Override default color with set color.
-            wireframeRenderable.color.setTo(color);
+            wireframeRenderable.setColor(color);
         }
-        wireframeRenderable.setWireframeBoundingBox(this);
+        wireframeRenderable.setBoxBounds(this, true);
         wireframeRenderable.render();
     }
 
@@ -325,14 +315,15 @@ public class BoundingBox {
      */
     public void renderHolographic(TransformationMatrix transform, Point3D offset, ColorRGB color) {
         if (holographicRenderable == null) {
-            holographicRenderable = new RenderableObject(new ColorRGB(), true);
+            holographicRenderable = new RenderableData(new RenderableVertices(true), "mts:textures/rendering/holobox.png");
+            holographicRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         }
         holographicRenderable.transform.set(transform);
         if (offset != null) {
             holographicRenderable.transform.applyTranslation(offset);
         }
-        holographicRenderable.color.setTo(color);
-        holographicRenderable.setHolographicBoundingBox(this);
+        holographicRenderable.setColor(color);
+        holographicRenderable.setBoxBounds(this, false);
         holographicRenderable.render();
     }
 }

@@ -4,8 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -15,8 +13,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
@@ -33,10 +29,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.GIFParser;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
-import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableData;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -60,8 +55,8 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -79,19 +74,16 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
 
-    private static Map<String, RenderType> renderTypes = new HashMap<>();
-    private static final BufferData testData = new BufferData();
-    private static boolean onBufferSet2 = false;
-    private static Map<RenderableObject, List<BufferData>> bufferSet1 = new HashMap<>();
-    private static Map<RenderableObject, List<BufferData>> bufferSet2 = new HashMap<>();
-    private static Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
-    private static ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
+    private static final Map<String, RenderType> renderTypes = new HashMap<>();
+    private static final Map<RenderableData, BufferData> buffers = new HashMap<>();
+    private static final Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
     private static MatrixStack matrixStack;
     private static IRenderTypeBuffer renderBuffer;
-    private static Point3D renderCameraOffset = new Point3D();
+    public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
 
@@ -128,102 +120,60 @@ public class InterfaceRender implements IInterfaceRender {
     }
     
     @Override
-    public void renderVertices(RenderableObject object) {
+    public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
         matrixStack.pushPose();
-        Matrix4f matrix4f = convertMatrix4f(object.transform);
+        Matrix4f matrix4f = convertMatrix4f(data.transform);
         MatrixStack.Entry stackEntry = matrixStack.last();
         stackEntry.pose().multiply(matrix4f);
 
-        if (object.isLines) {
+        if (data.vertexObject.isLines) {
             IVertexBuilder buffer = renderBuffer.getBuffer(RenderType.lines());
-            while (object.vertices.hasRemaining()) {
-                buffer.vertex(stackEntry.pose(), object.vertices.get(), object.vertices.get(), object.vertices.get());
-                buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+            while (data.vertexObject.vertices.hasRemaining()) {
+                buffer.vertex(stackEntry.pose(), data.vertexObject.vertices.get(), data.vertexObject.vertices.get(), data.vertexObject.vertices.get());
+                buffer.color(data.color.red, data.color.green, data.color.blue, data.alpha);
                 buffer.endVertex();
             }
             //Rewind buffer for next read.
-            object.vertices.rewind();
+            data.vertexObject.vertices.rewind();
         } else {
-            String typeID = object.texture + object.isTranslucent + object.enableBrightBlending + object.ignoreWorldShading + object.disableLighting;
-            RenderType renderType = renderTypes.get(typeID);
-            if (object.cacheVertices && !renderingGUI) {
-                if (renderType == null) {
-                    Builder stateBuilder = CustomRenderType.createForObject(object);
-                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, object.isTranslucent, stateBuilder.createCompositeState(false));
-                    renderTypes.put(typeID, renderType);
-                }
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            final RenderType renderType;
+            if (data.vertexObject.cacheVertices && !renderingGUI) {
+            	//Get the render type and data buffer for this entity.
+                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
+                BufferData buffer = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
 
-                //Get the active buffer set.  We flip-flop each render.
-                List<BufferData> availableBuffers;
-                List<BufferData> usedBuffers;
-                if (onBufferSet2) {
-                    availableBuffers = bufferSet2.get(object);
-                    if (availableBuffers == null) {
-                        availableBuffers = new ArrayList<>();
-                        bufferSet2.put(object, availableBuffers);
-                    }
-                    usedBuffers = bufferSet1.get(object);
-                    if (usedBuffers == null) {
-                        usedBuffers = new ArrayList<>();
-                        bufferSet1.put(object, usedBuffers);
-                    }
-                } else {
-                    availableBuffers = bufferSet1.get(object);
-                    if (availableBuffers == null) {
-                        availableBuffers = new ArrayList<>();
-                        bufferSet1.put(object, availableBuffers);
-                    }
-                    usedBuffers = bufferSet2.get(object);
-                    if (usedBuffers == null) {
-                        usedBuffers = new ArrayList<>();
-                        bufferSet2.put(object, usedBuffers);
-                    }
+                //Reset buffer if it's not ready.
+                if (changedSinceLastRender) {
+                    buffer.builder.clear();
+                    buffer.isReady = false;
                 }
-
-                //Try to get a already-created buffer rather than make a new one.
-                testData.setTo(object);
-                int index = availableBuffers.indexOf(testData);
-                BufferData data;
-                if (index != -1) {
-                    //Matching data, use it.
-                    data = availableBuffers.remove(index);
-                } else if (!availableBuffers.isEmpty()) {
-                    //Get last data, since it's least likely to be static.
-                    data = availableBuffers.remove(availableBuffers.size() - 1);
-                    data.setTo(object);
-                } else {
-                    //No data available, need to make it.
-                    data = new BufferData(renderType, object);
-                }
-                usedBuffers.add(data);
-
-                //Make sure data is ready, if not, init it.
-                if (!data.isReady) {
-                    index = 0;
-                    data.builder.begin(GL11.GL_QUADS, renderType.format());
-                    while (object.vertices.hasRemaining()) {
+                if (!buffer.isReady) {
+                    int index = 0;
+                    buffer.builder.begin(GL11.GL_QUADS, renderType.format());
+                    while (data.vertexObject.vertices.hasRemaining()) {
                         //Need to parse these out first since our order differs.
-                        float normalX = object.vertices.get();
-                        float normalY = object.vertices.get();
-                        float normalZ = object.vertices.get();
-                        float texU = object.vertices.get();
-                        float texV = object.vertices.get();
-                        float posX = object.vertices.get();
-                        float posY = object.vertices.get();
-                        float posZ = object.vertices.get();
+                        float normalX = data.vertexObject.vertices.get();
+                        float normalY = data.vertexObject.vertices.get();
+                        float normalZ = data.vertexObject.vertices.get();
+                        float texU = data.vertexObject.vertices.get();
+                        float texV = data.vertexObject.vertices.get();
+                        float posX = data.vertexObject.vertices.get();
+                        float posY = data.vertexObject.vertices.get();
+                        float posZ = data.vertexObject.vertices.get();
 
                         //Add the vertex format bits.
                         do {
-                            data.builder.vertex(posX, posY, posZ, object.color.red, object.color.green, object.color.blue, object.alpha, texU, texV, OverlayTexture.NO_OVERLAY, object.worldLightValue, normalX, normalY, normalZ);
+                            buffer.builder.vertex(posX, posY, posZ, data.color.red, data.color.green, data.color.blue, data.alpha, texU, texV, OverlayTexture.NO_OVERLAY, data.worldLightValue, normalX, normalY, normalZ);
                         } while (++index == 3);
                         if (index == 4) {
                             index = 0;
                         }
                     }
-                    data.isReady = true;
-                    data.builder.end();
-                    data.buffer.upload(data.builder);
-                    object.vertices.rewind();
+                    buffer.isReady = true;
+                    buffer.builder.end();
+                    buffer.buffer.upload(buffer.builder);
+                    data.vertexObject.vertices.rewind();
                 }
 
                 //Add this buffer to the list to render later.
@@ -232,27 +182,23 @@ public class InterfaceRender implements IInterfaceRender {
                     renders = new ArrayList<>();
                     queuedRenders.put(renderType, renders);
                 }
-                renders.add(new RenderData(stackEntry.pose(), data.buffer));
+                renders.add(new RenderData(stackEntry.pose(), buffer.buffer));
             } else {
-                if (renderType == null) {
-                    Builder stateBuilder = CustomRenderType.createForObject(object);
-                    renderType = CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, object.isTranslucent, stateBuilder.createCompositeState(false));
-                    renderTypes.put(typeID, renderType);
-                }
+                renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
                 
                 //Now populate the state we requested.
                 int index = 0;
-                while (object.vertices.hasRemaining()) {
+                while (data.vertexObject.vertices.hasRemaining()) {
                     //Need to parse these out first since our order differs.
-                    float normalX = object.vertices.get();
-                    float normalY = object.vertices.get();
-                    float normalZ = object.vertices.get();
-                    float texU = object.vertices.get();
-                    float texV = object.vertices.get();
-                    float posX = object.vertices.get();
-                    float posY = object.vertices.get();
-                    float posZ = object.vertices.get();
+                    float normalX = data.vertexObject.vertices.get();
+                    float normalY = data.vertexObject.vertices.get();
+                    float normalZ = data.vertexObject.vertices.get();
+                    float texU = data.vertexObject.vertices.get();
+                    float texV = data.vertexObject.vertices.get();
+                    float posX = data.vertexObject.vertices.get();
+                    float posY = data.vertexObject.vertices.get();
+                    float posZ = data.vertexObject.vertices.get();
 
                     //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
                     //Blaze3d my ass, this is SLOWER than DisplayLists!
@@ -261,10 +207,10 @@ public class InterfaceRender implements IInterfaceRender {
                     //Yes, they're stupid.
                     do {
                         buffer.vertex(stackEntry.pose(), posX, posY, posZ);
-                        buffer.color(object.color.red, object.color.green, object.color.blue, object.alpha);
+                        buffer.color(data.color.red, data.color.green, data.color.blue, data.alpha);
                         buffer.uv(texU, texV);
                         buffer.overlayCoords(OverlayTexture.NO_OVERLAY);
-                        buffer.uv2(object.worldLightValue);
+                        buffer.uv2(data.worldLightValue);
                         buffer.normal(stackEntry.normal(), normalX, normalY, normalZ);
                         buffer.endVertex();
                     } while (++index == 3);
@@ -273,23 +219,25 @@ public class InterfaceRender implements IInterfaceRender {
                     }
                 }
                 //Rewind buffer for next read.
-                object.vertices.rewind();
+                data.vertexObject.vertices.rewind();
             }
         }
         matrixStack.popPose();
     }
 
     @Override
-    public void deleteVertices(RenderableObject object) {
-        //Add to removed render list, we should only remove renders AFTER they are rendered.
-        List<BufferData> dataSet = bufferSet1.remove(object);
-        if (dataSet != null) {
-            removedRenders.addAll(dataSet);
-        }
-        dataSet = bufferSet2.remove(object);
-        if (dataSet != null) {
-            removedRenders.addAll(dataSet);
-        }
+    public void deleteVertices(RenderableData data) {
+        if (data.vertexObject.cacheVertices) {
+	    	//Add to removed render list, we should only remove renders AFTER they are rendered.
+	    	//This ensures they are un-bound, if the were bound prior.
+            //Make sure we actually bound a buffer; just because the main system asks for a bound buffer,
+    	    //doesn't mean we actually can give it one.  GUI models are one such case, as they don't work right
+            //with bound buffers due to matrix differences.
+            BufferData buffer = buffers.remove(data);
+            if (buffer != null) {
+                removedRenders.add(buffer);
+            }
+    	}
     }
 
     @Override
@@ -304,69 +252,44 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
-    public String downloadURLTexture(String textureURL) {
-        if (!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)) {
-            //Parse the texture, get the OpenGL integer that represents this texture, and save it.
-            //FAR less jank than using MC's resource system.
+    public boolean bindURLTexture(String textureURL, InputStream stream) {
+        if (stream != null) {
             try {
-                URL url = new URL(textureURL);
-                URLConnection connection = url.openConnection();
-                try {
-                    List<String> validContentTypes = new ArrayList<>();
-                    for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                        validContentTypes.add("image/" + imageSuffix);
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    if (validContentTypes.contains(contentType)) {
-                        if (contentType.endsWith("gif")) {
-                            ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-                            ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
-                            reader.setInput(stream);
-                            ParsedGIF gif = GIFParser.parseGIF(reader);
-                            if (gif != null) {
-                                animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, ResourceLocation> gifFrameIndexes = new HashMap<>();
-                                for (GIFImageFrame frame : gif.frames.values()) {
-                                    BufferedImage frameBuffer = frame.getImage();
-                                    ByteArrayOutputStream frameArrayStream = new ByteArrayOutputStream();
-                                    ImageIO.write(frameBuffer, "gif", frameArrayStream);
-                                    InputStream frameStream = new ByteArrayInputStream(frameArrayStream.toByteArray());
-
-                                    NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, frameStream);
-                                    DynamicTexture texture = new DynamicTexture(image);
-                                    ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-gif", texture);
-                                    gifFrameIndexes.put(frame, textureLocation);
-                                }
-                                animatedGIFFrames.put(gif, gifFrameIndexes);
-                            } else {
-                                return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
-                            }
-                        } else {
-                            NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, url.openStream());
-                            DynamicTexture texture = new DynamicTexture(image);
-                            ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-url", texture);
-                            onlineTextures.put(textureURL, textureLocation);
-                        }
-                    } else {
-                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
-                        for (String validType : validContentTypes) {
-                            errorString.append(validType).append(", ");
-                        }
-                        onlineTextures.put(textureURL, null);
-                        return errorString.toString();
-                    }
-                } catch (Exception e) {
-                    onlineTextures.put(textureURL, null);
-                    e.printStackTrace();
-                    return "Could not parse images.  Error was: " + e.getMessage();
-                }
+                NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, stream);
+                DynamicTexture texture = new DynamicTexture(image);
+                ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-url", texture);
+                onlineTextures.put(textureURL, textureLocation);
+                return true;
             } catch (Exception e) {
-                onlineTextures.put(textureURL, null);
-                e.printStackTrace();
-                return "Could not open URL for processing.  Error was: " + e.getMessage();
+                return false;
+            }
+        } else {
+            onlineTextures.put(textureURL, null);
+            return true;
+        }
+    }
+
+    @Override
+    public boolean bindURLGIF(String textureURL, ParsedGIF gif) {
+        Map<GIFImageFrame, ResourceLocation> gifFrameIndexes = new HashMap<>();
+        for (GIFImageFrame frame : gif.frames.values()) {
+            try {
+                BufferedImage frameBuffer = frame.getImage();
+                ByteArrayOutputStream frameArrayStream = new ByteArrayOutputStream();
+                ImageIO.write(frameBuffer, "gif", frameArrayStream);
+                InputStream frameStream = new ByteArrayInputStream(frameArrayStream.toByteArray());
+
+                NativeImage image = NativeImage.read(NativeImage.PixelFormat.RGB, frameStream);
+                DynamicTexture texture = new DynamicTexture(image);
+                ResourceLocation textureLocation = Minecraft.getInstance().textureManager.register("mts-gif", texture);
+                gifFrameIndexes.put(frame, textureLocation);
+            } catch (Exception e) {
+                return false;
             }
         }
-        return null;
+        animatedGIFs.put(textureURL, gif);
+        animatedGIFFrames.put(gif, gifFrameIndexes);
+        return true;
     }
 
     /**
@@ -387,7 +310,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Online texture.
             ResourceLocation onlineTexture = onlineTextures.get(textureLocation);
             return onlineTexture != null ? new RenderState.TextureState(onlineTextures.get(textureLocation), false, false) : MISSING_STATE;
-        } else if (textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)) {
+        } else if (textureLocation.equals(RenderableData.GLOBAL_TEXTURE_NAME)) {
             //Default texture.
             return BLOCK_STATE;
         } else {
@@ -413,7 +336,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Renders the main GUI, setting up any transforms or operations as required.
      */
-    @SuppressWarnings("deprecation") //This is for RenderSystem calls.
+    @SuppressWarnings("deprecation")
     protected static void renderGUI(MatrixStack stack, int mouseX, int mouseY, int screenWidth, int screenHeight, float partialTicks, boolean updateGUIs) {
         //Get the buffer for GUI rendering.
         matrixStack = stack;
@@ -511,30 +434,45 @@ public class InterfaceRender implements IInterfaceRender {
      * class here.
      */
     public static void registerRenderer(FMLClientSetupEvent event) {
-        //Register blank classes for the builders.
+        //Register the global entity rendering class.
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.E_TYPE4.get(), manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
+            @Override
+            public ResourceLocation getTextureLocation(BuilderEntityRenderForwarder builder) {
+                return null;
+            }
+
+            @Override
+            public boolean shouldRender(BuilderEntityRenderForwarder builder, ClippingHelper camera, double camX, double camY, double camZ) {
+                //Always render the forwarder, no matter where the camera is.
+                return true;
+            }
+
+            @Override
+            public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
+                if (builder.playerFollowing == Minecraft.getInstance().player) {
+                    //Set camera offset point for later.
+                    renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
+
+                    //Set the stack variables and render.
+                    doRenderCall(stack, buffer, false, partialTicks);
+                }
+            }
+        });
+
+        //Register blank classes for the other builders.
         //If we don't, the game crashes when trying to render them.
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityExisting.E_TYPE2.get(), manager -> new BlankRender<BuilderEntityExisting>(manager));
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityLinkedSeat.E_TYPE3.get(), manager -> new BlankRender<BuilderEntityLinkedSeat>(manager));
     }
 
     public static void doRenderCall(MatrixStack stack, IRenderTypeBuffer buffer, boolean blendingEnabled, float partialTicks) {
-        if (!blendingEnabled) {
-            //Flip the buffer set to the next one prior to rendering.
-            onBufferSet2 = !onBufferSet2;
-        }
-
-        //Set camera offfset point for later.
-        Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        renderCameraOffset.set(position.x, position.y, position.z);
-
-        //Set the global variables.
         matrixStack = stack;
         renderBuffer = buffer;
-
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
+
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
             for (AEntityC_Renderable entity : allEntities) {
@@ -605,15 +543,15 @@ public class InterfaceRender implements IInterfaceRender {
             throw new IllegalStateException("This class must not be instantiated, this is only here to gain access to the rendering constants.");
         }
 
-        private static Builder createForObject(RenderableObject object) {
+        private static Builder createForObject(RenderableData data) {
             //Create the state builder.  Changed states are active, default states are commented to save processing but still show the state.
             RenderType.State.Builder stateBuilder = RenderType.State.builder();
 
-            stateBuilder.setTextureState(getTexture(object.texture));
+            stateBuilder.setTextureState(getTexture(data.texture));
             //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
-            stateBuilder.setTransparencyState(object.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (object.isTranslucent ? PROPER_TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
+            stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? PROPER_TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
             //Diffuse lighting is the ambient lighting that auto-shades models.
-            stateBuilder.setDiffuseLightingState(object.ignoreWorldShading || object.disableLighting ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
+            stateBuilder.setDiffuseLightingState(data.lightingMode.disableTextureShadows ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
             //Always smooth shading.
             stateBuilder.setShadeModelState(SMOOTH_SHADE);
             //Use default alpha to remove alpha fragments in cut-out textures.
@@ -623,15 +561,15 @@ public class InterfaceRender implements IInterfaceRender {
             //Cull is fine.  Not sure what this does, actually...
             //stateBuilder.setCullState(NO_CULL);
             //Lightmap is on unless we are bright.
-            stateBuilder.setLightmapState(object.disableLighting ? NO_LIGHTMAP : LIGHTMAP);
+            stateBuilder.setLightmapState(data.lightingMode.disableWorldLighting ? NO_LIGHTMAP : LIGHTMAP);
             //No overlays ever.
             stateBuilder.setOverlayState(NO_OVERLAY);
             //No fog.
             //stateBuilder.setFogState(NO_FOG);
             //No layering.
             //stateBuilder.setLayeringState(NO_LAYERING);
-            //Target depends on blending.
-            stateBuilder.setOutputState(object.isTranslucent ? TRANSLUCENT_TARGET : MAIN_TARGET);
+            //Target is always main.
+            //stateBuilder.setOutputState(MAIN_TARGET);
             //Default texture is fine.
             //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
             //Not sure what this does, but it should be fine as-is?
@@ -645,8 +583,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     private static class RenderData {
-        final Matrix4f matrix;
-        final VertexBuffer buffer;
+        private final Matrix4f matrix;
+        private final VertexBuffer buffer;
 
         private RenderData(Matrix4f matrix, VertexBuffer buffer) {
             this.matrix = new Matrix4f(matrix);
@@ -657,11 +595,6 @@ public class InterfaceRender implements IInterfaceRender {
     private static class BufferData {
         final BufferBuilder builder;
         final VertexBuffer buffer;
-        float red;
-        float green;
-        float blue;
-        float alpha;
-        int lightIndex;
         boolean isReady;
 
         private BufferData() {
@@ -669,36 +602,13 @@ public class InterfaceRender implements IInterfaceRender {
             buffer = null;
         }
 
-        private BufferData(RenderType type, RenderableObject object) {
-            int vertices = object.vertices.limit() / 8;
+        private BufferData(RenderType type, RenderableData data) {
+            int vertices = data.vertexObject.vertices.limit() / 8;
             //Convert verts to faces, then back to quad-verts for MC rendering.
             //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
             vertices = ((vertices / 3) + 1) * 4;
             this.builder = new BufferBuilder(type.format().getIntegerSize() * vertices);
             this.buffer = new VertexBuffer(type.format());
-            setTo(object);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other instanceof BufferData) {
-                BufferData data = (BufferData) other;
-                return data.lightIndex == lightIndex && data.alpha == alpha && data.blue == blue && data.green == green && data.red == red;
-            } else {
-                return false;
-            }
-        }
-
-        private void setTo(RenderableObject object) {
-            this.red = object.color.red;
-            this.green = object.color.green;
-            this.blue = object.color.blue;
-            this.alpha = object.alpha;
-            this.lightIndex = object.worldLightValue;
-            this.isReady = false;
-            if (builder != null) {
-                builder.discard();
-            }
         }
     }
 

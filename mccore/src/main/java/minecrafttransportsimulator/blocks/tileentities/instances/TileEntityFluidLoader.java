@@ -5,6 +5,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoa
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -14,9 +15,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEntityFluidTankProvider {
     private final EntityFluidTank tank;
 
-    public TileEntityFluidLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, position, placingPlayer, data);
-        this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
+    public TileEntityFluidLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
+        super(world, position, placingPlayer, item, data);
+        this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, definition.decor.fuelCapacity);
         world.addEntity(tank);
     }
 

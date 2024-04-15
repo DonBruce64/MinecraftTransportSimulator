@@ -91,6 +91,12 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("How much spread the pellets will have when fired. 0 is no spread, higher values have higher spread.")
         public float pelletSpreadFactor;
+
+        @JSONDescription("The model of the casing to use for the casing particle, or null if no model is to be used.")
+        public String casingModel;
+
+        @JSONDescription("The texture of the casing to use for the casing particle, or null if no casing is to be rendered.")
+        public String casingTexture;
     }
 
     public enum BulletType {
