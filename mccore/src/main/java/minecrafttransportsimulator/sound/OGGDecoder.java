@@ -121,7 +121,7 @@ public class OGGDecoder implements IStreamDecoder {
                         int bytesRead = dataSourceStream.read(syncState.data, offset, OGG_BUFFER_SIZE);
                         syncState.wrote(bytesRead);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
                 } else {
                     throw new IllegalStateException("ERROR: Corrupt OGG file detected!");
