@@ -1221,13 +1221,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Called externally to reset all caches for all objects and animations on this entity.
      */
-    public static void resetModelsAndAnimations(AWrapperWorld world) {
-        for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
-            if (entity.definition.rendering.modelType != ModelType.NONE) {
-                if (entity.objectList != null) {
-                    entity.objectList.forEach(object -> object.destroy());
-                    entity.objectList = null;
-                }
+    public void resetModelsAndAnimations() {
+    	if (definition.rendering.modelType != ModelType.NONE) {
+            if (objectList != null) {
+                objectList.forEach(object -> object.destroy());
+                objectList = null;
             }
         }
     }

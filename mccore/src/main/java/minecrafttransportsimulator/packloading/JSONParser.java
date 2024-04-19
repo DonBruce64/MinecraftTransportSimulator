@@ -37,7 +37,6 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -697,9 +696,6 @@ public class JSONParser {
             	placedPart.applyHotloads = true;
             }
     	}
-    	
-    	//Clear object lists before changing definitions.
-        AEntityD_Definable.objectLists.clear();
 	}
 
     @Retention(RetentionPolicy.RUNTIME)

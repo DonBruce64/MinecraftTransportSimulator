@@ -47,7 +47,6 @@ public abstract class SimpleReloadableResourceManagerMixin {
         	for(AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
         		entity.resetModelsAndAnimations();
         	}
-        	AEntityD_Definable.objectLists.clear();
         }
     }
 
