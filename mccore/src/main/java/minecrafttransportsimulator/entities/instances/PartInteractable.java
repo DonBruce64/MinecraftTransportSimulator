@@ -86,8 +86,8 @@ public final class PartInteractable extends APart {
 
     @Override
     public LanguageEntry checkForRemoval() {
-        if (!definition.interactable.canBeOpenedInHand && getMass() > definition.generic.mass) {
-            return LanguageSystem.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
+        if (!definition.generic.canBeRemovedByHand && getMass() > definition.generic.mass) {
+            return LanguageSystem.INTERACT_PARTREMOVE_INVENTORY;
         } else {
             return super.checkForRemoval();
         }

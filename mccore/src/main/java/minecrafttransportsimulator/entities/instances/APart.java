@@ -75,10 +75,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isSpare;
     public boolean isMirrored;
     private boolean requestedForcedCamera;
-    private boolean playerHoldingWrenchLastTick;
-    private boolean playerHoldingWrench;
-    private boolean playerHoldingScrewdriverLastTick;
-    private boolean playerHoldingScrewdriver;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -190,17 +186,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
         }else if(requestedForcedCamera && activeCamera != null) {
         	requestedForcedCamera = false;
-        }
-
-        //Update tool state.
-        if (world.isClient()) {
-            playerHoldingWrenchLastTick = playerHoldingWrench;
-            playerHoldingScrewdriverLastTick = playerHoldingScrewdriver;
-            playerHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
-            playerHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
-            if (playerHoldingWrenchLastTick ^ playerHoldingWrench || playerHoldingScrewdriverLastTick ^ playerHoldingScrewdriver) {
-                forceCollisionUpdateThisTick = true;
-            }
         }
 
         //Update active state.
@@ -321,26 +306,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             allInteractionBoxes.removeAll(interactionBoxes);
             return;
         }
-
-        //If we are holding a screwdriver or wrench, run these checks to remove hitboxes if needed. This can only be done on the client.
-        if (world.isClient()) {
-            if (playerHoldingWrench || playerHoldingScrewdriver) {
-	            //If we are holding a wrench and the part requires a screwdriver, remove interaction boxes so they don't get in the way and vice versa.
-                if ((playerHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) || (playerHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver)) {
-	                allInteractionBoxes.removeAll(interactionBoxes);
-	                return;
-	            }
-	            //If we are holding a wrench or screwdriver, and the part has children, don't add the interaction boxes.  We can't wrench those parts.
-	            //The only exceptions are parts that have permanent-default parts on them. or if they specifically don't block subpart removal.  These can be removed.
-	            //Again, this only applies on clients for that client player.
-	        	for (APart childPart : parts) {
-	                if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
-	                    allInteractionBoxes.removeAll(interactionBoxes);
-	                    return;
-	                }
-	            }
-	        }
-        }
     }
 
     @Override
@@ -353,9 +318,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (vehicleOn != null && vehicleOn.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
-                if (player.getInventory().addStack(getStack())) {
-                    entityOn.removePart(this, true, null);
+            	LanguageEntry partResult = checkForRemoval();
+            	if(partResult != null) {
+            		player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+            		return;
+            	}else if (!player.getInventory().addStack(getStack())) {
+                	world.spawnItemStack(getStack(), position);
                 }
+            	entityOn.removePart(this, true, null);
             }
         } else {
             //Not a removable part, or is an actual attack.
@@ -519,10 +489,24 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     /**
-     * Checks if this part can be removed with a wrench.  If so, then null is returned.
+     * Checks if this part can be removed with a wrench/screwdriver.  If so, then null is returned.
      * If not, a {@link LanguageEntry} is returned with the message of why it cannot be.
      */
     public LanguageEntry checkForRemoval() {
+        boolean playerHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
+        boolean playerHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
+        
+        for (APart childPart : parts) {
+            if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
+                allInteractionBoxes.removeAll(interactionBoxes);
+                return LanguageSystem.INTERACT_PARTREMOVE_HASPARTS;
+            }
+        }
+        if(playerHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) {
+        	return LanguageSystem.INTERACT_PARTREMOVE_SCREWDRIVER;
+        }else if(playerHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver) {
+        	return LanguageSystem.INTERACT_PARTREMOVE_WRENCH;
+        }
         return null;
     }
 

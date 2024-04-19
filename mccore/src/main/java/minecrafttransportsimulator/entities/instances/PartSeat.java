@@ -364,7 +364,7 @@ public final class PartSeat extends APart {
     @Override
     public LanguageEntry checkForRemoval() {
         if (rider != null) {
-            return LanguageSystem.INTERACT_VEHICLE_SEATTAKEN;
+            return LanguageSystem.INTERACT_PARTREMOVE_RIDER;
         } else {
             return super.checkForRemoval();
         }

@@ -351,8 +351,13 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_VEHICLE_OWNED = new LanguageEntry("interact.vehicle.owned", "You are not the owner of this vehicle and therefore cannot change it or its parts!");
     public static final LanguageEntry INTERACT_VEHICLE_NEEDKEY = new LanguageEntry("interact.vehicle.needkey", "You must have the key of this vehicle to start it!");
     public static final LanguageEntry INTERACT_VEHICLE_NOSPACE = new LanguageEntry("interact.vehicle.nospace", "There is not enough space to place down this vehicle here.");
-    public static final LanguageEntry INTERACT_VEHICLE_CANTREMOVEINVENTORY = new LanguageEntry("interact.vehicle.cantremoveinventory", "You cannot remove this part because it is not empty!");
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");
+    
+    public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
+    public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
+    public static final LanguageEntry INTERACT_PARTREMOVE_SCREWDRIVER = new LanguageEntry("interact.partremove.screwdriver", "This part requires a screwdriver to remove!");
+    public static final LanguageEntry INTERACT_PARTREMOVE_INVENTORY = new LanguageEntry("interact.partremove.inventory", "You cannot remove this part because it is not empty!");
+    public static final LanguageEntry INTERACT_PARTREMOVE_RIDER = new LanguageEntry("interact.partremove.rider", "You cannot remove this seat while it is being ridden!");
 
     public static final LanguageEntry INTERACT_JUMPERCABLE_FIRSTLINK = new LanguageEntry("interact.jumpercable.firstlink", "Linking first engine to jumper cable.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_SECONDLINK = new LanguageEntry("interact.jumpercable.secondlink", "Engines linked.  Transmitting power.");
