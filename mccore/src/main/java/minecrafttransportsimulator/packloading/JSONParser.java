@@ -37,8 +37,6 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
@@ -55,7 +53,6 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -667,6 +664,9 @@ public class JSONParser {
                     //Reload item subdefs, since it will have changed.
                     for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
                         AItemSubTyped<?> item = (AItemSubTyped<?>) PackParser.getItem(definitionToOverride.packID, definitionToOverride.systemName, subDefinition.subName);
+                        if(item == null) {
+                        	return "\nWas asked to hotload definition " + subDefinition.subName + " on " + definitionToOverride.packID + ":" + definitionToOverride.systemName + " but can't as that definition doesn't exist!  You can only hotload existing definitions.";
+                        }
                         item.subDefinition = subDefinition;
                     }
 
@@ -686,17 +686,6 @@ public class JSONParser {
             return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();
         }
     }
-
-    public static void doImports() {
-        for(AWrapperWorld world : AWrapperWorld.worlds) {
-            for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                vehicle.applyHotloads = true;
-            }
-            for (EntityPlacedPart placedPart : world.getEntitiesOfType(EntityPlacedPart.class)) {
-            	placedPart.applyHotloads = true;
-            }
-    	}
-	}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)

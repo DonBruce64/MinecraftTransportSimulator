@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
@@ -56,8 +57,7 @@ public class GUIPackExporter extends AGUIBase {
         addComponent(packImportButton = new GUIComponentButton(this, guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-            	JSONParser.doImports();
-                debug.setText(JSONParser.importAllJSONs(false));
+            	EntityManager.doImports(() -> debug.setText(JSONParser.importAllJSONs(false)));
             }
         });
         //Add control buttons.

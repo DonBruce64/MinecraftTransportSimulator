@@ -2,8 +2,10 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,10 +39,20 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<IWrapperNBT, ItemVehicle> hotloadedVehicles = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<IWrapperNBT> hotloadedPlacedParts = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<UUID, UUID> hotloadedRiderIDs = new ConcurrentHashMap<>();
-    private int hotloadCountdown;
+    
+    private static int hotloadCountdown;
+    private static HotloadFunction hotloadFunction;
+    private static final Set<EntityManager> managersToHotload = new HashSet<>();
+    
+    private final Map<IWrapperNBT, ItemVehicle> hotloadedVehicles = new HashMap<>();
+    private final Set<IWrapperNBT> hotloadedPlacedParts = new HashSet<>();
+    private final Map<UUID, UUID> hotloadedRiderIDs = new HashMap<>();
+    
+    private static final List<EntityManager> managers = new ArrayList<>();
+
+    public EntityManager() {
+    	managers.add(this);
+    }
 
     public abstract AWrapperWorld getWorld();
 
@@ -146,37 +158,6 @@ public abstract class EntityManager {
     public void tickAll() {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                //TODO make this generic by referencing the d-level class and putting inits in items.
-                if (entity instanceof AEntityD_Definable) {
-                	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-                    if (definable.applyHotloads) {
-                        if (!entity.world.isClient()) {
-                            //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
-                        	if(entity instanceof AEntityF_Multipart) {
-	                            ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
-	                                if (part.rider != null) {
-	                                    hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
-	                                    part.removeRider();
-	                                }
-	                            });
-                        	}
-                            
-                            //Now store data for countdown and remove entity.
-                        	if(entity instanceof EntityVehicleF_Physics) {
-                        		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
-                        	}else if(entity instanceof EntityPlacedPart) {
-                        		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-                        	}
-                            definable.remove();
-                            hotloadCountdown = 20;
-                        } else {
-                        	definable.remove();
-                        }
-                        //Don't do futher logic with the hotload applied.
-                        continue;
-                    }
-                }
-                
                 entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
                 entity.update();
                 if (entity instanceof AEntityD_Definable) {
@@ -186,8 +167,49 @@ public abstract class EntityManager {
             }
         }
         
-        if (hotloadCountdown > 0) {
-            if (--hotloadCountdown == 10) {
+        //Do hotload operations.
+        if(hotloadCountdown > 0) {
+        	if(getWorld().isClient()) {
+        		//Only countdown on the client, since we know there's only one client and will only tick once per update.
+        		--hotloadCountdown;
+        	}
+        	//Step 1, remove all entities.
+        	if(managersToHotload.contains(this)) {
+        		for (AEntityA_Base entity : allTickableEntities) {
+                    if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
+                    	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+                        if (!entity.world.isClient()) {
+                            //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
+                        	if(entity instanceof AEntityF_Multipart) {
+                                ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
+                                    if (part.rider != null) {
+                                        hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
+                                        part.removeRider();
+                                    }
+                                });
+                        	}
+                            
+                            //Now store data for countdown and remove entity.
+                        	if(entity instanceof EntityVehicleF_Physics) {
+                        		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
+                        	}else if(entity instanceof EntityPlacedPart) {
+                        		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                        	}
+                            definable.remove();
+                        } else {
+                        	definable.remove();
+                        }
+                    }
+                }
+        		managersToHotload.remove(this);	
+        	}
+        	//Step 2, import all JSON.
+        	if (hotloadCountdown == 20) {
+        		if(getWorld().isClient()) {
+        			hotloadFunction.apply();
+        		}
+        	}else if (hotloadCountdown == 10) {
+        		//Step 3, load back all entities.
                 hotloadedVehicles.forEach((data, item) -> {
                     EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
                     vehicle.addPartsPostAddition(null, data);
@@ -201,6 +223,7 @@ public abstract class EntityManager {
                 });
                 hotloadedPlacedParts.clear();
             } else if (hotloadCountdown == 0) {
+            	//Step 4, load back all riders.
                 hotloadedRiderIDs.forEach((seatID, riderID) -> {
                     getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
                 });
@@ -256,5 +279,24 @@ public abstract class EntityManager {
             EntityBullet bullet = (EntityBullet) entity;
             bulletMap.get(bullet.gun.uniqueUUID).remove(bullet.bulletNumber);
         }
+    }
+    
+    /**
+     * Tells the manager to import JSONs in all worlds.
+     * This has to do a sequenced-handshake where entities are removed, JSONs applied, and then added back again.
+     * The removal has to happen for all worlds before the importing can occur.
+     * If we don't do this, concurrency errors can result in crashes.
+     * If a file is specified, only that JSON will be imported.  Otherwise, all JSONs will be imported.
+     *  
+     */
+    public static void doImports(HotloadFunction hotloadFunction) {
+    	hotloadCountdown = 30;
+    	managersToHotload.addAll(managers);
+    	EntityManager.hotloadFunction = hotloadFunction;
+	}
+    
+    @FunctionalInterface
+    public static abstract interface HotloadFunction{
+    	public void apply();
     }
 }

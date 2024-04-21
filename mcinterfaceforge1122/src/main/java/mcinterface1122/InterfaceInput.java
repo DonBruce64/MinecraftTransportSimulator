@@ -13,10 +13,10 @@ import org.lwjgl.input.Controllers;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -334,9 +334,7 @@ public class InterfaceInput implements IInterfaceInput {
         if (configKey.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
         } else if (ConfigSystem.settings.general.devMode.value && importKey.isPressed()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            JSONParser.doImports();
-            clientPlayer.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
+            EntityManager.doImports(() -> InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true)));
         }
     }
 }

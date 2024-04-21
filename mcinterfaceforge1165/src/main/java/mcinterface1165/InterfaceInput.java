@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.glfw.GLFW;
 
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
@@ -357,8 +358,7 @@ public class InterfaceInput implements IInterfaceInput {
         if (configKey.isDown() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
         } else if (ConfigSystem.settings.general.devMode.value && importKey.isDown()) {
-        	JSONParser.doImports();
-            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true));
+        	EntityManager.doImports(() -> InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true)));
         }
     }
 

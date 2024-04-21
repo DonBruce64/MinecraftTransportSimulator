@@ -154,8 +154,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
     };
-    
-    public boolean applyHotloads;
 
     /**
      * Constructor for synced entities

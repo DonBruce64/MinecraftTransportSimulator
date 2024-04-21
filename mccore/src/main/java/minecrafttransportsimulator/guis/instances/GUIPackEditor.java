@@ -164,10 +164,8 @@ public class GUIPackEditor extends JFrame {
                             AJSONItem definition = (AJSONItem) currentJSON;
                             if (definition.packID != null && definition.systemName != null) {
                                 if (definition instanceof AJSONMultiModelProvider) {
-                                	JSONParser.doImports();
                                     JOptionPane.showMessageDialog(null, JSONParser.importJSON(file, PackParser.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition, false));
                                 } else {
-                                	JSONParser.doImports();
                                     JOptionPane.showMessageDialog(null, JSONParser.importJSON(file, PackParser.getItem(definition.packID, definition.systemName).definition, false));
                                 }
                             }
