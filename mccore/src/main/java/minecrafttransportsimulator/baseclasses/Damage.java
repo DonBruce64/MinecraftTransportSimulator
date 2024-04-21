@@ -48,6 +48,21 @@ public class Damage {
         this.entityResponsible = entityResponsible;
         this.language = language;
     }
+    
+    public Damage(Damage otherDamage, double factor, BoundingBox box) {
+        this.amount = otherDamage.amount*factor;
+        this.box = box;
+        this.damgeSource = otherDamage.damgeSource;
+        this.entityResponsible = otherDamage.entityResponsible;
+        this.language = otherDamage.language;
+        this.isHand = otherDamage.isHand;
+        this.isFire = otherDamage.isFire;
+        this.isWater = otherDamage.isWater;
+        this.isExplosion = otherDamage.isExplosion;
+        this.effects = otherDamage.effects;
+        this.ignoreArmor = otherDamage.ignoreArmor;
+        this.ignoreCooldown = otherDamage.ignoreCooldown;
+    }
 
     public Damage(PartGun gun, BoundingBox box, double amount) {
         this.amount = amount;
