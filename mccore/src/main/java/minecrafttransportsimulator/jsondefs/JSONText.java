@@ -28,6 +28,10 @@ public class JSONText {
     @JSONDescription("The factor to apply to the variable before formatting.  Not used if the variable is text-based. If this is used, variableName and variableFormat MUST be used as well or it will have no effect.")
     public float variableFactor;
 
+    @JSONRequired(dependentField = "variableFactor")
+    @JSONDescription("If this is present, then the variable will have this value offset applied to it. e.i. variable returns 5 but an offset 0f -2 will have this text object display 3.")
+    public float variableOffset;
+
     @JSONRequired(dependentField = "variableName")
     @JSONDescription("The format to display the variable in.  This follows the Java String.format() format, with the input being a floating-point number (%f) for normal variables, and a string (%s) for text variables.  This has many different ways of formatting things.  Google will be your friend here, this documentation shall not.")
     public String variableFormat;
