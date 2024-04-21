@@ -138,7 +138,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     lastLoadedNBT = null;
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    e.printStackTrace();
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                     remove();
                 }
             }

@@ -664,9 +664,6 @@ public class JSONParser {
                     //Reload item subdefs, since it will have changed.
                     for (JSONSubDefinition subDefinition : ((AJSONMultiModelProvider) definitionToOverride).definitions) {
                         AItemSubTyped<?> item = (AItemSubTyped<?>) PackParser.getItem(definitionToOverride.packID, definitionToOverride.systemName, subDefinition.subName);
-                        if(item == null) {
-                        	return "\nWas asked to hotload definition " + subDefinition.subName + " on " + definitionToOverride.packID + ":" + definitionToOverride.systemName + " but can't as that definition doesn't exist!  You can only hotload existing definitions.";
-                        }
                         item.subDefinition = subDefinition;
                     }
 

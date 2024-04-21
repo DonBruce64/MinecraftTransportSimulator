@@ -40,7 +40,8 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
     
-    private static int hotloadCountdown;
+    private static byte hotloadCountdown;
+    private static byte hotloadStep;
     private static HotloadFunction hotloadFunction;
     private static final Set<EntityManager> managersToHotload = new HashSet<>();
     
@@ -168,67 +169,108 @@ public abstract class EntityManager {
         }
         
         //Do hotload operations.
-        if(hotloadCountdown > 0) {
-        	if(getWorld().isClient()) {
-        		//Only countdown on the client, since we know there's only one client and will only tick once per update.
-        		--hotloadCountdown;
-        	}
-        	//Step 1, remove all entities.
-        	if(managersToHotload.contains(this)) {
-        		for (AEntityA_Base entity : allTickableEntities) {
-                    if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
-                    	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-                        if (!entity.world.isClient()) {
-                            //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
-                        	if(entity instanceof AEntityF_Multipart) {
-                                ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
-                                    if (part.rider != null) {
-                                        hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
-                                        part.removeRider();
-                                    }
-                                });
-                        	}
-                            
-                            //Now store data for countdown and remove entity.
-                        	if(entity instanceof EntityVehicleF_Physics) {
-                        		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
-                        	}else if(entity instanceof EntityPlacedPart) {
-                        		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-                        	}
-                            definable.remove();
-                        } else {
-                        	definable.remove();
-                        }
-                    }
-                }
-        		managersToHotload.remove(this);	
-        	}
-        	//Step 2, import all JSON.
-        	if (hotloadCountdown == 20) {
-        		if(getWorld().isClient()) {
-        			hotloadFunction.apply();
+        //This operates on all threads concurrently as long as we're counting down.
+        if(hotloadStep > 0) {
+        	switch(hotloadStep) {
+        		case(1):{
+        			if(getWorld().isClient()) {
+        				//Client manager, set counter to let entities sync.
+        				if(hotloadCountdown == 0) {
+        					hotloadCountdown = 10;
+        				}
+        			}else {
+        				//Server manager, remove all entities in this manager for reloading.
+	                	if(managersToHotload.contains(this)) {
+	                		for (AEntityA_Base entity : allTickableEntities) {
+	                            if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
+	                            	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+	                                //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
+	                            	if(entity instanceof AEntityF_Multipart) {
+	                                    ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
+	                                        if (part.rider != null) {
+	                                            hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
+	                                            part.removeRider();
+	                                        }
+	                                    });
+	                            	}
+	                                
+	                                //Now store data for countdown and remove entity.
+	                            	if(entity instanceof EntityVehicleF_Physics) {
+	                            		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
+	                            	}else if(entity instanceof EntityPlacedPart) {
+	                            		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+	                            	}
+	                            	//Remove will cause entity to get removed client-side, no need to remove on that thread.
+	                                definable.remove();
+	                            }
+	                        }
+	                		managersToHotload.remove(this);	
+	                	}
+        			}
+        			break;
         		}
-        	}else if (hotloadCountdown == 10) {
-        		//Step 3, load back all entities.
-                hotloadedVehicles.forEach((data, item) -> {
-                    EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
-                    vehicle.addPartsPostAddition(null, data);
-                    vehicle.world.spawnEntity(vehicle);
-                });
-                hotloadedVehicles.clear();
-                hotloadedPlacedParts.forEach(data-> {
-                    EntityPlacedPart placedPart = new EntityPlacedPart(getWorld(), null, data);
-                    placedPart.addPartsPostAddition(null, data);
-                    placedPart.world.spawnEntity(placedPart);
-                });
-                hotloadedPlacedParts.clear();
-            } else if (hotloadCountdown == 0) {
-            	//Step 4, load back all riders.
-                hotloadedRiderIDs.forEach((seatID, riderID) -> {
-                    getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
-                });
-                hotloadedRiderIDs.clear();
-            }
+        		case(2):{
+                	if(getWorld().isClient()) {
+                		//Client manager, apply hotloads once on this client.
+            			hotloadFunction.apply();
+            			//No need to wait, all systems will be ready next tick.
+            			hotloadCountdown = 1;
+            		}
+        			break;
+        		}
+        		case(3):{
+        			if(getWorld().isClient()) {
+        				//Client manager, set counter to let entities sync.
+        				if(hotloadCountdown == 0) {
+        					hotloadCountdown = 10;
+        				}
+        			}else {
+        				//Server manager, load back in saved entities while we wait for client to count down.
+	                    hotloadedVehicles.forEach((data, item) -> {
+	                        EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
+	                        vehicle.addPartsPostAddition(null, data);
+	                        vehicle.world.spawnEntity(vehicle);
+	                    });
+	                    hotloadedVehicles.clear();
+	                    hotloadedPlacedParts.forEach(data-> {
+	                        EntityPlacedPart placedPart = new EntityPlacedPart(getWorld(), null, data);
+	                        placedPart.addPartsPostAddition(null, data);
+	                        placedPart.world.spawnEntity(placedPart);
+	                    });
+	                    hotloadedPlacedParts.clear();
+        			}
+        			break;
+        		}
+        		case(4):{
+        			if(getWorld().isClient()) {
+        				//Client manager, set counter to let riders sync.
+        				if(hotloadCountdown == 0) {
+        					hotloadCountdown = 10;
+        				}
+        			}else if(!getWorld().isClient()) {
+        				//Server manager, load back all seated riders.
+        				hotloadedRiderIDs.forEach((seatID, riderID) -> {
+                            getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
+                        });
+                        hotloadedRiderIDs.clear();
+                        
+        			}
+        			break;
+        		}
+        		case(5):{
+        			//Done with hotloads, set to step 0.
+                    hotloadStep = 0;
+                    break;
+        		}
+        	}
+        	
+        	//Countdown timer to go to next step.
+    		//Only countdown on the client, since we know there's only one client and will only tick once per update.
+        	if(hotloadStep != 0 && getWorld().isClient()) {
+        		if(--hotloadCountdown == 0) {
+        			++hotloadStep;
+        		};
+        	}
         }
     }
 
@@ -290,9 +332,14 @@ public abstract class EntityManager {
      *  
      */
     public static void doImports(HotloadFunction hotloadFunction) {
-    	hotloadCountdown = 30;
-    	managersToHotload.addAll(managers);
+    	for(EntityManager manager : managers) {
+    		if(!manager.getWorld().isClient()) {
+    			//Only add server managers for hotloading since we don't remove entities on clients.
+    			managersToHotload.add(manager);
+    		}
+    	}
     	EntityManager.hotloadFunction = hotloadFunction;
+    	hotloadStep = 1;
 	}
     
     @FunctionalInterface
