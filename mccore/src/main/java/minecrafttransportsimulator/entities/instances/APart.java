@@ -23,9 +23,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
-import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
@@ -542,7 +542,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public String getTexture() {
-        if (definition.generic.useVehicleTexture) {
+        if (subDefinition.useVehicleTexture) {
             if (vehicleOn != null) {
                 return vehicleOn.getTexture();
             } else if (definition.generic.benchTexture != null) {

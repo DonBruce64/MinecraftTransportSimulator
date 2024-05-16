@@ -483,7 +483,7 @@ public class GUIPartBench extends AGUIBase {
         } while (materials == null);
 
         //Enable render based on what component we have.
-        boolean isPartWithVehicleTexture = currentItem instanceof AItemPart && ((AItemPart) currentItem).definition.generic.useVehicleTexture;
+        boolean isPartWithVehicleTexture = currentItem instanceof AItemPart && ((AItemPart) currentItem).subDefinition.useVehicleTexture;
         boolean isPartWithBuiltinTexture = currentItem instanceof AItemPart && ((AItemPart) currentItem).definition.generic.benchTexture != null;
         if (currentItem instanceof AItemSubTyped && (!isPartWithVehicleTexture || isPartWithBuiltinTexture)) {
             modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subDefinition);

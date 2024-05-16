@@ -87,9 +87,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("NOTE: Using a unique 'type' name is preferred over customType parameters.  See the various part conventions ebfore using this!\n\nThis parameter is optional and should only be used for parts that you need in specific places.  This will restrict this part to only work in part definitions with customTypes defined, and only if they contain this customType.")
         public String customType;
 
-        @JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
-        public boolean useVehicleTexture;
-
         @JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
         public boolean canBeRemovedByHand;
 
@@ -131,6 +128,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("A listing of animation objects for determining if this part is active.  Leaving this blank will make for a part that is always active.  Visibility transforms will turn the part on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.")
         public List<JSONAnimationDefinition> activeAnimations;
+
+        @Deprecated
+        public boolean useVehicleTexture;
     }
 
     public static class JSONPartEngine {

@@ -14,6 +14,9 @@ public class JSONSubDefinition {
     @JSONDescription("This text value will be appended to the JSON filename to get the name of the component.  This name is then used to tell MTS the name of the texture and item to use when rendering this component.  Remember, the subName is APPENDED to the JSON file name.  If you name your textures off the sub name MTS will not be able to find them!  If you are making a single-variant model you can leave this field blank, but it must be present otherwise MTS will crash on load.")
     public String subName;
 
+    @JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
+    public boolean useVehicleTexture;
+
     @JSONDescription("This parameter is optional, and is only used for vehicles and parts.  If set, when the vehicle's color is changed with the paint gun (or when default parts are first placed on it) the new color's definition is checked for partTones.  If they are set, all part placement definitions will be checked.  If any of them has a toneIndex, it will be matched with one of the tones in this list.  If the part has a definition with the tone specified by the number, then it will be switched to that definition.")
     public List<String> partTones;
 

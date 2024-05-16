@@ -573,6 +573,14 @@ public final class LegacyCompatSystem {
             definition.general.useVehicleTexture = false;
         }
         
+        //Move vehicle texture to new section.
+        if (definition.generic.useVehicleTexture) {
+            for (JSONSubDefinition subDef : definition.definitions) {
+                subDef.useVehicleTexture = true;
+            }
+            definition.general.useVehicleTexture = false;
+        }
+
         //Move subParts to parts if we have them there.
         if (definition.subParts != null) {
             definition.parts = definition.subParts;
