@@ -729,8 +729,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 groundMotion.y = groundDeviceCollective.getMaxCollisionDepth() / speedFactor;
                 if (groundMotion.y > 0) {
                     world.beginProfiling("GroundBoostApply", false);
-                    //Make sure boost doesn't exceed the config value.
-                    groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value / speedFactor);
+                    //This will limit climbing speed for vehicle
+                    groundMotion.y = Math.min(groundMotion.y, 0.65 / speedFactor);
 
                     //If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
                     //This is done as it's clear motion.y is just moving the vehicle into the ground.
