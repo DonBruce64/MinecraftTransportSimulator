@@ -32,8 +32,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -166,12 +166,12 @@ public class PartGun extends APart {
         //Swap min and max pitch.  In JSON, negative values are down and positive up.
         //But for us, positive is down and negative is up.
         if (definition.gun.minPitch != 0) {
-            this.minPitch = placementDefinition.maxPitch != 0 ? -Math.max(definition.gun.maxPitch, placementDefinition.maxPitch) : -definition.gun.maxPitch;
+            this.minPitch = placementDefinition.maxPitch != 0 ? Math.max(-definition.gun.maxPitch, -placementDefinition.maxPitch) : -definition.gun.maxPitch;
         } else {
             this.minPitch = -placementDefinition.maxPitch;
         }
         if (definition.gun.minPitch != 0) {
-            this.maxPitch = placementDefinition.minPitch != 0 ? -Math.min(definition.gun.minPitch, placementDefinition.minPitch) : -definition.gun.minPitch;
+            this.maxPitch = placementDefinition.minPitch != 0 ? Math.min(-definition.gun.minPitch, -placementDefinition.minPitch) : -definition.gun.minPitch;
         } else {
             this.maxPitch = -placementDefinition.minPitch;
         }
