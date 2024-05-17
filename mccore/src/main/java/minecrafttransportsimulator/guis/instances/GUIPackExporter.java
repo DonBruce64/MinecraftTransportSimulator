@@ -27,7 +27,6 @@ public class GUIPackExporter extends AGUIBase {
     private GUIComponentButton modelRenderButton;
     private GUIComponentButton packExportButton;
     private GUIComponentButton packImportButton;
-    private GUIComponentButton packEditorButton;
     private GUIComponentTextBox debug;
 
     //Model render screen components.
@@ -46,7 +45,7 @@ public class GUIPackExporter extends AGUIBase {
     @Override
     public void setupComponents() {
         super.setupComponents();
-        int buttonWidth = 350 / 4;
+        int buttonWidth = 350 / 3;
         int buttonOffset = -(350 - getWidth()) / 2;
         addComponent(packExportButton = new GUIComponentButton(this, guiLeft + buttonOffset, guiTop, buttonWidth, 20, "EXPORT PACKS") {
             @Override
@@ -67,7 +66,6 @@ public class GUIPackExporter extends AGUIBase {
                 modelRenderButton.visible = false;
                 packExportButton.visible = false;
                 packImportButton.visible = false;
-                packEditorButton.visible = false;
                 debug.visible = false;
 
                 componentItemModel.visible = true;
@@ -78,12 +76,6 @@ public class GUIPackExporter extends AGUIBase {
                 }
             }
         });
-        addComponent(this.packEditorButton = new GUIComponentButton(this, guiLeft + 3 * buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "PACK EDITOR") {
-            @Override
-            public void onClicked(boolean leftSide) {
-                new GUIPackEditor();
-            }
-        });
 
         addComponent(backButton = new GUIComponentButton(this, guiLeft + 20, guiTop + 140, 60, 20, "BACK") {
             @Override
@@ -91,7 +83,6 @@ public class GUIPackExporter extends AGUIBase {
                 modelRenderButton.visible = true;
                 packExportButton.visible = true;
                 packImportButton.visible = true;
-                packEditorButton.visible = true;
                 debug.visible = true;
 
                 componentItemModel.visible = false;
