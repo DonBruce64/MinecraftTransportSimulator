@@ -76,9 +76,9 @@ public class PartEffector extends APart {
                     }
                     case HARVESTER: {
                         //Harvest drops, and add to inventories.
-                        List<IWrapperItemStack> drops = world.harvestBlock(box.globalCenter);
-                        if (!drops.isEmpty()) {
-                            drops.addAll(world.harvestBlock(box.globalCenter));
+                        List<IWrapperItemStack> blockDrops = world.harvestBlock(box.globalCenter);
+                        if (!blockDrops.isEmpty()) {
+                            drops.addAll(blockDrops);
                             activatedThisTick = true;
                         }
                         break;
