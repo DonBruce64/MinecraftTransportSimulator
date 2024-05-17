@@ -207,7 +207,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 radio.stop();
             }
             for (SoundInstance sound : sounds) {
-                sound.stopSound = true;
+                //Only stop looping sounds, other sounds should play till they run out.
+                if (sound.soundDef != null && sound.soundDef.looping) {
+                    sound.stopSound = true;
+                }
             }
         }
         if (rider != null) {
