@@ -796,6 +796,12 @@ public final class LegacyCompatSystem {
                 definition.ground.climbHeight = 1.5F;
             }
             //Set friction modifiers.
+            if(definition.ground.wetFrictionPenalty == 0 && definition.ground.frictionModifiers.containsKey(BlockMaterial.NORMAL) && definition.ground.frictionModifiers.containsKey(BlockMaterial.NORMAL_WET)) {
+            	definition.ground.wetFrictionPenalty = definition.ground.frictionModifiers.get(BlockMaterial.NORMAL) - definition.ground.frictionModifiers.get(BlockMaterial.NORMAL_WET);
+            }
+            if (definition.ground.wetFrictionPenalty == 0 && !definition.ground.isTread) {
+                definition.ground.wetFrictionPenalty = -0.1F;
+            }
             if (definition.ground.frictionModifiers == null) {
                 definition.ground.frictionModifiers = new LinkedHashMap<>();
                 definition.ground.frictionModifiers.put(BlockMaterial.SNOW, -0.2F);
@@ -804,9 +810,6 @@ public final class LegacyCompatSystem {
                 definition.ground.frictionModifiers.remove(BlockMaterial.DIRT_WET);
                 definition.ground.frictionModifiers.remove(BlockMaterial.SAND_WET);
                 definition.ground.frictionModifiers.remove(BlockMaterial.NORMAL_WET);
-            }
-            if (definition.ground.wetFrictionPenalty == 0 && !definition.ground.isTread) {
-                definition.ground.wetFrictionPenalty = -0.1F;
             }
         }
 
