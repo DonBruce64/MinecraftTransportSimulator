@@ -52,8 +52,8 @@ import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Base class for entities that are defined via JSON definitions and can be modeled in 3D.
@@ -298,6 +298,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
                 subDefinition = testSubDef;
                 cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
+                resetModelsAndAnimations();
                 return;
             }
         }
