@@ -319,7 +319,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (vehicleOn != null && vehicleOn.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
-            	LanguageEntry partResult = checkForRemoval();
+            	LanguageEntry partResult = checkForRemoval(player);
             	if(partResult != null) {
             		player.sendPacket(new PacketPlayerChatMessage(player, partResult));
             		return;
@@ -493,19 +493,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      * Checks if this part can be removed with a wrench/screwdriver.  If so, then null is returned.
      * If not, a {@link LanguageEntry} is returned with the message of why it cannot be.
      */
-    public LanguageEntry checkForRemoval() {
-        boolean playerHoldingWrench = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH);
-        boolean playerHoldingScrewdriver = InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCREWDRIVER);
-        
+    public LanguageEntry checkForRemoval(IWrapperPlayer player) {
         for (APart childPart : parts) {
             if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
                 allInteractionBoxes.removeAll(interactionBoxes);
                 return LanguageSystem.INTERACT_PARTREMOVE_HASPARTS;
             }
         }
-        if(playerHoldingWrench && definition.generic.mustBeRemovedByScrewdriver) {
+        if (player.isHoldingItemType(ItemComponentType.WRENCH) && definition.generic.mustBeRemovedByScrewdriver) {
         	return LanguageSystem.INTERACT_PARTREMOVE_SCREWDRIVER;
-        }else if(playerHoldingScrewdriver && !definition.generic.mustBeRemovedByScrewdriver) {
+        } else if (player.isHoldingItemType(ItemComponentType.SCREWDRIVER) && !definition.generic.mustBeRemovedByScrewdriver) {
         	return LanguageSystem.INTERACT_PARTREMOVE_WRENCH;
         }
         return null;

@@ -362,11 +362,11 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    public LanguageEntry checkForRemoval() {
+    public LanguageEntry checkForRemoval(IWrapperPlayer player) {
         if (rider != null) {
             return LanguageSystem.INTERACT_PARTREMOVE_RIDER;
         } else {
-            return super.checkForRemoval();
+            return super.checkForRemoval(player);
         }
     }
 

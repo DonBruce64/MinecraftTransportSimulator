@@ -162,7 +162,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 if (entity instanceof APart) {
                                     APart part = (APart) entity;
                                     if (!part.isPermanent && part.isValid) {
-                                        LanguageEntry partResult = part.checkForRemoval();
+                                        LanguageEntry partResult = part.checkForRemoval(player);
                                         if (partResult != null) {
                                             player.sendPacket(new PacketPlayerChatMessage(player, partResult));
                                             return CallbackType.NONE;

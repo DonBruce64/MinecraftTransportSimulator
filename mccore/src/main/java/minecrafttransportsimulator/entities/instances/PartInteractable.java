@@ -85,11 +85,11 @@ public final class PartInteractable extends APart {
     }
 
     @Override
-    public LanguageEntry checkForRemoval() {
+    public LanguageEntry checkForRemoval(IWrapperPlayer player) {
         if (!definition.generic.canBeRemovedByHand && getMass() > definition.generic.mass) {
             return LanguageSystem.INTERACT_PARTREMOVE_INVENTORY;
         } else {
-            return super.checkForRemoval();
+            return super.checkForRemoval(player);
         }
     }
 
