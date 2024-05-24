@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -23,7 +23,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDis
  */
 public class GUIFuelPump extends AGUIInventory {
 
-    private final TileEntityFuelPump pump;
+    private final ATileEntityFuelPump pump;
     private final boolean configuring;
     private final List<GUIComponentTextBox> interactableSlotBoxes = new ArrayList<>();
     private final List<AGUIComponent> fuelComponents = new ArrayList<>();
@@ -31,7 +31,7 @@ public class GUIFuelPump extends AGUIInventory {
     private final List<GUIComponentItem> fuelItems = new ArrayList<>();
     private final List<GUIComponentItem> paymentItems = new ArrayList<>();
 
-    public GUIFuelPump(TileEntityFuelPump pump, boolean configuring) {
+    public GUIFuelPump(ATileEntityFuelPump pump, boolean configuring) {
         super(null);
         this.pump = pump;
         this.configuring = configuring;
