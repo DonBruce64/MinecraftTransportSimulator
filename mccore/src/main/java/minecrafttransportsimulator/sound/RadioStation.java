@@ -77,22 +77,24 @@ public class RadioStation {
      * to reflect the buffer count.  Returns the index of the newly-created
      * buffer, or 0 if the buffer wasn't able to be created.
      */
-    private int generateBufferIndex() {
+    private int generateBufferIndex(boolean updateDisplay) {
         ByteBuffer buffer = decoder.readBlock();
         if (buffer != null) {
             //Get new buffer index from the audio system and add it to our radios.
             int bufferIndex = InterfaceManager.soundInterface.createBuffer(buffer, decoder);
             activeBuffers.add(bufferIndex);
 
-            //Update station buffer counts and return buffer index.
-            int bufferTextIndex = displayText.indexOf("Buffers:");
-            if (bufferTextIndex != -1) {
-                displayText = displayText.substring(0, bufferTextIndex + "Buffers:".length());
-                for (byte i = 0; i < activeBuffers.size(); ++i) {
-                    displayText += "X";
+            if (updateDisplay) {
+                //Update station buffer counts and return buffer index.
+                int bufferTextIndex = displayText.indexOf("Buffers:");
+                if (bufferTextIndex != -1) {
+                    displayText = displayText.substring(0, bufferTextIndex + "Buffers:".length());
+                    for (byte i = 0; i < activeBuffers.size(); ++i) {
+                        displayText += "X";
+                    }
+                } else {
+                    displayText = "DISPLAY MALFUNCTION!\nTURN RADIO OFF AND ON TO RESET!";
                 }
-            } else {
-                displayText = "DISPLAY MALFUNCTION!\nTURN RADIO OFF AND ON TO RESET!";
             }
             return bufferIndex;
         }
@@ -164,7 +166,7 @@ public class RadioStation {
 
                 //If we have less than 5 buffers, try to get another one.
                 if (activeBuffers.size() < 5) {
-                    int newIndex = generateBufferIndex();
+                    int newIndex = generateBufferIndex(true);
                     if (newIndex != 0 && !playingRadios.isEmpty()) {
                         Iterator<EntityRadio> iterator = playingRadios.iterator();
                         while (iterator.hasNext()) {
@@ -241,8 +243,8 @@ public class RadioStation {
                 if (!musicFile.getName().toLowerCase(Locale.ROOT).endsWith(".mp3")) {
                     iterator.remove();
                 } else {
-                    displayText = "Station: " + musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName();
-                    displayText += "\nBuffers:";
+                    infoText = "Station: " + musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName();
+                    infoText += "\nBuffers:";
                     decoder = null;
                     decoderThread = new DecoderThread(this, musicFiles.get(0));
                     decoderThread.start();
@@ -405,7 +407,7 @@ public class RadioStation {
                     //This prevents the buffers from running out from starting too quickly.
                     //Because this is in a thread, it also saves on processing power.
                     for (byte i = 0; i < 5; ++i) {
-                        station.generateBufferIndex();
+                        station.generateBufferIndex(false);
                     }
                     //Done starting decoding, note ourselves as dead and update text.
                     station.decoderThread = null;
