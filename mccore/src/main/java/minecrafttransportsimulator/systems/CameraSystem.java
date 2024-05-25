@@ -23,7 +23,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public class CameraSystem {
 
-    public static boolean runningCustomCameras;
+    public static JSONCameraObject activeCamera;
     private static boolean nightVisionEnabled;
     private static float currentFOV;
     private static float currentMouseSensitivity;
@@ -68,35 +68,35 @@ public class CameraSystem {
             nightVisionEnabled = false;
         }
         customCameraOverlay = null;
-        runningCustomCameras = false;
+        activeCamera = null;
 
         //Do custom camera operations, if we have one.
         if (cameraProvider != null) {
-            JSONCameraObject camera = cameraProvider.activeCamera;
-            if (camera != null) {
+            activeCamera = cameraProvider.activeCamera;
+            if (activeCamera != null) {
                 AnimationSwitchbox switchbox = cameraProvider.activeCameraSwitchbox;
 
                 //Set current overlay for future calls.
-                customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
+                customCameraOverlay = activeCamera.overlay != null ? activeCamera.overlay + ".png" : null;
 
                 //If the camera has an FOV override, apply it.
-                if (camera.fovOverride != 0) {
+                if (activeCamera.fovOverride != 0) {
                     if (currentFOV == 0) {
                         currentFOV = InterfaceManager.clientInterface.getFOV();
                     }
-                    InterfaceManager.clientInterface.setFOV(camera.fovOverride);
+                    InterfaceManager.clientInterface.setFOV(activeCamera.fovOverride);
                 }
 
                 //If the camera has a mouse sensitivity override, apply it.
-                if (camera.mouseSensitivityOverride != 0) {
+                if (activeCamera.mouseSensitivityOverride != 0) {
                     if (currentMouseSensitivity == 0) {
                         currentMouseSensitivity = InterfaceManager.clientInterface.getMouseSensitivity();
                     }
-                    InterfaceManager.clientInterface.setMouseSensitivity(camera.mouseSensitivityOverride);
+                    InterfaceManager.clientInterface.setMouseSensitivity(activeCamera.mouseSensitivityOverride);
                 }
 
                 //First set the position of the camera to the defined position.
-                cameraAdjustedPosition.set(camera.pos);
+                cameraAdjustedPosition.set(activeCamera.pos);
 
                 //Now run transforms on this position to get it's proper position.
                 if (switchbox != null) {
@@ -116,8 +116,8 @@ public class CameraSystem {
                 if (switchbox != null) {
                     cameraRotation.multiply(switchbox.rotation);
                 }
-                if (camera.rot != null) {
-                    cameraRotation.multiply(camera.rot);
+                if (activeCamera.rot != null) {
+                    cameraRotation.multiply(activeCamera.rot);
                 }
 
                 //Rotational portion is good.  Finally, add the position of the provider.
@@ -126,12 +126,10 @@ public class CameraSystem {
                 cameraAdjustedPosition.add(cameraOffset);
 
                 //Also check night vision.
-                if (camera.nightVision) {
+                if (activeCamera.nightVision) {
                     player.addPotionEffect(NIGHT_VISION_CAMERA_POTION);
                     nightVisionEnabled = true;
                 }
-
-                runningCustomCameras = true;
                 return true;
             }
         }

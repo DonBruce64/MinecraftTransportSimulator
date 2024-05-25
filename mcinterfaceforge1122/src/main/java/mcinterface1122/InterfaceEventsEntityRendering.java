@@ -419,7 +419,7 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVRenderHand(RenderHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
             event.setCanceled(true);
         }
     }
@@ -427,7 +427,7 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVrenderSpecificHand(RenderSpecificHandEvent event) {
         EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        if ((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras) {
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
             event.setCanceled(true);
         }
     }

@@ -264,7 +264,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             if (world.isClient()) {
                 prevRiderCameraPosition.set(riderCameraPosition);
                 CameraMode cameraMode = InterfaceManager.clientInterface.getCameraMode();
-                if (!CameraSystem.runningCustomCameras && cameraMode != CameraMode.FIRST_PERSON) {
+                if (CameraSystem.activeCamera == null && cameraMode != CameraMode.FIRST_PERSON) {
                     riderCameraPosition.set(riderEyePosition);
 
                     //Adjust eye position to account for zoom settings.
