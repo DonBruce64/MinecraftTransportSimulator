@@ -201,7 +201,9 @@ public class PartEffector extends APart {
                                             for (int i = 0; i < inventory.getSize(); ++i) {
                                                 IWrapperItemStack stack = inventory.getStack(i);
                                                 if (!stack.isEmpty()) {
-                                                    IWrapperItemStack stackToDrop = stack.split(1);
+                                                    IWrapperItemStack stackToDrop = stack.copy();
+                                                    stackToDrop.add(-stackToDrop.getSize() + 1);
+                                                    inventory.removeFromSlot(i, 1);
                                                     world.spawnItemStack(stackToDrop, box.globalCenter);
                                                     activatedThisTick = true;
                                                     break;
