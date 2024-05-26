@@ -418,7 +418,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
      */
     public EntityBullet.HitType attackProjectile(Damage damage, EntityBullet bullet, Collection<BoundingBoxHitResult> hitBoxes) {
-        //FIXME need to get the side here for bullet particles.
         //Check all boxes for armor and see if we penetrated them.
         for (BoundingBoxHitResult hitEntry : hitBoxes) {
             APart hitPart = getPartWithBox(hitEntry.box);
