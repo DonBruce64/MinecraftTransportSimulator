@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -18,17 +18,17 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  *
  * @author don_bruce
  */
-public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<TileEntityFuelPump, IWrapperPlayer> {
+public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<ATileEntityFuelPump, IWrapperPlayer> {
     private final int slotClicked;
     private final int amountChangedTo;
 
-    public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, IWrapperPlayer player, int slotClicked, int amountChangedTo) {
+    public PacketTileEntityFuelPumpDispense(ATileEntityFuelPump pump, IWrapperPlayer player, int slotClicked, int amountChangedTo) {
         super(pump, player);
         this.slotClicked = slotClicked;
         this.amountChangedTo = amountChangedTo;
     }
 
-    public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, IWrapperPlayer player, int slotClicked) {
+    public PacketTileEntityFuelPumpDispense(ATileEntityFuelPump pump, IWrapperPlayer player, int slotClicked) {
         super(pump, player);
         this.slotClicked = slotClicked;
         this.amountChangedTo = -1;
@@ -48,7 +48,7 @@ public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<Tile
     }
 
     @Override
-    protected boolean handle(AWrapperWorld world, TileEntityFuelPump pump, IWrapperPlayer player) {
+    protected boolean handle(AWrapperWorld world, ATileEntityFuelPump pump, IWrapperPlayer player) {
         if (amountChangedTo != -1) {
             pump.fuelAmounts.set(slotClicked, amountChangedTo);
             return true;

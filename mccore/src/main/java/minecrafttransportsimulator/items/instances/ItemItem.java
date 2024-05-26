@@ -162,7 +162,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 if (entity instanceof APart) {
                                     APart part = (APart) entity;
                                     if (!part.isPermanent && part.isValid) {
-                                        LanguageEntry partResult = part.checkForRemoval();
+                                        LanguageEntry partResult = part.checkForRemoval(player);
                                         if (partResult != null) {
                                             player.sendPacket(new PacketPlayerChatMessage(player, partResult));
                                             return CallbackType.NONE;
@@ -194,22 +194,23 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case KEY: {
                 //Keys always act on top-most entity.  If we are a part, get our master entity.
-                EntityVehicleF_Physics vehicle = entity instanceof APart ? ((APart) entity).vehicleOn : null;
+                EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
                 if (vehicle != null) {
                     if (rightClick && !entity.world.isClient()) {
                         //Try to lock the entity.
                         //First check to see if we need to set this key's entity.
                         IWrapperItemStack stack = player.getHeldStack();
                         IWrapperNBT data = stack.getData();
-                        UUID keyVehicleUUID = data != null ? data.getUUID("vehicle") : null;
-                        if (keyVehicleUUID == null) {
+                        UUID keyUUID = data != null ? data.getUUID("keyUUID") : null;
+                        if (keyUUID == null) {
                             //Check if we are the owner before making this a valid key.
-                            if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
+                            if (vehicle.keyUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_NOTOWNER));
                             } else {
-                                keyVehicleUUID = vehicle.uniqueUUID;
+                                keyUUID = UUID.randomUUID();
+                                vehicle.keyUUID = keyUUID;
                                 data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                                data.setUUID("vehicle", keyVehicleUUID);
+                                data.setUUID("keyUUID", keyUUID);
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_BIND));
                             }
@@ -218,7 +219,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 
                         //Try to lock or unlock this entity.
                         //If we succeed, send callback to clients to change locked state.
-                        if (!keyVehicleUUID.equals(vehicle.uniqueUUID)) {
+                        if (!keyUUID.equals(vehicle.keyUUID)) {
                             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_WRONGKEY));
                         } else {
                             if (entity instanceof PartSeat) {

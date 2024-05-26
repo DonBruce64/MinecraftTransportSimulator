@@ -16,10 +16,12 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -54,7 +56,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @DerivedValue
     public boolean locked;
     public static final String LOCKED_VARIABLE = "locked";
-    public final UUID ownerUUID;
+    public UUID keyUUID;
 
     //Internal states.
     public boolean goingInReverse;
@@ -121,9 +123,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
         if (data != null) {
             this.locked = data.getBoolean("locked");
+            this.keyUUID = data.getUUID("keyUUID");
             this.totalPathDelta = data.getDouble("totalPathDelta");
             this.prevTotalPathDelta = totalPathDelta;
             this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -1083,8 +1085,20 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Takes into account player OP status and {@link #ownerUUID}, if set.
      */
     public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
-        return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
+        if (player.isOP()) {
+            return PlayerOwnerState.ADMIN;
+        } else if (keyUUID == null) {
+            return PlayerOwnerState.OWNER;
+        } else {
+            IWrapperItemStack heldStack = player.getHeldStack();
+            if (heldStack.getItem() instanceof ItemItem) {
+                IWrapperNBT stackData = heldStack.getData();
+                if (stackData != null && keyUUID.equals(stackData.getUUID("keyUUID"))) {
+                    return PlayerOwnerState.OWNER;
+                }
+            }
+            return PlayerOwnerState.USER;
+        }
     }
 
     /**
@@ -1117,8 +1131,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setBoolean("locked", locked);
-        if (ownerUUID != null) {
-            data.setUUID("ownerUUID", ownerUUID);
+        if (keyUUID != null) {
+            data.setUUID("keyUUID", keyUUID);
         }
         data.setPoint3d("serverDeltaM", serverDeltaM);
         data.setPoint3d("serverDeltaR", serverDeltaR);

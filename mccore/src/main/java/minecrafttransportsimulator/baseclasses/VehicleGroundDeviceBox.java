@@ -22,7 +22,7 @@ public class VehicleGroundDeviceBox {
     private final EntityVehicleF_Physics vehicle;
     private final boolean isFront;
     private final boolean isLeft;
-    private boolean isTread;
+    private boolean isLongTread;
     private int treadZBestOffset;
     private float climbHeight;
     private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false);
@@ -166,7 +166,7 @@ public class VehicleGroundDeviceBox {
         solidBox.localCenter.set(0D, Double.MAX_VALUE, 0D);
         solidBox.widthRadius = 0;
         solidBox.heightRadius = 0;
-        isTread = false;
+        isLongTread = false;
         for (APart groundDevice : groundDevices) {
             solidBox.localCenter.x += groundDevice.localOffset.x;
             solidBox.localCenter.z += groundDevice.localOffset.z;
@@ -175,8 +175,8 @@ public class VehicleGroundDeviceBox {
                 solidBox.heightRadius = groundDevice.getHeight() / 2D;
                 solidBox.widthRadius = groundDevice.getWidth() / 2D;
             }
-            if (groundDevice.definition.ground.isTread) {
-                isTread = true;
+            if (groundDevice.definition.ground.isTread && groundDevice.definition.ground.extraCollisionBoxOffset != 0) {
+                isLongTread = true;
             }
         }
         solidBox.depthRadius = solidBox.widthRadius;
@@ -236,7 +236,7 @@ public class VehicleGroundDeviceBox {
         Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
         if (!groundDevices.isEmpty()) {
             if (updateGroundDeviceTreadPosition) {
-                int treadZCurrentOffset = isTread ? (int) -(solidBoxNormalPos.z > 0 ? Math.floor(solidBoxNormalPos.z) : Math.ceil(solidBoxNormalPos.z)) : 0;
+                int treadZCurrentOffset = isLongTread ? (int) -(solidBoxNormalPos.z > 0 ? Math.floor(solidBoxNormalPos.z) : Math.ceil(solidBoxNormalPos.z)) : 0;
                 boolean treadZFoundBestOffset = treadZCurrentOffset == 0; //Not a tread or short tread, ensures we use current offset.
                 int treadZLastGroundOffset = 0;
 

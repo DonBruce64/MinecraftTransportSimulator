@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -25,9 +27,9 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     private static final List<String> allPartTypes = new ArrayList<>();
 
     public APart currentPart;
+    private final Point3D motionApplied = new Point3D();
     private boolean riderPresentLastCheck;
     private boolean riderPresentThisCheck;
-    private boolean needToFindGround = true;
 
     public EntityPlacedPart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, null, data);
@@ -62,46 +64,43 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
                 remove();
             }
         } else {
-            currentPart = parts.get(0);
             if (currentPart != null) {
-                currentPart.placementDefinition.pos.y = currentPart.definition.generic.placedOffset;
-                forceCollisionUpdateThisTick = currentPart.requiresDeltaUpdates();
                 //Seat checks are needed to allow the seat to update interactable boxes when rider state changes.
                 riderPresentLastCheck = riderPresentThisCheck;
                 riderPresentThisCheck = currentPart.rider != null;
 
                 //Go down to find ground, if we haven't already.
-                if (needToFindGround) {
-                    if (currentPart.definition.generic.fallsToGround) {
-                        //Don't check on the first tick, since we won't be updated yet.
-                        if (ticksExisted > 1) {
-                            if (motion.y > -3.9) {
-                                motion.y += -0.08;
-                            }
+                if (currentPart.definition.generic.fallsToGround) {
+                    //Need this check to be here since if we put it in the check method we recurse since parts call super.
+                    forceCollisionUpdateThisTick = currentPart.requiresDeltaUpdates();
 
-                            //We can only go down 1 block at a time to ensure proper collision checks.
-                            //Too fast and we skip them.
-                            Point3D motionApplied = new Point3D();
-                            while (needToFindGround && motionApplied.y > motion.y) {
-                                motionApplied.y -= 1;
-                                if (motionApplied.y < motion.y) {
-                                    motionApplied.y = motion.y;
-                                }
-                                encompassingBox.globalCenter.set(position).add(motionApplied);
-                                world.updateBoundingBoxCollisions(encompassingBox, motionApplied, true);
-
-                                if (encompassingBox.currentCollisionDepth.y != 0) {
-                                    position.add(motionApplied).subtract(encompassingBox.currentCollisionDepth);
-                                    motion.y = 0;
-                                    needToFindGround = false;
-                                    //Do final box update.
-                                    allInteractionBoxes.forEach(box -> box.updateToEntity(this, null));
-                                }
-                            }
-                            position.add(motion);
+                    //Don't check on the first tick, since we won't be updated yet.
+                    if (ticksExisted > 1) {
+                        if (motion.y > -3.9) {
+                            motion.y += -0.08;
                         }
-                    } else {
-                        needToFindGround = false;
+
+                        //We can only go down 1 block at a time to ensure proper collision checks.
+                        //Too fast and we skip them
+                        double maxCollisionDepth = 0;
+                        motionApplied.set(0, 0, 0);
+                        while (motionApplied.y > motion.y) {
+                            motionApplied.y -= 1;
+                            if (motionApplied.y < motion.y) {
+                                motionApplied.y = motion.y;
+                            }
+                            for(BoundingBox box : allBlockCollisionBoxes) {
+                                box.updateCollisions(world, motionApplied, false);
+                                if (box.currentCollisionDepth.y <= maxCollisionDepth) {
+                                	maxCollisionDepth = box.currentCollisionDepth.y;
+                                }
+                            }
+                        }
+                        position.add(motion);
+                        if(maxCollisionDepth != 0) {
+                        	motion.y = 0;
+                        	position.y -= maxCollisionDepth;
+                        }
                     }
                 }
             }
@@ -109,8 +108,21 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     }
 
     @Override
+    public void addPart(APart part, boolean sendPacket) {
+        super.addPart(part, sendPacket);
+        currentPart = part;
+        currentPart.placementDefinition.pos.y = currentPart.definition.generic.placedOffset;
+    }
+
+    @Override
+    public void removePart(APart part, boolean removeFromWorld, Iterator<APart> iterator) {
+        super.removePart(part, removeFromWorld, iterator);
+        currentPart = null;
+    }
+
+    @Override
     public boolean requiresDeltaUpdates() {
-        return super.requiresDeltaUpdates() || needToFindGround || (riderPresentLastCheck != riderPresentThisCheck);
+        return currentPart != null && (super.requiresDeltaUpdates() || currentPart.definition.generic.fallsToGround || (riderPresentLastCheck != riderPresentThisCheck));
     }
 
     @Override

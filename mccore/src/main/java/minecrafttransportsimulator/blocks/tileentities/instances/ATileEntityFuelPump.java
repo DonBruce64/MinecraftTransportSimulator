@@ -30,7 +30,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
     public double fuelDispensedThisPurchase;
     public double fuelDispensedThisConnection;
     public boolean isCreative;
-    public UUID placingPlayerID;
+    public final UUID placingPlayerID;
 
     public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -53,6 +53,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             for (int i = 0; i < fuelItems.getSize(); ++i) {
                 this.fuelAmounts.add(0);
             }
+            this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : null;
         }
     }
 
