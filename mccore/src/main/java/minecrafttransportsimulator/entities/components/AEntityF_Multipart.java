@@ -387,26 +387,16 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     double boxDistance = hitResult.position.distanceTo(pathStart);
                     boolean addBox = true;
                     if (box.groupDef != null) {
-                        //Don't add boxes within the same group.
+                        //Make sure we're using the closest box hit for this group.
                         Iterator<Entry<Double, BoundingBoxHitResult>> iterator = hitBoxes.entrySet().iterator();
                         while (iterator.hasNext()) {
                             Entry<Double, BoundingBoxHitResult> entry = iterator.next();
                             BoundingBoxHitResult otherHitEntry = entry.getValue();
                             if (otherHitEntry.box.groupDef == box.groupDef) {
-                                //If we have more armor, remove the prior box since it won't stop the bullet as much.
-                                //Otherwise, just use closest box.
-                                if (box.definition.armorThickness != 0) {
-                                    if (box.definition.armorThickness > otherHitEntry.box.definition.armorThickness) {
-                                        iterator.remove();
-                                    } else {
-                                        addBox = false;
-                                    }
+                                if (entry.getKey() > boxDistance) {
+                                    iterator.remove();
                                 } else {
-                                    if (entry.getKey() > boxDistance) {
-                                        iterator.remove();
-                                    } else {
-                                        addBox = false;
-                                    }
+                                    addBox = false;
                                 }
                                 break;
                             }
@@ -454,10 +444,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             //Check armor pen and see if we hit too much and need to stop processing.
-            if (hitEntry.box.definition != null && (hitEntry.box.definition.armorThickness != 0 || hitEntry.box.definition.heatArmorThickness != 0)) {
+            if (hitEntry.box.groupDef != null && (hitEntry.box.groupDef.armorThickness != 0 || hitEntry.box.groupDef.heatArmorThickness != 0)) {
                 hitOperationalHitbox = true;
                 if (bullet != null) {
-                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.definition.heatArmorThickness != 0 ? hitEntry.box.definition.heatArmorThickness : hitEntry.box.definition.armorThickness) : 0;
+                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
                     double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
                     bullet.armorPenetrated += armorThickness;
                     bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);

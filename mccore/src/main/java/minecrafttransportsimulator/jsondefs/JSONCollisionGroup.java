@@ -13,6 +13,15 @@ public class JSONCollisionGroup {
     @JSONDescription("Normally, all boxes block player movement.  If you want a hitbox group to just be there to handle bullet collisions, set this to true as it will let players walk though them, but will stop bullets.")
     public boolean isForBullets;
 
+    @JSONDescription("How much armor this group has.  Values greater than 0 will make this group use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
+    public float armorThickness;
+
+    @JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
+    public float heatArmorThickness;
+
+    @JSONDescription("How much to multiply the damage for bullets that hit this group by.  Is 1.0 if not specified.")
+    public float damageMultiplier;
+
     @JSONDescription("How much health this collision group has.  When the health reaches 0, this collision group will be disabled.  Useful for armor that can only take so many hits, or parts of models that you want to break off when hit.  If this value is 0, then the collision group will always be present, and damage inflicted will be charged to the entity rather than this collision group.")
     public int health;
 

@@ -149,6 +149,29 @@ public final class LegacyCompatSystem {
                 provider.constants.forEach(key -> provider.constantValues.put(key, 1D));
                 provider.constants = null;
             }
+
+            //Move collision box-specific paramters to their groups.
+            if (provider instanceof AJSONInteractableEntity) {
+                AJSONInteractableEntity interactable = (AJSONInteractableEntity) provider;
+                if (interactable.collisionGroups != null) {
+                    for (JSONCollisionGroup collisionGroup : interactable.collisionGroups) {
+                        for (JSONCollisionBox collisionBox : collisionGroup.collisions) {
+                            if (collisionBox.armorThickness != 0) {
+                                collisionGroup.armorThickness = collisionBox.armorThickness;
+                                collisionBox.armorThickness = 0;
+                            }
+                            if (collisionBox.heatArmorThickness != 0) {
+                                collisionGroup.armorThickness = collisionBox.heatArmorThickness;
+                                collisionBox.heatArmorThickness = 0;
+                            }
+                            if (collisionBox.damageMultiplier != 0) {
+                                collisionGroup.armorThickness = collisionBox.damageMultiplier;
+                                collisionBox.damageMultiplier = 0;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         //Do JSON-specific compats.
@@ -179,6 +202,7 @@ public final class LegacyCompatSystem {
             if (ConfigSystem.settings != null && ConfigSystem.settings.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)) {
                 performModelLegacyCompats((AJSONMultiModelProvider) definition);
             }
+
 
             //Check vehicle litVariable LCs, these have to run after model LCs since the model can set some of these.
             if (provider instanceof JSONVehicle) {
@@ -2213,7 +2237,7 @@ public final class LegacyCompatSystem {
                 collision.pos = door.closedPos;
                 collision.width = door.width;
                 collision.height = door.height;
-                collision.armorThickness = door.armorThickness;
+                collisionGroup.armorThickness = door.armorThickness;
                 collisionGroup.collisions.add(collision);
 
                 //Create animations for this door.
