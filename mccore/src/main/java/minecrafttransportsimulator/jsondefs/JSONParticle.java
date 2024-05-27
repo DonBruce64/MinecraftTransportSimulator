@@ -25,6 +25,9 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
+    @JSONDescription("If true, this particle will do brightness blending.  Ignored if the user has blendedLights as false in their config.")
+    public boolean isBlended;
+
     @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
     public boolean stopsOnGround;
 

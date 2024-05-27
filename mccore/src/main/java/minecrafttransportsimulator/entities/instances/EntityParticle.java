@@ -26,6 +26,7 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Basic particle class.  This mimic's MC's particle logic, except we can manually set
@@ -302,6 +303,9 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         } else if (model == null) {
             renderable.setLightMode(LightingMode.IGNORE_ORIENTATION_LIGHTING);
+        }
+        if (definition.isBlended) {
+            renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
         }
 
         this.killBadParticle = false;
