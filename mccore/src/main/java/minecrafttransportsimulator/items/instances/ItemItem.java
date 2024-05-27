@@ -51,6 +51,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     /**First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.**/
     private static PartInteractable firstPartClicked;
 
+    public static final String KEY_UUID_TAG = "keyUUID";
+
     public ItemItem(JSONItem definition) {
         super(definition, null);
     }
@@ -201,7 +203,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         //First check to see if we need to set this key's entity.
                         IWrapperItemStack stack = player.getHeldStack();
                         IWrapperNBT data = stack.getData();
-                        UUID keyUUID = data != null ? data.getUUID("keyUUID") : null;
+                        UUID keyUUID = data != null ? data.getUUID(KEY_UUID_TAG) : null;
                         if (keyUUID == null) {
                             //Check if we are the owner before making this a valid key.
                             if (vehicle.keyUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
@@ -210,7 +212,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 keyUUID = UUID.randomUUID();
                                 vehicle.keyUUID = keyUUID;
                                 data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                                data.setUUID("keyUUID", keyUUID);
+                                data.setUUID(KEY_UUID_TAG, keyUUID);
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_BIND));
                             }

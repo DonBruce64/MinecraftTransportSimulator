@@ -130,7 +130,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super(world, placingPlayer, item, data);
         if (data != null) {
             this.locked = data.getBoolean("locked");
-            this.keyUUID = data.getUUID("keyUUID");
+            this.keyUUID = data.getUUID(ItemItem.KEY_UUID_TAG);
             this.totalPathDelta = data.getDouble("totalPathDelta");
             this.prevTotalPathDelta = totalPathDelta;
             this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -1156,7 +1156,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             IWrapperItemStack heldStack = player.getHeldStack();
             if (heldStack.getItem() instanceof ItemItem) {
                 IWrapperNBT stackData = heldStack.getData();
-                if (stackData != null && keyUUID.equals(stackData.getUUID("keyUUID"))) {
+                if (stackData != null && keyUUID.equals(stackData.getUUID(ItemItem.KEY_UUID_TAG))) {
                     return PlayerOwnerState.OWNER;
                 }
             }
@@ -1195,7 +1195,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super.save(data);
         data.setBoolean("locked", locked);
         if (keyUUID != null) {
-            data.setUUID("keyUUID", keyUUID);
+            data.setUUID(ItemItem.KEY_UUID_TAG, keyUUID);
         }
         data.setPoint3d("serverDeltaM", serverDeltaM);
         data.setPoint3d("serverDeltaR", serverDeltaR);
