@@ -54,6 +54,14 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
             }
             case BARREL: {
                 tooltipLines.add(LanguageSystem.ITEMINFO_INTERACTABLE_CAPACITY.getCurrentValue() + definition.interactable.inventoryUnits * 10000 + "mb");
+                IWrapperNBT tankData = data.getData("tank");
+                if (tankData != null) {
+                    String tankFluidName = tankData.getString("currentFluid");
+                    double tankFluidLevel = tankData.getDouble("fluidLevel");
+                    if (tankFluidLevel != 0) {
+                        tooltipLines.add(LanguageSystem.ITEMINFO_INTERACTABLE_CONTENTS.getCurrentValue() + tankFluidName + ":" + tankFluidLevel + "mb");
+                    }
+                }
                 break;
             }
             case JERRYCAN: {
