@@ -36,29 +36,19 @@ public class JSONCollisionGroup {
 
     public static enum CollisionType {
         @JSONDescription("Allows collision with blocks.")
-        BLOCK(true, true, true),
+        BLOCK,
         @JSONDescription("Allows entities to collide with this box.")
-        ENTITY(true, true, true),
+        ENTITY,
         @JSONDescription("Allows vehicle wheels to ride on boxes in this group.")
-        VEHICLE(true, true, true),
+        VEHICLE,
         @JSONDescription("Allows attacking from damage sources.  This includes bullets.")
-        ATTACK(false, false, true),
+        ATTACK,
         @JSONDescription("Allows bullet interaction, but not general attacks.")
-        BULLET(false, false, true),
+        BULLET,
         @JSONDescription("Allows clicking.")
-        CLICK(true, false, false),
+        CLICK,
         @JSONDescription("Allows effector logic.")
-        EFFECTOR(false, false, false);
-
-        public final boolean canBeClicked;
-        public final boolean canBeAttackedByNormal;
-        public final boolean canBeAttackedByBullet;
-
-        private CollisionType(boolean canBeClicked, boolean canBeAttackedByNormal, boolean canBeAttackedByBullet) {
-            this.canBeClicked = canBeClicked;
-            this.canBeAttackedByNormal = canBeAttackedByNormal;
-            this.canBeAttackedByBullet = canBeAttackedByBullet;
-        }
+        EFFECTOR;
     }
 
     @Deprecated
