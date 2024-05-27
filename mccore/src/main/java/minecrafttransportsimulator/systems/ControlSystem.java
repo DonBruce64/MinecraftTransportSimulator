@@ -320,11 +320,36 @@ public final class ControlSystem {
 
         //Check flaps.
         if (aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()) {
-            int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngle);
-            if (ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed() && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
-            } else if (ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed() && currentFlapSetting > 0) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
+            if (ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()) {
+                int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngle);
+                if (currentFlapSetting == -1) {
+                    //Get next-highest notch since we're going down.
+                    for (int i = 0; i < aircraft.definition.motorized.flapNotches.size(); ++i) {
+                        float flapNotch = aircraft.definition.motorized.flapNotches.get(i);
+                        if (flapNotch > aircraft.flapDesiredAngle) {
+                            currentFlapSetting = i;
+                            break;
+                        }
+                    }
+                }
+                if (currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
+                }
+            } else if (ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()) {
+                int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngle);
+                if (currentFlapSetting == -1) {
+                    //Get next-lowest notch since we're going up.
+                    for (int i = aircraft.definition.motorized.flapNotches.size() - 1; i <= 0; --i) {
+                        float flapNotch = aircraft.definition.motorized.flapNotches.get(i);
+                        if (flapNotch < aircraft.flapDesiredAngle) {
+                            currentFlapSetting = i;
+                            break;
+                        }
+                    }
+                }
+                if (currentFlapSetting > 0) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
+                }
             }
         }
 
