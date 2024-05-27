@@ -316,7 +316,7 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_KEY_LOCK = new LanguageEntry("interact.key.lock", "Vehicle locked!");
     public static final LanguageEntry INTERACT_KEY_UNLOCK = new LanguageEntry("interact.key.unlock", "Vehicle unlocked!");
     public static final LanguageEntry INTERACT_KEY_BIND = new LanguageEntry("interact.key.bind", "Key bound to vehicle.  Ready for locking/unlocking use.");
-    public static final LanguageEntry INTERACT_KEY_NOTOWNER = new LanguageEntry("interact.key.notowner", "This key is not for any vehicle, and only the owner of this vehicle may make new keys!");
+    public static final LanguageEntry INTERACT_KEY_HASKEY = new LanguageEntry("interact.key.haskey", "This vehicle already has a key for it.  Only OPs may make new keys for vehicles that already have them.");
     public static final LanguageEntry INTERACT_KEY_WRONGKEY = new LanguageEntry("interact.key.wrongkey", "This key does not go to this vehicle!");
 
     public static final LanguageEntry INTERACT_FUELPUMP_NOFUEL = new LanguageEntry("interact.fuelpump.nofuel", "The pump is empty.  Either insert fuel into the pump via buckets, or connect it to a fluid or electrical system from the bottom.");
@@ -348,7 +348,6 @@ public class LanguageSystem {
 
     public static final LanguageEntry INTERACT_VEHICLE_SEATTAKEN = new LanguageEntry("interact.vehicle.seattaken", "This seat is taken!");
     public static final LanguageEntry INTERACT_VEHICLE_LOCKED = new LanguageEntry("interact.vehicle.locked", "This vehicle is locked!");
-    public static final LanguageEntry INTERACT_VEHICLE_OWNED = new LanguageEntry("interact.vehicle.owned", "You are not the owner of this vehicle and therefore cannot change it or its parts!");
     public static final LanguageEntry INTERACT_VEHICLE_NEEDKEY = new LanguageEntry("interact.vehicle.needkey", "You must have the key of this vehicle to start it!");
     public static final LanguageEntry INTERACT_VEHICLE_NOSPACE = new LanguageEntry("interact.vehicle.nospace", "There is not enough space to place down this vehicle here.");
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");

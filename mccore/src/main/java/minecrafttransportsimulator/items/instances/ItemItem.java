@@ -10,7 +10,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -118,13 +117,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     }
 
     @Override
-    public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
+    public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, boolean rightClick) {
+        EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
         switch (definition.item.type) {
 	    	case WRENCH: 
 	    	case SCREWDRIVER: {
                 if (!entity.world.isClient()) {
-                    //If the player isn't the owner of the entity, they can't interact with it.
-                    if (!ownerState.equals(PlayerOwnerState.USER)) {
+                    //If the vehicle isn't unlocked, or the player isn't OP, they can't interact with it.
+                    if (vehicle == null || !vehicle.locked) {
                         if (rightClick) {
                             //Right-clicking opens GUIs.
                             if (player.isSneaking()) {
@@ -134,8 +134,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 } else {
                                     player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                                 }
-                            } else if (entity instanceof EntityVehicleF_Physics) {
-                                EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                            } else if (vehicle != null) {
                                 if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
                                     player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
                                 } else if (!vehicle.allParts.contains(player.getEntityRiding())) {
@@ -145,16 +144,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         } else {
                             //Left clicking removes parts, or removes vehicles, if we were sneaking.
                             if(player.isSneaking()) {
-                                EntityVehicleF_Physics vehicle;
-                                if(entity instanceof APart) {
-                                    vehicle = ((APart) entity).vehicleOn;
-                                }else if(entity instanceof EntityVehicleF_Physics) {
-                                    vehicle = (EntityVehicleF_Physics) entity;
-                                } else {
-                                    vehicle = null;
-                                }
                                 if(vehicle != null) {
-                                    if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
+                                    if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
                                         vehicle.disconnectAllConnections();
                                         vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter);
                                         vehicle.remove();
@@ -178,25 +169,22 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             }
                         }
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                     }
                 }
                 return CallbackType.NONE;
             }
             case PAINT_GUN: {
                 if (!entity.world.isClient() && rightClick) {
-                    //If the player isn't the owner of the entity, they can't interact with it.
-                    if (!ownerState.equals(PlayerOwnerState.USER)) {
+                    if (vehicle == null || !vehicle.locked) {
                         player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     } else {
-                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                     }
                 }
                 return CallbackType.NONE;
             }
             case KEY: {
-                //Keys always act on top-most entity.  If we are a part, get our master entity.
-                EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
                 if (vehicle != null) {
                     if (rightClick && !entity.world.isClient()) {
                         //Try to lock the entity.
@@ -205,9 +193,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         IWrapperNBT data = stack.getData();
                         UUID keyUUID = data != null ? data.getUUID(KEY_UUID_TAG) : null;
                         if (keyUUID == null) {
-                            //Check if we are the owner before making this a valid key.
-                            if (vehicle.keyUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
-                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_NOTOWNER));
+                            if (vehicle.keyUUID != null && !player.isOP()) {
+                                player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_HASKEY));
                             } else {
                                 keyUUID = UUID.randomUUID();
                                 vehicle.keyUUID = keyUUID;
@@ -319,8 +306,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_ALREADYLINKED));
                                 }
                             }
-                        } else if (entity instanceof EntityVehicleF_Physics) {
-                            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                        } else if (vehicle != null) {
                             if (vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
                                 if (vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                     firstPartClicked.linkedVehicle = vehicle;
@@ -394,8 +380,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     if (entity instanceof APart) {
                         entity = ((APart) entity).vehicleOn;
                     }
-                    if (entity instanceof EntityVehicleF_Physics) {
-                        EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                    if (vehicle != null) {
                         if (vehicle.repairCooldownTicks == 0) {
                             if (!vehicle.outOfHealth || definition.repair.canRepairTotaled) {
                                 if (entity.damageAmount == 0) {

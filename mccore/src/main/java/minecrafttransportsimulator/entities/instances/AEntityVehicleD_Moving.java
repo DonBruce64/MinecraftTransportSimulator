@@ -25,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -1140,27 +1139,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     iterator.remove();
                 }
             }
-        }
-    }
-
-    /**
-     * Returns the owner state of the passed-in player, relative to this entity.
-     * Takes into account player OP status and {@link #ownerUUID}, if set.
-     */
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        if (player.isOP()) {
-            return PlayerOwnerState.ADMIN;
-        } else if (keyUUID == null) {
-            return PlayerOwnerState.OWNER;
-        } else {
-            IWrapperItemStack heldStack = player.getHeldStack();
-            if (heldStack.getItem() instanceof ItemItem) {
-                IWrapperNBT stackData = heldStack.getData();
-                if (stackData != null && keyUUID.equals(stackData.getUUID(ItemItem.KEY_UUID_TAG))) {
-                    return PlayerOwnerState.OWNER;
-                }
-            }
-            return PlayerOwnerState.USER;
         }
     }
 

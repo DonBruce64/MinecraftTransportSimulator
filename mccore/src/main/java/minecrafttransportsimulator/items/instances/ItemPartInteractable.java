@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
@@ -82,7 +81,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
     }
 
     @Override
-    public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick) {
+    public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, boolean rightClick) {
         if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
             if (!entity.world.isClient()) {
                 if (rightClick) {
