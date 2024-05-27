@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
+import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
@@ -226,6 +227,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCameraChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityColorChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityKeyChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTextChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTowingChange.class);

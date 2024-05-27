@@ -28,6 +28,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
@@ -202,6 +203,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 data.setUUID(KEY_UUID_TAG, keyUUID);
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_BIND));
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityKeyChange(vehicle, keyUUID));
                             }
                             return CallbackType.NONE;
                         }
