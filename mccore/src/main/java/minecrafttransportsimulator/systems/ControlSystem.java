@@ -332,7 +332,7 @@ public final class ControlSystem {
                         }
                     }
                 }
-                if (currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
+                if (currentFlapSetting != -1 && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
                 }
             } else if (ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()) {

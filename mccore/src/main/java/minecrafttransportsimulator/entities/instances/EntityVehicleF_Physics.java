@@ -187,18 +187,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         autopilotSetting = getVariable(AUTOPILOT_VALUE_VARIABLE);
         flapDesiredAngle = getVariable(FLAPS_VARIABLE);
 
-        //Adjust flaps to current setting.
-        if (definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()) {
-            if (flapCurrentAngle < flapDesiredAngle) {
-                flapCurrentAngle += definition.motorized.flapSpeed;
-            } else if (flapCurrentAngle > flapDesiredAngle) {
-                flapCurrentAngle -= definition.motorized.flapSpeed;
-            }
-            if (Math.abs(flapCurrentAngle - flapDesiredAngle) < definition.motorized.flapSpeed) {
-                flapCurrentAngle = flapDesiredAngle;
-            }
-        }
-
         //Set indicated speed and autopilot state.
         indicatedSpeed = axialVelocity * speedFactor * 20;
         if (isVariableActive(AUTOPILOT_ACTIVE_VARIABLE)) {
@@ -289,6 +277,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         rudderAngle = rudderInput;
         setVariable(RUDDER_VARIABLE, rudderAngle);
 
+        //Adjust flaps to current setting.
+        if (definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()) {
+            if (flapCurrentAngle < flapDesiredAngle) {
+                flapCurrentAngle += definition.motorized.flapSpeed;
+            } else if (flapCurrentAngle > flapDesiredAngle) {
+                flapCurrentAngle -= definition.motorized.flapSpeed;
+            }
+            if (Math.abs(flapCurrentAngle - flapDesiredAngle) < definition.motorized.flapSpeed) {
+                flapCurrentAngle = flapDesiredAngle;
+            }
+        }
+
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
@@ -334,6 +334,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         break;
                     case "axleRatio":
                         currentAxleRatio = adjustVariable(modifier, currentAxleRatio);
+                        break;
+                    case "flaps_actual":
+                        flapCurrentAngle = adjustVariable(modifier, (float) flapCurrentAngle);
                         break;
                     case AILERON_VARIABLE:
                         aileronAngle = adjustVariable(modifier, (float) aileronAngle);
