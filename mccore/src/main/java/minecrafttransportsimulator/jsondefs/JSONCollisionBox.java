@@ -18,15 +18,6 @@ public class JSONCollisionBox {
     @JSONDescription("If true, the collision box will behave like a ground device set to float.  Note that if you make a boat that uses only these boxes, you'll need one for every corner like you would wheels on a car.  Failing to do so will result in your boat doing a Titanic, just without an iceberg.")
     public boolean collidesWithLiquids;
 
-    @JSONDescription("How much armor this collision box has.  Values greater than 0 will make this box use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
-    public float armorThickness;
-
-    @JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
-    public float heatArmorThickness;
-
-    @JSONDescription("How much to multiply the damage for bullets that hit this hitbox by.  Is 1.0 if not specified.")
-    public float damageMultiplier;
-
     @JSONDescription("If set, clicking this collision box will do variable operations.  The exact operation depends on the variableType and variableValue.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
     public String variableName;
 
@@ -56,4 +47,10 @@ public class JSONCollisionBox {
 
     @Deprecated
     public boolean isInterior;
+    @Deprecated
+    public float armorThickness;
+    @Deprecated
+    public float heatArmorThickness;
+    @Deprecated
+    public float damageMultiplier;
 }

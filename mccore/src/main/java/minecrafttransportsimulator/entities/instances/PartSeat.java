@@ -126,17 +126,6 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    protected void updateEncompassingBox() {
-        super.updateEncompassingBox();
-
-        //Don't have any interaction boxes if we are on a client and the player is sitting in us.
-        //This keeps us from clicking our own seat when we want to click other things.
-        if (riderIsClient) {
-            allInteractionBoxes.clear();
-        }
-    }
-
-    @Override
     public void updatePartList() {
         super.updatePartList();
 
@@ -380,6 +369,10 @@ public final class PartSeat extends APart {
                     return true;
                 }
             }
+        }
+        //Don't let us click ourselves if we are riding ourselves.
+        if (riderIsClient) {
+            return false;
         }
         return super.canBeClicked();
     }

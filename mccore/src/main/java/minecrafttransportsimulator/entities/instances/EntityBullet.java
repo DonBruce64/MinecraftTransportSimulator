@@ -16,6 +16,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -457,8 +458,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     if (!multipart.allParts.contains(gun)) {
                                         if (multipart.encompassingBox.intersects(proxBounds)) {
                                             //Could have hit this multipart, check all boxes.
-                                            for (BoundingBox box : multipart.allInteractionBoxes) {
-                                                if (box.globalCenter.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
+                                            for (BoundingBox box : multipart.allCollisionBoxes) {
+                                                if ((box.collisionTypes.contains(CollisionType.ATTACK) || box.collisionTypes.contains(CollisionType.BULLET)) && box.globalCenter.isDistanceToCloserThan(proxBounds.globalCenter, definition.bullet.proximityFuze)) {
                                                     targetToHit = box.globalCenter.copy();
                                                     hitType = HitType.VEHICLE;
                                                     displayDebugMessage("PROX FUZE HIT VEHICLE");

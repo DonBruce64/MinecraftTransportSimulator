@@ -226,10 +226,8 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
         List<IWrapperEntity> entities = new ArrayList<>();
-        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
-            if (entity instanceof EntityLivingBase) {
-                entities.add(WrapperEntity.getWrapperFor(entity));
-            }
+        for (EntityLivingBase entity : world.getEntitiesWithinAABB(EntityLivingBase.class, WrapperWorld.convert(box))) {
+            entities.add(WrapperEntity.getWrapperFor(entity));
         }
         return entities;
     }

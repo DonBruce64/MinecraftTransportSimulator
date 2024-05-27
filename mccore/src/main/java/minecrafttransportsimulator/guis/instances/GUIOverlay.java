@@ -87,7 +87,7 @@ public class GUIOverlay extends AGUIBase {
                 AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) interactResult.entity;
                 BoundingBox mousedOverBox = null;
                 JSONPartDefinition packVehicleDef = null;
-                for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activePartSlotBoxes.entrySet()) {
+                for (Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.activeClientPartSlotBoxes.entrySet()) {
                     BoundingBox box = boxEntry.getKey();
                     if (box.getIntersection(startPosition, endPosition) != null) {
                         if (mousedOverBox == null || (box.globalCenter.distanceTo(startPosition) < mousedOverBox.globalCenter.distanceTo(startPosition))) {

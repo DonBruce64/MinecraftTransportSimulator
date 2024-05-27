@@ -98,7 +98,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
         //If we didn't get the box from the part slot, get it from the main list.
         if (hitBox == null) {
-            for (BoundingBox box : entity.interactionBoxes) {
+            for (BoundingBox box : entity.collisionBoxes) {
                 if (box.localCenter.equals(hitBoxLocalCenter)) {
                     hitBox = box;
                     break;
@@ -175,7 +175,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         //Not holding an item that can interact with a entity, nor right-clicked a box.  Try to interact with the entity itself.
         if (rightClick) {
             entity.interact(player);
-        } else if (leftClick && (hitBox.definition == null || hitBox.definition.armorThickness == 0)) {
+        } else if (leftClick && (hitBox.groupDef == null || hitBox.groupDef.armorThickness == 0)) {
             entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
         }
         return false;

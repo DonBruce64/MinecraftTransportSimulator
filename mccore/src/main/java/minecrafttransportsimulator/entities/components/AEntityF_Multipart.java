@@ -1,13 +1,16 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
@@ -28,6 +31,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -57,6 +61,11 @@ import minecrafttransportsimulator.systems.LanguageSystem;
 public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityE_Interactable<JSONDefinition> {
 
     /**
+     * List of collision boxes, with all part collision boxes included.
+     **/
+    public final Set<BoundingBox> allCollisionBoxes = new HashSet<>();
+
+    /**
      * This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
      * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
      * operations are performed.  Note that if you are iterating over this list when you call one of those
@@ -76,45 +85,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public final List<APart> partsInSlots = new ArrayList<>();
 
     /**
-     * List of block collision boxes, with all part block collision boxes included.
-     **/
-    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>();
-
-    /**
-     * List of entity collision boxes, with all part collision boxes included.
-     **/
-    public final List<BoundingBox> allEntityCollisionBoxes = new ArrayList<>();
-
-    /**
-     * List of interaction boxes, plus all part boxes included.
-     **/
-    public final List<BoundingBox> allInteractionBoxes = new ArrayList<>();
-
-    /**
-     * List of bullet boxes, plus all part boxes included.
-     **/
-    public final List<BoundingBox> allBulletCollisionBoxes = new ArrayList<>();
-
-    /**
-     * List of damage boxes, plus all part boxes included.
-     **/
-    public final List<BoundingBox> allDamageCollisionBoxes = new ArrayList<>();
-
-    /**
      * Map of part slot boxes.  Key is the box, value is the definition for that slot.
+     * Note that this contains all POSSIBLE boxes.  Boxes may not be active and in
+     * {@link #allCollisionBoxes} if their conditions aren't right for clicking.
      **/
     public final Map<BoundingBox, JSONPartDefinition> partSlotBoxes = new HashMap<>();
+    public final Map<BoundingBox, JSONPartDefinition> activeClientPartSlotBoxes = new HashMap<>();
     private final Map<JSONPartDefinition, AnimationSwitchbox> partSlotSwitchboxes = new HashMap<>();
-
-    /**
-     * Map of active part slot boxes.  Boxes in here will also be in {@link #partSlotBoxes}.
-     **/
-    public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<>();
-
-    /**
-     * Map of part slot boxes, plus all part boxes included.
-     **/
-    public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<>();
 
     //Constants
     private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
@@ -122,6 +99,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     private static final float PART_SLOT_GROUND_HITBOX_WIDTH = 0.75F;
     private static final float PART_SLOT_GROUND_HITBOX_HEIGHT = 2.25F;
     private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
+    private static final Set<CollisionType> partSlotBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.CLICK));
 
     private APart partToPlace;
     private EntityPlacedPart placedPart;
@@ -168,15 +146,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     @Override
     public void update() {
-        //Need to do this before updating as these require knowledge of prior states.
-        //If we call super, then it will overwrite the prior state.
-        //We update both our variables and our part variables here.
-        updateVariableModifiers();
-        for (APart part : parts) {
-            part.updateVariableModifiers();
-        }
-
-        //Now call super and do the updates.
         super.update();
         world.beginProfiling("EntityF_Level", true);
 
@@ -187,66 +156,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Transfer(partToPlace, placedPart, otherPartDef));
             partToPlace = null;
             placedPart = null;
-        }
-
-        //Populate active part slot list and update box positions.
-        //Only do this on clients; servers reference the main list to handle clicks.
-        //Boxes added on clients depend on what the player is holding.
-        //We add these before part boxes so the player can click them before clicking a part.
-        if (world.isClient() && !partSlotBoxes.isEmpty()) {
-            world.beginProfiling("PartSlotActives", false);
-            activePartSlotBoxes.clear();
-            if (canBeClicked()) {
-                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                AItemBase heldItem = player.getHeldItem();
-                if (heldItem instanceof AItemPart) {
-                    for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
-                        AItemPart heldPart = (AItemPart) heldItem;
-                        //Does the part held match this packPart?
-                        if (heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subDefinition, false)) {
-                            //Are there any doors blocking us from clicking this part?
-                            if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
-                                //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one.
-                                BoundingBox box = partSlotBoxEntry.getKey();
-                                if (heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
-                                    box.widthRadius = heldPart.definition.generic.width / 2D;
-                                    box.heightRadius = heldPart.definition.generic.height / 2D;
-                                    box.depthRadius = heldPart.definition.generic.width / 2D;
-                                }
-                                activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
-                                forceCollisionUpdateThisTick = true;
-                                if(this instanceof APart) {
-                                    ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
-                                }
-                            }
-                        }
-                    }
-                } else if (heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER) {
-                    //Don't check held parts, just check if we can actually place anything in a slot.
-                    for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
-                        if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
-                            activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
-                            forceCollisionUpdateThisTick = true;
-                        }
-                    }
-                }
-            }
-
-            //Update part slot box positions.
-            if (requiresDeltaUpdates()) {
-                world.beginProfiling("PartSlotPositions", false);
-                activePartSlotBoxes.forEach((box, partDef) -> {
-                    AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
-                    if (switchBox != null) {
-                        if (switchBox.runSwitchbox(0, false)) {
-                            box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
-                            box.updateToEntity(this, box.globalCenter);
-                        }
-                    } else {
-                        box.updateToEntity(this, null);
-                    }
-                });
-            }
         }
 
         //Check for part slot variable changes and do logic.
@@ -368,56 +277,39 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //Get all collision boxes and check if we hit any of them.
             //Sort them by distance for later.
             TreeMap<Double, BoundingBoxHitResult> hitBoxes = new TreeMap<>();
-            populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allDamageCollisionBoxes);
-            if (isBullet) {
-                populateHitBoxesInSet(pathStart, pathEnd, hitBoxes, allBulletCollisionBoxes);
+            for (BoundingBox box : allCollisionBoxes) {
+                if (box.collisionTypes.contains(CollisionType.ATTACK) || (isBullet && box.collisionTypes.contains(CollisionType.BULLET))) {
+                    BoundingBoxHitResult hitResult = box.getIntersection(pathStart, pathEnd);
+                    if (hitResult != null) {
+                        double boxDistance = hitResult.position.distanceTo(pathStart);
+                        boolean addBox = true;
+                        if (box.groupDef != null) {
+                            //Don't add boxes within the same group.
+                            Iterator<Entry<Double, BoundingBoxHitResult>> iterator = hitBoxes.entrySet().iterator();
+                            while (iterator.hasNext()) {
+                                Entry<Double, BoundingBoxHitResult> entry = iterator.next();
+                                BoundingBoxHitResult otherHitEntry = entry.getValue();
+                                if (otherHitEntry.box.groupDef == box.groupDef) {
+                                    if (entry.getKey() > boxDistance) {
+                                        iterator.remove();
+                                    } else {
+                                        addBox = false;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (addBox) {
+                            hitBoxes.put(boxDistance, hitResult);
+                        }
+                    }
+                }
             }
             if (!hitBoxes.isEmpty()) {
                 return hitBoxes.values();
             }
         }
         return null;
-    }
-
-    private void populateHitBoxesInSet(Point3D pathStart, Point3D pathEnd, TreeMap<Double, BoundingBoxHitResult> hitBoxes, List<BoundingBox> boxesToCheck) {
-        for (BoundingBox box : boxesToCheck) {
-            if (!allPartSlotBoxes.containsKey(box)) {
-                BoundingBoxHitResult hitResult = box.getIntersection(pathStart, pathEnd);
-                if (hitResult != null) {
-                    double boxDistance = hitResult.position.distanceTo(pathStart);
-                    boolean addBox = true;
-                    if (box.groupDef != null) {
-                        //Don't add boxes within the same group.
-                        Iterator<Entry<Double, BoundingBoxHitResult>> iterator = hitBoxes.entrySet().iterator();
-                        while (iterator.hasNext()) {
-                            Entry<Double, BoundingBoxHitResult> entry = iterator.next();
-                            BoundingBoxHitResult otherHitEntry = entry.getValue();
-                            if (otherHitEntry.box.groupDef == box.groupDef) {
-                                //If we have more armor, remove the prior box since it won't stop the bullet as much.
-                                //Otherwise, just use closest box.
-                                if (box.definition.armorThickness != 0) {
-                                    if (box.definition.armorThickness > otherHitEntry.box.definition.armorThickness) {
-                                        iterator.remove();
-                                    } else {
-                                        addBox = false;
-                                    }
-                                } else {
-                                    if (entry.getKey() > boxDistance) {
-                                        iterator.remove();
-                                    } else {
-                                        addBox = false;
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (addBox) {
-                        hitBoxes.put(boxDistance, hitResult);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -428,7 +320,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
      */
     public EntityBullet.HitType attackProjectile(Damage damage, EntityBullet bullet, Collection<BoundingBoxHitResult> hitBoxes) {
-        //FIXME need to get the side here for bullet particles.
         //Check all boxes for armor and see if we penetrated them.
         for (BoundingBoxHitResult hitEntry : hitBoxes) {
             APart hitPart = getPartWithBox(hitEntry.box);
@@ -454,10 +345,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             //Check armor pen and see if we hit too much and need to stop processing.
-            if (hitEntry.box.definition != null && (hitEntry.box.definition.armorThickness != 0 || hitEntry.box.definition.heatArmorThickness != 0)) {
+            if (hitEntry.box.groupDef != null && (hitEntry.box.groupDef.armorThickness != 0 || hitEntry.box.groupDef.heatArmorThickness != 0)) {
                 hitOperationalHitbox = true;
                 if (bullet != null) {
-                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.definition.heatArmorThickness != 0 ? hitEntry.box.definition.heatArmorThickness : hitEntry.box.definition.armorThickness) : 0;
+                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
                     double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
                     bullet.armorPenetrated += armorThickness;
                     bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
@@ -549,16 +440,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public Collection<BoundingBox> getCollisionBoxes() {
-        return allEntityCollisionBoxes;
-    }
-
-    @Override
-    public Collection<BoundingBox> getDamageBoxes() {
-        return allDamageCollisionBoxes;
-    }
-
-    @Override
     public boolean canCollideWith(AEntityB_Existing entityToCollide) {
         return !(entityToCollide instanceof APart);
     }
@@ -595,17 +476,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             part.damageCollisionBox(box, damageAmount);
         } else {
             super.damageCollisionBox(box, damageAmount);
-        }
-    }
-
-    @Override
-    protected void updateCollisionBoxes() {
-        super.updateCollisionBoxes();
-        //Only add active slots on clients.
-        //Different clients may have different boxes active, but the server will always have them all.
-        if (world.isClient()) {
-            interactionBoxes.addAll(activePartSlotBoxes.keySet());
-            damageCollisionBoxes.addAll(activePartSlotBoxes.keySet());
         }
     }
 
@@ -845,14 +715,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public APart getPartWithBox(BoundingBox box) {
         for (APart part : parts) {
-            if (part.allDamageCollisionBoxes.contains(box)) {
-                if (part.damageCollisionBoxes.contains(box)) {
-                    return part;
-                } else {
-                    return part.getPartWithBox(box);
-                }
-            } else if (part.allBulletCollisionBoxes.contains(box)) {
-                if (part.bulletCollisionBoxes.contains(box)) {
+            if (part.allCollisionBoxes.contains(box)) {
+                if (part.collisionBoxes.contains(box)) {
                     return part;
                 } else {
                     return part.getPartWithBox(box);
@@ -893,8 +757,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     private void recalculatePartSlots() {
         partSlotBoxes.clear();
-        //Need to clear this since if we have no part slots we won't run the code to align this.
-        activePartSlotBoxes.clear();
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
@@ -907,13 +769,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
                 BoundingBox newSlotBox;
                 if (isForGroundDevices) {
-                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_GROUND_HITBOX_WIDTH / 2D, PART_SLOT_GROUND_HITBOX_HEIGHT / 2D, PART_SLOT_GROUND_HITBOX_WIDTH / 2D, false);
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_GROUND_HITBOX_WIDTH / 2D, PART_SLOT_GROUND_HITBOX_HEIGHT / 2D, PART_SLOT_GROUND_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 } else {
-                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false);
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 }
                 partSlotBoxes.put(newSlotBox, partDef);
             }
         }
+        //Add all slot boxes, clients will remove as applicable, servers will never remove.
+        collisionBoxes.addAll(partSlotBoxes.keySet());
         forceCollisionUpdateThisTick = true;
         if (this instanceof APart) {
             ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
@@ -921,31 +785,87 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
+    protected void updateCollisionBoxes() {
+        super.updateCollisionBoxes();
+        //Populate active part slot list and update box positions.
+        //Only do this on clients; servers reference the main list to handle clicks.
+        //Boxes added on clients depend on what the player is holding.
+        //We add these before part boxes so the player can click them before clicking a part.
+        if (!partSlotBoxes.isEmpty()) {
+            if (world.isClient()) {
+                world.beginProfiling("PartSlotActives", false);
+                activeClientPartSlotBoxes.clear();
+                if (canBeClicked()) {
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    AItemBase heldItem = player.getHeldItem();
+                    boolean holdingScanner = heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER;
+                    if (holdingScanner || heldItem instanceof AItemPart) {
+                        for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
+                            BoundingBox box = partSlotBoxEntry.getKey();
+                            JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
+                            boolean activeSlotFound = false;
+                            if (holdingScanner) {
+                                //Don't check held parts, just check if we can actually place anything in a slot.
+                                if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
+                                    activeSlotFound = true;
+                                }
+                            } else {
+                                AItemPart heldPart = (AItemPart) heldItem;
+                                if (heldPart.isPartValidForPackDef(slotDef, subDefinition, false) && isVariableListTrue(slotDef.interactableVariables)) {
+                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one.
+                                    if (heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
+                                        box.widthRadius = heldPart.definition.generic.width / 2D;
+                                        box.heightRadius = heldPart.definition.generic.height / 2D;
+                                        box.depthRadius = heldPart.definition.generic.width / 2D;
+                                    }
+                                    activeSlotFound = true;
+                                    if (this instanceof APart) {
+                                        ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
+                                    }
+                                }
+                            }
+                            if (activeSlotFound) {
+                                collisionBoxes.add(box);
+                                activeClientPartSlotBoxes.put(box, slotDef);
+                                forceCollisionUpdateThisTick = true;
+                                if (requiresDeltaUpdates()) {
+                                    AnimationSwitchbox switchBox = partSlotSwitchboxes.get(slotDef);
+                                    if (switchBox != null) {
+                                        if (switchBox.runSwitchbox(0, false)) {
+                                            box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
+                                            box.updateToEntity(this, box.globalCenter);
+                                        }
+                                    } else {
+                                        box.updateToEntity(this, null);
+                                    }
+                                }
+                            } else {
+                                collisionBoxes.remove(box);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     protected void updateEncompassingBox() {
         super.updateEncompassingBox();
+        //If we are on the server, now add slot boxes.
+        //If did this before in the update method, the encompassing box would use the slot boxes.
+        //Since the server doesn't update slot position, this leads to issues.
+        if (!world.isClient()) {
+            collisionBoxes.addAll(partSlotBoxes.keySet());
+        }
 
         //Set active collision box, door box, and interaction box lists to current boxes.
-        allEntityCollisionBoxes.clear();
-        allEntityCollisionBoxes.addAll(entityCollisionBoxes);
-        allBlockCollisionBoxes.clear();
-        allBlockCollisionBoxes.addAll(blockCollisionBoxes);
-        allInteractionBoxes.clear();
-        allInteractionBoxes.addAll(interactionBoxes);
-        allBulletCollisionBoxes.clear();
-        allBulletCollisionBoxes.addAll(bulletCollisionBoxes);
-        allDamageCollisionBoxes.clear();
-        allDamageCollisionBoxes.addAll(damageCollisionBoxes);
-        allPartSlotBoxes.clear();
-        allPartSlotBoxes.putAll(partSlotBoxes);
+        allCollisionBoxes.clear();
+        allCollisionBoxes.addAll(collisionBoxes);
 
         //Add all part boxes.
         for (APart part : parts) {
-            allEntityCollisionBoxes.addAll(part.allEntityCollisionBoxes);
-            allBlockCollisionBoxes.addAll(part.allBlockCollisionBoxes);
-            allBulletCollisionBoxes.addAll(part.allBulletCollisionBoxes);
-            allInteractionBoxes.addAll(part.allInteractionBoxes);
-            allDamageCollisionBoxes.addAll(part.allDamageCollisionBoxes);
-            allPartSlotBoxes.putAll(part.allPartSlotBoxes);
+            allCollisionBoxes.addAll(part.allCollisionBoxes);
         }
 
         //Update encompassing bounding box to reflect all bounding boxes of all parts.
@@ -956,16 +876,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y) + part.encompassingBox.heightRadius);
                     encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z) + part.encompassingBox.depthRadius);
                 }
-            }
-        }
-
-        //Also check active part slots, but only on the client.
-        //Servers will just get packets to the box, but clients need to raytrace the slots.
-        if (world.isClient() && !activePartSlotBoxes.isEmpty()) {
-            for (BoundingBox box : activePartSlotBoxes.keySet()) {
-                encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x) + box.widthRadius);
-                encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y) + box.heightRadius);
-                encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z) + box.depthRadius);
             }
         }
         encompassingBox.updateToEntity(this, null);
@@ -1017,19 +927,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        //Override default rendering to disable de-activated boxes from rendering.
-        for (BoundingBox box : interactionBoxes) {
-            if (allInteractionBoxes.contains(box)) {
-                if (boundingBox == box) {
-                    box.renderWireframe(this, transform, null, ColorRGB.GRAY);
-                } else {
-                    box.renderWireframe(this, transform, null, null);
-                }
-            }
-        }
-        for (BoundingBox box : bulletCollisionBoxes) {
-            box.renderWireframe(this, transform, null, null);
-        }
+        super.renderBoundingBoxes(transform);
         if (System.currentTimeMillis() % 1000 > 500) {
             encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
         }
@@ -1037,7 +935,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     @Override
     protected void renderHolographicBoxes(TransformationMatrix transform) {
-        if (!activePartSlotBoxes.isEmpty()) {
+        if (!activeClientPartSlotBoxes.isEmpty()) {
             //If we are holding a part or scanner, render the valid slots.
             world.beginProfiling("PartHoloboxes", true);
             IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
@@ -1046,13 +944,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
             if (heldPart != null || holdingScanner) {
                 if (holdingScanner) {
-                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activePartSlotBoxes.entrySet()) {
+                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activeClientPartSlotBoxes.entrySet()) {
                         BoundingBox box = slotEntry.getKey();
                         JSONPartDefinition slotDef = slotEntry.getValue();
                         Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
                         boolean isImportant = false;
-                        for(String slotType : slotDef.types) {
-                            if(slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
+                        for (String slotType : slotDef.types) {
+                            if (slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
                                 isImportant = true;
                                 break;
                             }
@@ -1060,7 +958,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         box.renderHolographic(transform, boxCenterDelta, isImportant ? ColorRGB.YELLOW : ColorRGB.DARK_GRAY);
                     }
                 } else {
-                    for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()) {
+                    for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activeClientPartSlotBoxes.entrySet()) {
                         boolean isHoldingCorrectTypePart = false;
                         boolean isHoldingCorrectParamPart = false;
 

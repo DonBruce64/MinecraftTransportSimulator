@@ -594,7 +594,7 @@ public class PartGun extends APart {
     }
 
     @Override
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         currentFireDelay = definition.gun.fireDelay;
         currentBulletSpreadFactor = definition.gun.bulletSpreadFactor;
         currentIsTwoHandedness = definition.gun.isTwoHanded ? 1 : 0;

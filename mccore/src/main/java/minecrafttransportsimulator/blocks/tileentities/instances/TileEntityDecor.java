@@ -110,7 +110,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     }
 
     @Override
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         lightLevel = definition.decor.lightLevel;
 
         //Adjust current variables to modifiers, if any exist.

@@ -1168,7 +1168,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * By default, this will get any variables that {@link #getVariable(String)}
      * returns, but can be extended to do other variables specific to the entity.
      */
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));

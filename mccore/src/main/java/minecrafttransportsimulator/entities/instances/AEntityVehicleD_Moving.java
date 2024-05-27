@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
@@ -20,7 +22,9 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -118,6 +122,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D tempBoxPosition = new Point3D();
     private final Point3D normalizedGroundVelocityVector = new Point3D();
     private final Point3D normalizedGroundHeadingVector = new Point3D();
+    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
 
@@ -146,6 +151,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void update() {
         super.update();
         world.beginProfiling("VehicleD_Level", true);
+        //Update block collision box list with current boxes.
+        allBlockCollisionBoxes.clear();
+        for (BoundingBox box : allCollisionBoxes) {
+            if (box.collisionTypes.contains(CollisionType.BLOCK)) {
+                allBlockCollisionBoxes.add(box);
+            }
+        }
+
         //If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
         if (ticksExisted == 1 && placingPlayer != null && !world.isClient()) {
             //Get how far above the ground the vehicle needs to be, and move it to that position.
@@ -197,7 +210,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
-            world.beginProfiling("GroundForces", false);
+            world.beginProfiling("GroundForces", true);
             getForcesAndMotions();
             world.beginProfiling("GroundOperations", false);
             if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
@@ -210,8 +223,58 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (!world.isClient()) {
                 adjustControlSurfaces();
             }
+            world.endProfiling();
         }
         world.endProfiling();
+    }
+
+    @Override
+    public void doPostUpdateLogic() {
+        super.doPostUpdateLogic();
+
+        //Move all entities that are touching this entity.
+        if (velocity != 0) {
+            world.beginProfiling("MoveAlongEntities", true);
+            encompassingBox.heightRadius += 1.0;
+            List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
+            encompassingBox.heightRadius -= 1.0;
+            for (IWrapperEntity entity : nearbyEntities) {
+                //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
+                if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
+                    //Check each box individually.  Need to do this to know which delta to apply.
+                    BoundingBox entityBounds = entity.getBounds();
+                    entityBounds.heightRadius += 0.25;
+                    for (BoundingBox box : allCollisionBoxes) {
+                        if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
+                            //If the entity is within 0.5 units of the top of the box, we can move them.
+                            //If not, they are just colliding and not on top of the entity and we should leave them be.
+                            double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
+                            if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
+                                //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
+                                Point3D entityVelocity = entity.getVelocity();
+                                if (entityVelocity.y <= 0 || entityVelocity.y < entityBottomDelta) {
+                                    //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
+                                    //This lets entities "move along" with entities when touching a collision box.
+                                    Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
+                                    Point3D startingAngles = entityPositionVector.copy().getAngles(true);
+                                    Point3D entityPositionDelta = entityPositionVector.copy();
+                                    entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
+                                    Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
+
+                                    entityPositionDelta.add(position).subtract(prevPosition);
+                                    entityPositionDelta.subtract(entityPositionVector).add(0, entityBottomDelta, 0);
+                                    entity.setPosition(entityPositionDelta.add(entity.getPosition()), true);
+                                    entity.setYaw(entity.getYaw() + entityAngleDelta.y);
+                                    entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            world.endProfiling();
+        }
     }
 
     @Override
@@ -753,7 +816,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //If we hit something, however, we need to inhibit the movement so we don't do that.
                 //This prevents vehicles from phasing through walls even though they are driving on the ground.
                 //If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
-                world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
+                world.beginProfiling("CollisionCheck_" + lastBlockCollisionBoxesCount, false);
                 if (isCollisionBoxCollided()) {
                     world.beginProfiling("CollisionHandling", false);
                     if (towedByConnection != null) {
@@ -942,7 +1005,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Checks if we have a collided collision box.  If so, true is returned.
      */
     private boolean isCollisionBoxCollided() {
-        if (motion.length() > 0.001) {
+        if (!ConfigSystem.settings.general.noclipVehicles.value && motion.length() > 0.001) {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);

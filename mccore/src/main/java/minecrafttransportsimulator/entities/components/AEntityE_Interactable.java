@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -25,7 +24,6 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -37,7 +35,6 @@ import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
@@ -61,51 +58,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * and querying the entire list to find the hitbox for a given group and index.
      **/
     public final List<List<BoundingBox>> definitionCollisionBoxes = new ArrayList<>();
+    public final Set<BoundingBox> collisionBoxes = new HashSet<>();
     private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<>();
-
-    /**
-     * List of bounding boxes that should be used to check collision of this entity with blocks.
-     **/
-    public final Set<BoundingBox> blockCollisionBoxes = new HashSet<>();
-
-    /**
-     * List of bounding boxes that should be used for collision of other entities with this entity.
-     * This includes {@link #blockCollisionBoxes}, but may include others.
-     **/
-    public final Set<BoundingBox> entityCollisionBoxes = new HashSet<>();
-
-    /**
-     * List of bounding boxes that should be used for interaction of other entities with this entity.
-     * This includes all {@link #entityCollisionBoxes}, but may include others, most likely being the
-     * core {@link #boundingBox} for this entity.
-     **/
-    public final Set<BoundingBox> interactionBoxes = new HashSet<>();
-
-    /**
-     * List of bounding boxes that should be used for bullet collisions with this entity.
-     * These can't be clicked by players, and can't be collided with.
-     **/
-    public final Set<BoundingBox> bulletCollisionBoxes = new HashSet<>();
-
-    /**
-     * List of bounding boxes that should be used for damage collisions with this entity.
-     * These can't be clicked by players, and can't be collided with, but can be attacked.
-     * By default, this includes all {@link #interactionBoxes} but not {@link #bulletCollisionBoxes}
-     * since those can only be damaged by bullets specifically.
-     **/
-    public final Set<BoundingBox> damageCollisionBoxes = new HashSet<>();
-
-    /**
-     * List of inactive bounding boxes.  Used only on servers to allow them to handle packets
-     * from clients that may have a different set of active boxes than they have due to rendering.
-     **/
-    public final Set<BoundingBox> inactiveCollisionBoxes = new HashSet<>();
 
     /**
      * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
      * to check a single large box rather than multiple small ones to save processing power.
      **/
-    public final BoundingBox encompassingBox = new BoundingBox(new Point3D(), new Point3D(), 0, 0, 0, false);
+    public final BoundingBox encompassingBox = new BoundingBox(new Point3D(), new Point3D(), 0, 0, 0, false, null);
 
     /**
      * Set of entities that this entity collided with this tick.  Any entity that is in this set
@@ -284,47 +244,31 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * properties, and animation state (if applicable).
      */
     protected void updateCollisionBoxes() {
-        blockCollisionBoxes.clear();
-        entityCollisionBoxes.clear();
-        interactionBoxes.clear();
-        bulletCollisionBoxes.clear();
-        damageCollisionBoxes.clear();
-        inactiveCollisionBoxes.clear();
-
+        collisionBoxes.clear();
         if (definition.collisionGroups != null) {
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
                 JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
-                List<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(i);
+                List<BoundingBox> boxes = definitionCollisionBoxes.get(i);
                 if (groupDef.health == 0 || getVariable("collision_" + (i + 1) + "_damage") < groupDef.health) {
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
-                            for (BoundingBox box : collisionBoxes) {
+                            for (BoundingBox box : boxes) {
                                 box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
                                 box.updateToEntity(this, box.globalCenter);
                             }
                         } else {
-                            inactiveCollisionBoxes.addAll(collisionBoxes);
                             continue;
                         }
                     } else {
-                        for (BoundingBox box : collisionBoxes) {
+                        for (BoundingBox box : boxes) {
                             box.updateToEntity(this, null);
                         }
                     }
-                    if (groupDef.isForBullets) {
-                        bulletCollisionBoxes.addAll(collisionBoxes);
-                    } else {
-                        if (!groupDef.isInterior && !ConfigSystem.settings.general.noclipVehicles.value) {
-                            blockCollisionBoxes.addAll(collisionBoxes);
-                        }
-                        entityCollisionBoxes.addAll(collisionBoxes);
-                    }
+                    collisionBoxes.addAll(boxes);
                 }
             }
         }
-        interactionBoxes.addAll(entityCollisionBoxes);
-        damageCollisionBoxes.addAll(interactionBoxes);
     }
 
     /**
@@ -335,7 +279,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         encompassingBox.widthRadius = 0;
         encompassingBox.heightRadius = 0;
         encompassingBox.depthRadius = 0;
-        for (BoundingBox box : damageCollisionBoxes) {
+        for (BoundingBox box : collisionBoxes) {
             encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x) + box.widthRadius);
             encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y) + box.heightRadius);
             encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z) + box.depthRadius);
@@ -371,71 +315,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             updateEncompassingBox();
             world.endProfiling();
 
-            //Move all entities that are touching this entity.
-            if (!entityCollisionBoxes.isEmpty() && velocity != 0) {
-                world.beginProfiling("MoveAlongEntities", true);
-                encompassingBox.heightRadius += 1.0;
-                List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
-                encompassingBox.heightRadius -= 1.0;
-                for (IWrapperEntity entity : nearbyEntities) {
-                    //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-                    if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
-                        //Check each box individually.  Need to do this to know which delta to apply.
-                        BoundingBox entityBounds = entity.getBounds();
-                        entityBounds.heightRadius += 0.25;
-                        for (BoundingBox box : entityCollisionBoxes) {
-                            if (entityBounds.intersects(box)) {
-                                //If the entity is within 0.5 units of the top of the box, we can move them.
-                                //If not, they are just colliding and not on top of the entity and we should leave them be.
-                                double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
-                                if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
-                                    //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
-                                    Point3D entityVelocity = entity.getVelocity();
-                                    if (entityVelocity.y <= 0 || entityVelocity.y < entityBottomDelta) {
-                                        //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
-                                        //This lets entities "move along" with entities when touching a collision box.
-                                        Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
-                                        Point3D startingAngles = entityPositionVector.copy().getAngles(true);
-                                        Point3D entityPositionDelta = entityPositionVector.copy();
-                                        entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
-                                        Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
-
-                                        entityPositionDelta.add(position).subtract(prevPosition);
-                                        entityPositionDelta.subtract(entityPositionVector).add(0, entityBottomDelta, 0);
-                                        entity.setPosition(entityPositionDelta.add(entity.getPosition()), true);
-                                        entity.setYaw(entity.getYaw() + entityAngleDelta.y);
-                                        entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                world.endProfiling();
-            }
-
             //Reset collision override flag.
             forceCollisionUpdateThisTick = false;
         }
-    }
-
-    /**
-     * Returns a collection of BoundingBoxes that make up this entity's collision bounds.
-     * These are boxes that other entities can collide with that should block their movement.
-     * This is an externally-facing method and should not be used by normal code.
-     */
-    public Collection<BoundingBox> getCollisionBoxes() {
-        return entityCollisionBoxes;
-    }
-
-    /**
-     * Returns a collection of BoundingBoxes that make up this entity's damage bounds.
-     * These are boxes that can be damaged by other entities.
-     * This is an externally-facing method and should not be used by normal code.
-     */
-    public Collection<BoundingBox> getDamageBoxes() {
-        return damageCollisionBoxes;
     }
 
     /**
@@ -495,12 +377,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        for (BoundingBox box : interactionBoxes) {
-            box.renderWireframe(this, transform, null, null);
-        }
-        for (BoundingBox box : bulletCollisionBoxes) {
-            box.renderWireframe(this, transform, null, null);
-        }
+        collisionBoxes.forEach(box -> box.renderWireframe(this, transform, null, null));
     }
 
     @Override

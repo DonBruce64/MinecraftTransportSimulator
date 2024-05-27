@@ -453,6 +453,7 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_BULLET_QUANTITY = new LanguageEntry("iteminfo.bullet.quantity", "Quantity: ");
 
     public static final LanguageEntry ITEMINFO_INTERACTABLE_CAPACITY = new LanguageEntry("iteminfo.interactable.capacity", "Capacity: ");
+    public static final LanguageEntry ITEMINFO_INTERACTABLE_CONTENTS = new LanguageEntry("iteminfo.interactable.contents", "Contents: ");
 
     public static final LanguageEntry ITEMINFO_JERRYCAN_FILL = new LanguageEntry("iteminfo.jerrycan.fill", "Fill this can by right-clicking a fuel pump.");
     public static final LanguageEntry ITEMINFO_JERRYCAN_DRAIN = new LanguageEntry("iteminfo.jerrycan.drain", "Fill a vehicle by right-clicking with a full can.");

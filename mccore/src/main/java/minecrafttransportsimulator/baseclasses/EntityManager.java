@@ -21,6 +21,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -160,9 +161,21 @@ public abstract class EntityManager {
         for (AEntityA_Base entity : allTickableEntities) {
             if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
                 entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
-                entity.update();
                 if (entity instanceof AEntityD_Definable) {
-                    ((AEntityD_Definable<?>) entity).doPostUpdateLogic();
+                    AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+                    //Need to do this before updating as these require knowledge of prior states.
+                    entity.world.beginProfiling("VariableModifiers", true);
+                    definable.updateVariableModifiers();
+                    if (definable instanceof AEntityF_Multipart) {
+                        ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());
+                    }
+                    entity.world.beginProfiling("MainUpdate", false);
+                    entity.update();
+                    entity.world.beginProfiling("PostUpdate", false);
+                    definable.doPostUpdateLogic();
+                    entity.world.endProfiling();
+                } else {
+                    entity.update();
                 }
                 entity.world.endProfiling();
             }
@@ -286,10 +299,10 @@ public abstract class EntityManager {
         multiparts.addAll(getEntitiesOfType(EntityPlacedPart.class));
 
         for (AEntityF_Multipart<?> multipart : multiparts) {
-            if (multipart.encompassingBox.intersects(vectorBounds)) {
+            if (multipart.encompassingBox.intersects(vectorBounds) && multipart.canBeClicked()) {
                 //Could have hit this multipart, check if and what we did via raytracing.
-                for (BoundingBox box : multipart.allInteractionBoxes) {
-                    if (box.intersects(vectorBounds)) {
+                for (BoundingBox box : multipart.allCollisionBoxes) {
+                    if (box.collisionTypes.contains(CollisionType.CLICK) && box.intersects(vectorBounds)) {
                         BoundingBoxHitResult intersectionPoint = box.getIntersection(startPoint, endPoint);
                         if (intersectionPoint != null) {
                             if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint.position, closestResult.position)) {

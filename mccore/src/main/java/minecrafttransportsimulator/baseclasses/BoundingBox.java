@@ -2,12 +2,14 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
@@ -46,6 +48,7 @@ public class BoundingBox {
     public final boolean collidesWithLiquids;
     public final JSONCollisionGroup groupDef;
     public final JSONCollisionBox definition;
+    public final Set<CollisionType> collisionTypes;
 
     private static final Point3D helperPoint = new Point3D();
 
@@ -53,28 +56,35 @@ public class BoundingBox {
      * Simplest constructor.  Used for simple bounds.
      **/
     public BoundingBox(Point3D center, double radius) {
-        this(new Point3D(), center, radius, radius, radius, false, null, null);
+        this(new Point3D(), center, radius, radius, radius, false, null, null, null);
     }
 
     /**
      * Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.
      **/
     public BoundingBox(Point3D center, double widthRadius, double heightRadius, double depthRadius) {
-        this(new Point3D(), center, widthRadius, heightRadius, depthRadius, false, null, null);
+        this(new Point3D(), center, widthRadius, heightRadius, depthRadius, false, null, null, null);
+    }
+
+    /**
+     * Like the other simple constructor, but with a parameter for collision type.
+     **/
+    public BoundingBox(Point3D center, double widthRadius, double heightRadius, double depthRadius, Set<CollisionType> collisionTypes) {
+        this(new Point3D(), center, widthRadius, heightRadius, depthRadius, false, null, null, collisionTypes);
     }
 
     /**
      * Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.
      **/
-    public BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids) {
-        this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null, null);
+    public BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, Set<CollisionType> collisionTypes) {
+        this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null, null, collisionTypes);
     }
 
     /**
      * JSON constructor.  Used for boxes that are created from JSON and need extended properties.
      **/
     public BoundingBox(JSONCollisionBox definition, JSONCollisionGroup groupDef) {
-        this(definition.pos, definition.pos.copy(), definition.width / 2D, definition.height / 2D, definition.width / 2D, definition.collidesWithLiquids, definition, groupDef);
+        this(definition.pos, definition.pos.copy(), definition.width / 2D, definition.height / 2D, definition.width / 2D, definition.collidesWithLiquids, definition, groupDef, groupDef.collisionTypes);
     }
 
     /**
@@ -92,7 +102,7 @@ public class BoundingBox {
     /**
      * Master constructor.  Used for main creation.
      **/
-    private BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef) {
+    private BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef, Set<CollisionType> collisionTypes) {
         this.localCenter = localCenter;
         this.globalCenter = globalCenter;
         this.tempGlobalCenter = globalCenter.copy();
@@ -103,6 +113,7 @@ public class BoundingBox {
         this.collidesWithLiquids = collidesWithLiquids;
         this.groupDef = groupDef;
         this.definition = definition;
+        this.collisionTypes = collisionTypes;
     }
 
     @Override
@@ -277,10 +288,10 @@ public class BoundingBox {
                 if (definition.variableName != null) {
                     //Green for boxes that activate variables.
                     wireframeRenderable.setColor(ColorRGB.GREEN);
-                } else if (groupDef != null && groupDef.isForBullets) {
+                } else if (groupDef != null && groupDef.collisionTypes.contains(CollisionType.BULLET)) {
                     //Orange for bullet collisions.
                     wireframeRenderable.setColor(ColorRGB.ORANGE);
-                } else if (groupDef != null && !groupDef.isInterior) {
+                } else if (groupDef != null && groupDef.collisionTypes.contains(CollisionType.BLOCK)) {
                     //Red for block collisions.
                     wireframeRenderable.setColor(ColorRGB.RED);
                 } else {
