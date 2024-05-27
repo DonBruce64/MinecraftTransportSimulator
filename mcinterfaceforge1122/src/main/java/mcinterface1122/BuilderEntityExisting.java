@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -67,13 +68,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      **/
     private static Point3D lastExplosionPosition;
     /**
-     * Collective for interaction boxes.  These are used by this entity to allow players to interact with it.
-     **/
-    private WrapperAABBCollective damageBoxes;
-    /**
      * Collective for collision boxes.  These are used by this entity to make things collide with it.
      **/
     private WrapperAABBCollective collisionBoxes;
+    /**
+     * Collective for collision boxes.  These are used by this entity to make things interact and attack it.
+     **/
+    private WrapperAABBCollective interactAttackBoxes;
 
     public BuilderEntityExisting(World world) {
         super(world);
@@ -111,13 +112,19 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //Only do this after the first tick of the entity, as we might have some states that need updating
                     //on that first tick that would cause bad maths.
                     //We also do this only every second, as it prevents excess checks.
-                    damageBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getDamageBoxes());
-                    collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
+                    collisionBoxes = new WrapperAABBCollective(interactable, true);
+                    interactAttackBoxes = new WrapperAABBCollective(interactable, false);
                     if (entity instanceof EntityVehicleF_Physics && interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
                         setSize((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F);
                         //Make sure the collision bounds for MC are big enough to collide with this entity.
                         if (World.MAX_ENTITY_RADIUS < interactable.encompassingBox.widthRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.heightRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.depthRadius) {
-                            World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
+                            double maxEntityRadius = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
+                            if (maxEntityRadius < 25) {
+                                World.MAX_ENTITY_RADIUS = maxEntityRadius;
+                            } else {
+                                InterfaceManager.coreInterface.logError("Attempted to set the world entity max size to way too big of a number (" + maxEntityRadius + ") for " + entity + "  Removing entity from world as this is likely a pack error that will cause lots of TPS loss!");
+                                setDead();
+                            }
                         }
                     }
                 }
@@ -168,7 +175,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
                 //Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
-                for (BoundingBox box : damageBoxes.boxes) {
+                for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.intersects(explosiveBounds)) {
                         multipart.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
                     }
@@ -177,7 +184,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             } else if (attacker != null) {
                 //Check the damage at the current position of the attacker.
                 Point3D attackerPosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
-                for (BoundingBox box : damageBoxes.boxes) {
+                for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.isPointInside(attackerPosition, null)) {
                         multipart.attack(new Damage(amount, box, null, playerSource, null));
                         return true;
@@ -204,15 +211,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     @Override
     public AxisAlignedBB getEntityBoundingBox() {
         //Override this to make interaction checks work with the multiple collision points.
-        //We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
-        return damageBoxes != null ? damageBoxes : super.getEntityBoundingBox();
+        return interactAttackBoxes != null ? interactAttackBoxes : super.getEntityBoundingBox();
     }
 
     @Override
     @Nullable
     public AxisAlignedBB getCollisionBoundingBox() {
         //Override this to make collision checks work with the multiple collision points.
-        //We only return collision boxes here as we don't want the player to collide with interaction boxes.
         return collisionBoxes != null ? collisionBoxes : super.getCollisionBoundingBox();
     }
 
@@ -220,11 +225,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public ItemStack getPickedResult(RayTraceResult target) {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
-                for (BoundingBox box : part.interactionBoxes) {
-                    if (box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z), null)) {
-                        IWrapperItemStack stack = part.getStack();
-                        if (stack != null) {
-                            return ((WrapperItemStack) stack).stack;
+                for (BoundingBox box : part.collisionBoxes) {
+                    if (box.collisionTypes.contains(CollisionType.CLICK)) {
+                        if (box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z), null)) {
+                            IWrapperItemStack stack = part.getStack();
+                            if (stack != null) {
+                                return ((WrapperItemStack) stack).stack;
+                            }
                         }
                     }
                 }
@@ -236,7 +243,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     @Override
     public boolean canBeCollidedWith() {
         //This gets overridden to allow players to interact with this entity.
-        return collisionBoxes != null && !collisionBoxes.boxes.isEmpty();
+        return collisionBoxes != null && !collisionBoxes.getBoxes().isEmpty();
     }
 
     @Override

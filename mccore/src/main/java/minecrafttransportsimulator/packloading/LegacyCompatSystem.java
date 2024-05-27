@@ -29,6 +29,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
@@ -231,6 +232,32 @@ public final class LegacyCompatSystem {
             if (provider.rendering.particles != null) {
                 for (JSONParticle particleDef : provider.rendering.particles) {
                     performParticleLegacyCompats(particleDef);
+                }
+            }
+            
+            //Convert old hitboxes.
+            if(definition instanceof AJSONInteractableEntity) {
+                AJSONInteractableEntity interactable = (AJSONInteractableEntity) provider;
+                if(interactable.collisionGroups != null) {
+                    for(JSONCollisionGroup collisionGroup : interactable.collisionGroups) {
+                        if (collisionGroup.collisionTypes == null) {
+                            collisionGroup.collisionTypes = new HashSet<>();
+                            if (collisionGroup.isForBullets) {
+                                collisionGroup.collisionTypes.add(CollisionType.BULLET);
+                                collisionGroup.isForBullets = false;
+                            } else if (collisionGroup.isInterior) {
+                                collisionGroup.collisionTypes.add(CollisionType.ENTITY);
+                                collisionGroup.collisionTypes.add(CollisionType.ATTACK);
+                                collisionGroup.collisionTypes.add(CollisionType.CLICK);
+                                collisionGroup.isInterior = false;
+                            } else {
+                                collisionGroup.collisionTypes.add(CollisionType.BLOCK);
+                                collisionGroup.collisionTypes.add(CollisionType.ENTITY);
+                                collisionGroup.collisionTypes.add(CollisionType.ATTACK);
+                                collisionGroup.collisionTypes.add(CollisionType.CLICK);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -898,6 +925,16 @@ public final class LegacyCompatSystem {
                 definition.interactable.furnaceType = FurnaceComponentType.STANDARD;
                 definition.interactable.furnaceRate = 1.0F;
                 definition.interactable.furnaceEfficiency = 1.0F;
+            }
+        }
+
+        //Convert old effector hitboxes.
+        if (definition.effector != null && definition.collisionGroups != null) {
+            for (JSONCollisionGroup collisionGroup : definition.collisionGroups) {
+                if (collisionGroup.collisionTypes == null) {
+                    collisionGroup.collisionTypes = new HashSet<>();
+                    collisionGroup.collisionTypes.add(CollisionType.EFFECTOR);
+                }
             }
         }
 

@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -89,10 +90,12 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
                             if (motionApplied.y < motion.y) {
                                 motionApplied.y = motion.y;
                             }
-                            for(BoundingBox box : allBlockCollisionBoxes) {
-                                box.updateCollisions(world, motionApplied, false);
-                                if (box.currentCollisionDepth.y <= maxCollisionDepth) {
-                                	maxCollisionDepth = box.currentCollisionDepth.y;
+                            for (BoundingBox box : allCollisionBoxes) {
+                                if (box.collisionTypes.contains(CollisionType.BLOCK)) {
+                                    box.updateCollisions(world, motionApplied, false);
+                                    if (box.currentCollisionDepth.y <= maxCollisionDepth) {
+                                        maxCollisionDepth = box.currentCollisionDepth.y;
+                                    }
                                 }
                             }
                         }
@@ -123,14 +126,6 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     @Override
     public boolean requiresDeltaUpdates() {
         return currentPart != null && (super.requiresDeltaUpdates() || currentPart.definition.generic.fallsToGround || (riderPresentLastCheck != riderPresentThisCheck));
-    }
-
-    @Override
-    protected void updateEncompassingBox() {
-        super.updateEncompassingBox();
-        //Need to move all interaction boxes into collision boxes to make players collide with us.
-        allEntityCollisionBoxes.addAll(allInteractionBoxes);
-        allEntityCollisionBoxes.removeAll(allPartSlotBoxes.keySet());
     }
 
     @Override

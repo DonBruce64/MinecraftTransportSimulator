@@ -762,7 +762,7 @@ public class PartEngine extends APart {
     }
 
     @Override
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         currentMaxRPM = definition.engine.maxRPM;
         currentMaxSafeRPM = definition.engine.maxSafeRPM;
         currentRevlimitRPM = definition.engine.revlimitRPM;

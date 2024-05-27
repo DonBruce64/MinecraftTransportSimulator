@@ -179,10 +179,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void update() {
         super.update();
+        world.beginProfiling("PartAlignment", true);
         isInvisible = partOn != null ? partOn.isInvisible : false;
         
         //Update forced camera mode if we are supposed to be forcing it.
         //We need to one-shot this though to ensure that we don't sent infinite packets.
+        world.beginProfiling("CameraModeCheck", true);
         if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
         }else if(requestedForcedCamera && activeCamera != null) {
@@ -190,6 +192,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Update active state.
+        world.beginProfiling("ActiveStateCheck", false);
         isActive = partOn != null ? partOn.isActive : true;
         if (isActive && placementActiveSwitchbox != null) {
             isActive = placementActiveSwitchbox.runSwitchbox(0, false);
@@ -203,6 +206,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Set initial offsets.
+        world.beginProfiling("BaseStateCheck", false);
         motion.set(entityOn.motion);
         position.set(entityOn.position);
         orientation.set(entityOn.orientation);
@@ -230,6 +234,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //First apply part slot animation translation and rotation.
         //This will rotate us to our proper slot position.
+        world.beginProfiling("SwitchboxCheck", false);
         if (!isInvisible && placementMovementSwitchbox != null) {
             isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
             //Offset needs to move according to full transform.
@@ -243,6 +248,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Now rotate us to face the slot's requested orientation.
+        world.beginProfiling("SwitchboxApply", false);
         if (placementDefinition.rot != null) {
             localOrientation.multiply(placementDefinition.rot);
         }
@@ -264,6 +270,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Set global position to reflect new local position.
+        world.beginProfiling("AlignmentApply", false);
         Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
         position.add(localPositionDelta);
         orientation.multiply(localOrientation);
@@ -277,6 +284,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         boundingBox.widthRadius = getWidth() / 2D * scale.x;
         boundingBox.heightRadius = getHeight() / 2D * scale.y;
         boundingBox.depthRadius = getWidth() / 2D * scale.z;
+        world.endProfiling();
+        world.endProfiling();
     }
 
     @Override
@@ -295,20 +304,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Add collision if we aren't a fake part.
         if (!isFake()) {
             super.updateCollisionBoxes();
-            interactionBoxes.add(boundingBox);
-            damageCollisionBoxes.add(boundingBox);
-        }
-    }
-
-    @Override
-    protected void updateEncompassingBox() {
-        super.updateEncompassingBox();
-
-        //Don't add our interaction boxes to the box list if we aren't active and on the client.
-        //Servers need all of these since we might be active for some players and not others.
-        if (world.isClient() && !canBeClicked()) {
-            allInteractionBoxes.removeAll(interactionBoxes);
-            return;
+            collisionBoxes.add(boundingBox);
         }
     }
 
@@ -499,7 +495,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public LanguageEntry checkForRemoval(IWrapperPlayer player) {
         for (APart childPart : parts) {
             if (!childPart.isPermanent && !childPart.placementDefinition.allowParentRemoval) {
-                allInteractionBoxes.removeAll(interactionBoxes);
                 return LanguageSystem.INTERACT_PARTREMOVE_HASPARTS;
             }
         }

@@ -1,17 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONCollisionGroup {
-
-    @JSONDescription("Normally, collision boxes collide with blocks.  However, excess block-based collision checks will SIGNIFICANTLY impact TPS performance.  As such, this should be set to true for all but the most essential collision boxes.")
-    public boolean isInterior;
-
-    @JSONDescription("Normally, all boxes block player movement.  If you want a hitbox group to just be there to handle bullet collisions, set this to true as it will let players walk though them, but will stop bullets.")
-    public boolean isForBullets;
 
     @JSONDescription("How much armor this group has.  Values greater than 0 will make this group use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
     public float armorThickness;
@@ -29,9 +24,45 @@ public class JSONCollisionGroup {
     public String applyAfter;
 
     @JSONRequired
+    @JSONDescription("The types of collision for this group.")
+    public Set<CollisionType> collisionTypes;
+
+    @JSONRequired
     @JSONDescription("A listing of collisions for this group.")
     public List<JSONCollisionBox> collisions;
 
     @JSONDescription("A optional listing of animations to use to modify the collision boxes.  Translation/rotation animations do what you would expect.  Visibiity animations will completely disable the hitbox if they are false.")
     public List<JSONAnimationDefinition> animations;
+
+    public static enum CollisionType {
+        @JSONDescription("Allows collision with blocks.")
+        BLOCK(true, true, true),
+        @JSONDescription("Allows entities to collide with this box.")
+        ENTITY(true, true, true),
+        @JSONDescription("Allows vehicle wheels to ride on boxes in this group.")
+        VEHICLE(true, true, true),
+        @JSONDescription("Allows attacking from damage sources.  This includes bullets.")
+        ATTACK(false, false, true),
+        @JSONDescription("Allows bullet interaction, but not general attacks.")
+        BULLET(false, false, true),
+        @JSONDescription("Allows clicking.")
+        CLICK(true, false, false),
+        @JSONDescription("Allows effector logic.")
+        EFFECTOR(false, false, false);
+
+        public final boolean canBeClicked;
+        public final boolean canBeAttackedByNormal;
+        public final boolean canBeAttackedByBullet;
+
+        private CollisionType(boolean canBeClicked, boolean canBeAttackedByNormal, boolean canBeAttackedByBullet) {
+            this.canBeClicked = canBeClicked;
+            this.canBeAttackedByNormal = canBeAttackedByNormal;
+            this.canBeAttackedByBullet = canBeAttackedByBullet;
+        }
+    }
+
+    @Deprecated
+    public boolean isInterior;
+    @Deprecated
+    public boolean isForBullets;
 }

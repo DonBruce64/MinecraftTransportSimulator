@@ -98,7 +98,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
 
         //If we didn't get the box from the part slot, get it from the main list.
         if (hitBox == null) {
-            for (BoundingBox box : entity.interactionBoxes) {
+            for (BoundingBox box : entity.collisionBoxes) {
                 if (box.localCenter.equals(hitBoxLocalCenter)) {
                     hitBox = box;
                     break;

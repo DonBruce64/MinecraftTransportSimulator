@@ -35,7 +35,7 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
     }
 
     @Override
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         lightLevel = 12F / 15F;
 
         //Adjust current variables to modifiers, if any exist.

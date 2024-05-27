@@ -1,11 +1,15 @@
 package mcinterface1165;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
 
@@ -18,11 +22,31 @@ import net.minecraft.util.math.vector.Vector3d;
  * @author don_bruce
  */
 public class WrapperAABBCollective extends AxisAlignedBB {
-    protected final Collection<BoundingBox> boxes;
+    private final AEntityE_Interactable<?> interactable;
+    private final boolean collision;
+    private final Set<BoundingBox> boxes = new HashSet<>();
 
-    public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes) {
-        super(encompassingBox.globalCenter.x - encompassingBox.widthRadius, encompassingBox.globalCenter.y - encompassingBox.heightRadius, encompassingBox.globalCenter.z - encompassingBox.depthRadius, encompassingBox.globalCenter.x + encompassingBox.widthRadius, encompassingBox.globalCenter.y + encompassingBox.heightRadius, encompassingBox.globalCenter.z + encompassingBox.depthRadius);
-        this.boxes = boxes;
+    public WrapperAABBCollective(AEntityE_Interactable<?> interactable, boolean collision) {
+        super(interactable.encompassingBox.globalCenter.x - interactable.encompassingBox.widthRadius, interactable.encompassingBox.globalCenter.y - interactable.encompassingBox.heightRadius, interactable.encompassingBox.globalCenter.z - interactable.encompassingBox.depthRadius, interactable.encompassingBox.globalCenter.x + interactable.encompassingBox.widthRadius, interactable.encompassingBox.globalCenter.y + interactable.encompassingBox.heightRadius, interactable.encompassingBox.globalCenter.z + interactable.encompassingBox.depthRadius);
+        this.interactable = interactable;
+        this.collision = collision;
+    }
+
+    public Set<BoundingBox> getBoxes() {
+        if (boxes.isEmpty()) {
+            (interactable instanceof AEntityF_Multipart ? ((AEntityF_Multipart<?>) interactable).allCollisionBoxes : interactable.collisionBoxes).forEach(box -> {
+                if (collision) {
+                    if (box.collisionTypes.contains(CollisionType.ENTITY)) {
+                        boxes.add(box);
+                    }
+                } else {
+                    if (box.collisionTypes.contains(CollisionType.ATTACK) || box.collisionTypes.contains(CollisionType.CLICK)) {
+                        boxes.add(box);
+                    }
+                }
+            });
+        }
+        return boxes;
     }
 
     @Override
@@ -34,7 +58,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ) {
         //CHeck super first, as that's the encompassing box.
         if (super.intersects(otherMinX, otherMinY, otherMinZ, otherMaxX, otherMaxY, otherMaxZ)) {
-            for (BoundingBox testBox : boxes) {
+            for (BoundingBox testBox : getBoxes()) {
                 if (otherMaxX > testBox.globalCenter.x - testBox.widthRadius && otherMinX < testBox.globalCenter.x + testBox.widthRadius && otherMaxY > testBox.globalCenter.y - testBox.heightRadius && otherMinY < testBox.globalCenter.y + testBox.heightRadius && otherMaxZ > testBox.globalCenter.z - testBox.depthRadius && otherMinZ < testBox.globalCenter.z + testBox.depthRadius) {
                     return true;
                 }
@@ -54,7 +78,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         Point3D start = new Point3D(vecA.x, vecA.y, vecA.z);
         Point3D end = new Point3D(vecB.x, vecB.y, vecB.z);
         BoundingBoxHitResult intersection = null;
-        for (BoundingBox testBox : boxes) {
+        for (BoundingBox testBox : getBoxes()) {
             BoundingBoxHitResult testIntersection = testBox.getIntersection(start, end);
             if (testIntersection != null) {
                 if (intersection == null || start.isFirstCloserThanSecond(testIntersection.position, intersection.position)) {
@@ -81,7 +105,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     }
 
     private double calculateXOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
+        for (BoundingBox testBox : getBoxes()) {
             if (box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
                     //Positive offset, box.maxX <= this.minX.
@@ -102,7 +126,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     }
     
     private double calculateYOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
+        for (BoundingBox testBox : getBoxes()) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
                     //Positive offset, box.maxX <= this.minX.
@@ -123,7 +147,7 @@ public class WrapperAABBCollective extends AxisAlignedBB {
     }
     
     private double calculateZOffset(AxisAlignedBB box, double offset) {
-        for (BoundingBox testBox : boxes) {
+        for (BoundingBox testBox : getBoxes()) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius) {
                 if (offset > 0.0D) {
                     //Positive offset, box.maxX <= this.minX.

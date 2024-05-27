@@ -1,12 +1,15 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 
 /**
  * This class is a IWrapper for vehicle ground device collision points.  It's used to get a point
@@ -25,8 +28,9 @@ public class VehicleGroundDeviceBox {
     private boolean isLongTread;
     private int treadZBestOffset;
     private float climbHeight;
-    private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false);
-    private final BoundingBox liquidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, true);
+    private static final Set<CollisionType> groundBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.BLOCK));
+    private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false, groundBoxCollisionTypes);
+    private final BoundingBox liquidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, true, groundBoxCollisionTypes);
     private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<>();
     private final List<PartGroundDevice> groundDevices = new ArrayList<>();
     private final List<PartGroundDevice> liquidDevices = new ArrayList<>();
@@ -63,33 +67,35 @@ public class VehicleGroundDeviceBox {
     public void updateMembers() {
         //Get all liquid collision boxes.  Parts can add these via their collision boxes.
         liquidCollisionBoxes.clear();
-        for (BoundingBox box : vehicle.allBlockCollisionBoxes) {
-            APart partOn = vehicle.getPartWithBox(box);
-            if (box.collidesWithLiquids) {
-                final boolean boxFront;
-                final boolean boxLeft;
-                final boolean boxRight;
-                if (partOn != null) {
-                    Point3D relativePosition = partOn.position.copy().subtract(partOn.vehicleOn.position).reOrigin(partOn.vehicleOn.orientation);
-                    boxFront = relativePosition.z > 0;
-                    boxLeft = relativePosition.x >= -MAX_DELTA_FROM_ZERO;
-                    boxRight = relativePosition.x <= MAX_DELTA_FROM_ZERO;
-                } else {
-                    boxFront = box.localCenter.z > 0;
-                    boxLeft = box.localCenter.x >= 0;
-                    boxRight = box.localCenter.x <= 0;
-                }
-                if (isFront && boxFront) {
-                    if (isLeft && boxLeft) {
-                        liquidCollisionBoxes.add(box);
-                    } else if (!isLeft && boxRight) {
-                        liquidCollisionBoxes.add(box);
+        for (BoundingBox box : vehicle.allCollisionBoxes) {
+            if (box.collisionTypes.contains(CollisionType.BLOCK)) {
+                APart partOn = vehicle.getPartWithBox(box);
+                if (box.collidesWithLiquids) {
+                    final boolean boxFront;
+                    final boolean boxLeft;
+                    final boolean boxRight;
+                    if (partOn != null) {
+                        Point3D relativePosition = partOn.position.copy().subtract(partOn.vehicleOn.position).reOrigin(partOn.vehicleOn.orientation);
+                        boxFront = relativePosition.z > 0;
+                        boxLeft = relativePosition.x >= -MAX_DELTA_FROM_ZERO;
+                        boxRight = relativePosition.x <= MAX_DELTA_FROM_ZERO;
+                    } else {
+                        boxFront = box.localCenter.z > 0;
+                        boxLeft = box.localCenter.x >= 0;
+                        boxRight = box.localCenter.x <= 0;
                     }
-                } else if (!isFront && !boxFront) {
-                    if (isLeft && boxLeft) {
-                        liquidCollisionBoxes.add(box);
-                    } else if (!isLeft && boxRight) {
-                        liquidCollisionBoxes.add(box);
+                    if (isFront && boxFront) {
+                        if (isLeft && boxLeft) {
+                            liquidCollisionBoxes.add(box);
+                        } else if (!isLeft && boxRight) {
+                            liquidCollisionBoxes.add(box);
+                        }
+                    } else if (!isFront && !boxFront) {
+                        if (isLeft && boxLeft) {
+                            liquidCollisionBoxes.add(box);
+                        } else if (!isLeft && boxRight) {
+                            liquidCollisionBoxes.add(box);
+                        }
                     }
                 }
             }
@@ -441,8 +447,8 @@ public class VehicleGroundDeviceBox {
                 //We know we could have hit this entity.  Check if we actually did.
                 BoundingBox collidingBox = null;
                 double boxCollisionDepth;
-                for (BoundingBox box : otherVehicle.getCollisionBoxes()) {
-                    if (box.intersects(solidBox)) {
+                for (BoundingBox box : otherVehicle.allCollisionBoxes) {
+                    if (box.collisionTypes.contains(CollisionType.VEHICLE) && box.intersects(solidBox)) {
                         if (collisionMotion.y > 0) {
                             boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
                             if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {

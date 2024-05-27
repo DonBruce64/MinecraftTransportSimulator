@@ -32,12 +32,7 @@ public abstract class APacketEntityInteractHitbox extends APacketEntity<AEntityE
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity) {
-        for (BoundingBox box : entity.damageCollisionBoxes) {
-            if (box.localCenter.equals(hitBoxLocalCenter)) {
-                return handle(world, entity, box);
-            }
-        }
-        for (BoundingBox box : entity.inactiveCollisionBoxes) {
+        for (BoundingBox box : entity.collisionBoxes) {
             if (box.localCenter.equals(hitBoxLocalCenter)) {
                 return handle(world, entity, box);
             }

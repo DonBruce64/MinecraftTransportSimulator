@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -11,6 +14,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -39,6 +43,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public final Point3D motion;
     public final Point3D prevMotion;
     public double velocity;
+    private static final Set<CollisionType> boundingBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.ATTACK, CollisionType.CLICK));
     public final BoundingBox boundingBox;
 
     /**
@@ -114,7 +119,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         this.prevPosition = position.copy();
         this.prevOrientation = new RotationMatrix().set(orientation);
         this.prevMotion = motion.copy();
-        this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
+        this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5, boundingBoxCollisionTypes);
 
         if (hasRadio()) {
             if (data != null) {
@@ -139,7 +144,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         this.prevOrientation = new RotationMatrix().set(orientation);
         this.motion = motion.copy();
         this.prevMotion = motion.copy();
-        this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
+        this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5, boundingBoxCollisionTypes);
         this.radio = null;
     }
 

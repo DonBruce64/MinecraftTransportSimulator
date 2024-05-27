@@ -11,10 +11,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -22,12 +20,10 @@ import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.ExplosionEvent;
@@ -65,13 +61,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
      **/
     private static Point3D lastExplosionPosition;
     /**
-     * Collective for interaction boxes.  These are used by this entity to allow players to interact with it.
-     **/
-    private WrapperAABBCollective damageBoxes;
-    /**
      * Collective for collision boxes.  These are used by this entity to make things collide with it.
      **/
     public WrapperAABBCollective collisionBoxes;
+    /**
+     * Collective for collision boxes.  These are used by this entity to make things interact and attack it.
+     **/
+    private WrapperAABBCollective interactAttackBoxes;
 
     public BuilderEntityExisting(EntityType<? extends BuilderEntityExisting> eType, World world) {
         super(eType, world);
@@ -110,14 +106,20 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     //on that first tick that would cause bad maths.
                     //We also do this only every second, as it prevents excess checks.
                     entity.world.beginProfiling("CollisionOverhead", true);
-                    damageBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getDamageBoxes());
-                    collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
+                    collisionBoxes = new WrapperAABBCollective(interactable, true);
+                    interactAttackBoxes = new WrapperAABBCollective(interactable, false);
                     if (entity instanceof EntityVehicleF_Physics && interactable.ticksExisted > 1 && interactable.ticksExisted % 20 == 0) {
                         mutableDims = new EntitySize((float) Math.max(interactable.encompassingBox.widthRadius * 2F, interactable.encompassingBox.depthRadius * 2F), (float) interactable.encompassingBox.heightRadius * 2F, false);
                         //Make sure the collision bounds for MC are big enough to collide with this entity.
                         double maxEntityRadius = level.getMaxEntityRadius();
                         if (maxEntityRadius < interactable.encompassingBox.widthRadius || maxEntityRadius < interactable.encompassingBox.heightRadius || maxEntityRadius < interactable.encompassingBox.depthRadius) {
-                            level.increaseMaxEntityRadius(Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius));
+                            maxEntityRadius = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
+                            if (maxEntityRadius < 25) {
+                                level.increaseMaxEntityRadius(maxEntityRadius);
+                            } else {
+                                InterfaceManager.coreInterface.logError("Attempted to set the world entity max size to way too big of a number (" + maxEntityRadius + ") for " + entity + "  Removing entity from world as this is likely a pack error that will cause lots of TPS loss!");
+                                remove();
+                            }
                         }
                     }
                     entity.world.endProfiling();
@@ -174,7 +176,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
                 //Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
-                for (BoundingBox box : damageBoxes.boxes) {
+                for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.intersects(explosiveBounds)) {
                         multipart.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
                     }
@@ -184,7 +186,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 //Check the damage at the current position of the attacker.
                 Vector3d attackerMcPos = attacker.position();
                 Point3D attackerPosition = new Point3D(attackerMcPos.x, attackerMcPos.y, attackerMcPos.z);
-                for (BoundingBox box : damageBoxes.boxes) {
+                for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.isPointInside(attackerPosition, null)) {
                         multipart.attack(new Damage(amount, box, null, playerSource, null));
                         return true;
@@ -212,35 +214,22 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     public AxisAlignedBB getBoundingBox() {
         //Override this to make collision checks work with the multiple collision points.
         //We return the collision boxes as a wrapper here as we need a bounding box large enough to encompass both.
-        return damageBoxes != null ? damageBoxes : super.getBoundingBox();
-    }
-
-    @Override
-    public ItemStack getPickedResult(RayTraceResult target) {
-        if (entity instanceof AEntityF_Multipart) {
-            for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
-                for (BoundingBox box : part.interactionBoxes) {
-                    if (box.isPointInside(new Point3D(target.getLocation().x, target.getLocation().y, target.getLocation().z), null)) {
-                        IWrapperItemStack stack = part.getStack();
-                        if (stack != null) {
-                            return ((WrapperItemStack) stack).stack;
-                        }
-                    }
-                }
-            }
-        }
-        return ItemStack.EMPTY;
+        return collisionBoxes != null ? collisionBoxes : super.getBoundingBox();
     }
 
     @Override
     public boolean canBeCollidedWith() {
-        //This gets overridden to allow players to interact with this entity.
-        return damageBoxes != null && !damageBoxes.boxes.isEmpty();
+        //This need to return false as otherwise MC tries to just collide with the encompassing WrapperAABB.
+        //This causes the player to constantly auto-jump.  We get around this by returning false here and overriding the collision
+        //code via a mixin.  This forces MC to only collide with the sub-boxes.  1.12.2 let us split collision and interaction, but
+        //this MC version only lets us use a single box for both and this confuses it since it doesn't support multi-collision entities.
+        return false;
     }
 
     public boolean isPickable() {
-        //This gets overridden to allow players to interact with this entity.
-        return damageBoxes != null && !damageBoxes.boxes.isEmpty();
+        //This need to return true.  Even though the returned collision boxes don't include interaction boxes like those for parts, projectiles
+        //use this method with their raytracing to see if they can hit us.
+        return true;
     }
 
     @Override

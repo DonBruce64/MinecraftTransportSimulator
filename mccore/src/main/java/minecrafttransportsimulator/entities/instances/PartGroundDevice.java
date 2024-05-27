@@ -217,7 +217,7 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    protected void updateVariableModifiers() {
+    public void updateVariableModifiers() {
         float frictionLoss = getFrictionLoss();
         currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
         currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
