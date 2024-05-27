@@ -207,6 +207,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         position.set(entityOn.position);
         orientation.set(entityOn.orientation);
         localOffset.set(placementDefinition.pos);
+        if (definition.generic.slotOffset != null) {
+            localOffset.add(definition.generic.slotOffset);
+        }
         
         //Update permanent-ness
         isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;

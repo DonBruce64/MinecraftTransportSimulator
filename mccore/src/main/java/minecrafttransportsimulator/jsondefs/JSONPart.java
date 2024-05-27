@@ -117,6 +117,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The offset, in the Y direction, as to where this part will exist when placed in the world.  Has no effect if canBePlacedOnGround is false.")
         public float placedOffset;
 
+        @JSONDescription("The offset for where this part will exist relative to its slot.  May be left out if no offset is desired.")
+        public Point3D slotOffset;
+
         @JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
         public int mass;
 
