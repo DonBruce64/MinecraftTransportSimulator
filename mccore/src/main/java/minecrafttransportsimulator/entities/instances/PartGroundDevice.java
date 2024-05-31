@@ -47,6 +47,7 @@ public class PartGroundDevice extends APart {
     public float currentLateralFriction;
     @ModifiedValue
     private float currentHeight;
+    private float lastHeight;
     private final Point3D groundPosition = new Point3D();
     private BlockMaterial materialBelow;
     public final Point3D wheelbasePoint;
@@ -108,7 +109,7 @@ public class PartGroundDevice extends APart {
     @Override
     public void update() {
         if (vehicleOn != null && !isSpare) {
-            //Change ground device collective if we changed active state or offset.
+            //Change ground device collective if we changed active state or offset or height.
             if (prevActive != isActive) {
                 vehicleOn.groundDeviceCollective.updateMembers();
                 vehicleOn.groundDeviceCollective.updateBounds();
@@ -117,6 +118,10 @@ public class PartGroundDevice extends APart {
             if (!localOffset.equals(prevLocalOffset)) {
                 vehicleOn.groundDeviceCollective.updateBounds();
                 prevLocalOffset.set(localOffset);
+            }
+            if (lastHeight != currentHeight) {
+                vehicleOn.groundDeviceCollective.updateBounds();
+                boundingBox.heightRadius = currentHeight;
             }
 
             //Set reference position for animation vars if we call them later.
@@ -231,6 +236,7 @@ public class PartGroundDevice extends APart {
         if (currentLateralFriction < 0) {
             currentLateralFriction = 0;
         }
+        lastHeight = currentHeight;
         currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
         //Adjust current variables to modifiers, if any exist.
@@ -315,13 +321,7 @@ public class PartGroundDevice extends APart {
             //Valid conditions, send packet before continuing.
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
         }
-
-        //Set flat state and new bounding box.
         isFlat = setFlat;
-        boundingBox.heightRadius = getHeight();
-        if (vehicleOn != null) {
-            vehicleOn.groundDeviceCollective.updateBounds();
-        }
     }
 
     public double getDesiredAngularVelocity() {
