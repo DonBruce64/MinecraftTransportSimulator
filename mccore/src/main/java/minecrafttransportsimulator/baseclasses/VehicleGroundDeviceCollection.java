@@ -5,8 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -107,6 +109,54 @@ public class VehicleGroundDeviceCollection {
             ++count;
         }
         return count;
+    }
+
+    /**
+     * Gets the wheelbase of the collective for turning operations.
+     */
+    public double getTurningWheelbase() {
+        double furthestFrontPoint = 0;
+        double furthestRearPoint = 0;
+        double turningDistance = 0;
+        boolean foundTurningDevice = false;
+        //Check grounded ground devices for turn contributions.
+        //Their distance from the center of the vehicle defines our turn arc.
+        //Don't use fake ground devices here as it'll mess up math for vehicles.
+        for (PartGroundDevice groundDevice : groundedGroundDevices) {
+            if (groundDevice.wheelbasePoint.z > furthestFrontPoint) {
+                furthestFrontPoint = groundDevice.wheelbasePoint.z;
+            }
+            if (groundDevice.wheelbasePoint.z < furthestRearPoint) {
+                furthestRearPoint = groundDevice.wheelbasePoint.z;
+            }
+            if (groundDevice.placementDefinition.turnsWithSteer) {
+                foundTurningDevice = true;
+            }
+        }
+        turningDistance = furthestFrontPoint - furthestRearPoint;
+
+        //If we didn't find any ground devices to make us turn, check propellers in the water.
+        //If there is a propeller, we know we are a valid wheelbase system that can turn.
+        //If there isn't, then we're a barge that can't turn.
+        if (turningDistance == 0) {
+            for (APart part : vehicle.allParts) {
+                if (part instanceof PartPropeller) {
+                    if (part.isInLiquid()) {
+                        foundTurningDevice = true;
+                    }
+                } else if (part instanceof PartGroundDevice) {
+                    PartGroundDevice groundDevice = (PartGroundDevice) part;
+                    if (groundDevice.wheelbasePoint.z > furthestFrontPoint) {
+                        furthestFrontPoint = groundDevice.wheelbasePoint.z;
+                    }
+                    if (groundDevice.wheelbasePoint.z < furthestRearPoint) {
+                        furthestRearPoint = groundDevice.wheelbasePoint.z;
+                    }
+                }
+            }
+        }
+
+        return foundTurningDevice ? furthestFrontPoint - furthestRearPoint : 0;
     }
 
     /**

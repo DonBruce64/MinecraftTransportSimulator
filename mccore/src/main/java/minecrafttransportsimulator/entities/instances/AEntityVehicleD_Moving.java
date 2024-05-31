@@ -521,42 +521,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             return steeringAngle / 20D;
         }
         if (steeringAngle != 0) {
-            double furthestFrontPoint = 0;
-            double furthestRearPoint = 0;
-            
-            double turningDistance = 0;
-            boolean foundTurningDevice = false;
-            //Check grounded ground devices for turn contributions.
-            //Their distance from the center of the vehicle defines our turn arc.
-            //Don't use fake ground devices here as it'll mess up math for vehicles.
-            for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-                if (groundDevice.wheelbasePoint.z > furthestFrontPoint) {
-                    furthestFrontPoint = groundDevice.wheelbasePoint.z;
-                }
-                if (groundDevice.wheelbasePoint.z < furthestRearPoint) {
-                    furthestRearPoint = groundDevice.wheelbasePoint.z;
-                }
-                if (groundDevice.placementDefinition.turnsWithSteer) {
-                    foundTurningDevice = true;
-                }
-            }
-            turningDistance = furthestFrontPoint - furthestRearPoint;
-
-            //If we didn't find any ground devices to make us turn, check propellers in the water.
-            if (turningDistance == 0) {
-                for (APart part : allParts) {
-                    if (part instanceof PartPropeller) {
-                        if (part.isInLiquid()) {
-                            turningDistance = Math.max(turningDistance, Math.abs(part.placementDefinition.pos.z));
-                            foundTurningDevice = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            //If we are able to turn, calculate the force we create to do so.
-            if (foundTurningDevice && turningDistance > 0) {
+            double turningDistance = groundDeviceCollective.getTurningWheelbase();
+            if (turningDistance > 0) {
                 //If we are vehicle that can do skid-steer, and that's active, do so now.
                 if (definition.motorized.hasSkidSteer) {
                     if (groundDeviceCollective.isReady() && groundVelocity < 0.05) {
