@@ -41,6 +41,7 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
     
+    private static final byte hotloadCountdownPreset = 20;
     private static byte hotloadCountdown;
     private static byte hotloadStep;
     private static HotloadFunction hotloadFunction;
@@ -189,7 +190,7 @@ public abstract class EntityManager {
         			if(getWorld().isClient()) {
         				//Client manager, set counter to let entities sync.
         				if(hotloadCountdown == 0) {
-        					hotloadCountdown = 10;
+                            hotloadCountdown = hotloadCountdownPreset;
         				}
         			}else {
         				//Server manager, remove all entities in this manager for reloading.
@@ -235,7 +236,7 @@ public abstract class EntityManager {
         			if(getWorld().isClient()) {
         				//Client manager, set counter to let entities sync.
         				if(hotloadCountdown == 0) {
-        					hotloadCountdown = 10;
+                            hotloadCountdown = hotloadCountdownPreset;
         				}
         			}else {
         				//Server manager, load back in saved entities while we wait for client to count down.
@@ -258,7 +259,7 @@ public abstract class EntityManager {
         			if(getWorld().isClient()) {
         				//Client manager, set counter to let riders sync.
         				if(hotloadCountdown == 0) {
-        					hotloadCountdown = 10;
+                            hotloadCountdown = hotloadCountdownPreset;
         				}
         			}else if(!getWorld().isClient()) {
         				//Server manager, load back all seated riders.
