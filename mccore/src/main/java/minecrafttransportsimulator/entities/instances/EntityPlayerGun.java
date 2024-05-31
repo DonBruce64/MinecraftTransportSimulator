@@ -167,10 +167,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             if (activeGun != null && (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex())) {
                 if (!world.isClient()) {
                     saveGun(true);
+                    return;
                 } else {
                     activeGun.isHandHeldGunEquipped = false;
                 }
-                return;
             }
 
             if (!world.isClient()) {
