@@ -28,6 +28,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     private static final List<String> allPartTypes = new ArrayList<>();
 
     public APart currentPart;
+    private boolean foundPart;
     private final Point3D motionApplied = new Point3D();
     private boolean riderPresentLastCheck;
     private boolean riderPresentThisCheck;
@@ -59,13 +60,13 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     @Override
     public void update() {
         super.update();
-        //TODO will NOT be empty normally, but have to check due to syncing.  See F-class TODO for details.
         if (parts.isEmpty()) {
-            if (ticksExisted > 100) {
+            if (foundPart || ticksExisted > 100) {
                 remove();
             }
         } else {
             if (currentPart != null) {
+                foundPart = true;
                 //Seat checks are needed to allow the seat to update interactable boxes when rider state changes.
                 riderPresentLastCheck = riderPresentThisCheck;
                 riderPresentThisCheck = currentPart.rider != null;
