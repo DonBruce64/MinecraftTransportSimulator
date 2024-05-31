@@ -308,7 +308,13 @@ public abstract class EntityManager {
                         if (intersectionPoint != null) {
                             if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint.position, closestResult.position)) {
                                 APart part = multipart.getPartWithBox(box);
-                                closestResult = new EntityInteractResult(part != null ? part : multipart, box, intersectionPoint.position);
+                                if (part != null) {
+                                    if (part.canBeClicked()) {
+                                        closestResult = new EntityInteractResult(part, box, intersectionPoint.position);
+                                    }
+                                } else {
+                                    closestResult = new EntityInteractResult(multipart, box, intersectionPoint.position);
+                                }
                             }
                         }
                     }
