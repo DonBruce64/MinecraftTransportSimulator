@@ -162,11 +162,11 @@ public final class LegacyCompatSystem {
                                 collisionBox.armorThickness = 0;
                             }
                             if (collisionBox.heatArmorThickness != 0) {
-                                collisionGroup.armorThickness = collisionBox.heatArmorThickness;
+                                collisionGroup.heatArmorThickness = collisionBox.heatArmorThickness;
                                 collisionBox.heatArmorThickness = 0;
                             }
                             if (collisionBox.damageMultiplier != 0) {
-                                collisionGroup.armorThickness = collisionBox.damageMultiplier;
+                                collisionGroup.damageMultiplier = collisionBox.damageMultiplier;
                                 collisionBox.damageMultiplier = 0;
                             }
                         }
