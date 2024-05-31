@@ -181,7 +181,7 @@ public class VehicleGroundDeviceBox {
                 solidBox.heightRadius = groundDevice.getHeight() / 2D;
                 solidBox.widthRadius = groundDevice.getWidth() / 2D;
             }
-            if (groundDevice.definition.ground.isTread && groundDevice.definition.ground.extraCollisionBoxOffset != 0) {
+            if (groundDevice.definition.ground.isTread && ((PartGroundDevice) groundDevice).getLongPartOffset() != 0) {
                 isLongTread = true;
             }
         }
