@@ -163,7 +163,7 @@ public class VehicleGroundDeviceBox {
 
     /**
      * Updates this boxes' bounds to match the included members.  This should only be done when we
-     * change members, or if a member has changed position.
+     * change members, or if a member has changed position/size in the local sphere.
      */
     public void updateBounds() {
         //Update solid box local center and size.

@@ -2,11 +2,13 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
@@ -323,8 +325,11 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         } else {
             if (player.isHoldingItemType(ItemComponentType.KEY)) {
                 IWrapperNBT data = player.getHeldStack().getData();
-                if (data != null && uniqueUUID.equals(data.getUUID("vehicle"))) {
-                    return true;
+                if (data != null) {
+                    UUID itemKeyUUID = data.getUUID(ItemItem.KEY_UUID_TAG);
+                    if (itemKeyUUID != null && itemKeyUUID.equals(keyUUID)) {
+                        return true;
+                    }
                 }
             }
             if (world.isClient()) {

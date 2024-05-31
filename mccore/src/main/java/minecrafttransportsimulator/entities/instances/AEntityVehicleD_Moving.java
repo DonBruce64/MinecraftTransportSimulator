@@ -25,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -130,7 +129,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super(world, placingPlayer, item, data);
         if (data != null) {
             this.locked = data.getBoolean("locked");
-            this.keyUUID = data.getUUID("keyUUID");
+            this.keyUUID = data.getUUID(ItemItem.KEY_UUID_TAG);
             this.totalPathDelta = data.getDouble("totalPathDelta");
             this.prevTotalPathDelta = totalPathDelta;
             this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -1144,27 +1143,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * Returns the owner state of the passed-in player, relative to this entity.
-     * Takes into account player OP status and {@link #ownerUUID}, if set.
-     */
-    public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
-        if (player.isOP()) {
-            return PlayerOwnerState.ADMIN;
-        } else if (keyUUID == null) {
-            return PlayerOwnerState.OWNER;
-        } else {
-            IWrapperItemStack heldStack = player.getHeldStack();
-            if (heldStack.getItem() instanceof ItemItem) {
-                IWrapperNBT stackData = heldStack.getData();
-                if (stackData != null && keyUUID.equals(stackData.getUUID("keyUUID"))) {
-                    return PlayerOwnerState.OWNER;
-                }
-            }
-            return PlayerOwnerState.USER;
-        }
-    }
-
-    /**
      * Method block for getting the steering angle of this vehicle.
      * This returns the normalized steering angle, from -1.0 to 1.0;
      */
@@ -1195,7 +1173,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super.save(data);
         data.setBoolean("locked", locked);
         if (keyUUID != null) {
-            data.setUUID("keyUUID", keyUUID);
+            data.setUUID(ItemItem.KEY_UUID_TAG, keyUUID);
         }
         data.setPoint3d("serverDeltaM", serverDeltaM);
         data.setPoint3d("serverDeltaR", serverDeltaR);

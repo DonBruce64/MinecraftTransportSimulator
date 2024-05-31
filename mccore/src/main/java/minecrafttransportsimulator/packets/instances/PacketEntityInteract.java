@@ -7,7 +7,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -28,7 +27,7 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * to handle players clicking on the entity.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the entity if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
- * the logic in {@link IItemEntityInteractable#doEntityInteraction(AEntityE_Interactable, APart, IWrapperPlayer, PlayerOwnerState, boolean)}
+ * the logic in {@link IItemEntityInteractable#doEntityInteraction(AEntityE_Interactable, APart, IWrapperPlayer, boolean)}
  *
  * @author don_bruce
  */
@@ -62,7 +61,6 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
     @Override
     public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperPlayer player) {
         EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
-        PlayerOwnerState ownerState = vehicle != null ? vehicle.getOwnerState(player) : PlayerOwnerState.OWNER;
         IWrapperItemStack heldStack = player.getHeldStack();
         AItemBase heldItem = heldStack.getItem();
 
@@ -76,9 +74,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
                 if (slotEntry.getKey().localCenter.equals(hitBoxLocalCenter)) {
                     //Only owners can add parts.
-                    if (ownerState.equals(PlayerOwnerState.USER)) {
-                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_OWNED));
-                    } else {
+                    if (vehicle == null || !vehicle.locked) {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
                         if (heldItem instanceof AItemPart && !player.isSneaking()) {
                             IWrapperNBT data = heldStack.getData();
@@ -90,6 +86,8 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
                         }
+                    } else {
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                     }
                     return false;
                 }
@@ -118,7 +116,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         //If we clicked with with an item that can interact with a entity, perform that interaction.
         //If the item doesn't or couldn't interact with the entity, check for other interactions.
         if (heldItem instanceof IItemEntityInteractable && (rightClick || leftClick)) {
-            switch (((IItemEntityInteractable) heldItem).doEntityInteraction(entity, hitBox, player, ownerState, rightClick)) {
+            switch (((IItemEntityInteractable) heldItem).doEntityInteraction(entity, hitBox, player, rightClick)) {
                 case ALL:
                     return true;
                 case PLAYER:

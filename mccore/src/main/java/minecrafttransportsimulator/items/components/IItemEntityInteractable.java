@@ -2,7 +2,6 @@ package minecrafttransportsimulator.items.components;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 
@@ -32,7 +31,7 @@ public interface IItemEntityInteractable {
      * this, any client-side interactions that need to know something about the player who initially interacted
      * with this entity should NOT use {@link CallbackType#ALL}, as this will not give the "correct" player instance.
      */
-    CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
+    CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, boolean rightClick);
 
     enum CallbackType {
         NONE,

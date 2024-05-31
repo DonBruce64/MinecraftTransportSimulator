@@ -438,13 +438,4 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         }
         return data;
     }
-
-    /**
-     * Emum for easier functions for owner states.
-     */
-    public enum PlayerOwnerState {
-        USER,
-        OWNER,
-        ADMIN
-    }
 }
