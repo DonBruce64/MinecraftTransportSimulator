@@ -531,12 +531,12 @@ public class EntityParticle extends AEntityC_Renderable {
                 break;
             }
             case PLAYER: {
-                helperPoint.set(clientPlayer.getEyePosition()).subtract(position);
+                helperPoint.set(InterfaceManager.clientInterface.getCameraPosition()).subtract(position);
                 orientation.setToVector(helperPoint, true);
                 break;
             }
             case YAXIS: {
-                helperPoint.set(clientPlayer.getEyePosition()).subtract(position);
+                helperPoint.set(InterfaceManager.clientInterface.getCameraPosition()).subtract(position);
                 helperPoint.y = 0;
                 orientation.setToVector(helperPoint, true);
                 break;

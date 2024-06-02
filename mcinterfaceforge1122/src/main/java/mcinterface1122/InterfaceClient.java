@@ -152,8 +152,9 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public Point3D getCameraPosition() {
-        Vec3d position = ActiveRenderInfo.getCameraPosition();
-        mutablePosition.set(position.x, position.y, position.z);
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        Vec3d cameraOffset = ActiveRenderInfo.getCameraPosition();
+        mutablePosition.set(player.posX + cameraOffset.x, player.posY + cameraOffset.y, player.posZ + cameraOffset.z);
         return mutablePosition;
     }
 
