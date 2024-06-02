@@ -474,8 +474,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     ballastForce = airDensity * currentBallastVolume * -elevatorAngle / 10D;
                 } else if (elevatorAngle > 0) {
                     ballastForce = 1.225 * currentBallastVolume * -elevatorAngle / 10D;
-                } else {
+                } else if (motion.y < -0.15 || motion.y > 0.15) {
                     ballastForce = 1.225 * currentBallastVolume * 10D * -motion.y;
+                } else {
+                    ballastForce = 0;
+                    motion.y = 0;
                 }
                 if (motion.y * ballastForce != 0) {
                     ballastForce /= Math.pow(1 + Math.abs(motion.y), 2);

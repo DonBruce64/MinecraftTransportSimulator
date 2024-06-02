@@ -13,8 +13,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
@@ -103,8 +103,8 @@ public class GUIHUD extends AGUIBase {
             instrument.visible = CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value);
         }
 
-        //Set health label text and visibility.
-        healthLabel.text = String.format("Health: %.0f/%d", vehicle.definition.general.health - vehicle.damageAmount, vehicle.definition.general.health);
+        //Set health label text and visibility.;
+        healthLabel.text = String.format("Health: %d/%d", (int) Math.ceil(vehicle.definition.general.health - vehicle.damageAmount), vehicle.definition.general.health);
         healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
         healthLabel.color = vehicle.outOfHealth ? ColorRGB.RED : ColorRGB.WHITE;
 

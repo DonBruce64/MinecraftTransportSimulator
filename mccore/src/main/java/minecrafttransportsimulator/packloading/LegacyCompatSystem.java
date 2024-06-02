@@ -162,11 +162,11 @@ public final class LegacyCompatSystem {
                                 collisionBox.armorThickness = 0;
                             }
                             if (collisionBox.heatArmorThickness != 0) {
-                                collisionGroup.armorThickness = collisionBox.heatArmorThickness;
+                                collisionGroup.heatArmorThickness = collisionBox.heatArmorThickness;
                                 collisionBox.heatArmorThickness = 0;
                             }
                             if (collisionBox.damageMultiplier != 0) {
-                                collisionGroup.armorThickness = collisionBox.damageMultiplier;
+                                collisionGroup.damageMultiplier = collisionBox.damageMultiplier;
                                 collisionBox.damageMultiplier = 0;
                             }
                         }
@@ -749,11 +749,6 @@ public final class LegacyCompatSystem {
             //Add engine type if it is missing.
             if (definition.engine.type == null) {
                 definition.engine.type = JSONPart.EngineType.NORMAL;
-            }
-
-            //Set damage forwards multiplier if not set.
-            if (definition.generic.forwardsDamageMultiplier == 0) {
-                definition.generic.forwardsDamageMultiplier = 1;
             }
 
             //Add fuel type, if it is missing.

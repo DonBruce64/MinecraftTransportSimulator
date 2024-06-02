@@ -236,7 +236,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 entity.prevOrientation.set(entity.orientation);
                 entity.world.spawnEntity(entity);
 
-                //TODO we would normally transfer the part here, but we can't do that since MC does jank.  Remove with EOBeta completion.  This forces the placed part to spawn before we try and add the part.
+                //Need to defer the  adding of this part to give time for the main entity to spawn and transfer to the clients.
                 partToPlace = currentPart;
                 placedPart = entity;
                 placeTimer = 20;
@@ -757,6 +757,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     private void recalculatePartSlots() {
         partSlotBoxes.clear();
+        if (world.isClient()) {
+            activeClientPartSlotBoxes.clear();
+        }
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
