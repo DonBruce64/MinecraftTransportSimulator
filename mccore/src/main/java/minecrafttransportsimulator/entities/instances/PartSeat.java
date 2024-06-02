@@ -96,17 +96,6 @@ public final class PartSeat extends APart {
                                 entityPlayerRiding.removeRider();
                             }
                             setRider(player, !(entityPlayerRiding instanceof PartSeat) || ((PartSeat) entityPlayerRiding).vehicleOn != vehicleOn);
-
-                            //If this seat can control a gun, and isn't controlling one, set it now.
-                            //This prevents the need to select a gun when initially mounting.
-                            //Only do this if we don't allow for no gun selection.
-                            //If we do have an active gun, validate that it's still correct.
-                            if (activeGunItem == null) {
-                                if (!placementDefinition.canDisableGun) {
-                                    setNextActiveGun();
-                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this, SeatAction.CHANGE_GUN));
-                                }
-                            }
                         }
                     }
                 }
@@ -186,6 +175,17 @@ public final class PartSeat extends APart {
                 //Set the vehicle creative status, if it's not true already.
                 if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
                     vehicleOn.isCreative = true;
+                }
+            }
+
+            //If this seat can control a gun, and isn't controlling one, set it now.
+            //This prevents the need to select a gun when initially mounting.
+            //Only do this if we don't allow for no gun selection, or if the rider is a NPC..
+            //If we do have an active gun, validate that it's still correct.
+            if (activeGunItem == null) {
+                if (!placementDefinition.canDisableGun || !(rider instanceof IWrapperPlayer)) {
+                    setNextActiveGun();
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this, SeatAction.CHANGE_GUN));
                 }
             }
 

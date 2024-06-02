@@ -853,12 +853,12 @@ public class PartGun extends APart {
      */
     private boolean validateTarget(IWrapperEntity target) {
         if (target.isValid()) {
-            //Get vector from eyes of controller to target.
+            //Get vector from gun center to target.
             //Target we aim for the middle, as it's more accurate.
             //We also take into account tracking for bullet speed.
-            targetVector.set(target.getEyePosition());
+            targetVector.set(target.getPosition());
             targetVector.y += target.getEyeHeight() / 2D;
-            targetVector.subtract(lastController.getEyePosition());
+            targetVector.subtract(position);
 
             //Transform vector to gun's coordinate system.
             //Get the angles the gun has to rotate to match the target.
