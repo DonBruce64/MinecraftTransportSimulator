@@ -244,7 +244,6 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case TICKET: {
                 if (!entity.world.isClient() && rightClick) {
-
                     if (entity instanceof PartSeat) {
                         if (player.isSneaking()) {
                             if (entity.rider != null) {
@@ -255,8 +254,13 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 entity.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), entity);
                             }
                         }
-                    } else if (entity instanceof APart) {
-                        AEntityF_Multipart<?> master = ((APart) entity).masterEntity;
+                    } else {
+                        AEntityF_Multipart<?> master;
+                        if (entity instanceof APart) {
+                            master = ((APart) entity).masterEntity;
+                        } else {
+                            master = (AEntityF_Multipart<?>) entity;
+                        }
                         if (player.isSneaking()) {
                             for (APart otherPart : master.allParts) {
                                 if (otherPart.rider != null) {
