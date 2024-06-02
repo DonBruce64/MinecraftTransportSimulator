@@ -96,8 +96,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     //Constants
     private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
     private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.5F;
-    private static final float PART_SLOT_GROUND_HITBOX_WIDTH = 0.75F;
-    private static final float PART_SLOT_GROUND_HITBOX_HEIGHT = 2.25F;
+    private static final float PART_SLOT_LARGE_HITBOX_WIDTH = 0.75F;
+    private static final float PART_SLOT_LARGE_HITBOX_HEIGHT = 2.25F;
     private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
     private static final Set<CollisionType> partSlotBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.CLICK));
 
@@ -759,16 +759,16 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
-                boolean isForGroundDevices = false;
+                boolean isLarge = false;
                 for (String type : partDef.types) {
-                    if (type.startsWith("ground_")) {
-                        isForGroundDevices = true;
+                    if (type.startsWith("ground_") || type.startsWith("propeller_")) {
+                        isLarge = true;
                         break;
                     }
                 }
                 BoundingBox newSlotBox;
-                if (isForGroundDevices) {
-                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_GROUND_HITBOX_WIDTH / 2D, PART_SLOT_GROUND_HITBOX_HEIGHT / 2D, PART_SLOT_GROUND_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
+                if (isLarge) {
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_LARGE_HITBOX_WIDTH / 2D, PART_SLOT_LARGE_HITBOX_HEIGHT / 2D, PART_SLOT_LARGE_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 } else {
                     newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 }
