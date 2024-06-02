@@ -46,8 +46,9 @@ public class InterfaceEventsEntityRendering {
     private static float riderStoredHeadRot;
     private static float riderStoredHeadRotO;
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
-    private static final Point3D cameraAdjustedPosition = new Point3D();
-    private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    public static final Point3D cameraAdjustedPosition = new Point3D();
+    public static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    public static boolean adjustedCamera;
     private static PlayerEntity mcPlayer;
 
     private static int lastScreenWidth;
@@ -67,12 +68,13 @@ public class InterfaceEventsEntityRendering {
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
             float partialTicks = (float) event.getRenderPartialTicks();
+            adjustedCamera = false;
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, partialTicks)) {
                 //Camera adjustments occur backwards here.  Reverse order in the matrix.
                 //Also need to reverse sign of Y, since that's backwards in MC.
                 cameraAdjustedOrientation.convertToAngles();
                 if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.THIRD_PERSON_INVERTED) {
-                    //Inverted third-person needs roll and pich flipped due to the opposite perspective.
+                    //Inverted third-person needs roll and pitch flipped due to the opposite perspective.
                     //It also needs the camera rotated 180 in the Y to face the other direction.
                     event.setRoll((float) -cameraAdjustedOrientation.angles.z);
                     event.setPitch((float) -cameraAdjustedOrientation.angles.x);
@@ -82,11 +84,11 @@ public class InterfaceEventsEntityRendering {
                     event.setPitch((float) cameraAdjustedOrientation.angles.x);
                     event.setYaw((float) -cameraAdjustedOrientation.angles.y);
                 }
-
                 //Move the info's setup to the set position of the camera.
                 //This will offset the player's eye position to match the camera.
                 //We do this in first-person mode since third-person adds zoom stuff.
                 ((RenderInfoInvokerMixin) info).invoke_setPosition(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
+                adjustedCamera = true;
             }
         }
     }
