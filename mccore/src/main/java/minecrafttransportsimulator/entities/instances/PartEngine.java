@@ -961,6 +961,10 @@ public class PartEngine extends APart {
                 return linkedEngine != null ? 1 : 0;
             case ("engine_hours"):
                 return hours;
+            case ("engine_bypass_ratio"):
+                return currentBypassRatio;
+            case ("engine_jet_power_factor"):
+                return currentJetPowerFactor;
         }
         if (variable.startsWith("engine_sin_")) {
         	//engine_sin_X This will offset the engine rotation INPUT to the trig function by X

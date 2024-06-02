@@ -868,7 +868,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
             case ("fueling"):
                 return beingFueled ? 1 : 0;
-
+            //Good for tuning aircraft engines.
+            case ("thrust"):
+                return thrustForceValue;
             //State cases generally used on aircraft.
             case ("flaps_actual"):
                 return flapCurrentAngle;
