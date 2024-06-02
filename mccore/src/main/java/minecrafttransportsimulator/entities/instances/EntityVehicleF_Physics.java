@@ -797,12 +797,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
     }
 
-    public Point3D getVelocityVector() {
-        Point3D vector = new Point3D();
-        vector.set(position.copy()).add(motion.x,motion.y,motion.z);
-        return vector;
-    }
-
     @Override
     public boolean shouldRenderBeams() {
         return ConfigSystem.client.renderingSettings.vehicleBeams.value;
@@ -900,20 +894,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return 75 * sideVector.dotProduct(normalizedVelocityVector, true);
             case ("slip_understeer"):
                 return getSteeringAngle() * (1 - Math.max(0, Math.min(1, Math.abs(turningForce) / 10)));
-            case ("velocity_angle"):
-                double angle = -Math.toDegrees(Math.atan2(-getVelocityVector().y + position.y,Math.hypot(-getVelocityVector().z + position.z,-getVelocityVector().x + position.x))) + orientation.angles.x;
-                while (angle < -180)
-                    angle += 360;
-                while (angle > 180)
-                    angle -= 360;
-                return angle;
-            case ("velocity_direction"):
-                double direction = Math.toDegrees(Math.atan2(-getVelocityVector().z + position.z, -getVelocityVector().x + position.x)) + 90 + orientation.angles.y;
-                while (direction < -180)
-                    direction += 360;
-                while (direction > 180)
-                    direction -= 360;
-                return direction;
             case ("gear_present"):
                 return definition.motorized.gearSequenceDuration != 0 ? 1 : 0;
             case ("gear_moving"):
