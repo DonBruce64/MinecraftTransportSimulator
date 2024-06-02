@@ -1,10 +1,96 @@
 {
-    "general": {
-        "name": "Instrument Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["instrument"]
+  "decor": {
+    "type": "generic",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "crafting": {
+      "itemTypes": [
+        "instrument"
+      ]
     }
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Instrument Bench",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mts:bench/instrumentbench_open0",
+        "soundVariations": [
+          "mts:bench/instrumentbench_open0",
+          "mts:bench/instrumentbench_open1",
+          "mts:bench/instrumentbench_open2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/instrumentbench_craft0",
+        "soundVariations": [
+          "mts:bench/instrumentbench_craft0",
+          "mts:bench/instrumentbench_craft1",
+          "mts:bench/instrumentbench_craft2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/instrumentbench_close0",
+        "soundVariations": [
+          "mts:bench/instrumentbench_close0",
+          "mts:bench/instrumentbench_close1",
+          "mts:bench/instrumentbench_close2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Instrument Bench",
+    "materialLists": [
+      []
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
+  }
 }
