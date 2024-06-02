@@ -119,6 +119,7 @@ public class PartGun extends APart {
     //Temp helper variables for calculations
     private final Point3D targetVector = new Point3D();
     private final Point3D targetAngles = new Point3D();
+    private final Point3D controllerAngles = new Point3D();
     private final RotationMatrix firingSpreadRotation = new RotationMatrix();
     private final RotationMatrix pitchMuzzleRotation = new RotationMatrix();
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
@@ -388,8 +389,8 @@ public class PartGun extends APart {
                                 for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                     ++bulletsFired;
 
-                                    //If this bullet isn't long-range, don't spawn on the server.  That's just extra tracking.
-                                    if (world.isClient() || loadedBullet.definition.bullet.isLongRange) {
+                                    //If this bullet isn't long-range, or isn't fired from a NPC, don't spawn on the server.  That's just extra tracking.
+                                    if (world.isClient() || (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer))) {
                                         //Get the bullet's state.
                                         setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 
@@ -671,8 +672,10 @@ public class PartGun extends APart {
             //If we have a target, validate it and try to hit it.
             if (entityTarget != null) {
                 if (validateTarget(entityTarget)) {
-                    controller.setYaw(targetAngles.y);
-                    controller.setPitch(targetAngles.x);
+                    controllerAngles.set(targetVector).getAngles(true);
+                    controller.setYaw(controllerAngles.y);
+                    controller.setPitch(controllerAngles.x);
+
                     //Only fire if we're within 1 movement increment of the target.
                     if (Math.abs(targetAngles.y - internalOrientation.angles.y) < yawSpeed && Math.abs(targetAngles.x - internalOrientation.angles.x) < pitchSpeed) {
                         state = state.promote(GunState.FIRING_REQUESTED);
@@ -855,6 +858,7 @@ public class PartGun extends APart {
             //We also take into account tracking for bullet speed.
             targetVector.set(target.getEyePosition());
             targetVector.y += target.getEyeHeight() / 2D;
+            targetVector.subtract(lastController.getEyePosition());
 
             //Transform vector to gun's coordinate system.
             //Get the angles the gun has to rotate to match the target.
