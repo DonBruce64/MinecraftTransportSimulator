@@ -159,7 +159,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Now that position is set, check to make sure we aren't an invalid particle.
         if (definition.type == ParticleType.BREAK) {
-            if (!world.isAir(position)) {
+            if (world.isAir(position)) {
                 //Don't spawn break particles in the air, they're null textures.
                 this.staticColor = null;
                 this.renderable = null;
