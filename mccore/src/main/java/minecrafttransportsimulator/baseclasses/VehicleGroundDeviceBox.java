@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition.JSONGroundDevicePosition;
 
 /**
  * This class is a IWrapper for vehicle ground device collision points.  It's used to get a point
@@ -110,49 +111,51 @@ public class VehicleGroundDeviceBox {
             if (part instanceof PartGroundDevice) {
                 if (!part.isSpare) {
                     PartGroundDevice ground = (PartGroundDevice) part;
-                    boolean groundIsFront = part.placementDefinition.groundDevicePosition != null ? part.placementDefinition.groundDevicePosition.isFront : ground.wheelbasePoint.z > 0;
-                    boolean groundIsRear = !groundIsFront;
-                    boolean groundIsLeft = part.placementDefinition.groundDevicePosition != null ? part.placementDefinition.groundDevicePosition.isLeft : ground.wheelbasePoint.x >= 0;
-                    boolean groundIsRight = part.placementDefinition.groundDevicePosition != null ? part.placementDefinition.groundDevicePosition.isRight : ground.wheelbasePoint.x <= 0;
-                    if (isFront && groundIsFront) {
-                        if (isLeft && groundIsLeft) {
-                            groundDevices.add(ground);
-                            totalClimbHeight += ground.definition.ground.climbHeight;
-                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
-                                canRollOnGround = true;
-                            }
-                            if (ground.definition.ground.canFloat) {
-                                liquidDevices.add(ground);
-                            }
-                        } else if (!isLeft && groundIsRight) {
-                            groundDevices.add(ground);
-                            totalClimbHeight += ground.definition.ground.climbHeight;
-                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
-                                canRollOnGround = true;
-                            }
-                            if (ground.definition.ground.canFloat) {
-                                liquidDevices.add(ground);
+                    APart currentPart = part;
+
+                    //Get a JSON-defined ground position from our placement def, or that from a parent if we're sub-parted.
+                    JSONGroundDevicePosition groundPosition;
+                    do {
+                        groundPosition = currentPart.placementDefinition.groundDevicePosition;
+                        if (groundPosition == null) {
+                            if (part.entityOn instanceof APart) {
+                                currentPart = (APart) part.entityOn;
+                            } else {
+                                currentPart = null;
                             }
                         }
-                    } else if (!isFront && groundIsRear) {
-                        if (isLeft && groundIsLeft) {
-                            groundDevices.add(ground);
-                            totalClimbHeight += ground.definition.ground.climbHeight;
-                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
-                                canRollOnGround = true;
+                    } while (groundPosition == null && currentPart != null);
+
+                    //Create a position if none is defined.
+                    if (groundPosition == null) {
+                        if (ground.wheelbasePoint.z > 0) {
+                            if (ground.wheelbasePoint.x == 0) {
+                                groundPosition = JSONGroundDevicePosition.FRONT_CENTER;
+                            } else if (ground.wheelbasePoint.x >= 0) {
+                                groundPosition = JSONGroundDevicePosition.FRONT_LEFT;
+                            } else {
+                                groundPosition = JSONGroundDevicePosition.FRONT_RIGHT;
                             }
-                            if (ground.definition.ground.canFloat) {
-                                liquidDevices.add(ground);
+                        } else {
+                            if (ground.wheelbasePoint.x == 0) {
+                                groundPosition = JSONGroundDevicePosition.REAR_CENTER;
+                            } else if (ground.wheelbasePoint.x >= 0) {
+                                groundPosition = JSONGroundDevicePosition.REAR_LEFT;
+                            } else {
+                                groundPosition = JSONGroundDevicePosition.REAR_RIGHT;
                             }
-                        } else if (!isLeft && groundIsRight) {
-                            groundDevices.add(ground);
-                            totalClimbHeight += ground.definition.ground.climbHeight;
-                            if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
-                                canRollOnGround = true;
-                            }
-                            if (ground.definition.ground.canFloat) {
-                                liquidDevices.add(ground);
-                            }
+                        }
+                    }
+
+                    //Add us if our requested position matches our found position.
+                    if (!(isFront ^ groundPosition.isFront) && (isLeft && groundPosition.isLeft || !isLeft && groundPosition.isRight)) {
+                        groundDevices.add(ground);
+                        totalClimbHeight += ground.definition.ground.climbHeight;
+                        if (ground.definition.ground.isWheel || ground.definition.ground.isTread) {
+                            canRollOnGround = true;
+                        }
+                        if (ground.definition.ground.canFloat) {
+                            liquidDevices.add(ground);
                         }
                     }
                 }
