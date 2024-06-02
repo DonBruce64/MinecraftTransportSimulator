@@ -751,11 +751,6 @@ public final class LegacyCompatSystem {
                 definition.engine.type = JSONPart.EngineType.NORMAL;
             }
 
-            //Set damage forwards multiplier if not set.
-            if (definition.generic.forwardsDamageMultiplier == 0) {
-                definition.generic.forwardsDamageMultiplier = 1;
-            }
-
             //Add fuel type, if it is missing.
             if (definition.engine.type == EngineType.MAGIC) {
                 definition.engine.fuelType = JSONConfigSettings.FuelDefaults.NOTHING.name().toLowerCase();
