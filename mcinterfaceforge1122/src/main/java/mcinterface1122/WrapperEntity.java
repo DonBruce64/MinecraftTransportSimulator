@@ -19,7 +19,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
@@ -208,8 +207,10 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
-    public void movePosition(Point3D offset) {
-        entity.move(MoverType.SELF, offset.x, offset.y, offset.z);
+    public void applyMotion(Point3D motion) {
+        entity.motionX += motion.x;
+        entity.motionY += motion.y;
+        entity.motionZ += motion.z;
     }
 
     @Override
@@ -381,7 +382,7 @@ public class WrapperEntity implements IWrapperEntity {
             entity.setFire(5);
         }
         if (damage.knockback != null) {
-            entity.move(MoverType.SELF, damage.knockback.x, damage.knockback.y, damage.knockback.z);
+            applyMotion(damage.knockback);
         }
         if (damage.isWater) {
             entity.extinguish();

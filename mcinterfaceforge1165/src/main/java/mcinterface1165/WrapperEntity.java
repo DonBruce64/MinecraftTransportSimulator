@@ -19,7 +19,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -29,7 +28,6 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -212,8 +210,8 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
-    public void movePosition(Point3D offset) {
-        entity.move(MoverType.SELF, new Vector3d(offset.x, offset.y, offset.z));
+    public void applyMotion(Point3D motion) {
+        entity.setDeltaMovement(entity.getDeltaMovement().add(motion.x, motion.y, motion.z));
     }
 
     @Override
@@ -383,7 +381,7 @@ public class WrapperEntity implements IWrapperEntity {
             entity.setRemainingFireTicks(5);
         }
         if (damage.knockback != null) {
-            entity.move(MoverType.SELF, new Vector3d(damage.knockback.x, damage.knockback.y, damage.knockback.z));
+            applyMotion(damage.knockback);
         }
         if (damage.isWater) {
             entity.clearFire();
