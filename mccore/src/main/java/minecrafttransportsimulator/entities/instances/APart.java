@@ -296,14 +296,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public boolean requiresDeltaUpdates() {
-        return super.requiresDeltaUpdates() || entityOn.requiresDeltaUpdates() || isMoveable;
+        return entityOn.requiresDeltaUpdates() || isMoveable || super.requiresDeltaUpdates();
     }
 
     @Override
-    protected void updateCollisionBoxes() {
+    protected void updateCollisionBoxes(boolean requiresDeltaUpdates) {
         //Add collision if we aren't a fake part.
         if (!isFake()) {
-            super.updateCollisionBoxes();
+            super.updateCollisionBoxes(requiresDeltaUpdates);
             collisionBoxes.add(boundingBox);
         }
     }

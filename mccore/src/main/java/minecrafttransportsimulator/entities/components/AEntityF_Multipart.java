@@ -458,10 +458,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Part was removed during updates, remove from the part listing.
                 removePart(part, true, iterator);
             } else {
-                //If the part needs updated collision, we will too, since our encompassing box could be affected.
-                if (part.forceCollisionUpdateThisTick) {
-                    forceCollisionUpdateThisTick = true;
-                }
                 part.doPostUpdateLogic();
             }
         }
@@ -781,21 +777,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         }
         //Add all slot boxes, clients will remove as applicable, servers will never remove.
         collisionBoxes.addAll(partSlotBoxes.keySet());
-        forceCollisionUpdateThisTick = true;
-        if (this instanceof APart) {
-            ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
-        }
     }
 
     @Override
-    protected void updateCollisionBoxes() {
-        super.updateCollisionBoxes();
-        //Populate active part slot list and update box positions.
-        //Only do this on clients; servers reference the main list to handle clicks.
-        //Boxes added on clients depend on what the player is holding.
-        //We add these before part boxes so the player can click them before clicking a part.
-        if (!partSlotBoxes.isEmpty()) {
-            if (world.isClient()) {
+    protected void updateCollisionBoxes(boolean requiresDeltaUpdates) {
+        super.updateCollisionBoxes(requiresDeltaUpdates);
+        if (world.isClient()) {
+            if (!partSlotBoxes.isEmpty()) {
                 world.beginProfiling("PartSlotActives", false);
                 activeClientPartSlotBoxes.clear();
                 if (canBeClicked()) {
@@ -822,16 +810,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                         box.depthRadius = heldPart.definition.generic.width / 2D;
                                     }
                                     activeSlotFound = true;
-                                    if (this instanceof APart) {
-                                        ((APart) this).masterEntity.forceCollisionUpdateThisTick = true;
-                                    }
                                 }
                             }
                             if (activeSlotFound) {
                                 collisionBoxes.add(box);
                                 activeClientPartSlotBoxes.put(box, slotDef);
-                                forceCollisionUpdateThisTick = true;
-                                if (requiresDeltaUpdates()) {
+                                if (requiresDeltaUpdates) {
                                     AnimationSwitchbox switchBox = partSlotSwitchboxes.get(slotDef);
                                     if (switchBox != null) {
                                         if (switchBox.runSwitchbox(0, false)) {
@@ -862,11 +846,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             collisionBoxes.addAll(partSlotBoxes.keySet());
         }
 
-        //Set active collision box, door box, and interaction box lists to current boxes.
+        //Populate all box list.
         allCollisionBoxes.clear();
         allCollisionBoxes.addAll(collisionBoxes);
-
-        //Add all part boxes.
         for (APart part : parts) {
             allCollisionBoxes.addAll(part.allCollisionBoxes);
         }

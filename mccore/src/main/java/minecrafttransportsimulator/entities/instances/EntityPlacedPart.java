@@ -30,8 +30,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     public APart currentPart;
     private boolean foundPart;
     private final Point3D motionApplied = new Point3D();
-    private boolean riderPresentLastCheck;
-    private boolean riderPresentThisCheck;
+    private boolean partRequiresDeltaUpdates;
 
     public EntityPlacedPart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, null, data);
@@ -67,14 +66,10 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
         } else {
             if (currentPart != null) {
                 foundPart = true;
-                //Seat checks are needed to allow the seat to update interactable boxes when rider state changes.
-                riderPresentLastCheck = riderPresentThisCheck;
-                riderPresentThisCheck = currentPart.rider != null;
-
                 //Go down to find ground, if we haven't already.
                 if (currentPart.definition.generic.fallsToGround) {
                     //Need this check to be here since if we put it in the check method we recurse since parts call super.
-                    forceCollisionUpdateThisTick = currentPart.requiresDeltaUpdates();
+                    partRequiresDeltaUpdates = currentPart.requiresDeltaUpdates();
 
                     //Don't check on the first tick, since we won't be updated yet.
                     if (ticksExisted > 1) {
@@ -126,7 +121,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
 
     @Override
     public boolean requiresDeltaUpdates() {
-        return currentPart != null && (super.requiresDeltaUpdates() || currentPart.definition.generic.fallsToGround || (riderPresentLastCheck != riderPresentThisCheck));
+        return partRequiresDeltaUpdates;
     }
 
     @Override
