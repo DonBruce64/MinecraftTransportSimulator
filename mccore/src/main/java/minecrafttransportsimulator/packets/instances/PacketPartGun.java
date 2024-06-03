@@ -7,70 +7,92 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
- * Packet used to send signals to guns.  This can be either to start/stop the firing of the gun,
- * or to re-load the gun with the specified bullets.  If we are doing start/stop commands, then
+ * Packet used to send signals to guns.  This can be either to change the state of the gun,
+ * or to re-load the gun with the specified bullets.  If we are doing state commands, then
  * this packet first gets sent to the server from the client who requested the command.  After this,
- * it is send to all players tracking the gun.  If this packet is for re-loading bullets, then it will
+ * it is send to all players tracking the gun (if applicable).  If this packet is for re-loading bullets, then it will
  * only appear on clients after the server has verified the bullets can in fact be loaded.
  *
  * @author don_bruce
  */
 public class PacketPartGun extends APacketEntity<PartGun> {
-    private final boolean controlPulse;
-    private final boolean triggerState;
-    private final boolean aimState;
+    private final Request stateRequest;
     private final ItemBullet bulletItem;
 
-    public PacketPartGun(PartGun gun, boolean triggerState, boolean aimState) {
+    public PacketPartGun(PartGun gun, Request stateRequest) {
         super(gun);
-        this.controlPulse = true;
-        this.triggerState = triggerState;
-        this.aimState = aimState;
+        this.stateRequest = stateRequest;
         this.bulletItem = null;
     }
 
     public PacketPartGun(PartGun gun, ItemBullet bullet) {
         super(gun);
-        this.controlPulse = false;
-        this.triggerState = false;
-        this.aimState = false;
+        this.stateRequest = Request.RELOAD;
         this.bulletItem = bullet;
     }
 
     public PacketPartGun(ByteBuf buf) {
         super(buf);
-        this.controlPulse = buf.readBoolean();
-        this.aimState = buf.readBoolean();
-        if (controlPulse) {
-            this.triggerState = buf.readBoolean();
-            this.bulletItem = null;
-        } else {
-            this.triggerState = false;
+        this.stateRequest = Request.values()[buf.readByte()];
+        if (stateRequest == Request.RELOAD) {
             this.bulletItem = readItemFromBuffer(buf);
+        } else {
+            this.bulletItem = null;
         }
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        buf.writeBoolean(controlPulse);
-        buf.writeBoolean(aimState);
-        if (controlPulse) {
-            buf.writeBoolean(triggerState);
-        } else {
+        buf.writeByte(stateRequest.ordinal());
+        if (stateRequest == Request.RELOAD) {
             writeItemToBuffer(bulletItem, buf);
         }
     }
 
     @Override
     public boolean handle(AWrapperWorld world, PartGun gun) {
-        if (controlPulse) {
-            gun.playerHoldingTrigger = triggerState;
-            gun.isHandHeldGunAimed = aimState;
-            return true;
-        } else {
-            gun.clientNextBullet = bulletItem;
-            return false;
+        switch (stateRequest) {
+            case RELOAD: {
+                gun.clientNextBullet = bulletItem;
+                break;
+            }
+            case TRIGGER_ON: {
+                gun.playerHoldingTrigger = true;
+                break;
+            }
+            case TRIGGER_OFF: {
+                gun.playerHoldingTrigger = false;
+                break;
+            }
+            case AIM_ON: {
+                gun.isHandHeldGunAimed = true;
+                break;
+            }
+            case AIM_OFF: {
+                gun.isHandHeldGunAimed = false;
+                break;
+            }
+            case KNOCKBACK: {
+                gun.performGunKnockback();
+                break;
+            }
+        }
+        return stateRequest.sendToClients;
+    }
+
+    public static enum Request {
+        RELOAD(false),
+        TRIGGER_ON(true),
+        TRIGGER_OFF(true),
+        AIM_ON(true),
+        AIM_OFF(true),
+        KNOCKBACK(true);
+
+        private final boolean sendToClients;
+
+        private Request(boolean sendToClients) {
+            this.sendToClients = sendToClients;
         }
     }
 }

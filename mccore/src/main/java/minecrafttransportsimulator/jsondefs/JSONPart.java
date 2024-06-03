@@ -463,6 +463,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
         public float defaultPitch;
         
+        @JSONDescription("How much knocback this gun provides to the shooter.")
+        public float knockback;
+
         @JSONDescription("How far away the gun will be able to lock targets.")
         public int lockRange;
 

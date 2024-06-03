@@ -39,6 +39,7 @@ public class Damage {
     public boolean isExplosion;
     public boolean ignoreArmor;
     public boolean ignoreCooldown;
+    public Point3D knockback;
     public List<JSONPotionEffect> effects;
 
     public Damage(double amount, BoundingBox box, AEntityB_Existing damgeSource, IWrapperEntity entityResponsible, LanguageEntry language) {
@@ -80,6 +81,9 @@ public class Damage {
         }
         if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.ARMOR_PIERCING)) {
             ignoreArmor = true;
+        }
+        if (gun.lastLoadedBullet.definition.bullet.knockback != 0) {
+            knockback = box.globalCenter.copy().subtract(gun.position).normalize().scale(gun.lastLoadedBullet.definition.bullet.knockback);
         }
         effects = gun.lastLoadedBullet.definition.bullet.effects;
     }

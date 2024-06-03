@@ -119,6 +119,11 @@ public interface IWrapperEntity {
      * but not if they are riding an entity.
      */
     void setPosition(Point3D position, boolean onGround);
+    
+    /**
+     * Applies a motive force to the entity of the passed-in amount.
+     */
+    void applyMotion(Point3D offset);
 
     /**
      * Gets the entity's velocity as a vector.

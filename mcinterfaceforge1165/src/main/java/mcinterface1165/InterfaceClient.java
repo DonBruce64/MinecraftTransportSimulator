@@ -17,10 +17,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
-import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -162,8 +162,8 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public Point3D getCameraPosition() {
-        Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        mutablePosition.set(position.x, position.y, position.z);
+        Vector3d cameraOffset = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        mutablePosition.set(cameraOffset.x, cameraOffset.y, cameraOffset.z);
         return mutablePosition;
     }
 

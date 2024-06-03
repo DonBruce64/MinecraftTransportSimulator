@@ -107,12 +107,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public static final String DAMAGE_VARIABLE = "damage";
     public boolean outOfHealth;
 
-    /**
-     * Internal variable to force collision box updates, even if we aren't normally a moveable entity.
-     * Useful if we don't normally move and shouldn't run box updates, but can move on state-change.
-     **/
-    public boolean forceCollisionUpdateThisTick;
-
     protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
     protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
     protected int lastSnapConnectionTried = 0;
@@ -213,18 +207,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     public void update() {
         super.update();
-
         world.beginProfiling("EntityE_Level", true);
-        //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
-
         world.endProfiling();
     }
 
     @Override
     public boolean requiresDeltaUpdates() {
-        return !collisionSwitchboxes.isEmpty() || forceCollisionUpdateThisTick;
+        //Require updates for the first tick since we need to populate our initial state. 
+        return !collisionSwitchboxes.isEmpty() || ticksExisted == 1;
     }
 
     @Override
@@ -240,10 +232,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     * Updates the position of all collision boxes, and sets them in their appropriate maps based on their
-     * properties, and animation state (if applicable).
+     * Updates the state and position of all collision boxes.
      */
-    protected void updateCollisionBoxes() {
+    protected void updateCollisionBoxes(boolean requiresDeltaUpdates) {
         collisionBoxes.clear();
         if (definition.collisionGroups != null) {
             for (int i = 0; i < definition.collisionGroups.size(); ++i) {
@@ -253,14 +244,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     AnimationSwitchbox switchBox = collisionSwitchboxes.get(groupDef);
                     if (switchBox != null) {
                         if (switchBox.runSwitchbox(0, false)) {
-                            for (BoundingBox box : boxes) {
-                                box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
-                                box.updateToEntity(this, box.globalCenter);
+                            if (requiresDeltaUpdates) {
+                                for (BoundingBox box : boxes) {
+                                    box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
+                                    box.updateToEntity(this, box.globalCenter);
+                                }
                             }
                         } else {
                             continue;
                         }
-                    } else {
+                    } else if (requiresDeltaUpdates) {
                         for (BoundingBox box : boxes) {
                             box.updateToEntity(this, null);
                         }
@@ -308,16 +301,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     @Override
     public void doPostUpdateLogic() {
         super.doPostUpdateLogic();
-        if (requiresDeltaUpdates()) {
-            //Update collision boxes to new position.
-            world.beginProfiling("CollisionBoxUpdates", true);
-            updateCollisionBoxes();
-            updateEncompassingBox();
-            world.endProfiling();
-
-            //Reset collision override flag.
-            forceCollisionUpdateThisTick = false;
-        }
+        //Update collision boxes to new position.
+        world.beginProfiling("CollisionBoxUpdates", true);
+        updateCollisionBoxes(requiresDeltaUpdates());
+        /*TODO there's a potential to optimize this for placed parts to not run all the time, but can't seem to get it to work.
+        For the moment, we can just leave this running all the time and call it good until placed parts become a TPS issue.*/
+        updateEncompassingBox();
+        world.endProfiling();
     }
 
     /**

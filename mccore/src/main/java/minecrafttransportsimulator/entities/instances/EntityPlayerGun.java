@@ -310,7 +310,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    protected void updateCollisionBoxes() {
+    protected void updateCollisionBoxes(boolean requiresDeltaUpdates) {
         //Do nothing and don't add any collision.  This could block player actions.
     }
 

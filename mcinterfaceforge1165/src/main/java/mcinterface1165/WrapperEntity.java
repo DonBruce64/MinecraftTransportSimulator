@@ -210,6 +210,11 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public void applyMotion(Point3D motion) {
+        entity.setDeltaMovement(entity.getDeltaMovement().add(motion.x, motion.y, motion.z));
+    }
+
+    @Override
     public Point3D getVelocity() {
         //Need to manually put 0 here for Y since entities on ground have a constant -Y motion.
         mutableVelocity.set(entity.getDeltaMovement().x, entity.isOnGround() ? 0 : entity.getDeltaMovement().y, entity.getDeltaMovement().z);
@@ -374,6 +379,9 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.isFire) {
             newSource.setIsFire();
             entity.setRemainingFireTicks(5);
+        }
+        if (damage.knockback != null) {
+            applyMotion(damage.knockback);
         }
         if (damage.isWater) {
             entity.clearFire();

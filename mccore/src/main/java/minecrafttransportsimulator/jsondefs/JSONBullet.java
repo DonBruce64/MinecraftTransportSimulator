@@ -47,6 +47,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
         public float blastStrength;
 
+        @JSONDescription("If set, this bullet, when it hits an entity, will push it back this far.")
+        public float knockback;
+
         @JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
         public float armorPenetration;
 

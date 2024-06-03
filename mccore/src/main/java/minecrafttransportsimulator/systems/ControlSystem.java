@@ -101,7 +101,16 @@ public final class ControlSystem {
         //or try to interact with entities if we are not.
         EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
         if (playerGun != null && playerGun.activeGun != null) {
-            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
+            if (clickingLeft) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_ON));
+            } else {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_OFF));
+            }
+            if (clickingRight) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_ON));
+            } else {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_OFF));
+            }
         }
         if (clickingLeft || clickingRight) {
             Point3D startPosition = player.getEyePosition();
@@ -203,7 +212,11 @@ public final class ControlSystem {
             if (part instanceof PartGun) {
                 PartGun gun = (PartGun) part;
                 if (clientPlayer.equals(gun.getGunController())) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
+                    if (gunTrigger.isPressed()) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, PacketPartGun.Request.TRIGGER_ON));
+                    } else {
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, PacketPartGun.Request.TRIGGER_OFF));
+                    }
                 }
             } else if (part instanceof PartSeat) {
                 if (gunSwitchPressedThisScan) {
