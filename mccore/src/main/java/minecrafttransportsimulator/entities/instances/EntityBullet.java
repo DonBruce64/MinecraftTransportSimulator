@@ -256,30 +256,32 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     }
 
                     //Clamp angular delta to match turn rate and apply.
-                    if (targetVector.y > definition.bullet.turnRate) {
-                        targetVector.y = definition.bullet.turnRate;
-                    } else if (targetVector.y < -definition.bullet.turnRate) {
-                        targetVector.y = -definition.bullet.turnRate;
-                    }
-                    orientation.rotateY(targetVector.y);
+                    if (ticksExisted > definition.bullet.guidanceDelay) {
+                        if (targetVector.y > definition.bullet.turnRate) {
+                            targetVector.y = definition.bullet.turnRate;
+                        } else if (targetVector.y < -definition.bullet.turnRate) {
+                            targetVector.y = -definition.bullet.turnRate;
+                        }
+                        orientation.rotateY(targetVector.y);
 
-                    if (targetVector.x > definition.bullet.turnRate) {
-                        targetVector.x = definition.bullet.turnRate;
-                    } else if (targetVector.x < -definition.bullet.turnRate) {
-                        targetVector.x = -definition.bullet.turnRate;
-                    }
-                    orientation.rotateX(targetVector.x);
+                        if (targetVector.x > definition.bullet.turnRate) {
+                            targetVector.x = definition.bullet.turnRate;
+                        } else if (targetVector.x < -definition.bullet.turnRate) {
+                            targetVector.x = -definition.bullet.turnRate;
+                        }
+                        orientation.rotateX(targetVector.x);
 
-                    //Set motion to new orientation.
-                    targetVector.set(0, 0, motion.length()).rotate(orientation);
-                    if(ticksExisted > definition.bullet.burnTime){
-                        motion.y -= definition.bullet.gravitationalVelocity;
-                        motion.set(targetVector.x, motion.y, targetVector.z);
-                    } else {
-                        motion.set(targetVector);
+                        //Set motion to new orientation.
+                        targetVector.set(0, 0, motion.length()).rotate(orientation);
+                        if (ticksExisted > definition.bullet.burnTime) {
+                            motion.y -= definition.bullet.gravitationalVelocity;
+                            motion.set(targetVector.x, motion.y, targetVector.z);
+                        } else {
+                            motion.set(targetVector);
+                        }
+                        //Update target distance.
+                        targetDistance = targetPosition.distanceTo(position);
                     }
-                    //Update target distance.
-                    targetDistance = targetPosition.distanceTo(position);
                 }
             }
 
