@@ -19,6 +19,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -28,6 +29,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -374,6 +376,9 @@ public class WrapperEntity implements IWrapperEntity {
         if (damage.isFire) {
             newSource.setIsFire();
             entity.setRemainingFireTicks(5);
+        }
+        if (damage.knockback != null) {
+            entity.move(MoverType.SELF, new Vector3d(damage.knockback.x, damage.knockback.y, damage.knockback.z));
         }
         if (damage.isWater) {
             entity.clearFire();

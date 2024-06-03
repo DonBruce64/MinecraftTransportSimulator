@@ -48,7 +48,7 @@ public class PacketEntityBulletHitExternalEntity extends APacketBase {
         PartGun gun = world.getBulletGun(gunID);
         IWrapperEntity entity = world.getExternalEntity(entityID);
         if (entity != null) {
-            EntityBullet.performExternalEntityHitLogic(entity, new Damage(gun, null, amount));
+            EntityBullet.performExternalEntityHitLogic(entity, new Damage(gun, entity.getBounds(), amount));
         }
     }
 }
