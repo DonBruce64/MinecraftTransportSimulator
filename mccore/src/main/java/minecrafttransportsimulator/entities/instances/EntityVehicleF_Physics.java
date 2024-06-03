@@ -425,6 +425,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Set blimp-specific states before calculating forces.
             if (definition.motorized.isBlimp) {
+                thrustTorque.x = 0;
+                thrustTorque.z = 0;
                 //If we have the brake pressed at a slow speed, stop the blimp.
                 //This is needed to prevent runaway blimps.
                 if (Math.hypot(motion.x, motion.z) < 0.15 && (brake > 0 || parkingBrakeOn)) {
