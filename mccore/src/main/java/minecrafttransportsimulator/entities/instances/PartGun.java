@@ -411,8 +411,17 @@ public class PartGun extends APart {
                                         } else {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                         }
-
                                         world.addEntity(newBullet);
+                                        
+                                        //Now do knockback, if it exists.
+                                        if (entityOn instanceof EntityPlayerGun && definition.gun.knockback != 0) {
+                                            if(!world.isClient()) {
+                                                performGunKnockback();
+                                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                            }else if(InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
+                                                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                            }
+                                        }
                                     }
                                 }
 
@@ -1000,6 +1009,13 @@ public class PartGun extends APart {
             }
         }
         return null;
+    }
+
+    /**
+     * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
+     */
+    public void performGunKnockback() {
+        ((EntityPlayerGun) entityOn).player.movePosition(new Point3D(0, 0, 1).rotate(orientation).scale(-definition.gun.knockback));
     }
 
     /**

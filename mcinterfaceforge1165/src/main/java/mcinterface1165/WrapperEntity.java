@@ -212,6 +212,11 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public void movePosition(Point3D offset) {
+        entity.move(MoverType.SELF, new Vector3d(offset.x, offset.y, offset.z));
+    }
+
+    @Override
     public Point3D getVelocity() {
         //Need to manually put 0 here for Y since entities on ground have a constant -Y motion.
         mutableVelocity.set(entity.getDeltaMovement().x, entity.isOnGround() ? 0 : entity.getDeltaMovement().y, entity.getDeltaMovement().z);

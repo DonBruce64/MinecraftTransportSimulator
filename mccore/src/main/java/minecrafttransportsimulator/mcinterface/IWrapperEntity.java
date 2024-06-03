@@ -119,6 +119,13 @@ public interface IWrapperEntity {
      * but not if they are riding an entity.
      */
     void setPosition(Point3D position, boolean onGround);
+    
+    /**
+     * Moves the entity's position by the passed-in amount.
+     * This is different than a setting operation as it takes
+     * into account collision and does movement interpolation.
+     */
+    void movePosition(Point3D offset);
 
     /**
      * Gets the entity's velocity as a vector.
