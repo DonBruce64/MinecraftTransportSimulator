@@ -114,8 +114,8 @@ public class VehicleGroundDeviceBox {
                     do {
                         groundPosition = currentPart.placementDefinition.groundDevicePosition;
                         if (groundPosition == null) {
-                            if (part.entityOn instanceof APart) {
-                                currentPart = (APart) part.entityOn;
+                            if (currentPart.entityOn instanceof APart) {
+                                currentPart = (APart) currentPart.entityOn;
                             } else {
                                 currentPart = null;
                             }
