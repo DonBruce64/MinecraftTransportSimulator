@@ -87,6 +87,7 @@ public class PartGun extends APart {
 
     //These variables are used during firing and will be reset on loading.
     public GunState state;
+    public boolean bulletsPresentOnServer;
     public boolean firedThisRequest;
     public boolean firedThisCheck;
     public boolean playerHoldingTrigger;
@@ -208,6 +209,8 @@ public class PartGun extends APart {
             //This prevents pack changes from locking guns.
             if (loadedBullet == null) {
                 bulletsLeft = 0;
+            } else if (world.isClient()) {
+                bulletsPresentOnServer = true;
             }
 
             String reloadingBulletPack = data.getString("reloadingBulletPack");
@@ -379,8 +382,11 @@ public class PartGun extends APart {
                     }
 
                     //If we have bullets, try and fire them.
+                    //The only exception is if the server is the controller, in that case fire until we are told to stop.
+                    //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
                     boolean cycledGun = false;
-                    if (bulletsLeft > 0) {
+                    boolean serverIsPrimaryController = loadedBullet != null && (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
+                    if (bulletsLeft > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
                         state = state.promote(GunState.FIRING_CURRENTLY);
 
                         //If we are in our cam, fire the bullets.
@@ -388,9 +394,7 @@ public class PartGun extends APart {
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                     ++bulletsFired;
-
-                                    //If this bullet isn't long-range, or isn't fired from a NPC, don't spawn on the server.  That's just extra tracking.
-                                    if (world.isClient() || (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer))) {
+                                    if (world.isClient() || serverIsPrimaryController) {
                                         //Get the bullet's state.
                                         setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 
@@ -428,12 +432,13 @@ public class PartGun extends APart {
 
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group.
-                                if (--bulletsLeft == 0) {
+                                if (bulletsLeft > 0 && --bulletsLeft == 0) {
                                     //Only set the bullet to null on the server. This lets the server choose a different bullet to load.
                                     //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
                                     //That would cause us to finish the reload with a null bullet, and crash later.
                                     if (!world.isClient()) {
                                         loadedBullet = null;
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_OUT));
                                     }
                                     break;
                                 }
@@ -546,6 +551,9 @@ public class PartGun extends APart {
             lastLoadedBullet = loadedBullet;
             bulletsLeft += reloadingBullet.definition.bullet.quantity;
             reloadingBullet = null;
+            if (!world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
+            }
         }
 
         //Increment or decrement windup.
