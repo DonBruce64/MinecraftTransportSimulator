@@ -26,6 +26,8 @@ import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 
 public class PartEffector extends APart {
 
+    private final List<PartInteractable> linkedPullableCrates = new ArrayList<>();
+    private final List<PartInteractable> linkedPushableCrates = new ArrayList<>();
     private final List<IWrapperItemStack> drops = new ArrayList<>();
     private final Map<IWrapperEntity, IWrapperItemStack> entityItems = new HashMap<>();
 
@@ -61,13 +63,12 @@ public class PartEffector extends APart {
                     switch (definition.effector.type) {
                         case FERTILIZER: {
                             //Search all inventories for fertilizer and try to use it.
-                            for (APart part : linkedParts) {
-                                if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
-                                    EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-                                    for (int i = 0; i < inventory.getSize(); ++i) {
-                                        IWrapperItemStack stack = inventory.getStack(i);
+                            for (PartInteractable crate : linkedPullableCrates) {
+                                if (crate.isActive) {
+                                    for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                        IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.fertilizeBlock(box.globalCenter, stack)) {
-                                            inventory.removeFromSlot(i, 1);
+                                            crate.inventory.removeFromSlot(i, 1);
                                             activatedThisTick = true;
                                             break;
                                         }
@@ -87,13 +88,12 @@ public class PartEffector extends APart {
                         }
                         case PLANTER: {
                             //Search all inventories for seeds and try to plant them.
-                            for (APart part : linkedParts) {
-                                if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
-                                    EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-                                    for (int i = 0; i < inventory.getSize(); ++i) {
-                                        IWrapperItemStack stack = inventory.getStack(i);
+                            for (PartInteractable crate : linkedPullableCrates) {
+                                if (crate.isActive) {
+                                    for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                        IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.plantBlock(box.globalCenter, stack)) {
-                                            inventory.removeFromSlot(i, 1);
+                                            crate.inventory.removeFromSlot(i, 1);
                                             activatedThisTick = true;
                                             break;
                                         }
@@ -161,13 +161,12 @@ public class PartEffector extends APart {
                             if (placerDelay == definition.effector.placerDelay) {
                                 if (world.isAir(box.globalCenter)) {
                                     //Search all inventories for blocks  and try to place them.
-                                    for (APart part : linkedParts) {
-                                        if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE && part.isActive && part.definition.interactable.feedsVehicles) {
-                                            EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-                                            for (int i = 0; i < inventory.getSize(); ++i) {
-                                                IWrapperItemStack stack = inventory.getStack(i);
+                                    for (PartInteractable crate : linkedPullableCrates) {
+                                        if (crate.isActive) {
+                                            for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                                IWrapperItemStack stack = crate.inventory.getStack(i);
                                                 if (world.placeBlock(box.globalCenter, stack)) {
-                                                    inventory.removeFromSlot(i, 1);
+                                                    crate.inventory.removeFromSlot(i, 1);
                                                     activatedThisTick = true;
                                                     break;
                                                 }
@@ -195,15 +194,14 @@ public class PartEffector extends APart {
                                 world.populateItemStackEntities(entityItems, box);
                                 if (entityItems.isEmpty()) {
                                     //Place the first item found.
-                                    for (APart part : linkedParts) {
-                                        if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE && part.isActive && part.definition.interactable.feedsVehicles) {
-                                            EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-                                            for (int i = 0; i < inventory.getSize(); ++i) {
-                                                IWrapperItemStack stack = inventory.getStack(i);
+                                    for (PartInteractable crate : linkedPullableCrates) {
+                                        if (crate.isActive) {
+                                            for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                                IWrapperItemStack stack = crate.inventory.getStack(i);
                                                 if (!stack.isEmpty()) {
                                                     IWrapperItemStack stackToDrop = stack.copy();
                                                     stackToDrop.add(-stackToDrop.getSize() + 1);
-                                                    inventory.removeFromSlot(i, 1);
+                                                    crate.inventory.removeFromSlot(i, 1);
                                                     world.spawnItemStack(stackToDrop, box.globalCenter);
                                                     activatedThisTick = true;
                                                     break;
@@ -235,12 +233,12 @@ public class PartEffector extends APart {
                         Iterator<IWrapperItemStack> iterator = drops.iterator();
                         while (iterator.hasNext()) {
                             IWrapperItemStack dropStack = iterator.next();
-                            for (APart part : linkedParts) {
-                                if (part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+                            for (PartInteractable crate : linkedPushableCrates) {
+                                if (crate.isActive) {
                                     //For collectors, we can only add the whole stack, not a partial stack.
                                     //Therefore, we need to simulate the addition first to make sure things fit.
                                     if (definition.effector.type == EffectorComponentType.COLLECTOR) {
-                                        if (((PartInteractable) part).inventory.addStack(dropStack, dropStack.getSize(), false)) {
+                                        if (crate.inventory.addStack(dropStack, dropStack.getSize(), false)) {
                                             activatedThisTick = true;
                                             for (Entry<IWrapperEntity, IWrapperItemStack> entry : entityItems.entrySet()) {
                                                 if (entry.getValue() == dropStack) {
@@ -250,7 +248,7 @@ public class PartEffector extends APart {
                                         }
                                     }
                                     //Do actual addition.
-                                    if (((PartInteractable) part).inventory.addStack(dropStack)) {
+                                    if (crate.inventory.addStack(dropStack)) {
                                         iterator.remove();
                                         break;
                                     }
@@ -271,6 +269,31 @@ public class PartEffector extends APart {
             }
             if (activatedThisTick) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this, false));
+            }
+        }
+    }
+
+    @Override
+    public void updatePartList() {
+        super.updatePartList();
+
+        //Update linked effector linkables list.
+        linkedPullableCrates.clear();
+        linkedParts.forEach(part -> {
+            if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE) {
+                linkedPushableCrates.add((PartInteractable) part);
+                if(part.definition.interactable.feedsVehicles) {
+                    linkedPullableCrates.add((PartInteractable) part);
+                }
+            }
+        });
+        if (entityOn instanceof PartInteractable) {
+            PartInteractable interactable = (PartInteractable) entityOn;
+            if (interactable.definition.interactable.interactionType == InteractableComponentType.CRATE) {
+                linkedPushableCrates.add(interactable);
+                if (interactable.definition.interactable.feedsVehicles) {
+                    linkedPullableCrates.add(interactable);
+                }
             }
         }
     }
