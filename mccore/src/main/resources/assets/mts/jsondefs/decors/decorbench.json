@@ -1,10 +1,107 @@
 {
-    "general": {
-        "name": "Decor Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["decor", "pole"]
+  "decor": {
+    "type": "generic",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "crafting": {
+      "itemTypes": [
+        "decor",
+        "pole"
+      ]
     }
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Decor Bench",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mts:bench/itembench_start",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/itembench_loop",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "forwardsDelay": 15,
+            "reverseDelay": 15,
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "looping": true,
+        "minDistance": 0.0,
+        "minDistanceVolume": 0.5,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/decorbench_craft0",
+        "soundVariations": [
+          "mts:bench/decorbench_craft0",
+          "mts:bench/decorbench_craft1",
+          "mts:bench/decorbench_craft2",
+          "mts:bench/decorbench_craft3",
+          "mts:bench/decorbench_craft4"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/itembench_stop",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Decor Bench",
+    "materialLists": [
+      []
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
+  }
 }

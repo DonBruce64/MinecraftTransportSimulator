@@ -1,11 +1,110 @@
 {
-    "general": {
-        "name": "Seat & Cargo Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["part"],
-        "partTypes": ["seat", "crate", "interactable_", "effector_"]
+  "decor": {
+    "type": "generic",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "crafting": {
+      "itemTypes": [
+        "part"
+      ],
+      "partTypes": [
+        "seat",
+        "crate",
+        "interactable_",
+        "effector_"
+      ]
     }
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Seat & Cargo Bench",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mts:bench/seatbench_start",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/seatbench_loop",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "forwardsDelay": 15,
+            "reverseDelay": 15,
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "looping": true,
+        "minDistance": 0.0,
+        "minDistanceVolume": 0.5,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/seatbench_craft0",
+        "soundVariations": [
+          "mts:bench/seatbench_craft0",
+          "mts:bench/seatbench_craft1",
+          "mts:bench/seatbench_craft2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/seatbench_stop",
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 15.0,
+        "maxDistanceVolume": 0.0
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Seat & Cargo Bench",
+    "materialLists": [
+      []
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
+  }
 }
