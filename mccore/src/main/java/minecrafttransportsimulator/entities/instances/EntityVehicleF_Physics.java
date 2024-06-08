@@ -125,6 +125,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public float currentWaterBallastFactor;
     @ModifiedValue
     public float currentAxleRatio;
+    @ModifiedValue
+    public float currentGravityFactor;
 
     //Coefficients.
     private double wingLiftCoeff;
@@ -267,6 +269,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentSteeringForceIgnoresSpeed = definition.motorized.steeringForceIgnoresSpeed ? 1 : 0;
         currentSteeringForceFactor = definition.motorized.steeringForceFactor;
         currentBrakingFactor = definition.motorized.brakingFactor;
+        currentGravityFactor = definition.motorized.gravityFactor;
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
         currentAxleRatio = definition.motorized.axleRatio;
@@ -318,13 +321,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
                     case "steeringForceIgnoresSpeed":
-                    	currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
+                        currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
                         break;
                     case "steeringForceFactor":
                         currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
                         break;
                     case "brakingFactor":
                         currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor);
+                        break;
+                    case "gravityFactor":
+                        currentGravityFactor = adjustVariable(modifier, currentGravityFactor);
                         break;
                     case "overSteer":
                         currentOverSteer = adjustVariable(modifier, currentOverSteer);
@@ -550,12 +556,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Finally, get gravity.
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
+            /*if (definition.motorized.isAircraft) {
+                gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
+            } else {
+                gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) / speedFactor : 0;
+            }*/
             if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
                 elevatorTorque = -orientation.angles.x * 2;
                 aileronTorque = -orientation.angles.z * 2;
             }
-            if (!definition.motorized.isAircraft) {
+            if (definition.motorized.gravityFactor != 0) {
+                gravitationalForce *= currentGravityFactor;
+            } else {
                 gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
 
