@@ -39,7 +39,7 @@
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "maxDistance": 15.0,
+        "maxDistance": 10.0,
         "maxDistanceVolume": 0.0
       },
       {
@@ -59,7 +59,7 @@
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "maxDistance": 15.0,
+        "maxDistance": 10.0,
         "maxDistanceVolume": 0.0
       },
       {
@@ -79,7 +79,7 @@
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "maxDistance": 15.0,
+        "maxDistance": 10.0,
         "maxDistanceVolume": 0.0
       }
     ],

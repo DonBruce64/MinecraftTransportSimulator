@@ -58,7 +58,7 @@
         "looping": true,
         "minDistance": 0.0,
         "minDistanceVolume": 0.5,
-        "maxDistance": 15.0,
+        "maxDistance": 20.0,
         "maxDistanceVolume": 0.0
       },
       {
@@ -78,7 +78,7 @@
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "maxDistance": 15.0,
+        "maxDistance": 20.0,
         "maxDistanceVolume": 0.0
       },
       {
