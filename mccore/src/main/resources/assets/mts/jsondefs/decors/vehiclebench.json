@@ -1,10 +1,97 @@
 {
-    "general": {
-        "name": "Vehicle Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["vehicle"]
+  "decor": {
+    "type": "generic",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "crafting": {
+      "itemTypes": [
+        "vehicle"
+      ]
     }
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Vehicle Bench",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mts:bench/vehiclebench_open0",
+        "soundVariations": [
+          "mts:bench/vehiclebench_open0",
+          "mts:bench/vehiclebench_open1",
+          "mts:bench/vehiclebench_open2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 6.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/vehiclebench_craft0",
+        "soundVariations": [
+          "mts:bench/vehiclebench_craft0",
+          "mts:bench/vehiclebench_craft1",
+          "mts:bench/vehiclebench_craft2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/vehiclebench_close0",
+        "soundVariations": [
+          "mts:bench/vehiclebench_close0",
+          "mts:bench/vehiclebench_close1",
+          "mts:bench/vehiclebench_close2",
+          "mts:bench/vehiclebench_close3"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 6.0,
+        "maxDistanceVolume": 0.0
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Vehicle Bench",
+    "materialLists": [
+      []
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
+  }
 }
