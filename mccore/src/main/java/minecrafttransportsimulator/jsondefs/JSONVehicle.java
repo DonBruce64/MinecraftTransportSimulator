@@ -123,6 +123,11 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor for how effective the brakes are on this vehicle.  1.0 is default, with higher values making for more effective brakes.  Note that this doesn't affect braking in bad weather, with flat tires, or missing wheels, as should be obvious.")
         public float brakingFactor;
 
+        @JSONRequired
+        @ModifiableValue
+        @JSONDescription("The factor for how much gravity is multiplied by on this vehicle.  1.0 is default.")
+        public float gravityFactor;
+
         @JSONDescription("The angle which this vehicle will try to tilt to at max turning.  Note that the vehicle may not reach this angle if it isn't going fast enough.  Designed for bikes and boats.")
         public float maxTiltAngle;
 
