@@ -111,6 +111,7 @@ public class PartEngine extends APart {
     private double prevDriveshaftRotation;
     private double currentJetPowerFactor;
     private double currentBypassRatio;
+    private double currentThrustVectorMultiplier;
     private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
     private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
     private final List<PartPropeller> linkedPropellers = new ArrayList<>();
@@ -784,7 +785,7 @@ public class PartEngine extends APart {
         currentWinddownRate = definition.engine.engineWinddownRate;
         currentJetPowerFactor = definition.engine.jetPowerFactor;
         currentBypassRatio = definition.engine.bypassRatio;
-
+        currentThrustVectorMultiplier = definition.engine.thrustVectorMultiplier;
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -852,6 +853,9 @@ public class PartEngine extends APart {
                         break;
                     case "bypassRatio":
                         currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
+                        break;
+                        case "thrustVectorMultiplier":
+                    currentThrustVectorMultiplier = adjustVariable(modifier,(float) currentThrustVectorMultiplier);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -963,6 +967,8 @@ public class PartEngine extends APart {
                 return hours;
             case ("engine_bypass_ratio"):
                 return currentBypassRatio;
+            case ("engine_thrustVectorMultiplier"):
+                return currentThrustVectorMultiplier;
             case ("engine_jet_power_factor"):
                 return currentJetPowerFactor;
         }
@@ -1305,7 +1311,7 @@ public class PartEngine extends APart {
             engineForce.set(engineAxisVector).scale(thrust);
             force.add(engineForce);
             engineForce.reOrigin(vehicleOn.orientation);
-            torque.add(localOffset.crossProduct(engineForce));
+            torque.add(localOffset.crossProduct(engineForce).scale(currentThrustVectorMultiplier));
         }
         return engineForceValue;
     }
