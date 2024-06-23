@@ -214,6 +214,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Used only with jetPowerFactor for jet thrust calculations.  Higher bypass ratio engines will have better power when turning fast, and will allow for lower fuel consumptions, but will also have a lower top-speed.")
         public float bypassRatio;
 
+        @JSONDescription("Changes the amount of rotational (AKA Thrust Vectoring) force jet engines apply to the vehicle theyre placed on. Useful for aircrafts that have large engines that are off center")
+        public float thrustVectorMultiplier;
+
         @JSONDescription("This is a constant ratio that will be used for any propellers attached to this engine, and will override the value in gearRatios.  Useful when you want to gear-down a propeller on a vehicle that's normally land-bound.")
         public float propellerRatio;
 
