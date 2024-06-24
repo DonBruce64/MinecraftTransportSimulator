@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "cdc"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:glass_pane"
+        },
+        "c": {
+            "item": "minecraft:comparator"
+        },
+        "d": {
+            "item": "minecraft:quartz"
+        }
+    },
+    "result": {
+        "item": "mts:mts.itembench"
+    }
+}

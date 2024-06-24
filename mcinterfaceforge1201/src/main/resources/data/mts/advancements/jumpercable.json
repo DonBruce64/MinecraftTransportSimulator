@@ -1,0 +1,16 @@
+{
+    "parent": "mts:enginebench",
+    "display": {
+        "icon": {"item": "mts:mts.jumpercable"},
+        "title": {"translate": "advancements.mts.jumpercable.title"},
+        "description": {"translate": "advancements.mts.jumpercable.description"}
+    },
+    "criteria": {
+        "has_jumpercable": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.jumpercable"}]
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {"item": "mts:mts.wheelbench"},
+        "title": {"translate": "advancements.mts.wheelbench.title"},
+        "description": {"translate": "advancements.mts.wheelbench.description"}
+    },
+    "criteria": {
+        "has_wheelbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.wheelbench"}]
+            }
+        }
+    }
+}

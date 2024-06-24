@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "mcinterface1201.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "common.BiomeInvokerMixin",
+    "common.ConcretePowderBlockMixin",
+    "common.EntityMixin",
+    "common.MinecraftMixin"
+  ],
+  "client": [
+    "client.BipedModelMixin",
+    "client.ClientPlayNetHandlerMixin",
+    "client.ListenerMixin",
+    "client.CameraInvokerMixin",
+    "client.SimpleReloadableResourceManagerMixin",
+    "client.VillagerModelMixin",
+    "client.WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

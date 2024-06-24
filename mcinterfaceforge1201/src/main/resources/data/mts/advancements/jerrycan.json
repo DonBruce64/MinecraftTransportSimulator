@@ -1,0 +1,16 @@
+{
+    "parent": "mts:fuelpump",
+    "display": {
+        "icon": {"item": "mts:mts.jerrycan"},
+        "title": {"translate": "advancements.mts.jerrycan.title"},
+        "description": {"translate": "advancements.mts.jerrycan.description"}
+    },
+    "criteria": {
+        "has_jerrycan": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.jerrycan"}]
+            }
+        }
+    }
+}
