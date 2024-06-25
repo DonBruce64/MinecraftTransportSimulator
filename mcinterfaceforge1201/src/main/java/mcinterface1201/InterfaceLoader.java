@@ -91,6 +91,8 @@ public class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(BuilderCreativeTab::onFillCreativeTab);
+
         InterfaceManager.coreInterface.logError("Welcome to MTS VERSION: " + MODVER);
 
         //Parse packs
@@ -118,6 +120,13 @@ public class InterfaceLoader {
                 if (item.autoGenerate()) {
                     Item.Properties itemProperties = new Item.Properties();
 
+                    itemProperties.stacksTo(item.getStackSize());
+                    if (item instanceof ItemItem && ((ItemItem) item).definition.food != null) {
+                        IItemFood food = (IItemFood) item;
+                        itemProperties.food(new FoodProperties.Builder().nutrition(food.getHungerAmount()).saturationMod(food.getSaturationAmount()).build());
+                    }
+                    BuilderItem bItem = new BuilderItem(itemProperties, item);
+
                     //Check if the creative tab is set/created.
                     //The only except is for "invisible" parts of the core mod, these are internal.
                     boolean hideOnCreativeTab = item.definition.general.hideOnCreativeTab || (item instanceof AItemSubTyped && ((AItemSubTyped<?>) item).subDefinition.hideOnCreativeTab);
@@ -128,14 +137,8 @@ public class InterfaceLoader {
                             AItemPack<?> tabItem = packConfiguration.packItem != null ? PackParser.getItem(packConfiguration.packID, packConfiguration.packItem) : null;
                             BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, tabItem));
                         }
-                        itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
+                        BuilderCreativeTab.createdTabs.get(tabID).addItem(item, bItem);
                     }
-                    itemProperties.stacksTo(item.getStackSize());
-                    if (item instanceof ItemItem && ((ItemItem) item).definition.food != null) {
-                        IItemFood food = (IItemFood) item;
-                        itemProperties.food(new FoodProperties.Builder().nutrition(food.getHungerAmount()).saturationMod(food.getSaturationAmount()).build());
-                    }
-                    new BuilderItem(itemProperties, item);
                 }
             }
         }

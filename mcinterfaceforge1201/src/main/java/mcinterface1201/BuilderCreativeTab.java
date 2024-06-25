@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import net.minecraft.network.chat.Component;
@@ -13,6 +14,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * Builder for a MC creative tabs.  This class interfaces with the MC creative tab system,
@@ -33,7 +37,11 @@ public class BuilderCreativeTab extends CreativeModeTab {
     private final List<Item> items = new ArrayList<>();
 
     BuilderCreativeTab(String name, AItemPack<?> tabItem) {
-        super(name);
+        super(
+                CreativeModeTab.builder()
+                        .title(Component.literal(name))
+                        .icon(() -> tabItem != null ? new ItemStack(BuilderItem.itemMap.get(tabItem)) : null)
+        );
         this.label = name;
         //Need to delay turning this into a MC item since we may not yet have created a builder.
         this.tabItem = tabItem;
@@ -54,12 +62,6 @@ public class BuilderCreativeTab extends CreativeModeTab {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public ItemStack makeIcon() {
-        return tabItem != null ? new ItemStack(BuilderItem.itemMap.get(tabItem)) : null;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
     public ItemStack getIconItem() {
         if (tabItem != null) {
             return super.getIconItem();
@@ -68,22 +70,11 @@ public class BuilderCreativeTab extends CreativeModeTab {
         }
     }
 
-    @Override
-    public void buildContents(ItemDisplayParameters parameters) {
-        super.buildContents(parameters);
-        // TODO 1.20.1
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void fillItemList(NonNullList<ItemStack> givenList) {
-        //This is needed to re-sort the items here to get them in the correct order.
-        //MC will re-order these by ID if we let it.  To prevent this, we swap MC's
-        //internal list with our own, which ensures that the order is the order
-        //we did registration in.
-        givenList.clear();
-        for (Item item : items) {
-            item.fillItemCategory(this, givenList);
+    public static void onFillCreativeTab(BuildCreativeModeTabContentsEvent event) {
+        if(event.getTab() instanceof BuilderCreativeTab tab) {
+            for(Item item : tab.items) {
+                event.accept(() -> item);
+            }
         }
     }
 }
