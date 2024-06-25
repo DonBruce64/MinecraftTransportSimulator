@@ -1,12 +1,7 @@
 package mcinterface1201;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
@@ -21,6 +16,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.ITag;
+import net.minecraftforge.registries.tags.ITagManager;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class InterfaceCore implements IInterfaceCore {
     protected static final Map<String, List<BuilderItem>> taggedItems = new HashMap<>();
@@ -104,17 +103,18 @@ class InterfaceCore implements IInterfaceCore {
         //Convert to lowercase in case we are camelCase from oreDict systems.
         String lowerCaseOre = oreName.toLowerCase(Locale.ROOT);
         List<IWrapperItemStack> stacks = new ArrayList<>();
-        TagKey<Item> tag = ItemTags.getAllTags().getTag(new ResourceLocation("minecraft", lowerCaseOre));
-        if (tag == null) {
-            tag = ItemTags.getAllTags().getTag(new ResourceLocation("forge", lowerCaseOre));
+        ITagManager<Item> tags = ForgeRegistries.ITEMS.tags();
+        TagKey<Item> tagKey = tags.createTagKey(new ResourceLocation("minecraft", lowerCaseOre));
+        if (!tags.isKnownTagName(tagKey)) {
+            tagKey = tags.createTagKey(new ResourceLocation("forge", lowerCaseOre));
         }
-        if (tag == null) {
+        if (!tags.isKnownTagName(tagKey)) {
             List<BuilderItem> items = taggedItems.get(lowerCaseOre);
             if (items != null) {
                 items.forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
             }
         } else {
-            tag.getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
+            tags.getTag(tagKey).forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
         }
 
         return stacks;
