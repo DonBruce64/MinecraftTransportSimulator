@@ -29,6 +29,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -65,6 +67,14 @@ public class BuilderBlock extends Block implements EntityBlock {
     BuilderBlock(ABlockBase block) {
         super(BlockBehaviour.Properties.copy(Blocks.STONE).strength(block.hardness, block.blastResistance).noOcclusion());
         this.block = block;
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+        if(!(block instanceof ABlockBaseTileEntity))
+            return null;
+        return (level1, pos, state1, be) -> { ((BuilderTileEntity) be).tick(level1, pos, state1); };
     }
 
     @Nullable
