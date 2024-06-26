@@ -1,0 +1,16 @@
+{
+    "parent": "mts:vehiclebench",
+    "display": {
+        "icon": {"item": "mts:mts.paintgun"},
+        "title": {"translate": "advancements.mts.paintgun.title"},
+        "description": {"translate": "advancements.mts.paintgun.description"}
+    },
+    "criteria": {
+        "has_paintgun": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.paintgun"}]
+            }
+        }
+    }
+}
