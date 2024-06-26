@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -38,8 +39,6 @@ public class InterfaceInput implements IInterfaceInput {
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
-    private static boolean runningClassicMode = false;
-    private static boolean joystickLoadingAttempted = false;
     private static boolean joystickEnabled = false;
     private static boolean joystickBlocked = false;
     private static boolean joystickInhibited = false;
@@ -52,9 +51,6 @@ public class InterfaceInput implements IInterfaceInput {
     private static final Map<String, Integer> joystickButtonCounts = new LinkedHashMap<>();
     private static final Map<String, Integer> joystickComponentCounts = new LinkedHashMap<>();
 
-    //Classic mode joystick variables.
-    private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<>();
-
     @Override
     public int getKeysetID() {
         return 16;
@@ -63,9 +59,7 @@ public class InterfaceInput implements IInterfaceInput {
     @Override
     public void initConfigKey() {
         configKey = new KeyMapping(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
-        ClientRegistry.registerKeyBinding(configKey);
         importKey = new KeyMapping(LanguageSystem.GUI_IMPORT.getCurrentValue(), GLFW.GLFW_KEY_UNKNOWN, InterfaceLoader.MODNAME);
-        ClientRegistry.registerKeyBinding(importKey);
     }
 
     @Override
@@ -79,44 +73,27 @@ public class InterfaceInput implements IInterfaceInput {
             Thread joystickThread = new Thread(() -> {
                 try {
                     joystickNameCounters.clear();
-                    if (runningClassicMode) {
-                        classicJoystickMap.clear();
-                        for (Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-                            joystickEnabled = true;
-                            if (joystick.getType() != null && !joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0) {
-                                String joystickName = joystick.getName();
+                    joystickMap.clear();
+                    joystickAxisCounts.clear();
+                    joystickHatCounts.clear();
+                    joystickButtonCounts.clear();
+                    joystickComponentCounts.clear();
+                    for (int i = GLFW.GLFW_JOYSTICK_1; i < GLFW.GLFW_JOYSTICK_16; ++i) {
+                        joystickEnabled = true;
+                        if (GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
+                            String joystickName = GLFW.glfwGetJoystickName(i);
 
-                                //Add an index on this joystick to be sure we don't override multi-component units.
-                                if (!joystickNameCounters.containsKey(joystickName)) {
-                                    joystickNameCounters.put(joystickName, 0);
-                                }
-                                classicJoystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-                                joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+                            //Add an index on this joystick to be sure we don't override multi-component units.
+                            if (!joystickNameCounters.containsKey(joystickName)) {
+                                joystickNameCounters.put(joystickName, 0);
                             }
-                        }
-                    } else {
-                        joystickMap.clear();
-                        joystickAxisCounts.clear();
-                        joystickHatCounts.clear();
-                        joystickButtonCounts.clear();
-                        joystickComponentCounts.clear();
-                        for (int i = GLFW.GLFW_JOYSTICK_1; i < GLFW.GLFW_JOYSTICK_16; ++i) {
-                            joystickEnabled = true;
-                            if (GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
-                                String joystickName = GLFW.glfwGetJoystickName(i);
-
-                                //Add an index on this joystick to be sure we don't override multi-component units.
-                                if (!joystickNameCounters.containsKey(joystickName)) {
-                                    joystickNameCounters.put(joystickName, 0);
-                                }
-                                String joystickID = joystickName + "_" + joystickNameCounters.get(joystickName);
-                                joystickMap.put(joystickID, i);
-                                joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
-                                joystickAxisCounts.put(joystickID, GLFW.glfwGetJoystickAxes(i).limit());
-                                joystickHatCounts.put(joystickID, GLFW.glfwGetJoystickHats(i).limit());
-                                joystickButtonCounts.put(joystickID, GLFW.glfwGetJoystickButtons(i).limit());
-                                joystickComponentCounts.put(joystickID, joystickAxisCounts.get(joystickID) + joystickHatCounts.get(joystickID) + joystickButtonCounts.get(joystickID));
-                            }
+                            String joystickID = joystickName + "_" + joystickNameCounters.get(joystickName);
+                            joystickMap.put(joystickID, i);
+                            joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+                            joystickAxisCounts.put(joystickID, GLFW.glfwGetJoystickAxes(i).limit());
+                            joystickHatCounts.put(joystickID, GLFW.glfwGetJoystickHats(i).limit());
+                            joystickButtonCounts.put(joystickID, GLFW.glfwGetJoystickButtons(i).limit());
+                            joystickComponentCounts.put(joystickID, joystickAxisCounts.get(joystickID) + joystickHatCounts.get(joystickID) + joystickButtonCounts.get(joystickID));
                         }
                     }
 
@@ -127,25 +104,16 @@ public class InterfaceInput implements IInterfaceInput {
                             Entry<String, ConfigJoystick> controllerEntry = iterator.next();
                             ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase(Locale.ROOT));
                             ConfigJoystick config = controllerEntry.getValue();
-                            if (runningClassicMode) {
-                                if (classicJoystickMap.containsKey(config.joystickName)) {
-                                    if (classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex) {
+                            if (joystickMap.containsKey(config.joystickName)) {
+                                if (control.isAxis) {
+                                    if (joystickAxisCounts.get(config.joystickName) <= config.buttonIndex) {
                                         iterator.remove();
-                                        InterfaceManager.coreInterface.logError("Removed classic joystick with too low count.  Had " + classicJoystickMap.get(config.joystickName).getComponents().length + " requested " + config.buttonIndex);
+                                        InterfaceManager.coreInterface.logError("Removed joystick with too low axis count.  Had " + joystickAxisCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                     }
-                                }
-                            } else {
-                                if (joystickMap.containsKey(config.joystickName)) {
-                                    if (control.isAxis) {
-                                        if (joystickAxisCounts.get(config.joystickName) <= config.buttonIndex) {
-                                            iterator.remove();
-                                            InterfaceManager.coreInterface.logError("Removed joystick with too low axis count.  Had " + joystickAxisCounts.get(config.joystickName) + " requested " + config.buttonIndex);
-                                        }
-                                    } else {
-                                        if (joystickComponentCounts.get(config.joystickName) <= config.buttonIndex) {
-                                            iterator.remove();
-                                            InterfaceManager.coreInterface.logError("Removed joystick with too low button count.  Had " + joystickComponentCounts.get(config.joystickName) + " requested " + config.buttonIndex);
-                                        }
+                                } else {
+                                    if (joystickComponentCounts.get(config.joystickName) <= config.buttonIndex) {
+                                        iterator.remove();
+                                        InterfaceManager.coreInterface.logError("Removed joystick with too low button count.  Had " + joystickComponentCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                     }
                                 }
                             }
@@ -219,95 +187,73 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public boolean isJoystickPresent(String joystickName) {
-        return !joystickInhibited && runningClassicMode ? classicJoystickMap.containsKey(joystickName) : joystickMap.containsKey(joystickName);
+        return !joystickInhibited && joystickMap.containsKey(joystickName);
     }
 
     @Override
     public List<String> getAllJoystickNames() {
-        return new ArrayList<>(runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet());
+        return new ArrayList<>(joystickMap.keySet());
     }
 
     @Override
     public int getJoystickComponentCount(String joystickName) {
-        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents().length : joystickComponentCounts.get(joystickName);
+        return joystickComponentCounts.get(joystickName);
     }
 
     @Override
     public String getJoystickComponentName(String joystickName, int index) {
-        if (runningClassicMode) {
-            return classicJoystickMap.get(joystickName).getComponents()[index].getName();
+        if (isJoystickComponentAxis(joystickName, index)) {
+            return "Axis: " + String.valueOf(index);
         } else {
-            if (isJoystickComponentAxis(joystickName, index)) {
-                return "Axis: " + String.valueOf(index);
+            if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
+                return "Hat: " + String.valueOf(index - joystickAxisCounts.get(joystickName));
             } else {
-                if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
-                    return "Hat: " + String.valueOf(index - joystickAxisCounts.get(joystickName));
-                } else {
-                    return "Button: " + String.valueOf(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName));
-                }
+                return "Button: " + String.valueOf(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName));
             }
         }
     }
 
     @Override
     public boolean isJoystickComponentAxis(String joystickName, int index) {
-        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].isAnalog() : GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).limit() > index;
+        return GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).limit() > index;
     }
 
     @Override
     public float getJoystickAxisValue(String joystickName, int index) {
         //Check to make sure this control is operational before testing.  It could have been removed from a prior game.
-        if (runningClassicMode) {
-            if (classicJoystickMap.containsKey(joystickName)) {
-                classicJoystickMap.get(joystickName).poll();
-                return classicJoystickMap.get(joystickName).getComponents()[index].getPollData();
-            } else {
-                return 0;
-            }
-        } else {
-            //Make sure we're not calling this on non-axis.
-            //This could be a hat switch hiding.
-            if (joystickMap.containsKey(joystickName)) {
-                if (isJoystickComponentAxis(joystickName, index)) {
-                    return GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).get(index);
-                } else if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
-                    switch (GLFW.glfwGetJoystickHats(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName))) {
-                        case (GLFW.GLFW_HAT_UP):
-                            return 0.25F;
-                        case (GLFW.GLFW_HAT_LEFT):
-                            return 0.5F;
-                        case (GLFW.GLFW_HAT_DOWN):
-                            return 0.75F;
-                        case (GLFW.GLFW_HAT_RIGHT):
-                            return 1.0F;
-                        default:
-                            return 1.0F;
-                    }
-                } else {
-                    return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS ? 1 : 0;
+        //Make sure we're not calling this on non-axis.
+        //This could be a hat switch hiding.
+        if (joystickMap.containsKey(joystickName)) {
+            if (isJoystickComponentAxis(joystickName, index)) {
+                return GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).get(index);
+            } else if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
+                switch (GLFW.glfwGetJoystickHats(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName))) {
+                    case (GLFW.GLFW_HAT_UP):
+                        return 0.25F;
+                    case (GLFW.GLFW_HAT_LEFT):
+                        return 0.5F;
+                    case (GLFW.GLFW_HAT_DOWN):
+                        return 0.75F;
+                    case (GLFW.GLFW_HAT_RIGHT):
+                        return 1.0F;
+                    default:
+                        return 1.0F;
                 }
             } else {
-                return 0;
+                return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS ? 1 : 0;
             }
+        } else {
+            return 0;
         }
     }
 
     @Override
     public boolean getJoystickButtonValue(String joystickName, int index) {
         //Check to make sure this control is operational before testing.  It could have been removed from a prior game.
-        if (runningClassicMode) {
-            if (classicJoystickMap.containsKey(joystickName)) {
-                classicJoystickMap.get(joystickName).poll();
-                return classicJoystickMap.get(joystickName).getComponents()[index].getPollData() > 0;
-            } else {
-                return false;
-            }
+        if (joystickMap.containsKey(joystickName)) {
+            return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS;
         } else {
-            if (joystickMap.containsKey(joystickName)) {
-                return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS;
-            } else {
-                return false;
-            }
+            return false;
         }
     }
 
@@ -339,18 +285,6 @@ public class InterfaceInput implements IInterfaceInput {
      */
     @SubscribeEvent
     public static void onIVKeyInput(InputEvent.Key event) {
-        //Check if we switched joystick modes.
-        if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
-            runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;
-            joystickLoadingAttempted = false;
-        }
-
-        //Init joysticks if we haven't already tried or if we switched loaders.
-        if (!joystickLoadingAttempted) {
-            InterfaceManager.inputInterface.initJoysticks();
-            joystickLoadingAttempted = true;
-        }
-
         //Check if we pressed the config or import key.
         if (configKey.isDown() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
@@ -368,5 +302,11 @@ public class InterfaceInput implements IInterfaceInput {
             lastScrollValue = (int) event.getScrollDelta();
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public static void registerKeyMappings(RegisterKeyMappingsEvent ev) {
+        ev.register(configKey);
+        ev.register(importKey);
     }
 }
