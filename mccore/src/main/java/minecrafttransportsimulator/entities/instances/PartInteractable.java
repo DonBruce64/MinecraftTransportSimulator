@@ -297,6 +297,20 @@ public final class PartInteractable extends APart {
                     return 0;
                 }
             }
+            case ("interactable_furnace_fuel"): {
+                if (furnace != null) {
+                    return furnace.ticksLeftOfFuel;
+                } else {
+                    return 0;
+                }
+            }
+            case ("interactable_furnace_remaining"): {
+                if (furnace != null) {
+                    return furnace.ticksLeftToSmelt;
+                } else {
+                    return 0;
+                }
+            }
         }
 
         return super.getRawVariableValue(variable, partialTicks);
