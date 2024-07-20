@@ -174,6 +174,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (definition.rendering != null && definition.rendering.textObjects != null) {
                 for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                     JSONText textDef = definition.rendering.textObjects.get(i);
+                    //Check for text value in case we added a text line after wr created this entity.
                     text.put(textDef, data.hasKey("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
                 }
             }
@@ -183,7 +184,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 variables.put(variableName, data.getDouble(variableName));
             }
         } else {
-            //Only set initial variables on initial placement.
+            //Only set initial text/variables on initial placement.
+            if (definition.rendering != null && definition.rendering.textObjects != null) {
+                for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
+                    JSONText textDef = definition.rendering.textObjects.get(i);
+                    text.put(textDef, textDef.defaultText);
+                }
+            }
+
             if (definition.initialVariables != null) {
                 for (String variable : definition.initialVariables) {
                     variables.put(variable, 1D);
