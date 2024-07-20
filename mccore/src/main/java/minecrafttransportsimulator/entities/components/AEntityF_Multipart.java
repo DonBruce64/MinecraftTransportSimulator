@@ -767,7 +767,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                 }
                 BoundingBox newSlotBox;
-                if (isLarge) {
+                if (partDef.slotWidth != 0) {
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), partDef.slotWidth / 2D, partDef.slotHeight / 2D, partDef.slotWidth / 2D, false, partSlotBoxCollisionTypes);
+                } else if (isLarge) {
                     newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_LARGE_HITBOX_WIDTH / 2D, PART_SLOT_LARGE_HITBOX_HEIGHT / 2D, PART_SLOT_LARGE_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 } else {
                     newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
@@ -803,8 +805,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             } else {
                                 AItemPart heldPart = (AItemPart) heldItem;
                                 if (heldPart.isPartValidForPackDef(slotDef, subDefinition, false) && isVariableListTrue(slotDef.interactableVariables)) {
-                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one.
-                                    if (heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
+                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one, but only if we don't have a holo box bounds defined.
+                                    if (slotDef.slotWidth == 0 && heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
                                         box.widthRadius = heldPart.definition.generic.width / 2D;
                                         box.heightRadius = heldPart.definition.generic.height / 2D;
                                         box.depthRadius = heldPart.definition.generic.width / 2D;

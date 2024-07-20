@@ -88,6 +88,12 @@ public class JSONPartDefinition {
     @JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for treads, where the length depends on the vehicle the tread is placed on.  This parameter overrides the same-named parameter in the part JSON, if that parameter is set.")
     public float extraCollisionBoxOffset;
 
+    @JSONDescription("The width of the holographic part slot box for this slot.  Does not apply to generic parts which use their defined size.")
+    public float slotWidth;
+
+    @JSONDescription("Like slotWidth, but height.")
+    public float slotHeight;
+
     @JSONDescription("If set, this will cause treads hanging along the top rollers to droop.  The amount they droop is defined by this constant, with higher values equating to less droop.  Note that if you want to use this parameter, it is recommended to keep your idler rollers at about the same spacing from one another, as it is possible to have too much droop on one set and not enough on another.  Adjust to suit your vehicle.")
     public float treadDroopConstant;
 
