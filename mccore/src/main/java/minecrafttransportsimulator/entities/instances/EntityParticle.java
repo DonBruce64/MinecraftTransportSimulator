@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -239,7 +240,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalBuffer.put(parsedObject.vertices);
                 }
-                totalBuffer.flip();
+                ((Buffer) totalBuffer).flip();
                 return new RenderableVertices("PARTICLE_3D", totalBuffer, false);
             });
             this.renderable = new RenderableData(parsedModel, texture);

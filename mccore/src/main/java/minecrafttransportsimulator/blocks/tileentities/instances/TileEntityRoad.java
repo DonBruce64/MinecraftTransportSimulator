@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -353,7 +354,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             for (RenderableVertices object : parsedModel) {
                                 totalModel.put(object.vertices);
                             }
-                            totalModel.flip();
+                            ((Buffer) totalModel).flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), totalModel, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
                             componentRenderables.put(component, renderable);
                             break;
@@ -369,7 +370,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             for (RenderableVertices object : parsedModel) {
                                 parsedVertices.put(object.vertices);
                             }
-                            parsedVertices.flip();
+                            ((Buffer) parsedVertices).flip();
 
                             //Offset vertices to be corner-aligned, as that's how our curve aligns.
                             for (int i = 0; i < parsedVertices.capacity(); i += 8) {
@@ -457,7 +458,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                     segmentVertices.add(convertedVertexData);
                                 }
                                 //Rewind for next segment.
-                                parsedVertices.rewind();
+                                ((Buffer) parsedVertices).rewind();
 
                                 //Set the last index.
                                 priorIndex = currentIndex;
@@ -468,7 +469,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             for (float[] segmentVertex : segmentVertices) {
                                 convertedVertices.put(segmentVertex);
                             }
-                            convertedVertices.flip();
+                            ((Buffer) convertedVertices).flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
                             componentRenderables.put(component, renderable);
                             break;

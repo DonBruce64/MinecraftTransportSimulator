@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.sound;
 
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -88,7 +89,7 @@ public class MP3Decoder implements IStreamDecoder {
         //rather it sets the values for the decoder to those of the passed-in equalizer.
         int totalSamplesRead = 0;
         decoder.setEqualizer(equalizer);
-        decodedDataBuffer.clear();
+        ((Buffer) decodedDataBuffer).clear();
 
         //Create a ShortBuffer view to put short arrays into.
         ShortBuffer sampleBuffer = decodedDataBuffer.asShortBuffer();
@@ -120,8 +121,8 @@ public class MP3Decoder implements IStreamDecoder {
         }
 
         //Rewind the decoded data buffer, set the limit based on the samples read, and return.
-        decodedDataBuffer.rewind();
-        decodedDataBuffer.limit(totalSamplesRead * 2);
+        ((Buffer) decodedDataBuffer).rewind();
+        ((Buffer) decodedDataBuffer).limit(totalSamplesRead * 2);
         return isStereo ? IStreamDecoder.stereoToMono(decodedDataBuffer) : decodedDataBuffer;
     }
 
