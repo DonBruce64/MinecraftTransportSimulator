@@ -1015,7 +1015,11 @@ public class PartGun extends APart {
      * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
      */
     public void performGunKnockback() {
-        ((EntityPlayerGun) entityOn).player.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-definition.gun.knockback));
+        double knockback = -definition.gun.knockback;
+        if (lastLoadedBullet.definition.bullet.pellets != 0) {
+            knockback /= lastLoadedBullet.definition.bullet.pellets;
+        }
+        ((EntityPlayerGun) entityOn).player.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(knockback));
     }
 
     /**
