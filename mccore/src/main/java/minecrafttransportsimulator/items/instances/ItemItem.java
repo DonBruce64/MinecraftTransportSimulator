@@ -435,6 +435,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                     return true;
                 }
             }
+        } else if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
+            if (!world.isClient()) {
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
+            }
         }
         return false;
     }
