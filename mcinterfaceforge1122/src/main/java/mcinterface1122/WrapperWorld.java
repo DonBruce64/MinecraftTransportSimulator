@@ -1016,7 +1016,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
-                tickAll();
+                tickAll(true);
 
                 for (EntityPlayer player : event.world.playerEntities) {
                     UUID playerUUID = player.getUniqueID();
@@ -1057,15 +1057,10 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
                 }
+                endProfiling();
             } else {
-                //Update player guns.  These happen at the end since they need the player to update first.
-                beginProfiling("MTS_PlayerGunUpdates", true);
-                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                    gun.update();
-                    gun.doPostUpdateLogic();
-                }
+                tickAll(false);
             }
-            endProfiling();
         }
     }
 

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -192,7 +191,7 @@ public class InterfaceClient implements IInterfaceClient {
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
                     world.beginProfiling("MTS_ClientVehicleUpdates", true);
-                    world.tickAll();
+                    world.tickAll(true);
 
                     //Open pack missing screen if we don't have packs.
                     if (!player.isSpectator()) {
@@ -236,12 +235,7 @@ public class InterfaceClient implements IInterfaceClient {
                         }
                     }
                 } else {
-                    //Update player guns.  These happen at the end since they need the player to update first.
-                    world.beginProfiling("MTS_PlayerGunUpdates", true);
-                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
-                        gun.update();
-                        gun.doPostUpdateLogic();
-                    }
+                    world.tickAll(false);
                     
                     //Handle camera requests.
                     if(cameraModeRequest != null) {
