@@ -1000,12 +1000,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //If we collided, so check to see if we can break some blocks or if we need to explode.
             //Don't bother with this logic if it's impossible for us to break anything.
             if (box.updateCollisions(world, collisionMotion, true)) {
+                Point3D collisionStartPosition = this.prevPosition;
                 float hardnessHitThisBox = 0;
                 boolean inhibitMovement = false;
                 for (Point3D blockPosition : box.collidingBlockPositions) {
                     float blockHardness = world.getBlockHardness(blockPosition);
                     if (!world.isBlockLiquid(blockPosition)) {
-                        if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
+                        if ((ConfigSystem.settings.damage.vehicleBlockBreaking.value || ConfigSystem.settings.damage.vehicleDestruction.value)
+                                && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
                             hardnessHitThisBox += blockHardness;
                             if (collisionMotion.y > -0.01) {
                                 //Don't want to blow up from falling fast.
@@ -1014,11 +1016,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                             //Slow down for broken blocks.
                             motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
                             if (ticksExisted > 500) {
-                                if (!world.isClient()) {
+                                if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && !world.isClient()) {
                                     world.destroyBlock(blockPosition, true);
                                     if (box.groupDef != null && blockHardness > 0) {
                                         damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
                                     }
+                                    collisionStartPosition = this.position;
                                 }
                                 continue;
                             }
@@ -1045,6 +1048,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (inhibitMovement) {
                     motion.subtract(box.currentCollisionDepth.scale(1 / speedFactor));
                     collisionMotion.set(motion.copy().scale(speedFactor));
+                    //Unstuck vehicle
+                    this.position.set(collisionStartPosition);
                 }
             }
         }
