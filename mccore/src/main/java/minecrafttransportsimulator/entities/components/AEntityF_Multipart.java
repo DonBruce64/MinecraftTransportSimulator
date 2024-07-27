@@ -761,7 +761,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 JSONPartDefinition partDef = definition.parts.get(i);
                 boolean isLarge = false;
                 for (String type : partDef.types) {
-                    System.out.println(type);
                     if (type.startsWith("engine_") || type.startsWith("ground_") || type.startsWith("propeller")) {
                         isLarge = true;
                         break;
