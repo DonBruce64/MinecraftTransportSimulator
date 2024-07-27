@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -188,6 +189,14 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         return true;
     }
     
+    @Override
+    public IWrapperItemStack getStack() {
+        //Add data to the stack we return for the payment info.
+        IWrapperItemStack stack = super.getStack();
+        stack.setData(saveFuelData(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        return stack;
+    }
+
     public void setConnection(EntityVehicleF_Physics newVehicle) {
         if (newVehicle != null) {
             newVehicle.beingFueled = true;
@@ -204,9 +213,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
 
     protected abstract void fuelVehicle(double amount);
 
-    @Override
-    public IWrapperNBT save(IWrapperNBT data) {
-        super.save(data);
+    private IWrapperNBT saveFuelData(IWrapperNBT data) {
         data.setData("inventory", fuelItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         data.setData("inventory2", paymentItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         for (int i = 0; i < fuelItems.getSize(); ++i) {
@@ -217,6 +224,13 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         if (placingPlayerID != null) {
             data.setUUID("placingPlayerID", placingPlayerID);
         }
+        return data;
+    }
+
+    @Override
+    public IWrapperNBT save(IWrapperNBT data) {
+        super.save(data);
+        saveFuelData(data);
         return data;
     }
 }

@@ -85,6 +85,16 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
+    public IWrapperItemStack getStack() {
+        //Add fuel data to the stack we return.  We know we'll have data here since it's in super.
+        IWrapperItemStack stack = super.getStack();
+        IWrapperNBT data = stack.getData();
+        data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        stack.setData(data);
+        return stack;
+    }
+
+    @Override
     public void remove() {
         super.remove();
         tank.remove();
