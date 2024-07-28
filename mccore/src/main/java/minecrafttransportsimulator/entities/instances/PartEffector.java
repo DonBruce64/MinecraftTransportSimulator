@@ -110,7 +110,7 @@ public class PartEffector extends APart {
                                 if (!harvestedDrops.isEmpty()) {
                                     for (IWrapperItemStack stack : harvestedDrops) {
                                         if (stack.getSize() > 0) {
-                                            world.spawnItemStack(stack, position);
+                                            world.spawnItemStack(stack, position, null);
                                         }
                                     }
                                 }
@@ -202,7 +202,7 @@ public class PartEffector extends APart {
                                                     IWrapperItemStack stackToDrop = stack.copy();
                                                     stackToDrop.add(-stackToDrop.getSize() + 1);
                                                     crate.inventory.removeFromSlot(i, 1);
-                                                    world.spawnItemStack(stackToDrop, box.globalCenter);
+                                                    world.spawnItemStack(stackToDrop, box.globalCenter, new Point3D(Math.random() * 0.2D - 0.1D, -0.2D, Math.random() * 0.2D - 0.1D).rotate(orientation));
                                                     activatedThisTick = true;
                                                     break;
                                                 }
@@ -260,7 +260,7 @@ public class PartEffector extends APart {
                         //Don't do this for collectors, since those items are actually entities that weren't collected.
                         if (definition.effector.type != EffectorComponentType.COLLECTOR) {
                             for (IWrapperItemStack dropStack : drops) {
-                                world.spawnItemStack(dropStack, position);
+                                world.spawnItemStack(dropStack, position, null);
                             }
                         }
                         drops.clear();

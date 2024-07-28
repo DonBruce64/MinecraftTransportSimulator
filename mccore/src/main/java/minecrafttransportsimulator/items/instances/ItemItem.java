@@ -148,7 +148,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 if(vehicle != null) {
                                     if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
                                         vehicle.disconnectAllConnections();
-                                        vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter);
+                                        vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter, null);
                                         vehicle.remove();
                                     }
                                 }
@@ -162,7 +162,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                             return CallbackType.NONE;
                                         } else {
                                             //Player can remove part, spawn item in the world and remove part.
-                                            part.entityOn.world.spawnItemStack(part.getStack(), part.position);
+                                            part.entityOn.world.spawnItemStack(part.getStack(), part.position, null);
                                             part.entityOn.removePart(part, true, null);
                                         }
                                     }

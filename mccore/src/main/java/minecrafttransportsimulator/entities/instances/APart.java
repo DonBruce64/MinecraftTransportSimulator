@@ -323,7 +323,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             		player.sendPacket(new PacketPlayerChatMessage(player, partResult));
             		return;
             	}else if (!player.getInventory().addStack(getStack())) {
-                	world.spawnItemStack(getStack(), position);
+                	world.spawnItemStack(getStack(), position, null);
                 }
             	entityOn.removePart(this, true, null);
             }

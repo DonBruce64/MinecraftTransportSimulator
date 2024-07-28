@@ -104,7 +104,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
         //Now call super and spawn drops.
         super.destroy(box);
-        drops.forEach(stack -> world.spawnItemStack(stack, box.globalCenter));
+        drops.forEach(stack -> world.spawnItemStack(stack, box.globalCenter, null));
     }
 
     @Override

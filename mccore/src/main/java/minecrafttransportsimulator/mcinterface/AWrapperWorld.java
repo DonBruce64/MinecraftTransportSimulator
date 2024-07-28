@@ -403,8 +403,11 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns the passed-in stack as an item entity at the passed-in point.
      * This should be called only on servers, as spawning items on clients
      * leads to phantom items that can't be picked up.
+     * Normally, items are spawned as if they're on top of blocks in a default MC behavior.
+     * You can specify a motion to override this and spawn them right at the point with the requested motion.
      */
-    public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point);
+    //FIXME make newer interfaces utilize the optional motion.
+    public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion);
 
     /**
      * Spawns an explosion of the specified strength at the passed-in point.

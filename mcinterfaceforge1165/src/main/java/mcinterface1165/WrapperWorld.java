@@ -990,9 +990,16 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnItemStack(IWrapperItemStack stack, Point3D point) {
-        //Spawn 1 block above in case we're right on a block.
-        world.addFreshEntity(new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack));
+    public void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion) {
+        ItemEntity item;
+        if (optionalMotion != null) {
+            item = new ItemEntity(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack);
+            item.setDeltaMovement(new Vector3d(optionalMotion.x, optionalMotion.y, optionalMotion.z));
+        } else {
+            //Spawn 1 block above in case we're right on a block.
+            item = new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack);
+        }
+        world.addFreshEntity(item);
     }
 
     @Override

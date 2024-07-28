@@ -97,7 +97,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
             if (axis != Axis.NONE) {
                 ATileEntityPole_Component component = components.get(axis);
                 if (component != null) {
-                    world.spawnItemStack(component.getStack(), position);
+                    world.spawnItemStack(component.getStack(), position, null);
                 }
             }
         }
