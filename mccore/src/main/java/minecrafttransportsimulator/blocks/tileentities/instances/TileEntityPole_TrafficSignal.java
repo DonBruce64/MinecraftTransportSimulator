@@ -29,7 +29,7 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
             for (LightType light : LightType.values()) {
                 light.lightNames.forEach(name -> setVariable(name, 0));
             }
-            if (linkedController.isValid && linkedController.controlledSignals.contains(this)) {
+            if (linkedController.isValid) {
                 for (SignalGroup group : linkedController.signalGroups.get(axis)) {
                     group.currentLight.lightNames.forEach(name -> setVariable(name, 1));
                 }

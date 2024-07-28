@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -58,7 +59,7 @@ public class TileEntitySignalController extends TileEntityDecor {
      * Signal blocks used in this controller.  Based on components.
      **/
     public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<>();
-    public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<>();
+    private final Map<TileEntityPole_TrafficSignal, Point3D> controlledSignals = new HashMap<>();
 
     /**
      * Lane counts and intersection widths.
@@ -92,10 +93,22 @@ public class TileEntitySignalController extends TileEntityDecor {
                                     TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
                                     intersectionProperties.get(axis).isActive = true;
                                     signal.linkedController = this;
-                                    controlledSignals.add(signal);
+                                    controlledSignals.put(signal, poleLocation);
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            //Check to make sure some of the pole haven't gone invalid since we checked them.
+            if (!controlledSignals.isEmpty()) {
+                Iterator<Entry<TileEntityPole_TrafficSignal, Point3D>> iterator = controlledSignals.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Entry<TileEntityPole_TrafficSignal, Point3D> entry = iterator.next();
+                    if (!entry.getKey().isValid) {
+                        missingLocations.add(entry.getValue());
+                        iterator.remove();
                     }
                 }
             }
@@ -203,6 +216,7 @@ public class TileEntitySignalController extends TileEntityDecor {
      * Clear found pole variables.  This is done on controller init or when we are removed.
      */
     public void clearFoundPoles() {
+        controlledSignals.keySet().forEach(signal -> signal.linkedController = null);
         controlledSignals.clear();
         missingLocations.clear();
         missingLocations.addAll(componentLocations);
