@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Locale;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
@@ -127,5 +129,37 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
      */
     public void repair(IWrapperNBT data) {
         data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
+    }
+
+    /**
+     * Returns the number of repair recipes for this item.
+     * This also queries the default repair lists in case we don't have any defined on ourselves.
+     */
+    public int getRepairRecipeCount() {
+        if (definition.general.repairMaterialLists != null && !definition.general.repairMaterialLists.isEmpty()) {
+            return definition.general.repairMaterialLists.size();
+        } else if (this instanceof ItemVehicle && !ConfigSystem.settings.general.defaultVehicleRepairMaterials.value.isEmpty()) {
+            return 1;
+        } else if (this instanceof AItemPart && !ConfigSystem.settings.general.defaultPartRepairMaterials.value.isEmpty()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns the repair materials for this item with the specific recipe, or null if none exist.
+     * This also queries the default repair lists in case we don't have any defined on ourselves.
+     */
+    public List<String> getRepairMaterials(int recipeIndex) {
+        if (definition.general.repairMaterialLists != null && !definition.general.repairMaterialLists.isEmpty()) {
+            return definition.general.repairMaterialLists.get(recipeIndex);
+        } else if (this instanceof ItemVehicle && !ConfigSystem.settings.general.defaultVehicleRepairMaterials.value.isEmpty()) {
+            return ConfigSystem.settings.general.defaultVehicleRepairMaterials.value;
+        } else if (this instanceof AItemPart && !ConfigSystem.settings.general.defaultPartRepairMaterials.value.isEmpty()) {
+            return ConfigSystem.settings.general.defaultPartRepairMaterials.value;
+        } else {
+            return null;
+        }
     }
 }
