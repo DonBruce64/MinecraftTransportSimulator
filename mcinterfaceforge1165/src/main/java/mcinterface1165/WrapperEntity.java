@@ -166,11 +166,19 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public double getSeatOffset() {
-        if (entity instanceof VillagerEntity) {
-            return -12D / 16D;
-        } else {
-            return 0D;
+        //Vanilla entities (boat/minecart) normally have a 0.14 pixel delta from their base to where the entity sits.
+        //We account for this here.
+        AEntityB_Existing riding = getEntityRiding();
+        if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
+            if (entity instanceof VillagerEntity) {
+                //Need to add-on a factor for villagers since we make them sit whereas they don't normally do this.
+                //Actual factor is based on what players have for their offsets, see the player wrapper method for details.
+                return entity.getMyRidingOffset() - 0.14D - 0.485D;
+            } else {
+                return entity.getMyRidingOffset() - 0.14D;
+            }
         }
+        return 0;
     }
 
     @Override
