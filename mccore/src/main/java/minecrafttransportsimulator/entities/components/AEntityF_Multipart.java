@@ -756,6 +756,24 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (world.isClient()) {
             activeClientPartSlotBoxes.clear();
         }
+
+        //Check if we made childLimit.  If so, bail on adding slot boxes.
+        AEntityF_Multipart<?> testEntity = this;
+        int level = 0;
+        do {
+            if (testEntity instanceof APart) {
+                ++level;
+                APart part = (APart) testEntity;
+                if (part.placementDefinition.maxPartLevels != 0 && part.placementDefinition.maxPartLevels <= level) {
+                    return;
+                }
+                testEntity = part.entityOn;
+            } else {
+                testEntity = null;
+            }
+        } while (testEntity != null);
+
+        //Good to add slot boxes.
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
