@@ -281,7 +281,7 @@ public abstract class EntityManager {
         }
     }
 
-    private static void doTick(AEntityA_Base entity) {
+    public static void doTick(AEntityA_Base entity) {
         entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
         if (entity instanceof AEntityD_Definable) {
             AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
