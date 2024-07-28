@@ -149,7 +149,11 @@ public class InterfaceSound implements IInterfaceSound {
                     //Update position and volume, and block rolloff.
                     sound.updatePosition();
                     AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
-                    AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.masterVolume.value);
+                    if (sound.radio == null) {
+                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.soundVolume.value);
+                    } else {
+                        AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume * ConfigSystem.client.controlSettings.radioVolume.value);
+                    }
                     AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 0);
 
                     //If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
