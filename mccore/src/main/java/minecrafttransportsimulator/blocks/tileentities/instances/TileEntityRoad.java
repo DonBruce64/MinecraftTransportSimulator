@@ -369,6 +369,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
                             for (RenderableVertices object : parsedModel) {
                                 parsedVertices.put(object.vertices);
+                                object.vertices.rewind();//Rewind after put since this might be used on other road segments.
                             }
                             ((Buffer) parsedVertices).flip();
 
