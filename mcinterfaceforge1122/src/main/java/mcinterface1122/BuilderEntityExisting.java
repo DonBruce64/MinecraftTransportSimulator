@@ -73,6 +73,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     private WrapperAABBCollective collisionBoxes;
     /**
      * Collective for collision boxes.  These are used by this entity to make things interact and attack it.
+     * Collision boxes need to be in here since otherwise entities won't be registered to even try and check for collision.
      **/
     private WrapperAABBCollective interactAttackBoxes;
 
