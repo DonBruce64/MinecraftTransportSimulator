@@ -36,7 +36,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
-    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityClientWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityServerWrappers = new HashMap<>();
 
     protected final Entity entity;
     private AEntityB_Existing cachedEntityRiding;
@@ -51,6 +52,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (entity instanceof PlayerEntity) {
             return WrapperPlayer.getWrapperFor((PlayerEntity) entity);
         } else if (entity != null) {
+            Map<Entity, WrapperEntity> entityWrappers = entity.level.isClientSide ? entityClientWrappers : entityServerWrappers;
             WrapperEntity wrapper = entityWrappers.get(entity);
             if (wrapper == null || !wrapper.isValid() || entity != wrapper.entity) {
                 wrapper = new WrapperEntity(entity);
@@ -440,6 +442,10 @@ public class WrapperEntity implements IWrapperEntity {
      */
     @SubscribeEvent
     public static void onIVWorldUnload(WorldEvent.Unload event) {
-        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        if (event.getWorld().isClientSide()) {
+            entityClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        } else {
+            entityServerWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        }
     }
 }

@@ -31,7 +31,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
-    private static final Map<PlayerEntity, WrapperPlayer> playerWrappers = new HashMap<>();
+    private static final Map<PlayerEntity, WrapperPlayer> playerClientWrappers = new HashMap<>();
+    private static final Map<PlayerEntity, WrapperPlayer> playerServerWrappers = new HashMap<>();
 
     protected final PlayerEntity player;
 
@@ -44,6 +45,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      */
     public static WrapperPlayer getWrapperFor(PlayerEntity player) {
         if (player != null) {
+            Map<PlayerEntity, WrapperPlayer> playerWrappers = player.level.isClientSide ? playerClientWrappers : playerServerWrappers;
             WrapperPlayer wrapper = playerWrappers.get(player);
             if (wrapper == null || !wrapper.isValid() || player != wrapper.player) {
                 wrapper = new WrapperPlayer(player);
@@ -175,6 +177,10 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      */
     @SubscribeEvent
     public static void onIVWorldUnload(WorldEvent.Unload event) {
-        playerWrappers.keySet().removeIf(entityPlayer -> entityPlayer.level.equals(event.getWorld()));
+        if (event.getWorld().isClientSide()) {
+            playerClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        } else {
+            playerServerWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        }
     }
 }
