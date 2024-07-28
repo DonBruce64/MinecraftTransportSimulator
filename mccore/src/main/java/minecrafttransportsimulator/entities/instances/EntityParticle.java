@@ -79,7 +79,7 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
 
-        //Set initial position.
+        //Set transforms based on type.
         helperTransform.resetTransforms();
         if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
             orientation.set(entitySpawning.orientation);
@@ -106,6 +106,39 @@ public class EntityParticle extends AEntityC_Renderable {
             helperTransform.multiply(switchbox.netMatrix);
         }
 
+        //Apply transforms to get position.
+        if (definition.pos != null) {
+            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
+        } else {
+            helperPoint.set(0, 0, 0);
+        }
+        helperPoint.transform(helperTransform);
+        position.add(helperPoint);
+
+        //Now that position is set, check to make sure we aren't an invalid particle.
+        if (definition.type == ParticleType.BREAK) {
+            if (world.isAir(position)) {
+                //Don't spawn break particles in the air, they're null textures.
+                this.staticColor = null;
+                this.renderable = null;
+                this.model = null;
+                this.initialVelocity = null;
+                this.killBadParticle = true;
+                return;
+            }
+        }
+
+        //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
+        Point3D blockCheckPosition;
+        if (definition.getBlockPropertiesFromGround) {
+            //Center of block for safety of FPEs.
+            blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
+        } else {
+            //Use spawning position here since block properties for particles are usually from bullets, which are slightly in the block.
+            blockCheckPosition = spawingPosition;
+        }
+
+        //Apply transforms to get orientation.
         if (definition.rot != null) {
             orientation.multiply(definition.rot);
         }
@@ -119,13 +152,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
         prevOrientation.set(orientation);
 
-        if (definition.pos != null) {
-            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
-        } else {
-            helperPoint.set(0, 0, 0);
-        }
-        helperPoint.transform(helperTransform);
-        position.add(helperPoint);
+        //Get initial motion.
         if (definition.initialVelocity != null) {
             if (definition.spreadRandomness != null) {
                 motion.x = 2 * definition.spreadRandomness.x * Math.random() - definition.spreadRandomness.x;
@@ -158,18 +185,6 @@ public class EntityParticle extends AEntityC_Renderable {
         }
         initialVelocity = motion.copy();
         updateOrientation();
-
-        //Now that position is set, check to make sure we aren't an invalid particle.
-        if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(position)) {
-                //Don't spawn break particles in the air, they're null textures.
-                this.staticColor = null;
-                this.renderable = null;
-                this.model = null;
-                this.killBadParticle = true;
-                return;
-            }
-        }
 
         //Set model and texture.
         String model = definition.model;
@@ -219,13 +234,6 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase(Locale.ROOT) + ".png";
         }
 
-        Point3D blockCheckPosition;
-        if(definition.getBlockPropertiesFromGround) {
-        	//Center of block for safety of FPEs.
-        	blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
-    	}else {
-    		blockCheckPosition = position;
-    	}
         this.model = model;
         if (this.model != null) {
             RenderableVertices parsedModel = parsedParticleModels.computeIfAbsent(this.model, k -> {
