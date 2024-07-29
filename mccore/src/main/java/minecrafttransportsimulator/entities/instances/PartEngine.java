@@ -137,10 +137,6 @@ public class PartEngine extends APart {
             this.pressure = data.getDouble("pressure");
             this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
         }
-        this.running = data.getBoolean("running");
-        this.rpm = data.getDouble("rpm");
-        this.temp = data.getDouble("temp");
-        this.pressure = data.getDouble("pressure");
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
                 ++reverseGears;

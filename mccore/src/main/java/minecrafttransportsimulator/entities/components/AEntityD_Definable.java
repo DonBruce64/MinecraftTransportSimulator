@@ -303,14 +303,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (testSubDef.subName.equals(newSubDefName)) {
                 //Remove existing constants, if we have them, then add them, if we have them.
                 if (subDefinition != null && subDefinition.constants != null) {
-                    testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(0,  false));
+                    subDefinition.constants.forEach(constant -> getOrCreateVariable(constant).setTo(0,  false));
                 }
                 if (testSubDef.constants != null) {
-                    testSubDef.constants.forEach(constant -> {
-                        ComputedVariable newVariable = new ComputedVariable(this, constant, null);
-                        newVariable.setTo(1, false);
-                        addVariable(newVariable);
-                    });
+                    testSubDef.constants.forEach(constant -> getOrCreateVariable(constant).setTo(1,  false));
                 }
                 subDefinition = testSubDef;
                 cachedItem = PackParser.getItem(definition.packID, definition.systemName, subDefinition.subName);
