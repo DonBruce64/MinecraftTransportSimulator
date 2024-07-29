@@ -25,8 +25,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -185,7 +183,6 @@ public final class PartSeat extends APart {
             if (activeGunItem == null) {
                 if (!placementDefinition.canDisableGun || !(rider instanceof IWrapperPlayer)) {
                     setNextActiveGun();
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this, SeatAction.CHANGE_GUN));
                 }
             }
 
