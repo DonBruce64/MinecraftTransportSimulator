@@ -564,9 +564,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
-        if (variable.equals("engine_magneto")) {
-            System.out.println(this);
-        }
         if (entityOn == null) {
             //We don't have the entity set yet if we're constructing, defer to later.
             return new ComputedVariable(this, variable, partialTicks -> {

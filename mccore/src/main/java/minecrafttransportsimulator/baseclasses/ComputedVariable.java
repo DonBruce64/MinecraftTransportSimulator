@@ -50,6 +50,7 @@ public class ComputedVariable {
         this.randomVariable = variable.startsWith("random");
         this.isConstant = variable.startsWith(CONSTANT_PREFIX);
         this.invertedVariable = variable.startsWith(INVERTED_PREFIX) ? null : new ComputedVariable(entity, INVERTED_PREFIX + variable, null);
+        setInternal(0);
     }
 
     /**Constructor for variables with no logic, and instead maintained state.**/
