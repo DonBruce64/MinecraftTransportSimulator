@@ -65,7 +65,16 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
 
     @Override
     public FluidStack getFluid() {
-        return tank != null && !tank.getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tank.getFluid())), (int) tank.getFluidLevel()) : FluidStack.EMPTY;
+        if (tank != null && !tank.getFluid().isEmpty()) {
+            //Need to find the mod that registered this fluid, Forge is stupid and has them per-mod vs just all with a single name.
+            //FIXME put this fix into newer Forge versions when able.
+            for (ResourceLocation fluidKey : ForgeRegistries.FLUIDS.getKeys()) {
+                if (fluidKey.getPath().equals(tank.getFluid())) {
+                    return new FluidStack(ForgeRegistries.FLUIDS.getValue(fluidKey), (int) tank.getFluidLevel());
+                }
+            }
+        }
+        return FluidStack.EMPTY;
     }
 
     @Override
