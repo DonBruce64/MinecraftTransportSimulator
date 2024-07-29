@@ -68,7 +68,7 @@ public final class RenderInstrument {
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
-                        if (ComputedVariable.isNumberedVariable(component.textObject.variableName) && (component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_"))) {
+                        if (!ComputedVariable.isNumberedVariable(component.textObject.variableName) && (component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_"))) {
                             String oldName = component.textObject.variableName;
                             component.textObject.variableName += "_" + partNumber;
                             RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
@@ -144,7 +144,7 @@ public final class RenderInstrument {
             //We also need to set the partNumber to 1 if we have a part number of 0 and we're
             //doing a part-specific animation.
             //Skip adding a suffix if one already exists.
-            final boolean addSuffix = ComputedVariable.isNumberedVariable(clock.animation.variable) && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
+            final boolean addSuffix = !ComputedVariable.isNumberedVariable(clock.animation.variable) && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
             if (partNumber == 0 && addSuffix) {
                 partNumber = 1;
             }
