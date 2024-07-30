@@ -924,6 +924,12 @@ public final class LegacyCompatSystem {
             }
         }
 
+        //Convert old effector delay.
+        if (definition.effector != null && definition.effector.placerDelay != 0) {
+            definition.effector.operationDelay = definition.effector.placerDelay;
+            definition.effector.placerDelay = 0;
+        }
+
         //Convert old effector hitboxes.
         if (definition.effector != null && definition.collisionGroups != null) {
             for (JSONCollisionGroup collisionGroup : definition.collisionGroups) {
