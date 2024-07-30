@@ -618,7 +618,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                             if (computedVariable != null) {
                                 return computedVariable;
                             } else {
-                                System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
+                                //System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
                                 return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
                             }
                         } else {

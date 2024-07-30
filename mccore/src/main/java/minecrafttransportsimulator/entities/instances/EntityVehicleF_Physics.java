@@ -300,7 +300,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         break;
                     default:
                     	ComputedVariable variable = getOrCreateVariable(modifier.variable);
-                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
+                        variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }

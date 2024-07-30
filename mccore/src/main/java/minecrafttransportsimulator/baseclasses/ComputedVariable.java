@@ -27,7 +27,7 @@ public class ComputedVariable {
 	/**The key of this variable, required to be unique to all variables on the entity.**/
     public final String variableKey;
     /**The entity this variable is defined on.**/
-    public final AEntityD_Definable<?> entity;
+    public AEntityD_Definable<?> entity;
     private ComputedVariableOperator function;
     private boolean changesOnPartialTicks;
     private boolean randomVariable;
@@ -49,7 +49,15 @@ public class ComputedVariable {
         this.changesOnPartialTicks = changesOnPartialTicks;
         this.randomVariable = variable.startsWith("random");
         this.isConstant = variable.startsWith(CONSTANT_PREFIX);
-        this.invertedVariable = variable.startsWith(INVERTED_PREFIX) ? null : new ComputedVariable(entity, INVERTED_PREFIX + variable, null);
+        if (!variable.startsWith(INVERTED_PREFIX)) {
+            if (isConstant) {
+                this.invertedVariable = new ComputedVariable(entity, INVERTED_PREFIX + variable, null);
+            } else {
+                this.invertedVariable = new ComputedVariable(entity, INVERTED_PREFIX + variable, partialTicks -> this.computeInvertedValue(partialTicks), changesOnPartialTicks);
+            }
+        } else {
+            this.invertedVariable = null;
+        }
         setInternal(0);
     }
 
@@ -94,6 +102,7 @@ public class ComputedVariable {
     }
 
     public final void setFunctionTo(ComputedVariable other) {
+        this.entity = other.entity;
         this.function = other.function;
         this.isConstant = other.isConstant;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
@@ -110,6 +119,9 @@ public class ComputedVariable {
      */
     public final double computeValue(float partialTicks) {
         if (function != null) {
+            if (entity == null) {
+                System.out.println(variableKey);
+            }
             if (randomVariable || (changesOnPartialTicks && partialTicks != 0)) {
                 setInternal(function.apply(partialTicks));
             } else if (lastTickChecked != entity.ticksExisted) {
@@ -118,6 +130,11 @@ public class ComputedVariable {
             }
         }
         return currentValue;
+    }
+
+    private final double computeInvertedValue(float partialTicks) {
+        computeValue(partialTicks);
+        return invertedVariable.currentValue;
     }
 
     public final void setTo(double value, boolean sendPacket) {

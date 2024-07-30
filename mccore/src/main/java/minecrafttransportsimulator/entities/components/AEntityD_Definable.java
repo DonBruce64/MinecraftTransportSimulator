@@ -208,7 +208,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     ComputedVariable newVariable = new ComputedVariable(this, constantKey, null);
                     newVariable.setTo(constantValue, false);
                     addVariable(newVariable);
-                    System.out.println("SEtting const " + constantKey + " to " + constantValue);
                 });
             }
         }
@@ -961,6 +960,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
+        if (clock.animation.variable.equals("!ground_onground_1")) {
+            //System.out.println("ERE2");
+        }
         double value = getOrCreateVariable(clock.animation.variable).computeValue(partialTicks);
         if (!clock.isUseful) {
             return clampAndScale(value, clock.animation, scaleFactor, offset);
@@ -1023,6 +1025,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 computedVar = computedVariables.get(normalVariable);
                 if (computedVar == null) {
                     computedVar = createComputedVariable(normalVariable, true);
+                    computedVariables.put(normalVariable, computedVar);
                 }
                 computedVar = computedVar.invertedVariable;
             } else {
