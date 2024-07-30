@@ -98,6 +98,7 @@ public class ComputedVariable {
         this.isConstant = other.isConstant;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
         this.randomVariable = other.randomVariable;
+        setInternal(other.currentValue);
     }
 
     public final double getValue() {

@@ -201,6 +201,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     addVariable(newVariable);
                 });
             }
+
+            //Add constants. These get put in when we don't have data, but will be saved and restored from data when we have it. 
+            if (definition.constantValues != null) {
+                definition.constantValues.forEach((constantKey, constantValue) -> {
+                    ComputedVariable newVariable = new ComputedVariable(this, constantKey, null);
+                    newVariable.setTo(constantValue, false);
+                    addVariable(newVariable);
+                    System.out.println("SEtting const " + constantKey + " to " + constantValue);
+                });
+            }
         }
     }
 
@@ -386,11 +396,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
 
-        }
-
-        //Add constants.
-        if (definition.constantValues != null) {
-            definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
         }
     }
 

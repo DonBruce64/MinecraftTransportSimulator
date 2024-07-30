@@ -776,7 +776,6 @@ public class PartEngine extends APart {
         currentJetPowerFactor = definition.engine.jetPowerFactor;
         currentBypassRatio = definition.engine.bypassRatio;
 
-
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {

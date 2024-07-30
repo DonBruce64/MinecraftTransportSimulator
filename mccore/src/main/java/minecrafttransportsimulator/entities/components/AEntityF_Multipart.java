@@ -107,14 +107,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        if (data == null) {
-            //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
-            //the value will be set before any subsequent logic occurs.
-            if (definition.constantValues != null) {
-                definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
-            }
-        }
-
         //Init part slots.
         if (definition.parts != null) {
             while (partsInSlots.size() < definition.parts.size()) {
@@ -548,11 +540,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
                         e.printStackTrace();
-                    }
-                    //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
-                    //the value will be set before spawning in any conditional parts.
-                    if (definition.constantValues != null) {
-                        definition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
                     }
                 } else {
                     //Add default parts.  We need to do this after we actually create this part so its slots are valid.
