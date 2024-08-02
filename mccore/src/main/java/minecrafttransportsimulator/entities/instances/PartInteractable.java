@@ -135,12 +135,14 @@ public final class PartInteractable extends APart {
         super.update();
         if (furnace != null) {
             furnace.update();
-            //Only look for fuel when we're processing and don't have any.
-            if (!world.isClient() && furnace.ticksLeftOfFuel == 0 && furnace.ticksLeftToSmelt > 0) {
-                addFurnaceFuel();
-            }
-            if (vehicleOn != null) {
-                vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+            if (furnace.ticksLeftToSmelt > 0) {
+                //Only look for fuel when we're processing and don't have any.
+                if (!world.isClient() && furnace.ticksLeftOfFuel == 0) {
+                    addFurnaceFuel();
+                }
+                if (vehicleOn != null) {
+                    vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+                }
             }
         }
 
