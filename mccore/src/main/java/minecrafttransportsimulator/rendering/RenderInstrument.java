@@ -152,7 +152,7 @@ public final class RenderInstrument {
                 partNumber = 1;
             }
             String oldVariable = clock.animation.variable;
-            if (addSuffix) {
+            if (partNumber != 0) {
                 clock.animation.variable += "_" + partNumber;
             }
             return oldVariable;
