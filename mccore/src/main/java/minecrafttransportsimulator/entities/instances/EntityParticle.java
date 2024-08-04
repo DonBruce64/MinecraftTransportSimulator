@@ -46,6 +46,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
     //Constant properties.
     private final AEntityC_Renderable entitySpawning;
+    private final AnimationSwitchbox spawningSwitchbox;
     private final JSONParticle definition;
     private final int maxAge;
     private final Point3D initialVelocity;
@@ -70,10 +71,11 @@ public class EntityParticle extends AEntityC_Renderable {
     private int colorIndex;
     private int colorDelayIndex;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox switchbox) {
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox spawningSwitchbox) {
         super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
         this.entitySpawning = entitySpawning;
         this.definition = definition;
+        this.spawningSwitchbox = spawningSwitchbox;
         this.maxAge = generateMaxAge();
         boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
@@ -81,39 +83,41 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set transforms based on type.
         helperTransform.resetTransforms();
-        if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
-            orientation.set(entitySpawning.orientation);
-            helperTransform.set(orientation);
-        } else if (definition.spawningOrientation == ParticleSpawningOrientation.FACING) {
-        	if(entitySpawning instanceof EntityBullet) {
-        		EntityBullet bullet = (EntityBullet) entitySpawning;
-                if (bullet.sideHit != Axis.NONE) {
-        			helperRotation.setToZero().rotateX(-90);        			
-                    orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
-        			helperTransform.set(orientation);
-        		}else {
-                    //Nothing for bullet to hit, block spawning.
-                    this.initialVelocity = null;
-                    this.staticColor = null;
-                    this.renderable = null;
-                    this.model = null;
-        			this.killBadParticle = true;
-                    return;
-        		}
-        	}
-        }
-        if (switchbox != null) {
-            helperTransform.multiply(switchbox.netMatrix);
+        switch (definition.spawningOrientation) {
+            case ENTITY:
+            case ATTACHED: {
+                orientation.set(entitySpawning.orientation);
+                helperTransform.set(orientation);
+                break;
+            }
+            case FACING: {
+                if (entitySpawning instanceof EntityBullet) {
+                    EntityBullet bullet = (EntityBullet) entitySpawning;
+                    if (bullet.sideHit != Axis.NONE) {
+                        helperRotation.setToZero().rotateX(-90);
+                        orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
+                        helperTransform.set(orientation);
+                    } else {
+                        //Nothing for bullet to hit, block spawning.
+                        this.initialVelocity = null;
+                        this.staticColor = null;
+                        this.renderable = null;
+                        this.model = null;
+                        this.killBadParticle = true;
+                        return;
+                    }
+                }
+                break;
+            }
+            case WORLD: {
+                //Do nothing, world doesn't touch position/orientation.
+                break;
+            }
         }
 
-        //Apply transforms to get position.
-        if (definition.pos != null) {
-            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
-        } else {
-            helperPoint.set(0, 0, 0);
-        }
-        helperPoint.transform(helperTransform);
-        position.add(helperPoint);
+        //Set position.
+        setPositionToSpawn();
+        prevPosition.set(position);
 
         //Now that position is set, check to make sure we aren't an invalid particle.
         if (definition.type == ParticleType.BREAK) {
@@ -138,18 +142,8 @@ public class EntityParticle extends AEntityC_Renderable {
             blockCheckPosition = spawingPosition;
         }
 
-        //Apply transforms to get orientation.
-        if (definition.rot != null) {
-            orientation.multiply(definition.rot);
-        }
-        if (definition.rotationRandomness != null) {
-            helperPoint.set(definition.rotationRandomness);
-            helperPoint.x = (2 * Math.random() - 1) * helperPoint.x;
-            helperPoint.y = (2 * Math.random() - 1) * helperPoint.y;
-            helperPoint.z = (2 * Math.random() - 1) * helperPoint.z;
-            helperRotation.setToAngles(helperPoint);
-            orientation.multiply(helperRotation);
-        }
+        //Set orientation.
+        setOrientationToSpawn();
         prevOrientation.set(orientation);
 
         //Get initial motion.
@@ -170,7 +164,6 @@ public class EntityParticle extends AEntityC_Renderable {
             motion.rotate(helperTransform);
         }
         if (definition.relativeInheritedVelocityFactor != null) {
-            helperRotation.setToVector(entitySpawning.motion, true);
             helperPoint.set(entitySpawning.motion);
             if (entitySpawning instanceof EntityVehicleF_Physics) {
                 helperPoint.scale(((EntityVehicleF_Physics) entitySpawning).speedFactor);
@@ -180,6 +173,7 @@ public class EntityParticle extends AEntityC_Renderable {
                     helperPoint.scale(partSpawning.vehicleOn.speedFactor);
                 }
             }
+            helperRotation.setToVector(entitySpawning.motion, true);
             helperPoint.reOrigin(helperRotation).multiply(definition.relativeInheritedVelocityFactor).rotate(helperRotation);
             motion.add(helperPoint);
         }
@@ -320,6 +314,46 @@ public class EntityParticle extends AEntityC_Renderable {
         this.killBadParticle = false;
     }
 
+    private void setPositionToSpawn() {
+        //Apply transforms to get position.
+        if (definition.pos != null) {
+            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
+        } else {
+            helperPoint.set(0, 0, 0);
+        }
+        if (spawningSwitchbox != null) {
+            spawningSwitchbox.runSwitchbox(0, false);
+            helperTransform.multiply(spawningSwitchbox.netMatrix);
+        }
+        helperPoint.transform(helperTransform);
+        position.add(helperPoint);
+    }
+
+    private void setOrientationToSpawn() {
+        //Apply transforms to get orientation.
+        if (definition.rot != null) {
+            orientation.multiply(definition.rot);
+        }
+        if (definition.rotationRandomness != null) {
+            helperPoint.set(definition.rotationRandomness);
+            helperPoint.x = (2 * Math.random() - 1) * helperPoint.x;
+            helperPoint.y = (2 * Math.random() - 1) * helperPoint.y;
+            helperPoint.z = (2 * Math.random() - 1) * helperPoint.z;
+            helperRotation.setToAngles(helperPoint);
+            orientation.multiply(helperRotation);
+        }
+    }
+
+    @Override
+    public EntityAutoUpdateTime getUpdateTime() {
+        //Sync with our spawning entity in case we depend on their variables.
+        if (entitySpawning instanceof APart) {
+            return ((APart) entitySpawning).masterEntity.getUpdateTime();
+        } else {
+            return entitySpawning.getUpdateTime();
+        }
+    }
+
     @Override
     public void update() {
         super.update();
@@ -331,6 +365,14 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set movement.
         if (!definition.stopsOnGround || !touchingBlocks) {
+            if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
+                position.set(entitySpawning.position);
+                orientation.set(entitySpawning.orientation);
+                helperTransform.set(orientation);
+                setPositionToSpawn();
+                setOrientationToSpawn();
+            }
+            
             if (definition.movementDuration != 0) {
                 if (ticksExisted <= definition.movementDuration) {
                     Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);

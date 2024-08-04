@@ -259,10 +259,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Player guns are queued to be ticked after their players are updated.
         //If not, then they don't move to the right spot.
-        return false;
+        return EntityAutoUpdateTime.AFTER_PLAYER;
     }
 
     @Override

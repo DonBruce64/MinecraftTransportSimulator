@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityA_Base.EntityAutoUpdateTime;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -18,7 +19,6 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -35,7 +35,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public abstract class EntityManager {
     public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allNormalTickableEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allPlayerTickableEntities = new ConcurrentLinkedQueue<>();
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
@@ -69,8 +70,10 @@ public abstract class EntityManager {
      */
     public <EntityType extends AEntityA_Base> void addEntity(EntityType entity) {
         allEntities.add(entity);
-        if (entity.shouldAutomaticallyUpdate()) {
-            allTickableEntities.add(entity);
+        if (entity.getUpdateTime() == EntityAutoUpdateTime.NORMAL) {
+            allNormalTickableEntities.add(entity);
+        } else if (entity.getUpdateTime() == EntityAutoUpdateTime.AFTER_PLAYER) {
+            allPlayerTickableEntities.add(entity);
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
@@ -159,9 +162,9 @@ public abstract class EntityManager {
      * Ticks all entities that exist and need ticking.  These are any entities that
      * are not parts, since parts are ticked by their parents.
      */
-    public void tickAll(boolean start) {
-        if (start) {
-            for (AEntityA_Base entity : allTickableEntities) {
+    public void tickAll(boolean beforePlayer) {
+        if (beforePlayer) {
+            for (AEntityA_Base entity : allNormalTickableEntities) {
                 if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
                     doTick(entity);
                 }
@@ -180,7 +183,7 @@ public abstract class EntityManager {
                         } else {
                             //Server manager, remove all entities in this manager for reloading.
                             if (managersToHotload.contains(this)) {
-                                for (AEntityA_Base entity : allTickableEntities) {
+                                for (AEntityA_Base entity : allNormalTickableEntities) {
                                     if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
                                         AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
                                         //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
@@ -273,10 +276,10 @@ public abstract class EntityManager {
                 }
             }
         } else {
-            //Update player guns.  These happen at the end since they need the player to update first.
-            getWorld().beginProfiling("MTS_PlayerGunUpdates", true);
-            for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                doTick(gun);
+            for (AEntityA_Base entity : allPlayerTickableEntities) {
+                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                    doTick(entity);
+                }
             }
         }
     }
@@ -343,7 +346,8 @@ public abstract class EntityManager {
      */
     public void removeEntity(AEntityA_Base entity) {
         allEntities.remove(entity);
-        allTickableEntities.remove(entity);
+        allNormalTickableEntities.remove(entity);
+        allPlayerTickableEntities.remove(entity);
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.remove(entity);
         }

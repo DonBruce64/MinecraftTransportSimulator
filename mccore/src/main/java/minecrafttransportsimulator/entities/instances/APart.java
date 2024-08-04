@@ -289,9 +289,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Parts are always updated by their parent, not the main update calls.
-        return false;
+        return EntityAutoUpdateTime.NEVER;
     }
 
     @Override

@@ -38,9 +38,9 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Furnaces don't need to tick.
-        return false;
+        return EntityAutoUpdateTime.NEVER;
     }
 
     @Override
