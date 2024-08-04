@@ -1057,9 +1057,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void resetVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
         if (computedVar != null) {
-            if (this.definition.systemName.contains("standardwheel") && variable.equals("part_present_2")) {
-                System.out.println("ERE");
-            }
             if (variable.startsWith(ComputedVariable.INVERTED_PREFIX)) {
                 computedVar.setFunctionTo(createComputedVariable(variable.substring(ComputedVariable.INVERTED_PREFIX.length()), true).invertedVariable);
             } else {
