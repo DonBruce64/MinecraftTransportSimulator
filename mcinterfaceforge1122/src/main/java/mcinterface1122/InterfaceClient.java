@@ -16,7 +16,6 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
-import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -203,11 +202,11 @@ public class InterfaceClient implements IInterfaceClient {
                         }
                     }
 
-                    //Complain about Universal Tweaks mod at 10 second mark.
-                    if (ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("universaltweaks")) {
+                    //Complain about compats at 10 second mark.
+                    if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                         if (ticksToCullingWarning > 0) {
                             if (--ticksToCullingWarning == 0) {
-                                player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT UNIVERSAL TWEAKS MOD IS PRESENT.  THIS MOD CULLS IV VEHICLES UNLESS \"Entity Desync\" IS SET TO FALSE IN THE UNIVERSAL TWEAKS CONFIG.");
+                                //Nothing to complain about here!
                             }
                         }
                     }
