@@ -64,4 +64,10 @@ public class JSONSound {
 
     @JSONDescription("The volume of the sound at the maximum distance.")
     public double maxDistanceVolume;
+
+    @JSONDescription("The conical sound vector for the direction of this sound.  Used in conjunction with soundSpan to restrict a sound to a conical area.")
+    public Point3D conicalVector;
+
+    @JSONDescription("How many degrees outward from soundVector the sound can be heard.")
+    public double conicalAngle;
 }
