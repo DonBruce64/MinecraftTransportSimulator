@@ -232,7 +232,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 if (foundConnection != null) {
                     switch (variable) {
                         case ("connected"):
-                            return ComputedVariable.ONE_VARIABLE;
+                            return new ComputedVariable(true);
                         case ("pitch"): {
                             final Point3D helperPoint = new Point3D();
                             return new ComputedVariable(this, variable, partialTicks -> {
@@ -270,7 +270,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             }
 
             //Invalid variable, or connection not yet set.
-            return ComputedVariable.ZERO_VARIABLE;
+            return new ComputedVariable(false);
         } else {
             return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
@@ -528,7 +528,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
 
         //Clear connection variables, since our connections have changed and those affect them.
-        resetVariablesMatchingFunction(variable -> variable.variableKey.startsWith("connection"));
+        resetVariablesWithFunctions();
 
         //Handle connection update requests.
         if (!world.isClient()) {
@@ -554,7 +554,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
         }
         
-        resetVariablesMatchingFunction(variable -> variable.variableKey.startsWith("connection"));
+        resetVariablesWithFunctions();
 
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));

@@ -142,8 +142,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //FIXME need to fix linked animations.
         //animationsInitialized = false;
 
-        //Reset any variables that aren't on this entity since we changed linking.
-        resetVariablesMatchingFunction(variable -> variable.entity != this);
+        //Reset any variables since we changed linking.
+        resetVariablesWithFunctions();
     }
 
     @Override
@@ -578,7 +578,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     return entityOn.createComputedVariable(variable.substring("vehicle_".length()), true);
                 } else {
                     //Not on a vehicle, value will always be 0.
-                    return ComputedVariable.ZERO_VARIABLE;
+                    return new ComputedVariable(false);
                 }
             } else if (variable.startsWith("parent_")) {
                 return entityOn.createComputedVariable(variable.substring("parent_".length()), true);
@@ -586,7 +586,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 //Not a parent variable we know about, check for part variables.
                 switch (variable) {
                     case ("part_present"):
-                        return ComputedVariable.ONE_VARIABLE;
+                        return new ComputedVariable(true);
                     case ("part_ismirrored"):
                         return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
                     case ("part_isonfront"):

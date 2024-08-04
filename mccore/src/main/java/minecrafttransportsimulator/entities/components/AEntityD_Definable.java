@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Function;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -908,10 +907,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         if (definition.rendering.textObjects.size() > textIndex) {
                             return new ComputedVariable(this, variable, partialTicks -> !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0, false);
                         } else {
-                            return ComputedVariable.ZERO_VARIABLE;
+                            return new ComputedVariable(false);
                         }
                     } else {
-                        return ComputedVariable.ZERO_VARIABLE;
+                        return new ComputedVariable(false);
                     }
                 } else if (variable.startsWith("blockmaterial_")) {
                     final String materialName = variable.substring("blockmaterial_".length()).toUpperCase();
@@ -1025,7 +1024,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Gets the requested variable.
+     * Gets the requested variable, or creates it if it doesn't exist.
      */
     public ComputedVariable getOrCreateVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
@@ -1058,16 +1057,19 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void resetVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
         if (computedVar != null) {
-            computedVar.setFunctionTo(getOrCreateVariable(variable));
+            if (this.definition.systemName.contains("standardwheel") && variable.equals("part_present_2")) {
+                System.out.println("ERE");
+            }
+            if (variable.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+                computedVar.setFunctionTo(createComputedVariable(variable.substring(ComputedVariable.INVERTED_PREFIX.length()), true).invertedVariable);
+            } else {
+                computedVar.setFunctionTo(createComputedVariable(variable, true));
+            }
         }
     }
 
-    public void resetVariablesMatchingFunction(Function<ComputedVariable, Boolean> function) {
-        computedVariables.values().forEach(computedVar -> {
-            if (function.apply(computedVar)) {
-                resetVariable(computedVar.variableKey);
-            }
-        });
+    public void resetVariablesWithFunctions() {
+        computedVariables.keySet().forEach(variableKey -> resetVariable(variableKey));
     }
 
     public boolean containsVariable(String variable) {

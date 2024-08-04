@@ -985,7 +985,7 @@ public class PartEngine extends APart {
                         variable = variable.substring(0, variable.length() - "_cam".length());
                     } else {
                         //Invaild variable.
-                        return ComputedVariable.ZERO_VARIABLE;
+                        return new ComputedVariable(false);
                     }
 
                     //Extract the values we need
@@ -1006,7 +1006,7 @@ public class PartEngine extends APart {
                         }, true);
                     } else {
                         //Invalid piston arrangement.
-                        return ComputedVariable.ZERO_VARIABLE;
+                        return new ComputedVariable(false);
                     }
                 } else {
                     return super.createComputedVariable(variable, createDefaultIfNotPresent);

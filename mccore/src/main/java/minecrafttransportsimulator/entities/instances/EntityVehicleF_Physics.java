@@ -904,7 +904,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                             }
                             default:
                                 //Invalid radar type.
-                                return ComputedVariable.ZERO_VARIABLE;
+                                return new ComputedVariable(false);
                         }
                         
                         final int radarNumber = Integer.parseInt(parsedVariable[2]) - 1;
@@ -963,7 +963,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     }
                     
                     //Down here means bad variable format.
-                    return ComputedVariable.ZERO_VARIABLE;
+                    return new ComputedVariable(false);
                 }else {
                     return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }

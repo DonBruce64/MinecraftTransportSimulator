@@ -21,8 +21,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 public class ComputedVariable {
     public static final String INVERTED_PREFIX = "!";
     public static final String CONSTANT_PREFIX = "#";
-    public static final ComputedVariable ZERO_VARIABLE = new ComputedVariable(null, "#0", null);
-    public static final ComputedVariable ONE_VARIABLE = new ComputedVariable(null, "#1", null);
 
 	/**The key of this variable, required to be unique to all variables on the entity.**/
     public final String variableKey;
@@ -31,7 +29,7 @@ public class ComputedVariable {
     private ComputedVariableOperator function;
     private boolean changesOnPartialTicks;
     private boolean randomVariable;
-    private boolean isConstant;
+    public boolean isConstant;
     private long lastTickChecked;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/
     public double currentValue;
@@ -71,6 +69,11 @@ public class ComputedVariable {
         }
     }
 
+    /**Constructor for making a constant of either true or false.**/
+    public ComputedVariable(boolean bool) {
+        this(null, bool ? "#1" : "#0", null);
+    }
+
     @Override
     public String toString() {
         return variableKey + ":" + currentValue;
@@ -105,6 +108,8 @@ public class ComputedVariable {
         this.entity = other.entity;
         this.function = other.function;
         this.isConstant = other.isConstant;
+        this.currentValue = other.currentValue;
+        this.isActive = other.isActive;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
         this.randomVariable = other.randomVariable;
         setInternal(other.currentValue);

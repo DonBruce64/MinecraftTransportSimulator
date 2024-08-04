@@ -72,7 +72,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
             case ("slab_present_down"):
                 return new ComputedVariable(this, variable, partialTicks -> world.isBlockBelowBottomSlab(position) ? 1 : 0, false);
         }
-        return ComputedVariable.ZERO_VARIABLE;
+        return new ComputedVariable(false);
     }
 
     @Override

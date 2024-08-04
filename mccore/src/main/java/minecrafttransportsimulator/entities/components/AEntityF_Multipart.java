@@ -493,7 +493,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 if (partFound != null) {
                                     return partFound.createComputedVariable(partVariable, true);
                                 } else {
-                                    return ComputedVariable.ZERO_VARIABLE;
+                                    return new ComputedVariable(false);
                                 }
                             } else {
                                 --partNumber;
@@ -505,7 +505,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             //Couldn't find the part, set to 0.
-            return ComputedVariable.ZERO_VARIABLE;
+            return new ComputedVariable(false);
         } else {
             return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
@@ -686,8 +686,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
         parts.forEach(APart::updatePartList);
         
-        //Clear computed variables for anything that's not on ourselves, since our parts changed.
-        resetVariablesMatchingFunction(variable -> variable.entity != this);
+        //Clear computed variables since we changed parts and functions likely changed.
+        resetVariablesWithFunctions();
     }
 
     /**
