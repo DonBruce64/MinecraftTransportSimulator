@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import mcinterface1165.InterfaceRender;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GameRenderer;
@@ -34,6 +35,9 @@ public abstract class WorldRendererMixin {
         //Set camera offset point for later.
         Vector3d position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
+        if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
+            InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, false, pPartialTicks);
+        }
         InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, true, pPartialTicks);
     }
 }
