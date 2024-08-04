@@ -85,6 +85,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      **/
     private final Map<String, ComputedVariable> computedVariables = new HashMap<>();
 
+    /**
+     * Map of computed variables restored from saved data.  These aren't populated into the map until asked since there may
+     * be computed values that have overwritten these values since last save, and we need to use those values VS these.
+     **/
+    private final Map<String, ComputedVariable> savedComputedVariables = new HashMap<>();
+
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
     private final Set<JSONSound> soundDefFalseLastCheck = new HashSet<>();
@@ -183,7 +189,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             //Load variables.
             for (String variableName : data.getStrings("variables")) {
-                addVariable(new ComputedVariable(this, variableName, data));
+                savedComputedVariables.put(variableName, new ComputedVariable(this, variableName, data));
             }
         } else {
             //Only set initial text/variables on initial placement.
@@ -933,10 +939,20 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 } else {
                     //Either a hard-coded value, or one we are wrapping.  No logic required.
                     //Double-check we don't already have this variable.  If we do, we don't need to re-create it.
-                    ComputedVariable existingVariable = computedVariables.get(variable);
-                    if (existingVariable != null) {
-                        return existingVariable;
+                    ComputedVariable exsitingVariable = computedVariables.get(variable);
+                    if (exsitingVariable != null) {
+                        return exsitingVariable;
                     } else {
+                        exsitingVariable = savedComputedVariables.remove(variable);
+                        if (exsitingVariable != null) {
+                            //Double-check that we don't have a computed variable this saved variable would replace.
+                            if (createComputedVariable(variable, false) == null) {
+                                addVariable(exsitingVariable);
+                                return exsitingVariable;
+                            } else {
+                                System.out.println("REPLACING VARIABLE SAVED " + variable + " WITH DYAMIC ON " + this);
+                            }
+                        }
                         return createDefaultIfNotPresent ? new ComputedVariable(this, variable, null) : null;
                     }
                 }
@@ -960,9 +976,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
-        if (clock.animation.variable.equals("!ground_onground_1")) {
-            //System.out.println("ERE2");
-        }
         double value = getOrCreateVariable(clock.animation.variable).computeValue(partialTicks);
         if (!clock.isUseful) {
             return clampAndScale(value, clock.animation, scaleFactor, offset);
@@ -1012,8 +1025,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Gets the requested variable.  Note that this MAY change if the variable is requested to be reset,
-     * so don't keep a static reference to the variable unless you don't have to worry about state-changes.
+     * Gets the requested variable.
      */
     public ComputedVariable getOrCreateVariable(String variable) {
         ComputedVariable computedVar = computedVariables.get(variable);
@@ -1247,7 +1259,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
         List<String> savedNames = new ArrayList<>();
-        computedVariables.values().forEach(variable -> variable.saveToNBT(savedNames, data));
+        computedVariables.values().forEach(variable -> {
+            if (variable.entity == this) {
+                variable.saveToNBT(savedNames, data);
+            }
+        });
         if (!savedNames.isEmpty()) {
             data.setStrings("variables", savedNames);
         }
