@@ -241,6 +241,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCANFOUND = new LanguageEntry("gui.signalcontroller.scanfound", "Found: ");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE = new LanguageEntry("gui.signalcontroller.righthanddrive", "Right-Hand Drive");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_LEFTHANDDRIVE = new LanguageEntry("gui.signalcontroller.lefthanddrive", "Left-Hand Drive");
+    public static final LanguageEntry GUI_SIGNALCONTROLLER_STOPONLY = new LanguageEntry("gui.signalcontroller.stoponly", "Red Before Green");
+    public static final LanguageEntry GUI_SIGNALCONTROLLER_STOPYELLOW = new LanguageEntry("gui.signalcontroller.stopyellow", "Ylw/Red Before Green");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_TIMEMODE = new LanguageEntry("gui.signalcontroller.timemode", "Time Delay");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_TRIGGERMODE = new LanguageEntry("gui.signalcontroller.triggermode", "Vehicle Trigger");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_PRIMARYAXIS = new LanguageEntry("gui.signalcontroller.primaryaxis", "Main Axis: ");

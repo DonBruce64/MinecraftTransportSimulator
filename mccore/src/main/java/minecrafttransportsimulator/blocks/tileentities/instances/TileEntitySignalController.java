@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +35,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
     //Main settings for all operation.
     public boolean isRightHandDrive;
+    public boolean hasStopYellow;
     public boolean timedMode;
     public boolean unsavedClientChangesPreset;
     public Axis mainDirectionAxis = Axis.NORTH;
@@ -136,6 +139,7 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         //Load state data.
         isRightHandDrive = data.getBoolean("isRightHandDrive");
+        hasStopYellow = data.getBoolean("hasStopYellow");
         timedMode = data.getBoolean("timedMode");
         String axisName = data.getString("mainDirectionAxis");
         mainDirectionAxis = axisName.isEmpty() ? Axis.NORTH : Axis.valueOf(axisName);
@@ -237,6 +241,7 @@ public class TileEntitySignalController extends TileEntityDecor {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setBoolean("isRightHandDrive", isRightHandDrive);
+        data.setBoolean("hasStopYellow", hasStopYellow);
         data.setBoolean("timedMode", timedMode);
         data.setString("mainDirectionAxis", mainDirectionAxis.name());
 
@@ -476,6 +481,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case CAUTION_LIGHT:
                     return LightType.STOP_LIGHT;
                 case STOP_LIGHT:
+                    return hasStopYellow ? LightType.CAUTION_STOP_LIGHT : LightType.GO_LIGHT;
+                case CAUTION_STOP_LIGHT:
                     return LightType.GO_LIGHT;
                 default:
                     return null;
@@ -499,6 +506,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                     return isMainSignal ? greenMainTime : greenCrossTime;
                 case CAUTION_LIGHT:
                     return isMainSignal ? yellowMainTime : yellowCrossTime;
+                case CAUTION_STOP_LIGHT:
+                    return 20;
                 case STOP_LIGHT:
                     return allRedTime;
                 default:
@@ -561,6 +570,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case CAUTION_LIGHT_LEFT:
                     return LightType.STOP_LIGHT_LEFT;
                 case STOP_LIGHT_LEFT:
+                    return hasStopYellow ? LightType.CAUTION_STOP_LIGHT_LEFT : LightType.GO_LIGHT_LEFT;
+                case CAUTION_STOP_LIGHT_LEFT:
                     return LightType.GO_LIGHT_LEFT;
                 default:
                     return null;
@@ -584,6 +595,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                     return (isMainSignal ? greenMainTime : greenCrossTime) / 4;
                 case CAUTION_LIGHT_LEFT:
                     return (isMainSignal ? yellowMainTime : yellowCrossTime) / 4;
+                case CAUTION_STOP_LIGHT_LEFT:
+                    return 20;
                 case STOP_LIGHT_LEFT:
                     return allRedTime;
                 default:
@@ -647,6 +660,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case CAUTION_LIGHT_RIGHT:
                     return LightType.STOP_LIGHT_RIGHT;
                 case STOP_LIGHT_RIGHT:
+                    return hasStopYellow ? LightType.CAUTION_STOP_LIGHT_RIGHT : LightType.GO_LIGHT_RIGHT;
+                case CAUTION_STOP_LIGHT_RIGHT:
                     return LightType.GO_LIGHT_RIGHT;
                 default:
                     return null;
@@ -670,6 +685,8 @@ public class TileEntitySignalController extends TileEntityDecor {
                     return (isMainSignal ? greenMainTime : greenCrossTime) / 4;
                 case CAUTION_LIGHT_RIGHT:
                     return (isMainSignal ? yellowMainTime : yellowCrossTime) / 4;
+                case CAUTION_STOP_LIGHT_RIGHT:
+                    return 20;
                 case STOP_LIGHT_RIGHT:
                     return allRedTime;
                 default:
@@ -722,20 +739,29 @@ public class TileEntitySignalController extends TileEntityDecor {
     public enum LightType {
         STOP_LIGHT,
         CAUTION_LIGHT,
+        CAUTION_STOP_LIGHT("stop_light", "caution_light"),
         GO_LIGHT,
 
         STOP_LIGHT_LEFT,
         CAUTION_LIGHT_LEFT,
+        CAUTION_STOP_LIGHT_LEFT("stop_light_left", "caution_light_left"),
         GO_LIGHT_LEFT,
 
         STOP_LIGHT_RIGHT,
         CAUTION_LIGHT_RIGHT,
+        CAUTION_STOP_LIGHT_RIGHT("stop_light_right", "caution_light_right"),
         GO_LIGHT_RIGHT;
 
-        public final String lowercaseName;
+        public final List<String> lightNames = new ArrayList<>();
 
-        LightType() {
-            this.lowercaseName = name().toLowerCase(Locale.ROOT);
+        LightType(String... overrideNames) {
+            if (overrideNames.length == 0) {
+                lightNames.add(name().toLowerCase(Locale.ROOT));
+            } else {
+                for (String name : overrideNames) {
+                    lightNames.add(name);
+                }
+            }
         }
     }
 
