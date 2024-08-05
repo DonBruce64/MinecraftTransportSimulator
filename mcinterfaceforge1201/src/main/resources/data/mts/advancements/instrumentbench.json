@@ -1,0 +1,16 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {"item": "mts:mts.instrumentbench"},
+        "title": {"translate": "advancements.mts.instrumentbench.title"},
+        "description": {"translate": "advancements.mts.instrumentbench.description"}
+    },
+    "criteria": {
+        "has_instrumentbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.instrumentbench"}]
+            }
+        }
+    }
+}
