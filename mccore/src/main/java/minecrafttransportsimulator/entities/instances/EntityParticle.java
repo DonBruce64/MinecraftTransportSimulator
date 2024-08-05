@@ -545,6 +545,10 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
             renderable.setAlpha(renderable.alpha * (maxAge - ticksExisted) / definition.fadeTransparencyTime);
         }
+        if (definition.daytimeReductionFactor != 0) {
+            //Get world light and factor this into the alpha value.
+            renderable.setAlpha(renderable.alpha * (1 - (definition.daytimeReductionFactor * world.getLightBrightness(position, true))));
+        }
 
         if (renderable.isTranslucent == blendingEnabled) {
             if (staticColor == null) {

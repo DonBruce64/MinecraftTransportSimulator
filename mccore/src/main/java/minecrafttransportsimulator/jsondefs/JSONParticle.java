@@ -28,6 +28,9 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will do brightness blending.  Ignored if the user has blendedLights as false in their config.")
     public boolean isBlended;
 
+    @JSONDescription("Reduces alpha by this factor during daytime.  A value of 1 means the particle will be invisible during full daylight, decimals (0.0->1.0) for partial brightness during daytime are supported.")
+    public float daytimeReductionFactor;
+
     @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
     public boolean stopsOnGround;
 
