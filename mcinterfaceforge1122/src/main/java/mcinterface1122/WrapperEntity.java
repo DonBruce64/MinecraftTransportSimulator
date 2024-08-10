@@ -19,6 +19,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
@@ -169,7 +170,12 @@ public class WrapperEntity implements IWrapperEntity {
         //We account for this here.
         AEntityB_Existing riding = getEntityRiding();
         if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
-            return entity.getYOffset() - 0.14D;
+            if (entity instanceof EntityAnimal) {
+                //Animals are moved up 0.14 pixels (~2.25), for their sitting positions.  Un-do this.
+                return entity.getYOffset() - 0.14D;
+            } else {
+                return entity.getYOffset();
+            }
         }
         return 0;
     }
