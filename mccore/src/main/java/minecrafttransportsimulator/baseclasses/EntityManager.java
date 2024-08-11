@@ -361,6 +361,49 @@ public abstract class EntityManager {
         }
     }
     
+    //FIXME need to put this on newer MC versions.
+    public void adjustHeightForRain(Point3D position) {
+        for (EntityVehicleF_Physics vehicle : getEntitiesOfType(EntityVehicleF_Physics.class)) {
+            if (vehicle.encompassingBox.isPointInsideAndBelow(position)) {
+                //Point is inside the box, but we might not be blocked by a collision box.  If we are, we need to block rain.
+                for (BoundingBox box : vehicle.allCollisionBoxes) {
+                    if (box.collisionTypes.contains(CollisionType.ENTITY)) {
+                        //Check all four corners.
+                        //We might only be blocking partially, but we need to block the whole block.
+                        position.x -= 0.5;
+                        position.z -= 0.5;
+                        if (box.isPointInsideAndBelow(position)) {
+                            position.y = box.globalCenter.y + box.heightRadius;
+                            position.x += 0.5;
+                            position.z += 0.5;
+                        } else {
+                            position.x += 1.0;
+                            if (box.isPointInsideAndBelow(position)) {
+                                position.y = box.globalCenter.y + box.heightRadius;
+                                position.x -= 0.5;
+                                position.z += 0.5;
+                            } else {
+                                position.z += 1.0;
+                                if (box.isPointInsideAndBelow(position)) {
+                                    position.y = box.globalCenter.y + box.heightRadius;
+                                    position.x -= 0.5;
+                                    position.z -= 0.5;
+                                } else {
+                                    position.x -= 1.0;
+                                    if (box.isPointInsideAndBelow(position)) {
+                                        position.y = box.globalCenter.y + box.heightRadius;
+                                    }
+                                    position.x += 0.5;
+                                    position.z -= 0.5;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Tells the manager to import JSONs in all worlds.
      * This has to do a sequenced-handshake where entities are removed, JSONs applied, and then added back again.

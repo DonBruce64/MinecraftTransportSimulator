@@ -174,6 +174,13 @@ public class BoundingBox {
     }
 
     /**
+     * Returns true if the passed-in point is inside this box in the XZ plane, and is below this box.
+     */
+    public boolean isPointInsideAndBelow(Point3D point) {
+        return globalCenter.x - widthRadius <= point.x && globalCenter.x + widthRadius >= point.x && globalCenter.y + heightRadius > point.y && globalCenter.z - depthRadius <= point.z && globalCenter.z + depthRadius >= point.z;
+    }
+
+    /**
      * Returns true if the passed-in box intersects this box.
      */
     public boolean intersects(BoundingBox box) {
