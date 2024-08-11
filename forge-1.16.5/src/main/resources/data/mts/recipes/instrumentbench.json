@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aba",
+        "cdc",
+        "c c"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:glowstone"
+        },
+        "c": {
+            "tag": "minecraft:planks"
+        },
+        "d": {
+            "item": "minecraft:redstone_block"
+        }
+    },
+    "result": {
+        "item": "mts:mts.instrumentbench"
+    }
+}

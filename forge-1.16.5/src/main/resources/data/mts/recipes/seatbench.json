@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "aba",
+        "a a"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:iron_axe"
+        }
+    },
+    "result": {
+        "item": "mts:mts.seatbench"
+    }
+}
