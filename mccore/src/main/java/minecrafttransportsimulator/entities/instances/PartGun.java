@@ -87,6 +87,7 @@ public class PartGun extends APart {
 
     //These variables are used during firing and will be reset on loading.
     public GunState state;
+    public boolean bulletsPresentOnServer;
     public boolean firedThisRequest;
     public boolean firedThisCheck;
     public boolean playerHoldingTrigger;
@@ -119,6 +120,7 @@ public class PartGun extends APart {
     //Temp helper variables for calculations
     private final Point3D targetVector = new Point3D();
     private final Point3D targetAngles = new Point3D();
+    private final Point3D controllerAngles = new Point3D();
     private final RotationMatrix firingSpreadRotation = new RotationMatrix();
     private final RotationMatrix pitchMuzzleRotation = new RotationMatrix();
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
@@ -207,6 +209,8 @@ public class PartGun extends APart {
             //This prevents pack changes from locking guns.
             if (loadedBullet == null) {
                 bulletsLeft = 0;
+            } else if (world.isClient()) {
+                bulletsPresentOnServer = true;
             }
 
             String reloadingBulletPack = data.getString("reloadingBulletPack");
@@ -378,8 +382,11 @@ public class PartGun extends APart {
                     }
 
                     //If we have bullets, try and fire them.
+                    //The only exception is if the server is the controller, in that case fire until we are told to stop.
+                    //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
                     boolean cycledGun = false;
-                    if (bulletsLeft > 0) {
+                    boolean serverIsPrimaryController = loadedBullet != null && (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
+                    if (bulletsLeft > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
                         state = state.promote(GunState.FIRING_CURRENTLY);
 
                         //If we are in our cam, fire the bullets.
@@ -387,9 +394,7 @@ public class PartGun extends APart {
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
                                 for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                     ++bulletsFired;
-
-                                    //If this bullet isn't long-range, don't spawn on the server.  That's just extra tracking.
-                                    if (world.isClient() || loadedBullet.definition.bullet.isLongRange) {
+                                    if (world.isClient() || serverIsPrimaryController) {
                                         //Get the bullet's state.
                                         setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 
@@ -427,12 +432,13 @@ public class PartGun extends APart {
 
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group.
-                                if (--bulletsLeft == 0) {
+                                if (bulletsLeft > 0 && --bulletsLeft == 0) {
                                     //Only set the bullet to null on the server. This lets the server choose a different bullet to load.
                                     //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
                                     //That would cause us to finish the reload with a null bullet, and crash later.
                                     if (!world.isClient()) {
                                         loadedBullet = null;
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_OUT));
                                     }
                                     break;
                                 }
@@ -545,6 +551,9 @@ public class PartGun extends APart {
             lastLoadedBullet = loadedBullet;
             bulletsLeft += reloadingBullet.definition.bullet.quantity;
             reloadingBullet = null;
+            if (!world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
+            }
         }
 
         //Increment or decrement windup.
@@ -671,8 +680,10 @@ public class PartGun extends APart {
             //If we have a target, validate it and try to hit it.
             if (entityTarget != null) {
                 if (validateTarget(entityTarget)) {
-                    controller.setYaw(targetAngles.y);
-                    controller.setPitch(targetAngles.x);
+                    controllerAngles.set(targetVector).getAngles(true);
+                    controller.setYaw(controllerAngles.y);
+                    controller.setPitch(controllerAngles.x);
+
                     //Only fire if we're within 1 movement increment of the target.
                     if (Math.abs(targetAngles.y - internalOrientation.angles.y) < yawSpeed && Math.abs(targetAngles.x - internalOrientation.angles.x) < pitchSpeed) {
                         state = state.promote(GunState.FIRING_REQUESTED);
@@ -850,11 +861,12 @@ public class PartGun extends APart {
      */
     private boolean validateTarget(IWrapperEntity target) {
         if (target.isValid()) {
-            //Get vector from eyes of controller to target.
+            //Get vector from gun center to target.
             //Target we aim for the middle, as it's more accurate.
             //We also take into account tracking for bullet speed.
-            targetVector.set(target.getEyePosition());
+            targetVector.set(target.getPosition());
             targetVector.y += target.getEyeHeight() / 2D;
+            targetVector.subtract(position);
 
             //Transform vector to gun's coordinate system.
             //Get the angles the gun has to rotate to match the target.
@@ -1015,7 +1027,11 @@ public class PartGun extends APart {
      * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
      */
     public void performGunKnockback() {
-        ((EntityPlayerGun) entityOn).player.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-definition.gun.knockback));
+        double knockback = -definition.gun.knockback;
+        if (lastLoadedBullet.definition.bullet.pellets != 0) {
+            knockback /= lastLoadedBullet.definition.bullet.pellets;
+        }
+        ((EntityPlayerGun) entityOn).player.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(knockback));
     }
 
     /**

@@ -165,7 +165,13 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public double getSeatOffset() {
-        return 0D;
+        //Vanilla entities (boat/minecart) normally have a 0.14 pixel delta from their base to where the entity sits.
+        //We account for this here.
+        AEntityB_Existing riding = getEntityRiding();
+        if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
+            return entity.getYOffset() - 0.14D;
+        }
+        return 0;
     }
 
     @Override

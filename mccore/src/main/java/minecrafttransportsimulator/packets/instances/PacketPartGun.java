@@ -73,6 +73,14 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 gun.isHandHeldGunAimed = false;
                 break;
             }
+            case BULLETS_OUT: {
+                gun.bulletsPresentOnServer = false;
+                break;
+            }
+            case BULLETS_PRESENT: {
+                gun.bulletsPresentOnServer = true;
+                break;
+            }
             case KNOCKBACK: {
                 gun.performGunKnockback();
                 break;
@@ -87,6 +95,8 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         TRIGGER_OFF(true),
         AIM_ON(true),
         AIM_OFF(true),
+        BULLETS_OUT(false),
+        BULLETS_PRESENT(false),
         KNOCKBACK(true);
 
         private final boolean sendToClients;

@@ -270,12 +270,12 @@ public class GUIPartBench extends AGUIBase {
         nextColorButton.enabled = nextSubItem != null;
 
         //Enable next recipe button if we have multiple valid recipes.
-        nextRecipeButton.enabled = currentItem != null && (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() > 1 : currentItem.definition.general.materialLists.size() > 1);
+        nextRecipeButton.enabled = materials != null && !materials.isEmpty();
 
         vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
         vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
         repairCraftingButton.visible = !viewingRepair && currentItem != null;
-        repairCraftingButton.enabled = repairCraftingButton.visible && currentItem.definition.general.repairMaterialLists != null && !currentItem.definition.general.repairMaterialLists.isEmpty();
+        repairCraftingButton.enabled = repairCraftingButton.visible && currentItem.getRepairRecipeCount() > 0;
         normalCraftingButton.visible = viewingRepair;
         partInfo.visible = !displayVehicleInfo;
         vehicleInfo.visible = displayVehicleInfo;
@@ -471,7 +471,7 @@ public class GUIPartBench extends AGUIBase {
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair, true);
             if (materials == null) {
-                if (++recipeIndex == (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() : currentItem.definition.general.materialLists.size())) {
+                if (++recipeIndex == (viewingRepair ? currentItem.getRepairRecipeCount() : currentItem.definition.general.materialLists.size())) {
                     recipeIndex = 0;
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";

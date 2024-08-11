@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -17,7 +16,6 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
-import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -192,7 +190,7 @@ public class InterfaceClient implements IInterfaceClient {
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
                     world.beginProfiling("MTS_ClientVehicleUpdates", true);
-                    world.tickAll();
+                    world.tickAll(true);
 
                     //Open pack missing screen if we don't have packs.
                     if (!player.isSpectator()) {
@@ -204,11 +202,11 @@ public class InterfaceClient implements IInterfaceClient {
                         }
                     }
 
-                    //Complain about Universal Tweaks mod at 10 second mark.
-                    if (ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("universaltweaks")) {
+                    //Complain about compats at 10 second mark.
+                    if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                         if (ticksToCullingWarning > 0) {
                             if (--ticksToCullingWarning == 0) {
-                                player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT UNIVERSAL TWEAKS MOD IS PRESENT.  THIS MOD CULLS IV VEHICLES UNLESS \"Entity Desync\" IS SET TO FALSE IN THE UNIVERSAL TWEAKS CONFIG.");
+                                //Nothing to complain about here!
                             }
                         }
                     }
@@ -236,12 +234,7 @@ public class InterfaceClient implements IInterfaceClient {
                         }
                     }
                 } else {
-                    //Update player guns.  These happen at the end since they need the player to update first.
-                    world.beginProfiling("MTS_PlayerGunUpdates", true);
-                    for (EntityPlayerGun gun : world.getEntitiesOfType(EntityPlayerGun.class)) {
-                        gun.update();
-                        gun.doPostUpdateLogic();
-                    }
+                    world.tickAll(false);
                     
                     //Handle camera requests.
                     if(cameraModeRequest != null) {

@@ -230,9 +230,13 @@ public class RenderableModelObject {
             float lightLevel;
             if (lightDef != null) {
                 lightLevel = entity.lightBrightnessValues.get(lightDef);
-                if (lightDef.isElectric && entity instanceof EntityVehicleF_Physics) {
+                AEntityD_Definable<?> masterEntity = entity;
+                if (masterEntity instanceof APart) {
+                    masterEntity = ((APart) masterEntity).masterEntity;
+                }
+                if (lightDef.isElectric && masterEntity instanceof EntityVehicleF_Physics) {
                     //Light start dimming at 10V, then go dark at 3V.
-                    double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
+                    double electricPower = ((EntityVehicleF_Physics) masterEntity).electricPower;
                     if (electricPower < 3) {
                         lightLevel = 0;
                     } else if (electricPower < 10) {

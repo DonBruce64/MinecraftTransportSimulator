@@ -43,7 +43,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
                         boxes.add(box);
                     }
                 } else {
-                    if (box.collisionTypes.contains(CollisionType.ATTACK) || box.collisionTypes.contains(CollisionType.CLICK)) {
+                    if (box.collisionTypes.contains(CollisionType.ENTITY) || box.collisionTypes.contains(CollisionType.ATTACK) || box.collisionTypes.contains(CollisionType.CLICK)) {
                         boxes.add(box);
                     }
                 }

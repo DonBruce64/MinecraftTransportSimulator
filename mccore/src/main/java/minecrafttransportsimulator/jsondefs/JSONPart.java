@@ -584,6 +584,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The type of the effector.  This defines what this effector does.")
         public EffectorComponentType type;
 
+        @JSONDescription("The delay, in ticks, between operations.  Used to cut down on operation spam for some applications.")
+        public int operationDelay;
+
         @JSONDescription("How hard a block the effector can break.  Only valid for drills.")
         public float drillHardness;
 
@@ -593,7 +596,7 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
 
-        @JSONDescription("The delay, in ticks, between placer, and dropper, placing operations.  Used to cut down on placement spam for some applications.")
+        @Deprecated
         public int placerDelay;
     }
 

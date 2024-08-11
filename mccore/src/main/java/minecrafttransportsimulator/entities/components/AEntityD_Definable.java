@@ -174,6 +174,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (definition.rendering != null && definition.rendering.textObjects != null) {
                 for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                     JSONText textDef = definition.rendering.textObjects.get(i);
+                    //Check for text value in case we added a text line after wr created this entity.
                     text.put(textDef, data.hasKey("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
                 }
             }
@@ -183,7 +184,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 variables.put(variableName, data.getDouble(variableName));
             }
         } else {
-            //Only set initial variables on initial placement.
+            //Only set initial text/variables on initial placement.
+            if (definition.rendering != null && definition.rendering.textObjects != null) {
+                for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
+                    JSONText textDef = definition.rendering.textObjects.get(i);
+                    text.put(textDef, textDef.defaultText);
+                }
+            }
+
             if (definition.initialVariables != null) {
                 for (String variable : definition.initialVariables) {
                     variables.put(variable, 1D);
@@ -658,18 +666,29 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                 //Next, check the distance.
                 double distance = 0;
+                double conicalFactor = 1.0;
                 if(shouldSoundStartPlaying) {
 	                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
 	                if (shouldSoundStartPlaying) {
 	                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
 	                    if (soundDef.maxDistance != soundDef.minDistance) {
-	                        shouldSoundStartPlaying = distance < soundDef.maxDistance && distance > soundDef.minDistance;
+                            shouldSoundStartPlaying = distance < soundDef.maxDistance && distance >= soundDef.minDistance;
 	                    } else {
 	                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
 	                    }
 	                }
+
+                    //Next, check if we have a conical restriction.
+                    if (shouldSoundStartPlaying && soundDef.conicalVector != null) {
+                        double conicalAngle = Math.toDegrees(Math.acos(soundDef.conicalVector.copy().rotate(orientation).dotProduct(InterfaceManager.clientInterface.getClientPlayer().getEyePosition().subtract(soundPos).normalize(), true)));
+                        if (conicalAngle >= soundDef.conicalAngle || conicalAngle < 0) {
+                            shouldSoundStartPlaying = false;
+                        } else {
+                            conicalFactor = (soundDef.conicalAngle - conicalAngle) / soundDef.conicalAngle;
+                        }
+                    }
                 }
-                
+
                 //Finally, play the sound if all checks were true.
                 SoundInstance playingSound = null;
                 for (SoundInstance sound : sounds) {
@@ -741,6 +760,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                                 sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
                             }
                         }
+
+                        //Apply conical factor.
+                        sound.volume *= conicalFactor;
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.

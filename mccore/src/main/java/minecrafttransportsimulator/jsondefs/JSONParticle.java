@@ -25,6 +25,12 @@ public class JSONParticle {
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
+    @JSONDescription("If true, this particle will do brightness blending.  Ignored if the user has blendedLights as false in their config.")
+    public boolean isBlended;
+
+    @JSONDescription("Reduces alpha by this factor during daytime.  A value of 1 means the particle will be invisible during full daylight, decimals (0.0->1.0) for partial brightness during daytime are supported.")
+    public float daytimeReductionFactor;
+
     @JSONDescription("Makes the particle stop all movement when it hits the ground.  This includes rotation.")
     public boolean stopsOnGround;
 
@@ -169,6 +175,8 @@ public class JSONParticle {
     public enum ParticleSpawningOrientation {
         @JSONDescription("Particle spawns relative to the entity that spawned it.")
         ENTITY,
+        @JSONDescription("Particle spawns attached to the entity that spawned it, and moves with that entity.")
+        ATTACHED,
         @JSONDescription("Particle spawns relative to the world and ignores entity orientation.")
         WORLD,
         @JSONDescription("Particle spawns relative to to the face orientation where the bullet that spawned it hit.  If this is an air burst that didn't hit anything, or isn't on a bullet, it will not be spawned.")

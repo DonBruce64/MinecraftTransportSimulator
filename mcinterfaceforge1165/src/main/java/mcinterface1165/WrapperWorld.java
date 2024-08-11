@@ -373,7 +373,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (LivingEntity entity : world.getEntitiesOfClass(LivingEntity.class, WrapperWorld.convert(box))) {
-            if (entity.getVehicle() == null && !(entity instanceof MonsterEntity)) {
+            if (entity.getVehicle() == null && !(entity instanceof MonsterEntity) && !(entity instanceof PlayerEntity)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
@@ -990,9 +990,16 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnItemStack(IWrapperItemStack stack, Point3D point) {
-        //Spawn 1 block above in case we're right on a block.
-        world.addFreshEntity(new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack));
+    public void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion) {
+        ItemEntity item;
+        if (optionalMotion != null) {
+            item = new ItemEntity(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack);
+            item.setDeltaMovement(new Vector3d(optionalMotion.x, optionalMotion.y, optionalMotion.z));
+        } else {
+            //Spawn 1 block above in case we're right on a block.
+            item = new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack);
+        }
+        world.addFreshEntity(item);
     }
 
     @Override
@@ -1030,7 +1037,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isClientSide && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
-                tickAll();
+                tickAll(true);
 
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();
@@ -1101,13 +1108,9 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
                 }
+                endProfiling();
             } else {
-                //Update player guns.  These happen at the end since they need the player to update first.
-                beginProfiling("MTS_PlayerGunUpdates", true);
-                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                    gun.update();
-                    gun.doPostUpdateLogic();
-                }
+                tickAll(false);
             }
         }
     }

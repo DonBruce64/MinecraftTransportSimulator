@@ -241,6 +241,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_SIGNALCONTROLLER_SCANFOUND = new LanguageEntry("gui.signalcontroller.scanfound", "Found: ");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE = new LanguageEntry("gui.signalcontroller.righthanddrive", "Right-Hand Drive");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_LEFTHANDDRIVE = new LanguageEntry("gui.signalcontroller.lefthanddrive", "Left-Hand Drive");
+    public static final LanguageEntry GUI_SIGNALCONTROLLER_STOPONLY = new LanguageEntry("gui.signalcontroller.stoponly", "Red Before Green");
+    public static final LanguageEntry GUI_SIGNALCONTROLLER_STOPYELLOW = new LanguageEntry("gui.signalcontroller.stopyellow", "Ylw/Red Before Green");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_TIMEMODE = new LanguageEntry("gui.signalcontroller.timemode", "Time Delay");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_TRIGGERMODE = new LanguageEntry("gui.signalcontroller.triggermode", "Vehicle Trigger");
     public static final LanguageEntry GUI_SIGNALCONTROLLER_PRIMARYAXIS = new LanguageEntry("gui.signalcontroller.primaryaxis", "Main Axis: ");
@@ -288,7 +290,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_HEADER_CONTROLS = new LanguageEntry("gui.config.header.controls", "CONTROLS");
 
     public static final LanguageEntry GUI_CONFIG_CONTROLS_TITLE = new LanguageEntry("gui.config.controls.title", "Choose a configuration to change: ");
-    public static final LanguageEntry GUI_CONFIG_CONTROLS_VOLUME = new LanguageEntry("gui.config.controls.volume", "Volume: ");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_SOUNDVOLUME = new LanguageEntry("gui.config.controls.soundvolume", "Sound Volume: ");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");

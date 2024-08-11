@@ -1,10 +1,12 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -41,7 +43,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     private int hotbarSelected = -1;
     private IWrapperItemStack gunStack;
     private boolean didGunFireLastTick;
-    private boolean gunBeingRemoved;
     public PartGun activeGun;
 
     public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -136,13 +137,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 return;
             }
 
-            //If the gun was in the removal process, do the removal now.
-            if (gunBeingRemoved) {
-                gunBeingRemoved = false;
-                removePart(activeGun, true, null);
-                activeGun = null;
-            }
-
             //If we have a gun, but the player's held stack is null, get it now.
             //This happens if we load a gun as a saved part.
             if (activeGun != null && gunStack == null) {
@@ -157,29 +151,28 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 if (activeGun != null && gunStack == null) {
                     //Either the player's held item changed, or the pack did.
                     //Held gun is invalid, so don't use or save it.
-                    gunBeingRemoved = true;
+                    removePart(activeGun, true, null);
                     return;
-                }
-            }
-            //Check to make sure if we had a gun, that it didn't change.
-            AItemBase heldItem = player.getHeldItem();
-            ItemPartGun heldGun = heldItem instanceof ItemPartGun ? (ItemPartGun) heldItem : null;
-            if (activeGun != null && (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex())) {
-                if (!world.isClient()) {
-                    saveGun(true);
-                    return;
-                } else {
-                    activeGun.isHandHeldGunEquipped = false;
                 }
             }
 
             if (!world.isClient()) {
-                //If we don't have a gun yet, try to get the current one if the player is holding one.
-                if (activeGun == null && heldGun != null) {
-                    if (heldGun.definition.gun.handHeld) {
-                        gunStack = player.getHeldStack();
-                        addPartFromStack(gunStack, player, 0, true, false);
-                        hotbarSelected = player.getHotbarIndex();
+                AItemBase heldItem = player.getHeldItem();
+                ItemPartGun heldGun = heldItem instanceof ItemPartGun ? (ItemPartGun) heldItem : null;
+                if (activeGun != null) {
+                    //Check to make sure if we had a gun, that it didn't change.
+                    if (heldGun == null || activeGun.definition != heldGun.definition || hotbarSelected != player.getHotbarIndex()) {
+                        saveGun(true);
+                        return;
+                    }
+                } else {
+                    //If we don't have a gun yet, try to get the current one if the player is holding one.
+                    if (heldGun != null) {
+                        if (heldGun.definition.gun.handHeld) {
+                            gunStack = player.getHeldStack();
+                            addPartFromStack(gunStack, player, 0, true, false);
+                            hotbarSelected = player.getHotbarIndex();
+                        }
                     }
                 }
             }
@@ -266,10 +259,22 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Player guns are queued to be ticked after their players are updated.
         //If not, then they don't move to the right spot.
-        return false;
+        return EntityAutoUpdateTime.AFTER_PLAYER;
+    }
+
+    @Override
+    public void removePart(APart part, boolean removeFromWorld, Iterator<APart> iterator) {
+        //Prior to removal, flag the gun as not being held and tick one last time.
+        //This allows the gun to perform any holstering tasks.
+        if (part == activeGun) {
+            activeGun.isHandHeldGunEquipped = false;
+            EntityManager.doTick(activeGun);
+        }
+        super.removePart(part, removeFromWorld, iterator);
+        activeGun = null;
     }
 
     @Override
@@ -323,9 +328,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
-            gunBeingRemoved = true;
-            activeGun.isHandHeldGunEquipped = false;
-            return;
+            removePart(activeGun, true, null);
         }
     }
 

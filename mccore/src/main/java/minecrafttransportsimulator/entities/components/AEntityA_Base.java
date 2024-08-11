@@ -59,12 +59,13 @@ public abstract class AEntityA_Base {
     }
 
     /**
-     * Returns true if this entity should be ticked in the main update calls.
+     * Returns the update time of this entity within the main update calls.  Entities are handled in order of addition,
+     * however, some entities are dependent on parent entities or others to update and may need special handling.
      * Note that this does not block one from calling {@link #update()} manually; this
-     * just blocks the auto-ticking code.
+     * just handles the auto-ticking code.
      */
-    public boolean shouldAutomaticallyUpdate() {
-        return true;
+    public EntityAutoUpdateTime getUpdateTime() {
+        return EntityAutoUpdateTime.NORMAL;
     }
 
     /**
@@ -107,5 +108,11 @@ public abstract class AEntityA_Base {
     public IWrapperNBT save(IWrapperNBT data) {
         data.setUUID(UNIQUE_UUID_TAG_NAME, uniqueUUID);
         return data;
+    }
+
+    public static enum EntityAutoUpdateTime {
+        NORMAL,
+        AFTER_PLAYER,
+        NEVER;
     }
 }

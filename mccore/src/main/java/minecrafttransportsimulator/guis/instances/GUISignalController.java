@@ -30,6 +30,7 @@ public class GUISignalController extends AGUIBase {
     private GUIComponentButton directionButton;
     private GUIComponentButton cycleButton;
     private GUIComponentButton driveSideButton;
+    private GUIComponentButton stopYellowButton;
     private boolean onLaneScreen;
 
     //Label for scan results.
@@ -151,12 +152,12 @@ public class GUISignalController extends AGUIBase {
         addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_SCANFOUND.getCurrentValue() + controller.componentLocations.size()));
         topOffset += scanDistanceText.height + rowSpacing * 3;
 
-        //RHD/LHD switch.
-        addComponent(driveSideButton = new GUIComponentButton(this, leftTextOffset, topOffset, 115, 15, controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue()) {
+        //Stop yellow switch.
+        addComponent(stopYellowButton = new GUIComponentButton(this, leftTextOffset, topOffset, 115, 15, controller.hasStopYellow ? LanguageSystem.GUI_SIGNALCONTROLLER_STOPYELLOW.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_STOPONLY.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
-                controller.isRightHandDrive = !controller.isRightHandDrive;
-                this.text = controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue();
+                controller.hasStopYellow = !controller.hasStopYellow;
+                this.text = controller.hasStopYellow ? LanguageSystem.GUI_SIGNALCONTROLLER_STOPYELLOW.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_STOPONLY.getCurrentValue();
                 controller.unsavedClientChangesPreset = true;
                 controller.initializeController(null);
             }
@@ -198,10 +199,23 @@ public class GUISignalController extends AGUIBase {
             }
         });
 
-        //Lane width defaults.
-        addComponent(laneWidthText = new GUIComponentNumericTextBox(this, middleObjectOffset + 60, topOffset, "4.0", 40));
-        addComponent(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_LANEWIDTH.getCurrentValue()).setComponent(laneWidthText));
+        //RHD/LHD switch.
+        addComponent(driveSideButton = new GUIComponentButton(this, middleObjectOffset, topOffset, 100, 15, controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue()) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                controller.isRightHandDrive = !controller.isRightHandDrive;
+                this.text = controller.isRightHandDrive ? LanguageSystem.GUI_SIGNALCONTROLLER_RIGHTHANDDRIVE.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LEFTHANDDRIVE.getCurrentValue();
+                controller.unsavedClientChangesPreset = true;
+                controller.initializeController(null);
+            }
+        });
+
         topOffset += 15 + rowSpacing * 3;
+
+        //Lane width defaults.
+        addComponent(laneWidthText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, "4.0"));
+        addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, LanguageSystem.GUI_SIGNALCONTROLLER_LANEWIDTH.getCurrentValue()).setComponent(laneWidthText));
+        topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 
         //Time text.  These auto-forward their values.
         addComponent(greenMainTimeText = new GUIComponentNumericTextBox(this, middleObjectOffset, topOffset, String.valueOf(controller.greenMainTime / 20)) {
@@ -250,7 +264,7 @@ public class GUISignalController extends AGUIBase {
         topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT + rowSpacing * 4;
 
         //Change screen button.
-        addComponent(new GUIComponentButton(this, leftTextOffset, topOffset, 100, 20, onLaneScreen ? LanguageSystem.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LANESETTINGS.getCurrentValue()) {
+        addComponent(new GUIComponentButton(this, leftTextOffset, topOffset, 100, 15, onLaneScreen ? LanguageSystem.GUI_SIGNALCONTROLLER_SIGNALSETTINGS.getCurrentValue() : LanguageSystem.GUI_SIGNALCONTROLLER_LANESETTINGS.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 onLaneScreen = !onLaneScreen;
@@ -259,7 +273,7 @@ public class GUISignalController extends AGUIBase {
         });
 
         //Confirm button.
-        addComponent(new GUIComponentButton(this, guiLeft + getWidth() - 100, topOffset, 80, 20, LanguageSystem.GUI_CONFIRM.getCurrentValue()) {
+        addComponent(new GUIComponentButton(this, guiLeft + getWidth() - 100, topOffset, 80, 15, LanguageSystem.GUI_CONFIRM.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 InterfaceManager.packetInterface.sendToServer(new PacketTileEntitySignalControllerChange(controller));
@@ -311,13 +325,14 @@ public class GUISignalController extends AGUIBase {
         directionButton.visible = !onLaneScreen;
         cycleButton.visible = !onLaneScreen;
         driveSideButton.visible = !onLaneScreen;
+        stopYellowButton.visible = !onLaneScreen;
 
         scanCenterXText.visible = !onLaneScreen;
         scanCenterZText.visible = !onLaneScreen;
         scanDistanceText.visible = !onLaneScreen;
         trafficSignalCount.visible = !onLaneScreen;
-        laneWidthText.visible = !onLaneScreen;
 
+        laneWidthText.visible = !onLaneScreen;
         greenMainTimeText.visible = !onLaneScreen;
         greenCrossTimeText.visible = !onLaneScreen;
         yellowMainTimeText.visible = !onLaneScreen;

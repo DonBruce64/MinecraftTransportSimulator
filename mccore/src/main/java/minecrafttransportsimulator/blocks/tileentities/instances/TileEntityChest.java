@@ -39,7 +39,7 @@ public class TileEntityChest extends TileEntityDecor {
         for (int i = 0; i < inventory.getSize(); ++i) {
             IWrapperItemStack stack = inventory.getStack(i);
             if (stack != null) {
-                world.spawnItemStack(stack, position);
+                world.spawnItemStack(stack, position, null);
             }
         }
         //Now forward destruction call.  If we didn't, we'd have removed our inventory already.

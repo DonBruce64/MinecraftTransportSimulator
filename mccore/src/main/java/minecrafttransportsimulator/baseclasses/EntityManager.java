@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityA_Base.EntityAutoUpdateTime;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -34,7 +35,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public abstract class EntityManager {
     public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<AEntityA_Base> allTickableEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allNormalTickableEntities = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AEntityA_Base> allPlayerTickableEntities = new ConcurrentLinkedQueue<>();
     public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
@@ -68,8 +70,10 @@ public abstract class EntityManager {
      */
     public <EntityType extends AEntityA_Base> void addEntity(EntityType entity) {
         allEntities.add(entity);
-        if (entity.shouldAutomaticallyUpdate()) {
-            allTickableEntities.add(entity);
+        if (entity.getUpdateTime() == EntityAutoUpdateTime.NORMAL) {
+            allNormalTickableEntities.add(entity);
+        } else if (entity.getUpdateTime() == EntityAutoUpdateTime.AFTER_PLAYER) {
+            allPlayerTickableEntities.add(entity);
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
@@ -158,134 +162,147 @@ public abstract class EntityManager {
      * Ticks all entities that exist and need ticking.  These are any entities that
      * are not parts, since parts are ticked by their parents.
      */
-    public void tickAll() {
-        for (AEntityA_Base entity : allTickableEntities) {
-            if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
-                entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
-                if (entity instanceof AEntityD_Definable) {
-                    AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-                    //Need to do this before updating as these require knowledge of prior states.
-                    entity.world.beginProfiling("VariableModifiers", true);
-                    definable.updateVariableModifiers();
-                    if (definable instanceof AEntityF_Multipart) {
-                        ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());
-                    }
-                    entity.world.beginProfiling("MainUpdate", false);
-                    entity.update();
-                    entity.world.beginProfiling("PostUpdate", false);
-                    definable.doPostUpdateLogic();
-                    entity.world.endProfiling();
-                } else {
-                    entity.update();
+    public void tickAll(boolean beforePlayer) {
+        if (beforePlayer) {
+            for (AEntityA_Base entity : allNormalTickableEntities) {
+                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                    doTick(entity);
                 }
-                entity.world.endProfiling();
+            }
+
+            //Do hotload operations.
+            //This operates on all threads concurrently as long as we're counting down.
+            if (hotloadStep > 0) {
+                switch (hotloadStep) {
+                    case (1): {
+                        if (getWorld().isClient()) {
+                            //Client manager, set counter to let entities sync.
+                            if (hotloadCountdown == 0) {
+                                hotloadCountdown = hotloadCountdownPreset;
+                            }
+                        } else {
+                            //Server manager, remove all entities in this manager for reloading.
+                            if (managersToHotload.contains(this)) {
+                                for (AEntityA_Base entity : allNormalTickableEntities) {
+                                    if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
+                                        AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+                                        //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
+                                        if (entity instanceof AEntityF_Multipart) {
+                                            ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
+                                                if (part.rider != null) {
+                                                    hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
+                                                    part.removeRider();
+                                                }
+                                            });
+                                        }
+
+                                        //Now store data for countdown and remove entity.
+                                        if (entity instanceof EntityVehicleF_Physics) {
+                                            hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
+                                        } else if (entity instanceof EntityPlacedPart) {
+                                            hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+                                        }
+                                        //Remove will cause entity to get removed client-side, no need to remove on that thread.
+                                        definable.remove();
+                                    }
+                                }
+                                managersToHotload.remove(this);
+                            }
+                        }
+                        break;
+                    }
+                    case (2): {
+                        if (getWorld().isClient()) {
+                            //Client manager, apply hotloads once on this client.
+                            hotloadFunction.apply();
+                            //No need to wait, all systems will be ready next tick.
+                            hotloadCountdown = 1;
+                        }
+                        break;
+                    }
+                    case (3): {
+                        if (getWorld().isClient()) {
+                            //Client manager, set counter to let entities sync.
+                            if (hotloadCountdown == 0) {
+                                hotloadCountdown = hotloadCountdownPreset;
+                            }
+                        } else {
+                            //Server manager, load back in saved entities while we wait for client to count down.
+                            hotloadedVehicles.forEach((data, item) -> {
+                                EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
+                                vehicle.addPartsPostAddition(null, data);
+                                vehicle.world.spawnEntity(vehicle);
+                            });
+                            hotloadedVehicles.clear();
+                            hotloadedPlacedParts.forEach(data -> {
+                                EntityPlacedPart placedPart = new EntityPlacedPart(getWorld(), null, data);
+                                placedPart.addPartsPostAddition(null, data);
+                                placedPart.world.spawnEntity(placedPart);
+                            });
+                            hotloadedPlacedParts.clear();
+                        }
+                        break;
+                    }
+                    case (4): {
+                        if (getWorld().isClient()) {
+                            //Client manager, set counter to let riders sync.
+                            if (hotloadCountdown == 0) {
+                                hotloadCountdown = hotloadCountdownPreset;
+                            }
+                        } else if (!getWorld().isClient()) {
+                            //Server manager, load back all seated riders.
+                            hotloadedRiderIDs.forEach((seatID, riderID) -> {
+                                getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
+                            });
+                            hotloadedRiderIDs.clear();
+
+                        }
+                        break;
+                    }
+                    case (5): {
+                        //Done with hotloads, set to step 0.
+                        hotloadStep = 0;
+                        break;
+            		}
+                }
+
+                //Countdown timer to go to next step.
+                //Only countdown on the client, since we know there's only one client and will only tick once per update.
+                if (hotloadStep != 0 && getWorld().isClient()) {
+                    if (--hotloadCountdown == 0) {
+                        ++hotloadStep;
+                    }
+                    ;
+                }
+            }
+        } else {
+            for (AEntityA_Base entity : allPlayerTickableEntities) {
+                if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
+                    doTick(entity);
+                }
             }
         }
-        
-        //Do hotload operations.
-        //This operates on all threads concurrently as long as we're counting down.
-        if(hotloadStep > 0) {
-        	switch(hotloadStep) {
-        		case(1):{
-        			if(getWorld().isClient()) {
-        				//Client manager, set counter to let entities sync.
-        				if(hotloadCountdown == 0) {
-                            hotloadCountdown = hotloadCountdownPreset;
-        				}
-        			}else {
-        				//Server manager, remove all entities in this manager for reloading.
-	                	if(managersToHotload.contains(this)) {
-	                		for (AEntityA_Base entity : allTickableEntities) {
-	                            if (entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart) {
-	                            	AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
-	                                //First need to save/remove riders, since we don't want to save them with this data since they aren't being unloaded.
-	                            	if(entity instanceof AEntityF_Multipart) {
-	                                    ((AEntityF_Multipart<?>) entity).allParts.forEach(part -> {
-	                                        if (part.rider != null) {
-	                                            hotloadedRiderIDs.put(part.uniqueUUID, part.rider.getID());
-	                                            part.removeRider();
-	                                        }
-	                                    });
-	                            	}
-	                                
-	                                //Now store data for countdown and remove entity.
-	                            	if(entity instanceof EntityVehicleF_Physics) {
-	                            		hotloadedVehicles.put(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()), (ItemVehicle) definable.cachedItem);
-	                            	}else if(entity instanceof EntityPlacedPart) {
-	                            		hotloadedPlacedParts.add(definable.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-	                            	}
-	                            	//Remove will cause entity to get removed client-side, no need to remove on that thread.
-	                                definable.remove();
-	                            }
-	                        }
-	                		managersToHotload.remove(this);	
-	                	}
-        			}
-        			break;
-        		}
-        		case(2):{
-                	if(getWorld().isClient()) {
-                		//Client manager, apply hotloads once on this client.
-            			hotloadFunction.apply();
-            			//No need to wait, all systems will be ready next tick.
-            			hotloadCountdown = 1;
-            		}
-        			break;
-        		}
-        		case(3):{
-        			if(getWorld().isClient()) {
-        				//Client manager, set counter to let entities sync.
-        				if(hotloadCountdown == 0) {
-                            hotloadCountdown = hotloadCountdownPreset;
-        				}
-        			}else {
-        				//Server manager, load back in saved entities while we wait for client to count down.
-	                    hotloadedVehicles.forEach((data, item) -> {
-	                        EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(getWorld(), null, item, data);
-	                        vehicle.addPartsPostAddition(null, data);
-	                        vehicle.world.spawnEntity(vehicle);
-	                    });
-	                    hotloadedVehicles.clear();
-	                    hotloadedPlacedParts.forEach(data-> {
-	                        EntityPlacedPart placedPart = new EntityPlacedPart(getWorld(), null, data);
-	                        placedPart.addPartsPostAddition(null, data);
-	                        placedPart.world.spawnEntity(placedPart);
-	                    });
-	                    hotloadedPlacedParts.clear();
-        			}
-        			break;
-        		}
-        		case(4):{
-        			if(getWorld().isClient()) {
-        				//Client manager, set counter to let riders sync.
-        				if(hotloadCountdown == 0) {
-                            hotloadCountdown = hotloadCountdownPreset;
-        				}
-        			}else if(!getWorld().isClient()) {
-        				//Server manager, load back all seated riders.
-        				hotloadedRiderIDs.forEach((seatID, riderID) -> {
-                            getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
-                        });
-                        hotloadedRiderIDs.clear();
-                        
-        			}
-        			break;
-        		}
-        		case(5):{
-        			//Done with hotloads, set to step 0.
-                    hotloadStep = 0;
-                    break;
-        		}
-        	}
-        	
-        	//Countdown timer to go to next step.
-    		//Only countdown on the client, since we know there's only one client and will only tick once per update.
-        	if(hotloadStep != 0 && getWorld().isClient()) {
-        		if(--hotloadCountdown == 0) {
-        			++hotloadStep;
-        		};
-        	}
+    }
+
+    public static void doTick(AEntityA_Base entity) {
+        entity.world.beginProfiling("MTSEntity_" + entity.uniqueUUID, true);
+        if (entity instanceof AEntityD_Definable) {
+            AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+            //Need to do this before updating as these require knowledge of prior states.
+            entity.world.beginProfiling("VariableModifiers", true);
+            definable.updateVariableModifiers();
+            if (definable instanceof AEntityF_Multipart) {
+                ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());
+            }
+            entity.world.beginProfiling("MainUpdate", false);
+            entity.update();
+            entity.world.beginProfiling("PostUpdate", false);
+            definable.doPostUpdateLogic();
+            entity.world.endProfiling();
+        } else {
+            entity.update();
         }
+        entity.world.endProfiling();
     }
 
     /**
@@ -329,7 +346,8 @@ public abstract class EntityManager {
      */
     public void removeEntity(AEntityA_Base entity) {
         allEntities.remove(entity);
-        allTickableEntities.remove(entity);
+        allNormalTickableEntities.remove(entity);
+        allPlayerTickableEntities.remove(entity);
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.remove(entity);
         }

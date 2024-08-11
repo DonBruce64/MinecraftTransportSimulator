@@ -289,9 +289,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Parts are always updated by their parent, not the main update calls.
-        return false;
+        return EntityAutoUpdateTime.NEVER;
     }
 
     @Override
@@ -323,7 +323,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             		player.sendPacket(new PacketPlayerChatMessage(player, partResult));
             		return;
             	}else if (!player.getInventory().addStack(getStack())) {
-                	world.spawnItemStack(getStack(), position);
+                	world.spawnItemStack(getStack(), position, null);
                 }
             	entityOn.removePart(this, true, null);
             }
@@ -379,11 +379,20 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     /**
      * Updates the tone of the part to its appropriate type.
      * If the part can't match the tone of this vehicle, then it is not modified.
+     * Code checks first one level up, then the top-level, if the level up doesn't have a tone.
      */
     public void updateTone(boolean recursive) {
         if (placementDefinition.toneIndex != 0) {
+            String partTone = null;
             if (entityOn.subDefinition.partTones != null && entityOn.subDefinition.partTones.size() >= placementDefinition.toneIndex) {
-                String partTone = entityOn.subDefinition.partTones.get(placementDefinition.toneIndex - 1);
+                partTone = entityOn.subDefinition.partTones.get(placementDefinition.toneIndex - 1);
+            }
+            if (partTone == null) {
+                if (masterEntity.subDefinition.partTones != null && masterEntity.subDefinition.partTones.size() >= placementDefinition.toneIndex) {
+                    partTone = masterEntity.subDefinition.partTones.get(placementDefinition.toneIndex - 1);
+                }
+            }
+            if (partTone != null) {
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
                         updateSubDefinition(partTone);

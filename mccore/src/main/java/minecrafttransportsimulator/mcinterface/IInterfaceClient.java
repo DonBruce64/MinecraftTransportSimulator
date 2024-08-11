@@ -121,7 +121,8 @@ public interface IInterfaceClient {
     /**
      * Returns the player.  Only valid on CLIENTs as on servers
      * there are multiple players.  Note that the player MAY be null if the
-     * world hasn't been loaded yet.
+     * world hasn't been loaded yet.  Also note that tests to check if any player
+     * is this client should use the equals method vs the == operator.
      */
     IWrapperPlayer getClientPlayer();
 

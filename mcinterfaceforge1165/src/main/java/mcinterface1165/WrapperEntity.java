@@ -36,7 +36,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
-    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityClientWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityServerWrappers = new HashMap<>();
 
     protected final Entity entity;
     private AEntityB_Existing cachedEntityRiding;
@@ -51,6 +52,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (entity instanceof PlayerEntity) {
             return WrapperPlayer.getWrapperFor((PlayerEntity) entity);
         } else if (entity != null) {
+            Map<Entity, WrapperEntity> entityWrappers = entity.level.isClientSide ? entityClientWrappers : entityServerWrappers;
             WrapperEntity wrapper = entityWrappers.get(entity);
             if (wrapper == null || !wrapper.isValid() || entity != wrapper.entity) {
                 wrapper = new WrapperEntity(entity);
@@ -164,11 +166,19 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public double getSeatOffset() {
-        if (entity instanceof VillagerEntity) {
-            return -12D / 16D;
-        } else {
-            return 0D;
+        //Vanilla entities (boat/minecart) normally have a 0.14 pixel delta from their base to where the entity sits.
+        //We account for this here.
+        AEntityB_Existing riding = getEntityRiding();
+        if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
+            if (entity instanceof VillagerEntity) {
+                //Need to add-on a factor for villagers since we make them sit whereas they don't normally do this.
+                //Actual factor is based on what players have for their offsets, see the player wrapper method for details.
+                return entity.getMyRidingOffset() - 0.14D - 0.485D;
+            } else {
+                return entity.getMyRidingOffset() - 0.14D;
+            }
         }
+        return 0;
     }
 
     @Override
@@ -440,6 +450,10 @@ public class WrapperEntity implements IWrapperEntity {
      */
     @SubscribeEvent
     public static void onIVWorldUnload(WorldEvent.Unload event) {
-        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        if (event.getWorld().isClientSide()) {
+            entityClientWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        } else {
+            entityServerWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.level);
+        }
     }
 }

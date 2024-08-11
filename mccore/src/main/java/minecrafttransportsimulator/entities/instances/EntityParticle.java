@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Basic particle class.  This mimic's MC's particle logic, except we can manually set
@@ -44,6 +46,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
     //Constant properties.
     private final AEntityC_Renderable entitySpawning;
+    private final AnimationSwitchbox spawningSwitchbox;
     private final JSONParticle definition;
     private final int maxAge;
     private final Point3D initialVelocity;
@@ -68,62 +71,82 @@ public class EntityParticle extends AEntityC_Renderable {
     private int colorIndex;
     private int colorDelayIndex;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox switchbox) {
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox spawningSwitchbox) {
         super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
         this.entitySpawning = entitySpawning;
         this.definition = definition;
+        this.spawningSwitchbox = spawningSwitchbox;
         this.maxAge = generateMaxAge();
         boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
 
-        //Set initial position.
+        //Set transforms based on type.
         helperTransform.resetTransforms();
-        if (definition.spawningOrientation == ParticleSpawningOrientation.ENTITY) {
-            orientation.set(entitySpawning.orientation);
-            helperTransform.set(orientation);
-        } else if (definition.spawningOrientation == ParticleSpawningOrientation.FACING) {
-        	if(entitySpawning instanceof EntityBullet) {
-        		EntityBullet bullet = (EntityBullet) entitySpawning;
-                if (bullet.sideHit != Axis.NONE) {
-        			helperRotation.setToZero().rotateX(-90);        			
-                    orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
-        			helperTransform.set(orientation);
-        		}else {
-                    //Nothing for bullet to hit, block spawning.
-                    this.initialVelocity = null;
-                    this.staticColor = null;
-                    this.renderable = null;
-                    this.model = null;
-        			this.killBadParticle = true;
-                    return;
-        		}
-        	}
-        }
-        if (switchbox != null) {
-            helperTransform.multiply(switchbox.netMatrix);
+        switch (definition.spawningOrientation) {
+            case ENTITY:
+            case ATTACHED: {
+                orientation.set(entitySpawning.orientation);
+                helperTransform.set(orientation);
+                break;
+            }
+            case FACING: {
+                if (entitySpawning instanceof EntityBullet) {
+                    EntityBullet bullet = (EntityBullet) entitySpawning;
+                    if (bullet.sideHit != Axis.NONE) {
+                        helperRotation.setToZero().rotateX(-90);
+                        orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
+                        helperTransform.set(orientation);
+                    } else {
+                        //Nothing for bullet to hit, block spawning.
+                        this.initialVelocity = null;
+                        this.staticColor = null;
+                        this.renderable = null;
+                        this.model = null;
+                        this.killBadParticle = true;
+                        return;
+                    }
+                }
+                break;
+            }
+            case WORLD: {
+                //Do nothing, world doesn't touch position/orientation.
+                break;
+            }
         }
 
-        if (definition.rot != null) {
-            orientation.multiply(definition.rot);
+        //Set position.
+        setPositionToSpawn();
+        prevPosition.set(position);
+
+        //Now that position is set, check to make sure we aren't an invalid particle.
+        if (definition.type == ParticleType.BREAK) {
+            if (world.isAir(position)) {
+                //Don't spawn break particles in the air, they're null textures.
+                this.staticColor = null;
+                this.renderable = null;
+                this.model = null;
+                this.initialVelocity = null;
+                this.killBadParticle = true;
+                return;
+            }
         }
-        if (definition.rotationRandomness != null) {
-            helperPoint.set(definition.rotationRandomness);
-            helperPoint.x = (2 * Math.random() - 1) * helperPoint.x;
-            helperPoint.y = (2 * Math.random() - 1) * helperPoint.y;
-            helperPoint.z = (2 * Math.random() - 1) * helperPoint.z;
-            helperRotation.setToAngles(helperPoint);
-            orientation.multiply(helperRotation);
+
+        //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
+        Point3D blockCheckPosition;
+        if (definition.getBlockPropertiesFromGround) {
+            //Center of block for safety of FPEs.
+            blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
+        } else {
+            //Use spawning position here since block properties for particles are usually from bullets, which are slightly in the block.
+            blockCheckPosition = spawingPosition;
         }
+
+        //Set orientation.
+        setOrientationToSpawn();
         prevOrientation.set(orientation);
 
-        if (definition.pos != null) {
-            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
-        } else {
-            helperPoint.set(0, 0, 0);
-        }
-        helperPoint.transform(helperTransform);
-        position.add(helperPoint);
+        //Get initial motion.
         if (definition.initialVelocity != null) {
             if (definition.spreadRandomness != null) {
                 motion.x = 2 * definition.spreadRandomness.x * Math.random() - definition.spreadRandomness.x;
@@ -141,7 +164,6 @@ public class EntityParticle extends AEntityC_Renderable {
             motion.rotate(helperTransform);
         }
         if (definition.relativeInheritedVelocityFactor != null) {
-            helperRotation.setToVector(entitySpawning.motion, true);
             helperPoint.set(entitySpawning.motion);
             if (entitySpawning instanceof EntityVehicleF_Physics) {
                 helperPoint.scale(((EntityVehicleF_Physics) entitySpawning).speedFactor);
@@ -151,23 +173,12 @@ public class EntityParticle extends AEntityC_Renderable {
                     helperPoint.scale(partSpawning.vehicleOn.speedFactor);
                 }
             }
+            helperRotation.setToVector(entitySpawning.motion, true);
             helperPoint.reOrigin(helperRotation).multiply(definition.relativeInheritedVelocityFactor).rotate(helperRotation);
             motion.add(helperPoint);
         }
         initialVelocity = motion.copy();
         updateOrientation();
-
-        //Now that position is set, check to make sure we aren't an invalid particle.
-        if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(position)) {
-                //Don't spawn break particles in the air, they're null textures.
-                this.staticColor = null;
-                this.renderable = null;
-                this.model = null;
-                this.killBadParticle = true;
-                return;
-            }
-        }
 
         //Set model and texture.
         String model = definition.model;
@@ -217,13 +228,6 @@ public class EntityParticle extends AEntityC_Renderable {
             texture = "mts:textures/particles/" + definition.type.name().toLowerCase(Locale.ROOT) + ".png";
         }
 
-        Point3D blockCheckPosition;
-        if(definition.getBlockPropertiesFromGround) {
-        	//Center of block for safety of FPEs.
-        	blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
-    	}else {
-    		blockCheckPosition = position;
-    	}
         this.model = model;
         if (this.model != null) {
             RenderableVertices parsedModel = parsedParticleModels.computeIfAbsent(this.model, k -> {
@@ -238,7 +242,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalBuffer.put(parsedObject.vertices);
                 }
-                totalBuffer.flip();
+                ((Buffer) totalBuffer).flip();
                 return new RenderableVertices("PARTICLE_3D", totalBuffer, false);
             });
             this.renderable = new RenderableData(parsedModel, texture);
@@ -303,8 +307,51 @@ public class EntityParticle extends AEntityC_Renderable {
         } else if (model == null) {
             renderable.setLightMode(LightingMode.IGNORE_ORIENTATION_LIGHTING);
         }
+        if (definition.isBlended) {
+            renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+        }
 
         this.killBadParticle = false;
+    }
+
+    private void setPositionToSpawn() {
+        //Apply transforms to get position.
+        if (definition.pos != null) {
+            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
+        } else {
+            helperPoint.set(0, 0, 0);
+        }
+        if (spawningSwitchbox != null) {
+            spawningSwitchbox.runSwitchbox(0, false);
+            helperTransform.multiply(spawningSwitchbox.netMatrix);
+        }
+        helperPoint.transform(helperTransform);
+        position.add(helperPoint);
+    }
+
+    private void setOrientationToSpawn() {
+        //Apply transforms to get orientation.
+        if (definition.rot != null) {
+            orientation.multiply(definition.rot);
+        }
+        if (definition.rotationRandomness != null) {
+            helperPoint.set(definition.rotationRandomness);
+            helperPoint.x = (2 * Math.random() - 1) * helperPoint.x;
+            helperPoint.y = (2 * Math.random() - 1) * helperPoint.y;
+            helperPoint.z = (2 * Math.random() - 1) * helperPoint.z;
+            helperRotation.setToAngles(helperPoint);
+            orientation.multiply(helperRotation);
+        }
+    }
+
+    @Override
+    public EntityAutoUpdateTime getUpdateTime() {
+        //Sync with our spawning entity in case we depend on their variables.
+        if (entitySpawning instanceof APart) {
+            return ((APart) entitySpawning).masterEntity.getUpdateTime();
+        } else {
+            return entitySpawning.getUpdateTime();
+        }
     }
 
     @Override
@@ -318,6 +365,14 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set movement.
         if (!definition.stopsOnGround || !touchingBlocks) {
+            if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
+                position.set(entitySpawning.position);
+                orientation.set(entitySpawning.orientation);
+                helperTransform.set(orientation);
+                setPositionToSpawn();
+                setOrientationToSpawn();
+            }
+            
             if (definition.movementDuration != 0) {
                 if (ticksExisted <= definition.movementDuration) {
                     Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
@@ -488,7 +543,11 @@ public class EntityParticle extends AEntityC_Renderable {
             renderable.setAlpha(definition.transparency != 0 ? definition.transparency : 1.0F);
         }
         if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
-            renderable.setAlpha(renderable.alpha *= (maxAge - ticksExisted) / (float) definition.fadeTransparencyTime);
+            renderable.setAlpha(renderable.alpha * (maxAge - ticksExisted) / definition.fadeTransparencyTime);
+        }
+        if (definition.daytimeReductionFactor != 0) {
+            //Get world light and factor this into the alpha value.
+            renderable.setAlpha(renderable.alpha * (1 - (definition.daytimeReductionFactor * world.getLightBrightness(position, true))));
         }
 
         if (renderable.isTranslucent == blendingEnabled) {

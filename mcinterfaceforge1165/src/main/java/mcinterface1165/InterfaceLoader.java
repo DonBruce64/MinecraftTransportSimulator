@@ -2,11 +2,9 @@ package mcinterface1165;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,11 +52,10 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.15.0";
+    public static final String MODVER = "22.16.0";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
-    public static Set<String> packIDs = new HashSet<>();
 
 
     public InterfaceLoader() {
@@ -106,9 +103,6 @@ public class InterfaceLoader {
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
-
-        //Set pack IDs.
-        packIDs.addAll(PackParser.getAllPackIDs());
 
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
@@ -190,6 +184,11 @@ public class InterfaceLoader {
             String name = collisionBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase(Locale.ROOT) + i;
             BuilderBlock.BLOCKS.register(name, () -> wrapper);
             BuilderBlock.blockMap.put(collisionBlock, wrapper);
+        }
+
+        //If we are on the client, create models.
+        if (isClient) {
+            InterfaceEventsModelLoader.init();
         }
 
         //Register the TEs.  Has to be done last to ensure block maps are populated.

@@ -1,10 +1,99 @@
 {
-    "general": {
-        "name": "Engine Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["part"], "partTypes": ["engine_"]
+  "decor": {
+    "type": "generic",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "crafting": {
+      "itemTypes": [
+        "part"
+      ],
+      "partTypes": [
+        "engine_"
+      ]
     }
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Engine Bench",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mts:bench/enginebench_open0",
+        "soundVariations": [
+          "mts:bench/enginebench_open0",
+          "mts:bench/enginebench_open1",
+          "mts:bench/enginebench_open2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/enginebench_craft0",
+        "soundVariations": [
+          "mts:bench/enginebench_craft0",
+          "mts:bench/enginebench_craft1",
+          "mts:bench/enginebench_craft2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 13.0,
+        "maxDistanceVolume": 0.0
+      },
+      {
+        "name": "mts:bench/enginebench_close0",
+        "soundVariations": [
+          "mts:bench/enginebench_close0",
+          "mts:bench/enginebench_close1",
+          "mts:bench/enginebench_close2"
+        ],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ],
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Engine Bench",
+    "materialLists": [
+      []
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
+  }
 }

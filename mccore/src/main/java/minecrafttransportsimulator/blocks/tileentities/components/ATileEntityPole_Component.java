@@ -29,9 +29,9 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Our poles update us all at once so their states are correct.
-        return false;
+        return EntityAutoUpdateTime.NEVER;
     }
 
     @Override

@@ -262,6 +262,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             riderRelativeOrientation.updateToAngles();
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);
+            //FIXME need to fix rider seat offset position in higher interfaces.
             riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
             riderHeadPosition.set(riderEyePosition);
 
@@ -303,8 +304,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     /**
      * Called to set the rider for this entity.  If this isn't possible because
      * there is already a rider, or we shouldn't accept riders, return false.
-     * Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
-     * for syncing so calling this on clients will result in Bad Stuff.
+     * Otherwise, return true.  
      * If the rider needs to face forward when they are added, set the boolean to true.
      * Note: this will only set them to face forwards on the tick they mount.
      * It won't block them from turning to a different orientation later.

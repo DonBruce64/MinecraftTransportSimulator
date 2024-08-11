@@ -976,9 +976,18 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnItemStack(IWrapperItemStack stack, Point3D point) {
-        //Spawn 1 block above in case we're right on a block.
-        world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack));
+    public void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion) {
+        EntityItem item;
+        if (optionalMotion != null) {
+            item = new EntityItem(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack);
+            item.motionX = optionalMotion.x;
+            item.motionY = optionalMotion.y;
+            item.motionZ = optionalMotion.z;
+        } else {
+            //Spawn 1 block above in case we're right on a block.
+            item = new EntityItem(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack);
+        }
+        world.spawnEntity(item);
     }
 
     @Override
@@ -1016,7 +1025,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 beginProfiling("MTS_ServerVehicleUpdates", true);
-                tickAll();
+                tickAll(true);
 
                 for (EntityPlayer player : event.world.playerEntities) {
                     UUID playerUUID = player.getUniqueID();
@@ -1057,15 +1066,10 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
                 }
+                endProfiling();
             } else {
-                //Update player guns.  These happen at the end since they need the player to update first.
-                beginProfiling("MTS_PlayerGunUpdates", true);
-                for (EntityPlayerGun gun : getEntitiesOfType(EntityPlayerGun.class)) {
-                    gun.update();
-                    gun.doPostUpdateLogic();
-                }
+                tickAll(false);
             }
-            endProfiling();
         }
     }
 

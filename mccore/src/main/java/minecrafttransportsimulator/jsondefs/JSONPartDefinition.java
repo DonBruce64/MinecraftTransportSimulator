@@ -55,6 +55,9 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If set, then whenever the paint gun is used on the vehicle this part is on, this part will attempt to match the tone specified by the index.  If the specified tone does not exist, the part will not change.  Default parts will automatically attempt to match tones, but hand-placed parts will not change unless painted.")
     public int toneIndex;
 
+    @JSONDescription("How many levels deep parts in this slot allow parts to be stacked on it.")
+    public int maxPartLevels;
+
     @JSONDescription("The minimum value that this slot will accept.  Parts with values lower than this will be invalid and show up as red holograms.  This differs depending on the part, with engines using fuelConsumption as their value, ground_devices using their diameter, and propellers using their diameter as well.  This allows you an easy way to make sure people don't add oversized engines to your little econo-box or put monster tires on the family sedan.  See the details for each part for what parameter is used for min/max calculations.")
     public float minValue;
 
@@ -87,6 +90,12 @@ public class JSONPartDefinition {
 
     @JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for treads, where the length depends on the vehicle the tread is placed on.  This parameter overrides the same-named parameter in the part JSON, if that parameter is set.")
     public float extraCollisionBoxOffset;
+
+    @JSONDescription("The width of the holographic part slot box for this slot.  Does not apply to generic parts which use their defined size.")
+    public float slotWidth;
+
+    @JSONDescription("Like slotWidth, but height.")
+    public float slotHeight;
 
     @JSONDescription("If set, this will cause treads hanging along the top rollers to droop.  The amount they droop is defined by this constant, with higher values equating to less droop.  Note that if you want to use this parameter, it is recommended to keep your idler rollers at about the same spacing from one another, as it is possible to have too much droop on one set and not enough on another.  Adjust to suit your vehicle.")
     public float treadDroopConstant;

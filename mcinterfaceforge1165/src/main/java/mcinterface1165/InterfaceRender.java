@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,6 +33,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -134,7 +136,7 @@ public class InterfaceRender implements IInterfaceRender {
                 buffer.endVertex();
             }
             //Rewind buffer for next read.
-            data.vertexObject.vertices.rewind();
+            ((Buffer) data.vertexObject.vertices).rewind();
         } else {
             String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
             final RenderType renderType;
@@ -173,7 +175,7 @@ public class InterfaceRender implements IInterfaceRender {
                     buffer.isReady = true;
                     buffer.builder.end();
                     buffer.buffer.upload(buffer.builder);
-                    data.vertexObject.vertices.rewind();
+                    ((Buffer) data.vertexObject.vertices).rewind();
                 }
 
                 //Add this buffer to the list to render later.
@@ -219,7 +221,7 @@ public class InterfaceRender implements IInterfaceRender {
                     }
                 }
                 //Rewind buffer for next read.
-                data.vertexObject.vertices.rewind();
+                ((Buffer) data.vertexObject.vertices).rewind();
             }
         }
         matrixStack.popPose();
@@ -449,7 +451,7 @@ public class InterfaceRender implements IInterfaceRender {
 
             @Override
             public void render(BuilderEntityRenderForwarder builder, float entityYaw, float partialTicks, MatrixStack stack, IRenderTypeBuffer buffer, int packedLight) {
-                if (builder.playerFollowing == Minecraft.getInstance().player) {
+                if (builder.playerFollowing == Minecraft.getInstance().player && !ConfigSystem.settings.general.forceRenderLastSolid.value) {
                     //Set camera offset point for later.
                     renderCameraOffset.set(MathHelper.lerp(partialTicks, builder.xOld, builder.getX()), MathHelper.lerp(partialTicks, builder.yOld, builder.getY()), MathHelper.lerp(partialTicks, builder.zOld, builder.getZ()));
 
@@ -603,7 +605,7 @@ public class InterfaceRender implements IInterfaceRender {
         }
 
         private BufferData(RenderType type, RenderableData data) {
-            int vertices = data.vertexObject.vertices.limit() / 8;
+            int vertices = ((Buffer) data.vertexObject.vertices).limit() / 8;
             //Convert verts to faces, then back to quad-verts for MC rendering.
             //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
             vertices = ((vertices / 3) + 1) * 4;

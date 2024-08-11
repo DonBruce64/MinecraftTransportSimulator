@@ -756,18 +756,38 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (world.isClient()) {
             activeClientPartSlotBoxes.clear();
         }
+
+        //Check if we made childLimit.  If so, bail on adding slot boxes.
+        AEntityF_Multipart<?> testEntity = this;
+        int level = 0;
+        do {
+            if (testEntity instanceof APart) {
+                ++level;
+                APart part = (APart) testEntity;
+                if (part.placementDefinition.maxPartLevels != 0 && part.placementDefinition.maxPartLevels <= level) {
+                    return;
+                }
+                testEntity = part.entityOn;
+            } else {
+                testEntity = null;
+            }
+        } while (testEntity != null);
+
+        //Good to add slot boxes.
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
                 boolean isLarge = false;
                 for (String type : partDef.types) {
-                    if (type.startsWith("ground_") || type.startsWith("propeller_")) {
+                    if (type.startsWith("engine_") || type.startsWith("ground_") || type.startsWith("propeller")) {
                         isLarge = true;
                         break;
                     }
                 }
                 BoundingBox newSlotBox;
-                if (isLarge) {
+                if (partDef.slotWidth != 0) {
+                    newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), partDef.slotWidth / 2D, partDef.slotHeight / 2D, partDef.slotWidth / 2D, false, partSlotBoxCollisionTypes);
+                } else if (isLarge) {
                     newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_LARGE_HITBOX_WIDTH / 2D, PART_SLOT_LARGE_HITBOX_HEIGHT / 2D, PART_SLOT_LARGE_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
                 } else {
                     newSlotBox = new BoundingBox(partDef.pos, partDef.pos.copy().rotate(orientation).add(position), PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, PART_SLOT_NORMAL_HITBOX_HEIGHT / 2D, PART_SLOT_NORMAL_HITBOX_WIDTH / 2D, false, partSlotBoxCollisionTypes);
@@ -803,8 +823,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             } else {
                                 AItemPart heldPart = (AItemPart) heldItem;
                                 if (heldPart.isPartValidForPackDef(slotDef, subDefinition, false) && isVariableListTrue(slotDef.interactableVariables)) {
-                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one.
-                                    if (heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
+                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one, but only if we don't have a holo box bounds defined.
+                                    if (slotDef.slotWidth == 0 && heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
                                         box.widthRadius = heldPart.definition.generic.width / 2D;
                                         box.heightRadius = heldPart.definition.generic.height / 2D;
                                         box.depthRadius = heldPart.definition.generic.width / 2D;

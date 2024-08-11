@@ -42,10 +42,13 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentLabel vehicleSelectionFaultLabel;
     private GUIComponentButton finishKeyboardBindingsButton;
 
-    //Volume level variables.
-    private GUIComponentButton volumeUpButton;
-    private GUIComponentButton volumeDownButton;
-    private GUIComponentLabel volumeLabel;
+    //Sound and radio level variables.
+    private GUIComponentButton soundVolumeUpButton;
+    private GUIComponentButton soundVolumeDownButton;
+    private GUIComponentLabel soundVolumeLabel;
+    private GUIComponentButton radioVolumeUpButton;
+    private GUIComponentButton radioVolumeDownButton;
+    private GUIComponentLabel radioVolumeLabel;
 
     //Keyboard assignment variables.
     private boolean configuringKeyboard;
@@ -162,28 +165,10 @@ public class GUIConfig extends AGUIBase {
             }
         }
 
-        //Add volume buttons and label.
-        addComponent(volumeUpButton = new GUIComponentButton(this, guiLeft + 68, guiTop + 160, 20, 20, "/\\") {
-            @Override
-            public void onClicked(boolean leftSide) {
-                ConfigSystem.client.controlSettings.masterVolume.value = (((int) (ConfigSystem.client.controlSettings.masterVolume.value * 10)) + 1) / 10F;
-                ConfigSystem.saveToDisk();
-            }
-        });
-        addComponent(volumeDownButton = new GUIComponentButton(this, guiLeft + 168, guiTop + 160, 20, 20, "\\/") {
-            @Override
-            public void onClicked(boolean leftSide) {
-                ConfigSystem.client.controlSettings.masterVolume.value = (((int) (ConfigSystem.client.controlSettings.masterVolume.value * 10)) - 1) / 10F;
-                ConfigSystem.saveToDisk();
-            }
-        });
-        addComponent(volumeLabel = new GUIComponentLabel(guiLeft + 128, guiTop + 165, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_CONTROLS_VOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.masterVolume.value, TextAlignment.CENTERED, 1.0F));
-        volumeLabel.setComponent(volumeDownButton);
-
         //Now add joystick buttons.
         for (String vehicleType : vehicleTypes) {
             String label = vehicleType.equals("car") ? LanguageSystem.GUI_CONFIG_CONTROLS_CAR_JOYSTICK.getCurrentValue() : LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK.getCurrentValue();
-            GUIComponentButton buttonJoystick = new GUIComponentButton(this, guiLeft + 68, guiTop + 70 + 20 * vehicleSelectionButtons.size(), 120, 20, label) {
+            GUIComponentButton buttonJoystick = new GUIComponentButton(this, guiLeft + 68, guiTop + 50 + 20 * vehicleSelectionButtons.size(), 120, 20, label) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     String lookupString = vehicleSelectionButtons.get(this);
@@ -195,6 +180,41 @@ public class GUIConfig extends AGUIBase {
             vehicleSelectionButtons.put(buttonJoystick, vehicleType + ".joystick");
             addComponent(buttonJoystick);
         }
+
+        //Add volume buttons and label.
+        addComponent(soundVolumeUpButton = new GUIComponentButton(this, guiLeft + 40, guiTop + 140, 20, 20, "/\\") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.controlSettings.soundVolume.value = (((int) (ConfigSystem.client.controlSettings.soundVolume.value * 10)) + 1) / 10F;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(soundVolumeDownButton = new GUIComponentButton(this, guiLeft + 188, guiTop + 140, 20, 20, "\\/") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.controlSettings.soundVolume.value = (((int) (ConfigSystem.client.controlSettings.soundVolume.value * 10)) - 1) / 10F;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(soundVolumeLabel = new GUIComponentLabel(guiLeft + 128, guiTop + 145, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_CONTROLS_SOUNDVOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.soundVolume.value, TextAlignment.CENTERED, 1.0F));
+        soundVolumeLabel.setComponent(soundVolumeDownButton);
+
+        addComponent(radioVolumeUpButton = new GUIComponentButton(this, soundVolumeUpButton.constructedX, soundVolumeUpButton.constructedY + soundVolumeUpButton.height, soundVolumeUpButton.width, soundVolumeUpButton.height, "/\\") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.controlSettings.radioVolume.value = (((int) (ConfigSystem.client.controlSettings.radioVolume.value * 10)) + 1) / 10F;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(radioVolumeDownButton = new GUIComponentButton(this, soundVolumeDownButton.constructedX, soundVolumeDownButton.constructedY + soundVolumeDownButton.height, soundVolumeDownButton.width, soundVolumeDownButton.height, "\\/") {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.controlSettings.radioVolume.value = (((int) (ConfigSystem.client.controlSettings.radioVolume.value * 10)) - 1) / 10F;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(radioVolumeLabel = new GUIComponentLabel(soundVolumeLabel.constructedX, soundVolumeLabel.constructedY + soundVolumeDownButton.height, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_CONTROLS_RADIOVOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.soundVolume.value, TextAlignment.CENTERED, 1.0F));
+        radioVolumeLabel.setComponent(radioVolumeDownButton);
 
         //Keyboard buttons and text.
         keyboardBoxes.clear();
@@ -466,14 +486,22 @@ public class GUIConfig extends AGUIBase {
 
         //If we haven't selected anything, render the volume controls.
         if (configuringControls && vehicleConfiguring.isEmpty()) {
-            volumeUpButton.visible = true;
-            volumeUpButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value < 1.5;
-            volumeDownButton.visible = true;
-            volumeDownButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value > 0;
-            volumeLabel.text = LanguageSystem.GUI_CONFIG_CONTROLS_VOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.masterVolume.value;
+            soundVolumeUpButton.visible = true;
+            soundVolumeUpButton.enabled = ConfigSystem.client.controlSettings.soundVolume.value < 1.5;
+            soundVolumeDownButton.visible = true;
+            soundVolumeDownButton.enabled = ConfigSystem.client.controlSettings.soundVolume.value > 0;
+            soundVolumeLabel.text = LanguageSystem.GUI_CONFIG_CONTROLS_SOUNDVOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.soundVolume.value;
+            radioVolumeUpButton.visible = true;
+            radioVolumeUpButton.enabled = ConfigSystem.client.controlSettings.radioVolume.value < 1.5;
+            radioVolumeDownButton.visible = true;
+            radioVolumeDownButton.enabled = ConfigSystem.client.controlSettings.radioVolume.value > 0;
+            radioVolumeLabel.text = LanguageSystem.GUI_CONFIG_CONTROLS_RADIOVOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.radioVolume.value;
+            //FIXME make sure radio volume gets applies in interfaces for ports.
         } else {
-            volumeUpButton.visible = false;
-            volumeDownButton.visible = false;
+            soundVolumeUpButton.visible = false;
+            soundVolumeDownButton.visible = false;
+            radioVolumeUpButton.visible = false;
+            radioVolumeDownButton.visible = false;
         }
 
         //If we have selected a vehicle, and are configuring a keyboard, render the keyboard controls.

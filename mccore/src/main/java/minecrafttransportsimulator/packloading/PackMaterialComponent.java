@@ -73,15 +73,13 @@ public class PackMaterialComponent {
         List<String> itemTexts = new ArrayList<String>();
         String currentSubName = "";
         if (forRepair) {
-            if (item.definition.general.repairMaterialLists != null) {
-                if (includeRepair) {
-                    if (InterfaceManager.coreInterface.isGameFlattened()) {
-                        itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + "1");
-                    } else {
-                        itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
-                    }
+            itemTexts.addAll(item.getRepairMaterials(recipeIndex));
+            if (includeRepair && !itemTexts.isEmpty()) {
+                if (InterfaceManager.coreInterface.isGameFlattened()) {
+                    itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":1");
+                } else {
+                    itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
                 }
-                itemTexts.addAll(item.definition.general.repairMaterialLists.get(recipeIndex));
             }
         } else {
             //Get main materials.

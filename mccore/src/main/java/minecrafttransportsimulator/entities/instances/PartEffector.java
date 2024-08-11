@@ -40,7 +40,7 @@ public class PartEffector extends APart {
     private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<>();
 
     //Variables used for placers.
-    private int placerDelay;
+    private int operationDelay;
 
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -54,7 +54,12 @@ public class PartEffector extends APart {
         super.update();
         //If we are active, do effector things.  Only do these on the server, clients get packets.
         activatedThisTick = false;
-        if (isActive && !world.isClient() && !outOfHealth) {
+        if (operationDelay < definition.effector.operationDelay) {
+            ++operationDelay;
+        } else {
+            operationDelay = 0;
+        }
+        if (isActive && !world.isClient() && !outOfHealth && operationDelay == definition.effector.operationDelay) {
             drops.clear();
             entityItems.clear();
             blockFlooredPositionsBrokeThisTick.clear();
@@ -110,7 +115,7 @@ public class PartEffector extends APart {
                                 if (!harvestedDrops.isEmpty()) {
                                     for (IWrapperItemStack stack : harvestedDrops) {
                                         if (stack.getSize() > 0) {
-                                            world.spawnItemStack(stack, position);
+                                            world.spawnItemStack(stack, position, null);
                                         }
                                     }
                                 }
@@ -158,28 +163,23 @@ public class PartEffector extends APart {
                             break;
                         }
                         case PLACER: {
-                            if (placerDelay == definition.effector.placerDelay) {
-                                if (world.isAir(box.globalCenter)) {
-                                    //Search all inventories for blocks  and try to place them.
-                                    for (PartInteractable crate : linkedPullableCrates) {
-                                        if (crate.isActive) {
-                                            for (int i = 0; i < crate.inventory.getSize(); ++i) {
-                                                IWrapperItemStack stack = crate.inventory.getStack(i);
-                                                if (world.placeBlock(box.globalCenter, stack)) {
-                                                    crate.inventory.removeFromSlot(i, 1);
-                                                    activatedThisTick = true;
-                                                    break;
-                                                }
+                            if (world.isAir(box.globalCenter)) {
+                                //Search all inventories for blocks  and try to place them.
+                                for (PartInteractable crate : linkedPullableCrates) {
+                                    if (crate.isActive) {
+                                        for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                            IWrapperItemStack stack = crate.inventory.getStack(i);
+                                            if (world.placeBlock(box.globalCenter, stack)) {
+                                                crate.inventory.removeFromSlot(i, 1);
+                                                activatedThisTick = true;
+                                                break;
                                             }
                                         }
-                                        if (activatedThisTick) {
-                                            break;
-                                        }
+                                    }
+                                    if (activatedThisTick) {
+                                        break;
                                     }
                                 }
-                                placerDelay = 0;
-                            } else {
-                                ++placerDelay;
                             }
                             break;
                         }
@@ -190,32 +190,26 @@ public class PartEffector extends APart {
                             break;
                         }
                         case DROPPER: {
-                            if (placerDelay == definition.effector.placerDelay) {
-                                world.populateItemStackEntities(entityItems, box);
-                                if (entityItems.isEmpty()) {
-                                    //Place the first item found.
-                                    for (PartInteractable crate : linkedPullableCrates) {
-                                        if (crate.isActive) {
-                                            for (int i = 0; i < crate.inventory.getSize(); ++i) {
-                                                IWrapperItemStack stack = crate.inventory.getStack(i);
-                                                if (!stack.isEmpty()) {
-                                                    IWrapperItemStack stackToDrop = stack.copy();
-                                                    stackToDrop.add(-stackToDrop.getSize() + 1);
-                                                    crate.inventory.removeFromSlot(i, 1);
-                                                    world.spawnItemStack(stackToDrop, box.globalCenter);
-                                                    activatedThisTick = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if (activatedThisTick) {
+                            //Place the first item found.
+                            boolean placedItem = false;
+                            for (PartInteractable crate : linkedPullableCrates) {
+                                if (crate.isActive) {
+                                    for (int i = 0; i < crate.inventory.getSize(); ++i) {
+                                        IWrapperItemStack stack = crate.inventory.getStack(i);
+                                        if (!stack.isEmpty()) {
+                                            IWrapperItemStack stackToDrop = stack.copy();
+                                            stackToDrop.add(-stackToDrop.getSize() + 1);
+                                            crate.inventory.removeFromSlot(i, 1);
+                                            world.spawnItemStack(stackToDrop, box.globalCenter, new Point3D(Math.random() * 0.2D - 0.1D, -0.2D, Math.random() * 0.2D - 0.1D).rotate(orientation));
+                                            activatedThisTick = true;
+                                            placedItem = true;
                                             break;
                                         }
                                     }
                                 }
-                                placerDelay = 0;
-                            } else {
-                                ++placerDelay;
+                                if (placedItem) {
+                                    break;
+                                }
                             }
                             break;
                         }
@@ -260,7 +254,7 @@ public class PartEffector extends APart {
                         //Don't do this for collectors, since those items are actually entities that weren't collected.
                         if (definition.effector.type != EffectorComponentType.COLLECTOR) {
                             for (IWrapperItemStack dropStack : drops) {
-                                world.spawnItemStack(dropStack, position);
+                                world.spawnItemStack(dropStack, position, null);
                             }
                         }
                         drops.clear();

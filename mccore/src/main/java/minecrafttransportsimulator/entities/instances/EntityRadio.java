@@ -76,9 +76,9 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     @Override
-    public boolean shouldAutomaticallyUpdate() {
+    public EntityAutoUpdateTime getUpdateTime() {
         //Radios get ticked from their parents post-update.
-        return false;
+        return EntityAutoUpdateTime.NEVER;
     }
 
     @Override

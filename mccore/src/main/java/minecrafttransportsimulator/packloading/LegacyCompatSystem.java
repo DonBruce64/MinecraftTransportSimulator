@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -921,6 +922,12 @@ public final class LegacyCompatSystem {
                 definition.interactable.furnaceRate = 1.0F;
                 definition.interactable.furnaceEfficiency = 1.0F;
             }
+        }
+
+        //Convert old effector delay.
+        if (definition.effector != null && definition.effector.placerDelay != 0) {
+            definition.effector.operationDelay = definition.effector.placerDelay;
+            definition.effector.placerDelay = 0;
         }
 
         //Convert old effector hitboxes.
@@ -2625,7 +2632,7 @@ public final class LegacyCompatSystem {
                                 lightDef.blendableComponents.add(blendable);
                             }
                         }
-                        object.vertices.rewind();
+                        ((Buffer) object.vertices).rewind();
                         definition.rendering.lightObjects.add(lightDef);
                     }
                 }

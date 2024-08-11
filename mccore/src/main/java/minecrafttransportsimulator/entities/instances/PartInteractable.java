@@ -74,7 +74,7 @@ public final class PartInteractable extends APart {
                 player.openCraftingGUI();
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
                 entityOn.removePart(this, true, null);
-                world.spawnItemStack(getStack(), position);
+                world.spawnItemStack(getStack(), position, null);
             } else if (tank != null) {
                 player.getHeldStack().interactWith(tank, player);
             }
@@ -135,12 +135,14 @@ public final class PartInteractable extends APart {
         super.update();
         if (furnace != null) {
             furnace.update();
-            //Only look for fuel when we're processing and don't have any.
-            if (!world.isClient() && furnace.ticksLeftOfFuel == 0 && furnace.ticksLeftToSmelt > 0) {
-                addFurnaceFuel();
-            }
-            if (vehicleOn != null) {
-                vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+            if (furnace.ticksLeftToSmelt > 0) {
+                //Only look for fuel when we're processing and don't have any.
+                if (!world.isClient() && furnace.ticksLeftOfFuel == 0) {
+                    addFurnaceFuel();
+                }
+                if (vehicleOn != null) {
+                    vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+                }
             }
         }
 
@@ -293,6 +295,20 @@ public final class PartInteractable extends APart {
                     return inventory.getSize();
                 } else if (tank != null) {
                     return tank.getMaxLevel() / 1000;
+                } else {
+                    return 0;
+                }
+            }
+            case ("interactable_furnace_fuel"): {
+                if (furnace != null) {
+                    return furnace.ticksLeftOfFuel;
+                } else {
+                    return 0;
+                }
+            }
+            case ("interactable_furnace_remaining"): {
+                if (furnace != null) {
+                    return furnace.ticksLeftToSmelt;
                 } else {
                     return 0;
                 }
