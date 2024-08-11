@@ -1,0 +1,27 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "abc",
+        "dad"
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:iron_block"
+        },
+        "b": {
+            "item": "minecraft:diamond"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "dyeRed"
+        },
+        "d": {
+            "type": "forge:ore_dict",
+            "ore": "dyeGreen"
+        }
+    },
+    "result": {
+        "item": "mts:mts.gunbench"
+    }
+}

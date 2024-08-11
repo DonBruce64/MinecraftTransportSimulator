@@ -1,0 +1,27 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "bca",
+        "dcd"
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "item": "mts:mts.jumpercable"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "dyeYellow"
+        },
+        "d": {
+            "item": "minecraft:redstone"
+        }
+    },
+    "result": {
+        "item": "mts:mts.jumperpack"
+    }
+}
