@@ -1,0 +1,24 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " ab",
+        "ccc",
+        "ba "
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "dyeBlack"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "c": {
+            "item": "minecraft:leather"
+        }
+    },
+    "result": {
+        "item": "mts:mts.fuelhose"
+    }
+}

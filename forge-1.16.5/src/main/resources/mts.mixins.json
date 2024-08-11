@@ -1,0 +1,24 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "mcinterface1165.mixin",
+    "compatibilityLevel": "JAVA_8",
+		"mixins": [
+				"common.ConcretePowderBlockMixin",
+				"common.EntityMixin",
+				"common.MinecraftMixin"
+		],
+    "client": [
+        "client.CameraInvoker",
+        "client.ClientPlayNetworkHandlerMixin",
+        "client.SoundListenerMixin",
+        "client.ReloadableResourceManagerImplMixin",
+        "client.BipedEntityModelMixin",
+        "client.VillagerResemblingModelMixin",
+				"client.WorldRendererMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "refmap": "mts.refmap.json"
+}

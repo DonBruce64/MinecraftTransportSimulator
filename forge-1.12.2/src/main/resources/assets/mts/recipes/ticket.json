@@ -1,0 +1,24 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aba",
+        "aba",
+        "ccc"
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:paper"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "dyeBlack"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "dyeYellow"
+        }
+    },
+    "result": {
+        "item": "mts:mts.ticket"
+    }
+}

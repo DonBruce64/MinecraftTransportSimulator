@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aba",
+        "aba",
+        "ccc"
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:paper"
+        },
+        "b": {
+            "item": "minecraft:black_dye"
+        },
+        "c": {
+            "item": "minecraft:yellow_dye"
+        }
+    },
+    "result": {
+        "item": "mts:mts.ticket"
+    }
+}

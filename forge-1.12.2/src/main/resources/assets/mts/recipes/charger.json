@@ -1,0 +1,29 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "ada",
+        "bcb",
+        "aba"
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "ingotGold"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "blockRedstone"
+        },
+        "d": {
+            "item": "mts:mts.jumpercable",
+            "data": 0
+        }
+    },
+    "result": {
+        "item": "mts:mts.charger"
+    }
+}
