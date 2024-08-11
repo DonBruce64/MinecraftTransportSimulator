@@ -1,13 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -15,15 +7,13 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+
+import java.util.*;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -35,69 +25,65 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
  */
 public abstract class AEntityB_Existing extends AEntityA_Base {
     protected static final Point3D ZERO_FOR_CONSTRUCTOR = new Point3D();
-
+    private static final Set<CollisionType> boundingBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.ATTACK, CollisionType.CLICK));
+    private static final Point3D riderTempPoint = new Point3D();
+    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
     public final Point3D position;
     public final RotationMatrix orientation;
     public final Point3D prevPosition;
     public final RotationMatrix prevOrientation;
     public final Point3D motion;
     public final Point3D prevMotion;
-    public double velocity;
-    private static final Set<CollisionType> boundingBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.ATTACK, CollisionType.CLICK));
     public final BoundingBox boundingBox;
-
-    /**
-     * The entity that is currently riding this entity.  There is only one rider per entity, though one can
-     * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
-     **/
-    public IWrapperEntity rider;
-
-    /**
-     * True if the running instance is the client, and the rider on this entity is the client player.
-     **/
-    public boolean riderIsClient;
-
     /**
      * List of all cameras available on this entity for the rider.  These get populated by other systems as applicable.
      **/
     public final List<JSONCameraObject> cameras = new ArrayList<>();
     public final Map<JSONCameraObject, AEntityD_Definable<?>> cameraEntities = new LinkedHashMap<>();
-    public JSONCameraObject activeCamera;
-    public AEntityD_Definable<?> activeCameraEntity;
-    public AnimationSwitchbox activeCameraSwitchbox;
-    private CameraMode lastCameraMode;
-
     /**
-     * The position of the eyes of the rider.  This is slightly different than the return for 
-     * {@link IWrapperEntity#getPosition()}, as the former is usually where the rider is sitting, 
+     * The position of the eyes of the rider.  This is slightly different than the return for
+     * {@link IWrapperEntity#getPosition()}, as the former is usually where the rider is sitting,
      * whereas this is usually that value offset by {@link IWrapperEntity#getEyeHeight()} and
      * {@link IWrapperEntity#getSeatOffset()}, multiplied by {@link IWrapperEntity#getVerticalScale()}.
      * Though this may differ if the default logic is overridden.
      **/
     public final Point3D riderEyePosition = new Point3D();
-    /**Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.**/
+    /**
+     * Like {@link #riderEyePosition}, but for the head.  This won't move even if viewpoints change.
+     **/
     public final Point3D riderHeadPosition = new Point3D();
-    /**Like {@link #riderEyePosition}, but for the camera.  This may or may not match the eye position depending on
-     * the game implementation and settings, since some settings add a default camera offset we need to account for here.**/
+    /**
+     * Like {@link #riderEyePosition}, but for the camera.  This may or may not match the eye position depending on
+     * the game implementation and settings, since some settings add a default camera offset we need to account for here.
+     **/
     public final Point3D riderCameraPosition = new Point3D();
     public final Point3D prevRiderCameraPosition = new Point3D();
-
+    //Internal sound variables.
+    public final EntityRadio radio;
+    public double velocity;
+    /**
+     * The entity that is currently riding this entity.  There is only one rider per entity, though one can
+     * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
+     **/
+    public IWrapperEntity rider;
+    /**
+     * True if the running instance is the client, and the rider on this entity is the client player.
+     **/
+    public boolean riderIsClient;
+    public JSONCameraObject activeCamera;
+    public AEntityD_Definable<?> activeCameraEntity;
+    public AnimationSwitchbox activeCameraSwitchbox;
     /**
      * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
      * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
      **/
     public RotationMatrix riderRelativeOrientation;
     public RotationMatrix prevRiderRelativeOrientation;
-    private static final Point3D riderTempPoint = new Point3D();
-    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
-
     //Camera variables.
     public int zoomLevel;
     public int cameraIndex;
-
-    //Internal sound variables.
-    public final EntityRadio radio;
     public List<SoundInstance> sounds = new ArrayList<>();//TODO make this a hashmap.
+    private CameraMode lastCameraMode;
 
     /**
      * Constructor for synced entities
@@ -182,22 +168,22 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     //No active cameras found, set index to 0 to disable and go back to normal rendering.
                     cameraIndex = 0;
                     activeCamera = null;
-                    if(lastCameraMode != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
-                    	InterfaceManager.clientInterface.setCameraMode(lastCameraMode);
-                    	lastCameraMode = null;
+                    if (lastCameraMode != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+                        InterfaceManager.clientInterface.setCameraMode(lastCameraMode);
+                        lastCameraMode = null;
                     }
                 }
             }
-            
+
             //If we just got to an active camera, store last camera mode and change to first-person if required.
             //If we have an active camera, force first-person if we don't have it.
-            if(activeCamera != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
-            	if(lastCameraMode == null) {
-            		lastCameraMode = InterfaceManager.clientInterface.getCameraMode();
-            	}
-            	if(InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
-            		InterfaceManager.clientInterface.setCameraMode(CameraMode.FIRST_PERSON);
-            	}
+            if (activeCamera != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+                if (lastCameraMode == null) {
+                    lastCameraMode = InterfaceManager.clientInterface.getCameraMode();
+                }
+                if (InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
+                    InterfaceManager.clientInterface.setCameraMode(CameraMode.FIRST_PERSON);
+                }
             }
         }
 
@@ -304,7 +290,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     /**
      * Called to set the rider for this entity.  If this isn't possible because
      * there is already a rider, or we shouldn't accept riders, return false.
-     * Otherwise, return true.  
+     * Otherwise, return true.
      * If the rider needs to face forward when they are added, set the boolean to true.
      * Note: this will only set them to face forwards on the tick they mount.
      * It won't block them from turning to a different orientation later.

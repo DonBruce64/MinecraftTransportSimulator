@@ -1,26 +1,6 @@
 package minecrafttransportsimulator.rendering;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -33,6 +13,14 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * This class represents an object that can be rendered from a model.  This object is a set of
@@ -196,7 +184,7 @@ public class RenderableModelObject {
                             return;
                         } else {
                             //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
-                            new ConnectorThread(textValue, this).run();
+                            new ConnectorThread(textValue, this).start();
                             downloadingTextures.add(textValue);
                             return;
                         }
@@ -478,7 +466,7 @@ public class RenderableModelObject {
         }
     }
 
-    private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(PartGroundDevice tread) {
+    private static List<Double[]> generateTreads(PartGroundDevice tread) {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
         List<RenderableVertices> parsedModel = AModelParser.parseModel(tread.entityOn.definition.getModelLocation(tread.entityOn.definition.definitions.get(0)), true);
@@ -720,7 +708,7 @@ public class RenderableModelObject {
             //FAR less jank than using MC's resource system.
             //We try a few times here since sources can do dumb things.
             int tryCount = 0;
-            String errorString = null;
+            StringBuilder errorString;
             do {
                 try {
                     URL urlObject = new URL(urlString);
@@ -730,7 +718,7 @@ public class RenderableModelObject {
                         String contentType = connection.getContentType();
                         String[] typeParams = contentType.split("/");
                         if (typeParams[0].equals("text")) {
-                            errorString = "ERROR: Found only text at the URL.  This is not a direct image link, or you don't have permission to view this image (hosted behind a login).";
+                            errorString = new StringBuilder("ERROR: Found only text at the URL.  This is not a direct image link, or you don't have permission to view this image (hosted behind a login).");
                         } else {
                             Iterator<ImageReader> iterator = ImageIO.getImageReadersByFormatName(typeParams[1]);
                             if (iterator.hasNext()) {
@@ -745,10 +733,10 @@ public class RenderableModelObject {
                                             objectOn.downloadingTextures.remove(urlString);
                                             return;
                                         } else {
-                                            errorString = "ERROR: Could not parse GIF due to an internal MC-system interface error.  Contact the mod author!";
+                                            errorString = new StringBuilder("ERROR: Could not parse GIF due to an internal MC-system interface error.  Contact the mod author!");
                                         }
                                     } else {
-                                        errorString = "ERROR: Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
+                                        errorString = new StringBuilder("ERROR: Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?");
                                     }
                                 } else {
                                     if (InterfaceManager.renderingInterface.bindURLTexture(urlString, connection.getInputStream())) {
@@ -756,27 +744,27 @@ public class RenderableModelObject {
                                         objectOn.downloadingTextures.remove(urlString);
                                         return;
                                     } else {
-                                        errorString = "ERROR: Got a correct image type, but was missing data for the image?  Likely partial data sent by the server source, try again later.";
+                                        errorString = new StringBuilder("ERROR: Got a correct image type, but was missing data for the image?  Likely partial data sent by the server source, try again later.");
                                     }
                                 }
                             } else {
-                                errorString = "ERROR: Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+                                errorString = new StringBuilder("ERROR: Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
                                 for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
-                                    errorString += ("image/" + imageSuffix + ", ");
+                                    errorString.append("image/").append(imageSuffix).append(", ");
                                 }
                             }
                         }
                     } catch (Exception e) {
-                        errorString = "ERROR: Could not parse images.  Error was: " + e.getMessage();
+                        errorString = new StringBuilder("ERROR: Could not parse images.  Error was: " + e.getMessage());
                     }
                 } catch (Exception e) {
-                    errorString = "ERROR: Could not open URL for processing.  Error was: " + e.getMessage();
+                    errorString = new StringBuilder("ERROR: Could not open URL for processing.  Error was: " + e.getMessage());
                 }
             } while (++tryCount < 10);
 
             //Set missing texture if we failed to get anything.
             InterfaceManager.renderingInterface.bindURLTexture(urlString, null);
-            erroredTextures.put(urlString, errorString);
+            erroredTextures.put(urlString, errorString.toString());
             objectOn.downloadingTextures.remove(urlString);
             objectOn.downloadedTextures.add(urlString);
         }

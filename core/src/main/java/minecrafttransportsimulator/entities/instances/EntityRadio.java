@@ -20,6 +20,8 @@ import minecrafttransportsimulator.sound.SoundInstance;
  */
 public class EntityRadio extends AEntityB_Existing {
 
+    //Private runtime variables.
+    private final AEntityB_Existing provider;
     //Public variables for modifying state.
     public boolean randomOrder;
     public int preset;
@@ -27,9 +29,6 @@ public class EntityRadio extends AEntityB_Existing {
     public int volume;
     public String displayText;
     public RadioStation currentStation;
-
-    //Private runtime variables.
-    private final AEntityB_Existing provider;
     private RadioSources currentSource;
     private SoundInstance currentSound;
 

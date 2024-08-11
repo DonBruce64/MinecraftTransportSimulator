@@ -1,22 +1,19 @@
 package mcinterface1122;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fluids.FluidEvent;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.*;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 /**
  * Builder for tile entities that contain fluids.  This builder ticks.
@@ -110,7 +107,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)) {
             return true;
         } else {
@@ -120,7 +117,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+    public <T> T getCapability(@NotNull Capability<T> capability, EnumFacing facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)) {
             return (T) this;
         } else {

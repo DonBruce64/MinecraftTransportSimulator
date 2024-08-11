@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("Bullets are special JSONs, as they're not a part, but they work with parts.  They're not an actual item like food, but they normally are only in item form.  Rather, they are an item that turns itself into a model with logic when fired from a gun.")
 public class JSONBullet extends AJSONMultiModelProvider {
@@ -11,6 +11,26 @@ public class JSONBullet extends AJSONMultiModelProvider {
     @JSONRequired
     @JSONDescription("Bullet-specific properties.")
     public Bullet bullet;
+
+    public enum BulletType {
+        @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
+        EXPLOSIVE,
+        @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
+        INCENDIARY,
+        @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
+        WATER,
+        @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
+        ARMOR_PIERCING
+    }
+
+    public enum GuidanceType {
+        @JSONDescription("Will track whatever target that was locked prior to firing, However, It will guide to the closest target it can 'see'. Therefore, it is possible to fire without a lock and have it find it's own target with the downside of it being possible to fool.")
+        PASSIVE,
+        @JSONDescription("Tracks the locked target but if the lock is lost, guidance stops.")
+        SEMI_ACTIVE,
+        @JSONDescription("Default method. Tracks whatever target the gun was locked on to prior to firing.")
+        ACTIVE
+    }
 
     public static class Bullet {
         @JSONRequired
@@ -105,24 +125,4 @@ public class JSONBullet extends AJSONMultiModelProvider {
         public String casingTexture;
     }
 
-    public enum BulletType {
-        @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
-        EXPLOSIVE,
-        @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
-        INCENDIARY,
-        @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
-        WATER,
-        @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
-        ARMOR_PIERCING
-    }
-
-    public enum GuidanceType {
-        @JSONDescription("Will track whatever target that was locked prior to firing, However, It will guide to the closest target it can 'see'. Therefore, it is possible to fire without a lock and have it find it's own target with the downside of it being possible to fool.")
-        PASSIVE,
-        @JSONDescription("Tracks the locked target but if the lock is lost, guidance stops.")
-        SEMI_ACTIVE,
-        @JSONDescription("Default method. Tracks whatever target the gun was locked on to prior to firing.")
-        ACTIVE
-    }
-    
 }

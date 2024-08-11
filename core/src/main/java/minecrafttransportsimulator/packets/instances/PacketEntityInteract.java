@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.Map.Entry;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -14,20 +12,18 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.Map.Entry;
 
 /**
  * Packet used to interact with entities.  Initially sent from clients to the server
  * to handle players clicking on the entity.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the entity if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
- * the logic in {@link IItemEntityInteractable#doEntityInteraction(AEntityE_Interactable, APart, IWrapperPlayer, boolean)}
+ * the logic in {@link IItemEntityInteractable#doEntityInteraction(AEntityE_Interactable, BoundingBox, IWrapperPlayer, boolean)}
  *
  * @author don_bruce
  */

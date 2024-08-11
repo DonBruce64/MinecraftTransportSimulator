@@ -1,19 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.nio.Buffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -39,6 +26,14 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  * Road tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as stores the "fake"
@@ -57,18 +52,17 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
-    //Static variables based on core definition.
-    public BezierCurve dynamicCurve;
     public final List<RoadLane> lanes = new ArrayList<>();
-
-    //Dynamic variables based on states.
-    private boolean isActive;
     public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<>();
     public final Map<RoadComponent, RenderableData> componentRenderables = new HashMap<>();
     public final List<RenderableData> devRenderables = new ArrayList<>();
     public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<>();
     public final List<Point3D> collisionBlockOffsets;
     public final List<Point3D> collidingBlockOffsets;
+    //Static variables based on core definition.
+    public BezierCurve dynamicCurve;
+    //Dynamic variables based on states.
+    private boolean isActive;
 
     public TileEntityRoad(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemRoadComponent item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -113,6 +107,139 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         //Don't generate lanes for inactive roads.
         if (isActive()) {
             generateLanes(data);
+        }
+    }
+
+    private static void generateDevElements(TileEntityRoad road) {
+        //Create the information hashes.
+        Point3D point1 = new Point3D();
+        Point3D point2 = new Point3D();
+        RotationMatrix rotation;
+        RenderableData renderable;
+        if (road.dynamicCurve != null) {
+            //Render actual curve.
+            int numberLines = (int) (road.dynamicCurve.pathLength * 10);
+            RenderableVertices vertexObject = new RenderableVertices(numberLines);
+            for (float f = 0; --numberLines > 0; f += 0.1) {
+                road.dynamicCurve.setPointToPositionAt(point1, f);
+                rotation = road.dynamicCurve.getRotationAt(f);
+                point2.set(0, 1, 0).rotate(rotation).add(point1);
+                vertexObject.addLine(point1, point2);
+            }
+            renderable = new RenderableData(vertexObject);
+            renderable.setColor(ColorRGB.GREEN);
+            road.devRenderables.add(renderable);
+
+            //Render the border bounds.
+            numberLines = (int) (road.dynamicCurve.pathLength * 10);
+            vertexObject = new RenderableVertices(numberLines);
+            for (float f = 0; --numberLines > 0; f += 0.1) {
+                road.dynamicCurve.setPointToPositionAt(point1, f);
+                rotation = road.dynamicCurve.getRotationAt(f);
+                point1.set(road.definition.road.roadWidth, 0, 0);
+
+                point2.set(point1).add(0, 1, 0).rotate(rotation);
+                point1.rotate(rotation);
+
+                road.dynamicCurve.offsetPointByPositionAt(point1, f);
+                road.dynamicCurve.offsetPointByPositionAt(point2, f);
+                vertexObject.addLine(point1, point2);
+            }
+            renderable = new RenderableData(vertexObject);
+            renderable.setColor(ColorRGB.CYAN);
+            road.devRenderables.add(renderable);
+        }
+
+        //Now render the lane curve segments.
+        for (RoadLane lane : road.lanes) {
+            for (BezierCurve laneCurve : lane.curves) {
+                //Render the curve bearing indicator
+                RenderableVertices vertexObject = new RenderableVertices(2);
+
+                //Render vertical segment.
+                rotation = laneCurve.getRotationAt(0);
+                laneCurve.setPointToPositionAt(point1, 0);
+                point2.set(0, 3, 0).rotate(rotation).add(point1);
+                vertexObject.addLine(point1, point2);
+
+                //Render 1-unit path delta.
+                point1.set(point2);
+                rotation = laneCurve.getRotationAt(1);
+                point1.set(0, 3, 0).rotate(rotation);
+                laneCurve.offsetPointByPositionAt(point1, 1);
+                vertexObject.addLine(point1, point2);
+
+                renderable = new RenderableData(vertexObject);
+                renderable.setColor(ColorRGB.RED);
+                road.devRenderables.add(renderable);
+
+                //Render all the points on the curve.
+                int numberLines = (int) (laneCurve.pathLength * 10);
+                vertexObject = new RenderableVertices(numberLines);
+                for (float f = 0; --numberLines > 0; f += 0.1) {
+                    laneCurve.setPointToPositionAt(point1, f);
+                    rotation = laneCurve.getRotationAt(f);
+                    point2.set(0, 1, 0).rotate(rotation).add(point1);
+                    vertexObject.addLine(point1, point2);
+                }
+                renderable = new RenderableData(vertexObject);
+                renderable.setColor(ColorRGB.YELLOW);
+                road.devRenderables.add(renderable);
+            }
+        }
+
+        //Render the lane connections.
+        for (RoadLane lane : road.lanes) {
+            for (List<RoadLaneConnection> curvePriorConnections : lane.priorConnections) {
+                BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
+                for (RoadLaneConnection priorConnection : curvePriorConnections) {
+                    TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
+                    if (otherRoad != null) {
+                        RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
+                        if (otherLane != null) {
+                            RenderableVertices vertexObject = new RenderableVertices(1);
+
+                            //Get the connection point.
+                            currentCurve.setPointToPositionAt(point1, 0.5F);
+                            rotation = currentCurve.getRotationAt(0.5F);
+                            point2.set(0, 2.0, 0).rotate(rotation).add(point1);
+
+                            //Render marker.
+                            vertexObject.addLine(point1, point2);
+
+                            renderable = new RenderableData(vertexObject);
+                            renderable.setColor(ColorRGB.PINK);
+                            road.devRenderables.add(renderable);
+                        }
+                    }
+                }
+            }
+        }
+        for (RoadLane lane : road.lanes) {
+            for (List<RoadLaneConnection> curveNextConnections : lane.nextConnections) {
+                BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));
+                for (RoadLaneConnection nextConnection : curveNextConnections) {
+                    TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
+                    if (otherRoad != null) {
+                        RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
+                        if (otherLane != null) {
+                            RenderableVertices vertexObject = new RenderableVertices(1);
+
+                            //Get the connection point.
+                            currentCurve.setPointToPositionAt(point1, currentCurve.pathLength - 0.5F);
+                            rotation = currentCurve.getRotationAt(currentCurve.pathLength - 0.5F);
+                            point2.set(0, 2.0, 0).rotate(rotation).add(point1);
+
+                            //Render marker.
+                            vertexObject.addLine(point1, point2);
+
+                            renderable = new RenderableData(vertexObject);
+                            renderable.setColor(ColorRGB.ORANGE);
+                            road.devRenderables.add(renderable);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -537,139 +664,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
             for (RenderableData renderable : devRenderables) {
                 renderable.transform.setTranslation(invertedPosition).multiply(transform);
                 renderable.render();
-            }
-        }
-    }
-
-    private static void generateDevElements(TileEntityRoad road) {
-        //Create the information hashes.
-        Point3D point1 = new Point3D();
-        Point3D point2 = new Point3D();
-        RotationMatrix rotation;
-        RenderableData renderable;
-        if (road.dynamicCurve != null) {
-            //Render actual curve.
-            int numberLines = (int) (road.dynamicCurve.pathLength * 10);
-            RenderableVertices vertexObject = new RenderableVertices(numberLines);
-            for (float f = 0; --numberLines > 0; f += 0.1) {
-                road.dynamicCurve.setPointToPositionAt(point1, f);
-                rotation = road.dynamicCurve.getRotationAt(f);
-                point2.set(0, 1, 0).rotate(rotation).add(point1);
-                vertexObject.addLine(point1, point2);
-            }
-            renderable = new RenderableData(vertexObject);
-            renderable.setColor(ColorRGB.GREEN);
-            road.devRenderables.add(renderable);
-
-            //Render the border bounds.
-            numberLines = (int) (road.dynamicCurve.pathLength * 10);
-            vertexObject = new RenderableVertices(numberLines);
-            for (float f = 0; --numberLines > 0; f += 0.1) {
-                road.dynamicCurve.setPointToPositionAt(point1, f);
-                rotation = road.dynamicCurve.getRotationAt(f);
-                point1.set(road.definition.road.roadWidth, 0, 0);
-
-                point2.set(point1).add(0, 1, 0).rotate(rotation);
-                point1.rotate(rotation);
-
-                road.dynamicCurve.offsetPointByPositionAt(point1, f);
-                road.dynamicCurve.offsetPointByPositionAt(point2, f);
-                vertexObject.addLine(point1, point2);
-            }
-            renderable = new RenderableData(vertexObject);
-            renderable.setColor(ColorRGB.CYAN);
-            road.devRenderables.add(renderable);
-        }
-
-        //Now render the lane curve segments.
-        for (RoadLane lane : road.lanes) {
-            for (BezierCurve laneCurve : lane.curves) {
-                //Render the curve bearing indicator
-                RenderableVertices vertexObject = new RenderableVertices(2);
-
-                //Render vertical segment.
-                rotation = laneCurve.getRotationAt(0);
-                laneCurve.setPointToPositionAt(point1, 0);
-                point2.set(0, 3, 0).rotate(rotation).add(point1);
-                vertexObject.addLine(point1, point2);
-
-                //Render 1-unit path delta.
-                point1.set(point2);
-                rotation = laneCurve.getRotationAt(1);
-                point1.set(0, 3, 0).rotate(rotation);
-                laneCurve.offsetPointByPositionAt(point1, 1);
-                vertexObject.addLine(point1, point2);
-
-                renderable = new RenderableData(vertexObject);
-                renderable.setColor(ColorRGB.RED);
-                road.devRenderables.add(renderable);
-
-                //Render all the points on the curve.
-                int numberLines = (int) (laneCurve.pathLength * 10);
-                vertexObject = new RenderableVertices(numberLines);
-                for (float f = 0; --numberLines > 0; f += 0.1) {
-                    laneCurve.setPointToPositionAt(point1, f);
-                    rotation = laneCurve.getRotationAt(f);
-                    point2.set(0, 1, 0).rotate(rotation).add(point1);
-                    vertexObject.addLine(point1, point2);
-                }
-                renderable = new RenderableData(vertexObject);
-                renderable.setColor(ColorRGB.YELLOW);
-                road.devRenderables.add(renderable);
-            }
-        }
-
-        //Render the lane connections.
-        for (RoadLane lane : road.lanes) {
-            for (List<RoadLaneConnection> curvePriorConnections : lane.priorConnections) {
-                BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
-                for (RoadLaneConnection priorConnection : curvePriorConnections) {
-                    TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
-                    if (otherRoad != null) {
-                        RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
-                        if (otherLane != null) {
-                            RenderableVertices vertexObject = new RenderableVertices(1);
-
-                            //Get the connection point.
-                            currentCurve.setPointToPositionAt(point1, 0.5F);
-                            rotation = currentCurve.getRotationAt(0.5F);
-                            point2.set(0, 2.0, 0).rotate(rotation).add(point1);
-
-                            //Render marker.
-                            vertexObject.addLine(point1, point2);
-
-                            renderable = new RenderableData(vertexObject);
-                            renderable.setColor(ColorRGB.PINK);
-                            road.devRenderables.add(renderable);
-                        }
-                    }
-                }
-            }
-        }
-        for (RoadLane lane : road.lanes) {
-            for (List<RoadLaneConnection> curveNextConnections : lane.nextConnections) {
-                BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));
-                for (RoadLaneConnection nextConnection : curveNextConnections) {
-                    TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
-                    if (otherRoad != null) {
-                        RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
-                        if (otherLane != null) {
-                            RenderableVertices vertexObject = new RenderableVertices(1);
-
-                            //Get the connection point.
-                            currentCurve.setPointToPositionAt(point1, currentCurve.pathLength - 0.5F);
-                            rotation = currentCurve.getRotationAt(currentCurve.pathLength - 0.5F);
-                            point2.set(0, 2.0, 0).rotate(rotation).add(point1);
-
-                            //Render marker.
-                            vertexObject.addLine(point1, point2);
-
-                            renderable = new RenderableData(vertexObject);
-                            renderable.setColor(ColorRGB.ORANGE);
-                            road.devRenderables.add(renderable);
-                        }
-                    }
-                }
             }
         }
     }

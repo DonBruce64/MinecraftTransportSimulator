@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -19,16 +16,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PartPropeller extends APart {
-    private double currentRPM;
-    /**
-     * In revolutions, or 1/360th a degree.
-     **/
-    private double angularPosition;
-    /**
-     * In revolutions per tick
-     **/
-    private double angularVelocity;
+    public static final int MIN_DYNAMIC_PITCH = 45;
+    protected final Point3D propellerAxisVector = new Point3D();
+    private final List<PartEngine> connectedEngines = new ArrayList<>();
+    private final Point3D propellerForce = new Point3D();
+    private final BoundingBox damageBounds;
     /**
      * In inches per rotation (360 degrees).
      **/
@@ -41,14 +37,16 @@ public class PartPropeller extends APart {
      * In meters per second.
      **/
     public double desiredLinearVelocity;
-
-    private final List<PartEngine> connectedEngines = new ArrayList<>();
-    protected final Point3D propellerAxisVector = new Point3D();
-    private final Point3D propellerForce = new Point3D();
+    private double currentRPM;
+    /**
+     * In revolutions, or 1/360th a degree.
+     **/
+    private double angularPosition;
+    /**
+     * In revolutions per tick
+     **/
+    private double angularVelocity;
     private double propellerForceValue;
-    private final BoundingBox damageBounds;
-
-    public static final int MIN_DYNAMIC_PITCH = 45;
 
     public PartPropeller(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartPropeller item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);

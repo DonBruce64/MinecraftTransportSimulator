@@ -1,21 +1,16 @@
 package minecrafttransportsimulator.sound;
 
+import javazoom.jl.decoder.Equalizer;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.sound.RadioManager.RadioSources;
+
 import java.io.File;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import javazoom.jl.decoder.Equalizer;
-import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.sound.RadioManager.RadioSources;
+import java.util.*;
 
 /**
  * Radio stations are sources that radios can hook into to provide sound.  All radios share the
@@ -25,6 +20,7 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
  * @author don_bruce
  */
 public class RadioStation {
+    public final Equalizer equalizer;
     //Created variables.
     private final RadioSources source;
     private final int index;
@@ -33,13 +29,11 @@ public class RadioStation {
     private final List<File> musicFiles;
     private final Set<EntityRadio> queuedRadios = new HashSet<>();
     private final Set<EntityRadio> playingRadios = new HashSet<>();
-
+    private final List<Integer> activeBuffers = new ArrayList<>();
     //Runtime variables.
     //Due to how the mp3 parser works, we can only have one equalizer per station.
     public String displayText = "";
     public String infoText = "";
-    public final Equalizer equalizer;
-    private final List<Integer> activeBuffers = new ArrayList<>();
     private volatile LinkingThread linkingThread;
     private volatile DecoderThread decoderThread;
     private volatile IStreamDecoder decoder;
@@ -132,7 +126,7 @@ public class RadioStation {
                     startPlayback();
                 } else {
                     //Clear out radios since we can't get this station.
-
+                    // FIXME: Remove this?
                 }
             } else if (decoderThread == null && decoder != null) {
                 //Have an active and ready decoder, start decoding.
@@ -201,7 +195,7 @@ public class RadioStation {
 
     /**
      * Starts playback of this station.  This is called when we first add a radio,
-     * or when the radio stops playing and we auto-restart.  This creates a new decoder for 
+     * or when the radio stops playing and we auto-restart.  This creates a new decoder for
      * parsing data and populates the buffers via a thread.  Radios will be started in the update
      * method when the buffer is full.
      */
@@ -268,7 +262,7 @@ public class RadioStation {
         linkingThread = new LinkingThread(this);
         linkingThread.start();
     }
-    
+
     /**
      * Custom thread class to prevent blocking of the main thread when querying radio stations for audio.
      * This thread finds the audio source and kills itself when it does, or when the source can't be found.
@@ -294,7 +288,7 @@ public class RadioStation {
         private boolean initDecoderThread() {
             //Try to open the radio URL.
             int tryCount = 0;
-            String errorString = null;
+            String errorString;
             do {
                 try {
                     //Create a URL and open a connection.

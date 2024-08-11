@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -12,6 +10,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+
+import java.util.Map;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider {
 

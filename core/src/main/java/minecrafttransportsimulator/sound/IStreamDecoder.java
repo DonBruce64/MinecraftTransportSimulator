@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.sound;
 
+import minecrafttransportsimulator.entities.instances.EntityRadio;
+
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-
-import minecrafttransportsimulator.entities.instances.EntityRadio;
 
 /**
  * Decoder interface.  All decoders that play streaming music via {@link EntityRadio}s
@@ -22,22 +22,6 @@ public interface IStreamDecoder {
      * The max size of the buffer (in bytes (2 bytes per sample)) to be returned in any given call to {@link #readBlock()}.
      **/
     int BUFFER_SIZE = 128 * 1024;
-
-    /**
-     * Reads a block of data and returns it as a ByteBuffer.
-     * Note that this buffer is re-used, so do NOT make multiple
-     * calls to this method without storing the data somewhere in
-     * between them.  Once no more blocks are available this method
-     * will return null.
-     */
-    ByteBuffer readBlock();
-
-    /**
-     * Stops the decoding process.  This ensures all I/O
-     * references like streams are safely closed, allowing for
-     * this decoder to be stopped prior to the end of the stream.
-     */
-    void stop();
 
     /**
      * Combines a stereo-sampled ByteBufer into a mono-sampled one.
@@ -61,6 +45,22 @@ public interface IStreamDecoder {
         ((Buffer) monoBuffer).flip();
         return monoBuffer;
     }
+
+    /**
+     * Reads a block of data and returns it as a ByteBuffer.
+     * Note that this buffer is re-used, so do NOT make multiple
+     * calls to this method without storing the data somewhere in
+     * between them.  Once no more blocks are available this method
+     * will return null.
+     */
+    ByteBuffer readBlock();
+
+    /**
+     * Stops the decoding process.  This ensures all I/O
+     * references like streams are safely closed, allowing for
+     * this decoder to be stopped prior to the end of the stream.
+     */
+    void stop();
 
     int getSampleRate();
 }

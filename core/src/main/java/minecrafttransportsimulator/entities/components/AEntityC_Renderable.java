@@ -58,7 +58,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
 
     /**
      * Called to return the integer representing the world light value.  Is normally
-     * the light at the position of the entity, but can be other values as required. 
+     * the light at the position of the entity, but can be other values as required.
      */
     public int getWorldLightValue() {
         return InterfaceManager.renderingInterface.getLightingAtPosition(position);

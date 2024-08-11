@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 public class JSONRendering {
     @JSONDescription("Text objects are used to render text on models.  This can be used for license plates on cars, tail numbers on planes, status information on fuel pumps, etc.  Every entry is its own text section, and therefore you can have multiple objects for different things.  For example, you may want to make a bus with light-up route signs with multiple characters, but also with two license plates that are limited to 7 characters.")
@@ -33,13 +33,6 @@ public class JSONRendering {
     @JSONRequired
     @JSONDescription("The type of model that this entity will render from.")
     public ModelType modelType;
-
-    public enum ModelType {
-        OBJ,
-        LITTLETILES,
-        NONE
-    }
-
     //Moved from old vehicle rendering classes.
     @Deprecated
     public int displayTextMaxLength;
@@ -65,6 +58,12 @@ public class JSONRendering {
     public List<String> constants;
     @Deprecated
     public List<String> initialVariables;
+
+    public enum ModelType {
+        OBJ,
+        LITTLETILES,
+        NONE
+    }
 
     @Deprecated
     public static class VehicleDisplayText {

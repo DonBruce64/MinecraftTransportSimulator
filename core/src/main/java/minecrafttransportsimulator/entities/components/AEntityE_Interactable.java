@@ -1,28 +1,10 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
-import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -37,6 +19,8 @@ import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.*;
+
 /**
  * Base entity class containing riders and their positions on this entity.  Used for
  * entities that need to keep track of riders and their locations.  This also contains
@@ -46,12 +30,12 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition> {
+    public static final String DAMAGE_VARIABLE = "damage";
     /**
      * Static helper matrix for transforming instrument positions.
      **/
     private static final TransformationMatrix instrumentTransform = new TransformationMatrix();
     private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setToAxisAngle(0, 1, 0, 180);
-
     /**
      * List of boxes generated from JSON.  These are stored here as objects to prevent the need
      * to create them every time we want to parse out hitboxes.  This allows parsing them into sub-sets,
@@ -59,8 +43,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      **/
     public final List<List<BoundingBox>> definitionCollisionBoxes = new ArrayList<>();
     public final Set<BoundingBox> collisionBoxes = new HashSet<>();
-    private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<>();
-
     /**
      * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
      * to check a single large box rather than multiple small ones to save processing power.
@@ -97,24 +79,22 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Maps instrument slot transforms to their respective switchboxes.
      **/
     public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<>();
-
+    protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
+    protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
+    private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<>();
     /**
      * The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
      * as damage is something that a good number of entities will have and that the base entity should track.
      **/
     @DerivedValue
     public double damageAmount;
-    public static final String DAMAGE_VARIABLE = "damage";
     public boolean outOfHealth;
-
-    protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
-    protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
     protected int lastSnapConnectionTried = 0;
     protected boolean bypassConnectionPacket;
 
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        
+
         //Parse variables out now to prevent variables from activating that use them.
         damageAmount = getVariable(DAMAGE_VARIABLE);
         outOfHealth = damageAmount == definition.general.health && definition.general.health != 0;
@@ -265,7 +245,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     * Updates the encompassing box.  This has to run after {@link #updateCollisionBoxes()} to ensure
+     * Updates the encompassing box.  This has to run after {@link #updateCollisionBoxes(boolean)} to ensure
      * we get all boxes for the encompassing box.
      */
     protected void updateEncompassingBox() {

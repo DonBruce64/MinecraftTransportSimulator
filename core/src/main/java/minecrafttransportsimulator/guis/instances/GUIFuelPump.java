@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -13,6 +10,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A GUI that is used to set up fuel pumps as a pay-to-use system.  Allows for setting various items

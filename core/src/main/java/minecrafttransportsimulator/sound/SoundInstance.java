@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.sound;
 
-import java.util.Random;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
+import java.util.Random;
 
 /**
  * Class that holds sound information.  One class is created for each sound that's playing
@@ -18,22 +18,19 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * @author don_bruce
  */
 public class SoundInstance {
+    public static final int DEFAULT_MAX_DISTANCE = 32;
     private static final Random soundRandom = new Random();
-
     public final AEntityB_Existing entity;
     public final String soundName;
     public final String soundPlayingName;
     public final JSONSound soundDef;
     public final EntityRadio radio;
     public final Point3D position;
-
     //Runtime variables.
     public int sourceIndex;
     public float volume = 1.0F;
     public float pitch = 1.0F;
     public boolean stopSound = false;
-
-    public static final int DEFAULT_MAX_DISTANCE = 32;
 
     public SoundInstance(AEntityB_Existing entity, String soundName) {
         this(entity, soundName, null, null);

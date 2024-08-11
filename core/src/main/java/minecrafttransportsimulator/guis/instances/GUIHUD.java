@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -15,6 +12,9 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}

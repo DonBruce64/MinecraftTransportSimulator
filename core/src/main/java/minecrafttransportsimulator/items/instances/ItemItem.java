@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -11,47 +8,39 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.List;
+import java.util.UUID;
+
 public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteractable, IItemFood {
-    /**Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.**/
+    public static final String KEY_UUID_TAG = "keyUUID";
+    /**
+     * First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.
+     **/
+    private static PartEngine firstEngineClicked;
+    /**
+     * First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.
+     **/
+    private static PartInteractable firstPartClicked;
+    /**
+     * Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.
+     **/
     public int pageNumber;
     public List<LanguageEntry> languageTitle;
     public List<LanguageEntry> languagePageTitle;
     public List<List<LanguageEntry>> languagePageText;
-
-    /**First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.**/
-    private static PartEngine firstEngineClicked;
-    /**First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.**/
-    private static PartInteractable firstPartClicked;
-
-    public static final String KEY_UUID_TAG = "keyUUID";
 
     public ItemItem(JSONItem definition) {
         super(definition, null);
@@ -121,8 +110,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, boolean rightClick) {
         EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
         switch (definition.item.type) {
-	    	case WRENCH: 
-	    	case SCREWDRIVER: {
+            case WRENCH:
+            case SCREWDRIVER: {
                 if (!entity.world.isClient()) {
                     //If the vehicle isn't unlocked, or the player isn't OP, they can't interact with it.
                     if (vehicle == null || !vehicle.locked) {
@@ -144,15 +133,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             }
                         } else {
                             //Left clicking removes parts, or removes vehicles, if we were sneaking.
-                            if(player.isSneaking()) {
-                                if(vehicle != null) {
+                            if (player.isSneaking()) {
+                                if (vehicle != null) {
                                     if ((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || player.isOP()) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && entity.isValid) {
                                         vehicle.disconnectAllConnections();
                                         vehicle.world.spawnItemStack(vehicle.getStack(), hitBox.globalCenter, null);
                                         vehicle.remove();
                                     }
                                 }
-                            }else {
+                            } else {
                                 if (entity instanceof APart) {
                                     APart part = (APart) entity;
                                     if (!part.isPermanent && part.isValid) {
@@ -401,7 +390,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     vehicle.setVariable(AEntityE_Interactable.DAMAGE_VARIABLE, newDamage);
                                     vehicle.repairCooldownTicks = 200;
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(vehicle, AEntityE_Interactable.DAMAGE_VARIABLE, newDamage));
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health), player);
                                     if (!player.isCreative()) {
                                         player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                                     }

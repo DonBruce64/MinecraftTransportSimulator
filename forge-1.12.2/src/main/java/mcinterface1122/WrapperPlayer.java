@@ -1,16 +1,9 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 import net.minecraft.block.BlockWorkbench;
@@ -27,6 +20,10 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
@@ -161,10 +158,10 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     public void openCraftingGUI() {
         player.displayGui(new BlockWorkbench.InterfaceCraftingTable(player.world, null) {
             @Override
-            public Container createContainer(InventoryPlayer playerInventory, EntityPlayer playerAccessing) {
+            public @NotNull Container createContainer(@NotNull InventoryPlayer playerInventory, @NotNull EntityPlayer playerAccessing) {
                 return new ContainerWorkbench(playerInventory, playerAccessing.world, playerAccessing.getPosition()) {
                     @Override
-                    public boolean canInteractWith(EntityPlayer playerIn) {
+                    public boolean canInteractWith(@NotNull EntityPlayer playerIn) {
                         return true;
                     }
                 };

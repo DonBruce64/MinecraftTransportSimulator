@@ -1,24 +1,20 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides.JSONCraftingOverride;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.PackParser;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.JSONConfigClient;
-import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides;
-import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides.JSONCraftingOverride;
-import minecrafttransportsimulator.jsondefs.JSONConfigExternalDamageOverrides;
-import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * Class that handles all configuration settings. This file is responsible for saving and loading
@@ -30,13 +26,13 @@ import minecrafttransportsimulator.packloading.PackParser;
  * @author don_bruce
  */
 public final class ConfigSystem {
+    public static JSONConfigSettings settings;
+    public static JSONConfigClient client;
+    public static JSONConfigExternalDamageOverrides externalDamageOverrides;
     private static File settingsFile;
     private static File clientFile;
     private static File craftingFile;
     private static File externalDamageFile;
-    public static JSONConfigSettings settings;
-    public static JSONConfigClient client;
-    public static JSONConfigExternalDamageOverrides externalDamageOverrides;
     private static File configDirectory;
 
     /**

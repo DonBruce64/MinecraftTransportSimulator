@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -10,12 +7,7 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONPanel;
 import minecrafttransportsimulator.jsondefs.JSONPanel.JSONPanelClickAction;
@@ -32,9 +24,12 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A GUI/control system hybrid, this takes the place of the HUD when called up.
- * This class is contains the base code for rendering things common to all vehicles, 
+ * This class is contains the base code for rendering things common to all vehicles,
  * specifics are added in the JSON as applicable.
  *
  * @author don_bruce
@@ -419,10 +414,10 @@ public class GUIPanel extends AGUIBase {
                 }
             }
         }
-        
+
         trailerSwitchDefs.clear();
         setupTowingButtons(vehicle);
-        
+
         //Add instruments.  These go wherever they are specified in the JSON.
         for (int i = 0; i < vehicle.instruments.size(); ++i) {
             if (vehicle.instruments.get(i) != null && vehicle.definition.instruments.get(i).placeOnPanel) {
@@ -446,7 +441,7 @@ public class GUIPanel extends AGUIBase {
             if (visibilityVariables != null) {
                 button.visible = vehicle.isVariableListTrue(visibilityVariables);
             }
-            if(button.visible) {
+            if (button.visible) {
                 button.textureYOffset = (int) button.component.textureStart.y + button.component.height * button.getState();
             }
         }
@@ -555,6 +550,36 @@ public class GUIPanel extends AGUIBase {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, action.variable));
                 break;
             }
+        }
+    }
+
+    private static class SwitchEntry {
+        protected final AEntityE_Interactable<?> connectionDefiner;
+        protected final EntityVehicleF_Physics vehicleOn;
+        protected final JSONConnectionGroup connectionGroup;
+        protected final int connectionGroupIndex;
+
+        private SwitchEntry(AEntityE_Interactable<?> connectionDefiner, JSONConnectionGroup connectionGroup) {
+            this.connectionDefiner = connectionDefiner;
+            this.vehicleOn = connectionDefiner instanceof APart ? ((APart) connectionDefiner).vehicleOn : (EntityVehicleF_Physics) connectionDefiner;
+            this.connectionGroup = connectionGroup;
+            this.connectionGroupIndex = connectionDefiner.definition.connectionGroups.indexOf(connectionGroup);
+        }
+
+        protected boolean isConnected() {
+            if (connectionGroup.isHookup) {
+                if (vehicleOn.towedByConnection != null && vehicleOn.towedByConnection.hookupGroupIndex == connectionGroupIndex) {
+                    return true;
+                }
+            }
+            if (connectionGroup.isHitch) {
+                for (TowingConnection connection : vehicleOn.towingConnections) {
+                    if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
@@ -717,36 +742,6 @@ public class GUIPanel extends AGUIBase {
                 appliedTrimThisRender = false;
             }
             return trimCycleVar ? 1 : 0;
-        }
-    }
-
-    private static class SwitchEntry {
-        protected final AEntityE_Interactable<?> connectionDefiner;
-        protected final EntityVehicleF_Physics vehicleOn;
-        protected final JSONConnectionGroup connectionGroup;
-        protected final int connectionGroupIndex;
-
-        private SwitchEntry(AEntityE_Interactable<?> connectionDefiner, JSONConnectionGroup connectionGroup) {
-            this.connectionDefiner = connectionDefiner;
-            this.vehicleOn = connectionDefiner instanceof APart ? ((APart) connectionDefiner).vehicleOn : (EntityVehicleF_Physics) connectionDefiner;
-            this.connectionGroup = connectionGroup;
-            this.connectionGroupIndex = connectionDefiner.definition.connectionGroups.indexOf(connectionGroup);
-        }
-
-        protected boolean isConnected() {
-            if (connectionGroup.isHookup) {
-                if (vehicleOn.towedByConnection != null && vehicleOn.towedByConnection.hookupGroupIndex == connectionGroupIndex) {
-                    return true;
-                }
-            }
-            if (connectionGroup.isHitch) {
-                for (TowingConnection connection : vehicleOn.towingConnections) {
-                    if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
     }
 }

@@ -1,17 +1,10 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -19,17 +12,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
-import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat.SeatAction;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+
+import java.util.Locale;
 
 /**
  * Class that handles all control operations.
@@ -154,7 +141,7 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartSeat(sittingSeat, SeatAction.ZOOM_OUT));
             }
             if (changeView.isPressed()) {
-            	InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(sittingSeat));
             }
         }
     }
@@ -521,38 +508,11 @@ public final class ControlSystem {
 
         //Check if we are shifting.
         if (ConfigSystem.client.controlSettings.useShifter.value) {
-            final int gearNumber;
-            if (ControlsJoystick.CAR_SHIFT_1.isPressed()) {
-                gearNumber = 1;
-            } else if (ControlsJoystick.CAR_SHIFT_2.isPressed()) {
-                gearNumber = 2;
-            } else if (ControlsJoystick.CAR_SHIFT_3.isPressed()) {
-                gearNumber = 3;
-            } else if (ControlsJoystick.CAR_SHIFT_4.isPressed()) {
-                gearNumber = 4;
-            } else if (ControlsJoystick.CAR_SHIFT_5.isPressed()) {
-                gearNumber = 5;
-            } else if (ControlsJoystick.CAR_SHIFT_6.isPressed()) {
-                gearNumber = 6;
-            } else if (ControlsJoystick.CAR_SHIFT_7.isPressed()) {
-                gearNumber = 7;
-            } else if (ControlsJoystick.CAR_SHIFT_8.isPressed()) {
-                gearNumber = 8;
-            } else if (ControlsJoystick.CAR_SHIFT_9.isPressed()) {
-                gearNumber = 9;
-            } else if (ControlsJoystick.CAR_SHIFT_R.isPressed()) {
-                gearNumber = 10;
-            } else {
-                gearNumber = 11;
-            }
-            powered.engines.forEach(engine -> {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.GEAR_SHIFT_VARIABLE, gearNumber));
-            });
+            final int gearNumber = getGearNumber();
+            powered.engines.forEach(engine -> InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine, PartEngine.GEAR_SHIFT_VARIABLE, gearNumber)));
         } else {
             if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
-                powered.engines.forEach(engine -> {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                });
+                powered.engines.forEach(engine -> InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE)));
             } else {
                 if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
                     powered.engines.forEach(engine -> {
@@ -640,6 +600,34 @@ public final class ControlSystem {
                 --powered.turningCooldown;
             }
         }
+    }
+
+    private static int getGearNumber() {
+        final int gearNumber;
+        if (ControlsJoystick.CAR_SHIFT_1.isPressed()) {
+            gearNumber = 1;
+        } else if (ControlsJoystick.CAR_SHIFT_2.isPressed()) {
+            gearNumber = 2;
+        } else if (ControlsJoystick.CAR_SHIFT_3.isPressed()) {
+            gearNumber = 3;
+        } else if (ControlsJoystick.CAR_SHIFT_4.isPressed()) {
+            gearNumber = 4;
+        } else if (ControlsJoystick.CAR_SHIFT_5.isPressed()) {
+            gearNumber = 5;
+        } else if (ControlsJoystick.CAR_SHIFT_6.isPressed()) {
+            gearNumber = 6;
+        } else if (ControlsJoystick.CAR_SHIFT_7.isPressed()) {
+            gearNumber = 7;
+        } else if (ControlsJoystick.CAR_SHIFT_8.isPressed()) {
+            gearNumber = 8;
+        } else if (ControlsJoystick.CAR_SHIFT_9.isPressed()) {
+            gearNumber = 9;
+        } else if (ControlsJoystick.CAR_SHIFT_R.isPressed()) {
+            gearNumber = 10;
+        } else {
+            gearNumber = 11;
+        }
+        return gearNumber;
     }
 
     /**

@@ -18,18 +18,16 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
  * @author don_bruce
  */
 public abstract class GUIComponentButton extends GUIComponentCutout {
+    public static final int ITEM_BUTTON_SIZE = 18;
     private static final int DEFAULT_BUTTON_SECTION_WIDTH = 100;
     private static final int DEFAULT_BUTTON_SECTION_HEIGHT = 20;
     private static final int DEFAULT_BUTTON_SECTION_BORDER = 6;
     private static final int DEFAULT_BUTTON_SECTION_WIDTH_OFFSET = 0;
     private static final int DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET = 196;
-    public static final int ITEM_BUTTON_SIZE = 18;
-
     public final boolean centeredText;
-
+    public final ColorRGB textColor;
     public boolean enabled = true;
     public boolean isDynamicTexture;
-    public final ColorRGB textColor;
     protected RenderableData renderable2;
     protected RenderableData renderable2L;
     protected RenderableData renderable3;

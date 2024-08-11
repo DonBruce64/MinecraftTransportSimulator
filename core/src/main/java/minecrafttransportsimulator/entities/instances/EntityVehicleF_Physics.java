@@ -1,14 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -21,6 +13,10 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
@@ -30,41 +26,18 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
-    //Aileron.
-    @DerivedValue
-    public double aileronInput;
-    @DerivedValue
-    public double aileronAngle;
-    @DerivedValue
-    public double aileronTrim;
     public static final double MAX_AILERON_ANGLE = 25;
     public static final double MAX_AILERON_TRIM = 10;
     public static final double AILERON_DAMPEN_RATE = 0.6;
     public static final String AILERON_INPUT_VARIABLE = "input_aileron";
     public static final String AILERON_VARIABLE = "aileron";
     public static final String AILERON_TRIM_VARIABLE = "trim_aileron";
-
-    //Elevator.
-    @DerivedValue
-    public double elevatorInput;
-    @DerivedValue
-    public double elevatorAngle;
-    @DerivedValue
-    public double elevatorTrim;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
     public static final String ELEVATOR_INPUT_VARIABLE = "input_elevator";
     public static final String ELEVATOR_VARIABLE = "elevator";
     public static final String ELEVATOR_TRIM_VARIABLE = "trim_elevator";
-
-    //Rudder.
-    @DerivedValue
-    public double rudderInput;
-    @DerivedValue
-    public double rudderAngle;
-    @DerivedValue
-    public double rudderTrim;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
     public static final double RUDDER_DAMPEN_RATE = 2.0;
@@ -72,14 +45,48 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public static final String RUDDER_INPUT_VARIABLE = "input_rudder";
     public static final String RUDDER_VARIABLE = "rudder";
     public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
-
     //Flaps.
     public static final short MAX_FLAP_ANGLE_REFERENCE = 350;
+    public static final String FLAPS_VARIABLE = "flaps_setpoint";
+    public static final String AUTOPILOT_VALUE_VARIABLE = "autopilot";
+    public static final String AUTOPILOT_ACTIVE_VARIABLE = "autopilot_active";
+    public static final String AUTOLEVEL_VARIABLE = "auto_level";
+    private final Point3D normalizedVelocityVector = new Point3D();
+    private final Point3D verticalVector = new Point3D();
+    private final Point3D sideVector = new Point3D();
+    private final Point3D hitchPrevOffset = new Point3D();
+    private final Point3D hitchCurrentOffset = new Point3D();
+    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
+    private final Point3D thrustForce = new Point3D();//kg*m/ticks^2
+    private final Point3D towingThrustForce = new Point3D();//kg*m/ticks^2
+    private final Point3D totalForce = new Point3D();//kg*m/ticks^2
+    private final Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
+    private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
+    private final Point3D rotorRotation = new Point3D();//degrees
+    //Aileron.
+    @DerivedValue
+    public double aileronInput;
+    @DerivedValue
+    public double aileronAngle;
+    @DerivedValue
+    public double aileronTrim;
+    //Elevator.
+    @DerivedValue
+    public double elevatorInput;
+    @DerivedValue
+    public double elevatorAngle;
+    @DerivedValue
+    public double elevatorTrim;
+    //Rudder.
+    @DerivedValue
+    public double rudderInput;
+    @DerivedValue
+    public double rudderAngle;
+    @DerivedValue
+    public double rudderTrim;
     @DerivedValue
     public double flapDesiredAngle;
     public double flapCurrentAngle;
-    public static final String FLAPS_VARIABLE = "flaps_setpoint";
-
     //External state control.
     public boolean turningLeft;
     public boolean turningRight;
@@ -89,23 +96,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double autopilotSetting;
     public double airDensity;
     public double seaLevel = ConfigSystem.settings.general.seaLevel.value;
-    public static final String AUTOPILOT_VALUE_VARIABLE = "autopilot";
-    public static final String AUTOPILOT_ACTIVE_VARIABLE = "autopilot_active";
-    public static final String AUTOLEVEL_VARIABLE = "auto_level";
     public int controllerCount;
     public IWrapperPlayer lastController;
-
-    //Internal states.
-    private boolean hasRotors;
-    private double trackAngle;
-    private double indicatedSpeed;
-    private final Point3D normalizedVelocityVector = new Point3D();
-    private final Point3D verticalVector = new Point3D();
-    private final Point3D sideVector = new Point3D();
-    private final Point3D hitchPrevOffset = new Point3D();
-    private final Point3D hitchCurrentOffset = new Point3D();
-    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
-
     //Properties.
     @ModifiedValue
     public float currentWingArea;
@@ -125,14 +117,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public float currentWaterBallastFactor;
     @ModifiedValue
     public float currentAxleRatio;
-
+    //Internal states.
+    private boolean hasRotors;
+    private double trackAngle;
+    private double indicatedSpeed;
     //Coefficients.
     private double wingLiftCoeff;
     private double aileronLiftCoeff;
     private double elevatorLiftCoeff;
     private double rudderLiftCoeff;
     private double dragCoeff;
-
     //Forces.
     private double dragForce;//kg*m/ticks^2
     private double wingForce;//kg*m/ticks^2
@@ -141,11 +135,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double rudderForce;//kg*m/ticks^2
     private double ballastForce;//kg*m/ticks^2
     private double gravitationalForce;//kg*m/ticks^2
-    private final Point3D thrustForce = new Point3D();//kg*m/ticks^2
     private double thrustForceValue;
-    private final Point3D towingThrustForce = new Point3D();//kg*m/ticks^2
-    private final Point3D totalForce = new Point3D();//kg*m/ticks^2
-
     //Torques.
     private double momentRoll;//kg*m^2
     private double momentPitch;//kg*m^2
@@ -153,14 +143,27 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double aileronTorque;//kg*m^2/ticks^2
     private double elevatorTorque;//kg*m^2/ticks^2
     private double rudderTorque;//kg*m^2/ticks^2
-    private final Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
-    private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
-    private final Point3D rotorRotation = new Point3D();//degrees
 
     public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
         if (data != null) {
             this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+        }
+    }
+
+    protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff) {
+        if (angleOfAttack == 0) {
+            return 0;
+        } else if (Math.abs(angleOfAttack) <= 15 * 1.25) {
+            return maxLiftCoeff * Math.sin(Math.PI / 2 * angleOfAttack / 15);
+        } else if (Math.abs(angleOfAttack) <= 15 * 1.5) {
+            if (angleOfAttack > 0) {
+                return maxLiftCoeff * (0.4 + 1 / (angleOfAttack - 15));
+            } else {
+                return maxLiftCoeff * (-0.4 + 1 / (angleOfAttack + 15));
+            }
+        } else {
+            return maxLiftCoeff * Math.sin(Math.PI / 6 * angleOfAttack / 15);
         }
     }
 
@@ -318,7 +321,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
                         break;
                     case "steeringForceIgnoresSpeed":
-                    	currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
+                        currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
                         break;
                     case "steeringForceFactor":
                         currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
@@ -408,7 +411,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set moments and air density.
-            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / (500D * world.getMaxHeight() / 256D));
+            airDensity = 1.225 * Math.pow(2, -(position.y - seaLevel) / (500D * world.getMaxHeight() / 256D));
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
@@ -781,22 +784,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
     }
 
-    protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff) {
-        if (angleOfAttack == 0) {
-            return 0;
-        } else if (Math.abs(angleOfAttack) <= 15 * 1.25) {
-            return maxLiftCoeff * Math.sin(Math.PI / 2 * angleOfAttack / 15);
-        } else if (Math.abs(angleOfAttack) <= 15 * 1.5) {
-            if (angleOfAttack > 0) {
-                return maxLiftCoeff * (0.4 + 1 / (angleOfAttack - 15));
-            } else {
-                return maxLiftCoeff * (-0.4 + 1 / (angleOfAttack + 15));
-            }
-        } else {
-            return maxLiftCoeff * Math.sin(Math.PI / 6 * angleOfAttack / 15);
-        }
-    }
-
     @Override
     public boolean shouldRenderBeams() {
         return ConfigSystem.client.renderingSettings.vehicleBeams.value;
@@ -842,7 +829,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("road_angle_rear"):
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
             //Vehicle state cases.
-            case("autopilot_present"):
+            case ("autopilot_present"):
                 return definition.motorized.hasAutopilot ? 1 : 0;
             case ("fuel"):
                 return fuelTank.getFluidLevel() / fuelTank.getMaxLevel();
@@ -913,7 +900,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("beacon_glideslope_delta"):
                 return selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0;
             case ("beacon_distance"):
-                return selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0;
+                return selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z, -selectedBeacon.position.x + position.x) : 0;
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.

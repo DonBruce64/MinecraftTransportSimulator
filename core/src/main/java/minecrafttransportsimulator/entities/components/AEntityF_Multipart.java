@@ -1,25 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
@@ -34,22 +15,13 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -60,30 +32,33 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  */
 public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityE_Interactable<JSONDefinition> {
 
+    //Constants
+    private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
+    private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.5F;
+    private static final float PART_SLOT_LARGE_HITBOX_WIDTH = 0.75F;
+    private static final float PART_SLOT_LARGE_HITBOX_HEIGHT = 2.25F;
+    private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
+    private static final Set<CollisionType> partSlotBoxCollisionTypes = new HashSet<>(Collections.singletonList(CollisionType.CLICK));
     /**
      * List of collision boxes, with all part collision boxes included.
      **/
     public final Set<BoundingBox> allCollisionBoxes = new HashSet<>();
-
     /**
      * This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
-     * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
+     * call {@link #addPart}, {@link #addPartFromStack(IWrapperItemStack, IWrapperPlayer, int, boolean, boolean)}, or {@link #removePart} to ensure all sub-classed
      * operations are performed.  Note that if you are iterating over this list when you call one of those
      * methods, and you don't pass the method an iterator instance, you will get a CME!.
      */
     public final List<APart> parts = new ArrayList<>();
-
     /**
      * Like {@link #parts}, except contains all parts on parts as well, recursively to the lowest part.
      */
     public final List<APart> allParts = new ArrayList<>();
-
     /**
      * Identical to {@link #parts}, except this list has null elements for empty slots.  Designed
      * for obtaining the part in a specific slot rather than iterative operations.
      */
     public final List<APart> partsInSlots = new ArrayList<>();
-
     /**
      * Map of part slot boxes.  Key is the box, value is the definition for that slot.
      * Note that this contains all POSSIBLE boxes.  Boxes may not be active and in
@@ -92,15 +67,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public final Map<BoundingBox, JSONPartDefinition> partSlotBoxes = new HashMap<>();
     public final Map<BoundingBox, JSONPartDefinition> activeClientPartSlotBoxes = new HashMap<>();
     private final Map<JSONPartDefinition, AnimationSwitchbox> partSlotSwitchboxes = new HashMap<>();
-
-    //Constants
-    private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
-    private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.5F;
-    private static final float PART_SLOT_LARGE_HITBOX_WIDTH = 0.75F;
-    private static final float PART_SLOT_LARGE_HITBOX_HEIGHT = 2.25F;
-    private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
-    private static final Set<CollisionType> partSlotBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.CLICK));
-
     private APart partToPlace;
     private EntityPlacedPart placedPart;
     private int placeTimer;
@@ -120,6 +86,20 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             while (partsInSlots.size() < definition.parts.size()) {
                 partsInSlots.add(null);
             }
+        }
+    }
+
+    /**
+     * Helper method to get the index of the passed-in variable.  Indexes are defined by
+     * variable names ending in _xx, where xx is a number.  The defined number is assumed
+     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
+     * define a number, then -1 is returned.
+     */
+    public static int getVariableNumber(String variable) {
+        if (variable.matches("^.*_\\d+$")) {
+            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+        } else {
+            return -1;
         }
     }
 
@@ -201,7 +181,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     //This keeps us from checking things really far away for no reason.
                     if (entity.encompassingBox.isPointInside(currentPart.position, PART_TRANSFER_GROWTH)) {
                         AEntityF_Multipart<?> otherMasterEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
-                        if(otherMasterEntity != masterEntity && entity.definition.parts != null) {
+                        if (otherMasterEntity != masterEntity && entity.definition.parts != null) {
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
                                 partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true)) {
@@ -425,7 +405,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
         IWrapperNBT freshData = InterfaceManager.coreInterface.getNewNBTWrapper();
         freshData.setPackItem(definition, subDefinition.subName);
-        freshData.getAllNames().forEach(name -> stackData.deleteEntry(name));
+        freshData.getAllNames().forEach(stackData::deleteEntry);
 
         if (!stackData.getAllNames().isEmpty()) {
             stack.setData(stackData);
@@ -511,20 +491,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
         } else {
             super.setVariable(variable, value);
-        }
-    }
-
-    /**
-     * Helper method to get the index of the passed-in variable.  Indexes are defined by
-     * variable names ending in _xx, where xx is a number.  The defined number is assumed
-     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
-     * define a number, then -1 is returned.
-     */
-    public static int getVariableNumber(String variable) {
-        if (variable.matches("^.*_\\d+$")) {
-            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
-        } else {
-            return -1;
         }
     }
 
@@ -730,20 +696,20 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * passed-in definition is placed on this entity, not when it's being loaded from saved data.
      */
     public void addDefaultPart(String partName, int partSlot, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
-    	//Don't even try if the partName is an empty string
-    	if (!partName.isEmpty()) {
-	        try {
-	            String partPackID = partName.substring(0, partName.indexOf(':'));
-	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
-	            try {
+        //Don't even try if the partName is an empty string
+        if (!partName.isEmpty()) {
+            try {
+                String partPackID = partName.substring(0, partName.indexOf(':'));
+                String partSystemName = partName.substring(partName.indexOf(':') + 1);
+                try {
                     addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false, true);
-	            } catch (NullPointerException e) {
-	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
-	            }
-	        } catch (IndexOutOfBoundsException e) {
-	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
-	        }
-    	}
+                } catch (NullPointerException e) {
+                    playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+                }
+            } catch (IndexOutOfBoundsException e) {
+                playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+            }
+        }
     }
 
     /**

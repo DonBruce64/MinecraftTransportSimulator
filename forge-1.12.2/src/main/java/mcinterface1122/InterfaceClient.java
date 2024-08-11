@@ -1,10 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
@@ -35,6 +30,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceClient implements IInterfaceClient {
@@ -235,41 +235,41 @@ public class InterfaceClient implements IInterfaceClient {
                     }
                 } else {
                     world.tickAll(false);
-                    
+
                     //Handle camera requests.
-                    if(cameraModeRequest != null) {
-                    	switch(cameraModeRequest) {
-	                    	case FIRST_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON_INVERTED:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
-	                    		break;
-	                    	}
-                    	}
-                    	cameraModeRequest = null;
+                    if (cameraModeRequest != null) {
+                        switch (cameraModeRequest) {
+                            case FIRST_PERSON: {
+                                Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+                                break;
+                            }
+                            case THIRD_PERSON: {
+                                Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+                                break;
+                            }
+                            case THIRD_PERSON_INVERTED: {
+                                Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
+                                break;
+                            }
+                        }
+                        cameraModeRequest = null;
                     }
 
                     //Update camera state, since this can change depending on tick if we check during renders.
                     int cameraModeInt = Minecraft.getMinecraft().gameSettings.thirdPersonView;
-                    switch(cameraModeInt) {
-                    	case(0):{
-                    		actualCameraMode = CameraMode.FIRST_PERSON;
-                    		break;
-                    	}
-                    	case(1):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON;
-                    		break;
-                    	}
-                    	case(2):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
-                    		break;
-                    	}
+                    switch (cameraModeInt) {
+                        case (0): {
+                            actualCameraMode = CameraMode.FIRST_PERSON;
+                            break;
+                        }
+                        case (1): {
+                            actualCameraMode = CameraMode.THIRD_PERSON;
+                            break;
+                        }
+                        case (2): {
+                            actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+                            break;
+                        }
                     }
                 }
                 world.endProfiling();

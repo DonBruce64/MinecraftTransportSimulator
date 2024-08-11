@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -15,7 +16,7 @@ import minecrafttransportsimulator.packloading.PackParser;
  * to process the instrument change, and then sent to all clients if
  * the change is able to be made.  Does not check ownership as that's
  * done before {@link GUIInstruments} is opened by checking for
- * ownership in {@link ItemItem#doVehicleInteraction}.
+ * ownership in {@link ItemItem#doEntityInteraction(AEntityE_Interactable, BoundingBox, IWrapperPlayer, boolean)}.
  *
  * @author don_bruce
  */

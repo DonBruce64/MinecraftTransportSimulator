@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -18,6 +15,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Helper class for containing lane data.  Lanes contain a reference to the road
  * they are a part of,  the lane number they represent, the curves that define
@@ -27,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnect
  * @author don_bruce
  */
 public class RoadLane {
+    private static final double CURVE_CONNECTION_MAX_DISTANCE = 0.20;
     public final TileEntityRoad road;
     public final int sectorNumber;
     public final int sectorLaneNumber;
@@ -34,8 +35,6 @@ public class RoadLane {
     public final List<BezierCurve> curves;
     public final List<List<RoadLaneConnection>> priorConnections;
     public final List<List<RoadLaneConnection>> nextConnections;
-
-    private static final double CURVE_CONNECTION_MAX_DISTANCE = 0.20;
 
     public RoadLane(TileEntityRoad road, int sectorNumber, int laneNumber, int sectorLaneNumber, IWrapperNBT data) {
         this.road = road;

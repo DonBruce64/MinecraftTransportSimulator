@@ -1,13 +1,14 @@
 package mcinterface1122;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 /**
  * Builder for tile entities that transform MC energy into power for other entities.
@@ -83,7 +84,7 @@ public class BuilderTileEntityEnergyCharger<EnergyTileEntity extends ATileEntity
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityEnergy.ENERGY && facing != null) {
             return true;
         } else {
@@ -93,7 +94,7 @@ public class BuilderTileEntityEnergyCharger<EnergyTileEntity extends ATileEntity
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+    public <T> T getCapability(@NotNull Capability<T> capability, EnumFacing facing) {
         if (capability == CapabilityEnergy.ENERGY && facing != null) {
             return (T) this;
         } else {

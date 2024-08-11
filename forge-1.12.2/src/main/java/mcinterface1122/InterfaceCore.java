@@ -1,9 +1,5 @@
 package mcinterface1122;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -15,6 +11,10 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 class InterfaceCore implements IInterfaceCore {
     @Override
@@ -36,7 +36,7 @@ class InterfaceCore implements IInterfaceCore {
     public String getModName(String modID) {
         return Loader.instance().getIndexedModList().get(modID).getName();
     }
-    
+
     @Override
     public InputStream getPackResource(String resource) {
         return InterfaceCore.class.getResourceAsStream(resource);
@@ -44,7 +44,7 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public void logError(String message) {
-        InterfaceLoader.LOGGER.error("MTSERROR: " + message);
+        InterfaceLoader.LOGGER.error("MTSERROR: {}", message);
     }
 
     @Override

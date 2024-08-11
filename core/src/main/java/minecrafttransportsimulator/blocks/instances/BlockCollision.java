@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -10,6 +7,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
@@ -29,6 +29,14 @@ public class BlockCollision extends ABlockBase {
         float heightRadiusRequired = collisionHeightInPixels / 16F / 2F;
         //Need to offset by 0.5 to center ourselves in the block.
         this.blockBounds = new BoundingBox(new Point3D(0.5, heightRadiusRequired, 0.5), 0.5D, heightRadiusRequired, 0.5D);
+    }
+
+    private static List<BlockCollision> createCollisionBlocks() {
+        List<BlockCollision> blocks = new ArrayList<>();
+        for (int i = 0; i < 16; ++i) {
+            blocks.add(new BlockCollision(i));
+        }
+        return blocks;
     }
 
     @Override
@@ -69,13 +77,5 @@ public class BlockCollision extends ABlockBase {
             }
         }
         return null;
-    }
-
-    private static List<BlockCollision> createCollisionBlocks() {
-        List<BlockCollision> blocks = new ArrayList<>();
-        for (int i = 0; i < 16; ++i) {
-            blocks.add(new BlockCollision(i));
-        }
-        return blocks;
     }
 }

@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.packets.components;
 
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -10,58 +7,11 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExternalEntity;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
-import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
-import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
-import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
-import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
-import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
-import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.packloading.PackParser;
+
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 /**
  * Base packet class.  All packets must extend this class to be used with the
@@ -82,33 +32,6 @@ public abstract class APacketBase {
      */
     public APacketBase(ByteBuf buf) {
     }
-
-    /**
-     * Normally, all packets will need to run on the main game thread
-     * for proper I/O access.  However, sometimes the data they access
-     * is read-only, or may be thread-safe.  In that case, it is prefered
-     * to have the packet be handled on the networking thread to help reduce
-     * main game load.  If so, then false should be returned here.
-     */
-    public boolean runOnMainThread() {
-        return true;
-    }
-
-    /**
-     * This is called to write the field values from this class into a buffer.
-     * Used prior to sending the packet off over the network.  Make sure to
-     * call super should you override this, as this puts the packetID in
-     * the buffer so the network knows what packet class this packet goes to!
-     */
-    public void writeToBuffer(ByteBuf buf) {
-        buf.writeByte(InterfaceManager.packetInterface.getPacketIndex(this));
-    }
-
-    /**
-     * This is called to handle the logic of this packet.  An instance of
-     * the world is passed-in here for referencing objects.
-     */
-    public abstract void handle(AWrapperWorld world);
 
     /**
      * Helper method to write a string to the buffer.
@@ -298,4 +221,31 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
     }
+
+    /**
+     * Normally, all packets will need to run on the main game thread
+     * for proper I/O access.  However, sometimes the data they access
+     * is read-only, or may be thread-safe.  In that case, it is prefered
+     * to have the packet be handled on the networking thread to help reduce
+     * main game load.  If so, then false should be returned here.
+     */
+    public boolean runOnMainThread() {
+        return true;
+    }
+
+    /**
+     * This is called to write the field values from this class into a buffer.
+     * Used prior to sending the packet off over the network.  Make sure to
+     * call super should you override this, as this puts the packetID in
+     * the buffer so the network knows what packet class this packet goes to!
+     */
+    public void writeToBuffer(ByteBuf buf) {
+        buf.writeByte(InterfaceManager.packetInterface.getPacketIndex(this));
+    }
+
+    /**
+     * This is called to handle the logic of this packet.  An instance of
+     * the world is passed-in here for referencing objects.
+     */
+    public abstract void handle(AWrapperWorld world);
 }

@@ -102,7 +102,7 @@ public interface IInventoryProvider {
         for (int i = 0; i < getSize(); ++i) {
             if (isStackValid(stackToAdd, i)) {
                 IWrapperItemStack stack = getStack(i);
-                int amountToAdd = 0;
+                int amountToAdd;
                 if (stack.isEmpty()) {
                     amountToAdd = getStackSize();
                     if (amountToAdd > qty) {
@@ -220,7 +220,7 @@ public interface IInventoryProvider {
 
     /**
      * Returns true if this inventory has all the materials to make the pack-based item..  Normally uses the output
-     * of {@link PackMaterialComponent#parseFromJSON(AItemPack, int, boolean, boolean, boolean)}, but can use any input.
+     * of {@link PackMaterialComponent#parseFromJSON(AItemPack, int, boolean, boolean, boolean, boolean)}, but can use any input.
      */
     default boolean hasMaterials(List<PackMaterialComponent> materials) {
         for (PackMaterialComponent material : materials) {
@@ -259,7 +259,7 @@ public interface IInventoryProvider {
 
     /**
      * Removes all materials from the inventory required to craft the passed-in item.
-     * {@link #hasMaterials(AItemPack, boolean, boolean, boolean)} MUST be called before this method to ensure
+     * {@link #hasMaterials(List)} MUST be called before this method to ensure
      * the the inventory actually has the required materials.  Failure to do so will
      * result in the this method removing the incorrect number of materials.
      * Note that for repair recipes, this will not remove the implicit item to repair.

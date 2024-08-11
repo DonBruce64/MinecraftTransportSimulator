@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -17,6 +13,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * Entity class responsible for being a part placed in the world.
  * Doesn't do anything except be a data storage bank for the placed part
@@ -26,10 +26,9 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> {
     private static final List<String> allPartTypes = new ArrayList<>();
-
+    private final Point3D motionApplied = new Point3D();
     public APart currentPart;
     private boolean foundPart;
-    private final Point3D motionApplied = new Point3D();
     private boolean partRequiresDeltaUpdates;
 
     public EntityPlacedPart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -74,7 +73,7 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
                     //Don't check on the first tick, since we won't be updated yet.
                     if (ticksExisted > 1) {
                         if (motion.y > -3.9) {
-                            motion.y += -0.08;
+                            motion.y -= 0.08;
                         }
 
                         //We can only go down 1 block at a time to ensure proper collision checks.
@@ -96,9 +95,9 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
                             }
                         }
                         position.add(motion);
-                        if(maxCollisionDepth != 0) {
-                        	motion.y = 0;
-                        	position.y -= maxCollisionDepth;
+                        if (maxCollisionDepth != 0) {
+                            motion.y = 0;
+                            position.y -= maxCollisionDepth;
                         }
                     }
                 }

@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-import java.util.Set;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
+import java.util.Set;
 
 public class JSONCollisionGroup {
 
@@ -33,6 +33,10 @@ public class JSONCollisionGroup {
 
     @JSONDescription("A optional listing of animations to use to modify the collision boxes.  Translation/rotation animations do what you would expect.  Visibiity animations will completely disable the hitbox if they are false.")
     public List<JSONAnimationDefinition> animations;
+    @Deprecated
+    public boolean isInterior;
+    @Deprecated
+    public boolean isForBullets;
 
     public static enum CollisionType {
         @JSONDescription("Allows collision with blocks.")
@@ -50,9 +54,4 @@ public class JSONCollisionGroup {
         @JSONDescription("Allows effector logic.")
         EFFECTOR;
     }
-
-    @Deprecated
-    public boolean isInterior;
-    @Deprecated
-    public boolean isForBullets;
 }

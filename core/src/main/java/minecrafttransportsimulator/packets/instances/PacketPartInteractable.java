@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -13,6 +11,8 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+
+import java.util.UUID;
 
 /**
  * Packet used to send signals to interactable parts.  This is either used used to link the interactable with

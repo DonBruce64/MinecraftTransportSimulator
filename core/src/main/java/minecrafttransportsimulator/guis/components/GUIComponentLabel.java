@@ -13,13 +13,12 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  * @author don_bruce
  */
 public class GUIComponentLabel extends AGUIComponent {
-    public ColorRGB color;
     public final String fontName;
     public final TextAlignment alignment;
     public final int wrapWidth;
     public final float scale;
     public final boolean autoScale;
-
+    public ColorRGB color;
     private AGUIComponent component;
 
     public GUIComponentLabel(int x, int y, ColorRGB color, String text) {

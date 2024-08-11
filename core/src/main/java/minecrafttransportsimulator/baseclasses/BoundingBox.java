@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -14,6 +10,10 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Basic bounding box.  This class is mutable and allows for quick setting of values

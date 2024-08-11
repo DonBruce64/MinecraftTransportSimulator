@@ -1,17 +1,17 @@
 package minecrafttransportsimulator.guis.components;
 
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.RenderableVertices;
+
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableData;
-import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
-import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * Custom #D model render class.  This allows for rendering a parsed model into a GUI.
@@ -49,6 +49,14 @@ public class GUIComponent3DModel extends AGUIComponent {
         this.isometric = isometric;
         this.spin = spin;
         this.staticScaling = staticScaling;
+    }
+
+    /**
+     * Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
+     */
+    public static void clearModelCaches(AGUIBase gui) {
+        modelParsedObjects.values().forEach(renderable -> renderable.destroy());
+        modelParsedObjects.clear();
     }
 
     @Override
@@ -121,13 +129,5 @@ public class GUIComponent3DModel extends AGUIComponent {
             renderable.setTexture(textureLocation);
             renderable.render();
         }
-    }
-
-    /**
-     * Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
-     */
-    public static void clearModelCaches(AGUIBase gui) {
-        modelParsedObjects.values().forEach(renderable -> renderable.destroy());
-        modelParsedObjects.clear();
     }
 }

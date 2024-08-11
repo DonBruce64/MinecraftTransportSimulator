@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.components;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
+import java.util.UUID;
 
 /**
  * Packet class that includes a default implementation for transmitting an entity
@@ -27,6 +27,15 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
         this.uniqueUUID = readUUIDFromBuffer(buf);
     }
 
+    /**
+     * Helper method for handling clamped values.  Mainly comes from
+     * control packets where we could go outside our desired bounds if we
+     * don't check clamping.
+     */
+    protected static int clampAngle(int min, int max, int value) {
+        return value < min ? min : (Math.min(value, max));
+    }
+
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
@@ -43,15 +52,6 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
                 world.markTileEntityChanged(((ATileEntityBase<?>) entity).position);
             }
         }
-    }
-
-    /**
-     * Helper method for handling clamped values.  Mainly comes from
-     * control packets where we could go outside our desired bounds if we
-     * don't check clamping.
-     */
-    protected static int clampAngle(int min, int max, int value) {
-        return value < min ? min : (Math.min(value, max));
     }
 
     /**

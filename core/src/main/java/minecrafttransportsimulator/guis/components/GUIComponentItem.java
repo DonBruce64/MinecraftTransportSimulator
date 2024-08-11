@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+
+import java.util.List;
 
 /**
  * Custom item render class.  This class is designed to render a {@link IWrapperItemStack}
@@ -24,10 +24,10 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  */
 public class GUIComponentItem extends AGUIComponent {
     public final float scale;
+    public final Point3D translation = new Point3D();
     public IWrapperItemStack stack;
     public List<IWrapperItemStack> stacks;
     public IWrapperItemStack stackToRender;
-    public final Point3D translation = new Point3D();
 
     /**
      * Default item constructor.

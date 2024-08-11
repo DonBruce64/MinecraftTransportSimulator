@@ -463,7 +463,7 @@ public class JSONParser {
         }
 
         long lastTimeModified = 0;
-        String debugText = "Export dir is: " + jsonDir.getAbsolutePath();
+        StringBuilder debugText = new StringBuilder("Export dir is: " + jsonDir.getAbsolutePath());
         for (String packID : PackParser.getAllPackIDs()) {
             File packDir = new File(jsonDir, packID);
             if (!packDir.exists()) {
@@ -488,7 +488,7 @@ public class JSONParser {
                     return "ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage();
                 }
             }
-            debugText += "\nExported pack: " + packID;
+            debugText.append("\nExported pack: ").append(packID);
         }
 
         try {
@@ -496,11 +496,11 @@ public class JSONParser {
             writer.write(String.valueOf(lastTimeModified));
             writer.flush();
             writer.close();
-            debugText += "\nExporting finished.";
+            debugText.append("\nExporting finished.");
         } catch (IOException e) {
             return "ERROR: Could not save last modified timestamp to disk.  Error is:\n" + e.getMessage();
         }
-        return debugText;
+        return debugText.toString();
     }
 
     /**
@@ -510,7 +510,7 @@ public class JSONParser {
     public static String importAllJSONs(boolean returnErrorsOnly) {
         File jsonDir = new File(InterfaceManager.gameDirectory, "mts_dev");
         if (jsonDir.exists()) {
-            String debugText = returnErrorsOnly ? "" : "Import dir is: " + jsonDir.getAbsolutePath();
+            StringBuilder debugText = new StringBuilder(returnErrorsOnly ? "" : "Import dir is: " + jsonDir.getAbsolutePath());
             File lastModifiedFile = new File(jsonDir, "lastexported.txt");
             if (lastModifiedFile.exists()) {
                 long lastTimeModified;
@@ -535,7 +535,7 @@ public class JSONParser {
                             File jsonFile = new File(packDir, definition.classification.toDirectory() + definition.prefixFolders + definition.systemName + ".json");
                             if (!parsedFiles.contains(jsonFile)) {
                                 if (jsonFile.lastModified() > lastTimeModified) {
-                                    debugText += JSONParser.importJSON(jsonFile, definition, returnErrorsOnly);
+                                    debugText.append(JSONParser.importJSON(jsonFile, definition, returnErrorsOnly));
                                 }
                                 parsedFiles.add(jsonFile);
                             }
@@ -543,10 +543,10 @@ public class JSONParser {
                     }
                 }
                 if(returnErrorsOnly) {
-                    if(debugText.isEmpty()) {
+                    if(debugText.length() == 0) {
                         return "Imported with no errors.";
                     }else {
-                        return debugText;
+                        return debugText.toString();
                     }
                 }else {
                     return debugText + "\nImporting finished.";

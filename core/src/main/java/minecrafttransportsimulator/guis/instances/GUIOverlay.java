@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
@@ -24,6 +20,10 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
 /**
  * A GUI that is used to render overlay components.  These components are independent of
  * any vehicle or entity the player is riding, and are always visible.
@@ -31,9 +31,9 @@ import minecrafttransportsimulator.systems.CameraSystem;
  * @author don_bruce
  */
 public class GUIOverlay extends AGUIBase {
+    private final List<String> tooltipText = new ArrayList<>();
     private GUIComponentLabel mouseoverLabel;
     private GUIComponentItem scannerItem;
-    private final List<String> tooltipText = new ArrayList<>();
 
     @Override
     public void setupComponents() {
@@ -72,9 +72,9 @@ public class GUIOverlay extends AGUIBase {
             PartInteractable interactable = (PartInteractable) interactResult.entity;
             if (interactable.tank != null) {
                 String fluidName = interactable.tank.getFluid();
-                if(fluidName.isEmpty()) {
+                if (fluidName.isEmpty()) {
                     mouseoverLabel.text = String.format("%.1f/%.1fb", interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
-                }else {
+                } else {
                     mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
                 }
             }

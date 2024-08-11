@@ -34,7 +34,7 @@ public interface IWrapperItemStack {
 
     /**
      * Returns the time it takes to smelt this item.  Note that due to Vanilla MC jank,
-     * this value MAY be non-zero even if {@link #getSmeltedItem()} returns nothing.  As such,
+     * this value MAY be non-zero even if {@link #getSmeltedItem(AWrapperWorld)} returns nothing.  As such,
      * that method should be checked before this one.
      */
     int getSmeltingTime(AWrapperWorld world);
@@ -99,7 +99,7 @@ public interface IWrapperItemStack {
     /**
      * Returns the data from the stack.
      * If there is no data, then null is returned.
-     * If the data is modified, {@link #setData(AIWrapperNBT)} should
+     * If the data is modified, {@link #setData(IWrapperNBT)} should
      * be called as new NBT tags generated from this method aren't linked
      * to the stack by default.  It also ensures proper states when
      * interfacing with modded items.

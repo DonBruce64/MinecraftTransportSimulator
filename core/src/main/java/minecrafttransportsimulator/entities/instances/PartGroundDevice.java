@@ -32,36 +32,33 @@ public class PartGroundDevice extends APart {
     public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
     public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
     public static final String FLAT_VARIABLE = "isFlat";
-
+    public final Point3D wheelbasePoint;
+    private final Point3D groundPosition = new Point3D();
+    private final Point3D zeroReferencePosition;
+    private final Point3D prevLocalOffset;
     //External states for animations.
     public boolean drivenLastTick = true;
     public boolean skipAngularCalcs = false;
     public double angularPosition;
     public double prevAngularPosition;
     public double angularVelocity;
-
     //Internal properties
     @ModifiedValue
     public float currentMotiveFriction;
     @ModifiedValue
     public float currentLateralFriction;
-    @ModifiedValue
-    private float currentHeight;
-    private float lastHeight;
-    private final Point3D groundPosition = new Point3D();
-    private BlockMaterial materialBelow;
-    public final Point3D wheelbasePoint;
-
     //Internal states for control and physics.
     public boolean isFlat;
     public boolean contactThisTick = false;
     public boolean animateAsOnGround;
+    public PartGroundDeviceFake fakePart;
+    @ModifiedValue
+    private float currentHeight;
+    private float lastHeight;
+    private BlockMaterial materialBelow;
     private int ticksCalcsSkipped = 0;
     private double prevAngularVelocity;
     private boolean prevActive = true;
-    private final Point3D zeroReferencePosition;
-    private final Point3D prevLocalOffset;
-    public PartGroundDeviceFake fakePart;
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -70,9 +67,9 @@ public class PartGroundDevice extends APart {
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
         AEntityF_Multipart<?> parent = entityOn;
-        while(parent instanceof APart) {
+        while (parent instanceof APart) {
             APart parentPart = (APart) parent;
-            if(parentPart.placementDefinition.rot != null) {
+            if (parentPart.placementDefinition.rot != null) {
                 wheelbasePoint.rotate(parentPart.placementDefinition.rot);
             }
             wheelbasePoint.add(parentPart.placementDefinition.pos);
@@ -250,7 +247,7 @@ public class PartGroundDevice extends APart {
                         currentLateralFriction = adjustVariable(modifier, currentLateralFriction);
                         break;
                     case "height":
-                    	currentHeight = adjustVariable(modifier, currentHeight);
+                        currentHeight = adjustVariable(modifier, currentHeight);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -266,7 +263,7 @@ public class PartGroundDevice extends APart {
             case ("ground_rotation"):
                 return vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0;
             case ("ground_rotation_normalized"):
-            	return vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0;
+                return vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600D), 3600L) / 10D : 0D;
             case ("ground_onground"):
                 return vehicleOn != null && animateAsOnGround ? 1 : 0;
             case ("ground_isflat"):

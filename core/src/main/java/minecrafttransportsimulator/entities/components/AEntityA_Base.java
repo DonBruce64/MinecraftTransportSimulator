@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.UUID;
-
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+
+import java.util.UUID;
 
 /**
  * Base entity class.  This class is the base for all in-game entities.  What these
@@ -22,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
  * @author don_bruce
  */
 public abstract class AEntityA_Base {
+    public static String UNIQUE_UUID_TAG_NAME = "uniqueUUID";
     /**
      * The world this entity is a part of.
      **/
@@ -38,8 +39,6 @@ public abstract class AEntityA_Base {
      * Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of update cycles.
      **/
     public long ticksExisted;
-
-    public static String UNIQUE_UUID_TAG_NAME = "uniqueUUID";
 
     public AEntityA_Base(AWrapperWorld world, IWrapperNBT data) {
         this.world = world;
@@ -71,7 +70,7 @@ public abstract class AEntityA_Base {
     /**
      * Normally, all entities sync across clients and servers via their {@link #uniqueUUID}.
      * However, some entities may be client-side, server-side only, or both sides but spawned so frequently
-     * syncing isn't desirable.  These entities should return false here to prevent corrupting the lookup mappings.  
+     * syncing isn't desirable.  These entities should return false here to prevent corrupting the lookup mappings.
      * This also should prevent the loading of any NBT data in the constructor, as none exists to load from and that variable will
      * be null.
      */

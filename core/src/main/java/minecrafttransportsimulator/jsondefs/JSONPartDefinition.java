@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JSONPartDefinition {
     public transient boolean bypassSlotMinMax;
@@ -207,13 +207,6 @@ public class JSONPartDefinition {
     @Deprecated
     public List<JSONParticle> particleObjects;
 
-    @Deprecated
-    public static class ExhaustObject {
-        public Point3D pos;
-        public Point3D velocity;
-        public float scale;
-    }
-
     public static enum JSONGroundDevicePosition {
         FRONT_LEFT(true, true, false),
         FRONT_RIGHT(true, false, true),
@@ -231,5 +224,12 @@ public class JSONPartDefinition {
             this.isLeft = isLeft;
             this.isRight = isRight;
         }
+    }
+
+    @Deprecated
+    public static class ExhaustObject {
+        public Point3D pos;
+        public Point3D velocity;
+        public float scale;
     }
 }

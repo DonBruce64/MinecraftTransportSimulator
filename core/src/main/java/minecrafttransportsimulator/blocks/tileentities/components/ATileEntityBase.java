@@ -24,8 +24,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityD_Definable<JSONDefinition> {
 
-    private float lastLightLevel;
     private final Point3D blockPosition;
+    private float lastLightLevel;
 
     public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);

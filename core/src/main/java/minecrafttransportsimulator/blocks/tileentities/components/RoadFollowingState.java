@@ -30,7 +30,7 @@ public class RoadFollowingState {
     public RoadFollowingState(RoadFollowingState state, boolean flipped) {
         this.lane = state.lane;
         this.curve = state.curve;
-        this.goingForwards = flipped ? !state.goingForwards : state.goingForwards;
+        this.goingForwards = flipped != state.goingForwards;
         this.currentSegment = state.currentSegment;
     }
 
@@ -101,7 +101,7 @@ public class RoadFollowingState {
 
     /**
      * Returns the current point on this curve we set to in the world.
-     * This should be called AFTER {@link #updateCurvePoints(float, int)},
+     * This should be called AFTER {@link #updateCurvePoints(float, LaneSelectionRequest)},
      * otherwise you may get out of the curve's bounds.
      */
     public Point3D getCurrentPoint() {
@@ -112,7 +112,7 @@ public class RoadFollowingState {
 
     /**
      * Returns the current yaw-rotation on this curve we set to in the world.
-     * This should be called AFTER {@link #updateCurvePoints(float, int)},
+     * This should be called AFTER {@link #updateCurvePoints(float, LaneSelectionRequest)},
      * otherwise you may get out of the curve's bounds.
      */
     public double getCurrentYaw() {
@@ -125,7 +125,7 @@ public class RoadFollowingState {
 
     /**
      * Returns the current roll-rotation on this curve we set to in the world.
-     * This should be called AFTER {@link #updateCurvePoints(float, int)},
+     * This should be called AFTER {@link #updateCurvePoints(float, LaneSelectionRequest)},
      * otherwise you may get out of the curve's bounds.
      */
     public double getCurrentRoll() {

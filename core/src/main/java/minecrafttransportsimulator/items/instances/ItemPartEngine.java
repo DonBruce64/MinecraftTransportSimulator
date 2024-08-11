@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -15,7 +12,22 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.List;
+import java.util.Map.Entry;
+
 public class ItemPartEngine extends AItemPart {
+
+    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
+        @Override
+        public boolean isCreatorValid(JSONPart definition) {
+            return definition.generic.type.startsWith("engine");
+        }
+
+        @Override
+        public ItemPartEngine createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartEngine(definition, subDefinition, sourcePackID);
+        }
+    };
 
     public ItemPartEngine(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, subDefinition, sourcePackID);
@@ -63,14 +75,14 @@ public class ItemPartEngine extends AItemPart {
             tooltipLines.add(definition.engine.isAutomatic ? LanguageSystem.ITEMINFO_ENGINE_AUTOMATIC.getCurrentValue() : LanguageSystem.ITEMINFO_ENGINE_MANUAL.getCurrentValue());
             tooltipLines.add(LanguageSystem.ITEMINFO_ENGINE_GEARRATIOS.getCurrentValue());
             for (byte i = 0; i < definition.engine.gearRatios.size(); i += 5) {
-                String gearRatios = "";
+                StringBuilder gearRatios = new StringBuilder();
                 for (byte j = i; j < i + 5 && j < definition.engine.gearRatios.size(); ++j) {
-                    gearRatios += String.valueOf(definition.engine.gearRatios.get(j));
+                    gearRatios.append(definition.engine.gearRatios.get(j));
                     if (j < definition.engine.gearRatios.size() - 1) {
-                        gearRatios += ",  ";
+                        gearRatios.append(",  ");
                     }
                 }
-                tooltipLines.add(gearRatios);
+                tooltipLines.add(gearRatios.toString());
             }
 
         } else {
@@ -87,16 +99,4 @@ public class ItemPartEngine extends AItemPart {
         super.repair(data);
         data.setDouble(PartEngine.HOURS_VARIABLE, 0);
     }
-
-    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
-        @Override
-        public boolean isCreatorValid(JSONPart definition) {
-            return definition.generic.type.startsWith("engine");
-        }
-
-        @Override
-        public ItemPartEngine createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
-            return new ItemPartEngine(definition, subDefinition, sourcePackID);
-        }
-    };
 }

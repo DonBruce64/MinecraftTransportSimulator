@@ -1,15 +1,16 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builder for a MC creative tabs.  This class interfaces with the MC creative tab system,
@@ -42,17 +43,17 @@ public class BuilderCreativeTab extends CreativeTabs {
     }
 
     @Override
-    public String getTranslationKey() {
+    public @NotNull String getTranslationKey() {
         return getTabLabel();
     }
 
     @Override
-    public ItemStack createIcon() {
-        return itemIcon != null ? new ItemStack(itemIcon) : null;
+    public @NotNull ItemStack createIcon() {
+        return itemIcon != null ? new ItemStack(itemIcon) : ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack getIcon() {
+    public @NotNull ItemStack getIcon() {
         if (itemIcon != null) {
             return super.getIcon();
         } else {

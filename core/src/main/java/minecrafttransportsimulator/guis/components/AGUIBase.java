@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.guis.instances.GUIOverlay;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Base GUI class.  This type is used in lieu of the MC GUI class to allow us to use
@@ -20,31 +20,29 @@ public abstract class AGUIBase {
     public static final int STANDARD_GUI_WIDTH = 256;
     public static final int STANDARD_GUI_HEIGHT = 192;
     public static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
+    public static final ConcurrentLinkedQueue<AGUIBase> activeGUIs = new ConcurrentLinkedQueue<>();
     protected static final int STANDARD_COLOR_WIDTH = 20;
     protected static final int STANDARD_COLOR_HEIGHT = 20;
     protected static final int STANDARD_COLOR_WIDTH_OFFSET = 236;
     protected static final int STANDARD_RED_HEIGHT_OFFSET = 196;
     protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
     protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
-
-    protected GUIComponentCutout background;
-    public final List<AGUIComponent> components = new ArrayList<>();
-
-    public static final ConcurrentLinkedQueue<AGUIBase> activeGUIs = new ConcurrentLinkedQueue<>();
     public static AGUIBase activeInputGUI;
 
+    static {
+        //Add the overlay GUI to the GUI listing and keep it there forever.
+        new GUIOverlay();
+    }
+
+    public final List<AGUIComponent> components = new ArrayList<>();
+    public boolean editingText;
+    protected GUIComponentCutout background;
     protected int worldLightValue;
     protected int screenWidth;
     protected int screenHeight;
     protected int guiLeft;
     protected int guiTop;
     protected GUIComponentButton lastButtonClicked;
-    public boolean editingText;
-
-    static {
-        //Add the overlay GUI to the GUI listing and keep it there forever.
-        new GUIOverlay();
-    }
 
     public AGUIBase() {
         //Remove old GUI if we are replacing one.
@@ -59,6 +57,32 @@ public abstract class AGUIBase {
             InterfaceManager.clientInterface.setActiveGUI(this);
             InterfaceManager.inputInterface.setGUIControls(true);
         }
+    }
+
+    /**
+     * If the passed-in GUI class is currently active, this closes it.
+     * Prevents the need to loop over and watch out for CMEs in generic closing code.
+     */
+    public static void closeIfOpen(Class<? extends AGUIBase> guiClass) {
+        AGUIBase guiToClose = null;
+        for (AGUIBase gui : activeGUIs) {
+            if (gui.getClass().equals(guiClass)) {
+                guiToClose = gui;
+                break;
+            }
+        }
+        if (guiToClose != null) {
+            guiToClose.close();
+        }
+    }
+
+    /**
+     * Clock method used to make flashing text and icons on screen.  Put here
+     * for all GUIs to use.  Returns true if the period is active.  Both
+     * parameters are in ticks, or 1/20 a second.
+     */
+    protected static boolean inClockPeriod(int totalPeriod, int onPeriod) {
+        return System.currentTimeMillis() * 0.02D % totalPeriod <= onPeriod;
     }
 
     /**
@@ -223,23 +247,6 @@ public abstract class AGUIBase {
     }
 
     /**
-     * If the passed-in GUI class is currently active, this closes it.
-     * Prevents the need to loop over and watch out for CMEs in generic closing code.
-     */
-    public static void closeIfOpen(Class<? extends AGUIBase> guiClass) {
-        AGUIBase guiToClose = null;
-        for (AGUIBase gui : activeGUIs) {
-            if (gui.getClass().equals(guiClass)) {
-                guiToClose = gui;
-                break;
-            }
-        }
-        if (guiToClose != null) {
-            guiToClose.close();
-        }
-    }
-
-    /**
      * If this is false, then no background texture will be rendered.
      */
     protected boolean renderBackground() {
@@ -356,15 +363,6 @@ public abstract class AGUIBase {
      */
     protected void addComponent(AGUIComponent component) {
         components.add(component);
-    }
-
-    /**
-     * Clock method used to make flashing text and icons on screen.  Put here
-     * for all GUIs to use.  Returns true if the period is active.  Both
-     * parameters are in ticks, or 1/20 a second.
-     */
-    protected static boolean inClockPeriod(int totalPeriod, int onPeriod) {
-        return System.currentTimeMillis() * 0.02D % totalPeriod <= onPeriod;
     }
 
     /**

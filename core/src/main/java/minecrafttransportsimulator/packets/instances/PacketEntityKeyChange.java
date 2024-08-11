@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
+
+import java.util.UUID;
 
 /**
  * Packet sent to entities to update their key linking.  This is sent from the

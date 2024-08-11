@@ -1,33 +1,37 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.EntityFurnace;
-import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.List;
+
 public class ItemPartInteractable extends AItemPart implements IItemEntityInteractable {
+
+    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
+        @Override
+        public boolean isCreatorValid(JSONPart definition) {
+            return definition.generic.type.startsWith("interactable");
+        }
+
+        @Override
+        public ItemPartInteractable createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartInteractable(definition, subDefinition, sourcePackID);
+        }
+    };
 
     public ItemPartInteractable(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, subDefinition, sourcePackID);
@@ -178,16 +182,4 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
         }
 
     }
-
-    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
-        @Override
-        public boolean isCreatorValid(JSONPart definition) {
-            return definition.generic.type.startsWith("interactable");
-        }
-
-        @Override
-        public ItemPartInteractable createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
-            return new ItemPartInteractable(definition, subDefinition, sourcePackID);
-        }
-    };
 }

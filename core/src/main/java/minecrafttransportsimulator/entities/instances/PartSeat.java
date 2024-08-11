@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -32,15 +27,20 @@ import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 public final class PartSeat extends APart {
-    public boolean canControlGuns;
-    private boolean riderChangingSeats;
     public final Point3D riderScale = new Point3D();
+    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
+    public boolean canControlGuns;
     public ItemPartGun activeGunItem;
     public int gunSequenceCooldown;
     public int gunGroupIndex;
     public int gunIndex;
-    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
+    private boolean riderChangingSeats;
 
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartSeat item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -88,8 +88,8 @@ public final class PartSeat extends APart {
                             //If they are riding our vehicle, don't adjust their head position.
                             AEntityB_Existing entityPlayerRiding = player.getEntityRiding();
                             if (entityPlayerRiding != null) {
-                                if(entityPlayerRiding instanceof PartSeat) {
-                                   ((PartSeat) entityPlayerRiding).riderChangingSeats = true;
+                                if (entityPlayerRiding instanceof PartSeat) {
+                                    ((PartSeat) entityPlayerRiding).riderChangingSeats = true;
                                 }
                                 entityPlayerRiding.removeRider();
                             }
@@ -256,7 +256,7 @@ public final class PartSeat extends APart {
                 rider.setPosition(position, false);
             }
             rider.setOrientation(orientation);
-    
+
             //Auto-open doors for the rider in this seat, if such doors exist.
             if (!world.isClient() && placementDefinition.interactableVariables != null) {
                 placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> {

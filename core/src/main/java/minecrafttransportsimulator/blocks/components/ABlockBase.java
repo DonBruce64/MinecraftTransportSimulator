@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.blocks.components;
 
-import java.util.HashMap;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+
+import java.util.HashMap;
 
 /**
  * Base Block class.  This type is used in the constructor of the interface block to allow us to use
@@ -15,6 +15,10 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
  * @author don_bruce
  */
 public abstract class ABlockBase {
+    /**
+     * Map of block material names to their enums.  Used for faster lookups without exceptions via valueOf function.
+     */
+    public static final HashMap<String, BlockMaterial> blockMaterialEnumMap = new HashMap<>();
     public final float hardness;
     public final float blastResistance;
 
@@ -67,37 +71,6 @@ public abstract class ABlockBase {
             this.xzPlanar = xzPlanar;
         }
 
-        public Point3D getOffsetPoint(Point3D point) {
-            return point.copy().add(xOffset, yOffset, zOffset);
-        }
-
-        public Axis getOpposite() {
-            switch (this) {
-                case UP:
-                    return DOWN;
-                case DOWN:
-                    return UP;
-                case NORTH:
-                    return SOUTH;
-                case SOUTH:
-                    return NORTH;
-                case EAST:
-                    return WEST;
-                case WEST:
-                    return EAST;
-                case NORTHEAST:
-                    return SOUTHWEST;
-                case SOUTHEAST:
-                    return NORTHWEST;
-                case NORTHWEST:
-                    return SOUTHEAST;
-                case SOUTHWEST:
-                    return NORTHEAST;
-                default:
-                    return NONE;
-            }
-        }
-
         public static Axis getFromRotation(double rotation, boolean checkDiagonals) {
             rotation = rotation % 360;
             if (rotation < 0) {
@@ -144,12 +117,38 @@ public abstract class ABlockBase {
                 }
             }
         }
-    }
 
-    /**
-     * Map of block material names to their enums.  Used for faster lookups without exceptions via valueOf function.
-     */
-    public static final HashMap<String, BlockMaterial> blockMaterialEnumMap = new HashMap<>();
+        public Point3D getOffsetPoint(Point3D point) {
+            return point.copy().add(xOffset, yOffset, zOffset);
+        }
+
+        public Axis getOpposite() {
+            switch (this) {
+                case UP:
+                    return DOWN;
+                case DOWN:
+                    return UP;
+                case NORTH:
+                    return SOUTH;
+                case SOUTH:
+                    return NORTH;
+                case EAST:
+                    return WEST;
+                case WEST:
+                    return EAST;
+                case NORTHEAST:
+                    return SOUTHWEST;
+                case SOUTHEAST:
+                    return NORTHWEST;
+                case NORTHWEST:
+                    return SOUTHEAST;
+                case SOUTHWEST:
+                    return NORTHEAST;
+                default:
+                    return NONE;
+            }
+        }
+    }
 
     /**
      * Enums for block material properties.  Not used by any of our blocks,

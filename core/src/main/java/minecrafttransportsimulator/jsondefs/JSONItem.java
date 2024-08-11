@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("While allowing users to craft vehicles is great, it can get a bit un-realistic to make a truck out of stacks of iron ingots and glass.  To help with this, MTS allows you to make custom items.  These items are loaded via JSON like all other vehicle bits, but rather than use an OBJ model they use the normal Minecraft item JSON format.  This allows you to take any JSON outputted from any modeling software (such as BlockBench) and plop it, along with a small file in the jsondefs section, into your pack for crafting use!  Items just have a general section per the default.  That's it.  If you want to add functionality to your items, you can do so by giving the appropriate type parameter.")
 public class JSONItem extends AJSONItem {
@@ -23,9 +23,42 @@ public class JSONItem extends AJSONItem {
     @JSONDescription("Weapon-specific item section.")
     public JSONWeapon weapon;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "repair" }, subField = "item")
+    @JSONRequired(dependentField = "type", dependentValues = {"repair"}, subField = "item")
     @JSONDescription("Repair-specific item section.")
     public JSONRepair repair;
+
+    public enum ItemComponentType {
+        @JSONDescription("Creates an item with no functionality.")
+        NONE,
+        @JSONDescription("Creates a booklet, which is a book-like item.")
+        BOOKLET,
+        @JSONDescription("Creates an item that can be eaten.")
+        FOOD,
+        @JSONDescription("Creates an item that can be used as a weapon.")
+        WEAPON,
+        @JSONDescription("Creates an item that works as a part scanner.")
+        SCANNER,
+        @JSONDescription("Creates an item that works as a wrench.")
+        WRENCH,
+        @JSONDescription("Creates an item that works as a screwdriver.")
+        SCREWDRIVER,
+        @JSONDescription("Creates an item that works as a paint gun.")
+        PAINT_GUN,
+        @JSONDescription("Creates an item that works as a key.")
+        KEY,
+        @JSONDescription("Creates an item that works as a ticket.")
+        TICKET,
+        @JSONDescription("Creates an item that works as a fuel hose.")
+        FUEL_HOSE,
+        @JSONDescription("Creates an item that works as jumper cables.")
+        JUMPER_CABLES,
+        @JSONDescription("Creates an item that works as a jumper pack.")
+        JUMPER_PACK,
+        @JSONDescription("Creates an item that works as a repair pack.")
+        REPAIR_PACK,
+        @JSONDescription("Creates an item that works as a Y2K button.")
+        Y2K_BUTTON
+    }
 
     public static class JSONItemGeneric {
         @JSONDescription("The functionality to give this item.")
@@ -94,38 +127,5 @@ public class JSONItem extends AJSONItem {
 
         @JSONDescription("How much health repair pack restores.")
         public int amount;
-    }
-
-    public enum ItemComponentType {
-        @JSONDescription("Creates an item with no functionality.")
-        NONE,
-        @JSONDescription("Creates a booklet, which is a book-like item.")
-        BOOKLET,
-        @JSONDescription("Creates an item that can be eaten.")
-        FOOD,
-        @JSONDescription("Creates an item that can be used as a weapon.")
-        WEAPON,
-        @JSONDescription("Creates an item that works as a part scanner.")
-        SCANNER,
-        @JSONDescription("Creates an item that works as a wrench.")
-        WRENCH,
-        @JSONDescription("Creates an item that works as a screwdriver.")
-        SCREWDRIVER,
-        @JSONDescription("Creates an item that works as a paint gun.")
-        PAINT_GUN,
-        @JSONDescription("Creates an item that works as a key.")
-        KEY,
-        @JSONDescription("Creates an item that works as a ticket.")
-        TICKET,
-        @JSONDescription("Creates an item that works as a fuel hose.")
-        FUEL_HOSE,
-        @JSONDescription("Creates an item that works as jumper cables.")
-        JUMPER_CABLES,
-        @JSONDescription("Creates an item that works as a jumper pack.")
-        JUMPER_PACK,
-        @JSONDescription("Creates an item that works as a repair pack.")
-        REPAIR_PACK,
-        @JSONDescription("Creates an item that works as a Y2K button.")
-        Y2K_BUTTON
     }
 }

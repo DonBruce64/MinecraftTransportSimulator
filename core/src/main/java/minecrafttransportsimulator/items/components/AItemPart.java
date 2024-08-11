@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -13,6 +11,8 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+
+import java.util.Map;
 
 /**
  * Base class for part items.  Contains methods on what part to spawn from

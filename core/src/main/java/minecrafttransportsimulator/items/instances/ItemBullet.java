@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.List;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet> {
 

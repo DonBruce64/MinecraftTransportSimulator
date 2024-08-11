@@ -1,15 +1,5 @@
 package mcinterface1122;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -38,6 +28,12 @@ import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  * Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
@@ -48,11 +44,6 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsEntityRendering {
-    public static boolean renderCurrentRiderSitting;
-    public static boolean renderCurrentRiderStanding;
-    private static boolean needPlayerTweaks = false;
-    private static boolean needToPopMatrix = false;
-    private static ItemStack heldStackHolder = null;
     private static final Set<EntityPlayer> playersOverwritten = new HashSet<>();
     private static final Point3D leftArmAngles = new Point3D();
     private static final Point3D rightArmAngles = new Point3D();
@@ -65,6 +56,11 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
+    public static boolean renderCurrentRiderSitting;
+    public static boolean renderCurrentRiderStanding;
+    private static boolean needPlayerTweaks = false;
+    private static boolean needToPopMatrix = false;
+    private static ItemStack heldStackHolder = null;
     private static int lastScreenWidth;
     private static int lastScreenHeight;
     private static float lastRiderYawHead;
@@ -79,12 +75,12 @@ public class InterfaceEventsEntityRendering {
     @SubscribeEvent
     public static void onIVCameraSetup(CameraSetup event) {
         if (event.getEntity() instanceof EntityPlayer) {
-            IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
+            WrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
                 //Set helper to the current camera position.
-                EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
+                EntityPlayer mcPlayer = player.player;
                 playerPosition.set(mcPlayer.posX, mcPlayer.posY, mcPlayer.posZ);
                 playerPrevPosition.set(mcPlayer.prevPosX, mcPlayer.prevPosY, mcPlayer.prevPosZ);
                 playerPositionHelper.set(playerPrevPosition).interpolate(playerPosition, event.getRenderPartialTicks());
@@ -95,11 +91,11 @@ public class InterfaceEventsEntityRendering {
                 temp = cameraAdjustedOrientation.m01;
                 cameraAdjustedOrientation.m01 = cameraAdjustedOrientation.m10;
                 cameraAdjustedOrientation.m10 = temp;
-                
+
                 temp = cameraAdjustedOrientation.m02;
                 cameraAdjustedOrientation.m02 = cameraAdjustedOrientation.m20;
                 cameraAdjustedOrientation.m20 = temp;
-                
+
                 temp = cameraAdjustedOrientation.m12;
                 cameraAdjustedOrientation.m12 = cameraAdjustedOrientation.m21;
                 cameraAdjustedOrientation.m21 = temp;
@@ -369,6 +365,26 @@ public class InterfaceEventsEntityRendering {
         }
     }
 
+    /**
+     * Hand render events.  We use these to disable rendering of the item in the player's hand
+     * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
+     */
+    @SubscribeEvent
+    public static void onIVRenderHand(RenderHandEvent event) {
+        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVrenderSpecificHand(RenderSpecificHandEvent event) {
+        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
+            event.setCanceled(true);
+        }
+    }
+
     private static class ModelPlayerCustom extends ModelPlayer {
         private final ModelPlayer base;
 
@@ -378,7 +394,7 @@ public class InterfaceEventsEntityRendering {
         }
 
         @Override
-        public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn) {
+        public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, @NotNull Entity entityIn) {
             super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor, entityIn);
             if (needPlayerTweaks) {
                 if (renderCurrentRiderSitting) {
@@ -409,26 +425,6 @@ public class InterfaceEventsEntityRendering {
                 this.bipedRightArm.rotateAngleZ = (float) rightArmAngles.z;
                 copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
             }
-        }
-    }
-
-    /**
-     * Hand render events.  We use these to disable rendering of the item in the player's hand
-     * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
-     */
-    @SubscribeEvent
-    public static void onIVRenderHand(RenderHandEvent event) {
-        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onIVrenderSpecificHand(RenderSpecificHandEvent event) {
-        EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
-        if ((entity != null && entity.activeGun != null) || CameraSystem.activeCamera != null) {
-            event.setCanceled(true);
         }
     }
 }

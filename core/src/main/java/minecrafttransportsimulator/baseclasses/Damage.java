@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
@@ -9,6 +7,8 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+
+import java.util.List;
 
 /**
  * Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -49,9 +49,9 @@ public class Damage {
         this.entityResponsible = entityResponsible;
         this.language = language;
     }
-    
+
     public Damage(Damage otherDamage, double factor, BoundingBox box) {
-        this.amount = otherDamage.amount*factor;
+        this.amount = otherDamage.amount * factor;
         this.box = box;
         this.damgeSource = otherDamage.damgeSource;
         this.entityResponsible = otherDamage.entityResponsible;

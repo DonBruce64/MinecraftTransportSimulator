@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
+
+import java.util.ArrayList;
 
 public class JSONDummyPartProvider extends AJSONPartProvider {
 

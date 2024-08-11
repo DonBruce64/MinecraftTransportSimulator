@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
@@ -14,6 +11,10 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Builder for an entity to sit in so they can ride another entity.  We use this rather
@@ -78,25 +79,22 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     setDead();
                 }
             }
-        } else if(entityUUID != null){
-        	if(ticksExisted < 100) {
+        } else if (entityUUID != null) {
+            if (ticksExisted < 100) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-        		entity = worldWrapper.getEntity(entityUUID);
-        	}else {
-        		InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
+                entity = worldWrapper.getEntity(entityUUID);
+            } else {
+                InterfaceManager.coreInterface.logError("Found a seat but no entity was found for it.  Did a pack change?");
                 setDead();
-        	}
-        }else if (loadFromSavedNBT) {
+            }
+        } else if (loadFromSavedNBT) {
             entityUUID = lastLoadedNBT.getUniqueId("entityUUID");
-            if(entityUUID == null) {
-            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
+            if (entityUUID == null) {
+                InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
                 setDead();
             }
             loadedFromSavedNBT = true;
-        }
-        
-        
-        else {
+        } else {
             //If we have NBT, and haven't loaded it, do so now.
             if (!loadedFromSavedNBT && loadFromSavedNBT) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
@@ -136,7 +134,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     }
 
     @Override
-    public void updatePassenger(Entity passenger) {
+    public void updatePassenger(@NotNull Entity passenger) {
         //Forward passenger updates to the entity.
         //Need to verify the entity has a rider, it might not if we are on the
         //client and waiting for the rider packet.  Or on the server and waiting for loading of the player.
@@ -153,7 +151,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     }
 
     @Override
-    protected void removePassenger(Entity passenger) {
+    protected void removePassenger(@NotNull Entity passenger) {
         super.removePassenger(passenger);
         //Need to make sure we actually have a rider as MC wipes out the rider list on init.
         //This sends a fake "dismount" command to saved entities and makes us dismount riders that shouldn't be.

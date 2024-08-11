@@ -17,15 +17,13 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
  */
 public class GUIInventoryContainer extends AGUIInventory {
 
+    private final int maxRowIncrements;
+    private final EntityInventoryContainer inventory;
+    private final boolean isPlayerHolding;
     //GUIs components created at opening.
     private GUIComponentButton priorRowButton;
     private GUIComponentButton nextRowButton;
     private GUIComponentCutout sliderCutout;
-    private final int maxRowIncrements;
-
-    private final EntityInventoryContainer inventory;
-    private final boolean isPlayerHolding;
-
     //Runtime variables.
     private int rowOffset;
 

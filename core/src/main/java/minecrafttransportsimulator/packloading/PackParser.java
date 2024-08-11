@@ -316,7 +316,7 @@ public final class PackParser {
      * sure the pack's dependent parameters are valid and the pack can be loaded prior to
      * performing any actual loading operations.  Note that all packs in this routine
      * assume the default loader.  If you want to use a custom loader, you should manually
-     * create and register your pack items and use {@link #registerItem(AJSONItem)}.
+     * create and register your pack items and use {@link #registerItem(AJSONBase)}.
      */
     private static void parseAllPacks() {
         List<String> packIDs = new ArrayList<>(packMap.keySet());

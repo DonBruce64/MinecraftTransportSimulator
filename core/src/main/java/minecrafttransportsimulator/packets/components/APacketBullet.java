@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.components;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
+
+import java.util.UUID;
 
 /**
  * Abstract packet for bullets that saves a reference to the gun lookup and bullet number.

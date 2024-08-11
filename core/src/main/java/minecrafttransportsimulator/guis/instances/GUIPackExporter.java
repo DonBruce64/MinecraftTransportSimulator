@@ -1,17 +1,13 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.packloading.JSONParser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This GUI is normally locked, and is only available in devMode.  It allows
@@ -23,16 +19,15 @@ import minecrafttransportsimulator.packloading.JSONParser;
  */
 public class GUIPackExporter extends AGUIBase {
 
+    //Model render screen components.
+    private final EntityVehicleF_Physics vehicleClicked;
+    private final List<GUIComponentTextBox> dataEntryBoxes = new ArrayList<>();
+    private final List<GUIComponentLabel> dataEntryLabels = new ArrayList<>();
     //Main screen components.
     private GUIComponentButton modelRenderButton;
     private GUIComponentButton packExportButton;
     private GUIComponentButton packImportButton;
     private GUIComponentTextBox debug;
-
-    //Model render screen components.
-    private final EntityVehicleF_Physics vehicleClicked;
-    private final List<GUIComponentTextBox> dataEntryBoxes = new ArrayList<>();
-    private final List<GUIComponentLabel> dataEntryLabels = new ArrayList<>();
     private GUIComponentButton backButton;
     private GUIComponentButton confirmButton;
     private GUIComponent3DModel componentItemModel;
@@ -56,7 +51,7 @@ public class GUIPackExporter extends AGUIBase {
         addComponent(packImportButton = new GUIComponentButton(this, guiLeft + buttonWidth + buttonOffset, guiTop, buttonWidth, 20, "IMPORT PACKS") {
             @Override
             public void onClicked(boolean leftSide) {
-            	EntityManager.doImports(() -> debug.setText(JSONParser.importAllJSONs(false)));
+                EntityManager.doImports(() -> debug.setText(JSONParser.importAllJSONs(false)));
             }
         });
         //Add control buttons.

@@ -1,9 +1,5 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -32,6 +28,11 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
@@ -146,18 +147,16 @@ public class WrapperEntity implements IWrapperEntity {
         AEntityB_Existing riding = getEntityRiding();
         if (riding instanceof PartSeat) {
             PartSeat seat = (PartSeat) riding;
-            if (seat != null) {
-                if (seat.placementDefinition.playerScale != null) {
-                    if (seat.definition.seat.playerScale != null) {
-                        return seat.scale.y * seat.placementDefinition.playerScale.y * seat.definition.seat.playerScale.y;
-                    } else {
-                        return seat.scale.y * seat.placementDefinition.playerScale.y;
-                    }
-                } else if (seat.definition.seat.playerScale != null) {
-                    return seat.scale.y * seat.definition.seat.playerScale.y;
+            if (seat.placementDefinition.playerScale != null) {
+                if (seat.definition.seat.playerScale != null) {
+                    return seat.scale.y * seat.placementDefinition.playerScale.y * seat.definition.seat.playerScale.y;
                 } else {
-                    return seat.scale.y;
+                    return seat.scale.y * seat.placementDefinition.playerScale.y;
                 }
+            } else if (seat.definition.seat.playerScale != null) {
+                return seat.scale.y * seat.definition.seat.playerScale.y;
+            } else {
+                return seat.scale.y;
             }
         }
         return 1.0;
@@ -375,7 +374,7 @@ public class WrapperEntity implements IWrapperEntity {
         }
         DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
-            public ITextComponent getDeathMessage(EntityLivingBase player) {
+            public @NotNull ITextComponent getDeathMessage(@NotNull EntityLivingBase player) {
                 if (damage.entityResponsible != null) {
                     return new TextComponentString(String.format(damage.language.getCurrentValue(), player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
                 } else {
@@ -410,7 +409,7 @@ public class WrapperEntity implements IWrapperEntity {
         entity.attackEntityFrom(newSource, (float) damage.amount);
 
         if (damage.effects != null) {
-            damage.effects.forEach(effect -> addPotionEffect(effect));
+            damage.effects.forEach(this::addPotionEffect);
         }
     }
 

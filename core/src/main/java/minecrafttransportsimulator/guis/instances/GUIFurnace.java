@@ -19,10 +19,9 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
  */
 public class GUIFurnace extends AGUIInventory {
 
+    private final EntityFurnace furnace;
     private GUIComponentCutout fuelIcon;
     private GUIComponentCutout smeltingProgress;
-
-    private final EntityFurnace furnace;
 
     public GUIFurnace(EntityFurnace furnace, String texture) {
         super(texture != null ? texture : "mts:textures/guis/furnace.png");

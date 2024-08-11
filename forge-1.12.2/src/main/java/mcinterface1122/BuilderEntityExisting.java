@@ -1,11 +1,5 @@
 package mcinterface1122;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -40,6 +34,12 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Builder for the main entity classes for MTS.  This builder allows us to create a new entity
@@ -162,7 +162,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource source, float amount) {
+    public boolean attackEntityFrom(@NotNull DamageSource source, float amount) {
         if (ConfigSystem.settings.damage.allowExternalDamage.value && !world.isRemote && entity instanceof AEntityF_Multipart) {
             AEntityF_Multipart<?> multipart = ((AEntityF_Multipart<?>) entity);
             if (multipart instanceof EntityVehicleF_Physics) {
@@ -210,7 +210,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public AxisAlignedBB getEntityBoundingBox() {
+    public @NotNull AxisAlignedBB getEntityBoundingBox() {
         //Override this to make interaction checks work with the multiple collision points.
         return interactAttackBoxes != null ? interactAttackBoxes : super.getEntityBoundingBox();
     }
@@ -223,7 +223,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public ItemStack getPickedResult(RayTraceResult target) {
+    public @NotNull ItemStack getPickedResult(@NotNull RayTraceResult target) {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.collisionBoxes) {

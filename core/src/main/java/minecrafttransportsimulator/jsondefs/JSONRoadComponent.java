@@ -1,19 +1,19 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
+import java.util.List;
+
 public class JSONRoadComponent extends AJSONMultiModelProvider {
 
     @JSONDescription("Road-generic properties.")
     public JSONRoadGeneric road;
 
-    public class JSONRoadGeneric {
+    public static class JSONRoadGeneric {
         //Common variables.
         @JSONDescription("The type of this road component.  This defines its properties.")
         public RoadComponent type;
@@ -47,7 +47,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider {
         public List<JSONRoadCollisionArea> collisionAreas;
     }
 
-    public class JSONLaneSector {
+    public static class JSONLaneSector {
         @JSONRequired
         @JSONDescription("The start position for this sector.  This should be the right-most side.  For example, on a 4-lane intersection this would be 0,0,0 for the south-facing sector.")
         public Point3D sectorStartPos;

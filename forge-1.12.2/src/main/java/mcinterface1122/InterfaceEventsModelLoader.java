@@ -1,21 +1,5 @@
 package mcinterface1122;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -44,6 +28,18 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -66,18 +62,18 @@ public class InterfaceEventsModelLoader {
         //Register the global entity rendering class.
         RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.class, manager -> new Render<BuilderEntityRenderForwarder>(manager) {
             @Override
-            protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder) {
+            protected ResourceLocation getEntityTexture(@NotNull BuilderEntityRenderForwarder builder) {
                 return null;
             }
 
             @Override
-            public boolean shouldRender(BuilderEntityRenderForwarder builder, ICamera camera, double camX, double camY, double camZ) {
+            public boolean shouldRender(@NotNull BuilderEntityRenderForwarder builder, @NotNull ICamera camera, double camX, double camY, double camZ) {
                 //Always render the forwarder, no matter where the camera is.
                 return true;
             }
 
             @Override
-            public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
+            public void doRender(@NotNull BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
                 //Get all entities in the world, and render them manually for this one builder.
                 //Only do this if the player the builder is following is the client player.
                 WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
@@ -85,7 +81,7 @@ public class InterfaceEventsModelLoader {
                 Entity cameraEntity = Minecraft.getMinecraft().getRenderViewEntity();
                 if (player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
                     ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-                    if (allEntities != null) {
+                    if (!allEntities.isEmpty()) {
                         boolean blendingEnabled = (MinecraftForgeClient.getRenderPass() == -1 ? InterfaceRender.lastRenderPassActualPass : MinecraftForgeClient.getRenderPass()) == 1;
 
                         //Use smooth shading for model rendering.
@@ -183,7 +179,7 @@ public class InterfaceEventsModelLoader {
         }
 
         @Override
-        public InputStream getInputStream(ResourceLocation location) throws IOException {
+        public @NotNull InputStream getInputStream(ResourceLocation location) throws IOException {
             //Create stream return variable and get raw data.
             InputStream stream;
             String rawPackInfo = location.getPath();
@@ -335,12 +331,12 @@ public class InterfaceEventsModelLoader {
         }
 
         @Override
-        public Set<String> getResourceDomains() {
+        public @NotNull Set<String> getResourceDomains() {
             return domains;
         }
 
         @Override
-        public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) {
+        public <T extends IMetadataSection> T getPackMetadata(@NotNull MetadataSerializer metadataSerializer, @NotNull String metadataSectionName) {
             return null;
         }
 
@@ -350,7 +346,7 @@ public class InterfaceEventsModelLoader {
         }
 
         @Override
-        public String getPackName() {
+        public @NotNull String getPackName() {
             return "Internal:" + domain;
         }
     }

@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -13,17 +10,19 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GUIBooklet extends AGUIBase {
+    private final List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<>();
+    private final List<GUIComponentButton> contentsButtons = new ArrayList<>();
+    //Item properties.
+    private final ItemItem booklet;
+    private final int totalPages;
     //Buttons and text.
     private GUIComponentButton leftButton;
     private GUIComponentButton rightButton;
     private GUIComponentButton contentsButton;
-    private final List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<>();
-    private final List<GUIComponentButton> contentsButtons = new ArrayList<>();
-
-    //Item properties.
-    private final ItemItem booklet;
-    private final int totalPages;
 
     public GUIBooklet(ItemItem booklet) {
         super();

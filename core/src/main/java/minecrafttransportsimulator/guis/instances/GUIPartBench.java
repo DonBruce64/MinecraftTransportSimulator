@@ -1,29 +1,14 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -33,6 +18,11 @@ import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
@@ -50,20 +40,20 @@ public class GUIPartBench extends AGUIBase {
     private final AEntityD_Definable<?> entity;
     private final JSONCraftingBench definition;
     private final IWrapperPlayer player;
-
+    //Crafting components.
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
+    boolean displayVehicleInfo = false;
     //Buttons and labels.
     private GUIComponentButton prevPackButton;
     private GUIComponentButton nextPackButton;
     private GUIComponentLabel packName;
-
     private GUIComponentButton prevPartButton;
     private GUIComponentButton nextPartButton;
     private GUIComponentLabel partName;
-
     private GUIComponentButton prevColorButton;
     private GUIComponentButton nextColorButton;
     private GUIComponentButton nextRecipeButton;
-
     private GUIComponentLabel partInfo;
     private GUIComponentLabel vehicleInfo;
     private GUIComponentButton vehicleInfoButton;
@@ -71,31 +61,22 @@ public class GUIPartBench extends AGUIBase {
     private GUIComponentButton repairCraftingButton;
     private GUIComponentButton normalCraftingButton;
     private GUIComponentButton confirmButton;
-
-    //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
-    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
     private List<PackMaterialComponent> materials;
-
     //Renders for the item.
     private GUIComponentItem itemRender;
     private GUIComponent3DModel modelRender;
-
     //Runtime variables.
     private String prevPack;
     private String currentPack;
     private String nextPack;
     private boolean viewingRepair;
-
     private AItemPack<? extends AJSONItem> prevItem;
     private AItemPack<? extends AJSONItem> currentItem;
     private AItemPack<? extends AJSONItem> nextItem;
     private int recipeIndex;
-
     //Only used for vehicles.
     private AItemPack<? extends AJSONItem> prevSubItem;
     private AItemPack<? extends AJSONItem> nextSubItem;
-    boolean displayVehicleInfo = false;
 
     public GUIPartBench(AEntityD_Definable<?> entity, JSONCraftingBench definition) {
         super();
@@ -334,6 +315,7 @@ public class GUIPartBench extends AGUIBase {
      * Sets the variables to be used on a button action, so once an action is performed this
      * logic MUST be called to update the button action states!
      */
+    @SuppressWarnings("RedundantCast")
     private void updateNames() {
         //Get all pack indexes.
         List<String> packIDs = new ArrayList<>(PackParser.getAllPackIDs());
@@ -467,16 +449,16 @@ public class GUIPartBench extends AGUIBase {
         }
 
         //Parse crafting items and set icon items.
-        String errorMessage = "";
+        StringBuilder errorMessage = new StringBuilder();
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair, true);
             if (materials == null) {
                 if (++recipeIndex == (viewingRepair ? currentItem.getRepairRecipeCount() : currentItem.definition.general.materialLists.size())) {
                     recipeIndex = 0;
                 }
-                errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
+                errorMessage.append(PackMaterialComponent.lastErrorMessage).append("\n");
                 if (recipeIndex == 0) {
-                    partInfo.text = errorMessage;
+                    partInfo.text = errorMessage.toString();
                     break;
                 }
             }

@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -14,6 +10,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Base item class for all pack-created items.  Stores information such as the

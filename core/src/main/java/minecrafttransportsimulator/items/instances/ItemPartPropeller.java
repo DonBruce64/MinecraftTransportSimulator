@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -12,7 +10,21 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.List;
+
 public class ItemPartPropeller extends AItemPart {
+
+    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
+        @Override
+        public boolean isCreatorValid(JSONPart definition) {
+            return definition.generic.type.startsWith("propeller");
+        }
+
+        @Override
+        public ItemPartPropeller createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartPropeller(definition, subDefinition, sourcePackID);
+        }
+    };
 
     public ItemPartPropeller(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, subDefinition, sourcePackID);
@@ -35,16 +47,4 @@ public class ItemPartPropeller extends AItemPart {
         tooltipLines.add(LanguageSystem.ITEMINFO_PROPELLER_PITCH.getCurrentValue() + definition.propeller.pitch);
         tooltipLines.add(LanguageSystem.ITEMINFO_PROPELLER_DIAMETER.getCurrentValue() + definition.propeller.diameter);
     }
-
-    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
-        @Override
-        public boolean isCreatorValid(JSONPart definition) {
-            return definition.generic.type.startsWith("propeller");
-        }
-
-        @Override
-        public ItemPartPropeller createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
-            return new ItemPartPropeller(definition, subDefinition, sourcePackID);
-        }
-    };
 }

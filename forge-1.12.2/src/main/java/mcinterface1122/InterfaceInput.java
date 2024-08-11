@@ -1,18 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.lwjgl.input.Controllers;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
@@ -32,6 +19,12 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.input.Controllers;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceInput implements IInterfaceInput {

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+
+import java.util.List;
 
 /**
  * Interface that allows for this item to be considered food and eaten.

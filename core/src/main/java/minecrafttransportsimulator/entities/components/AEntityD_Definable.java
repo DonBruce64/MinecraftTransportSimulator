@@ -1,20 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -25,22 +10,9 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCameraObject;
-import minecrafttransportsimulator.jsondefs.JSONLight;
-import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
-import minecrafttransportsimulator.jsondefs.JSONSound;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -55,6 +27,13 @@ import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.*;
+import java.util.Map.Entry;
+
 /**
  * Base class for entities that are defined via JSON definitions and can be modeled in 3D.
  * This level adds various method for said definitions, which include rendering functions.
@@ -67,22 +46,46 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * have them in their respective JSONs.
      */
     public final JSONDefinition definition;
-
-    /**
-     * The current sub-definition for this entity.
-     */
-    public JSONSubDefinition subDefinition;
-
     /**
      * Map containing text lines for saved text provided by this entity.
      **/
     public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<>();
-
+    /**
+     * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
+     * and iterating through the entire rendering section of the JSON is time-consuming.
+     **/
+    public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<>();
+    /**
+     * Maps animated (model) object names to their switchboxes.  This is created from the JSON definition as each entity has their own switchbox.
+     **/
+    public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<>();
+    /**
+     * Maps cameras to their respective switchboxes.
+     **/
+    public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
+    /**
+     * Maps light definitions to their current brightness.  This is updated every frame prior to rendering.
+     **/
+    public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<>();
+    /**
+     * Maps light definitions to their current color.  This is updated every frame prior to rendering.
+     **/
+    public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<>();
+    /**
+     * Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.
+     **/
+    public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
+    /**
+     * List of players interacting with this entity via a GUI.
+     **/
+    public final Set<IWrapperPlayer> playersInteracting = new HashSet<>();
+    //Radar lists.  Only updated once a tick.  Created when first requested via animations.
+    public final List<EntityVehicleF_Physics> aircraftOnRadar = new ArrayList<>();
+    public final List<EntityVehicleF_Physics> groundersOnRadar = new ArrayList<>();
     /**
      * Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.Used for animations/physics.
      **/
     protected final Map<String, Double> variables = new HashMap<>();
-
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
     private final Set<JSONSound> soundDefFalseLastCheck = new HashSet<>();
@@ -94,66 +97,23 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
     private final Map<JSONParticle, Point3D> lastPositionParticleSpawned = new HashMap<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
-    private long lastTickParticlesSpawned;
-    private float lastPartialTickParticlesSpawned;
-
+    private final Comparator<AEntityB_Existing> entityComparator = (o1, o2) -> position.isFirstCloserThanSecond(o1.position, o2.position) ? -1 : 1;
     /**
-     * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
-     * and iterating through the entire rendering section of the JSON is time-consuming.
-     **/
-    public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<>();
-
-    /**
-     * Maps animated (model) object names to their switchboxes.  This is created from the JSON definition as each entity has their own switchbox.
-     **/
-    public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<>();
-
-    /**
-     * Maps cameras to their respective switchboxes.
-     **/
-    public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
-
-    /**
-     * Maps light definitions to their current brightness.  This is updated every frame prior to rendering.
-     **/
-    public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<>();
-
-    /**
-     * Maps light definitions to their current color.  This is updated every frame prior to rendering.
-     **/
-    public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<>();
-
-    /**
-     * Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.
-     **/
-    public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
-
-    /**
-     * Object lists for models parsed for this entity.
-     **/
-    private List<RenderableModelObject> objectList;
-
-    /**
-     * List of players interacting with this entity via a GUI.
-     **/
-    public final Set<IWrapperPlayer> playersInteracting = new HashSet<>();
+     * The current sub-definition for this entity.
+     */
+    public JSONSubDefinition subDefinition;
     public boolean playerCraftedItem;
 
     /**
      * Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.
      **/
     public AItemPack<JSONDefinition> cachedItem;
-
-    //Radar lists.  Only updated once a tick.  Created when first requested via animations.
-    public final List<EntityVehicleF_Physics> aircraftOnRadar = new ArrayList<>();
-    public final List<EntityVehicleF_Physics> groundersOnRadar = new ArrayList<>();
-    private final Comparator<AEntityB_Existing> entityComparator = new Comparator<AEntityB_Existing>() {
-        @Override
-        public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
-            return position.isFirstCloserThanSecond(o1.position, o2.position) ? -1 : 1;
-        }
-
-    };
+    private long lastTickParticlesSpawned;
+    private float lastPartialTickParticlesSpawned;
+    /**
+     * Object lists for models parsed for this entity.
+     **/
+    private List<RenderableModelObject> objectList;
 
     /**
      * Constructor for synced entities
@@ -207,6 +167,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         super(world, position, motion, angles);
         this.definition = item.definition;
         updateSubDefinition(item.subDefinition.subName);
+    }
+
+    /**
+     * Helper method to clamp and scale the passed-in variable value based on the passed-in animation,
+     * returning it in the proper form.
+     */
+    private static double clampAndScale(double value, JSONAnimationDefinition animation, double scaleFactor, double offset) {
+        if (animation.axis != null) {
+            value = (animation.absolute ? Math.abs(value) : value) * scaleFactor + animation.offset + offset;
+            if (animation.clampMin != 0 && value < animation.clampMin) {
+                value = animation.clampMin;
+            } else if (animation.clampMax != 0 && value > animation.clampMax) {
+                value = animation.clampMax;
+            }
+            return value;
+        } else {
+            return (animation.absolute ? Math.abs(value) : value) * scaleFactor + animation.offset;
+        }
     }
 
     @Override
@@ -299,7 +277,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (testSubDef.subName.equals(newSubDefName)) {
                 //Remove existing constants, if we have them, then add them, if we have them.
                 if (subDefinition != null && subDefinition.constants != null) {
-                    variables.keySet().removeAll(subDefinition.constants);
+                    subDefinition.constants.forEach(variables.keySet()::remove);
                 }
                 if (testSubDef.constants != null) {
                     testSubDef.constants.forEach(var -> variables.put(var, 1D));
@@ -397,7 +375,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Clear radars.
             aircraftOnRadar.clear();
             groundersOnRadar.clear();
-            
+
             //Clear rendering assignments.
             if (world.isClient()) {
                 if (objectList != null) {
@@ -567,68 +545,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
     }
 
-    /**
-     * Custom light switchbox class.
-     */
-    private static class LightSwitchbox extends AnimationSwitchbox {
-        private boolean definedBrightness = false;
-        private float brightness = 0;
-        private ColorRGB color = null;
-
-        private LightSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
-            super(entity, animations, null);
-        }
-
-        public boolean runLight(float partialTicks) {
-            definedBrightness = false;
-            brightness = 0;
-            color = null;
-            return runSwitchbox(partialTicks, true);
-        }
-
-        @Override
-        public void runTranslation(DurationDelayClock clock, float partialTicks) {
-            definedBrightness = true;
-            if (clock.animation.axis.x != 0) {
-                brightness *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
-            } else if (clock.animation.axis.y != 0) {
-                brightness += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
-            } else {
-                brightness = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
-            }
-        }
-
-        @Override
-        public void runRotation(DurationDelayClock clock, float partialTicks) {
-            double colorFactor = entity.getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, partialTicks);
-            double colorX;
-            double colorY;
-            double colorZ;
-            if (color == null) {
-                colorX = clock.animation.axis.x * colorFactor + clock.animation.offset;
-                colorY = clock.animation.axis.y * colorFactor + clock.animation.offset;
-                colorZ = clock.animation.axis.z * colorFactor + clock.animation.offset;
-            } else {
-                colorX = clock.animation.axis.x * colorFactor + clock.animation.offset + color.red;
-                colorY = clock.animation.axis.y * colorFactor + clock.animation.offset + color.green;
-                colorZ = clock.animation.axis.z * colorFactor + clock.animation.offset + color.blue;
-            }
-            if (colorX < 0)
-                colorX = 0;
-            if (colorY < 0)
-                colorY = 0;
-            if (colorZ < 0)
-                colorZ = 0;
-            if (colorX > 1)
-                colorX = 1;
-            if (colorY > 1)
-                colorY = 1;
-            if (colorZ > 1)
-                colorZ = 1;
-            color = new ColorRGB((float) colorX, (float) colorY, (float) colorZ, false);
-        }
-    }
-
+    @SuppressWarnings("RedundantCast")
     @Override
     public void updateSounds(float partialTicks) {
         super.updateSounds(partialTicks);
@@ -636,10 +553,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (JSONSound soundDef : allSoundDefs) {
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
-            	//First check the animated conditionals, since those drive on/off state.
-            	AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
+                //First check the animated conditionals, since those drive on/off state.
+                AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
                 boolean shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
-                    
+
                 //If we aren't a looping or repeating sound, check if we were true last check.
                 //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.
                 if (!soundDef.looping && !soundDef.forceSound) {
@@ -651,32 +568,32 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         soundDefFalseLastCheck.add(soundDef);
                     }
                 }
-                
+
                 //Now that we know if we are enabled, check if the player has the right viewpoint.
                 AEntityB_Existing entityRiding = null;
                 boolean playerRidingThisEntity = false;
                 boolean hasOpenTop = false;
-                if(shouldSoundStartPlaying) {
-		            entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-		            AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
-		            playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
-		            hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                    shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior;
+                if (shouldSoundStartPlaying) {
+                    entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
+                    AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+                    playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
+                    hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
+                    shouldSoundStartPlaying = hasOpenTop || ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior);
                 }
 
                 //Next, check the distance.
                 double distance = 0;
                 double conicalFactor = 1.0;
-                if(shouldSoundStartPlaying) {
-	                Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
-	                if (shouldSoundStartPlaying) {
-	                    distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-	                    if (soundDef.maxDistance != soundDef.minDistance) {
+                if (shouldSoundStartPlaying) {
+                    Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
+                    if (shouldSoundStartPlaying) {
+                        distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        if (soundDef.maxDistance != soundDef.minDistance) {
                             shouldSoundStartPlaying = distance < soundDef.maxDistance && distance >= soundDef.minDistance;
-	                    } else {
-	                        shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
-	                    }
-	                }
+                        } else {
+                            shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
+                        }
+                    }
 
                     //Next, check if we have a conical restriction.
                     if (shouldSoundStartPlaying && soundDef.conicalVector != null) {
@@ -786,38 +703,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Custom sound switchbox class.
-     */
-    private static class SoundSwitchbox extends AnimationSwitchbox {
-        private boolean definedValue = false;
-        private float value = 0;
-
-        private SoundSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
-            super(entity, animations, null);
-        }
-
-        public boolean runSound(float partialTicks) {
-            value = 0;
-            definedValue = false;
-            return runSwitchbox(partialTicks, true);
-        }
-
-        @Override
-        public void runTranslation(DurationDelayClock clock, float partialTicks) {
-            definedValue = true;
-            value += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
-        }
-
-        @Override
-        public void runRotation(DurationDelayClock clock, float partialTicks) {
-            definedValue = true;
-            //Parobola is defined with parameter A being x, and H being z.
-            double parabolaValue = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
-            value += clock.animation.axis.x * Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
         }
     }
 
@@ -978,24 +863,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to clamp and scale the passed-in variable value based on the passed-in animation,
-     * returning it in the proper form.
-     */
-    private static double clampAndScale(double value, JSONAnimationDefinition animation, double scaleFactor, double offset) {
-        if (animation.axis != null) {
-            value = (animation.absolute ? Math.abs(value) : value) * scaleFactor + animation.offset + offset;
-            if (animation.clampMin != 0 && value < animation.clampMin) {
-                value = animation.clampMin;
-            } else if (animation.clampMax != 0 && value > animation.clampMax) {
-                value = animation.clampMax;
-            }
-            return value;
-        } else {
-            return (animation.absolute ? Math.abs(value) : value) * scaleFactor + animation.offset;
-        }
-    }
-
-    /**
      * Returns the value for the passed-in variable, subject to the formatting and factoring in the
      * text definition.
      */
@@ -1136,56 +1003,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Custom variable modifier switchbox class.
-     */
-    private static class VariableModifierSwitchbox extends AnimationSwitchbox {
-        private float modifiedValue = 0;
-
-        private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
-            super(entity, animations, null);
-        }
-
-        @Override
-        public void runTranslation(DurationDelayClock clock, float partialTicks) {
-            if (clock.animation.axis.x != 0) {
-                modifiedValue *= clock.animation.axis.y == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks), clock.animation.axis.y); //If the Y axis is zero, simply multiply. If it is not zero, multiply the variable raised to the power of Y.
-            } else if (clock.animation.axis.y != 0) {
-                modifiedValue += clock.animation.axis.z == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks), clock.animation.axis.z);
-            } else {
-                modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
-            }
-        }
-
-        //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
-        @Override
-        public void runRotation(DurationDelayClock clock, float partialTicks) {
-        	float trigValue = 0;
-        	if (clock.animation.invert) {
-        		if (clock.animation.axis.x != 0) {
-        			trigValue += clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
-        		}
-        		if (clock.animation.axis.y != 0) {
-	    			trigValue += clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
-        		}
-        		if (clock.animation.axis.z != 0) {
-	    			trigValue += clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
-        		}
-        	} else {
-        		if (clock.animation.axis.x != 0) {
-        			trigValue += clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
-        		}
-        		if (clock.animation.axis.y != 0) {
-	    			trigValue += clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
-        		}
-        		if (clock.animation.axis.z != 0) {
-	    			trigValue += clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
-        		}
-        	}
-        	modifiedValue *= trigValue;
-        }
-    }
-
-    /**
      * Called to update the variable modifiers for this entity.
      * By default, this will get any variables that {@link #getVariable(String)}
      * returns, but can be extended to do other variables specific to the entity.
@@ -1243,9 +1060,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Called externally to reset all caches for all objects and animations on this entity.
      */
     public void resetModelsAndAnimations() {
-    	if (definition.rendering.modelType != ModelType.NONE) {
+        if (definition.rendering.modelType != ModelType.NONE) {
             if (objectList != null) {
-                objectList.forEach(object -> object.destroy());
+                objectList.forEach(RenderableModelObject::destroy);
                 objectList = null;
             }
         }
@@ -1306,5 +1123,143 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD})
     public @interface ModifiedValue {
+    }
+
+    /**
+     * Custom light switchbox class.
+     */
+    private static class LightSwitchbox extends AnimationSwitchbox {
+        private boolean definedBrightness = false;
+        private float brightness = 0;
+        private ColorRGB color = null;
+
+        private LightSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
+            super(entity, animations, null);
+        }
+
+        public boolean runLight(float partialTicks) {
+            definedBrightness = false;
+            brightness = 0;
+            color = null;
+            return runSwitchbox(partialTicks, true);
+        }
+
+        @Override
+        public void runTranslation(DurationDelayClock clock, float partialTicks) {
+            definedBrightness = true;
+            if (clock.animation.axis.x != 0) {
+                brightness *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+            } else if (clock.animation.axis.y != 0) {
+                brightness += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+            } else {
+                brightness = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
+            }
+        }
+
+        @Override
+        public void runRotation(DurationDelayClock clock, float partialTicks) {
+            double colorFactor = entity.getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, partialTicks);
+            double colorX;
+            double colorY;
+            double colorZ;
+            if (color == null) {
+                colorX = clock.animation.axis.x * colorFactor + clock.animation.offset;
+                colorY = clock.animation.axis.y * colorFactor + clock.animation.offset;
+                colorZ = clock.animation.axis.z * colorFactor + clock.animation.offset;
+            } else {
+                colorX = clock.animation.axis.x * colorFactor + clock.animation.offset + color.red;
+                colorY = clock.animation.axis.y * colorFactor + clock.animation.offset + color.green;
+                colorZ = clock.animation.axis.z * colorFactor + clock.animation.offset + color.blue;
+            }
+            if (colorX < 0) colorX = 0;
+            if (colorY < 0) colorY = 0;
+            if (colorZ < 0) colorZ = 0;
+            if (colorX > 1) colorX = 1;
+            if (colorY > 1) colorY = 1;
+            if (colorZ > 1) colorZ = 1;
+            color = new ColorRGB((float) colorX, (float) colorY, (float) colorZ, false);
+        }
+    }
+
+    /**
+     * Custom sound switchbox class.
+     */
+    private static class SoundSwitchbox extends AnimationSwitchbox {
+        private boolean definedValue = false;
+        private float value = 0;
+
+        private SoundSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
+            super(entity, animations, null);
+        }
+
+        public boolean runSound(float partialTicks) {
+            value = 0;
+            definedValue = false;
+            return runSwitchbox(partialTicks, true);
+        }
+
+        @Override
+        public void runTranslation(DurationDelayClock clock, float partialTicks) {
+            definedValue = true;
+            value += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+        }
+
+        @Override
+        public void runRotation(DurationDelayClock clock, float partialTicks) {
+            definedValue = true;
+            //Parobola is defined with parameter A being x, and H being z.
+            double parabolaValue = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
+            value += clock.animation.axis.x * Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
+        }
+    }
+
+    /**
+     * Custom variable modifier switchbox class.
+     */
+    private static class VariableModifierSwitchbox extends AnimationSwitchbox {
+        private float modifiedValue = 0;
+
+        private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations) {
+            super(entity, animations, null);
+        }
+
+        @Override
+        public void runTranslation(DurationDelayClock clock, float partialTicks) {
+            if (clock.animation.axis.x != 0) {
+                modifiedValue *= clock.animation.axis.y == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks), clock.animation.axis.y); //If the Y axis is zero, simply multiply. If it is not zero, multiply the variable raised to the power of Y.
+            } else if (clock.animation.axis.y != 0) {
+                modifiedValue += clock.animation.axis.z == 0 ? entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks) : Math.pow(entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks), clock.animation.axis.z);
+            } else {
+                modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
+            }
+        }
+
+        //When a rotation is used, it will return V * (Xsin(V+x) + Ycos(V+y) + Ztan(V+z)) where X, Y, Z is the axis, and x, y, z is the centerPoint. Adding the 'invert' tag will make these inverse trig functions.
+        @Override
+        public void runRotation(DurationDelayClock clock, float partialTicks) {
+            float trigValue = 0;
+            if (clock.animation.invert) {
+                if (clock.animation.axis.x != 0) {
+                    trigValue += clock.animation.axis.x * Math.toDegrees(Math.asin(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
+                }
+                if (clock.animation.axis.y != 0) {
+                    trigValue += clock.animation.axis.y * Math.toDegrees(Math.acos(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
+                }
+                if (clock.animation.axis.z != 0) {
+                    trigValue += clock.animation.axis.z * Math.toDegrees(Math.atan(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
+                }
+            } else {
+                if (clock.animation.axis.x != 0) {
+                    trigValue += clock.animation.axis.x * Math.sin(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.x));
+                }
+                if (clock.animation.axis.y != 0) {
+                    trigValue += clock.animation.axis.y * Math.cos(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.y));
+                }
+                if (clock.animation.axis.z != 0) {
+                    trigValue += clock.animation.axis.z * Math.tan(Math.toRadians(entity.getAnimatedVariableValue(clock, 1, partialTicks) + clock.animation.centerPoint.z));
+                }
+            }
+            modifiedValue *= trigValue;
+        }
     }
 }

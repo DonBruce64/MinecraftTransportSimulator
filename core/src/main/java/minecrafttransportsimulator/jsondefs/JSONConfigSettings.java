@@ -1,18 +1,11 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.packloading.PackParser;
+
+import java.util.*;
 
 /**
  * Config class for game settings.  This is for internal code logic and is used on both
@@ -25,6 +18,14 @@ public class JSONConfigSettings {
     public ConfigGeneral general = new ConfigGeneral();
     public ConfigDamage damage = new ConfigDamage();
     public ConfigFuel fuel = new ConfigFuel();
+
+    public enum FuelDefaults {
+        GASOLINE,
+        DIESEL,
+        AVGAS,
+        REDSTONE,
+        NOTHING;
+    }
 
     public static class ConfigGeneral {
         public JSONConfigEntry<Boolean> generateOverrideConfigs = new JSONConfigEntry<>(false, "If true, then crafting and damage override config files, as well as language template files, will be dumped into the config folder at boot.  WARNING: this will overwrite your existing override config files!  Language files must be put into packs to function and will NOT overwrite anything.");
@@ -54,7 +55,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
         public JSONConfigEntry<Double> rfToElectricityFactor = new JSONConfigEntry<>(0.02D, "Factor for converting RF to internal electicity for vehicles.  Default value is 1/100, but can be adjusted.");
         public JSONConfigEntry<Double> vehicleDeathDespawnTime = new JSONConfigEntry<>(0.0D, "Time (in seconds) between when vehicles reach 0 health and they de-spawn.  Normally 0, which means they never de-spawn.");
-        public JSONConfigEntry<Integer> seaLevel = new JSONConfigEntry<>(63,"The Y-Level that will be used to base altitude off of. Will also be factored in for engine performance calculations. Change only if you know what you're doing/ why this matters to engines/flying.");
+        public JSONConfigEntry<Integer> seaLevel = new JSONConfigEntry<>(63, "The Y-Level that will be used to base altitude off of. Will also be factored in for engine performance calculations. Change only if you know what you're doing/ why this matters to engines/flying.");
         public JSONConfigEntry<List<String>> defaultVehicleRepairMaterials = new JSONConfigEntry<>(new ArrayList<>(), "List of items that can be used to repair vehicles by default, if no repair recipe is set in the vehicle's JSON.");
         public JSONConfigEntry<List<String>> defaultPartRepairMaterials = new JSONConfigEntry<>(new ArrayList<>(), "List of items that can be used to repair part by default, if no repair recipe is set in the part's JSON.");
         public JSONConfigEntry<Set<String>> engineDimensionBlacklist = new JSONConfigEntry<>(new HashSet<>(), "Blacklist of dimension names where engines will be prevented from being started.  Can be used to disable vehicles in specific dimensions.  Think Galacticraft, where you don't want folks flying planes on the moon.");
@@ -176,13 +177,5 @@ public class JSONConfigSettings {
             }
             return fuels;
         }
-    }
-
-    public enum FuelDefaults {
-        GASOLINE,
-        DIESEL,
-        AVGAS,
-        REDSTONE,
-        NOTHING;
     }
 }

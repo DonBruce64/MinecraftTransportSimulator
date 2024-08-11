@@ -1,21 +1,10 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -26,6 +15,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChang
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.*;
 
 /**
  * A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -38,29 +29,26 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  */
 public class GUIInstruments extends AGUIBase {
 
+    private static String currentPack;
     //GUIs components created at opening.
     private final EntityVehicleF_Physics vehicle;
     private final JSONPanel panelDef;
     private final IWrapperPlayer player;
     private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<>();
-
+    private final List<GUIComponentButton> instrumentSlots = new ArrayList<>();
+    private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<>();
+    private final Map<AEntityE_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<>();
     //Runtime variables.
     private GUIComponentButton prevPackButton;
     private GUIComponentButton nextPackButton;
     private GUIComponentButton clearButton;
-    private static String currentPack;
     private GUIComponentLabel packName;
-
     private boolean hudSelected = true;
     private GUIComponentButton hudButton;
     private GUIComponentButton panelButton;
     private GUIComponentLabel infoLabel;
     private AEntityE_Interactable<?> selectedEntity;
     private JSONInstrumentDefinition selectedInstrumentDefinition;
-
-    private final List<GUIComponentButton> instrumentSlots = new ArrayList<>();
-    private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<>();
-    private final Map<AEntityE_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<>();
 
     public GUIInstruments(EntityVehicleF_Physics vehicle) {
         super();

@@ -1,7 +1,5 @@
 package mcinterface1122;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import net.minecraft.item.ItemStack;
@@ -10,6 +8,9 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 /**
  * Builder for tile entities that contain inventories.  This builder ticks.
@@ -28,12 +29,12 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
     }
 
     @Override
-    public ItemStack getStackInSlot(int index) {
+    public @NotNull ItemStack getStackInSlot(int index) {
         return tileEntity != null ? ((WrapperItemStack) tileEntity.getInventory().getStack(index)).stack : ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+    public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
         if (tileEntity != null) {
             ItemStack stack = getStackInSlot(slot);
             if (stack.getCount() < amount) {
@@ -52,7 +53,7 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
     }
 
     @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+    public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
         if (tileEntity != null) {
             ItemStack existingStack = getStackInSlot(slot);
             if (ItemHandlerHelper.canItemStacksStack(stack, existingStack)) {
@@ -80,7 +81,7 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && (EnumFacing.UP.equals(facing) || EnumFacing.DOWN.equals(facing))) {
             return true;
         } else {
@@ -90,7 +91,7 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+    public <T> T getCapability(@NotNull Capability<T> capability, EnumFacing facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && (EnumFacing.UP.equals(facing) || EnumFacing.DOWN.equals(facing))) {
             return (T) this;
         } else {

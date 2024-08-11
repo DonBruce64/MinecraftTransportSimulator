@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering;
 
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,8 +9,6 @@ import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Class responsible for parsing OBJ models into arrays that can be fed to the GPU.

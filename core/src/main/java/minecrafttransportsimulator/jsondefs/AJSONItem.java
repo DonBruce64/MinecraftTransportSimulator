@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 /**
  * Base JSON class for all pack-loaded item JSONs.
@@ -110,6 +110,10 @@ public abstract class AJSONItem extends AJSONBase {
         public TextLine[] textLines;
         @Deprecated
         public List<JSONText> textObjects;
+        @Deprecated
+        public List<String> materials;
+        @Deprecated
+        public List<String> repairMaterials;
 
         @Deprecated
         public static class TextLine {
@@ -120,11 +124,5 @@ public abstract class AJSONItem extends AJSONBase {
             public float scale;
             public ColorRGB color;
         }
-
-        @Deprecated
-        public List<String> materials;
-
-        @Deprecated
-        public List<String> repairMaterials;
     }
 }

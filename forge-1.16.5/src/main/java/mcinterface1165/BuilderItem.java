@@ -205,7 +205,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
 
     /**
      * This is called by the main MC system after the item's use timer has expired.
-     * This is normally instant, as {@link #getMaxItemUseDuration(ItemStack)} is 0.
+     * This is normally instant, as {@link #getMaxUseTime(ItemStack)} is 0.
      * If this item is food, and a player is holding the item, have it apply to them.
      */
     @Override
@@ -224,9 +224,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                     for (JSONPotionEffect effect : effects) {
                         Potion potion = Potion.byId(effect.name);
                         if (potion != null) {
-                            potion.getEffects().forEach(mcEffect -> {
-                                entityLiving.addStatusEffect(new StatusEffectInstance(mcEffect.getEffectType(), effect.duration, effect.amplifier, false, true));
-                            });
+                            potion.getEffects().forEach(mcEffect -> entityLiving.addStatusEffect(new StatusEffectInstance(mcEffect.getEffectType(), effect.duration, effect.amplifier, false, true)));
                         } else {
                             throw new NullPointerException("Potion " + effect.name + " does not exist.");
                         }

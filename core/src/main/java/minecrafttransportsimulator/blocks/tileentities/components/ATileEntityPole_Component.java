@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -11,6 +9,8 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.Locale;
 
 /**
  * Base class for components that can go on poles.  Not actually a TE, just sits on one.

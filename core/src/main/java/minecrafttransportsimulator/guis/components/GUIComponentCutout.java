@@ -13,14 +13,13 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
 public class GUIComponentCutout extends AGUIComponent {
     public static final String NORMAL_SUFFIX = ".png";
     public static final String LIT_SUFFIX = "_lit.png";
-
-    //Texture variables.
-    protected RenderableData renderableL;
-    private boolean renderFullScreen;
     public int textureXOffset;
     public int textureYOffset;
     public int textureSectionWidth;
     public int textureSectionHeight;
+    //Texture variables.
+    protected RenderableData renderableL;
+    private boolean renderFullScreen;
 
     /**
      * Standard constructor for a 1:1 rendering.

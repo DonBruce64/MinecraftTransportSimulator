@@ -1,10 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -29,7 +25,7 @@ public class VehicleGroundDeviceBox {
     private boolean isLongTread;
     private int treadZBestOffset;
     private float climbHeight;
-    private static final Set<CollisionType> groundBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.BLOCK));
+    private static final Set<CollisionType> groundBoxCollisionTypes = new HashSet<>(Collections.singletonList(CollisionType.BLOCK));
     private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false, groundBoxCollisionTypes);
     private final BoundingBox liquidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, true, groundBoxCollisionTypes);
     private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<>();
@@ -144,7 +140,7 @@ public class VehicleGroundDeviceBox {
                     }
 
                     //Add us if our requested position matches our found position.
-                    if (!(isFront ^ groundPosition.isFront) && (isLeft && groundPosition.isLeft || !isLeft && groundPosition.isRight)) {
+                    if (isFront == groundPosition.isFront && (isLeft && groundPosition.isLeft || !isLeft && groundPosition.isRight)) {
                         groundDevices.add(ground);
                         totalClimbHeight += ground.definition.ground.climbHeight;
                         if (ground.definition.ground.canFloat) {
@@ -169,7 +165,7 @@ public class VehicleGroundDeviceBox {
         solidBox.widthRadius = 0;
         solidBox.heightRadius = 0;
         isLongTread = false;
-        for (APart groundDevice : groundDevices) {
+        for (PartGroundDevice groundDevice : groundDevices) {
             solidBox.localCenter.x += groundDevice.localOffset.x;
             solidBox.localCenter.z += groundDevice.localOffset.z;
             if (groundDevice.localOffset.y - groundDevice.getHeight() / 2D < solidBox.localCenter.y - solidBox.heightRadius) {
@@ -177,7 +173,7 @@ public class VehicleGroundDeviceBox {
                 solidBox.heightRadius = groundDevice.getHeight() / 2D;
                 solidBox.widthRadius = groundDevice.getWidth() / 2D;
             }
-            if (groundDevice.definition.ground.isTread && ((PartGroundDevice) groundDevice).getLongPartOffset() != 0) {
+            if (groundDevice.definition.ground.isTread && groundDevice.getLongPartOffset() != 0) {
                 isLongTread = true;
             }
         }

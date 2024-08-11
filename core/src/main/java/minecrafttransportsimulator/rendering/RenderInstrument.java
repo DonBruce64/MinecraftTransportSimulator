@@ -115,7 +115,7 @@ public final class RenderInstrument {
                         } else {
                             renderable.setLightMode(onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL);
                         }
-                        
+
                         //Need to invert Y here since we're using pixel-based coords.
                         renderable.vertexObject.setSpriteProperties(0, -component.textureWidth / 2, component.textureHeight / 2, component.textureWidth, component.textureHeight, (float) textureMinCoords.x, (float) textureMinCoords.y, (float) textureMaxCoords.x, (float) textureMaxCoords.y);
                         if (component.overlayTexture) {

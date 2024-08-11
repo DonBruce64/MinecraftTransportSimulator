@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
@@ -9,6 +7,8 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packets.components.APacketBase;
+
+import java.util.UUID;
 
 /**
  * Packet sent when a bullet hits an external entity.

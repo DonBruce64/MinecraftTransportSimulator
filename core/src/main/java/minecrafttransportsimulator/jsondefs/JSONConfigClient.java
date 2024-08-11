@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 
 /**
  * Config class for client settings.  This is only loaded on the client.  This allows the
@@ -53,7 +53,6 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(true, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.  Hence it being the default.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
-
 
 
         public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");

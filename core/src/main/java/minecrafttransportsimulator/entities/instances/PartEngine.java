@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -23,9 +20,32 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
-public class PartEngine extends APart {
-    public static String ELECTRICITY_FUEL = "electricity";
+import java.util.ArrayList;
+import java.util.List;
 
+public class PartEngine extends APart {
+    //Constants and static variables.
+    public static final String MAGNETO_VARIABLE = "engine_magneto";
+    public static final String ELECTRIC_STARTER_VARIABLE = "engine_starter";
+    public static final String HAND_STARTER_VARIABLE = "engine_starter_hand";
+    public static final String UP_SHIFT_VARIABLE = "engine_shift_up";
+    public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
+    public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
+    public static final String GEAR_SHIFT_VARIABLE = "engine_shift_request";
+    public static final String GEAR_VARIABLE = "engine_gear";
+    public static final String HOURS_VARIABLE = "hours";
+    public static final float COLD_TEMP = 30F;
+    public static final float OVERHEAT_TEMP_1 = 115.556F;
+    public static final float OVERHEAT_TEMP_2 = 121.111F;
+    public static final float FAILURE_TEMP = 132.222F;
+    public static final float LOW_OIL_PRESSURE = 40F;
+    public static final float MAX_SHIFT_SPEED = 0.35F;
+    public static String ELECTRICITY_FUEL = "electricity";
+    private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
+    private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
+    private final List<PartPropeller> linkedPropellers = new ArrayList<>();
+    private final Point3D engineAxisVector = new Point3D();
+    private final Point3D engineForce = new Point3D();
     //State data.
     public boolean backfired;
     public boolean badShift;
@@ -48,12 +68,12 @@ public class PartEngine extends APart {
     public double temp;
     public double pressure;
     public float propellerGearboxRatio;
-
     //Runtime calculated values.
     public double fuelFlow;
     public double rocketFuelUsed;
     public PartEngine linkedEngine;
-
+    @ModifiedValue
+    public float currentIsAutomatic;
     //Internal properties
     @ModifiedValue
     private float currentMaxRPM;
@@ -88,12 +108,9 @@ public class PartEngine extends APart {
     @ModifiedValue
     private float currentForceShift;
     @ModifiedValue
-    public float currentIsAutomatic;
-    @ModifiedValue
     private float currentWearFactor;
     @ModifiedValue
     private float currentWinddownRate;
-
     //Internal variables.
     private boolean autoStarterEngaged;
     private int starterLevel;
@@ -111,29 +128,7 @@ public class PartEngine extends APart {
     private double prevDriveshaftRotation;
     private double currentJetPowerFactor;
     private double currentBypassRatio;
-    private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
-    private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
-    private final List<PartPropeller> linkedPropellers = new ArrayList<>();
-    private final Point3D engineAxisVector = new Point3D();
-    private final Point3D engineForce = new Point3D();
     private double engineForceValue;
-
-    //Constants and static variables.
-    public static final String MAGNETO_VARIABLE = "engine_magneto";
-    public static final String ELECTRIC_STARTER_VARIABLE = "engine_starter";
-    public static final String HAND_STARTER_VARIABLE = "engine_starter_hand";
-    public static final String UP_SHIFT_VARIABLE = "engine_shift_up";
-    public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
-    public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
-    public static final String GEAR_SHIFT_VARIABLE = "engine_shift_request";
-    public static final String GEAR_VARIABLE = "engine_gear";
-    public static final String HOURS_VARIABLE = "hours";
-    public static final float COLD_TEMP = 30F;
-    public static final float OVERHEAT_TEMP_1 = 115.556F;
-    public static final float OVERHEAT_TEMP_2 = 121.111F;
-    public static final float FAILURE_TEMP = 132.222F;
-    public static final float LOW_OIL_PRESSURE = 40F;
-    public static final float MAX_SHIFT_SPEED = 0.35F;
 
     public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEngine item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -355,6 +350,7 @@ public class PartEngine extends APart {
                 } else if (isVariableActive(GEAR_SHIFT_VARIABLE)) {
                     double shiftValue = getVariable(GEAR_SHIFT_VARIABLE);
                     if (shiftValue < 10) {
+                        // FIXME: What is this?
                         while (currentGear < shiftValue && shiftUp())
                             ;
                     } else if (shiftValue == 10) {
@@ -836,10 +832,10 @@ public class PartEngine extends APart {
                         currentGearRatio = adjustVariable(modifier, currentGearRatio);
                         break;
                     case "forceShift":
-                    	currentForceShift = adjustVariable(modifier, currentForceShift);
+                        currentForceShift = adjustVariable(modifier, currentForceShift);
                         break;
                     case "isAutomatic":
-                    	currentIsAutomatic = adjustVariable(modifier, currentIsAutomatic);
+                        currentIsAutomatic = adjustVariable(modifier, currentIsAutomatic);
                         break;
                     case "engineWearFactor":
                         currentWearFactor = adjustVariable(modifier, currentWearFactor);
@@ -848,10 +844,10 @@ public class PartEngine extends APart {
                         currentWinddownRate = adjustVariable(modifier, currentWinddownRate);
                         break;
                     case "jetPowerFactor":
-                        currentJetPowerFactor = adjustVariable(modifier,(float) currentJetPowerFactor);
+                        currentJetPowerFactor = adjustVariable(modifier, (float) currentJetPowerFactor);
                         break;
                     case "bypassRatio":
-                        currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
+                        currentBypassRatio = adjustVariable(modifier, (float) currentBypassRatio);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -910,15 +906,15 @@ public class PartEngine extends APart {
             case ("engine_rpm_percent_revlimit"):
                 return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
             case ("engine_rpm_target"):
-            	return engineTargetRPM;
+                return engineTargetRPM;
             case ("engine_rpm_idle"):
-            	return currentIdleRPM;
+                return currentIdleRPM;
             case ("engine_rpm_start"):
-            	return currentStartRPM;
+                return currentStartRPM;
             case ("engine_rpm_stall"):
-            	return currentStallRPM;
+                return currentStallRPM;
             case ("engine_starter_power"):
-            	return currentStarterPower;
+                return currentStarterPower;
             case ("engine_fuel_consumption"):
                 return currentFuelConsumption;
             case ("engine_supercharger_fuel_consumption"):
@@ -967,41 +963,41 @@ public class PartEngine extends APart {
                 return currentJetPowerFactor;
         }
         if (variable.startsWith("engine_sin_")) {
-        	//engine_sin_X This will offset the engine rotation INPUT to the trig function by X
+            //engine_sin_X This will offset the engine rotation INPUT to the trig function by X
             int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
-        	return Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset));
+            return Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset));
         }
         if (variable.startsWith("engine_cos_")) {
-        	//engine_cos_X This will offset the engine rotation INPUT to the trig function by X
+            //engine_cos_X This will offset the engine rotation INPUT to the trig function by X
             int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
-        	return Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset));
+            return Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset));
         }
         if (variable.startsWith("engine_driveshaft_sin_")) {
-        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
+            //engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
             int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
-        	return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
+            return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
         }
         if (variable.startsWith("engine_driveshaft_cos_")) {
-        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
+            //engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
             int offset = Integer.parseInt(variable.substring("engine_driveshaft_cos_".length()));
-        	return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
+            return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
         }
         if (variable.startsWith("engine_piston_")) {
-        	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
-        	//i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
-        	//When suffixed with _cam, it will instead return the sector the camshaft rotation.
+            //Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
+            //i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
+            //When suffixed with _cam, it will instead return the sector the camshaft rotation.
 
-        	//If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
-        	int camMultiplier = 1;
-        	if (variable.endsWith("_crank")) {
-        		variable = variable.substring(0, variable.length() - "_crank".length());
-        	}
-        	if (variable.endsWith("_cam")) {
-        		camMultiplier = 2;
-        		variable = variable.substring(0, variable.length() - "_cam".length());
-        	}
-        	
-        	//Extract the values we need
+            //If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
+            int camMultiplier = 1;
+            if (variable.endsWith("_crank")) {
+                variable = variable.substring(0, variable.length() - "_crank".length());
+            }
+            if (variable.endsWith("_cam")) {
+                camMultiplier = 2;
+                variable = variable.substring(0, variable.length() - "_cam".length());
+            }
+
+            //Extract the values we need
             String[] parsedVariable = variable.substring("engine_piston_".length()).split("_");
             int pistonNumber = Integer.parseInt(parsedVariable[0]);
             int totalPistons = Integer.parseInt(parsedVariable[1]);
@@ -1009,19 +1005,19 @@ public class PartEngine extends APart {
             if (parsedVariable.length >= 3) {
                 offset = camMultiplier * Integer.parseInt(parsedVariable[2]);
             }
-            
+
             //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
             if (pistonNumber > totalPistons || totalPistons == 1) {
-            	pistonNumber = 1;
-            	totalPistons = 2;
+                pistonNumber = 1;
+                totalPistons = 2;
             }
-            
+
             //Map the shaft rotation to a value between 0 and 359.99...
             double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
-            
+
             //Calculate the angle of a 'sector'
             double sector = (360D * camMultiplier) / totalPistons;
-            
+
             //If the crank is in the requested sector, return 1, otherwise return 0.
             return (0 + (sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
         }
@@ -1073,7 +1069,7 @@ public class PartEngine extends APart {
     public void backfireEngine() {
         //Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
         backfired = true;
-        rpm -= currentMaxRPM < 15000 ? Math.round((0.05*rpm)+((hours*0.05)-25)) : Math.round((0.1*rpm)+((hours*0.1)-50));
+        rpm -= currentMaxRPM < 15000 ? Math.round((0.05 * rpm) + ((hours * 0.05) - 25)) : Math.round((0.1 * rpm) + ((hours * 0.1) - 50));
     }
 
     public void badShiftEngine() {

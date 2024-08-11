@@ -1,39 +1,21 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONMuzzle;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.*;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -50,65 +32,25 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class PartGun extends APart {
+    //Global data.
+    private static final int RAYTRACE_DISTANCE = 750;
+    private static final double DEFAULT_CONE_ANGLE = 2.0;
+    public final Set<EntityBullet> activeManualBullets = new HashSet<>();
     //Variables based on the specific gun's properties.
     private final double minYaw;
     private final double maxYaw;
     private final double defaultYaw;
     private final double yawSpeed;
-
     private final double minPitch;
     private final double maxPitch;
     private final double defaultPitch;
     private final double pitchSpeed;
-
-    //Variables that can be modified using VMs
-    @ModifiedValue
-    private float currentFireDelay;
-    @ModifiedValue
-    private float currentBulletSpreadFactor;
-    @ModifiedValue
-    public float currentIsTwoHandedness;
-
     private final boolean resetPosition;
 
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
-
-    //Stored variables used to determine bullet firing behavior.
-    public int bulletsFired;
-    private int bulletsLeft;
-    private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
     private final RotationMatrix prevInternalOrientation;
-    public ItemBullet loadedBullet;
-    public ItemBullet lastLoadedBullet;
-    private ItemBullet reloadingBullet;
-    public ItemBullet clientNextBullet;
     private final Random randomGenerator;
-
-    //These variables are used during firing and will be reset on loading.
-    public GunState state;
-    public boolean bulletsPresentOnServer;
-    public boolean firedThisRequest;
-    public boolean firedThisCheck;
-    public boolean playerHoldingTrigger;
-    public boolean isHandHeldGunAimed;
-    public boolean isHandHeldGunEquipped;
-    public boolean isRunningInCoaxialMode;
-    private int camOffset;
-    private int cooldownTimeRemaining;
-    private int reloadDelayRemaining;
-    private int reloadTimeRemaining;
-    private int windupTimeCurrent;
-    private int windupRotation;
-    private long lastMillisecondFired;
-    public IWrapperEntity lastController;
-    private PartSeat lastControllerSeat;
-    private Point3D controllerRelativeLookVector = new Point3D();
-    public IWrapperEntity entityTarget;
-    public PartEngine engineTarget;
-    public Point3D targetPosition;
-    public EntityBullet currentBullet;
-    public final Set<EntityBullet> activeManualBullets = new HashSet<>();
     private final Point3D bulletPosition = new Point3D();
     private final Point3D bulletVelocity = new Point3D();
     private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -116,7 +58,6 @@ public class PartGun extends APart {
     private final Point3D bulletVelocityRender = new Point3D();
     private final RotationMatrix bulletOrientationRender = new RotationMatrix();
     private final List<PartSeat> seatsControllingGun = new ArrayList<>();
-
     //Temp helper variables for calculations
     private final Point3D targetVector = new Point3D();
     private final Point3D targetAngles = new Point3D();
@@ -126,10 +67,44 @@ public class PartGun extends APart {
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
     private final Point3D normalizedConeVector = new Point3D();
     private final Point3D normalizedEntityVector = new Point3D();
-
-    //Global data.
-    private static final int RAYTRACE_DISTANCE = 750;
-    private static final double DEFAULT_CONE_ANGLE = 2.0;
+    @ModifiedValue
+    public float currentIsTwoHandedness;
+    //Stored variables used to determine bullet firing behavior.
+    public int bulletsFired;
+    public ItemBullet loadedBullet;
+    public ItemBullet lastLoadedBullet;
+    public ItemBullet clientNextBullet;
+    //These variables are used during firing and will be reset on loading.
+    public GunState state;
+    public boolean bulletsPresentOnServer;
+    public boolean firedThisRequest;
+    public boolean firedThisCheck;
+    public boolean playerHoldingTrigger;
+    public boolean isHandHeldGunAimed;
+    public boolean isHandHeldGunEquipped;
+    public boolean isRunningInCoaxialMode;
+    public IWrapperEntity lastController;
+    public IWrapperEntity entityTarget;
+    public PartEngine engineTarget;
+    public Point3D targetPosition;
+    public EntityBullet currentBullet;
+    //Variables that can be modified using VMs
+    @ModifiedValue
+    private float currentFireDelay;
+    @ModifiedValue
+    private float currentBulletSpreadFactor;
+    private int bulletsLeft;
+    private int currentMuzzleGroupIndex;
+    private ItemBullet reloadingBullet;
+    private int camOffset;
+    private int cooldownTimeRemaining;
+    private int reloadDelayRemaining;
+    private int reloadTimeRemaining;
+    private int windupTimeCurrent;
+    private int windupRotation;
+    private long lastMillisecondFired;
+    private PartSeat lastControllerSeat;
+    private Point3D controllerRelativeLookVector = new Point3D();
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -189,7 +164,7 @@ public class PartGun extends APart {
         } else {
             this.pitchSpeed = placementDefinition.pitchSpeed;
         }
-        
+
         this.resetPosition = definition.gun.resetPosition || placementDefinition.resetPosition;
 
         //Load saved data.
@@ -417,13 +392,13 @@ public class PartGun extends APart {
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                         }
                                         world.addEntity(newBullet);
-                                        
+
                                         //Now do knockback, if it exists.
                                         if (entityOn instanceof EntityPlayerGun && definition.gun.knockback != 0) {
-                                            if(!world.isClient()) {
+                                            if (!world.isClient()) {
                                                 performGunKnockback();
                                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
-                                            }else if(InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
+                                            } else if (InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
                                                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
                                             }
                                         }
@@ -628,7 +603,7 @@ public class PartGun extends APart {
                         currentBulletSpreadFactor = adjustVariable(modifier, currentBulletSpreadFactor);
                         break;
                     case "isTwoHanded":
-                    	currentIsTwoHandedness = adjustVariable(modifier, currentIsTwoHandedness);
+                        currentIsTwoHandedness = adjustVariable(modifier, currentIsTwoHandedness);
                         break;
                     case "gun_yaw":
                         internalOrientation.angles.y = adjustVariable(modifier, (float) internalOrientation.angles.y);
@@ -1093,7 +1068,7 @@ public class PartGun extends APart {
         }
     }
 
-    public double getLockedOnDirection(){
+    public double getLockedOnDirection() {
         double direction = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
         if (engineTarget != null) {
@@ -1108,13 +1083,13 @@ public class PartGun extends APart {
         return direction;
     }
 
-    public double getLockedOnAngle(){
+    public double getLockedOnAngle() {
         double angle = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
         if (engineTarget != null) {
-            angle = -Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y,Math.hypot(-engineTarget.position.z + referencePos.z,-engineTarget.position.x + referencePos.x))) + orientation.angles.x;
+            angle = -Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x;
         } else if (entityTarget != null) {
-            angle = -Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y,Math.hypot(-entityTarget.getPosition().z + referencePos.z,-entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x;
+            angle = -Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x;
         }
         while (angle < -180)
             angle += 360;
@@ -1123,7 +1098,7 @@ public class PartGun extends APart {
         return angle;
     }
 
-    public Point3D getLockedOnLeadPoint(){
+    public Point3D getLockedOnLeadPoint() {
         Point3D leadPoint = new Point3D();
         double ticksToTarget = 0;
         if (engineTarget != null) {
@@ -1136,7 +1111,7 @@ public class PartGun extends APart {
         return leadPoint;
     }
 
-    public double getLeadPointDirection(){
+    public double getLeadPointDirection() {
         double direction = 0;
         if (engineTarget != null || entityTarget != null) {
             direction = Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x)) + 90 + orientation.angles.y;
@@ -1151,7 +1126,7 @@ public class PartGun extends APart {
     public double getLeadAngleY() {
         double angle = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
-        if(engineTarget != null) {
+        if (engineTarget != null) {
             angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x);
         } else if (entityTarget != null) {
             angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
@@ -1195,7 +1170,7 @@ public class PartGun extends APart {
             case ("gun_lockedon_leadpoint_direction"):
                 return entityTarget != null ? getLeadPointDirection() : (engineTarget != null ? getLeadPointDirection() : 0);
             case ("gun_lockedon_leadpoint_angle"):
-                return entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y,Math.hypot(-getLockedOnLeadPoint().z + position.z,-getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0);
+                return entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0);
             case ("gun_lockedon_distance"):
                 return entityTarget != null ? entityTarget.getPosition().distanceTo(position) : (engineTarget != null ? engineTarget.position.distanceTo(position) : 0);
             case ("gun_lockedon_leadangle_x"):

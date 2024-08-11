@@ -1,16 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
-import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
-import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
@@ -23,16 +13,17 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -49,31 +40,46 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public static final String RIGHTTURNLIGHT_VARIABLE = "right_turn_signal";
     public static final String BRAKE_VARIABLE = "brake";
     public static final String PARKINGBRAKE_VARIABLE = "p_brake";
-
+    public static final double MAX_BRAKE = 1D;
+    public static final String LOCKED_VARIABLE = "locked";
+    public final RotationMatrix rotation = new RotationMatrix();
+    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
+    private final IWrapperPlayer placingPlayer;
+    //Internal movement variables.
+    private final Point3D serverDeltaM;
+    private final Point3D serverDeltaR;
+    private final Point3D serverDeltaMApplied = new Point3D();
+    private final Point3D serverDeltaRApplied = new Point3D();
+    private final Point3D clientDeltaM;
+    private final Point3D clientDeltaR;
+    private final Point3D clientDeltaMApplied = new Point3D();
+    private final Point3D clientDeltaRApplied = new Point3D();
+    private final Point3D roadMotion = new Point3D();
+    private final Point3D roadRotation = new Point3D();
+    private final Point3D vehicleCollisionMotion = new Point3D();
+    private final RotationMatrix vehicleCollisionRotation = new RotationMatrix();
+    private final Point3D groundMotion = new Point3D();
+    private final Point3D motionApplied = new Point3D();
+    private final RotationMatrix rotationApplied = new RotationMatrix();
+    private final Point3D tempBoxPosition = new Point3D();
+    private final Point3D normalizedGroundVelocityVector = new Point3D();
+    private final Point3D normalizedGroundHeadingVector = new Point3D();
     //External state control.
     @DerivedValue
     public double brake;
     @DerivedValue
     public boolean parkingBrakeOn;
-    public static final double MAX_BRAKE = 1D;
     @DerivedValue
     public boolean locked;
-    public static final String LOCKED_VARIABLE = "locked";
     public UUID keyUUID;
-
     //Internal states.
     public boolean goingInReverse;
     public boolean slipping;
     public boolean skidSteerActive;
     public boolean lockedOnRoad;
-    private boolean updateGroundDevicesRequest;
-    private int lastBlockCollisionBoxesCount;
     public double groundVelocity;
     public double turningForce;
     public double weightTransfer = 0;
-    public final RotationMatrix rotation = new RotationMatrix();
-    private final IWrapperPlayer placingPlayer;
-
     //Properties
     @ModifiedValue
     public float currentSteeringForceIgnoresSpeed;
@@ -85,45 +91,22 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public float currentOverSteer;
     @ModifiedValue
     public float currentUnderSteer;
-
+    public VehicleGroundDeviceCollection groundDeviceCollective;
     //Road-following data.
     protected RoadFollowingState frontFollower;
     protected RoadFollowingState rearFollower;
+    private boolean updateGroundDevicesRequest;
+    private int lastBlockCollisionBoxesCount;
     private LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
     private double totalPathDelta;
     private double prevTotalPathDelta;
     private boolean invertedRoadOrientation;
-
-    //Internal movement variables.
-    private final Point3D serverDeltaM;
-    private final Point3D serverDeltaR;
     private double serverDeltaP;
-    private final Point3D serverDeltaMApplied = new Point3D();
-    private final Point3D serverDeltaRApplied = new Point3D();
     private double serverDeltaPApplied;
-
-    private final Point3D clientDeltaM;
-    private final Point3D clientDeltaR;
     private double clientDeltaP;
-    private final Point3D clientDeltaMApplied = new Point3D();
-    private final Point3D clientDeltaRApplied = new Point3D();
     private double clientDeltaPApplied;
-
-    private final Point3D roadMotion = new Point3D();
-    private final Point3D roadRotation = new Point3D();
-    private final Point3D vehicleCollisionMotion = new Point3D();
-    private final RotationMatrix vehicleCollisionRotation = new RotationMatrix();
-    private final Point3D groundMotion = new Point3D();
-    private final Point3D motionApplied = new Point3D();
-    private final RotationMatrix rotationApplied = new RotationMatrix();
     private double pathingApplied;
-
-    private final Point3D tempBoxPosition = new Point3D();
-    private final Point3D normalizedGroundVelocityVector = new Point3D();
-    private final Point3D normalizedGroundHeadingVector = new Point3D();
-    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
     private AEntityE_Interactable<?> lastCollidedEntity;
-    public VehicleGroundDeviceCollection groundDeviceCollective;
 
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);

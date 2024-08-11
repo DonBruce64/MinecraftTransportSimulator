@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
@@ -10,6 +7,9 @@ import minecrafttransportsimulator.jsondefs.JSONConfigSettings.FuelDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.LinkedHashMap;
+import java.util.List;
 
 @JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the generic section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
 public class JSONPart extends AJSONPartProvider {
@@ -76,6 +76,88 @@ public class JSONPart extends AJSONPartProvider {
         INTERACTABLE,
         @JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
         EFFECTOR
+    }
+
+    public enum EngineType {
+        @JSONDescription("A standard internal-combustion engine.  Requires fuel from the vehicle's fuel tanks to run.")
+        NORMAL,
+        @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
+        ROCKET,
+        @JSONDescription("An electric engine.  Gets power from chargers connected to the grid.")
+        ELECTRIC,
+        @JSONDescription("An engine that doesn't need fuel.  This is designed for vehicles that don't need fuel, like bicycles, sailboats, handcars and the like.")
+        MAGIC
+    }
+
+    public enum LockOnType {
+        @JSONDescription("Look at stuff to get a lock")
+        DEFAULT,
+        @JSONDescription("The gun itself must see the target.")
+        BORESIGHT,
+        @JSONDescription("Goes where the player is pointed")
+        MANUAL,
+        @JSONDescription("Goes where the radar tells it to.")
+        RADAR
+    }
+
+    public enum TargetType {
+        @JSONDescription("Will lock on to anything. Default")
+        ALL,
+        @JSONDescription("Only Locks onto ground vehicles.")
+        GROUND,
+        @JSONDescription("Only locks on to aircraft.")
+        AIRCRAFT,
+        @JSONDescription("Will lock either aircraft or ground vehicles. Hard targets.")
+        HARD,
+        @JSONDescription("Only locks on to players or mobs.")
+        SOFT
+    }
+
+    public enum InteractableComponentType {
+        @JSONDescription("Stores items.  If feedsVehicles is set, then this crate will allow other parts such as guns, engines, and effectors to pull inventory out for their operations.  If the vehicle containing this crate explodes, and the crate contains ammo, the explosion size will be increased based on the amount and size of the ammo.  Additionally, if this crate has ammo and is struck by a bullet, it will blow up, taking the vehicle with it.")
+        CRATE,
+        @JSONDescription("Stores liquid.  If feedsVehicles is set, and this barrel contains fuel, then fuel will be taken out of this barrel to be put into the main fuel tank.  If the vehicle containing this barrel explodes, and the barrel contains fuel, the explosion size will be increased as if the vehicle had the fuel in the barrel in its fuel tank.")
+        BARREL,
+        @JSONDescription("Works as a standard crafting table when clicked.")
+        CRAFTING_TABLE,
+        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
+        FURNACE,
+        @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
+        JERRYCAN,
+        @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
+        CRAFTING_BENCH
+    }
+
+    public enum FurnaceComponentType {
+        @JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
+        STANDARD,
+        @JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
+        FUEL,
+        @JSONDescription("Runs off electric power.  Only valid for vehicles.")
+        ELECTRIC
+    }
+
+    public enum EffectorComponentType {
+        @JSONDescription("Checks for plants on the ground and applies bonemeal to them contained in crates.")
+        FERTILIZER,
+        @JSONDescription("Will harvest plants that pass through it, depositing items into vehicle crates, or on the ground if no crates are present, or their inventories are full.  Will also break bush blocks like tall grass, flowers, and saplings, depositing them on the ground.")
+        HARVESTER,
+        @JSONDescription("Will plant any plant-able items located in vehicle crate parts onto farmland. Does not work with cactus, reeds, or other non-farmland-based plants.")
+        PLANTER,
+        @JSONDescription("Turns dirt and grass into farmland, and coarse dirt into dirt.")
+        PLOW,
+        @JSONDescription("Removes snow from the world when touched.")
+        SNOWPLOW,
+        @JSONDescription("Removes blocks matching the parameters from the world when touched.")
+        DRILL,
+        @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
+        PLACER,
+        @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
+        COLLECTOR,
+        @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
+        DROPPER,
+        @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
+        SPRAYER
     }
 
     public static class JSONPartGeneric {
@@ -247,7 +329,7 @@ public class JSONPart extends AJSONPartProvider {
         public EngineSound[] customSoundset;
 
         @Deprecated
-        public class EngineSound {
+        public static class EngineSound {
             @Deprecated
             public String soundName;
 
@@ -281,17 +363,6 @@ public class JSONPart extends AJSONPartProvider {
             @Deprecated
             public boolean volumeAdvanced;
         }
-    }
-
-    public enum EngineType {
-        @JSONDescription("A standard internal-combustion engine.  Requires fuel from the vehicle's fuel tanks to run.")
-        NORMAL,
-        @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
-        ROCKET,
-        @JSONDescription("An electric engine.  Gets power from chargers connected to the grid.")
-        ELECTRIC,
-        @JSONDescription("An engine that doesn't need fuel.  This is designed for vehicles that don't need fuel, like bicycles, sailboats, handcars and the like.")
-        MAGIC;
     }
 
     public static class JSONPartGroundDevice {
@@ -378,7 +449,7 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("Type of target this gun can lock on to.")
         public TargetType targetType;
-        
+
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
@@ -462,7 +533,7 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
         public float defaultPitch;
-        
+
         @JSONDescription("How much knocback this gun provides to the shooter.")
         public float knockback;
 
@@ -492,30 +563,6 @@ public class JSONPart extends AJSONPartProvider {
 
         @Deprecated
         public float length;
-    }
-    
-    public enum LockOnType {
-        @JSONDescription("Look at stuff to get a lock")
-        DEFAULT,
-        @JSONDescription("The gun itself must see the target.")
-        BORESIGHT,
-        @JSONDescription("Goes where the player is pointed")
-        MANUAL,
-        @JSONDescription("Goes where the radar tells it to.")
-        RADAR
-    }
-
-    public enum TargetType {
-        @JSONDescription("Will lock on to anything. Default")
-        ALL,
-        @JSONDescription("Only Locks onto ground vehicles.")
-        GROUND,
-        @JSONDescription("Only locks on to aircraft.")
-        AIRCRAFT,
-        @JSONDescription("Will lock either aircraft or ground vehicles. Hard targets.")
-        HARD,
-        @JSONDescription("Only locks on to players or mobs.")
-        SOFT
     }
 
     public static class JSONPartInteractable {
@@ -555,30 +602,6 @@ public class JSONPart extends AJSONPartProvider {
         public JSONCraftingBench crafting;
     }
 
-    public enum InteractableComponentType {
-        @JSONDescription("Stores items.  If feedsVehicles is set, then this crate will allow other parts such as guns, engines, and effectors to pull inventory out for their operations.  If the vehicle containing this crate explodes, and the crate contains ammo, the explosion size will be increased based on the amount and size of the ammo.  Additionally, if this crate has ammo and is struck by a bullet, it will blow up, taking the vehicle with it.")
-        CRATE,
-        @JSONDescription("Stores liquid.  If feedsVehicles is set, and this barrel contains fuel, then fuel will be taken out of this barrel to be put into the main fuel tank.  If the vehicle containing this barrel explodes, and the barrel contains fuel, the explosion size will be increased as if the vehicle had the fuel in the barrel in its fuel tank.")
-        BARREL,
-        @JSONDescription("Works as a standard crafting table when clicked.")
-        CRAFTING_TABLE,
-        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
-        FURNACE,
-        @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
-        JERRYCAN,
-        @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
-        CRAFTING_BENCH
-    }
-
-    public enum FurnaceComponentType {
-        @JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
-        STANDARD,
-        @JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
-        FUEL,
-        @JSONDescription("Runs off electric power.  Only valid for vehicles.")
-        ELECTRIC
-    }
-
     public static class JSONPartEffector {
         @JSONRequired
         @JSONDescription("The type of the effector.  This defines what this effector does.")
@@ -598,29 +621,6 @@ public class JSONPart extends AJSONPartProvider {
 
         @Deprecated
         public int placerDelay;
-    }
-
-    public enum EffectorComponentType {
-        @JSONDescription("Checks for plants on the ground and applies bonemeal to them contained in crates.")
-        FERTILIZER,
-        @JSONDescription("Will harvest plants that pass through it, depositing items into vehicle crates, or on the ground if no crates are present, or their inventories are full.  Will also break bush blocks like tall grass, flowers, and saplings, depositing them on the ground.")
-        HARVESTER,
-        @JSONDescription("Will plant any plant-able items located in vehicle crate parts onto farmland. Does not work with cactus, reeds, or other non-farmland-based plants.")
-        PLANTER,
-        @JSONDescription("Turns dirt and grass into farmland, and coarse dirt into dirt.")
-        PLOW,
-        @JSONDescription("Removes snow from the world when touched.")
-        SNOWPLOW,
-        @JSONDescription("Removes blocks matching the parameters from the world when touched.")
-        DRILL,
-        @JSONDescription("Tries to place blocks from linked inventories.  Will only place blocks into air, so combine with a drill if you want to replace blocks.")
-        PLACER,
-        @JSONDescription("Tries to pick up items that come in contact with it and tries to place them into linked inventories.")
-        COLLECTOR,
-        @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
-        DROPPER,
-        @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
-        SPRAYER;
     }
 
     @Deprecated

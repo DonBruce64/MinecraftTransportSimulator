@@ -1,24 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
+import minecrafttransportsimulator.blocks.tileentities.instances.*;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.instances.GUIFuelPump;
-import minecrafttransportsimulator.guis.instances.GUIInstruments;
-import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
-import minecrafttransportsimulator.guis.instances.GUIPackExporter;
-import minecrafttransportsimulator.guis.instances.GUIPaintGun;
-import minecrafttransportsimulator.guis.instances.GUIPartBench;
-import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.guis.instances.GUISignalController;
-import minecrafttransportsimulator.guis.instances.GUITextEditor;
+import minecrafttransportsimulator.guis.instances.*;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;

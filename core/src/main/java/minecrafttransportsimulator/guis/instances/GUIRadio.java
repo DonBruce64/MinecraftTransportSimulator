@@ -1,21 +1,16 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * GUI for interfacing with radios.
@@ -25,6 +20,15 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
  * @author don_bruce
  */
 public class GUIRadio extends AGUIBase {
+    private final List<GUIComponentButton> presetButtons = new ArrayList<>();
+    private final List<GUIComponentButton> equalizerButtons = new ArrayList<>();
+    private final List<GUIComponentCutout> equalizerSliderBands = new ArrayList<>();
+    private final List<GUIComponentCutout> equalizerSliders = new ArrayList<>();
+    //Runtime information.
+    private final EntityRadio radio;
+    private final int bandsToSkip;
+    private final int bandsToShow;
+    private final int bandButtonSize;
     //Buttons.
     private GUIComponentButton offButton;
     private GUIComponentButton localButton;
@@ -40,19 +44,8 @@ public class GUIRadio extends AGUIBase {
     private GUIComponentButton volDnButton;
     private GUIComponentCutout volumeBack;
     private GUIComponentCutout volumeLevel;
-    private final List<GUIComponentButton> presetButtons = new ArrayList<>();
-    private final List<GUIComponentButton> equalizerButtons = new ArrayList<>();
-    private final List<GUIComponentCutout> equalizerSliderBands = new ArrayList<>();
-    private final List<GUIComponentCutout> equalizerSliders = new ArrayList<>();
-
     //Input boxes
     private GUIComponentTextBox stationDisplay;
-
-    //Runtime information.
-    private final EntityRadio radio;
-    private final int bandsToSkip;
-    private final int bandsToShow;
-    private final int bandButtonSize;
     private boolean equalizerMode = false;
     private boolean teachMode = false;
 

@@ -1,15 +1,5 @@
 package minecrafttransportsimulator.rendering;
 
-import java.awt.image.BufferedImage;
-import java.nio.Buffer;
-import java.nio.FloatBuffer;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -18,6 +8,15 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
@@ -140,7 +139,7 @@ public class RenderText {
         private final float charScale;
         /**
          * Offset of the char from the top of the texture sheet, in actual game texture pixels (not texture pixels).
-         * Used to know how far to adjust chars for this font up and down during rendering. 
+         * Used to know how far to adjust chars for this font up and down during rendering.
          **/
         private final float charTopOffset;
         /**

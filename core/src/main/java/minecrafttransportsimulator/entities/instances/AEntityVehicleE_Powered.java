@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -19,6 +15,10 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * This class adds engine components for vehicles, such as fuel, throttle,
@@ -43,7 +43,13 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public static final String GEAR_VARIABLE = "gear_setpoint";
     public static final String THROTTLE_VARIABLE = "throttle";
     public static final String REVERSE_THRUST_VARIABLE = "reverser";
-
+    public static final double MAX_THROTTLE = 1.0D;
+    public final EntityFluidTank fuelTank;
+    //Engines.
+    public final List<PartEngine> engines = new ArrayList<>();
+    //Map containing incoming missiles and radar info, sorted by distance.
+    public final List<EntityBullet> missilesIncoming = new ArrayList<>();
+    public final List<AEntityD_Definable<?>> radarsTracking = new ArrayList<>();
     //External state control.
     @DerivedValue
     public boolean reverseThrust;
@@ -54,8 +60,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public boolean isCreative;
     @DerivedValue
     public double throttle;
-    public static final double MAX_THROTTLE = 1.0D;
-
     //Internal states.
     public boolean hasReverseThrust;
     public int gearMovementTime;
@@ -65,14 +69,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double electricFlow;
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
-    public final EntityFluidTank fuelTank;
-
-    //Engines.
-    public final List<PartEngine> engines = new ArrayList<>();
-
-    //Map containing incoming missiles and radar info, sorted by distance.
-    public final List<EntityBullet> missilesIncoming = new ArrayList<>();
-    public final List<AEntityD_Definable<?>> radarsTracking = new ArrayList<>();
 
     public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);

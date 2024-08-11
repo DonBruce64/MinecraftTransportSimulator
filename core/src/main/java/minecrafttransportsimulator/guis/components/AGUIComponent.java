@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.RenderText;
@@ -9,6 +7,8 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+
+import java.util.List;
 
 /**
  * Base class for all components.  Contains basic common variables to all rendering.
@@ -22,25 +22,11 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
  */
 public abstract class AGUIComponent {
 
-    //Rendering variables.
-    public final int constructedX;
-    public final int constructedY;
-    public final Point3D position;
-    public final Point3D textPosition;
-    public int width;
-    public int height;
-
-    //State variables.
-    public boolean visible = true;
-    public boolean ignoreGUILightingState;
-    public String text;
-    protected RenderableData renderable;
+    protected static final int TEXT_DEFAULT_ZOFFSET = 200;
+    protected static final int MODEL_DEFAULT_ZOFFSET = 100;
     private static final RenderableVertices mutableTooltipVertices = RenderableVertices.createSprite(9, null, null);
     private static final RenderableData mutableTooltipRenderable = new RenderableData(mutableTooltipVertices, AGUIBase.STANDARD_TEXTURE_NAME);
     private static final Point3D mutableTooltipPosition = new Point3D();
-
-    protected static final int TEXT_DEFAULT_ZOFFSET = 200;
-    protected static final int MODEL_DEFAULT_ZOFFSET = 100;
     private static final int TOOLTIP_BORDER_PADDING = 4;
     private static final int TOOLTIP_SECTION_WIDTH = 100;
     private static final int TOOLTIP_SECTION_HEIGHT = 60;
@@ -54,6 +40,19 @@ public abstract class AGUIComponent {
         //Don't take into account lighting.
         mutableTooltipRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
     }
+
+    //Rendering variables.
+    public final int constructedX;
+    public final int constructedY;
+    public final Point3D position;
+    public final Point3D textPosition;
+    public int width;
+    public int height;
+    //State variables.
+    public boolean visible = true;
+    public boolean ignoreGUILightingState;
+    public String text;
+    protected RenderableData renderable;
 
     public AGUIComponent(int x, int y, int width, int height) {
         this.constructedX = x;
@@ -149,7 +148,7 @@ public abstract class AGUIComponent {
             //Render the 4 corners, and the 4 edge bits, and then the center.  This prevents stretching.
             int horizontalSegmentSize = actualStringWidth + 2 * TOOLTIP_BORDER_PADDING;
             int verticalSegmentSize = actualStringHeight + 2 * TOOLTIP_BORDER_PADDING;
-            
+
             //Top-left.
             mutableTooltipVertices.setSpriteProperties(0, xOffset, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET / TOOLTIP_TEXTURE_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET / TOOLTIP_TEXTURE_HEIGHT, (TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_WIDTH, (TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER) / TOOLTIP_TEXTURE_HEIGHT);
             //Top-right.

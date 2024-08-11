@@ -1,39 +1,28 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
-public class GUITextEditor extends AGUIBase {
-    //Buttons.
-    private GUIComponentButton confirmButton;
+import java.util.*;
 
+public class GUITextEditor extends AGUIBase {
     //Input boxes and their field names.
     private final Map<String, GUIComponentTextBox> textInputBoxes = new HashMap<>();
-
     //Entity clicked.
     private final AEntityD_Definable<?> entity;
-
     //Labels for sign.  These do fancy rendering.
     private final Map<GUIComponentLabel, String> signTextLabels = new HashMap<>();
+    //Buttons.
+    private GUIComponentButton confirmButton;
 
     public GUITextEditor(AEntityD_Definable<?> entity) {
         super();

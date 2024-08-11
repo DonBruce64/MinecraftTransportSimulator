@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.rendering;
 
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
+import java.util.Locale;
 
 /**
  * Class designed to represent rendering data.  This contains {@link RenderableVertices},

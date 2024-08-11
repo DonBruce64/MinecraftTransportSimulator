@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.Collections;
-import java.util.List;
-
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+
+import java.util.Collections;
+import java.util.List;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider> extends AItemPack<JSONDefinition> {
     public JSONSubDefinition subDefinition;

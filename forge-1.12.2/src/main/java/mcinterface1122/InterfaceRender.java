@@ -1,22 +1,5 @@
 package mcinterface1122;
 
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -42,6 +25,12 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.nio.*;
+import java.util.*;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -118,7 +107,7 @@ public class InterfaceRender implements IInterfaceRender {
         GL11.glPushMatrix();
         applyTransformOpenGL(data.transform);
         if (data.vertexObject.cacheVertices) {
-        	//Add entity to the rendering mapping once rendered.
+            //Add entity to the rendering mapping once rendered.
             objectMap.computeIfAbsent(data.vertexObject, k -> new HashSet<>()).add(data);
             int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {
                 int newIndex = GL11.glGenLists(1);
@@ -158,7 +147,7 @@ public class InterfaceRender implements IInterfaceRender {
                     GL11.glDeleteLists(cachedIndexMap.remove(data.vertexObject), 1);
                 }
             }
-    	}
+        }
     }
 
     @Override

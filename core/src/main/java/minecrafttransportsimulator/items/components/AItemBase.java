@@ -1,15 +1,11 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.List;
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
+
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Base item class for all MTS items.  Contains multiple methods to define the item's behavior,

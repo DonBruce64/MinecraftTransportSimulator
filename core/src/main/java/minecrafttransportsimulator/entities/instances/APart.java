@@ -1,14 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -28,6 +20,10 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
@@ -40,11 +36,25 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
+    private static boolean checkingLinkedParts;
+    /**
+     * All linked parts for this part.  Updated whenever the part set changes.
+     */
+    public final List<APart> linkedParts = new ArrayList<>();
+
+    //Instance properties.
+    /**
+     * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
+     * on if the entity is a part itself.
+     */
+    public final Point3D localOffset;
+    public final RotationMatrix localOrientation;
+    public final RotationMatrix zeroReferenceOrientation;
+    public final RotationMatrix prevZeroReferenceOrientation;
+    public final Point3D externalAnglesRotated = new Point3D();
     //JSON properties.
     public JSONPartDefinition placementDefinition;
     public int placementSlot;
-
-    //Instance properties.
     /**
      * The entity this part has been placed on,  can be a vehicle or a part.
      */
@@ -62,11 +72,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      * The part this part is on, or null if it's on a base entity.
      */
     public APart partOn;
-    /**
-     * All linked parts for this part.  Updated whenever the part set changes.
-     */
-    public final List<APart> linkedParts = new ArrayList<>();
-
     public boolean isInvisible = false;
     public boolean isActive = true;
     public boolean isPermanent = false;
@@ -75,21 +80,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isSpare;
     public boolean isMirrored;
     private boolean requestedForcedCamera;
-
-    /**
-     * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
-     * on if the entity is a part itself.
-     */
-    public final Point3D localOffset;
-    public final RotationMatrix localOrientation;
-    public final RotationMatrix zeroReferenceOrientation;
-    public final RotationMatrix prevZeroReferenceOrientation;
-    public final Point3D externalAnglesRotated = new Point3D();
     private AnimationSwitchbox placementActiveSwitchbox;
     private AnimationSwitchbox internalActiveSwitchbox;
     private AnimationSwitchbox placementMovementSwitchbox;
     private AnimationSwitchbox internalMovementSwitchbox;
-    private static boolean checkingLinkedParts;
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, item, data);
@@ -181,14 +175,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         super.update();
         world.beginProfiling("PartAlignment", true);
         isInvisible = partOn != null ? partOn.isInvisible : false;
-        
+
         //Update forced camera mode if we are supposed to be forcing it.
         //We need to one-shot this though to ensure that we don't sent infinite packets.
         world.beginProfiling("CameraModeCheck", true);
         if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
-        }else if(requestedForcedCamera && activeCamera != null) {
-        	requestedForcedCamera = false;
+        } else if (requestedForcedCamera && activeCamera != null) {
+            requestedForcedCamera = false;
         }
 
         //Update active state.
@@ -214,7 +208,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (definition.generic.slotOffset != null) {
             localOffset.add(definition.generic.slotOffset);
         }
-        
+
         //Update permanent-ness
         isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
 
@@ -318,14 +312,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (vehicleOn != null && vehicleOn.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
-            	LanguageEntry partResult = checkForRemoval(player);
-            	if(partResult != null) {
-            		player.sendPacket(new PacketPlayerChatMessage(player, partResult));
-            		return;
-            	}else if (!player.getInventory().addStack(getStack())) {
-                	world.spawnItemStack(getStack(), position, null);
+                LanguageEntry partResult = checkForRemoval(player);
+                if (partResult != null) {
+                    player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+                    return;
+                } else if (!player.getInventory().addStack(getStack())) {
+                    world.spawnItemStack(getStack(), position, null);
                 }
-            	entityOn.removePart(this, true, null);
+                entityOn.removePart(this, true, null);
             }
         } else {
             //Not a removable part, or is an actual attack.
@@ -508,9 +502,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
         }
         if (player.isHoldingItemType(ItemComponentType.WRENCH) && definition.generic.mustBeRemovedByScrewdriver) {
-        	return LanguageSystem.INTERACT_PARTREMOVE_SCREWDRIVER;
+            return LanguageSystem.INTERACT_PARTREMOVE_SCREWDRIVER;
         } else if (player.isHoldingItemType(ItemComponentType.SCREWDRIVER) && !definition.generic.mustBeRemovedByScrewdriver) {
-        	return LanguageSystem.INTERACT_PARTREMOVE_WRENCH;
+            return LanguageSystem.INTERACT_PARTREMOVE_WRENCH;
         }
         return null;
     }

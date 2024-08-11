@@ -1,19 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.nio.Buffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -28,6 +15,10 @@ import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.*;
 
 /**
  * Basic particle class.  This mimic's MC's particle logic, except we can manually set
@@ -51,15 +42,13 @@ public class EntityParticle extends AEntityC_Renderable {
     private final int maxAge;
     private final Point3D initialVelocity;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-
-    private ColorRGB startColor;
-    private ColorRGB endColor;
     private final ColorRGB staticColor;
     private final String model;
     private final RenderableData renderable;
-
     //Runtime variables.
     private final boolean killBadParticle;
+    private ColorRGB startColor;
+    private ColorRGB endColor;
     private boolean touchingBlocks;
     private float timeOfNextTexture;
     private int textureIndex;
@@ -198,8 +187,8 @@ public class EntityParticle extends AEntityC_Renderable {
                 this.killBadParticle = true;
                 return;
             }
-        } else if (definition.type == ParticleType.SMOKE) {
-            textureList = new ArrayList<String>();
+        } else if (definition.type == ParticleType.SMOKE) { // FIXME: Duplicates?
+            textureList = new ArrayList<>();
             for (int i = 0; i <= 11; ++i) {
                 textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
@@ -217,8 +206,8 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 timeOfNextTexture = maxAge;
             }
-        } else if (definition.type == ParticleType.SMOKE) {
-            textureList = new ArrayList<String>();
+        } else if (definition.type == ParticleType.SMOKE) { // FIXME: Duplicates?
+            textureList = new ArrayList<>();
             for (int i = 0; i <= 11; ++i) {
                 textureList.add("mts:textures/particles/big_smoke_" + i + ".png");
             }
@@ -259,9 +248,9 @@ public class EntityParticle extends AEntityC_Renderable {
         renderable.setTexture(texture);
 
         //Set color.
-        if(definition.useBlockColor) {
-        	this.staticColor = world.getBlockColor(blockCheckPosition);
-        }else if (definition.color != null) {
+        if (definition.useBlockColor) {
+            this.staticColor = world.getBlockColor(blockCheckPosition);
+        } else if (definition.color != null) {
             if (definition.toColor != null) {
                 this.startColor = definition.color;
                 this.endColor = definition.toColor;
@@ -292,7 +281,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 this.staticColor = ColorRGB.WHITE;
             }
         }
-        if(staticColor != null) {
+        if (staticColor != null) {
             renderable.setColor(staticColor);
         }
 
@@ -365,14 +354,14 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set movement.
         if (!definition.stopsOnGround || !touchingBlocks) {
-            if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
+            if (definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
                 position.set(entitySpawning.position);
                 orientation.set(entitySpawning.orientation);
                 helperTransform.set(orientation);
                 setPositionToSpawn();
                 setOrientationToSpawn();
             }
-            
+
             if (definition.movementDuration != 0) {
                 if (ticksExisted <= definition.movementDuration) {
                     Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
@@ -633,6 +622,6 @@ public class EntityParticle extends AEntityC_Renderable {
 
     private float interpolate(float start, float end, float factor, boolean clamp, float partialTicks) {
         float value = start + (end - start) * factor;
-        return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
+        return clamp ? value > 1.0F ? 1.0F : (Math.max(value, 0.0F)) : value;
     }
 }

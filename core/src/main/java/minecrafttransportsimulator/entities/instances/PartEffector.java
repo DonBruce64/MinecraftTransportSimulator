@@ -1,14 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -17,12 +8,11 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 public class PartEffector extends APart {
 
@@ -30,15 +20,13 @@ public class PartEffector extends APart {
     private final List<PartInteractable> linkedPushableCrates = new ArrayList<>();
     private final List<IWrapperItemStack> drops = new ArrayList<>();
     private final Map<IWrapperEntity, IWrapperItemStack> entityItems = new HashMap<>();
-
-    //Variables used for drills.
-    public int blocksBroken;
-    public boolean activatedThisTick;
     private final Point3D flooredCenter = new Point3D();
     private final Map<BoundingBox, Point3D> boxLastPositionsFloored = new HashMap<>();
     private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<>();
     private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<>();
-
+    //Variables used for drills.
+    public int blocksBroken;
+    public boolean activatedThisTick;
     //Variables used for placers.
     private int operationDelay;
 
@@ -276,7 +264,7 @@ public class PartEffector extends APart {
         linkedParts.forEach(part -> {
             if (part instanceof PartInteractable && part.definition.interactable.interactionType == InteractableComponentType.CRATE) {
                 linkedPushableCrates.add((PartInteractable) part);
-                if(part.definition.interactable.feedsVehicles) {
+                if (part.definition.interactable.feedsVehicles) {
                     linkedPullableCrates.add((PartInteractable) part);
                 }
             }

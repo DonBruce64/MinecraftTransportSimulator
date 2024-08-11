@@ -16,14 +16,11 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  */
 public class GUIComponentTextBox extends GUIComponentCutout {
     private static final String VALID_SPECIAL_CHARS = "/*!@#$%^&*()\"{}_[]|\\?/<>,.- ";
-
+    private final int maxTextLength;
     public ColorRGB fontColor;
-
     public boolean enabled = true;
     public boolean focused = false;
-
     private int textIndex;
-    private final int maxTextLength;
     private String flashText;
 
     public GUIComponentTextBox(AGUIBase gui, int x, int y, int width, String text) {

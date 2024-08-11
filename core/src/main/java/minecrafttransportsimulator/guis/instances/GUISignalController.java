@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -23,8 +18,19 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class GUISignalController extends AGUIBase {
 
+    //Intersection property boxes.
+    private final Set<GUIComponentIntersectionProperties> intersectionPropertyComponents = new HashSet<>();
+    private final List<GUIComponentLabel> upperPropertyLabels = new ArrayList<>();
+    private final List<GUIComponentLabel> lowerPropertyLabels = new ArrayList<>();
+    //Controller we're linked to.
+    private final TileEntitySignalController controller;
     //Buttons.
     private GUIComponentButton scanButton;
     private GUIComponentButton directionButton;
@@ -32,10 +38,8 @@ public class GUISignalController extends AGUIBase {
     private GUIComponentButton driveSideButton;
     private GUIComponentButton stopYellowButton;
     private boolean onLaneScreen;
-
     //Label for scan results.
     private GUIComponentLabel trafficSignalCount;
-
     //Input boxes
     private GUIComponentNumericTextBox scanDistanceText;
     private GUIComponentNumericTextBox scanCenterXText;
@@ -46,14 +50,6 @@ public class GUISignalController extends AGUIBase {
     private GUIComponentNumericTextBox yellowMainTimeText;
     private GUIComponentNumericTextBox yellowCrossTimeText;
     private GUIComponentNumericTextBox allRedTimeText;
-
-    //Intersection property boxes.
-    private final Set<GUIComponentIntersectionProperties> intersectionPropertyComponents = new HashSet<>();
-    private final List<GUIComponentLabel> upperPropertyLabels = new ArrayList<>();
-    private final List<GUIComponentLabel> lowerPropertyLabels = new ArrayList<>();
-
-    //Controller we're linked to.
-    private final TileEntitySignalController controller;
 
     public GUISignalController(TileEntitySignalController controller) {
         super();
@@ -373,8 +369,8 @@ public class GUISignalController extends AGUIBase {
     }
 
     private class GUIComponentNumericTextBox extends GUIComponentTextBox {
-        private final boolean floatingPoint;
         private static final int NUMERIC_HEIGHT = 10;
+        private final boolean floatingPoint;
 
         public GUIComponentNumericTextBox(AGUIBase gui, int x, int y, String text) {
             super(gui, x, y, 40, NUMERIC_HEIGHT, text, ColorRGB.WHITE, 5);

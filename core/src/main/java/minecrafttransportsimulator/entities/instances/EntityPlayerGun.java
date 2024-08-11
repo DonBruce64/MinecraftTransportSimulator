@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -17,13 +12,14 @@ import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Entity class responsible for storing and syncing information about the current gun
@@ -40,10 +36,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
 
     public final IWrapperPlayer player;
     private final RotationMatrix handRotation = new RotationMatrix();
+    public PartGun activeGun;
     private int hotbarSelected = -1;
     private IWrapperItemStack gunStack;
     private boolean didGunFireLastTick;
-    public PartGun activeGun;
 
     public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, null, data);
@@ -118,15 +114,15 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
 
             //Get the current gun.
             activeGun = null;
-            if(!parts.isEmpty()) {
+            if (!parts.isEmpty()) {
                 APart part = parts.get(0);
-                if(part instanceof PartGun) {
-                	activeGun = (PartGun) part;
-                }else {
-                	InterfaceManager.coreInterface.logError("Found a part on a player gun that wasn't a gun!  This shouldn't ever happen...");
-                	remove();
-                	return;
-                }	
+                if (part instanceof PartGun) {
+                    activeGun = (PartGun) part;
+                } else {
+                    InterfaceManager.coreInterface.logError("Found a part on a player gun that wasn't a gun!  This shouldn't ever happen...");
+                    remove();
+                    return;
+                }
             }
 
             //Check if the player is specator, if so, we don't do any gun logic.
@@ -242,7 +238,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
 
                 //Set/unset camera index if we need to.
                 if (activeGun.isHandHeldGunAimed || activeGun.definition.gun.forceHandheldCameras) {
-                    if (cameraIndex == 0 && cameras.size() > 0) {
+                    if (cameraIndex == 0 && !cameras.isEmpty()) {
                         ++cameraIndex;
                     }
                 } else if (cameraIndex != 0) {
@@ -254,7 +250,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
             //Player is either null or not valid.  Remove us.
             //Don't update post movement, as the gun will crash on update.
             remove();
-            return;
         }
     }
 

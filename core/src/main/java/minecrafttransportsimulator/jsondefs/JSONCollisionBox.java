@@ -33,6 +33,14 @@ public class JSONCollisionBox {
 
     @JSONDescription("The max value for this box to set.  Only used when the variable type is increment.")
     public float clampMax;
+    @Deprecated
+    public boolean isInterior;
+    @Deprecated
+    public float armorThickness;
+    @Deprecated
+    public float heatArmorThickness;
+    @Deprecated
+    public float damageMultiplier;
 
     public static enum VariableType {
         @JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
@@ -44,13 +52,4 @@ public class JSONCollisionBox {
         @JSONDescription("Clicking this box will set the variable to the value. When the player lets go of the mouse button, it will be set back to 0.")
         BUTTON
     }
-
-    @Deprecated
-    public boolean isInterior;
-    @Deprecated
-    public float armorThickness;
-    @Deprecated
-    public float heatArmorThickness;
-    @Deprecated
-    public float damageMultiplier;
 }

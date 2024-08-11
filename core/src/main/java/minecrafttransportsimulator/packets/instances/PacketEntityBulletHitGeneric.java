@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -10,6 +8,8 @@ import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
+
+import java.util.UUID;
 
 /**
  * Packet sent when a bullet hits something.

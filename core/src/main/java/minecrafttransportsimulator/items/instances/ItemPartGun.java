@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
@@ -14,7 +11,22 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.List;
+import java.util.Map;
+
 public class ItemPartGun extends AItemPart {
+
+    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
+        @Override
+        public boolean isCreatorValid(JSONPart definition) {
+            return definition.generic.type.startsWith("gun");
+        }
+
+        @Override
+        public ItemPartGun createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+            return new ItemPartGun(definition, subDefinition, sourcePackID);
+        }
+    };
 
     public ItemPartGun(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, subDefinition, sourcePackID);
@@ -55,16 +67,4 @@ public class ItemPartGun extends AItemPart {
         super.registerEntities(entityMap);
         entityMap.put(EntityPlayerGun.class.getSimpleName(), (world, data) -> new EntityPlayerGun(world, null, data));
     }
-
-    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
-        @Override
-        public boolean isCreatorValid(JSONPart definition) {
-            return definition.generic.type.startsWith("gun");
-        }
-
-        @Override
-        public ItemPartGun createItem(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
-            return new ItemPartGun(definition, subDefinition, sourcePackID);
-        }
-    };
 }

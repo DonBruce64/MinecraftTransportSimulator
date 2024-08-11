@@ -8,7 +8,7 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 /**
  * Packet used to send signals to effectors.  Currently, this is used to increment the number of blocks
  * broken for drill-type effectors to allow for animations to visibility states, or to notify the effector
- * on the client that it has done an operation. 
+ * on the client that it has done an operation.
  *
  * @author don_bruce
  */

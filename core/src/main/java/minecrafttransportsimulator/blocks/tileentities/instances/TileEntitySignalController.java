@@ -1,14 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -24,6 +15,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 
+import java.util.*;
+
 /**
  * Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -32,38 +25,32 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
  */
 public class TileEntitySignalController extends TileEntityDecor {
     private static final TransformationMatrix holoboxTransform = new TransformationMatrix();
-
+    /*Locations of blocks where signals are.**/
+    public final Set<Point3D> componentLocations = new HashSet<>();
+    /**
+     * Signal blocks used in this controller.  Based on components.
+     **/
+    public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<>();
+    public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<>();
+    /**
+     * Lane counts and intersection widths.
+     **/
+    public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<>();
+    private final Set<Point3D> missingLocations = new HashSet<>();
     //Main settings for all operation.
     public boolean isRightHandDrive;
     public boolean hasStopYellow;
     public boolean timedMode;
     public boolean unsavedClientChangesPreset;
     public Axis mainDirectionAxis = Axis.NORTH;
-
     //Settings for trigger operation.
     public Point3D intersectionCenterPoint;
-
     //Settings for timed operation.
     public int greenMainTime = 20 * 20;
     public int greenCrossTime = 10 * 20;
     public int yellowMainTime = 2 * 20;
     public int yellowCrossTime = 2 * 20;
     public int allRedTime = 20;
-
-    /*Locations of blocks where signals are.**/
-    public final Set<Point3D> componentLocations = new HashSet<>();
-    private final Set<Point3D> missingLocations = new HashSet<>();
-
-    /**
-     * Signal blocks used in this controller.  Based on components.
-     **/
-    public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<>();
-    public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<>();
-
-    /**
-     * Lane counts and intersection widths.
-     **/
-    public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<>();
 
     public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -271,6 +258,39 @@ public class TileEntitySignalController extends TileEntityDecor {
         return data;
     }
 
+    public enum LightType {
+        STOP_LIGHT,
+        CAUTION_LIGHT,
+        CAUTION_STOP_LIGHT("stop_light", "caution_light"),
+        GO_LIGHT,
+
+        STOP_LIGHT_LEFT,
+        CAUTION_LIGHT_LEFT,
+        CAUTION_STOP_LIGHT_LEFT("stop_light_left", "caution_light_left"),
+        GO_LIGHT_LEFT,
+
+        STOP_LIGHT_RIGHT,
+        CAUTION_LIGHT_RIGHT,
+        CAUTION_STOP_LIGHT_RIGHT("stop_light_right", "caution_light_right"),
+        GO_LIGHT_RIGHT;
+
+        public final List<String> lightNames = new ArrayList<>();
+
+        LightType(String... overrideNames) {
+            if (overrideNames.length == 0) {
+                lightNames.add(name().toLowerCase(Locale.ROOT));
+            } else {
+                Collections.addAll(lightNames, overrideNames);
+            }
+        }
+    }
+
+    public enum SignalDirection {
+        CENTER,
+        LEFT,
+        RIGHT
+    }
+
     public static class IntersectionProperties {
         public boolean isActive;
         public int centerLaneCount;
@@ -307,18 +327,16 @@ public class TileEntitySignalController extends TileEntityDecor {
         public final Axis axis;
         public final SignalDirection direction;
         public final boolean isMainSignal;
-        public boolean isActive;
-
-        protected LightType currentLight;
-        protected LightType requestedLight;
-        protected int currentCooldown;
-        protected boolean stateChangeRequested;
-
         //Parameters for this signal boxes bounds.  These are all based with a south-facing reference.
         //when checking, the point will be rotated to be in this reference plane.
         public final int laneCount;
         public final double signalLineWidth;
         public final Point3D signalLineCenter;
+        public boolean isActive;
+        protected LightType currentLight;
+        protected LightType requestedLight;
+        protected int currentCooldown;
+        protected boolean stateChangeRequested;
 
         private SignalGroup(Axis axis, SignalDirection direction, IWrapperNBT data) {
             this.axis = axis;
@@ -388,7 +406,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                     }
                 }
             } else if (!stateChangeRequested) {
-                if (requestedLight == null && currentCooldown == 0) {
+                if (currentCooldown == 0) {
                     //Do either time or trigger-based logic.
                     if (!currentLight.equals(getGreenLight())) {
                         if (timedMode) {
@@ -734,40 +752,5 @@ public class TileEntitySignalController extends TileEntityDecor {
                     return true; //Unknown direction.
             }
         }
-    }
-
-    public enum LightType {
-        STOP_LIGHT,
-        CAUTION_LIGHT,
-        CAUTION_STOP_LIGHT("stop_light", "caution_light"),
-        GO_LIGHT,
-
-        STOP_LIGHT_LEFT,
-        CAUTION_LIGHT_LEFT,
-        CAUTION_STOP_LIGHT_LEFT("stop_light_left", "caution_light_left"),
-        GO_LIGHT_LEFT,
-
-        STOP_LIGHT_RIGHT,
-        CAUTION_LIGHT_RIGHT,
-        CAUTION_STOP_LIGHT_RIGHT("stop_light_right", "caution_light_right"),
-        GO_LIGHT_RIGHT;
-
-        public final List<String> lightNames = new ArrayList<>();
-
-        LightType(String... overrideNames) {
-            if (overrideNames.length == 0) {
-                lightNames.add(name().toLowerCase(Locale.ROOT));
-            } else {
-                for (String name : overrideNames) {
-                    lightNames.add(name);
-                }
-            }
-        }
-    }
-
-    public enum SignalDirection {
-        CENTER,
-        LEFT,
-        RIGHT
     }
 }

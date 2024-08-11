@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -12,6 +9,10 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Builder for the MC Tile Entity class   This class interfaces with all the MC-specific
@@ -139,7 +140,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(@NotNull NBTTagCompound tag) {
         super.readFromNBT(tag);
         //Don't directly load the TE here.  This causes issues because Minecraft loads TEs before blocks.
         //This is horridly stupid, because then you can't get the block for the TE, but whatever, Mojang be Mojang.
@@ -147,7 +148,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+    public @NotNull NBTTagCompound writeToNBT(@NotNull NBTTagCompound tag) {
         super.writeToNBT(tag);
         if (tileEntity != null) {
             tileEntity.save(new WrapperNBT(tag));

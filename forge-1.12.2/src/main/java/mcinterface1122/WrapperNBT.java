@@ -1,11 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -13,6 +7,8 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
+
+import java.util.*;
 
 class WrapperNBT implements IWrapperNBT {
     protected final NBTTagCompound tag;
@@ -37,7 +33,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setBoolean(String name, boolean value) {
-        if(value) {
+        if (value) {
             tag.setBoolean(name, value);
         } else {
             tag.removeTag(name);
@@ -51,7 +47,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setInteger(String name, int value) {
-        if(value != 0) {
+        if (value != 0) {
             tag.setInteger(name, value);
         } else {
             tag.removeTag(name);
@@ -65,7 +61,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public void setDouble(String name, double value) {
-        if(value != 0) {
+        if (value != 0) {
             tag.setDouble(name, value);
         } else {
             tag.removeTag(name);

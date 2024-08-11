@@ -1,15 +1,42 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("Sometimes, you just want to have something shiny to place in the world that can't be driven away by a pesky thief.  In this case, decor is the go-to choice.  Decors are essentially block-based OBJ models that can be placed down.  These come with full animation support, and can even have some additional functions built-in to justify the cost of crafting them.")
 public class JSONDecor extends AJSONMultiModelProvider {
 
     @JSONDescription("Decor-specific properties.")
     public JSONDecorGeneric decor;
+
+    public enum DecorComponentType {
+        @JSONDescription("Will make the decor have no functionality.")
+        GENERIC,
+        @JSONDescription("Will make the decor have chest functionality.")
+        CHEST,
+        @JSONDescription("Will make the decor have beacon functionality.")
+        BEACON,
+        @JSONDescription("Will make the decor have signal controller functionality.")
+        SIGNAL_CONTROLLER,
+        @JSONDescription("Will make the decor have fuel pump functionality.")
+        FUEL_PUMP,
+        @JSONDescription("Will make the decor have electric vehicle charger functionality.")
+        CHARGER,
+        @JSONDescription("Will make the decor have item loader functionality.")
+        ITEM_LOADER,
+        @JSONDescription("Will make the decor have item unloader functionality.")
+        ITEM_UNLOADER,
+        @JSONDescription("Will make the decor have fluid loader functionality.")
+        FLUID_LOADER,
+        @JSONDescription("Will make the decor have fluid unloader functionality.")
+        FLUID_UNLOADER,
+        @JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
+        RADIO,
+        @JSONDescription("Will make the decor have seat functionality.")
+        SEAT
+    }
 
     public static class JSONDecorGeneric {
         @JSONDescription("An optional type for this decor to give it functionality.")
@@ -57,32 +84,5 @@ public class JSONDecor extends AJSONMultiModelProvider {
         public List<String> partTypes;
         @Deprecated
         public List<String> items;
-    }
-
-    public enum DecorComponentType {
-        @JSONDescription("Will make the decor have no functionality.")
-        GENERIC,
-        @JSONDescription("Will make the decor have chest functionality.")
-        CHEST,
-        @JSONDescription("Will make the decor have beacon functionality.")
-        BEACON,
-        @JSONDescription("Will make the decor have signal controller functionality.")
-        SIGNAL_CONTROLLER,
-        @JSONDescription("Will make the decor have fuel pump functionality.")
-        FUEL_PUMP,
-        @JSONDescription("Will make the decor have electric vehicle charger functionality.")
-        CHARGER,
-        @JSONDescription("Will make the decor have item loader functionality.")
-        ITEM_LOADER,
-        @JSONDescription("Will make the decor have item unloader functionality.")
-        ITEM_UNLOADER,
-        @JSONDescription("Will make the decor have fluid loader functionality.")
-        FLUID_LOADER,
-        @JSONDescription("Will make the decor have fluid unloader functionality.")
-        FLUID_UNLOADER,
-        @JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
-        RADIO,
-        @JSONDescription("Will make the decor have seat functionality.")
-        SEAT
     }
 }

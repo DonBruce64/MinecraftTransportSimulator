@@ -16,17 +16,16 @@ import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
  * @author don_bruce
  */
 public class EntityFurnace extends EntityInventoryContainer {
+    public static final int SMELTING_ITEM_SLOT = 0;
+    public static final int SMELTED_ITEM_SLOT = 1;
+    public static final int FUEL_ITEM_SLOT = 2;
+    public static final String FURNACE_FUEL_NAME = "furnace";
+    public final JSONPartInteractable definition;
     public int ticksAddedOfFuel;
     public int ticksLeftOfFuel;
     public int ticksNeededToSmelt;
     public int ticksLeftToSmelt;
     public double powerToDrawPerTick;
-    public final JSONPartInteractable definition;
-
-    public static final int SMELTING_ITEM_SLOT = 0;
-    public static final int SMELTED_ITEM_SLOT = 1;
-    public static final int FUEL_ITEM_SLOT = 2;
-    public static final String FURNACE_FUEL_NAME = "furnace";
 
     public EntityFurnace(AWrapperWorld world, IWrapperNBT data, JSONPartInteractable definition) {
         super(world, data, 3);

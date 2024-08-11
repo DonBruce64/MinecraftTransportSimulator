@@ -3,11 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 

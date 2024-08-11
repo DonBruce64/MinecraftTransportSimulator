@@ -1,15 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -29,6 +20,10 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * This part class is special, in that it does not extend APart.
  * This is because bullets do not render as vehicle parts, and instead
@@ -46,32 +41,30 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     //Properties
     public final PartGun gun;
     public final int bulletNumber;
-    private final boolean isBomb;
     public final double initialVelocity;
+    private final boolean isBomb;
     private final double velocityToAddEachTick;
     private final Point3D motionToAddEachTick;
     private final int despawnTime;
     private final BoundingBox proxBounds;
-
+    private final Point3D helperPoint = new Point3D();
+    private final List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
     //States
     public boolean waitingOnActionPacket;
+    public double targetDistance;
+    public double armorPenetrated;
+    public HitType lastHit;
+    public Axis sideHit;
     private int impactDespawnTimer = -1;
     private Point3D targetPosition;
-    private final Point3D helperPoint = new Point3D();
-    public double targetDistance;
     private double distanceTraveled;
-    public double armorPenetrated;
-
     private Point3D targetVector;
     private Point3D normalizedConeVector = new Point3D();
     private Point3D normalizedEntityVector = new Point3D();
     private PartEngine engineTargeted;
     private IWrapperEntity externalEntityTargeted;
-    public HitType lastHit;
-    public Axis sideHit;
     private Point3D relativeGunPos;
     private Point3D prevRelativeGunPos;
-    private final List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
 
     /**
      * Generic constructor for no target.
@@ -124,6 +117,72 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
+    }
+
+    public static void performEntityHitLogic(AEntityE_Interactable<?> entity, Damage damage) {
+        if (!entity.world.isClient()) {
+            entity.attack(damage);
+        }
+    }
+
+    public static void performExternalEntityHitLogic(IWrapperEntity entity, Damage damage) {
+        if (!entity.getWorld().isClient()) {
+            entity.attack(damage);
+        }
+    }
+
+    public static void performBlockHitLogic(PartGun gun, int bulletNumber, Point3D blockPosition, Axis blockSide) {
+        //This is for block state-changes.  Particles and animations are handled in generic.
+        if (!gun.world.isClient()) {
+            if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
+                gun.world.extinguish(blockPosition, blockSide);
+            } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
+                float hardnessHit = gun.world.getBlockHardness(blockPosition);
+                if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
+                    gun.world.destroyBlock(blockPosition, true);
+                } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
+                    //Couldn't break block, but we might be able to set it on fire.
+                    gun.world.setToFire(blockPosition, blockSide);
+                }
+            }
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
+        } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
+            //Don't do a state-change on the client, just make a breaking sound.
+            //Fancy bullets don't make block-breaking sounds.  They do other things instead.
+            InterfaceManager.clientInterface.playBlockBreakSound(blockPosition);
+        }
+    }
+
+    public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
+        //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
+        //any block-breaking packets arrive.
+        if (!gun.world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitSide, hitType));
+        }
+
+        //Spawn an explosion if we are an explosive bullet on the server.
+        if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
+            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
+            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
+        }
+
+        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
+        if (bullet != null) {
+            bullet.position.set(position);
+            bullet.lastHit = hitType;
+            bullet.sideHit = hitSide;
+            bullet.impactDespawnTimer = bullet.definition.bullet.impactDespawnTime;
+
+            //If we are on the client, do one last particle check.
+            //This lets systems query the blocks we hit before the server adjusts them the next tick.
+            if (bullet.world.isClient()) {
+                bullet.spawnParticles(0);
+                bullet.updateSounds(0);
+            }
+        }
+        if (gun.currentBullet != null && gun.currentBullet.bulletNumber <= bulletNumber) {
+            gun.currentBullet = null;
+        }
     }
 
     @Override
@@ -298,7 +357,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 Collection<BoundingBoxHitResult> hitMultipartBoxes = null;
                 IWrapperEntity hitExternalEntity = null;
                 BlockHitResult hitBlock = world.getBlockHit(position, motion);
-                
+
                 //Check for collided external entities.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
                 for (IWrapperEntity entity : attackedEntities) {
@@ -348,7 +407,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 boolean hitboxCanBeHit = true;
 
                                 //Check the prior multipart, if any of its hit hitboxes are closer, we can't be hit.
-                                if(hitMultipart != null) {
+                                if (hitMultipart != null) {
                                     for (BoundingBoxHitResult oldHitResult : hitMultipartBoxes) {
                                         if (position.isFirstCloserThanSecond(oldHitResult.position, hitResult.position)) {
                                             hitboxCanBeHit = false;
@@ -359,7 +418,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                         break;
                                     }
                                 }
-                                
+
                                 //Can't hit hitboxes behind blocks.
                                 if (hitboxCanBeHit && hitBlock != null && position.isFirstCloserThanSecond(hitBlock.hitPosition, hitResult.position)) {
                                     hitboxCanBeHit = false;
@@ -389,7 +448,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (hitMultipart != null && hitMultipart.attackProjectile(damage, this, hitMultipartBoxes) != null) {
                     return;
                 }
-                
+
                 //Now attack the block or external entity, if we have either.
                 if (hitExternalEntity != null) {
                     if (world.isClient()) {
@@ -574,72 +633,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 return partialTicks != 0 ? prevRelativeGunPos.z + (relativeGunPos.z - prevRelativeGunPos.z) * partialTicks : relativeGunPos.z;
             default:
                 throw new IllegalArgumentException("There are only three axis in the world you idiot!");
-        }
-    }
-
-    public static void performEntityHitLogic(AEntityE_Interactable<?> entity, Damage damage) {
-        if (!entity.world.isClient()) {
-            entity.attack(damage);
-        }
-    }
-
-    public static void performExternalEntityHitLogic(IWrapperEntity entity, Damage damage) {
-        if (!entity.getWorld().isClient()) {
-            entity.attack(damage);
-        }
-    }
-
-    public static void performBlockHitLogic(PartGun gun, int bulletNumber, Point3D blockPosition, Axis blockSide) {
-        //This is for block state-changes.  Particles and animations are handled in generic.
-        if (!gun.world.isClient()) {
-            if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
-                gun.world.extinguish(blockPosition, blockSide);
-            } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
-                float hardnessHit = gun.world.getBlockHardness(blockPosition);
-                if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
-                    gun.world.destroyBlock(blockPosition, true);
-                } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
-                    //Couldn't break block, but we might be able to set it on fire.
-                    gun.world.setToFire(blockPosition, blockSide);
-                }
-            }
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
-        } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
-        	//Don't do a state-change on the client, just make a breaking sound.
-            //Fancy bullets don't make block-breaking sounds.  They do other things instead.
-            InterfaceManager.clientInterface.playBlockBreakSound(blockPosition);
-        }
-    }
-
-    public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
-        //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
-        //any block-breaking packets arrive.
-        if (!gun.world.isClient()) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitSide, hitType));
-        }
-
-        //Spawn an explosion if we are an explosive bullet on the server.
-        if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
-        }
-
-        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
-        if (bullet != null) {
-            bullet.position.set(position);
-            bullet.lastHit = hitType;
-            bullet.sideHit = hitSide;
-            bullet.impactDespawnTimer = bullet.definition.bullet.impactDespawnTime;
-
-            //If we are on the client, do one last particle check.
-            //This lets systems query the blocks we hit before the server adjusts them the next tick.
-            if (bullet.world.isClient()) {
-                bullet.spawnParticles(0);
-                bullet.updateSounds(0);
-            }
-        }
-        if (gun.currentBullet != null && gun.currentBullet.bulletNumber <= bulletNumber) {
-            gun.currentBullet = null;
         }
     }
 

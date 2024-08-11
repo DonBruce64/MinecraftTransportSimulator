@@ -11,15 +11,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartSeat extends AItemPart {
 
-    public ItemPartSeat(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
-        super(definition, subDefinition, sourcePackID);
-    }
-
-    @Override
-    public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
-        return new PartSeat(entity, placingPlayer, packVehicleDef, this, partData);
-    }
-
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {
         @Override
         public boolean isCreatorValid(JSONPart definition) {
@@ -31,4 +22,13 @@ public class ItemPartSeat extends AItemPart {
             return new ItemPartSeat(definition, subDefinition, sourcePackID);
         }
     };
+
+    public ItemPartSeat(JSONPart definition, JSONSubDefinition subDefinition, String sourcePackID) {
+        super(definition, subDefinition, sourcePackID);
+    }
+
+    @Override
+    public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
+        return new PartSeat(entity, placingPlayer, packVehicleDef, this, partData);
+    }
 }

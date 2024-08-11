@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.Map;
-
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+
+import java.util.Map;
 
 /**
  * Interface for items that create entities when used.

@@ -1,19 +1,19 @@
 package minecrafttransportsimulator.rendering;
 
-import java.nio.Buffer;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 
+import java.nio.Buffer;
+import java.nio.FloatBuffer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
 /**
- * Class designed to represent a set of vertices.  Said object has at minimum some geometry. 
+ * Class designed to represent a set of vertices.  Said object has at minimum some geometry.
  * This can be a cached set of  vertices or a hard-coded saved set.
  *
  * @author don_bruce
@@ -22,13 +22,16 @@ public class RenderableVertices {
     public static final float Z_BUFFER_OFFSET = 0.0002F;
 
     public final String name;
-    /**Actual vertex data, stored as a series of tris.**/
+    /**
+     * Actual vertex data, stored as a series of tris.
+     **/
     public final FloatBuffer vertices;
     public final boolean cacheVertices;
     public final boolean isTranslucent;
     public final boolean isLines;
 
-    /**Index offset array for quad faces required to build a quad-textured box.
+    /**
+     * Index offset array for quad faces required to build a quad-textured box.
      * Order is set here to reference the points in a counter-clockwise order for rendering.
      * Points are set for 6 vertices in a two-tri rendering format to be directly used in vertex data.
      */
@@ -42,7 +45,8 @@ public class RenderableVertices {
             //Z-axis.
             Arrays.asList(BoxOffset.MAXX_MINY_MINZ, BoxOffset.MINX_MINY_MINZ, BoxOffset.MINX_MAXY_MINZ, BoxOffset.MAXX_MINY_MINZ, BoxOffset.MINX_MAXY_MINZ, BoxOffset.MAXX_MAXY_MINZ), Arrays.asList(BoxOffset.MINX_MINY_MAXZ, BoxOffset.MAXX_MINY_MAXZ, BoxOffset.MAXX_MAXY_MAXZ, BoxOffset.MINX_MINY_MAXZ, BoxOffset.MAXX_MAXY_MAXZ, BoxOffset.MINX_MAXY_MAXZ));
 
-    /**Index offset array for lines as returned by {@link #getEdgePoints(BoundingBox)}.
+    /**
+     * Index offset array for lines as returned by {@link #getEdgePoints(BoundingBox)}.
      * This array is used to "build" the lines for a box referencing the actual vertex
      * data stored in that function's returned array.  Each entry contains the start and
      * end point for the line needed to create a wireframe box.
@@ -57,18 +61,19 @@ public class RenderableVertices {
             //Sides.
             Arrays.asList(BoxOffset.MINX_MINY_MINZ, BoxOffset.MINX_MAXY_MINZ), Arrays.asList(BoxOffset.MINX_MINY_MAXZ, BoxOffset.MINX_MAXY_MAXZ), Arrays.asList(BoxOffset.MAXX_MINY_MINZ, BoxOffset.MAXX_MAXY_MINZ), Arrays.asList(BoxOffset.MAXX_MINY_MAXZ, BoxOffset.MAXX_MAXY_MAXZ));
 
-    /**Index offset array for quad normals.
+    /**
+     * Index offset array for quad normals.
      * This array is used in conjunction with {@link #FACE_POINT_INDEXES} to set vertex data.
      */
-    private static final float[][] FACE_NORMALS = new float[][] {
+    private static final float[][] FACE_NORMALS = new float[][]{
             //X-axis.
-            new float[] { -1.0F, 0.0F, 0.0F }, new float[] { 1.0F, 0.0F, 0.0F },
+            new float[]{-1.0F, 0.0F, 0.0F}, new float[]{1.0F, 0.0F, 0.0F},
 
             //Y-axis.
-            new float[] { 0.0F, 1.0F, 0.0F }, new float[] { 0.0F, -1.0F, 0.0F },
+            new float[]{0.0F, 1.0F, 0.0F}, new float[]{0.0F, -1.0F, 0.0F},
 
             //Z-axis.
-            new float[] { 0.0F, 0.0F, -1.0F }, new float[] { 0.0F, 0.0F, 1.0F } };
+            new float[]{0.0F, 0.0F, -1.0F}, new float[]{0.0F, 0.0F, 1.0F}};
 
     private static final int VERTEX_BUFFER_NX_OFFSET = 0;
     private static final int VERTEX_BUFFER_NY_OFFSET = 1;
@@ -106,7 +111,9 @@ public class RenderableVertices {
     private static final int FACES_PER_BEAM = 40;
     private static final float BEAM_OFFSET = -0.15F;
 
-    /**General-use constructor with no special behavior except automatically noting vertices as translucent based on the name**/
+    /**
+     * General-use constructor with no special behavior except automatically noting vertices as translucent based on the name
+     **/
     public RenderableVertices(String name, FloatBuffer vertexData, boolean cacheVertices) {
         this.name = name;
         this.vertices = vertexData;
@@ -115,7 +122,9 @@ public class RenderableVertices {
         this.isLines = false;
     }
 
-    /**Constructor used for lines.**/
+    /**
+     * Constructor used for lines.
+     **/
     public RenderableVertices(int numberLines) {
         this.name = "LINES";
         this.vertices = FloatBuffer.allocate(numberLines * FLOATS_PER_LINE);
@@ -124,7 +133,9 @@ public class RenderableVertices {
         this.isLines = true;
     }
 
-    /**Constructor used for bounding boxes.**/
+    /**
+     * Constructor used for bounding boxes.
+     **/
     public RenderableVertices(boolean holographic) {
         this.name = holographic ? "BOX_HOLOGRAPHIC" : "BOX_WIREFRAME";
         this.vertices = FloatBuffer.allocate(holographic ? FLOATS_PER_HOLGRAPHIC_BOX : FLOATS_PER_WIREFRAME_BOX);
@@ -133,10 +144,11 @@ public class RenderableVertices {
         this.isLines = !holographic;
     }
 
-    /**Static method used for single 2D sprites with centered position.  Contains parameter for number of sprite segments and texture
+    /**
+     * Static method used for single 2D sprites with centered position.  Contains parameter for number of sprite segments and texture
      * Split from constructor due to identical signature.  The passed-in arrays are optional and allow for a 3D built sprite with
      * defined orientation and normals.
-    **/
+     **/
     public static RenderableVertices createSprite(int spriteSegments, List<TransformationMatrix> transforms, List<Point3D> normals) {
         RenderableVertices vertexObject = new RenderableVertices("2D_TEXTURE", FloatBuffer.allocate(VERTEXES_PER_QUAD * FLOATS_PER_VERTEX * spriteSegments), false);
         FloatBuffer vertices = vertexObject.vertices;
@@ -204,8 +216,9 @@ public class RenderableVertices {
         return vertexObject;
     }
 
-    /**Static method used for creating a cone-like light beam shape.  This is not designed to render with lighting as the normals are invalid.
-    **/
+    /**
+     * Static method used for creating a cone-like light beam shape.  This is not designed to render with lighting as the normals are invalid.
+     **/
     public static RenderableVertices createLightBeams(List<JSONLightBlendableComponent> beamDefs) {
         RenderableVertices vertexObject = new RenderableVertices("LIGHT_BEAMS", FloatBuffer.allocate(beamDefs.size() * SIDES_PER_BEAM * FACES_PER_BEAM * VERTEXES_PER_FACE * FLOATS_PER_VERTEX), false);
         FloatBuffer vertices = vertexObject.vertices;
@@ -448,7 +461,7 @@ public class RenderableVertices {
         }
 
         private float[] getEdgePoint(BoundingBox box) {
-            return new float[] { (float) (positiveX ? +box.widthRadius : -box.widthRadius), (float) (positiveY ? +box.heightRadius : -box.heightRadius), (float) (positiveZ ? +box.depthRadius : -box.depthRadius) };
+            return new float[]{(float) (positiveX ? +box.widthRadius : -box.widthRadius), (float) (positiveY ? +box.heightRadius : -box.heightRadius), (float) (positiveZ ? +box.depthRadius : -box.depthRadius)};
         }
     }
 }

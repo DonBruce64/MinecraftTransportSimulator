@@ -13,9 +13,9 @@ import minecrafttransportsimulator.rendering.RenderInstrument;
  * @author don_bruce
  */
 public class GUIComponentInstrument extends AGUIComponent {
+    private static final TransformationMatrix transform = new TransformationMatrix();
     public final AEntityE_Interactable<?> entity;
     public final int slot;
-    private static final TransformationMatrix transform = new TransformationMatrix();
 
     public GUIComponentInstrument(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, int slot) {
         super(guiLeft, guiTop, 0, 0);

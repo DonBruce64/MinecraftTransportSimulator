@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 public class JSONParticle {
     @JSONRequired
@@ -15,10 +15,10 @@ public class JSONParticle {
 
     @JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
     public boolean spawnEveryTick;
-    
+
     @JSONDescription("If true, the particle will use the block color of the block it is spawned from.  Valid only on break type particles.")
     public boolean useBlockColor;
-    
+
     @JSONDescription("If true, the particle will use the block properties from the ground below it, no matter how far down the ground is, vs the properties of the block at the position it is at.")
     public boolean getBlockPropertiesFromGround;
 
@@ -163,15 +163,6 @@ public class JSONParticle {
     @Deprecated
     public boolean axisAligned;
 
-    public static class JSONSubParticle {
-
-        @JSONDescription("The particle to spawn.")
-        public JSONParticle particle;
-
-        @JSONDescription("The time, in ticks, at which to spawn the particle.")
-        public int time;
-    }
-
     public enum ParticleSpawningOrientation {
         @JSONDescription("Particle spawns relative to the entity that spawned it.")
         ENTITY,
@@ -209,5 +200,14 @@ public class JSONParticle {
         CASING,
         @JSONDescription("A generic particle.  This has no movement by default, so you will have to specify it.")
         GENERIC
+    }
+
+    public static class JSONSubParticle {
+
+        @JSONDescription("The particle to spawn.")
+        public JSONParticle particle;
+
+        @JSONDescription("The time, in ticks, at which to spawn the particle.")
+        public int time;
     }
 }

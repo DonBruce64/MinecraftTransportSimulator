@@ -1,16 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -19,6 +11,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
@@ -32,17 +27,15 @@ public class GUIPaintGun extends AGUIBase {
     //Init variables.
     private final AEntityD_Definable<?> entity;
     private final IWrapperPlayer player;
-
+    //Crafting components.
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
     //Buttons and labels.
     private GUIComponentLabel partName;
     private GUIComponentButton prevColorButton;
     private GUIComponentButton nextColorButton;
     private GUIComponentButton nextRecipeButton;
     private GUIComponentButton confirmButton;
-
-    //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
-    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
     private List<PackMaterialComponent> materials;
 
     //Renders for the item.
@@ -128,6 +121,7 @@ public class GUIPaintGun extends AGUIBase {
         prevColorButton.enabled = prevSubItem != null;
         nextColorButton.enabled = nextSubItem != null;
 
+        // FIXME: currentItem not checked for null here but checked later?
         //Enable repair recipe button if we have multiple indexes.
         nextRecipeButton.enabled = currentItem.subDefinition.extraMaterialLists.size() > 1;
 
@@ -205,16 +199,16 @@ public class GUIPaintGun extends AGUIBase {
 
         //Parse crafting items and set icon items.
         //Check all possible recipes, since some might be for other mods or versions.
-        String errorMessage = "";
+        StringBuilder errorMessage = new StringBuilder();
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false, false);
             if (materials == null) {
                 if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
                     recipeIndex = 0;
                 }
-                errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
+                errorMessage.append(PackMaterialComponent.lastErrorMessage).append("\n");
                 if (recipeIndex == 0) {
-                    InterfaceManager.coreInterface.logError(errorMessage);
+                    InterfaceManager.coreInterface.logError(errorMessage.toString());
                     break;
                 }
             }

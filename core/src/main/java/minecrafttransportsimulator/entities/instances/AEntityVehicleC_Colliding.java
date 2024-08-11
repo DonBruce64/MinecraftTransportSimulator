@@ -1,23 +1,18 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -30,15 +25,14 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
-    //Internal states.
-    public double currentMass;
-    public double axialVelocity;
     public final Point3D headingVector = new Point3D();
-
     /**
      * Cached value for speedFactor.  Saves us from having to use the long form all over.
      */
     public final double speedFactor;
+    //Internal states.
+    public double currentMass;
+    public double axialVelocity;
 
     public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);

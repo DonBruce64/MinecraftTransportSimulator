@@ -1,14 +1,6 @@
 package mcinterface1122;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Multimap;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -37,11 +29,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
@@ -50,6 +38,13 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Builder for MC items.  Constructing a new item with this builder This will automatically
@@ -90,7 +85,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * allow for use of the wrapper to decide what name we translate.
      */
     @Override
-    public String getItemStackDisplayName(ItemStack stack) {
+    public @NotNull String getItemStackDisplayName(@NotNull ItemStack stack) {
         return item.getItemName();
     }
 
@@ -103,7 +98,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      */
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn) {
+    public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltipLines, @NotNull ITooltipFlag flagIn) {
         if (stack.hasTagCompound()) {
             item.addTooltipLines(tooltipLines, new WrapperNBT(stack.getTagCompound()));
         } else {
@@ -116,7 +111,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If we are a food item, this should match our eating time.
      */
     @Override
-    public int getMaxItemUseDuration(ItemStack stack) {
+    public int getMaxItemUseDuration(@NotNull ItemStack stack) {
         return item instanceof IItemFood ? ((IItemFood) item).getTimeToEat() : 0;
     }
 
@@ -125,7 +120,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If we are a food item, and can be eaten, return eating here.
      */
     @Override
-    public EnumAction getItemUseAction(ItemStack stack) {
+    public @NotNull EnumAction getItemUseAction(@NotNull ItemStack stack) {
         if (item instanceof IItemFood) {
             IItemFood food = (IItemFood) item;
             if (food.getTimeToEat() > 0) {
@@ -136,7 +131,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     }
 
     @Override
-    public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack) {
+    public @NotNull Multimap<String, AttributeModifier> getAttributeModifiers(@NotNull EntityEquipmentSlot slot, @NotNull ItemStack stack) {
         Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
         if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null && slot.equals(EntityEquipmentSlot.MAINHAND)) {
             ItemItem weapon = (ItemItem) item;
@@ -155,7 +150,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public @NotNull EnumActionResult onItemUse(@NotNull EntityPlayer player, @NotNull World world, @NotNull BlockPos pos, EnumHand hand, @NotNull EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (hand.equals(EnumHand.MAIN_HAND)) {
             EnumActionResult result = item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
             if (result == EnumActionResult.FAIL && player.isSneaking()) {
@@ -181,7 +176,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    public @NotNull ActionResult<ItemStack> onItemRightClick(@NotNull World world, @NotNull EntityPlayer player, EnumHand hand) {
         if (hand.equals(EnumHand.MAIN_HAND)) {
             //If we are a food item, set our hand to start eating.
             //If we are a gun item, set our hand to prevent attacking.
@@ -200,7 +195,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If this item is food, and a player is holding the item, have it apply to them.
      */
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entityLiving) {
+    public @NotNull ItemStack onItemUseFinish(@NotNull ItemStack stack, @NotNull World world, @NotNull EntityLivingBase entityLiving) {
         if (item instanceof IItemFood) {
             if (entityLiving instanceof EntityPlayer) {
                 IItemFood food = ((IItemFood) item);
@@ -236,7 +231,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     }
 
     @Override
-    public boolean canDestroyBlockInCreative(World world, BlockPos pos, ItemStack stack, EntityPlayer player) {
+    public boolean canDestroyBlockInCreative(@NotNull World world, @NotNull BlockPos pos, @NotNull ItemStack stack, @NotNull EntityPlayer player) {
         return item.canBreakBlocks();
     }
 

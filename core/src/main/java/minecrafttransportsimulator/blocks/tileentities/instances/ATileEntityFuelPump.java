@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
@@ -11,27 +7,27 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 public abstract class ATileEntityFuelPump extends TileEntityDecor {
-    public EntityVehicleF_Physics connectedVehicle;
     public final EntityInventoryContainer fuelItems;
     public final EntityInventoryContainer paymentItems;
     public final List<Integer> fuelAmounts = new ArrayList<>();
+    public final UUID placingPlayerID;
+    public EntityVehicleF_Physics connectedVehicle;
     public int fuelPurchased;
     public double fuelDispensedThisPurchase;
     public double fuelDispensedThisConnection;
     public boolean isCreative;
-    public final UUID placingPlayerID;
 
     public ATileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -188,7 +184,7 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
         }
         return true;
     }
-    
+
     @Override
     public IWrapperItemStack getStack() {
         //Add data to the stack we return for the payment info.

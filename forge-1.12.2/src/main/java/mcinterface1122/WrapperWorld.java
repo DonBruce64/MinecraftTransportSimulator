@@ -1,20 +1,6 @@
 package mcinterface1122;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -30,26 +16,12 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockBush;
-import net.minecraft.block.BlockColored;
-import net.minecraft.block.BlockConcretePowder;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockDirt;
-import net.minecraft.block.BlockFarmland;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.BlockSlab;
-import net.minecraft.block.IGrowable;
+import net.minecraft.block.*;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -86,6 +58,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.util.*;
 
 /**
  * Wrapper to a world instance.  This contains many common methods that
@@ -403,9 +379,10 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     private static HashMap<Material, BlockMaterial> materialMap = new HashMap<>();
+
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
-        if(materialMap.isEmpty()) {
+        if (materialMap.isEmpty()) {
             materialMap.put(Material.CLAY, BlockMaterial.CLAY);
             materialMap.put(Material.GROUND, BlockMaterial.DIRT);
             materialMap.put(Material.GLASS, BlockMaterial.GLASS);
@@ -438,10 +415,10 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
     }
-    
+
     @Override
     public ColorRGB getBlockColor(Point3D position) {
-    	BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState state = world.getBlockState(pos);
         MapColor mcColor = state.getMapColor(world, pos);
         return new ColorRGB(mcColor.colorValue);

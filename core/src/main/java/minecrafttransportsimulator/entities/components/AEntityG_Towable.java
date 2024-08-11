@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -23,6 +20,9 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Base entity class containing towing states and methods.
  * At this level as not all multiparts can be towed.
@@ -30,15 +30,14 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  * @author don_bruce
  */
 public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider> extends AEntityF_Multipart<JSONDefinition> {
-    //Connection data.
-    public TowingConnection towedByConnection;
-    private TowingConnection savedTowedByConnection;
+    public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
     public final List<TowingConnection> towingConnections = new ArrayList<>();
     private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> savedDisconnectedTowingConnections = new ArrayList<>();
-
-    public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
+    //Connection data.
+    public TowingConnection towedByConnection;
+    private TowingConnection savedTowedByConnection;
 
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);

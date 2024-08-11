@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.Locale;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -14,6 +12,8 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect.PotionDefaults;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
+import java.util.Locale;
+
 /**
  * System for handling camera zoom, position, and overlays.  Note that actual overlay
  * rendering is left up to the interface: this class only maintains which overlay
@@ -23,16 +23,14 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  */
 public class CameraSystem {
 
+    private static final Point3D cameraOffset = new Point3D();
+    private static final RotationMatrix riderOrientation = new RotationMatrix();
+    private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
     public static JSONCameraObject activeCamera;
+    public static String customCameraOverlay;
     private static boolean nightVisionEnabled;
     private static float currentFOV;
     private static float currentMouseSensitivity;
-    public static String customCameraOverlay;
-
-    private static final Point3D cameraOffset = new Point3D();
-    private static final RotationMatrix riderOrientation = new RotationMatrix();
-
-    private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
 
     static {
         NIGHT_VISION_CAMERA_POTION.duration = 300;
@@ -146,16 +144,16 @@ public class CameraSystem {
             return false;
         }
     }
-    
-    public static enum CameraMode{
-    	FIRST_PERSON(false),
-    	THIRD_PERSON(true),
-    	THIRD_PERSON_INVERTED(true);
-    	
-    	public final boolean thirdPerson;
-    	
-    	private CameraMode(boolean thirdPerson) {
-    		this.thirdPerson = thirdPerson;
-    	}
+
+    public static enum CameraMode {
+        FIRST_PERSON(false),
+        THIRD_PERSON(true),
+        THIRD_PERSON_INVERTED(true);
+
+        public final boolean thirdPerson;
+
+        private CameraMode(boolean thirdPerson) {
+            this.thirdPerson = thirdPerson;
+        }
     }
 }

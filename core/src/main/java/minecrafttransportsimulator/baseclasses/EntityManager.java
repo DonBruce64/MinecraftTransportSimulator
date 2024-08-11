@@ -1,31 +1,17 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.*;
 import minecrafttransportsimulator.entities.components.AEntityA_Base.EntityAutoUpdateTime;
-import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Class that manages entities in a world.
@@ -42,21 +28,21 @@ public abstract class EntityManager {
     private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, PartGun> gunMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Map<Integer, EntityBullet>> bulletMap = new ConcurrentHashMap<>();
-    
+
     private static final byte hotloadCountdownPreset = 20;
     private static byte hotloadCountdown;
     private static byte hotloadStep;
     private static HotloadFunction hotloadFunction;
     private static final Set<EntityManager> managersToHotload = new HashSet<>();
-    
+
     private final Map<IWrapperNBT, ItemVehicle> hotloadedVehicles = new HashMap<>();
     private final Set<IWrapperNBT> hotloadedPlacedParts = new HashSet<>();
     private final Map<UUID, UUID> hotloadedRiderIDs = new HashMap<>();
-    
+
     private static final List<EntityManager> managers = new ArrayList<>();
 
     public EntityManager() {
-    	managers.add(this);
+        managers.add(this);
     }
 
     public abstract AWrapperWorld getWorld();
@@ -263,7 +249,7 @@ public abstract class EntityManager {
                         //Done with hotloads, set to step 0.
                         hotloadStep = 0;
                         break;
-            		}
+                    }
                 }
 
                 //Countdown timer to go to next step.
@@ -360,28 +346,27 @@ public abstract class EntityManager {
             bulletMap.get(bullet.gun.uniqueUUID).remove(bullet.bulletNumber);
         }
     }
-    
+
     /**
      * Tells the manager to import JSONs in all worlds.
      * This has to do a sequenced-handshake where entities are removed, JSONs applied, and then added back again.
      * The removal has to happen for all worlds before the importing can occur.
      * If we don't do this, concurrency errors can result in crashes.
      * If a file is specified, only that JSON will be imported.  Otherwise, all JSONs will be imported.
-     *  
      */
     public static void doImports(HotloadFunction hotloadFunction) {
-    	for(EntityManager manager : managers) {
-    		if(!manager.getWorld().isClient()) {
-    			//Only add server managers for hotloading since we don't remove entities on clients.
-    			managersToHotload.add(manager);
-    		}
-    	}
-    	EntityManager.hotloadFunction = hotloadFunction;
-    	hotloadStep = 1;
-	}
-    
+        for (EntityManager manager : managers) {
+            if (!manager.getWorld().isClient()) {
+                //Only add server managers for hotloading since we don't remove entities on clients.
+                managersToHotload.add(manager);
+            }
+        }
+        EntityManager.hotloadFunction = hotloadFunction;
+        hotloadStep = 1;
+    }
+
     @FunctionalInterface
-    public static abstract interface HotloadFunction{
-    	public void apply();
+    public static abstract interface HotloadFunction {
+        public void apply();
     }
 }

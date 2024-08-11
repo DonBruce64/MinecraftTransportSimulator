@@ -1,18 +1,7 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
@@ -23,25 +12,37 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
 public class GUIConfig extends AGUIBase {
+    private static final int DIGITAL_ASSIGN_MAX_ROWS = 6;
+    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<>();
+    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<>();
+    private final String[] vehicleTypes = new String[]{"car", "aircraft"};
+    private final Map<GUIComponentButton, String> vehicleSelectionButtons = new HashMap<>();
+    private final Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<>();
+    private final Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<>();
+    //Joystick selection variables.
+    private final List<GUIComponentButton> joystickSelectionButtons = new ArrayList<>();
+    private final List<GUIComponentButton> joystickComponentSelectionButtons = new ArrayList<>();
+    private final List<GUIComponentCutout> joystickComponentStateBackgrounds = new ArrayList<>();
+    private final List<GUIComponentCutout> joystickComponentStateForegrounds = new ArrayList<>();
+    //Joystick digital assignment variables.
+    private final Map<String, List<Map<GUIComponentButton, ControlsJoystick>>> digitalAssignButtons = new HashMap<>();
+    //Joystick analog assignment variables.
+    private final Map<String, Map<GUIComponentButton, ControlsJoystick>> analogAssignButtons = new HashMap<>();
     //Global variables.
     private GUIComponentButton renderConfigScreenButton;
     private GUIComponentButton controlConfigScreenButton;
     private GUIComponentButton controlScreenButton;
-
     //Config variables.
     private boolean configuringControls = true;
     private boolean configuringRendering = false;
-    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<>();
-    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<>();
-
     //Keybind selection variables.
     private String vehicleConfiguring = "";
-    private final String[] vehicleTypes = new String[]{"car", "aircraft"};
-    private final Map<GUIComponentButton, String> vehicleSelectionButtons = new HashMap<>();
     private GUIComponentLabel vehicleSelectionFaultLabel;
     private GUIComponentButton finishKeyboardBindingsButton;
-
     //Sound and radio level variables.
     private GUIComponentButton soundVolumeUpButton;
     private GUIComponentButton soundVolumeDownButton;
@@ -49,15 +50,8 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentButton radioVolumeUpButton;
     private GUIComponentButton radioVolumeDownButton;
     private GUIComponentLabel radioVolumeLabel;
-
     //Keyboard assignment variables.
     private boolean configuringKeyboard;
-    private final Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<>();
-    private final Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<>();
-
-    //Joystick selection variables.
-    private final List<GUIComponentButton> joystickSelectionButtons = new ArrayList<>();
-
     //Joystick component selection variables.
     private int scrollSpot = 0;
     private int selectedJoystickComponentCount = 0;
@@ -67,27 +61,15 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentButton deadzone_moreButton;
     private GUIComponentButton deadzone_lessButton;
     private GUIComponentTextBox deadzone_text;
-    private final List<GUIComponentButton> joystickComponentSelectionButtons = new ArrayList<>();
-    private final List<GUIComponentCutout> joystickComponentStateBackgrounds = new ArrayList<>();
-    private final List<GUIComponentCutout> joystickComponentStateForegrounds = new ArrayList<>();
-
     //Joystick assignment variables.
     private boolean assigningDigital;
     private int joystickComponentId = -1;
     private GUIComponentButton cancelAssignmentButton;
     private GUIComponentButton clearAssignmentButton;
-
-    //Joystick digital assignment variables.
-    private final Map<String, List<Map<GUIComponentButton, ControlsJoystick>>> digitalAssignButtons = new HashMap<>();
     private int digitalAssignmentGroupIndex;
     private int digitalAssignmentGroupIndexMax;
     private GUIComponentButton assignmentListUpButton;
     private GUIComponentButton assignmentListDownButton;
-    private static final int DIGITAL_ASSIGN_MAX_ROWS = 6;
-
-    //Joystick analog assignment variables.
-    private final Map<String, Map<GUIComponentButton, ControlsJoystick>> analogAssignButtons = new HashMap<>();
-
     //Joystick analog calibration variables.
     private boolean calibrating = false;
     private ControlsJoystick controlCalibrating;
@@ -402,8 +384,7 @@ public class GUIConfig extends AGUIBase {
                         };
                         digitalControlButtons.put(button, joystickControl);
                         if (digitalControlButtons.size() == DIGITAL_ASSIGN_MAX_ROWS) {
-                            Map<GUIComponentButton, ControlsJoystick> copiedMap = new HashMap<>();
-                            copiedMap.putAll(digitalControlButtons);
+                            Map<GUIComponentButton, ControlsJoystick> copiedMap = new HashMap<>(digitalControlButtons);
                             digitalAssignButtons.get(vehicleType).add(copiedMap);
                             digitalControlButtons.clear();
                             topOffsetDigital = 0;
@@ -463,8 +444,8 @@ public class GUIConfig extends AGUIBase {
     public void setStates() {
         super.setStates();
         //Global headers are just toggles depending on operation.
-        renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);
-        controlConfigScreenButton.enabled = configuringControls || (!configuringControls && configuringRendering);
+        renderConfigScreenButton.enabled = configuringControls || !configuringRendering;
+        controlConfigScreenButton.enabled = configuringControls || configuringRendering;
         controlScreenButton.enabled = !configuringControls;
 
         //If we are not configuring controls, render the appropriate config buttons and labels.
