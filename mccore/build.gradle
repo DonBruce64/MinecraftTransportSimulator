@@ -8,9 +8,9 @@ group = "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
 //Options for Java version to compile to.
-sourceCompatibility = targetCompatibility = "1.8"
 compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+		options.release = 8
 }
 
 repositories {
