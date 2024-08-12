@@ -189,7 +189,6 @@ public class InterfaceClient implements IInterfaceClient {
             WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
                     world.tickAll(true);
 
                     //Open pack missing screen if we don't have packs.
@@ -272,7 +271,6 @@ public class InterfaceClient implements IInterfaceClient {
                     	}
                     }
                 }
-                world.endProfiling();
             }
         }
     }

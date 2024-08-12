@@ -163,6 +163,21 @@ public abstract class EntityManager {
      * are not parts, since parts are ticked by their parents.
      */
     public void tickAll(boolean beforePlayer) {
+        //FIXME remove profiling from world callers in higher MC versions.
+        AWrapperWorld world = getWorld();
+        if (world.isClient()) {
+            if (beforePlayer) {
+                world.beginProfiling("MTS_ClientEntityUpdatesPre", true);
+            } else {
+                world.beginProfiling("MTS_ClientEntityUpdatesPost", true);
+            }
+        } else {
+            if (beforePlayer) {
+                world.beginProfiling("MTS_ServerEntityUpdatesPre", true);
+            } else {
+                world.beginProfiling("MTS_ServerEntityUpdatesPost", true);
+            }
+        }
         if (beforePlayer) {
             for (AEntityA_Base entity : allNormalTickableEntities) {
                 if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
@@ -175,7 +190,7 @@ public abstract class EntityManager {
             if (hotloadStep > 0) {
                 switch (hotloadStep) {
                     case (1): {
-                        if (getWorld().isClient()) {
+                        if (world.isClient()) {
                             //Client manager, set counter to let entities sync.
                             if (hotloadCountdown == 0) {
                                 hotloadCountdown = hotloadCountdownPreset;
@@ -212,7 +227,7 @@ public abstract class EntityManager {
                         break;
                     }
                     case (2): {
-                        if (getWorld().isClient()) {
+                        if (world.isClient()) {
                             //Client manager, apply hotloads once on this client.
                             hotloadFunction.apply();
                             //No need to wait, all systems will be ready next tick.
@@ -221,7 +236,7 @@ public abstract class EntityManager {
                         break;
                     }
                     case (3): {
-                        if (getWorld().isClient()) {
+                        if (world.isClient()) {
                             //Client manager, set counter to let entities sync.
                             if (hotloadCountdown == 0) {
                                 hotloadCountdown = hotloadCountdownPreset;
@@ -244,12 +259,12 @@ public abstract class EntityManager {
                         break;
                     }
                     case (4): {
-                        if (getWorld().isClient()) {
+                        if (world.isClient()) {
                             //Client manager, set counter to let riders sync.
                             if (hotloadCountdown == 0) {
                                 hotloadCountdown = hotloadCountdownPreset;
                             }
-                        } else if (!getWorld().isClient()) {
+                        } else {
                             //Server manager, load back all seated riders.
                             hotloadedRiderIDs.forEach((seatID, riderID) -> {
                                 getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
@@ -268,7 +283,7 @@ public abstract class EntityManager {
 
                 //Countdown timer to go to next step.
                 //Only countdown on the client, since we know there's only one client and will only tick once per update.
-                if (hotloadStep != 0 && getWorld().isClient()) {
+                if (hotloadStep != 0 && world.isClient()) {
                     if (--hotloadCountdown == 0) {
                         ++hotloadStep;
                     }
@@ -282,6 +297,7 @@ public abstract class EntityManager {
                 }
             }
         }
+        world.endProfiling();
     }
 
     public static void doTick(AEntityA_Base entity) {

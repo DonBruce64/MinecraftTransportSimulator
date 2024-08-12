@@ -232,7 +232,6 @@ public class InterfaceClient implements IInterfaceClient {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    world.beginProfiling("MTS_ClientVehicleUpdates", true);
                     world.tickAll(true);
 
                     //Need to update world brightness since sky darken isn't calculated normally on clients.
@@ -261,7 +260,6 @@ public class InterfaceClient implements IInterfaceClient {
                     		}
                     	}
                     }
-                    world.endProfiling();
                 } else {
                     world.tickAll(false);
                     

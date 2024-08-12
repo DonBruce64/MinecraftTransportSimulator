@@ -1024,7 +1024,6 @@ public class WrapperWorld extends AWrapperWorld {
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
         if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
-                beginProfiling("MTS_ServerVehicleUpdates", true);
                 tickAll(true);
 
                 for (EntityPlayer player : event.world.playerEntities) {
@@ -1066,7 +1065,6 @@ public class WrapperWorld extends AWrapperWorld {
                         }
                     }
                 }
-                endProfiling();
             } else {
                 tickAll(false);
             }
