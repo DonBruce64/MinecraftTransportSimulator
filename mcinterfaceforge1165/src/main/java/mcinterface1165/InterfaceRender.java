@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -136,7 +135,7 @@ public class InterfaceRender implements IInterfaceRender {
                 buffer.endVertex();
             }
             //Rewind buffer for next read.
-            ((Buffer) data.vertexObject.vertices).rewind();
+            data.vertexObject.vertices.rewind();
         } else {
             String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
             final RenderType renderType;
@@ -175,7 +174,7 @@ public class InterfaceRender implements IInterfaceRender {
                     buffer.isReady = true;
                     buffer.builder.end();
                     buffer.buffer.upload(buffer.builder);
-                    ((Buffer) data.vertexObject.vertices).rewind();
+                    data.vertexObject.vertices.rewind();
                 }
 
                 //Add this buffer to the list to render later.
@@ -221,7 +220,7 @@ public class InterfaceRender implements IInterfaceRender {
                     }
                 }
                 //Rewind buffer for next read.
-                ((Buffer) data.vertexObject.vertices).rewind();
+                data.vertexObject.vertices.rewind();
             }
         }
         matrixStack.popPose();
@@ -605,7 +604,7 @@ public class InterfaceRender implements IInterfaceRender {
         }
 
         private BufferData(RenderType type, RenderableData data) {
-            int vertices = ((Buffer) data.vertexObject.vertices).limit() / 8;
+            int vertices = data.vertexObject.vertices.limit() / 8;
             //Convert verts to faces, then back to quad-verts for MC rendering.
             //Add one face extra, since MC will want to increase the buffer if sees it can't handle another vert.
             vertices = ((vertices / 3) + 1) * 4;

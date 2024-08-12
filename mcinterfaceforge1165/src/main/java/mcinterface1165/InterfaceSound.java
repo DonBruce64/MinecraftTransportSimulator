@@ -1,7 +1,6 @@
 package mcinterface1165;
 
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -187,7 +186,7 @@ public class InterfaceSound implements IInterfaceSound {
                 if (sound.stopSound) {
                     //Sound was commanded to be stopped.  Delete sound source to free up slot.
                     IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-                    ((Buffer) sourceBuffer.put(sound.sourceIndex)).flip();
+                    sourceBuffer.put(sound.sourceIndex).flip();
                     AL10.alDeleteSources(sourceBuffer);
 
                     //Delete from playing list, and entity that has this sound.
@@ -243,7 +242,7 @@ public class InterfaceSound implements IInterfaceSound {
                             //This makes the source entity think that it's still playing and won't re-add it.
                             AL10.alSourcei(furthestSound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
                             sourceBuffer = BufferUtils.createIntBuffer(1);
-                            ((Buffer) sourceBuffer.put(furthestSound.sourceIndex)).flip();
+                            sourceBuffer.put(furthestSound.sourceIndex).flip();
                             AL10.alDeleteSources(sourceBuffer);
                             playingSounds.remove(furthestSound);
                         }
@@ -376,8 +375,8 @@ public class InterfaceSound implements IInterfaceSound {
                 ByteBuffer decodedData = ByteBuffer.allocateDirect(0);
                 ByteBuffer blockRead;
                 while ((blockRead = decoder.readBlock()) != null) {
-                    decodedData = ByteBuffer.allocateDirect(decodedData.capacity() + ((Buffer) blockRead).limit()).put(decodedData).put(blockRead);
-                    ((Buffer) decodedData).rewind();
+                    decodedData = ByteBuffer.allocateDirect(decodedData.capacity() + blockRead.limit()).put(decodedData).put(blockRead);
+                    decodedData.rewind();
                 }
 
                 //Generate an IntBuffer to store a pointer to the data buffer.

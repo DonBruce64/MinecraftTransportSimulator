@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.sound;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import minecrafttransportsimulator.entities.instances.EntityRadio;
@@ -47,7 +46,7 @@ public interface IStreamDecoder {
      * expect a mono sound stream.
      */
     static ByteBuffer stereoToMono(ByteBuffer stereoBuffer) {
-        ByteBuffer monoBuffer = ByteBuffer.allocateDirect(((Buffer) stereoBuffer).limit() / 2);
+        ByteBuffer monoBuffer = ByteBuffer.allocateDirect(stereoBuffer.limit() / 2);
         while (stereoBuffer.hasRemaining()) {
             //Combine samples using little-endian ordering.
             byte[] sampleSet = new byte[4];
@@ -58,7 +57,7 @@ public interface IStreamDecoder {
             monoBuffer.put((byte) (combinedSample & 0xFF));
             monoBuffer.put((byte) (combinedSample >> 8));
         }
-        ((Buffer) monoBuffer).flip();
+        monoBuffer.flip();
         return monoBuffer;
     }
 

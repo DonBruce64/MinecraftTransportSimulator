@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +97,7 @@ public class GUIComponent3DModel extends AGUIComponent {
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalModel.put(parsedObject.vertices);
                 }
-                ((Buffer) totalModel).flip();
+                totalModel.flip();
                 RenderableData renderable = new RenderableData(new RenderableVertices("GUI_3D_MODEL", totalModel, true), textureLocation);
                 modelParsedObjects.put(modelLocation, renderable);
             }

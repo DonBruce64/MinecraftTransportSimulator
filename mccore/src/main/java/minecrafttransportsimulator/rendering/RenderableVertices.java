@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering;
 
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -189,10 +188,9 @@ public class RenderableVertices {
 
             //If we have a transform, apply it now.
             if (transforms != null) {
-                int position = ((Buffer) vertices).position();
-                int xOffset = position - (FLOATS_PER_VERTEX - VERTEX_BUFFER_X_OFFSET);
-                int yOffset = position - (FLOATS_PER_VERTEX - VERTEX_BUFFER_Y_OFFSET);
-                int zOffset = position - (FLOATS_PER_VERTEX - VERTEX_BUFFER_Z_OFFSET);
+                int xOffset = vertices.position() - (FLOATS_PER_VERTEX - VERTEX_BUFFER_X_OFFSET);
+                int yOffset = vertices.position() - (FLOATS_PER_VERTEX - VERTEX_BUFFER_Y_OFFSET);
+                int zOffset = vertices.position() - (FLOATS_PER_VERTEX - VERTEX_BUFFER_Z_OFFSET);
                 Point3D helperPoint = new Point3D(vertices.get(xOffset), vertices.get(yOffset), vertices.get(zOffset));
                 helperPoint.transform(transforms.get(vertexIndex / VERTEXES_PER_QUAD));
                 vertices.put(xOffset, (float) helperPoint.x);
@@ -200,7 +198,7 @@ public class RenderableVertices {
                 vertices.put(zOffset, (float) helperPoint.z);
             }
         }
-        ((Buffer) vertices).flip();
+        vertices.flip();
         return vertexObject;
     }
 
@@ -262,7 +260,7 @@ public class RenderableVertices {
                 }
             }
         }
-        ((Buffer) vertices).flip();
+        vertices.flip();
         return vertexObject;
     }
 
@@ -279,8 +277,8 @@ public class RenderableVertices {
             offsetObject.vertices.put(vertexData[VERTEX_BUFFER_Y_OFFSET] + vertexData[VERTEX_BUFFER_NY_OFFSET] * offset);
             offsetObject.vertices.put(vertexData[VERTEX_BUFFER_Z_OFFSET] + vertexData[VERTEX_BUFFER_NZ_OFFSET] * offset);
         }
-        ((Buffer) vertices).rewind();
-        ((Buffer) offsetObject.vertices).flip();
+        vertices.rewind();
+        offsetObject.vertices.flip();
         offsetObject.setTextureBounds(0, 1, 0, 1);
         return offsetObject;
     }
@@ -293,12 +291,12 @@ public class RenderableVertices {
         float[] vertexData = new float[FLOATS_PER_VERTEX];
         for (int backfaceVertexIndex = vertices.capacity() - FLOATS_PER_VERTEX; backfaceVertexIndex >= 0; backfaceVertexIndex -= FLOATS_PER_VERTEX) {
             vertices.get(vertexData);
-            ((Buffer) backfaceObject.vertices).position(backfaceVertexIndex);
+            backfaceObject.vertices.position(backfaceVertexIndex);
             backfaceObject.vertices.put(vertexData);
         }
-        ((Buffer) vertices).rewind();
-        ((Buffer) backfaceObject.vertices).position(0);
-        ((Buffer) backfaceObject.vertices).limit(((Buffer) vertices).limit());
+        vertices.rewind();
+        backfaceObject.vertices.position(0);
+        backfaceObject.vertices.limit(vertices.limit());
         return backfaceObject;
     }
 
@@ -314,7 +312,7 @@ public class RenderableVertices {
         vertices.put((float) point2.y);
         vertices.put((float) point2.z);
         if (!vertices.hasRemaining()) {
-            ((Buffer) vertices).flip();
+            vertices.flip();
         }
     }
 
@@ -344,7 +342,7 @@ public class RenderableVertices {
         }
 
         //Flip for rendering.
-        ((Buffer) vertices).flip();
+        vertices.flip();
     }
 
     /**

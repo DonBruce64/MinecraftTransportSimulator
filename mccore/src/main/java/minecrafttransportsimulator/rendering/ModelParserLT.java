@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +115,7 @@ public final class ModelParserLT extends AModelParser {
                 //This could be supported in the future, but right now it ain't since vertices shouln't hold color data, since it's wasteful.
                 //Stupid MC with stupid color packing....
                 //new ColorRGB(tile.tile.color)
-                ((Buffer) buffer).flip();
+                buffer.flip();
                 RenderableVertices newObject = new RenderableVertices("little_tiles_generated", buffer, true);
                 objectList.add(newObject);
             }

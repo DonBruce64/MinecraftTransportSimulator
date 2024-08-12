@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.rendering;
 
 import java.awt.image.BufferedImage;
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -327,7 +326,7 @@ public class RenderText {
         private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue, boolean onGUI) {
             //Clear out the active object list as it was set last pass.
             for (RenderableData object : activeRenderObjects) {
-                ((Buffer) object.vertexObject.vertices).clear();
+                object.vertexObject.vertices.clear();
             }
             activeRenderObjects.clear();
 
@@ -482,27 +481,24 @@ public class RenderText {
                                 //However, only do this if we have vertices.
                                 //We could end up needing to word wrap before a formatting char.
                                 RenderableData priorRenderObject = getObjectFor(priorChar, currentColor);
-                                int priorPosition = ((Buffer) priorRenderObject.vertexObject.vertices).position();
-                                if (priorPosition != 0) {
-                                    priorPosition -= 6 * 8;
-                                    ((Buffer) priorRenderObject.vertexObject.vertices).position(priorPosition);
+                                if (priorRenderObject.vertexObject.vertices.position() != 0) {
+                                    priorRenderObject.vertexObject.vertices.position(priorRenderObject.vertexObject.vertices.position() - 6 * 8);
                                 }
 
                                 //If we had supplemental state rendering, remove from those blocks too.
                                 if (currentState.bold) {
                                     //Bold, remove another char as we double-rendered.
-                                    priorPosition -= 6 * 8;
-                                    priorRenderObject.vertexObject.vertices.position(priorPosition);
+                                    priorRenderObject.vertexObject.vertices.position(priorRenderObject.vertexObject.vertices.position() - 6 * 8);
                                 }
                                 if (currentState.underline) {
                                     //Remove 1 char from the underline object.
                                     RenderableData underlineRenderObject = getObjectFor(UNDERLINE_CHAR, currentColor);
-                                    ((Buffer) underlineRenderObject.vertexObject.vertices).position(((Buffer) underlineRenderObject.vertexObject.vertices).position() - 6 * 8);
+                                    underlineRenderObject.vertexObject.vertices.position(underlineRenderObject.vertexObject.vertices.position() - 6 * 8);
                                 }
                                 if (currentState.strikethrough) {
                                     //Remove 1 char from the strikethough object.
                                     RenderableData strikethroughRenderObject = getObjectFor(STRIKETHROUGH_CHAR, currentColor);
-                                    ((Buffer) strikethroughRenderObject.vertexObject.vertices).position(((Buffer) strikethroughRenderObject.vertexObject.vertices).position() - 6 * 8);
+                                    strikethroughRenderObject.vertexObject.vertices.position(strikethroughRenderObject.vertexObject.vertices.position() - 6 * 8);
                                 }
                             }
                         }
@@ -579,11 +575,11 @@ public class RenderText {
 
                                 //Get the current char vertex we are mimicking.  This requires checking the buffer.
                                 //Skip the first three indexes as they are normal data we don't care about.
-                                int currentIndex = ((Buffer) currentRenderObject.vertexObject.vertices).position();
-                                ((Buffer) currentRenderObject.vertexObject.vertices).position(currentIndex - (6 - j % 6 + j - 6) * 8 + 3);
+                                int currentIndex = currentRenderObject.vertexObject.vertices.position();
+                                currentRenderObject.vertexObject.vertices.position(currentIndex - (6 - j % 6 + j - 6) * 8 + 3);
                                 currentRenderObject.vertexObject.vertices.get(supplementalUV);
                                 currentRenderObject.vertexObject.vertices.get(supplementalVertex);
-                                ((Buffer) currentRenderObject.vertexObject.vertices).position(currentIndex);
+                                currentRenderObject.vertexObject.vertices.position(currentIndex);
 
                                 if (currentState.bold && j < 12) {
                                     //Just render a second char slightly offset.
@@ -668,7 +664,7 @@ public class RenderText {
                 }
                 object.transform.applyScaling(scale, scale, scale);
                 object.transform.applyTranslation(adjustmentOffset);
-                ((Buffer) object.vertexObject.vertices).flip();
+                object.vertexObject.vertices.flip();
                 object.render();
             }
         }

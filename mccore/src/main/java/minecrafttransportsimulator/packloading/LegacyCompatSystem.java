@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.packloading;
 
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -2632,7 +2631,7 @@ public final class LegacyCompatSystem {
                                 lightDef.blendableComponents.add(blendable);
                             }
                         }
-                        ((Buffer) object.vertices).rewind();
+                        object.vertices.rewind();
                         definition.rendering.lightObjects.add(lightDef);
                     }
                 }

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -354,7 +353,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             for (RenderableVertices object : parsedModel) {
                                 totalModel.put(object.vertices);
                             }
-                            ((Buffer) totalModel).flip();
+                            totalModel.flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), totalModel, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
                             componentRenderables.put(component, renderable);
                             break;
@@ -371,7 +370,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 parsedVertices.put(object.vertices);
                                 object.vertices.rewind();//Rewind after put since this might be used on other road segments.
                             }
-                            ((Buffer) parsedVertices).flip();
+                            parsedVertices.flip();
 
                             //Offset vertices to be corner-aligned, as that's how our curve aligns.
                             for (int i = 0; i < parsedVertices.capacity(); i += 8) {
@@ -459,7 +458,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                     segmentVertices.add(convertedVertexData);
                                 }
                                 //Rewind for next segment.
-                                ((Buffer) parsedVertices).rewind();
+                                parsedVertices.rewind();
 
                                 //Set the last index.
                                 priorIndex = currentIndex;
@@ -470,7 +469,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             for (float[] segmentVertex : segmentVertices) {
                                 convertedVertices.put(segmentVertex);
                             }
-                            ((Buffer) convertedVertices).flip();
+                            convertedVertices.flip();
                             RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true), componentItem.definition.getTextureLocation(componentItem.subDefinition));
                             componentRenderables.put(component, renderable);
                             break;

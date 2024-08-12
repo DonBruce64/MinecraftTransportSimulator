@@ -3,7 +3,6 @@ package minecrafttransportsimulator.rendering;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,7 +167,7 @@ public final class ModelParserOBJ extends AModelParser {
                 compiledBuffer.put(textureList.get(vertexData[1]));
                 compiledBuffer.put(vertexList.get(vertexData[0]));
             }
-            ((Buffer) compiledBuffer).flip();
+            compiledBuffer.flip();
             objectList.add(new RenderableVertices(objectName, compiledBuffer, true));
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");

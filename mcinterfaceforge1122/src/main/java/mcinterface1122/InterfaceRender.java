@@ -2,7 +2,6 @@ package mcinterface1122;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
@@ -214,7 +213,7 @@ public class InterfaceRender implements IInterfaceRender {
         }
         GL11.glEnd();
         //Rewind buffer for next read.
-        ((Buffer) vertices).rewind();
+        vertices.rewind();
     }
 
     /**
@@ -228,7 +227,7 @@ public class InterfaceRender implements IInterfaceRender {
         }
         GL11.glEnd();
         //Rewind buffer for next read.
-        ((Buffer) vertices).rewind();
+        vertices.rewind();
         GL11.glLineWidth(1);
     }
 
@@ -237,7 +236,7 @@ public class InterfaceRender implements IInterfaceRender {
      * passed-in matrix.
      */
     protected static void applyTransformOpenGL(TransformationMatrix matrix) {
-        ((Buffer) buffer).clear();
+        buffer.clear();
         buffer.put(matrix.m00);
         buffer.put(matrix.m10);
         buffer.put(matrix.m20);
@@ -254,7 +253,7 @@ public class InterfaceRender implements IInterfaceRender {
         buffer.put(matrix.m13);
         buffer.put(matrix.m23);
         buffer.put(matrix.m33);
-        ((Buffer) buffer).flip();
+        buffer.flip();
         GL11.glMultMatrix(buffer);
     }
 

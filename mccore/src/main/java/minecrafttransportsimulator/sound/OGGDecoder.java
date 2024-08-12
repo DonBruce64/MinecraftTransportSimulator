@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.sound;
 
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -146,7 +145,7 @@ public class OGGDecoder implements IStreamDecoder {
 
         totalSamplesProcessed = 0;
         int totalBytesRead = 0;
-        ((Buffer) decodedDataBuffer).clear();
+        decodedDataBuffer.clear();
         if (bufferFilledLastDecodeCall) {
             decodeSamples();
         }
@@ -189,8 +188,8 @@ public class OGGDecoder implements IStreamDecoder {
         }
 
         //Rewind the decoded data buffer, set the limit based on the samples read, and return.
-        ((Buffer) decodedDataBuffer).rewind();
-        ((Buffer) decodedDataBuffer).limit(totalSamplesProcessed * 2 * info.channels);
+        decodedDataBuffer.rewind();
+        decodedDataBuffer.limit(totalSamplesProcessed * 2 * info.channels);
         return info.channels == 2 ? IStreamDecoder.stereoToMono(decodedDataBuffer) : decodedDataBuffer;
     }
 
@@ -226,7 +225,7 @@ public class OGGDecoder implements IStreamDecoder {
         //Notify DSP that we processed these samples, increment process count, and exit.
         dspState.synthesis_read(samplesAbleToProcess);
         totalSamplesProcessed += samplesAbleToProcess;
-        ((Buffer) decodedDataBuffer).position(((Buffer) decodedDataBuffer).position() + sampleBuffer.position() * 2);
+        decodedDataBuffer.position(decodedDataBuffer.position() + sampleBuffer.position() * 2);
     }
 
     @Override
