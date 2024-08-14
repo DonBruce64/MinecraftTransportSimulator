@@ -29,6 +29,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -178,7 +179,13 @@ public class WrapperEntity implements IWrapperEntity {
                 //Villagers get the same offset as players.
                 return (-12D / 16D) * (30D / 32D);
             } else {
-                return entity.getMyRidingOffset();
+                ResourceLocation registration = entity.getType().getRegistryName();
+                if (registration != null && registration.getNamespace().equals("customnpcs")) {
+                    //CNPCs seem to be offset by 3, but invert their model scaling for their sitting position.
+                    return -3D / 16D * (32D / 30D);
+                } else {
+                    return entity.getMyRidingOffset();
+                }
             }
         }
         return 0;
