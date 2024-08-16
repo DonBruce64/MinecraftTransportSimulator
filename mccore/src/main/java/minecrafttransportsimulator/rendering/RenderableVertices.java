@@ -384,36 +384,43 @@ public class RenderableVertices {
      * {@link #createSprite(int, List, List)}, and requires the sprite index to be specified.
      */
     public void setSpriteProperties(int spriteIndex, int offsetX, int offsetY, int width, int height, float u, float v, float U, float V) {
+        setSpritePropertiesAdvancedTexture(spriteIndex, offsetX, offsetY, width, height, u, v, u, V, U, V, U, v);
+    }
+
+    /**
+     * Like {@link #setSpriteProperties(int, int, int, int, int, float, float, float, float)}, but with each texture coordinate specified.
+     */
+    public void setSpritePropertiesAdvancedTexture(int spriteIndex, int offsetX, int offsetY, int width, int height, float u1, float v1, float u2, float v2, float u3, float v3, float u4, float v4) {
         //Now populate the buffer.
         for (int vertexIndex = spriteIndex * VERTEXES_PER_QUAD; vertexIndex < (spriteIndex + 1) * VERTEXES_PER_QUAD; ++vertexIndex) {
             int quadVertexIndex = vertexIndex % VERTEXES_PER_QUAD;
             switch (quadVertexIndex) {
                 case (QUAD_TRI1_BOTTOM_RIGHT_INDEX):
                 case (QUAD_TRI2_BOTTOM_RIGHT_INDEX): {
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, U);
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, V);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u3);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v3);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_X_OFFSET, offsetX + width);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_Y_OFFSET, offsetY - height);
                     break;
                 }
                 case (QUAD_TRI1_TOP_RIGHT_INDEX): {
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, U);
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u4);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v4);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_X_OFFSET, offsetX + width);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_Y_OFFSET, offsetY);
                     break;
                 }
                 case (QUAD_TRI1_TOP_LEFT_INDEX):
                 case (QUAD_TRI2_TOP_LEFT_INDEX): {
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u);
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u1);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v1);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_X_OFFSET, offsetX);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_Y_OFFSET, offsetY);
                     break;
                 }
                 case (QUAD_TRI2_BOTTOM_LEFT_INDEX): {
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u);
-                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, V);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_U_OFFSET, u2);
+                    vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_V_OFFSET, v2);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_X_OFFSET, offsetX);
                     vertices.put(vertexIndex * FLOATS_PER_VERTEX + VERTEX_BUFFER_Y_OFFSET, offsetY - height);
                     break;
