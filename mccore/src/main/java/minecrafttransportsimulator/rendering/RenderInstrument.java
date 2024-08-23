@@ -25,8 +25,10 @@ public final class RenderInstrument {
     private static int partNumber = 0;
     private static RenderableData renderable = null;
     private static final TransformationMatrix textTransform = new TransformationMatrix();
-    private static final Point3D textureMinCoords = new Point3D();
-    private static final Point3D textureMaxCoords = new Point3D();
+    private static final Point3D textureCoord1 = new Point3D();
+    private static final Point3D textureCoord2 = new Point3D();
+    private static final Point3D textureCoord3 = new Point3D();
+    private static final Point3D textureCoord4 = new Point3D();
     private static final RotationMatrix helperRotation = new RotationMatrix();
     private static final RotationMatrix helperRotationMatrix = new RotationMatrix();
 
@@ -86,20 +88,21 @@ public final class RenderInstrument {
                     renderable.transform.set(transform);
                     renderable.transform.applyTranslation(0.0, 0.0, i * RenderableVertices.Z_BUFFER_OFFSET);
                     renderable.transform.applyScaling(slotScale, slotScale, slotScale);
-                    textureMinCoords.set(-component.textureWidth / 2D, -component.textureHeight / 2D, 0);
-                    textureMaxCoords.set(component.textureWidth / 2D, component.textureHeight / 2D, 0);
+                    textureCoord1.set(-component.textureWidth / 2D, -component.textureHeight / 2D, 0);
+                    textureCoord2.set(-component.textureWidth / 2D, component.textureHeight / 2D, 0);
+                    textureCoord3.set(component.textureWidth / 2D, component.textureHeight / 2D, 0);
+                    textureCoord4.set(component.textureWidth / 2D, -component.textureHeight / 2D, 0);
 
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
                         //Add the instrument UV-map offsets.
                         //These don't get added to the initial points to allow for rotation.
-                        textureMinCoords.add(component.textureXCenter, component.textureYCenter, 0);
-                        textureMaxCoords.add(component.textureXCenter, component.textureYCenter, 0);
-
                         //Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
-                        textureMinCoords.scale(1D / 1024D);
-                        textureMaxCoords.scale(1D / 1024D);
+                        textureCoord1.add(component.textureXCenter, component.textureYCenter, 0).scale(1D / 1024D);
+                        textureCoord2.add(component.textureXCenter, component.textureYCenter, 0).scale(1D / 1024D);
+                        textureCoord3.add(component.textureXCenter, component.textureYCenter, 0).scale(1D / 1024D);
+                        textureCoord4.add(component.textureXCenter, component.textureYCenter, 0).scale(1D / 1024D);
 
                         //Translate to the component.
                         renderable.transform.applyTranslation(component.xCenter, -component.yCenter, 0);
@@ -117,7 +120,7 @@ public final class RenderInstrument {
                         }
                         
                         //Need to invert Y here since we're using pixel-based coords.
-                        renderable.vertexObject.setSpriteProperties(0, -component.textureWidth / 2, component.textureHeight / 2, component.textureWidth, component.textureHeight, (float) textureMinCoords.x, (float) textureMinCoords.y, (float) textureMaxCoords.x, (float) textureMaxCoords.y);
+                        renderable.vertexObject.setSpritePropertiesAdvancedTexture(0, -component.textureWidth / 2, component.textureHeight / 2, component.textureWidth, component.textureHeight, (float) textureCoord1.x, (float) textureCoord1.y, (float) textureCoord2.x, (float) textureCoord2.y, (float) textureCoord3.x, (float) textureCoord3.y, (float) textureCoord4.x, (float) textureCoord4.y);
                         if (component.overlayTexture) {
                             renderable.setTransucentOverride();
                         }
@@ -170,14 +173,18 @@ public final class RenderInstrument {
             if (component.extendWindow) {
                 //We need to add to the edge of the window in this case rather than move the entire window.
                 if (clock.animation.axis.x < 0) {
-                    textureMinCoords.x += xTranslation;
+                    textureCoord1.x += xTranslation;
+                    textureCoord2.x += xTranslation;
                 } else if (clock.animation.axis.x > 0) {
-                    textureMaxCoords.x += xTranslation;
+                    textureCoord3.x += xTranslation;
+                    textureCoord4.x += xTranslation;
                 }
                 if (clock.animation.axis.y < 0) {
-                    textureMinCoords.y += yTranslation;
+                    textureCoord1.y += yTranslation;
+                    textureCoord4.y += yTranslation;
                 } else if (clock.animation.axis.y > 0) {
-                    textureMaxCoords.y += yTranslation;
+                    textureCoord2.y += yTranslation;
+                    textureCoord3.y += yTranslation;
                 }
             } else if (component.moveComponent) {
                 //Translate the rather than adjust the window coords.
@@ -190,12 +197,16 @@ public final class RenderInstrument {
                 //We don't want to do an OpenGL translation here as that would move the texture's
                 //rendered position on the instrument rather than change what texture is rendered.
                 if (clock.animation.axis.x != 0) {
-                    textureMinCoords.x += xTranslation;
-                    textureMaxCoords.x += xTranslation;
+                    textureCoord1.y += xTranslation;
+                    textureCoord2.y += xTranslation;
+                    textureCoord3.y += xTranslation;
+                    textureCoord4.y += xTranslation;
                 }
                 if (clock.animation.axis.y != 0) {
-                    textureMinCoords.y += yTranslation;
-                    textureMaxCoords.y += yTranslation;
+                    textureCoord1.y += yTranslation;
+                    textureCoord2.y += yTranslation;
+                    textureCoord3.y += yTranslation;
+                    textureCoord4.y += yTranslation;
                 }
             }
         }
@@ -211,17 +222,23 @@ public final class RenderInstrument {
             //Otherwise, we apply an OpenGL rotation operation.
             if (component.rotateWindow) {
                 //Add rotation offset to the points.
-                textureMinCoords.add(clock.animation.centerPoint);
-                textureMaxCoords.add(clock.animation.centerPoint);
+                textureCoord1.add(clock.animation.centerPoint);
+                textureCoord2.add(clock.animation.centerPoint);
+                textureCoord3.add(clock.animation.centerPoint);
+                textureCoord4.add(clock.animation.centerPoint);
 
                 //Rotate the points by the rotation.
                 helperRotation.angles.set(0, 0, variableValue);
-                textureMinCoords.rotate(helperRotation);
-                textureMaxCoords.rotate(helperRotation);
+                textureCoord1.rotate(helperRotation);
+                textureCoord2.rotate(helperRotation);
+                textureCoord3.rotate(helperRotation);
+                textureCoord4.rotate(helperRotation);
 
                 //Remove the rotation offsets.
-                textureMinCoords.subtract(clock.animation.centerPoint);
-                textureMaxCoords.subtract(clock.animation.centerPoint);
+                textureCoord1.subtract(clock.animation.centerPoint);
+                textureCoord2.subtract(clock.animation.centerPoint);
+                textureCoord3.subtract(clock.animation.centerPoint);
+                textureCoord4.subtract(clock.animation.centerPoint);
             } else if (component.textObject != null) {
                 textTransform.applyTranslation((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
                 helperRotationMatrix.setToAxisAngle(0, 0, 1, variableValue);
