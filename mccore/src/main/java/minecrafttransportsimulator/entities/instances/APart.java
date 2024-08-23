@@ -6,6 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -330,17 +331,13 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         } else {
             //Not a removable part, or is an actual attack.
             super.attack(damage);
-            if (definition.generic.forwardsDamageMultiplier != 0) {
+            if (definition.generic.forwardsDamageMultiplier != 0 && !damage.isExplosion) {
                 //Need to re-create damage object to use on entity.  Use null for box since we want to hurt the core entity.
                 masterEntity.attack(new Damage(damage, definition.generic.forwardsDamageMultiplier, null));
             }
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
-                if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(position, 1F, true);
-                } else {
-                    world.spawnExplosion(position, 0F, false);
-                }
+                world.spawnExplosion(new Explosion(world,position, 0F, 0F, false));
             }
         }
     }

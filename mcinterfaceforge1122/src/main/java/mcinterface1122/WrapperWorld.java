@@ -14,6 +14,7 @@ import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -395,6 +396,13 @@ public class WrapperWorld extends AWrapperWorld {
         return hardness;
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
+    public float getBlockBlastResistance(Point3D position) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        return world.getBlockState(pos).getBlock().getExplosionResistance(null);
+    }
+
     @Override
     public float getBlockSlipperiness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
@@ -744,8 +752,19 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void destroyBlock(Point3D position, boolean spawnDrops) {
+    public void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy) {
         world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (quickDestroy) {
+            IBlockState state = world.getBlockState(pos);
+            Block block = state.getBlock();
+            if (spawnDrops) {
+                block.dropBlockAsItem(world, pos, state, 0);
+            }
+            world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+        } else {
+            world.destroyBlock(pos, spawnDrops);
+        }
     }
 
     @Override
@@ -991,8 +1010,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, true);
+    public void spawnExplosion(Explosion explosion) {
     }
 
     /**
@@ -1025,6 +1043,8 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isRemote && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 tickAll(true);
+                //Also tick active explosions.
+                Explosion.tickActiveExplosions();
 
                 for (EntityPlayer player : event.world.playerEntities) {
                     UUID playerUUID = player.getUniqueID();

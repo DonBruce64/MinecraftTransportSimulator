@@ -16,6 +16,7 @@ import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -59,6 +60,7 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -82,7 +84,6 @@ import net.minecraft.util.math.shapes.IBooleanFunction;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -425,6 +426,13 @@ public class WrapperWorld extends AWrapperWorld {
             hardness = Float.MAX_VALUE;
         }
         return hardness;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public float getBlockBlastResistance(Point3D position) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        return world.getBlockState(pos).getBlock().getExplosionResistance();
     }
 
     @Override
@@ -770,8 +778,20 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void destroyBlock(Point3D position, boolean spawnDrops) {
+    public void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy) {
         world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (quickDestroy) {
+            BlockState state = world.getBlockState(pos);
+            FluidState fluidstate = world.getFluidState(pos);
+            if (spawnDrops) {
+                TileEntity tileentity = state.hasTileEntity() ? world.getBlockEntity(pos) : null;
+                Block.dropResources(state, world, pos, tileentity, null, ItemStack.EMPTY);
+            }
+            world.setBlock(pos, fluidstate.createLegacyBlock(), 3, 512);
+        } else {
+            world.destroyBlock(pos, spawnDrops);
+        }
     }
 
     @Override
@@ -1003,8 +1023,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames, Explosion.Mode.DESTROY);
+    public void spawnExplosion(Explosion explosion) {
     }
 
     /**
@@ -1037,6 +1056,8 @@ public class WrapperWorld extends AWrapperWorld {
         if (!event.world.isClientSide && event.world.equals(world)) {
             if (event.phase.equals(Phase.START)) {
                 tickAll(true);
+                //Also tick active explosions.
+                Explosion.tickActiveExplosions();
 
                 for (PlayerEntity mcPlayer : event.world.players()) {
                     UUID playerUUID = mcPlayer.getUUID();

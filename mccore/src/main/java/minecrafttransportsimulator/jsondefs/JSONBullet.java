@@ -44,8 +44,33 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("The case length of the bullet.  This determines what guns can fire it, but does not affect damage.  Units are in mm.")
         public float caseLength;
 
-        @JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
+        //Explosion mechanics : damage
+        @JSONDescription("Base Damage dealt at the source of the explosion if this bullet is explosive.")
+        public float blastDamage;
+
+        @JSONDescription("The max radius, in blocks, that damage can be dealt.")
+        public float blastDamageRadiusMax;
+
+        @JSONDescription("Inside this radius from the explosion, full damage is dealt. Damage begins decaying here.")
+        public float blastDamageRadiusDecay;
+
+        @JSONDescription("Only effects explosive bullets. Something something base block breaking damage thing.")
         public float blastStrength;
+
+        @JSONDescription("Max distance, in blocks, that block damage can be dealt.")
+        public float blastStrengthRadiusMax;
+
+        @JSONDescription("Inside this radius from the explosion, full strength is dealt. Strength begins decaying here.")
+        public float blastStrengthRadiusDecay;
+
+        @JSONDescription("Amount of armor this blast can cause damage through.")
+        public float blastArmorPenetration;
+
+        @JSONDescription("Max distance, in blocks, armor can be penetrated.")
+        public float blastPenetrationRadius;
+
+        @JSONDescription("Inside this radius, base penetration is dealt.")
+        public float blastMaxPenetrationRadius;
 
         @JSONDescription("If set, this bullet, when it hits an entity, will push it back this far.")
         public float knockback;

@@ -5,12 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.EntityManager;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -173,6 +168,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract float getBlockHardness(Point3D position);
 
     /**
+     * Returns the blast resistance of the block at the passed-in point.
+     */
+    public abstract float getBlockBlastResistance(Point3D position);
+
+    /**
      * Returns the slipperiness of the block at the passed-in position.
      * 0.6 is default slipperiness for blocks. higher values are more slippery.
      */
@@ -308,7 +308,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * This does no sanity checks, so make sure you're
      * actually allowed to do such a thing before calling.
      */
-    public abstract void destroyBlock(Point3D position, boolean spawnDrops);
+    public abstract void destroyBlock(Point3D position, boolean spawnDrops, boolean quickDestroy);
 
     /**
      * Returns true if the block at this position is air.
@@ -412,5 +412,5 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Spawns an explosion of the specified strength at the passed-in point.
      */
-    public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+    public abstract void spawnExplosion(Explosion explosion);
 }

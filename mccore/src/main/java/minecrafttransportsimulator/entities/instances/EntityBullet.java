@@ -4,12 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.BlockHitResult;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -597,7 +592,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
                 float hardnessHit = gun.world.getBlockHardness(blockPosition);
                 if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
-                    gun.world.destroyBlock(blockPosition, true);
+                    gun.world.destroyBlock(blockPosition, true, false);
                 } else if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY)) {
                     //Couldn't break block, but we might be able to set it on fire.
                     gun.world.setToFire(blockPosition, blockSide);
@@ -620,8 +615,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
+            Explosion boom = new Explosion(gun.world,position, gun.lastLoadedBullet.definition,gun.lastController);
+            gun.world.spawnExplosion(boom);
+            boom.breakBlocks();
+            boom.attackExternalEntity();
+            boom.attackInternalEntity();
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
