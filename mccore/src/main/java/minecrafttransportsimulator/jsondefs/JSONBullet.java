@@ -63,15 +63,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Inside this radius from the explosion, full strength is dealt. Strength begins decaying here.")
         public float blastStrengthRadiusDecay;
 
-        @JSONDescription("Amount of armor this blast can cause damage through.")
-        public float blastArmorPenetration;
-
-        @JSONDescription("Max distance, in blocks, armor can be penetrated.")
-        public float blastPenetrationRadius;
-
-        @JSONDescription("Inside this radius, base penetration is dealt.")
-        public float blastMaxPenetrationRadius;
-
         @JSONDescription("If set, this bullet, when it hits an entity, will push it back this far.")
         public float knockback;
 
