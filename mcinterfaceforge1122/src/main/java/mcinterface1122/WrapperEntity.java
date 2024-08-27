@@ -17,8 +17,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
@@ -27,6 +29,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
@@ -169,7 +172,18 @@ public class WrapperEntity implements IWrapperEntity {
         //We account for this here.
         AEntityB_Existing riding = getEntityRiding();
         if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
-            return entity.getYOffset() - 0.14D;
+            if (entity instanceof EntityAnimal) {
+                //Animals are moved up 0.14 pixels (~2.25), for their sitting positions.  Un-do this.
+                return entity.getYOffset() - 0.14D;
+            } else {
+                ResourceLocation registration = EntityList.getKey(entity);
+                if (registration != null && registration.getNamespace().equals("customnpcs")) {
+                    //CNPCs seem to be offset by 3, but invert their model scaling for their sitting position.
+                    return -3D / 16D * (32D / 30D);
+                } else {
+                    return entity.getYOffset();
+                }
+            }
         }
         return 0;
     }

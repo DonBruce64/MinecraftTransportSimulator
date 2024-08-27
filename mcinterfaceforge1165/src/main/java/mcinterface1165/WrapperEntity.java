@@ -20,6 +20,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.LeadItem;
@@ -28,6 +29,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -170,12 +172,20 @@ public class WrapperEntity implements IWrapperEntity {
         //We account for this here.
         AEntityB_Existing riding = getEntityRiding();
         if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
-            if (entity instanceof VillagerEntity) {
-                //Need to add-on a factor for villagers since we make them sit whereas they don't normally do this.
-                //Actual factor is based on what players have for their offsets, see the player wrapper method for details.
-                return entity.getMyRidingOffset() - 0.14D - 0.485D;
-            } else {
+            if (entity instanceof AnimalEntity) {
+                //Animals are moved up 0.14 pixels (~2.25), for their sitting positions.  Un-do this.
                 return entity.getMyRidingOffset() - 0.14D;
+            } else if (entity instanceof VillagerEntity) {
+                //Villagers get the same offset as players.
+                return (-12D / 16D) * (30D / 32D);
+            } else {
+                ResourceLocation registration = entity.getType().getRegistryName();
+                if (registration != null && registration.getNamespace().equals("customnpcs")) {
+                    //CNPCs seem to be offset by 3, but invert their model scaling for their sitting position.
+                    return -3D / 16D * (32D / 30D);
+                } else {
+                    return entity.getMyRidingOffset();
+                }
             }
         }
         return 0;

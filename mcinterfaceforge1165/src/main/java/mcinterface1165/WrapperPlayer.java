@@ -62,15 +62,15 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public double getSeatOffset() {
-        //Vanilla players don't sit quite at the bottom of their seats.
-        //It's normally 0.14 (animal offset which is based at Y=0) + 0.35 (player offet which is negative) = 0.49, 
-        //but it should be 10/16 pixels (legs are 12 pixels long, 4 pixels thick, and rotate on center for 10 pixels delta, or 0.625).
-        //Add on the remaining offset here if we see the player is having an offset applied from super.
-        double offset = super.getSeatOffset();
-        if (offset != 0) {
-            offset -= 0.135;
+        //Vanilla players have a -0.35 offset, which is horridly wrong.
+        //Player legs are 12 pixels, but the player model has a funky scale.
+        //It's supposed to be 32px, but is scaled to 30px, so we need to factor that here.
+        //Only return this offset if super returns a non-zero number, which indicates we're in a sitting seat.
+        if (super.getSeatOffset() != 0) {
+            return (-12D / 16D) * (30D / 32D);
+        } else {
+            return 0;
         }
-        return offset;
     }
 
     @Override
