@@ -137,13 +137,13 @@ public final class ControlSystem {
                 controlGroundVehicle(vehicle, isPlayerController);
             }
         } else {
-            controlCamera(ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
+            controlCamera(ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsKeyboard.CAR_CHANGEVIEW);
             rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
             controlGun(multipart, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
         }
     }
 
-    private static void controlCamera(ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView) {
+    private static void controlCamera(ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsKeyboard changeView) {
         AEntityB_Existing riding = clientPlayer.getEntityRiding();
         if (riding instanceof PartSeat) {
             PartSeat sittingSeat = (PartSeat) riding;
@@ -193,7 +193,7 @@ public final class ControlSystem {
 
     private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake) {
         //If the analog brake is set, do brake state based on that rather than the keyboard.
-        boolean isParkingBrakePressed = InterfaceManager.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
+        boolean isParkingBrakePressed = brakeMod.isPressed() || pBrake.isPressed();
         if (isParkingBrakePressed) {
             if (!parkingBrakePressedLastCheck) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
@@ -201,7 +201,7 @@ public final class ControlSystem {
             }
         } else {
             parkingBrakePressedLastCheck = false;
-            double brakeValue = InterfaceManager.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+            double brakeValue = brakeJoystick.isJoystickActive() ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
         }
     }
@@ -254,12 +254,11 @@ public final class ControlSystem {
     private static void controlJoystick(EntityVehicleF_Physics vehicle, ControlsKeyboard joystickInhibit) {
         if (joystickInhibit.isPressed()) {
             joysticksInhibited = !joysticksInhibited;
-            InterfaceManager.inputInterface.inhibitJoysticks(joysticksInhibited);
         }
     }
 
     private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue, double dampenRate) {
-        if (InterfaceManager.inputInterface.isJoystickPresent(axis.config.joystickName)) {
+        if (axis.isJoystickActive()) {
             double axisValue = axis.getAxisState(false);
             if (Double.isNaN(axisValue)) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
@@ -294,7 +293,7 @@ public final class ControlSystem {
     }
 
     private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController) {
-        controlCamera(ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
+        controlCamera(ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsKeyboard.AIRCRAFT_CHANGEVIEW);
         rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
         controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN_FIRE, ControlsKeyboard.AIRCRAFT_GUN_SWITCH);
         controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
@@ -320,7 +319,7 @@ public final class ControlSystem {
         }
 
         //Increment or decrement throttle.
-        if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)) {
+        if (ControlsJoystick.AIRCRAFT_THROTTLE.isJoystickActive()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE));
         } else {
             if (ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()) {
@@ -392,7 +391,7 @@ public final class ControlSystem {
     }
 
     private static void controlGroundVehicle(EntityVehicleF_Physics powered, boolean isPlayerController) {
-        controlCamera(ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
+        controlCamera(ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsKeyboard.CAR_CHANGEVIEW);
         rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
         controlGun(powered, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
         controlRadio(powered, ControlsKeyboard.CAR_RADIO);
@@ -408,7 +407,7 @@ public final class ControlSystem {
         if (powered.definition.motorized.hasIncrementalThrottle) {
             //Check brake and gas.  Brake always changes, gas goes up-down.
             controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
-            if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
+            if (ControlsJoystick.CAR_GAS.isJoystickActive()) {
                 //Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
                 double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
                 if (powered.autopilotSetting == 0 || powered.throttle < throttleLevel) {
@@ -427,7 +426,7 @@ public final class ControlSystem {
                 if (!powered.engines.isEmpty()) {
                     //Get the brake value.
                     final double brakeValue;
-                    if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)) {
+                    if (ControlsJoystick.CAR_BRAKE.isJoystickActive()) {
                         brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState(true);
                     } else if (ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()) {
                         brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
@@ -437,7 +436,7 @@ public final class ControlSystem {
 
                     //Get the throttle value.
                     final double throttleValue;
-                    if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
+                    if (ControlsJoystick.CAR_GAS.isJoystickActive()) {
                         throttleValue = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
                     } else if (ControlsKeyboardDynamic.CAR_SLOW.isPressed()) {
                         throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE / 2D;
@@ -482,7 +481,7 @@ public final class ControlSystem {
             } else {
                 //Check brake and gas and set to on or off.
                 controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
-                if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
+                if (ControlsJoystick.CAR_GAS.isJoystickActive()) {
                     //Send throttle over if throttle if cruise control is off, or if throttle is greater than the current value.
                     double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
                     if (powered.autopilotSetting == 0 || throttleLevel > powered.throttle) {
@@ -719,21 +718,21 @@ public final class ControlSystem {
          */
         public boolean isPressed() {
             if (linkedJoystick.isPressed()) {
+                //Joystick pressed.
                 return true;
-            } else if (InterfaceManager.inputInterface.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.client.controlSettings.kbOverride.value) {
+            } else if (linkedJoystick.isJoystickActive() && ConfigSystem.client.controlSettings.kbOverride.value) {
+                //Joystick found, but not pressed, and is overriding keyboard inputs, so return false.
                 return false;
-            } else {
-                if (isMomentary) {
-                    if (wasPressedLastCall) {
-                        wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
-                        return false;
-                    } else {
-                        wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
-                        return wasPressedLastCall;
-                    }
+            } else if (isMomentary) {
+                if (wasPressedLastCall) {
+                    wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                    return false;
                 } else {
-                    return InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                    wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                    return wasPressedLastCall;
                 }
+            } else {
+                return InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
             }
         }
     }
@@ -829,17 +828,25 @@ public final class ControlSystem {
             }
         }
 
+        public boolean isJoystickActive() {
+            return !joysticksInhibited && InterfaceManager.inputInterface.isJoystickPresent(config.joystickName);
+        }
+
         public boolean isPressed() {
-            if (isMomentary) {
-                if (wasPressedLastCall) {
-                    wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
-                    return false;
+            if (isJoystickActive()) {
+                if (isMomentary) {
+                    if (wasPressedLastCall) {
+                        wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
+                        return false;
+                    } else {
+                        wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
+                        return wasPressedLastCall;
+                    }
                 } else {
-                    wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
-                    return wasPressedLastCall;
+                    return InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
                 }
             } else {
-                return InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
+                return false;
             }
         }
 
