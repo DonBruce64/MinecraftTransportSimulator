@@ -566,6 +566,8 @@ public class JSONPart extends AJSONPartProvider {
         FURNACE,
         @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
         JERRYCAN,
+        @JSONDescription("Works as a battery, allowing a charge to be stored inside and then used to charge electric vehicles without a charger.")
+        BATTERY,
         @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
         CRAFTING_BENCH
     }

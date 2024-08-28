@@ -22,8 +22,12 @@ public final class PartInteractable extends APart {
     public final EntityInventoryContainer inventory;
     public final EntityFluidTank tank;
     public String jerrycanFluid;
+    public boolean batteryCharged;
     public PartInteractable linkedPart;
     public EntityVehicleF_Physics linkedVehicle;
+
+    public static final String JERRYCAN_FLUID_NAME = "jerrycanFluid";
+    public static final String BATTERY_CHARGED_NAME = "batteryCharged";
 
     public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -51,9 +55,20 @@ public final class PartInteractable extends APart {
             }
             case JERRYCAN: {
                 if (data != null) {
-                    this.jerrycanFluid = data.getString("jerrycanFluid");
+                    this.jerrycanFluid = data.getString(JERRYCAN_FLUID_NAME);
                 } else {
                     this.jerrycanFluid = "";
+                }
+                this.furnace = null;
+                this.inventory = null;
+                this.tank = null;
+                break;
+            }
+            case BATTERY: {
+                if (data != null) {
+                    this.batteryCharged = data.getBoolean(BATTERY_CHARGED_NAME);
+                } else {
+                    this.batteryCharged = false;
                 }
                 //No break statement here, fall-down to default to null things.
             }
@@ -72,7 +87,7 @@ public final class PartInteractable extends APart {
                 player.sendPacket(new PacketPartInteractable(this, player));
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {
                 player.openCraftingGUI();
-            } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
+            } else if (definition.interactable.interactionType == InteractableComponentType.JERRYCAN || definition.interactable.interactionType == InteractableComponentType.BATTERY) {
                 entityOn.removePart(this, true, null);
                 world.spawnItemStack(getStack(), position, null);
             } else if (tank != null) {
@@ -342,8 +357,10 @@ public final class PartInteractable extends APart {
             data.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         } else if (tank != null) {
             data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
-            data.setString("jerrycanFluid", jerrycanFluid);
+        } else if (definition.interactable.interactionType == InteractableComponentType.JERRYCAN) {
+            data.setString(JERRYCAN_FLUID_NAME, jerrycanFluid);
+        } else if (definition.interactable.interactionType == InteractableComponentType.BATTERY) {
+            data.setBoolean(BATTERY_CHARGED_NAME, batteryCharged);
         }
         return data;
     }

@@ -24,7 +24,7 @@ import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public class PartEngine extends APart {
-    public static String ELECTRICITY_FUEL = "electricity";
+    public static final String ELECTRICITY_FUEL = "electricity";
 
     //State data.
     public boolean backfired;

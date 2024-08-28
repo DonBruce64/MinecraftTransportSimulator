@@ -311,7 +311,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         for (APart part : allParts) {
             if (part instanceof PartEngine) {
                 foundEngine = true;
-                if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluid)) {
+                if ((part.definition.engine.type.equals(EngineType.ELECTRIC) && fluid.equals(PartEngine.ELECTRICITY_FUEL)) || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluid)) {
                     return FuelTankResult.VALID;
                 }
             }

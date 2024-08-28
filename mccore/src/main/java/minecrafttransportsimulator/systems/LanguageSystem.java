@@ -349,6 +349,14 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_JERRYCAN_TOOFULL = new LanguageEntry("interact.jerrycan.toofull", "This vehicle is already full of fuel.  You cannot add any more.");
     public static final LanguageEntry INTERACT_JERRYCAN_SUCCESS = new LanguageEntry("interact.jerrycan.success", "Added 1000mb of fluid to this vehicle.");
 
+    public static final LanguageEntry INTERACT_BATTERY_CHARGERLOW = new LanguageEntry("interact.battery.chargerlow", "This charger does not yet have enough power to charge this battery.");
+    public static final LanguageEntry INTERACT_BATTERY_CHARGED = new LanguageEntry("interact.battery.charged", "Battery charged.");
+    public static final LanguageEntry INTERACT_BATTERY_EMPTY = new LanguageEntry("interact.battery.empty", "This battery is empty and cannot charge this vehicle.");
+    public static final LanguageEntry INTERACT_BATTERY_WRONGENGINES = new LanguageEntry("interact.battery.wrongengines", "The engines in this vehicle are not electric and therefore the battery cannot charge them.");
+    public static final LanguageEntry INTERACT_BATTERY_NOENGINE = new LanguageEntry("interact.battery.noengine", "There is no engine in this vehicle.  Removing engines from vehicles resets their charge, so charging this vehicle would do nothing!");
+    public static final LanguageEntry INTERACT_BATTERY_TOOFULL = new LanguageEntry("interact.battery.toofull", "This vehicle is already fully charged.  You cannot charge it any more.");
+    public static final LanguageEntry INTERACT_BATTERY_SUCCESS = new LanguageEntry("interact.battery.success", "Added 1000mj of charge to this vehicle.");
+
     public static final LanguageEntry INTERACT_VEHICLE_SEATTAKEN = new LanguageEntry("interact.vehicle.seattaken", "This seat is taken!");
     public static final LanguageEntry INTERACT_VEHICLE_LOCKED = new LanguageEntry("interact.vehicle.locked", "This vehicle is locked!");
     public static final LanguageEntry INTERACT_VEHICLE_NEEDKEY = new LanguageEntry("interact.vehicle.needkey", "You must have the key of this vehicle to start it!");
@@ -461,6 +469,11 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_JERRYCAN_DRAIN = new LanguageEntry("iteminfo.jerrycan.drain", "Fill a vehicle by right-clicking with a full can.");
     public static final LanguageEntry ITEMINFO_JERRYCAN_EMPTY = new LanguageEntry("iteminfo.jerrycan.empty", "This can is currently empty.");
     public static final LanguageEntry ITEMINFO_JERRYCAN_CONTAINS = new LanguageEntry("iteminfo.jerrycan.contains", "This can contains: ");
+
+    public static final LanguageEntry ITEMINFO_BATTERY_FILL = new LanguageEntry("iteminfo.battery.fill", "Chargethis battery by right-clicking a charger with power.");
+    public static final LanguageEntry ITEMINFO_BATTERY_DRAIN = new LanguageEntry("iteminfo.battery.drain", "Charge a vehicle by right-clicking with a full charge.");
+    public static final LanguageEntry ITEMINFO_BATTERY_EMPTY = new LanguageEntry("iteminfo.battery.empty", "This battery is currently empty.");
+    public static final LanguageEntry ITEMINFO_BATTERY_FULL = new LanguageEntry("iteminfo.battery.full", "This battery is currently full.");
 
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
