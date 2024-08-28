@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import mcinterface1165.mixin.common.ConcretePowderBlockMixin;
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -1018,12 +1018,6 @@ public class WrapperWorld extends AWrapperWorld {
             item = new ItemEntity(world, point.x, point.y + 1, point.z, ((WrapperItemStack) stack).stack);
         }
         world.addFreshEntity(item);
-    }
-
-    @Override
-    public void spawnExplosion(Explosion explosion) {
-
-
     }
 
     /**

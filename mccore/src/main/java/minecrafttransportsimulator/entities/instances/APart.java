@@ -336,7 +336,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
-                world.spawnExplosion(new Explosion(world,position, 0F, 0F, false));
+                new Explosion(world, position, 0F, 0F, false);
             }
         }
     }

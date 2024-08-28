@@ -10,7 +10,6 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld.BlockHitResult;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -66,6 +65,10 @@ public class Explosion {
         strengthDecayEndRadius = damageDecayEndRadius;
         language = LanguageSystem.DEATH_EXPLOSION_NULL;
         entityResponsible = null;
+
+        attackInternalEntity();
+        attackExternalEntity();
+        breakBlocks();
     }
 
     /**Constructor for explosions from bullets.  Uses bullet properties for radii.**/
@@ -83,6 +86,10 @@ public class Explosion {
         strengthDecayEndRadius = bullet.bullet.blastStrengthRadiusMax;
         language = LanguageSystem.DEATH_EXPLOSION_PLAYER;
         this.entityResponsible = entityResponsible;
+
+        attackInternalEntity();
+        attackExternalEntity();
+        breakBlocks();
     }
 
     //gets damage dealt to vehicles, parts, anything in IV that can be hurt.
@@ -223,7 +230,7 @@ public class Explosion {
             if (isFlammable && Math.random() < fireRate) {
                 --blockPosition.y;
                 if (!world.isAir(blockPosition)) {
-                    world.setToFire(new BlockHitResult(blockPosition, Axis.UP));
+                    world.setToFire(blockPosition, Axis.UP);
                 }
             }
             if (positionsWithBlocksToBreak.isEmpty()) {

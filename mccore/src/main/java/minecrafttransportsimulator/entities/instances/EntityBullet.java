@@ -623,11 +623,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            Explosion boom = new Explosion(gun.world,position, gun.lastLoadedBullet.definition,gun.lastController);
-            gun.world.spawnExplosion(boom);
-            boom.breakBlocks();
-            boom.attackExternalEntity();
-            boom.attackInternalEntity();
+            new Explosion(gun.world, position, gun.lastLoadedBullet.definition, gun.lastController);
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);

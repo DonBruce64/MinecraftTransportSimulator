@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
-import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -414,20 +415,4 @@ public abstract class AWrapperWorld extends EntityManager {
      */
     //FIXME make newer interfaces utilize the optional motion.
     public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion);
-
-
-    public abstract void spawnExplosion(Explosion explosion);
-
-    /**
-     * Class for hitting on blocks.
-     */
-    public static class BlockHitResult {
-        public final Point3D position;
-        public final Axis side;
-
-        public BlockHitResult(Point3D position, Axis side) {
-            this.position = position;
-            this.side = side;
-        }
-    }
 }
