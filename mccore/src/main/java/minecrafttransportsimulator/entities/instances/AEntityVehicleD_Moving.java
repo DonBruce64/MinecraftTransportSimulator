@@ -1005,15 +1005,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 for (Point3D blockPosition : box.collidingBlockPositions) {
                     float blockHardness = world.getBlockHardness(blockPosition);
                     if (!world.isBlockLiquid(blockPosition)) {
-                        if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
+                        if (blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
                             hardnessHitThisBox += blockHardness;
                             if (collisionMotion.y > -0.01) {
                                 //Don't want to blow up from falling fast.
                                 hardnessHitThisTick += blockHardness;
                             }
-                            //Slow down for broken blocks.
-                            motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
-                            if (ticksExisted > 500) {
+                            //If we are supposed to break the block, do so now.
+                            if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && ticksExisted > 500) {
+                                //Scale motion back for broken block, and break block and damage vehicle.
+                                motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
                                 if (!world.isClient()) {
                                     world.destroyBlock(blockPosition, true);
                                     if (box.groupDef != null && blockHardness > 0) {
@@ -1023,6 +1024,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                 continue;
                             }
                         }
+                        //Didn't break this block, flag us to stop moving.
                         inhibitMovement = true;
                     }
                 }
