@@ -202,7 +202,9 @@ public final class ControlSystem {
         } else {
             parkingBrakePressedLastCheck = false;
             double brakeValue = brakeJoystick.isJoystickActive() ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+            if (brakeValue != vehicle.brake) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+            }
         }
     }
 
@@ -422,6 +424,8 @@ public final class ControlSystem {
                 }
             }
         } else {
+            double throttleRequest = -999;
+            double brakeRequest = -999;
             if (ConfigSystem.client.controlSettings.simpleThrottle.value) {
                 if (!powered.engines.isEmpty()) {
                     //Get the brake value.
@@ -451,18 +455,19 @@ public final class ControlSystem {
                     //and invert controls if we are in a reverse gear (and not using a shifter).
                     //Use only the first engine for this.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
+                        throttleRequest = 0;
+                        brakeRequest = EntityVehicleF_Physics.MAX_BRAKE;
                     } else if (powered.engines.get(0).currentGear >= 0 || ConfigSystem.client.controlSettings.useShifter.value) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+                        brakeRequest = brakeValue;
+
                         //Send throttle over if throttle if cruise control is off, or if the throttle is pressed, or was released this check.
                         if (powered.autopilotSetting == 0 || throttleValue > 0 || throttlePressedLastCheck) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
+                            throttleRequest = throttleValue;
                             throttlePressedLastCheck = throttleValue > 0;
                         }
                     } else {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
+                        throttleRequest = brakeValue;
+                        brakeRequest = throttleValue;
                     }
 
                     if (!ConfigSystem.client.controlSettings.useShifter.value) {
@@ -491,25 +496,31 @@ public final class ControlSystem {
                     if (ControlsKeyboardDynamic.CAR_SLOW.isPressed()) {
                         throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
+                            throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE / 2D;
                         } else {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
+                            throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE;
                         }
                     } else if (ControlsKeyboard.CAR_GAS.isPressed()) {
                         throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
+                            throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE;
                         } else {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
+                            throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE / 2D;
                         }
                     } else {
                         //Send gas off packet if we don't have cruise on, or if we do and we pressed the throttle last check.
                         if (powered.autopilotSetting == 0 || throttlePressedLastCheck) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
+                            throttleRequest = 0;
                             throttlePressedLastCheck = false;
                         }
                     }
                 }
+            }
+            if (throttleRequest != -999 && powered.throttle != throttleRequest) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleRequest));
+            }
+            if (brakeRequest != -999 && powered.brake != brakeRequest) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeRequest));
             }
         }
 
