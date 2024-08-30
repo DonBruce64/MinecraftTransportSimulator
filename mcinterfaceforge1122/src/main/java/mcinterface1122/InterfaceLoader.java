@@ -75,7 +75,7 @@ public final class InterfaceLoader {
         }
 
         //Init language system.
-        LanguageSystem.init();
+        LanguageSystem.init(event.getSide().isClient());
     }
 
     @EventHandler

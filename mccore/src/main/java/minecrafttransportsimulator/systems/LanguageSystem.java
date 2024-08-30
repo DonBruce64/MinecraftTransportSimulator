@@ -36,7 +36,8 @@ public class LanguageSystem {
      * Called to init this system.  Must be called after all pack items are loaded, but
      * before any pack item name references are used.
      */
-    public static void init() {
+    public static void init(boolean onClient) {
+        LanguageSystem.onClient = onClient;
 
         //Init all packs, getting their language entries first.
         for (String packID : PackParser.getAllPackIDs()) {
