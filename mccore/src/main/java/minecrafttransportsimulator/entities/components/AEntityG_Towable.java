@@ -105,7 +105,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         if (savedTowedByConnection != null) {
             if (ticksExisted % 20 == 0 && ticksExisted > 0) {
                 if (ticksExisted <= 100 || world.isClient()) {
-                    if (savedTowedByConnection.initConnection(world)) {
+                    if (savedTowedByConnection.initConnection(world, false)) {
                         savedTowedByConnection.towingVehicle.connectTrailer(savedTowedByConnection, false);
                     }
                 } else {
@@ -121,7 +121,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     for (int i = 0; i < savedTowingConnections.size(); ++i) {
                         TowingConnection savedTowingConnection = savedTowingConnections.get(i);
                         try {
-                            if (savedTowingConnection.initConnection(world)) {
+                            if (savedTowingConnection.initConnection(world, false)) {
                                 connectTrailer(savedTowingConnection, false);
                                 --i;
                             }
@@ -141,7 +141,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     for (int i = 0; i < savedDisconnectedTowingConnections.size(); ++i) {
                         TowingConnection savedTowingConnection = savedDisconnectedTowingConnections.get(i);
                         try {
-                            if (savedTowingConnection.initConnection(world)) {
+                            if (savedTowingConnection.initConnection(world, false)) {
                                 disconnectedTowingConnections.add(savedTowingConnection);
                                 --i;
                             }

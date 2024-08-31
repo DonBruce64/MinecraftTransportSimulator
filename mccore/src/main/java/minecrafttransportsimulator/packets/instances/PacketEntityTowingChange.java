@@ -53,7 +53,7 @@ public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>
     public boolean handle(AWrapperWorld world, AEntityG_Towable<?> hitchEntity) {
         if (connectionIndex == -1) {
             TowingConnection connection = new TowingConnection(connectionData);
-            if (connection.initConnection(world)) {
+            if (connection.initConnection(world, false)) {
                 hitchEntity.connectTrailer(connection, false);
             } else {
                 return false;
