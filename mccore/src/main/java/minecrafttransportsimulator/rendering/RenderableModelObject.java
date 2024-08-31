@@ -217,7 +217,7 @@ public class RenderableModelObject {
                     //Need >= here instead of above for things where min/max clamps are equal.
                     renderable.setAlpha(1);
                 } else {
-                    renderable.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
+                    renderable.setAlpha((float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin)));
                 }
             }
 
