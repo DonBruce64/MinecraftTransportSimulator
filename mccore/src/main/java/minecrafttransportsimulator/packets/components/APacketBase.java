@@ -36,7 +36,6 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
@@ -264,7 +263,6 @@ public abstract class APacketBase {
         //Part packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Add.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Remove.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Transfer.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGun.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEffector.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);

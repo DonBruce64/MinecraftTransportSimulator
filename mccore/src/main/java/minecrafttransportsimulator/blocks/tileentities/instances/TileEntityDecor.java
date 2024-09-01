@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
@@ -13,8 +14,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 /**
  * Decor tile entity.  Contains the definition so we know how
@@ -24,9 +23,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
  * @author don_bruce
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
-
-    public static final String CLICKED_VARIABLE = "clicked";
-    public static final String ACTIVATED_VARIABLE = "activated";
+	//Variables
+	public final ComputedVariable clicked;
+	public final ComputedVariable activated;
     private float lightLevel;
     public boolean craftedItem;
 
@@ -47,6 +46,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.widthRadius = definition.decor.depth / 2D;
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
+        
+        this.clicked = new ComputedVariable(this, "clicked", data);
+    	this.activated = new ComputedVariable(this, "activated", data);
     }
 
     @Override
@@ -57,8 +59,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         updateVariableModifiers();
 
         super.update();
-        //Reset clicked state and crafted item.
-        setVariable(CLICKED_VARIABLE, 0);
+        //Reset clicked state.
+        if(clicked.isActive) {
+        	clicked.toggle(false);
+        }
     }
 
     @Override
@@ -82,6 +86,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
+            } else {
+                clicked.setTo(1, true);
+                activated.toggle(true);
             }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
@@ -91,10 +98,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            setVariable(CLICKED_VARIABLE, 1);
-            toggleVariable(ACTIVATED_VARIABLE);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
+            clicked.setTo(1, true);
+            activated.toggle(true);
         }
         return true;
     }
@@ -118,10 +123,11 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
                     case "lightLevel":
-                        lightLevel = adjustVariable(modifier, lightLevel);
+                        lightLevel = (float) adjustVariable(modifier, lightLevel);
                         break;
                     default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
+                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
                         break;
                 }
             }

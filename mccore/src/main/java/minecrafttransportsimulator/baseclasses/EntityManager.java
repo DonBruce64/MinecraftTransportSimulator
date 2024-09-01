@@ -69,6 +69,7 @@ public abstract class EntityManager {
      * constructors won't complete before the entity is accessed from this list.
      */
     public <EntityType extends AEntityA_Base> void addEntity(EntityType entity) {
+        //FIXME need to make sure this occurs before part addition in higher MC builds.
         allEntities.add(entity);
         if (entity.getUpdateTime() == EntityAutoUpdateTime.NORMAL) {
             allNormalTickableEntities.add(entity);
@@ -77,9 +78,6 @@ public abstract class EntityManager {
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
-            if (entity instanceof AEntityD_Definable) {
-                ((AEntityD_Definable<?>) entity).initializeAnimations();
-            }
         }
         if (entity instanceof PartGun) {
             gunMap.put(entity.uniqueUUID, (PartGun) entity);

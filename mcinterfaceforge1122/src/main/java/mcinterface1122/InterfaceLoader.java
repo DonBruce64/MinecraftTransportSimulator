@@ -39,7 +39,6 @@ public final class InterfaceLoader {
         FluidRegistry.enableUniversalBucket();
     }
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         //Get game directory.

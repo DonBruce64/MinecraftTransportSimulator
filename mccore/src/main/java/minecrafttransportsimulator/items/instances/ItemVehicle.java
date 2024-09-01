@@ -31,7 +31,6 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
                 data.deleteAllUUIDTags(); //Do this just in case this is an older item.
             }
             EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, player, this, data);
-            vehicle.addPartsPostAddition(player, data);
 
             //Set position to the spot that was clicked by the player.
             //Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -45,6 +44,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             vehicle.motion.set(0, 0, 0);
             vehicle.prevMotion.set(vehicle.motion);
             vehicle.world.spawnEntity(vehicle);
+
+            //Now add the parts.  These have to be done after spawning the vehicle so they have the right tick order and position.
+            vehicle.addPartsPostAddition(player, data);
 
             //Decrement stack if we are not in creative.
             if (!player.isCreative()) {

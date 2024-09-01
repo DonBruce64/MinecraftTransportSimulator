@@ -26,11 +26,6 @@ public class TileEntityBeacon extends TileEntityDecor {
 
     public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
-    }
-
-    @Override
-    public void initializeAnimations() {
-        super.initializeAnimations();
         for (JSONText textDef : text.keySet()) {
             currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));
             return;

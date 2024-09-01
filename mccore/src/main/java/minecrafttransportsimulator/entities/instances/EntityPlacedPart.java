@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -114,8 +113,8 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     }
 
     @Override
-    public void removePart(APart part, boolean removeFromWorld, Iterator<APart> iterator) {
-        super.removePart(part, removeFromWorld, iterator);
+    public void removePart(APart part) {
+        super.removePart(part);
         currentPart = null;
     }
 

@@ -39,7 +39,7 @@ public abstract class BipedModelMixin<T extends LivingEntity> {
                     renderCurrentRiderStanding = seat.definition.seat.standing;
 
                     if (seat.vehicleOn != null && seat.placementDefinition.isController) {
-                        double turningAngle = seat.vehicleOn.rudderInput / 2D;
+                        double turningAngle = seat.vehicleOn.rudderInputVar.currentValue / 2D;
                         model.rightArm.xRot = (float) Math.toRadians(-75 + turningAngle);
                         model.rightArm.yRot = -yArmAngleRad;
                         model.rightArm.zRot = 0;

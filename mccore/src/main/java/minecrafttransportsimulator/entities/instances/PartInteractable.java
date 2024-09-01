@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
@@ -82,13 +83,13 @@ public final class PartInteractable extends APart {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (vehicleOn == null || !vehicleOn.locked) {
+        if (vehicleOn == null || !vehicleOn.lockedVar.isActive) {
             if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
                 player.sendPacket(new PacketPartInteractable(this, player));
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {
                 player.openCraftingGUI();
             } else if (definition.interactable.interactionType == InteractableComponentType.JERRYCAN || definition.interactable.interactionType == InteractableComponentType.BATTERY) {
-                entityOn.removePart(this, true, null);
+                remove();
                 world.spawnItemStack(getStack(), position, null);
             } else if (tank != null) {
                 player.getHeldStack().interactWith(tank, player);
@@ -287,50 +288,23 @@ public final class PartInteractable extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
-            case ("interactable_count"): {
-                if (inventory != null) {
-                    return inventory.getCount();
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_percent"): {
-                if (inventory != null) {
-                    return inventory.getCount() / (double) inventory.getSize();
-                } else if (tank != null) {
-                    return tank.getFluidLevel() / tank.getMaxLevel();
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_capacity"): {
-                if (inventory != null) {
-                    return inventory.getSize();
-                } else if (tank != null) {
-                    return tank.getMaxLevel() / 1000;
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_furnace_fuel"): {
-                if (furnace != null) {
-                    return furnace.ticksLeftOfFuel;
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_furnace_remaining"): {
-                if (furnace != null) {
-                    return furnace.ticksLeftToSmelt;
-                } else {
-                    return 0;
-                }
-            }
+            case ("interactable_count"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() : 0, false);
+            case ("interactable_percent"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() / (double) inventory.getSize() : (tank != null ? tank.getFluidLevel() / tank.getMaxLevel() : 0), false);
+            case ("interactable_capacity"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : (tank != null ? tank.getMaxLevel() / 1000 : 0), false);
+            case ("interactable_active"):
+                return new ComputedVariable(this, variable, partialTicks -> !playersInteracting.isEmpty() ? 1 : 0, false);
+            case ("interactable_furnace_fuel"):
+                return new ComputedVariable(this, variable, partialTicks -> furnace != null ? furnace.ticksLeftOfFuel : 0, false);
+            case ("interactable_furnace_remaining"):
+                return new ComputedVariable(this, variable, partialTicks -> furnace != null ? furnace.ticksLeftToSmelt : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     /**

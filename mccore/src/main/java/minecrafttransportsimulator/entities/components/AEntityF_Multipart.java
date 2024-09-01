@@ -17,6 +17,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -43,10 +44,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -101,33 +100,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
     private static final Set<CollisionType> partSlotBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.CLICK));
 
-    private APart partToPlace;
-    private EntityPlacedPart placedPart;
-    private int placeTimer;
-
     public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        if (data == null) {
-            //Add constants. This is also done in initializeAnimations, but repeating it here ensures 
-            //the value will be set before any subsequent logic occurs.
-            if (definition.constantValues != null) {
-                variables.putAll(definition.constantValues);
-            }
-        }
-
         //Init part slots.
         if (definition.parts != null) {
             while (partsInSlots.size() < definition.parts.size()) {
                 partsInSlots.add(null);
             }
-        }
-    }
 
-    @Override
-    public void initializeAnimations() {
-        super.initializeAnimations();
-        if (definition.parts != null) {
-            partSlotSwitchboxes.clear();
             for (JSONPartDefinition partDef : definition.parts) {
                 if (partDef.animations != null || partDef.applyAfter != null) {
                     List<JSONAnimationDefinition> animations = new ArrayList<>();
@@ -137,11 +117,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
                 }
             }
-            recalculatePartSlots();
         }
-
-        //Update the part list, this will re-create any linkings on us.
-        updatePartList();
     }
 
     @Override
@@ -149,24 +125,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.update();
         world.beginProfiling("EntityF_Level", true);
 
-        if (partToPlace != null && --placeTimer == 0) {
-            JSONPartDefinition otherPartDef = placedPart.definition.parts.get(0);
-            partToPlace.linkToEntity(placedPart, otherPartDef);
-            placedPart.addPart(partToPlace, false);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Transfer(partToPlace, placedPart, otherPartDef));
-            partToPlace = null;
-            placedPart = null;
-        }
-
         //Check for part slot variable changes and do logic.
         if (!world.isClient() && definition.parts != null) {
             for (int i = 0; i < definition.parts.size(); ++i) {
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (partDef.transferVariable != null) {
-                    if (isVariableActive(partDef.transferVariable)) {
+                    ComputedVariable variable = getOrCreateVariable(partDef.transferVariable);
+                    if (variable.isActive) {
                         transferPart(partDef);
-                        toggleVariable(partDef.transferVariable);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, partDef.transferVariable));
+                        variable.toggle(true);
                     }
                 }
             }
@@ -181,13 +148,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
         if (currentPart == null) {
             //False->True change, try to grab a part.
-            Point3D partAnchor = partDef.pos.copy().rotate(orientation).add(position);
+            Point3D partAnchor = partDef.pos.copy().rotate(orientation);
+            AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
+            if (switchBox != null) {
+                if (switchBox.runSwitchbox(0, false)) {
+                    partAnchor.transform(switchBox.netMatrix);
+                } else {
+                    //Slot not active.
+                    return;
+                }
+            }
+            partAnchor.add(position);
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                 if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
-                    partToTransfer.entityOn.removePart(partToTransfer, false, null);
-                    partToTransfer.linkToEntity(this, partDef);
-                    addPart(partToTransfer, false);
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Transfer(partToTransfer, this, partDef));
+                    IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                    partToTransfer.remove();
+                    addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
                     return;
                 }
             }
@@ -205,10 +181,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
                                 partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true)) {
-                                    removePart(currentPart, false, null);
-                                    currentPart.linkToEntity(entity, otherPartDef);
-                                    entity.addPart(currentPart, false);
-                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Transfer(currentPart, entity, otherPartDef));
+                                    IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                                    currentPart.remove();
+                                    entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
                                     return;
                                 }
                             }
@@ -217,29 +192,33 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
 
                 //Remove the part from ourselves.
-                removePart(currentPart, false, null);
-
-                //Align part to world grid.
-                currentPart.position.x = Math.floor(currentPart.position.x) + 0.5;
-                currentPart.position.y = Math.floor(currentPart.position.y);
-                currentPart.position.z = Math.floor(currentPart.position.z) + 0.5;
-                currentPart.orientation.setToAngles(new Point3D(0, Math.round((currentPart.orientation.convertToAngles().y + 360) / 90) * 90 % 360, 0));
-
-                //Create new placed part entity, align to part, add part, and spawn.
+                IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                IWrapperEntity partRider = currentPart.rider;
+                currentPart.remove();
+                
+                //Create placed part and align to part location.
                 IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
                 EntityPlacedPart entity = new EntityPlacedPart(world, null, placerData);
-                entity.addPartsPostAddition(null, placerData);
-
+                
+                //Align placed part to world grid.
                 entity.position.set(currentPart.position);
-                entity.prevPosition.set(entity.position);
+                entity.position.x = Math.floor(entity.position.x) + 0.5;
+                entity.position.y = Math.floor(entity.position.y);
+                entity.position.z = Math.floor(entity.position.z) + 0.5;
                 entity.orientation.set(currentPart.orientation);
+                entity.orientation.setToAngles(new Point3D(0, Math.round((entity.orientation.convertToAngles().y + 360) / 90) * 90 % 360, 0));
+                
+                //Set priors to prevent funny movement.
+                entity.prevPosition.set(entity.position);
                 entity.prevOrientation.set(entity.orientation);
+                
+                //Spawn into world and add part to placed part entity.
                 entity.world.spawnEntity(entity);
-
-                //Need to defer the  adding of this part to give time for the main entity to spawn and transfer to the clients.
-                partToPlace = currentPart;
-                placedPart = entity;
-                placeTimer = 20;
+                entity.addPartsPostAddition(null, placerData);//Do this because some classes might do things in sub-methods.
+                entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, 0, true, false);
+                if (partRider != null) {
+                    entity.parts.get(0).setRider(partRider, false);
+                }
             }
         }
     }
@@ -328,9 +307,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             //First check if we need to reduce health of the hitbox.
             boolean hitOperationalHitbox = false;
             if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.health != 0 && !damage.isWater) {
-                String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage";
-                double currentDamage = hitEntity.getVariable(variableName);
                 if (bullet != null) {
+                    double currentDamage = hitEntity.getOrCreateVariable("collision_" + (hitEntity.definition.collisionGroups.indexOf(hitEntry.box.groupDef) + 1) + "_damage").currentValue;
                     bullet.displayDebugMessage("HIT HEALTH BOX.  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitEntry.box.groupDef.health + "  ATTACKED FOR: " + damage.amount);
                 }
 
@@ -380,7 +358,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     boolean applyDamage = ((hitEntry.box.groupDef != null && (hitEntry.box.groupDef.health == 0 || damage.isWater)) || hitPart != null);
                     boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
 
-                    bullet.displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) hitEntity.damageAmount);
+                    bullet.displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) hitEntity.damageVar.currentValue);
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
@@ -410,8 +388,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public void remove() {
         super.remove();
         //Call all the part removal methods to ensure they save their states properly.
-        for (APart part : parts) {
-            part.remove();
+        while (!parts.isEmpty()) {
+            parts.get(0).remove();
         }
     }
 
@@ -445,27 +423,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public void doPostUpdateLogic() {
-        //Update parts prior to doing our post-updates.
-        //This is required for trailers, as they may attached to parts.
-        //This also ensures that during our post-update loop, all parts are post-updated.
-        world.beginProfiling("PartUpdates_" + parts.size(), true);
-        Iterator<APart> iterator = parts.iterator();
-        while (iterator.hasNext()) {
-            APart part = iterator.next();
-            part.update();
-            if (!part.isValid) {
-                //Part was removed during updates, remove from the part listing.
-                removePart(part, true, iterator);
-            } else {
-                part.doPostUpdateLogic();
-            }
-        }
-        world.endProfiling();
-        super.doPostUpdateLogic();
-    }
-
-    @Override
     public void damageCollisionBox(BoundingBox box, double damageAmount) {
         APart part = getPartWithBox(box);
         if (part != null) {
@@ -476,55 +433,47 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //If we have a variable with a suffix, we need to get that part first and pass
-        //it into this method rather than trying to run through the code now.
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            return getSpecificPartAnimation(variable, partNumber, partialTicks);
-        } else {
-            return super.getRawVariableValue(variable, partialTicks);
-        }
-    }
-
-    @Override
-    public void toggleVariable(String variable) {
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            APart foundPart = getSpecificPart(variable, partNumber);
-            if (foundPart != null) {
-                variable = variable.substring(0, variable.lastIndexOf("_"));
-                foundPart.toggleVariable(variable);
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
+        if (ComputedVariable.isNumberedVariable(variable)) {
+            //Iterate through our parts to find the index of the pack def for the part we want.
+            String partType = variable.substring(0, variable.indexOf("_"));
+            if (partType.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+                partType = partType.substring(ComputedVariable.INVERTED_PREFIX.length());
             }
-        } else {
-            super.toggleVariable(variable);
-        }
-    }
-
-    @Override
-    public void setVariable(String variable, double value) {
-        int partNumber = getVariableNumber(variable);
-        if (partNumber != -1) {
-            APart foundPart = getSpecificPart(variable, partNumber);
-            if (foundPart != null) {
-                foundPart.setVariable(variable.substring(0, variable.lastIndexOf("_")), value);
+            int partNumber = ComputedVariable.getVariableNumber(variable);
+            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
+            if (partType.equals("part")) {
+                //Shortcut as we can just get the part for the slot.
+                //Check index just in case someone screwed up a JSON.
+                APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
+                if (partFound != null) {
+                    return partFound.createComputedVariable(partVariable, true);
+                }
+            } else if (definition.parts != null) {
+                for (int i = 0; i < definition.parts.size(); ++i) {
+                    JSONPartDefinition partDef = definition.parts.get(i);
+                    for (String partDefType : partDef.types) {
+                        if (partDefType.startsWith(partType)) {
+                            if (partNumber == 0) {
+                                APart partFound = partsInSlots.get(i);
+                                if (partFound != null) {
+                                    return partFound.createComputedVariable(partVariable, true);
+                                } else {
+                                    return new ComputedVariable(false);
+                                }
+                            } else {
+                                --partNumber;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-        } else {
-            super.setVariable(variable, value);
-        }
-    }
 
-    /**
-     * Helper method to get the index of the passed-in variable.  Indexes are defined by
-     * variable names ending in _xx, where xx is a number.  The defined number is assumed
-     * to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
-     * define a number, then -1 is returned.
-     */
-    public static int getVariableNumber(String variable) {
-        if (variable.matches("^.*_\\d+$")) {
-            return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+            //Couldn't find the part, set to 0.
+            return new ComputedVariable(false);
         } else {
-            return -1;
+            return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 
@@ -564,7 +513,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     JSONPartDefinition partDef = definition.parts.get(i);
                     if (partDef.conditionalDefaultParts != null) {
                         for (Entry<String, String> conditionalDef : partDef.conditionalDefaultParts.entrySet()) {
-                            if (getCleanRawVariableValue(conditionalDef.getKey(), 0) > 0) {
+                            if (getOrCreateVariable(conditionalDef.getKey()).isActive) {
                                 addDefaultPart(conditionalDef.getValue(), i, placingPlayer, definition);
                                 break;
                             }
@@ -643,22 +592,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     /**
      * Removes the passed-in part from the entity.  Calls the part's {@link APart#remove()} method to
-     * let the part handle removal code.  Iterator is optional, but if you're in any code block that
-     * is iterating over the parts list, and you don't pass that iterator in, you'll get a CME.
+     * let it process removal, and sync with clients.
      */
-    public void removePart(APart part, boolean removeFromWorld, Iterator<APart> iterator) {
+    public void removePart(APart part) {
         if (parts.contains(part)) {
-            if (removeFromWorld) {
-                //Call the part's removal code for it to process.
+            parts.remove(part);
+            if(part.isValid) {
                 part.remove();
             }
 
-            //Remove part from main list of parts.
-            if (iterator != null) {
-                iterator.remove();
-            } else {
-                parts.remove(part);
-            }
             if (!part.isFake()) {
                 partsInSlots.set(definition.parts.indexOf(part.placementDefinition), null);
 
@@ -668,13 +610,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             //If we are on the server, notify all clients of this change.
             if (!world.isClient()) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Remove(part, removeFromWorld));
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Remove(part));
             }
-        }
 
-        //Let parts know a change was made.
-        part.masterEntity.updateAllpartList();
-        part.masterEntity.updatePartList();
+            //Let parts know a change was made.
+            part.masterEntity.updateAllpartList();
+            part.masterEntity.updatePartList();
+        }
     }
 
     /**
@@ -682,7 +624,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * At the time of call, the part that was added will already be added, and the part
      * that was removed will already be removed.
      */
-    protected void updateAllpartList() {
+    protected final void updateAllpartList() {
         allParts.clear();
         parts.forEach(part -> {
             part.updateAllpartList();
@@ -702,6 +644,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         cameraEntities.clear();
 
         parts.forEach(APart::updatePartList);
+        
+        //Clear computed variables since we changed parts and functions likely changed.
+        resetAllVariables();
     }
 
     /**
@@ -876,7 +821,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         //Update encompassing bounding box to reflect all bounding boxes of all parts.
         if (!parts.isEmpty()) {
             for (APart part : parts) {
-                if (!part.isFake()) {
+                //Don't check new parts or fake parts for encompassing calculations.
+                if (!part.isFake() && part.ticksExisted > 0) {
                     encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x) + part.encompassingBox.widthRadius);
                     encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y) + part.encompassingBox.heightRadius);
                     encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z) + part.encompassingBox.depthRadius);
@@ -884,50 +830,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
         }
         encompassingBox.updateToEntity(this, null);
-    }
-
-    /**
-     * Helper method to return the part at the specific index for the passed-in variable.
-     * Returns null if the part doesn't exist.
-     */
-    public APart getSpecificPart(String variable, int partNumber) {
-        //Iterate through our parts to find the index of the pack def for the part we want.
-        String partType = variable.substring(0, variable.indexOf("_"));
-        if (partType.equals("part")) {
-            //Shortcut as we can just get the part for the slot.
-            //Check index just in case someone screwed up a JSON.
-            return partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
-        } else if (definition.parts != null) {
-            for (int i = 0; i < definition.parts.size(); ++i) {
-                JSONPartDefinition partDef = definition.parts.get(i);
-                for (String defPartType : partDef.types) {
-                    if (defPartType.startsWith(partType)) {
-                        if (partNumber == 0) {
-                            return partsInSlots.get(i);
-                        } else {
-                            --partNumber;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        //No valid sub-part definitions found.  This is an error, but not one we should crash for.  Return null.
-        return null;
-    }
-
-    /**
-     * Helper method to return the value of an animation for a specific part, as
-     * determined by the index of that part.
-     */
-    public double getSpecificPartAnimation(String variable, int partNumber, float partialTicks) {
-        APart foundPart = getSpecificPart(variable, partNumber);
-        if (foundPart != null) {
-            return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-        } else {
-            return 0;
-        }
     }
 
     @Override
