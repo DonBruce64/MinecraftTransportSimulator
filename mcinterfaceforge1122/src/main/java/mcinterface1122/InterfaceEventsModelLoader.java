@@ -90,10 +90,6 @@ public class InterfaceEventsModelLoader {
 
                         //Use smooth shading for model rendering.
                         GL11.glShadeModel(GL11.GL_SMOOTH);
-                        //Disable alpha testing on blended pass as it discards transparent fragments.
-                        if (blendingEnabled) {
-                            GlStateManager.disableAlpha();
-                        }
                         //Enable normal re-scaling for model rendering.
                         //This prevents bad lighting.
                         GlStateManager.enableRescaleNormal();
@@ -111,9 +107,6 @@ public class InterfaceEventsModelLoader {
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);
-                        if (blendingEnabled) {
-                            GlStateManager.enableAlpha();
-                        }
                         GlStateManager.disableRescaleNormal();
                     }
                 }

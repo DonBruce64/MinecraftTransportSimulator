@@ -1048,6 +1048,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
         if (newValue != currentValue) {
+            newValue = Math.round(newValue * 1000) / 1000D;
             setVariable(variable, newValue);
             return true;
         } else {

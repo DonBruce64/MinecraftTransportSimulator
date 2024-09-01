@@ -44,7 +44,7 @@ public class TowingConnection {
         this.hookupConnectionIndex = hookupConnectionIndex;
         this.towingVehicle = hitchEntity instanceof APart ? ((APart) hitchEntity).vehicleOn : (EntityVehicleF_Physics) hitchEntity;
         this.towedVehicle = hookupEntity instanceof APart ? ((APart) hookupEntity).vehicleOn : (EntityVehicleF_Physics) hookupEntity;
-        initConnection(hitchEntity.world);
+        initConnection(hitchEntity.world, true);
     }
 
     public TowingConnection(IWrapperNBT data) {
@@ -63,10 +63,10 @@ public class TowingConnection {
      * times of entities in the world.  Just call it during later ticks for a few calls until you think
      * too much time has passed and the entities just don't exist in the world.
      */
-    public boolean initConnection(AWrapperWorld world) {
+    public boolean initConnection(AWrapperWorld world, boolean skipTickCheck) {
         if (towingEntity == null) {
             towingEntity = world.getEntity(hitchEntityUUID);
-            if (towingEntity != null && towingEntity.ticksExisted > 5) {
+            if (towingEntity != null && (skipTickCheck || towingEntity.ticksExisted > 5)) {
                 towingVehicle = towingEntity instanceof APart ? ((APart) towingEntity).vehicleOn : (EntityVehicleF_Physics) towingEntity;
                 if (towingEntity.definition.connectionGroups.size() > hitchGroupIndex) {
                     hitchConnectionGroup = towingEntity.definition.connectionGroups.get(hitchGroupIndex);
@@ -79,7 +79,7 @@ public class TowingConnection {
 
         if (towedEntity == null) {
             towedEntity = world.getEntity(hookupEntityUUID);
-            if (towedEntity != null && towedEntity.ticksExisted > 5) {
+            if (towedEntity != null && (skipTickCheck || towingEntity.ticksExisted > 5)) {
                 towedVehicle = towedEntity instanceof APart ? ((APart) towedEntity).vehicleOn : (EntityVehicleF_Physics) towedEntity;
                 if (towedEntity.definition.connectionGroups.size() > hookupGroupIndex) {
                     hookupConnectionGroup = towedEntity.definition.connectionGroups.get(hookupGroupIndex);
