@@ -849,6 +849,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
+            case ("radio_active"):
+                return new ComputedVariable(this, variable, partialTicks -> radio != null && radio.isPlaying() ? 1 : 0, false);
+            case ("radio_volume"):
+                return new ComputedVariable(this, variable, partialTicks -> radio != null ? radio.volume : 0, false);
+            case ("radio_preset"):
+                return new ComputedVariable(this, variable, partialTicks -> radio != null ? radio.preset : 0, false);
             case ("tick"):
                 return new ComputedVariable(this, variable, partialTicks -> ticksExisted + partialTicks, true);
             case ("tick_sin"):

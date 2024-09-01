@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -41,20 +40,6 @@ public class TileEntityRadio extends TileEntityDecor {
             return true;
         } else {
             return false;
-        }
-    }
-
-    @Override
-    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
-        switch (variable) {
-            case ("radio_active"):
-                return new ComputedVariable(this, variable, partialTicks -> radio.isPlaying() ? 1 : 0, false);
-            case ("radio_volume"):
-                return new ComputedVariable(this, variable, partialTicks -> radio.volume, false);
-            case ("radio_preset"):
-                return new ComputedVariable(this, variable, partialTicks -> radio.preset, false);
-            default:
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
     }
 }
