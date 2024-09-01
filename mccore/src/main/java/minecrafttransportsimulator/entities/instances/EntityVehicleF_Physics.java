@@ -408,7 +408,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set moments and air density.
-            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / (500D * world.getMaxHeight() / 256D));
+            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / ConfigSystem.settings.general.airDensityDeclineRate.value );
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
