@@ -194,10 +194,10 @@ public final class RenderInstrument {
                 //We don't want to do an OpenGL translation here as that would move the texture's
                 //rendered position on the instrument rather than change what texture is rendered.
                 if (clock.animation.axis.x != 0) {
-                    textureCoord1.y += xTranslation;
-                    textureCoord2.y += xTranslation;
-                    textureCoord3.y += xTranslation;
-                    textureCoord4.y += xTranslation;
+                    textureCoord1.x += xTranslation;
+                    textureCoord2.x += xTranslation;
+                    textureCoord3.x += xTranslation;
+                    textureCoord4.x += xTranslation;
                 }
                 if (clock.animation.axis.y != 0) {
                     textureCoord1.y += yTranslation;

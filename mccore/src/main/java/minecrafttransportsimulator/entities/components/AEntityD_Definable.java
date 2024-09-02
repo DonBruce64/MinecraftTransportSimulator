@@ -1116,7 +1116,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (List<String> variableList : list) {
                 boolean listIsTrue = false;
                 for (String variableName : variableList) {
-                    if (getOrCreateVariable(variableName).isActive) {
+                    if (getOrCreateVariable(variableName).computeValue(0) > 0) {
                         listIsTrue = true;
                         break;
                     }

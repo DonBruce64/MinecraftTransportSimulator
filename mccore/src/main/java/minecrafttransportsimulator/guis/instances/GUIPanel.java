@@ -351,13 +351,24 @@ public class GUIPanel extends AGUIBase {
                         break;
                     }
                     case AUTOPILOT: {
-                    	if (vehicle.autopilotValueVar.isActive) {
-                    		InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, 0));
-                        }else if (vehicle.definition.motorized.isAircraft) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, vehicle.position.y));
-                        } else {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, vehicle.indicatedSpeed));
-                        }
+                        newComponent = new GUIPanelButton(this, panelComponent) {
+                            @Override
+                            public void onClicked(boolean leftSide) {
+                                if (vehicle.autopilotValueVar.isActive) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, 0));
+                                } else if (vehicle.definition.motorized.isAircraft) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, vehicle.position.y));
+                                } else {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotValueVar, vehicle.indicatedSpeed));
+                                }
+                            }
+
+                            @Override
+                            public int getState() {
+                                return vehicle.autopilotValueVar.isActive ? 1 : 0;
+                            }
+                        };
+                        text = vehicle.definition.motorized.isAircraft ? "AUTO" : "CRUISE";
                         break;
                     }
                     case CUSTOM_VARIABLE: {

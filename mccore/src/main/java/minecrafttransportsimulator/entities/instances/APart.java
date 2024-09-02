@@ -275,6 +275,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public EntityAutoUpdateTime getUpdateTime() {
+        //Sync with what were are on.
+        return entityOn.getUpdateTime();
+    }
+
+    @Override
     public void remove() {
         super.remove();
         //Call this after removal since we don't want to get stuck in an infinite loop since part removal also calls this method.
