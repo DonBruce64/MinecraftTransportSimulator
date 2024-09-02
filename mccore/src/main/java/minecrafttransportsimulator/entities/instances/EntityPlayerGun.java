@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -265,14 +264,9 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public void removePart(APart part, boolean notifyClients) {
-        //Prior to removal, flag the gun as not being held and tick one last time.
-        //This allows the gun to perform any holstering tasks.
-        if (part == activeGun) {
-            activeGun.isHandHeldGunEquipped = false;
-            EntityManager.doTick(activeGun);
-        }
-        super.removePart(part, notifyClients);
+    public void removePart(APart part, boolean doFinalTick, boolean notifyClients) {
+        super.removePart(part, doFinalTick, notifyClients);
+        //No matter how we remove our gun, it's not ours anymore.
         activeGun = null;
     }
 
@@ -327,7 +321,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
-            activeGun.remove();
+            removePart(activeGun, true, true);
         }
     }
 

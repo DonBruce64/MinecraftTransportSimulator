@@ -102,7 +102,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     /**
      * Constructor for synced entities
      **/
-    public AEntityB_Existing(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+    public AEntityB_Existing(AWrapperWorld world, IWrapperNBT data) {
         super(world, data);
         if (data != null) {
             this.position = data.getPoint3d("position");

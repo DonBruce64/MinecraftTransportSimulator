@@ -31,7 +31,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
- * and {@link AEntityF_Multipart#removePart(APart, boolean)} to remove them.
+ * and {@link AEntityF_Multipart#removePart(APart, boolean, boolean)} to remove them.
  * You may extend {@link AEntityF_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -75,6 +75,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final boolean isSpare;
     public final boolean isMirrored;
     private boolean requestedForcedCamera;
+    private final ComputedVariable newlyAddedVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -150,11 +151,20 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
+
+        addVariable(newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        if (placingPlayer != null) {
+            newlyAddedVar.setActive(true, false);
+        }
     }
 
     @Override
     public void update() {
         super.update();
+        if (ticksExisted == 5) {
+            newlyAddedVar.setActive(false, false);
+        }
+
         world.beginProfiling("PartAlignment", true);
         isInvisible = partOn != null ? partOn.isInvisible : false;
         
@@ -268,7 +278,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void remove() {
         super.remove();
         //Call this after removal since we don't want to get stuck in an infinite loop since part removal also calls this method.
-        entityOn.removePart(this, !world.isClient());
+        entityOn.removePart(this, false, !world.isClient());
     }
 
     @Override
@@ -574,6 +584,14 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
                     case ("part_onvehicle"):
                         return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
+                    case ("part_added_vehicle"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
+                    case ("part_removed_vehicle"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && !isValid) ? 1 : 0, false);
+                    case ("part_added_ground"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn == null && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
+                    case ("part_removed_ground"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn == null && !isValid) ? 1 : 0, false);
                     default: {
                         ComputedVariable computedVariable = super.createComputedVariable(variable, false);
                         if (computedVariable == null) {

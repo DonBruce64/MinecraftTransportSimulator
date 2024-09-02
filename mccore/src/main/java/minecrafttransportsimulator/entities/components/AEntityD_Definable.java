@@ -156,8 +156,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Constructor for synced entities
      **/
-    public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityD_Definable(AWrapperWorld world, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
+        super(world, data);
         if (item != null) {
             this.definition = item.definition;
             updateSubDefinition(item.subDefinition.subName);
@@ -677,7 +677,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		            AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
 		            playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
 		            hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                    shouldSoundStartPlaying = hasOpenTop ? true : (playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior;
+                    shouldSoundStartPlaying = hasOpenTop ? true : ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior);
                 }
 
                 //Next, check the distance.

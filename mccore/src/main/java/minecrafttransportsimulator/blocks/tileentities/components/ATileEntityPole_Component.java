@@ -24,7 +24,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     public final Axis axis;
 
     public ATileEntityPole_Component(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
-        super(core.world, placingPlayer, item, data);
+        super(core.world, item, data);
         this.core = core;
         this.axis = axis;
     }

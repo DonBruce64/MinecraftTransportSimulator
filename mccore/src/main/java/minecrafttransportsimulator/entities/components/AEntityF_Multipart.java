@@ -19,6 +19,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -388,9 +389,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public void remove() {
         super.remove();
         //Remove all parts, but don't notify clients.  We don't want them to get removal packets before we ourselves are gone.
-        //IF they do, bad states will occur.
+        //If they do, bad states will occur.
         while (!parts.isEmpty()) {
-            removePart(parts.get(0), false);
+            removePart(parts.get(0), false, false);
         }
     }
 
@@ -502,7 +503,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     try {
                         IWrapperNBT partData = data.getData("part_" + i);
                         if (partData != null) {
-                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), placingPlayer, i, true, false);
+                            addPartFromStack(PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName")).getNewStack(partData), null, i, true, false);
                         }
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
@@ -595,12 +596,17 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Removes the passed-in part from the entity.  Calls the part's {@link APart#remove()} method to
      * let it process removal, and sync with clients.  This is primarily an internal method, for general
      * part removal, simply call the part's {@link #remove()} method as it calls this as appropriate.
+     * Note that if a final tick is required (say for animations to finish playing, set the boolean to true)
+     * this will tick the "dead" part, which the part can notice and handle closure states as appropriate.
      */
-    public void removePart(APart part, boolean notifyClients) {
+    public void removePart(APart part, boolean doFinalTick, boolean notifyClients) {
         if (parts.contains(part)) {
             parts.remove(part);
             if(part.isValid) {
                 part.remove();
+            }
+            if (doFinalTick) {
+                EntityManager.doTick(part);
             }
 
             if (!part.isFake()) {
@@ -612,7 +618,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             //If we are on the server, notify all clients of this change.
             if (!world.isClient() && notifyClients) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Remove(part));
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Remove(part, doFinalTick));
             }
 
             //Let parts know a change was made.

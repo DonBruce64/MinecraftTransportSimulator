@@ -111,7 +111,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     protected boolean bypassConnectionPacket;
 
     public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
-        super(world, placingPlayer, item, data);
+        super(world, item, data);
         //Handle instruments.
         if (definition.instruments != null) {
             //Need to init lists.

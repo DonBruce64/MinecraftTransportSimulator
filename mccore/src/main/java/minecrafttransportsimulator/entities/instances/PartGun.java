@@ -1167,7 +1167,7 @@ public class PartGun extends APart {
             case ("gun_inhand_aiming"):
                 return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunAimed ? 1 : 0, false);
             case ("gun_inhand_equipped"):
-                return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped && isValid ? 1 : 0, false);
             case ("gun_controller_firstperson"):
                 return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
             case ("gun_active"):

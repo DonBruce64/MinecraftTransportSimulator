@@ -161,7 +161,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                         } else {
                                             //Player can remove part, spawn item in the world and remove part.
                                             part.entityOn.world.spawnItemStack(part.getStack(), part.position, null);
-                                            part.remove();
+                                            part.entityOn.removePart(part, true, true);
                                         }
                                     }
                                 }

@@ -29,7 +29,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     private final Point3D blockPosition;
 
     public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
-        super(world, placingPlayer, item, data);
+        super(world, item, data);
         //Offset the position of this tile to be centered in the blocks 0->1 space.
         //This allows for better rotation code and simpler models.
         //We need to save the actual position though so we don't constantly offset.
