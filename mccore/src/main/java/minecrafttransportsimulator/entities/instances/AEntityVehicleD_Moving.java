@@ -7,6 +7,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -59,6 +60,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean lockedOnRoad;
     private boolean updateGroundDevicesRequest;
     private int lastBlockCollisionBoxesCount;
+    private int crashDebounce;
     public double groundVelocity;
     public double turningForce;
     public double weightTransfer = 0;
@@ -785,6 +787,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This prevents vehicles from phasing through walls even though they are driving on the ground.
                 //If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
                 world.beginProfiling("CollisionCheck_" + lastBlockCollisionBoxesCount, false);
+                if (crashDebounce > 0) {
+                    --crashDebounce;
+                }
                 if (isCollisionBoxCollided()) {
                     world.beginProfiling("CollisionHandling", false);
                     if (towedByConnection != null) {
@@ -1033,8 +1038,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 //If we hit too many blocks.  Either remove part this is a box on, or destroy us.
-                if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
-                    if (!world.isClient()) {
+                //If we didn't, reduce health if applicable
+                if (!world.isClient()) {
+                    if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
                         APart partHit = getPartWithBox(box);
                         if (partHit != null) {
                             hardnessHitThisTick -= hardnessHitThisBox;
@@ -1043,6 +1049,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                             destroy(box);
                             return false;
                         }
+                    } else if (hardnessHitThisTick > 0 && definition.motorized.crashSpeedMax > 0 && velocity > definition.motorized.crashSpeedMin && crashDebounce == 0) {
+                        attack(new Damage(definition.general.health * (velocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin), null, null, null, null));
+                        //Need the debounce so we don't continously apply crash damage during a crash.
+                        crashDebounce = 60;
                     }
                 }
 

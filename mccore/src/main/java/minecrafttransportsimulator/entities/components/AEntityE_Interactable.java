@@ -29,6 +29,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
@@ -348,11 +349,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             if (!outOfHealth) {
                 double currentDamage = damageVar.currentValue + damage.amount;
                 if (currentDamage > definition.general.health) {
-                    double amountActuallyNeeded = damage.amount - (currentDamage - definition.general.health);
                     currentDamage = definition.general.health;
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, amountActuallyNeeded));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(damageVar, definition.general.health));
                 } else {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, damage.amount));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, damage.amount, 0, definition.general.health));
                 }
                 damageVar.setTo(currentDamage, false);
             }
