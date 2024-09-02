@@ -598,6 +598,14 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
 
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Inputs for the crafting type effector.")
+        public List<String> crafterInputs;
+
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Output for the crafting type effector.")
+        public String crafterOutput;
+
         @Deprecated
         public int placerDelay;
     }
@@ -622,7 +630,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
         DROPPER,
         @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
-        SPRAYER;
+        SPRAYER,
+        @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.")
+        CRAFTER;
     }
 
     @Deprecated

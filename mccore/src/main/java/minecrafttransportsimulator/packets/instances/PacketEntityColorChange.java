@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -43,10 +45,11 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
         IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(newItem, recipeIndex, false, true, false, false))) {
+        List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(newItem, recipeIndex, false, true, false, false);
+        if (player.isCreative() || inventory.hasMaterials(materials)) {
             //Remove livery materials (if required) and set new subName.
             if (!player.isCreative()) {
-                inventory.removeMaterials(newItem, recipeIndex, false, true, false);
+                inventory.removeMaterials(materials);
             }
             entity.updateSubDefinition(newItem.subDefinition.subName);
 

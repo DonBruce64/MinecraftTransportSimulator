@@ -278,10 +278,25 @@ public interface IInventoryProvider {
      * result in the this method removing the incorrect number of materials.
      * Note that for repair recipes, this will not remove the implicit item to repair.
      */
-    default void removeMaterials(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
-        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair, false)) {
-            for (IWrapperItemStack stack : material.possibleItems) {
-                removeStack(stack, material.qty, false);
+    default void removeMaterials(List<PackMaterialComponent> materials) {
+        for (PackMaterialComponent material : materials) {
+            int requiredMaterialCount = material.qty;
+            for (IWrapperItemStack materialStack : material.possibleItems) {
+                for (int i = 0; i < getSize(); ++i) {
+                    IWrapperItemStack testStack = getStack(i);
+                    if (InterfaceManager.coreInterface.isOredictMatch(testStack, materialStack)) {
+                        int amountToRemove = requiredMaterialCount;
+                        if (testStack.getSize() < amountToRemove) {
+                            amountToRemove = testStack.getSize();
+                        }
+                        removeStack(testStack, amountToRemove, false);
+                        requiredMaterialCount -= amountToRemove;
+                    }
+                    if (requiredMaterialCount == 0) {
+                        //Don't need to search further since we got everything.
+                        break;
+                    }
+                }
             }
         }
     }

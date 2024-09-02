@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -50,7 +52,8 @@ public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Defina
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
         if (!world.isClient()) {
             IWrapperInventory inventory = player.getInventory();
-            if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair, false))) {
+            List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair, false);
+            if (player.isCreative() || inventory.hasMaterials(materials)) {
                 //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
                 if (forRepair) {
                     //Find the repair item and fix it.
@@ -63,7 +66,7 @@ public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Defina
                         stack.setData(stackData);
 
                         if (!player.isCreative()) {
-                            inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                            inventory.removeMaterials(materials);
                         }
                         inventory.setStack(stack, repairIndex);
                         return true;
@@ -72,7 +75,7 @@ public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Defina
                     //Check we can add the stack before removing materials.
                     if (inventory.addStack(itemToCraft.getNewStack(null))) {
                         if (!player.isCreative()) {
-                            inventory.removeMaterials(itemToCraft, recipeIndex, true, true, forRepair);
+                            inventory.removeMaterials(materials);
                         }
                         return true;
                     }
