@@ -603,8 +603,8 @@ public class JSONPart extends AJSONPartProvider {
         public List<String> crafterInputs;
 
         @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
-        @JSONDescription("Output for the crafting type effector.")
-        public String crafterOutput;
+        @JSONDescription("Outputs for the crafting type effector.")
+        public List<String> crafterOutputs;
 
         @Deprecated
         public int placerDelay;
@@ -631,7 +631,7 @@ public class JSONPart extends AJSONPartProvider {
         DROPPER,
         @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
         SPRAYER,
-        @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.")
+        @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.  Note that while this can put the resulting item into any inventory, it can only pull from linked inventories that have feedsVehicles as true.  Use this for separate input/output inventories if desired.")
         CRAFTER;
     }
 

@@ -131,7 +131,7 @@ public final class ConfigSystem {
                         ItemPartEffector effectorItem = (ItemPartEffector) packItem;
                         if (effectorItem.definition.effector.crafterInputs != null) {
                             override.autocrafterInputs = effectorItem.definition.effector.crafterInputs;
-                            override.autocrafterOutput = effectorItem.definition.effector.crafterOutput;
+                            override.autocrafterOutputs = effectorItem.definition.effector.crafterOutputs;
                         }
                     }
                 }
@@ -174,8 +174,8 @@ public final class ConfigSystem {
                                     if (effectorItem.definition.effector.crafterInputs != null) {
                                         effectorItem.definition.effector.crafterInputs = override.autocrafterInputs;
                                     }
-                                    if (effectorItem.definition.effector.crafterOutput != null) {
-                                        effectorItem.definition.effector.crafterOutput = override.autocrafterOutput;
+                                    if (effectorItem.definition.effector.crafterOutputs != null) {
+                                        effectorItem.definition.effector.crafterOutputs = override.autocrafterOutputs;
                                     }
                                 }
                             }

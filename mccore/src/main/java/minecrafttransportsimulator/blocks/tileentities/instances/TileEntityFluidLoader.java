@@ -68,7 +68,7 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
         if (amountToLoad > 0) {
             amountToLoad = tank.drain(fluidToLoad, amountToLoad, true);
             connectedPart.tank.fill(fluidToLoad, amountToLoad, true);
-            loadingActiveVar.setActive(true, true);
+            loadingActiveVar.setActive(amountToLoad > 0, true);
         } else {
             updateNearestPart();
             loadingActiveVar.setActive(false, true);
@@ -82,7 +82,7 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
         if (amountToUnload > 0) {
             amountToUnload = tank.fill(fluidToUnload, amountToUnload, true);
             connectedPart.tank.drain(fluidToUnload, amountToUnload, true);
-            unloadingActiveVar.setActive(true, true);
+            unloadingActiveVar.setActive(amountToUnload > 0, true);
         } else {
             updateNearestPart();
             unloadingActiveVar.setActive(false, true);

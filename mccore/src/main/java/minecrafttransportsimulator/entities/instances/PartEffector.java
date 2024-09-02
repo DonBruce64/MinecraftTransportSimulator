@@ -46,7 +46,7 @@ public class PartEffector extends APart {
 
     //Variables used for crafters.
     private final List<PackMaterialComponent> inputMaterials = new ArrayList<>();
-    private final PackMaterialComponent outputMaterial;
+    private final List<PackMaterialComponent> outputMaterials = new ArrayList<>();
 
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -62,12 +62,14 @@ public class PartEffector extends APart {
                     inputMaterials.add(material);
                 }
             });
-            outputMaterial = new PackMaterialComponent(definition.effector.crafterOutput);
-            if (outputMaterial.possibleItems.isEmpty()) {
-                InterfaceManager.coreInterface.logError("ERROR: Crafter of type " + definition + " is set with a material output of " + definition.effector.crafterOutput + " but that's not a valid item.  Contact your modpack, or pack author as this crafter is now disabled!");
-            }
-        } else {
-            outputMaterial = null;
+            definition.effector.crafterOutputs.forEach(output -> {
+                PackMaterialComponent material = new PackMaterialComponent(output);
+                if (material.possibleItems.isEmpty()) {
+                    InterfaceManager.coreInterface.logError("ERROR: Crafter of type " + definition + " is set with a material output of " + output + " but that's not a valid item.  Contact your modpack, or pack author as this output is being skipped!");
+                } else {
+                    outputMaterials.add(material);
+                }
+            });
         }
     }
 
@@ -243,11 +245,11 @@ public class PartEffector extends APart {
                             break;
                         }
                         case CRAFTER: {
-                            if (!outputMaterial.possibleItems.isEmpty()) {
+                            if (!outputMaterials.isEmpty()) {
                                 for (PartInteractable crate : linkedPullableCrates) {
                                     if (crate.isActive && crate.inventory.hasMaterials(inputMaterials)) {
                                         crate.inventory.removeMaterials(inputMaterials);
-                                        drops.add(outputMaterial.possibleItems.get(0).copy());
+                                        outputMaterials.forEach(material -> drops.add(material.possibleItems.get(0).copy()));
                                         break;
                                     }
                                 }
