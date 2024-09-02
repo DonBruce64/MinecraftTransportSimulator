@@ -77,6 +77,7 @@ public final class ControlSystem {
     }
 
     public static void controlGlobal(IWrapperPlayer player) {
+        //FIXME re-order global controals on higher MC versions.
         if (InterfaceManager.inputInterface.isLeftMouseButtonDown()) {
             if (!clickingLeft) {
                 clickingLeft = true;
