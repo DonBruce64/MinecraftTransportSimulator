@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpPayment;
 
 /**
  * A GUI that is used to set up fuel pumps as a pay-to-use system.  Allows for setting various items
@@ -60,7 +60,7 @@ public class GUIFuelPump extends AGUIInventory {
                         InterfaceManager.packetInterface.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, interactableSlotButtons.indexOf(this), changedStack));
                     } else {
                         //Send off packet to see if we need to remove stack count from player to pay for fuel.
-                        InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotButtons.indexOf(this)));
+                        InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpPayment(pump, player, interactableSlotButtons.indexOf(this)));
                     }
                 }
             };
@@ -86,7 +86,7 @@ public class GUIFuelPump extends AGUIInventory {
                 @Override
                 public void handleTextChange() {
                     //Set new values on the pump.
-                    InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.parseInt(this.getText())));
+                    InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpPayment(pump, player, interactableSlotBoxes.indexOf(this), Integer.parseInt(this.getText())));
                 }
             };
             fuelAmount.visible = !stack.isEmpty() || configuring;

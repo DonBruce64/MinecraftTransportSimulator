@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -60,7 +59,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
                 new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false);
                 break;
             case FUEL_PUMP:
-                new GUIFuelPump((TileEntityFuelPump) entity, false);
+                new GUIFuelPump((ATileEntityFuelPump) entity, false);
                 break;
             case FUEL_PUMP_CONFIG:
                 new GUIFuelPump((ATileEntityFuelPump) entity, true);

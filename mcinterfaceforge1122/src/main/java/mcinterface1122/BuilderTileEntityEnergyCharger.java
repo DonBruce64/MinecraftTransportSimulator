@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -29,13 +30,15 @@ public class BuilderTileEntityEnergyCharger<EnergyTileEntity extends ATileEntity
         if (!world.isRemote && tileEntity != null) {
             //Try and charge the internal TE.
             if (buffer > 0) {
-                int amountToCharge = tileEntity.getChargeAmount();
+                double amountToCharge = tileEntity.getChargeAmount();
                 if (amountToCharge != 0) {
-                    if (amountToCharge > buffer) {
-                        amountToCharge = buffer;
+                    int amountToRemoveFromBuffer = (int) (amountToCharge / ConfigSystem.settings.general.rfToElectricityFactor.value);
+                    if (amountToRemoveFromBuffer > buffer) {
+                        amountToRemoveFromBuffer = buffer;
+                        amountToCharge = amountToRemoveFromBuffer * ConfigSystem.settings.general.rfToElectricityFactor.value;
                     }
                     tileEntity.chargeEnergy(amountToCharge);
-                    buffer -= amountToCharge;
+                    buffer -= amountToRemoveFromBuffer;
                 }
             }
         }

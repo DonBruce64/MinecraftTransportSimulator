@@ -19,15 +19,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityChargerBattery;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntityEnergyCharger {
 
-    public int internalBuffer;
+    public double internalBuffer;
 
     //Maintain one "bucket" worth of fuel to allow batteries to charge from the charger.
-    private static final int MAX_BUFFER = (int) (1000 / ConfigSystem.settings.general.rfToElectricityFactor.value);
+    private static final int MAX_BUFFER = 1000;
 
     public TileEntityCharger(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
@@ -83,31 +82,31 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
     }
 
     @Override
-    public void fuelVehicle(double amount) {
+    public double fuelVehicle(double amount) {
+        if (amount > internalBuffer) {
+            amount = internalBuffer;
+        }
+        amount = connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount, true);
+        internalBuffer -= amount;
+        return amount;
+    }
+
+    @Override
+    public double getChargeAmount() {
+        //FIXME make this reference config in higher version interfaces.
+        double amount = MAX_BUFFER - internalBuffer;
+        //Don't let the charger fill the buffer to charge things if we haven't purchased fuel.
         if (!isCreative) {
-            double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase;
+            double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase - internalBuffer;
             if (amount > amountPurchasedRemaining) {
-                amount = (int) amountPurchasedRemaining;
+                amount = amountPurchasedRemaining;
             }
         }
-        int bufferToUse = (int) (amount / ConfigSystem.settings.general.rfToElectricityFactor.value);
-        if (bufferToUse > internalBuffer) {
-            bufferToUse = internalBuffer;
-        }
-        amount = bufferToUse * ConfigSystem.settings.general.rfToElectricityFactor.value;
-        internalBuffer -= bufferToUse;
-        double amountFilled = connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount, true);
-        fuelDispensedThisConnection += amountFilled;
-        fuelDispensedThisPurchase += amount;
+        return amount;
     }
 
     @Override
-    public int getChargeAmount() {
-        return MAX_BUFFER - internalBuffer;
-    }
-
-    @Override
-    public void chargeEnergy(int amount) {
+    public void chargeEnergy(double amount) {
         internalBuffer += amount;
     }
 

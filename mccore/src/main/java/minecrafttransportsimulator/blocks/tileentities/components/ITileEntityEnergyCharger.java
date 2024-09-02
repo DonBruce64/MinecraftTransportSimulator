@@ -12,11 +12,11 @@ public interface ITileEntityEnergyCharger {
     /**
      * Returns the amount of energy this interface can charge this tick.
      */
-    int getChargeAmount();
+    double getChargeAmount();
 
     /**
      * Charges the specified energy amount.  Should be less than or equal to the last call to {@link #getChargeAmount()}.
      * Only call this on the server.  Clients will sync via packets.
      */
-    void chargeEnergy(int amount);
+    void chargeEnergy(double amount);
 }

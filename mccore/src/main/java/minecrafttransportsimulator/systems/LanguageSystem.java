@@ -330,7 +330,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_FUELPUMP_NOENGINE = new LanguageEntry("interact.fuelpump.noengine", "There is no engine in this vehicle.  Engines with different fuel types will reset fuel, so put an engine in first to avoid fuel loss!");
     public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The contents in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
     public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Connected and fueling.");
-    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_FULL = new LanguageEntry("interact.fuelpump.full", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Paid fuel has been dispensed, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Pump is empty, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_DISCONNECT = new LanguageEntry("interact.fuelpump.disconnect", "Disconnecting and stopping pumping.");
 

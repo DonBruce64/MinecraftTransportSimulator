@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
@@ -20,10 +19,12 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 public abstract class ATileEntityFuelPump extends TileEntityDecor {
-    public EntityVehicleF_Physics connectedVehicle;
+    protected EntityVehicleF_Physics connectedVehicle;
+    protected IWrapperPlayer playerUsing;
     public final EntityInventoryContainer fuelItems;
     public final EntityInventoryContainer paymentItems;
     public final List<Integer> fuelAmounts = new ArrayList<>();
@@ -80,21 +81,15 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
 
             //Check distance to make sure the vehicle hasn't moved away.
             if (!connectedVehicle.position.isDistanceToCloserThan(position, 15)) {
+                playerUsing.sendPacket(new PacketPlayerChatMessage(playerUsing, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
                 setConnection(null);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 25, 25, 25))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_TOOFAR));
-                }
                 return;
             }
 
             //Check to make sure the vehicle isn't full.
             if (connectedVehicle.fuelTank.getFluidLevel() == connectedVehicle.fuelTank.getMaxLevel()) {
+                playerUsing.sendPacket(new PacketPlayerChatMessage(playerUsing, LanguageSystem.INTERACT_FUELPUMP_FULL));
                 setConnection(null);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_COMPLETE));
-                }
                 return;
             }
 
@@ -103,7 +98,17 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             if (amountToDispenseThisTick > definition.decor.pumpRate) {
                 amountToDispenseThisTick = definition.decor.pumpRate;
             }
-            fuelVehicle(amountToDispenseThisTick);
+            amountToDispenseThisTick = fuelVehicle(amountToDispenseThisTick);
+            fuelDispensedThisConnection += amountToDispenseThisTick;
+            fuelDispensedThisPurchase += amountToDispenseThisTick;
+            InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpDispense(this, amountToDispenseThisTick));
+
+            //If we are done dispensing, disconnect the vehicle.
+            if (!isCreative && fuelDispensedThisPurchase == fuelPurchased) {
+                playerUsing.sendPacket(new PacketPlayerChatMessage(playerUsing, LanguageSystem.INTERACT_FUELPUMP_COMPLETE));
+                setConnection(null);
+                return;
+            }
         }
     }
 
@@ -163,9 +168,9 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                         return true;
                     }
                     case VALID: {
-                        setConnection(nearestVehicle);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, nearestVehicle));
                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_CONNECT));
+                        setConnection(nearestVehicle);
+                        playerUsing = player;
                         return true;
                     }
                     case INVALID: {
@@ -182,9 +187,8 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             }
         } else {
             //Connected vehicle exists, disconnect it.
-            setConnection(null);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_DISCONNECT));
+            setConnection(null);
         }
         return true;
     }
@@ -203,15 +207,23 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
             fuelDispensedThisConnection = 0;
         } else if (connectedVehicle != null) {
             connectedVehicle.beingFueled = false;
+            playerUsing = null;
         }
         connectedVehicle = newVehicle;
+        if (!world.isClient()) {
+            if (connectedVehicle != null) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, connectedVehicle));
+            } else {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
+            }
+        }
     }
 
     protected abstract boolean hasFuel();
 
     protected abstract FuelTankResult checkPump(EntityVehicleF_Physics vehicle);
 
-    protected abstract void fuelVehicle(double amount);
+    protected abstract double fuelVehicle(double amount);
 
     private IWrapperNBT saveFuelData(IWrapperNBT data) {
         data.setData("inventory", fuelItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
