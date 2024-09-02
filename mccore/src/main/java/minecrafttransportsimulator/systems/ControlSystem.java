@@ -566,7 +566,7 @@ public final class ControlSystem {
             } else {
                 if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.currentIsAutomatic != 0) {
+                        if (engine.isAutomaticVar.isActive) {
                             if (engine.currentGearVar.currentValue < 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {
@@ -579,7 +579,7 @@ public final class ControlSystem {
                 }
                 if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.currentIsAutomatic != 0) {
+                        if (engine.isAutomaticVar.isActive) {
                             if (engine.currentGearVar.currentValue > 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {

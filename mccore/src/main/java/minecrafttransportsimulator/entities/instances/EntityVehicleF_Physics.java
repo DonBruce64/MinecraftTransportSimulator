@@ -13,7 +13,6 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -33,6 +32,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable aileronInputVar;
     public final ComputedVariable aileronAngleVar;
     public final ComputedVariable aileronTrimVar;
+    public final ComputedVariable aileronAreaVar;
     public static final double MAX_AILERON_ANGLE = 25;
     public static final double MAX_AILERON_TRIM = 10;
     public static final double AILERON_DAMPEN_RATE = 0.6;
@@ -41,6 +41,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable elevatorInputVar;
     public final ComputedVariable elevatorAngleVar;
     public final ComputedVariable elevatorTrimVar;
+    public final ComputedVariable elevatorAreaVar;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
@@ -49,15 +50,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable rudderInputVar;
     public final ComputedVariable rudderAngleVar;
     public final ComputedVariable rudderTrimVar;
+    public final ComputedVariable rudderAreaVar;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
     public static final double RUDDER_DAMPEN_RATE = 2.0;
     public static final double RUDDER_DAMPEN_RETURN_RATE = 4.0;
 
-    //Flaps.
+    //Wings/flaps.
     public static final short MAX_FLAP_ANGLE_REFERENCE = 350;
+    public final ComputedVariable wingAreaVar;
+    public final ComputedVariable wingSpanVar;
     public final ComputedVariable flapDesiredAngleVar;
-    public double flapCurrentAngle;
+    public final ComputedVariable flapActualAngleVar;
     
     //Autopilot.
     public final ComputedVariable autopilotValueVar;
@@ -84,25 +88,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D hitchCurrentOffset = new Point3D();
     private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
 
-    //Properties.
-    @ModifiedValue
-    public double currentWingArea;
-    @ModifiedValue
-    public double currentWingSpan;
-    @ModifiedValue
-    public double currentAileronArea;
-    @ModifiedValue
-    public double currentElevatorArea;
-    @ModifiedValue
-    public double currentRudderArea;
-    @ModifiedValue
-    public double currentDragCoefficient;
-    @ModifiedValue
-    public double currentBallastVolume;
-    @ModifiedValue
-    public double currentWaterBallastFactor;
-    @ModifiedValue
-    public double currentAxleRatio;
+    //Physics properties
+    public final ComputedVariable dragCoefficientVar;
+    public final ComputedVariable ballastVolumeVar;
+    public final ComputedVariable waterBallastFactorVar;
+    public final ComputedVariable axleRatioVar;
 
     //Coefficients.
     private double wingLiftCoeff;
@@ -137,21 +127,33 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
     public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
-        if (data != null) {
-            this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
-        }
         addVariable(this.aileronInputVar = new ComputedVariable(this, "input_aileron", data));
-        addVariable(this.elevatorInputVar = new ComputedVariable(this, "input_elevator", data));
-        addVariable(this.rudderInputVar = new ComputedVariable(this, "input_rudder", data));
         addVariable(this.aileronAngleVar = new ComputedVariable(this, "aileron", data));
-        addVariable(this.elevatorAngleVar = new ComputedVariable(this, "elevator", data));
-        addVariable(this.rudderAngleVar = new ComputedVariable(this, "rudder", data));
         addVariable(this.aileronTrimVar = new ComputedVariable(this, "trim_aileron", data));
+        addVariable(this.aileronAreaVar = new ComputedVariable(this, "aileronArea"));
+
+        addVariable(this.elevatorInputVar = new ComputedVariable(this, "input_elevator", data));
+        addVariable(this.elevatorAngleVar = new ComputedVariable(this, "elevator", data));
         addVariable(this.elevatorTrimVar = new ComputedVariable(this, "trim_elevator", data));
+        addVariable(this.elevatorAreaVar = new ComputedVariable(this, "elevatorArea"));
+
+        addVariable(this.rudderInputVar = new ComputedVariable(this, "input_rudder", data));
+        addVariable(this.rudderAngleVar = new ComputedVariable(this, "rudder", data));
         addVariable(this.rudderTrimVar = new ComputedVariable(this, "trim_rudder", data));
+        addVariable(this.rudderAreaVar = new ComputedVariable(this, "rudderArea"));
+
+        addVariable(this.wingAreaVar = new ComputedVariable(this, "wingArea"));
+        addVariable(this.wingSpanVar = new ComputedVariable(this, "wingSpan"));
         addVariable(this.flapDesiredAngleVar = new ComputedVariable(this, "flaps_setpoint", data));
+        addVariable(this.flapActualAngleVar = new ComputedVariable(this, "flaps_actual", data));
+
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
+
+        addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
+        addVariable(this.ballastVolumeVar = new ComputedVariable(this, "ballastVolume"));
+        addVariable(this.waterBallastFactorVar = new ComputedVariable(this, "waterBallastFactor"));
+        addVariable(this.axleRatioVar = new ComputedVariable(this, "axleRatio"));
     }
 
     @Override
@@ -218,93 +220,33 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
-    public void updateVariableModifiers() {
-        currentWingArea = (float) (definition.motorized.wingArea + definition.motorized.wingArea * 0.15F * flapCurrentAngle / MAX_FLAP_ANGLE_REFERENCE);
-        currentWingSpan = definition.motorized.wingSpan;
-        currentAileronArea = definition.motorized.aileronArea;
-        currentElevatorArea = definition.motorized.elevatorArea;
-        currentRudderArea = definition.motorized.rudderArea;
-        currentDragCoefficient = definition.motorized.dragCoefficient;
-        currentBallastVolume = definition.motorized.ballastVolume;
-        currentWaterBallastFactor = definition.motorized.waterBallastFactor;
-        currentSteeringForceIgnoresSpeed = definition.motorized.steeringForceIgnoresSpeed ? 1 : 0;
-        currentSteeringForceFactor = definition.motorized.steeringForceFactor;
-        currentBrakingFactor = definition.motorized.brakingFactor;
-        currentOverSteer = definition.motorized.overSteer;
-        currentUnderSteer = definition.motorized.underSteer;
-        currentAxleRatio = definition.motorized.axleRatio;
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        aileronAreaVar.setTo(definition.motorized.aileronArea, false);
         aileronAngleVar.setTo(aileronInputVar.currentValue, false);
         elevatorAngleVar.setTo(elevatorInputVar.currentValue, false);
+        elevatorAreaVar.setTo(definition.motorized.elevatorArea, false);
         rudderAngleVar.setTo(rudderInputVar.currentValue, false);
+        rudderAreaVar.setTo(definition.motorized.rudderArea, false);
 
-        //Adjust flaps to current setting.
+        wingAreaVar.setTo(definition.motorized.wingArea + definition.motorized.wingArea * 0.15F * flapActualAngleVar.currentValue / MAX_FLAP_ANGLE_REFERENCE, false);
+        wingSpanVar.setTo(definition.motorized.wingSpan, false);
+        //Run flap defaults after wings.  This lets wings get the last-state value, which might have been modified post-default-value setting.
         if (definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()) {
-            if (flapCurrentAngle < flapDesiredAngleVar.currentValue) {
-                flapCurrentAngle += definition.motorized.flapSpeed;
-            } else if (flapCurrentAngle > flapDesiredAngleVar.currentValue) {
-                flapCurrentAngle -= definition.motorized.flapSpeed;
+            if (flapActualAngleVar.currentValue < flapDesiredAngleVar.currentValue) {
+                flapActualAngleVar.setTo(flapActualAngleVar.currentValue + definition.motorized.flapSpeed, false);
+            } else if (flapActualAngleVar.currentValue > flapDesiredAngleVar.currentValue) {
+                flapActualAngleVar.setTo(flapActualAngleVar.currentValue - definition.motorized.flapSpeed, false);
             }
-            if (Math.abs(flapCurrentAngle - flapDesiredAngleVar.currentValue) < definition.motorized.flapSpeed) {
-                flapCurrentAngle = flapDesiredAngleVar.currentValue;
+            if (Math.abs(flapActualAngleVar.currentValue - flapDesiredAngleVar.currentValue) < definition.motorized.flapSpeed) {
+                flapActualAngleVar.setTo(flapDesiredAngleVar.currentValue, false);
             }
         }
 
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "wingArea":
-                        currentWingArea = adjustVariable(modifier, currentWingArea);
-                        break;
-                    case "wingSpan":
-                        currentWingSpan = adjustVariable(modifier, currentWingSpan);
-                        break;
-                    case "aileronArea":
-                        currentAileronArea = adjustVariable(modifier, currentAileronArea);
-                        break;
-                    case "elevatorArea":
-                        currentElevatorArea = adjustVariable(modifier, currentElevatorArea);
-                        break;
-                    case "rudderArea":
-                        currentRudderArea = adjustVariable(modifier, currentRudderArea);
-                        break;
-                    case "dragCoefficient":
-                        currentDragCoefficient = adjustVariable(modifier, currentDragCoefficient);
-                        break;
-                    case "ballastVolume":
-                        currentBallastVolume = adjustVariable(modifier, currentBallastVolume);
-                        break;
-                    case "waterBallastFactor":
-                        currentWaterBallastFactor = adjustVariable(modifier, currentWaterBallastFactor);
-                        break;
-                    case "steeringForceIgnoresSpeed":
-                    	currentSteeringForceIgnoresSpeed = adjustVariable(modifier, currentSteeringForceIgnoresSpeed);
-                        break;
-                    case "steeringForceFactor":
-                        currentSteeringForceFactor = adjustVariable(modifier, currentSteeringForceFactor);
-                        break;
-                    case "brakingFactor":
-                        currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor);
-                        break;
-                    case "overSteer":
-                        currentOverSteer = adjustVariable(modifier, currentOverSteer);
-                        break;
-                    case "underSteer":
-                        currentUnderSteer = adjustVariable(modifier, currentUnderSteer);
-                        break;
-                    case "axleRatio":
-                        currentAxleRatio = adjustVariable(modifier, currentAxleRatio);
-                        break;
-                    case "flaps_actual":
-                        flapCurrentAngle = adjustVariable(modifier, (float) flapCurrentAngle);
-                        break;
-                    default:
-                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
-                        variable.setTo(adjustVariable(modifier, variable.currentValue), false);
-                        break;
-                }
-            }
-        }
+        dragCoefficientVar.setTo(definition.motorized.dragCoefficient, false);
+        ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
+        waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
+        axleRatioVar.setTo(definition.motorized.axleRatio, false);
     }
 
     @Override
@@ -389,19 +331,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Get the lift coefficients and states for control surfaces.
             double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector, true)));
-            wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle / MAX_FLAP_ANGLE_REFERENCE);
+            wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapActualAngleVar.currentValue / MAX_FLAP_ANGLE_REFERENCE);
             aileronLiftCoeff = getLiftCoeff((aileronAngleVar.currentValue + aileronTrimVar.currentValue), 2);
             elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngleVar.currentValue + elevatorTrimVar.currentValue), 2);
             rudderLiftCoeff = getLiftCoeff(yawAngleDelta - (rudderAngleVar.currentValue + rudderTrimVar.currentValue), 2);
 
             //Get the drag coefficient and force.
             if (definition.motorized.isBlimp) {
-                dragCoeff = 0.004F * Math.pow(Math.abs(yawAngleDelta), 2) + currentDragCoefficient;
+                dragCoeff = 0.004F * Math.pow(Math.abs(yawAngleDelta), 2) + dragCoefficientVar.currentValue;
             } else if (definition.motorized.isAircraft) {
                 //Aircraft are 0.03 by default, or whatever is specified.
-                dragCoeff = 0.0004F * Math.pow(trackAngle, 2) + currentDragCoefficient;
+                dragCoeff = 0.0004F * Math.pow(trackAngle, 2) + dragCoefficientVar.currentValue;
             } else {
-                dragCoeff = currentDragCoefficient;
+                dragCoeff = dragCoefficientVar.currentValue;
                 //If we aren't an aircraft, check for grounded ground devices.
                 //If we don't have any grounded ground devices, assume we are in the air or in water.
                 //This results in an increase in drag due to poor airflow.
@@ -411,23 +353,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
             if (definition.motorized.crossSectionalArea > 0) {
                 dragForce = 0.5F * airDensity * velocity * velocity * definition.motorized.crossSectionalArea * dragCoeff;
-            } else if (currentWingSpan > 0) {
-                dragForce = 0.5F * airDensity * velocity * velocity * currentWingArea * (dragCoeff + wingLiftCoeff * wingLiftCoeff / (Math.PI * definition.motorized.wingSpan * definition.motorized.wingSpan / currentWingArea * 0.8));
+            } else if (wingSpanVar.currentValue > 0) {
+                dragForce = 0.5F * airDensity * velocity * velocity * wingAreaVar.currentValue * (dragCoeff + wingLiftCoeff * wingLiftCoeff / (Math.PI * definition.motorized.wingSpan * definition.motorized.wingSpan / wingAreaVar.currentValue * 0.8));
             } else {
                 dragForce = 0.5F * airDensity * velocity * velocity * 5.0F * dragCoeff;
             }
 
             //Get ballast force.
-            if (currentBallastVolume > 0) {
+            if (ballastVolumeVar.currentValue > 0) {
                 //Ballast gets less effective at applying positive lift at higher altitudes.
                 //This prevents blimps from ascending into space.
                 //Also take into account motionY, as we should provide less force if we are already going in the same direction.
                 if (elevatorAngleVar.currentValue < 0) {
-                    ballastForce = airDensity * currentBallastVolume * -elevatorAngleVar.currentValue / 10D;
+                    ballastForce = airDensity * ballastVolumeVar.currentValue * -elevatorAngleVar.currentValue / 10D;
                 } else if (elevatorAngleVar.currentValue > 0) {
-                    ballastForce = 1.225 * currentBallastVolume * -elevatorAngleVar.currentValue / 10D;
+                    ballastForce = 1.225 * ballastVolumeVar.currentValue * -elevatorAngleVar.currentValue / 10D;
                 } else if (motion.y < -0.15 || motion.y > 0.15) {
-                    ballastForce = 1.225 * currentBallastVolume * 10D * -motion.y;
+                    ballastForce = 1.225 * ballastVolumeVar.currentValue * 10D * -motion.y;
                 } else {
                     ballastForce = 0;
                     motion.y = 0;
@@ -438,13 +380,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Get all other forces.
-            wingForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentWingArea * wingLiftCoeff;
-            aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentAileronArea * aileronLiftCoeff;
-            elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentElevatorArea * elevatorLiftCoeff;
-            rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentRudderArea * rudderLiftCoeff;
+            wingForce = 0.5F * airDensity * axialVelocity * axialVelocity * wingAreaVar.currentValue * wingLiftCoeff;
+            aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
+            elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
+            rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
 
             //Get torques.  Point for ailerons is 0.75% to the edge of the wing.
-            aileronTorque = aileronForce * currentWingSpan * 0.5F * 0.75F;
+            aileronTorque = aileronForce * wingSpanVar.currentValue * 0.5F * 0.75F;
             elevatorTorque = elevatorForce * definition.motorized.tailDistance;
             rudderTorque = rudderForce * definition.motorized.tailDistance;
 
@@ -483,11 +425,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
             //This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-            if (currentWingArea > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAnythingOnGround()) {
+            if (wingAreaVar.currentValue > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAnythingOnGround()) {
                 elevatorTorque += 100;
             }
 
-            //If we are dead, don't apply control surface and ballast forces.
+            //If we are dead, don't apply forces.
             if (outOfHealth) {
                 wingForce = 0;
                 elevatorForce = 0;
@@ -497,13 +439,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 aileronTorque = 0;
                 rudderTorque = 0;
                 ballastForce = 0;
-                currentBallastVolume = 0;
             }
 
-            //Finally, get gravity.
-            gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
-            if (currentWaterBallastFactor != 0 && world.isBlockLiquid(position)) {
-                gravitationalForce -= gravitationalForce * currentWaterBallastFactor;
+            //Finally, get gravity.  Blimps sink when dead.
+            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * (9.8 / 400) : 0;
+            if (waterBallastFactorVar.isActive && world.isBlockLiquid(position)) {
+                gravitationalForce -= gravitationalForce * waterBallastFactorVar.currentValue;
                 elevatorTorque = -orientation.angles.x * 2;
                 aileronTorque = -orientation.angles.z * 2;
             }
@@ -804,14 +745,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> thrustForceValue, false);
 
             //State cases generally used on aircraft.
-            case ("flaps_actual"):
-                return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle, false);
             case ("flaps_moving"):
-            	return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle != flapDesiredAngleVar.currentValue ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> flapActualAngleVar.currentValue != flapDesiredAngleVar.currentValue ? 1 : 0, false);
             case ("flaps_increasing"):
-            	return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle < flapDesiredAngleVar.currentValue ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> flapActualAngleVar.currentValue < flapDesiredAngleVar.currentValue ? 1 : 0, false);
             case ("flaps_decreasing"):
-                return new ComputedVariable(this, variable, partialTicks -> flapCurrentAngle > flapDesiredAngleVar.currentValue ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> flapActualAngleVar.currentValue > flapDesiredAngleVar.currentValue ? 1 : 0, false);
             case ("vertical_speed"):
                 return new ComputedVariable(this, variable, partialTicks -> motion.y * speedFactor * 20, false);
             case ("lift_reserve"):
@@ -982,12 +921,5 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 box.renderWireframe(this, transform, null, ColorRGB.BLUE);
             }
         }
-    }
-
-    @Override
-    public IWrapperNBT save(IWrapperNBT data) {
-        super.save(data);
-        data.setDouble("flapCurrentAngle", flapCurrentAngle);
-        return data;
     }
 }

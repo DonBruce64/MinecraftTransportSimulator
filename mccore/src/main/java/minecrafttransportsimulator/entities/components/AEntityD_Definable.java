@@ -43,9 +43,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
@@ -1183,6 +1180,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Called to set the default values of all variables.  Must be run before any other updates that could
+     * affect these values.
+     */
+    public void setVariableDefaults() {
+        //Nothing for this level.
+    }
+
+    /**
      * Called to update the variable modifiers for this entity.
      */
     public void updateVariableModifiers() {
@@ -1270,40 +1275,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Indicates that this field is a derived value from
-     * one of the variables in {@link AEntityD_Definable#variables}.
-     * Variables that are derived are parsed from the map every update.
-     * To modify them you will need to update their values in the respective
-     * variable set via
-     * {@link PacketEntityVariableToggle},
-     * {@link PacketEntityVariableSet},
-     * {@link PacketEntityVariableIncrement}
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    @Target({ElementType.FIELD})
-    public @interface DerivedValue {
-    }
-
-    /**
      * Indicates that this field is able to be modified via variable modification
-     * by the code in {@link AEntityE_Interactable#updateVariableModifiers()},
-     * This annotation is only for variables that are NOT derived from states
-     * and annotated with {@link DerivedValue}, as those variables can inherently
-     * be modified as they are derived from the variable states.
+     * by the code in {@link AEntityD_Definable#updateVariableModifiers()},
      */
     @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD})
     public @interface ModifiableValue {
-    }
-
-    /**
-     * Indicates that this field is a modified version of a field annotated with
-     * {@link ModifiableValue}.  This is done to prevent modifying the parsed
-     * definition entry that contains the value, which is why it's stored
-     * in a new variable that gets aligned every tick before updates.
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    @Target({ElementType.FIELD})
-    public @interface ModifiedValue {
     }
 }

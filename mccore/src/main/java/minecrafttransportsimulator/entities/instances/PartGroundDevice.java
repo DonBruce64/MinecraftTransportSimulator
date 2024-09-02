@@ -7,7 +7,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -45,12 +44,9 @@ public class PartGroundDevice extends APart {
     public double angularVelocity;
 
     //Internal properties
-    @ModifiedValue
-    public double currentMotiveFriction;
-    @ModifiedValue
-    public double currentLateralFriction;
-    @ModifiedValue
-    private double currentHeight;
+    public final ComputedVariable motiveFrictionVar;
+    public final ComputedVariable lateralFrictionVar;
+    private final ComputedVariable heightVar;
     private double lastHeight;
     private final Point3D groundPosition = new Point3D();
     private BlockMaterial materialBelow;
@@ -82,6 +78,9 @@ public class PartGroundDevice extends APart {
         }
         
         addVariable(this.flatVar = new ComputedVariable(this, FLAT_VARIABLE, data));
+        addVariable(this.motiveFrictionVar = new ComputedVariable(this, "motiveFriction"));
+        addVariable(this.lateralFrictionVar = new ComputedVariable(this, "lateralFriction"));
+        addVariable(this.heightVar = new ComputedVariable(this, "height"));
     }
 
     @Override
@@ -123,9 +122,9 @@ public class PartGroundDevice extends APart {
                 vehicleOn.groundDeviceCollective.updateBounds();
                 prevLocalOffset.set(localOffset);
             }
-            if (lastHeight != currentHeight) {
+            if (lastHeight != heightVar.currentValue) {
                 vehicleOn.groundDeviceCollective.updateBounds();
-                boundingBox.heightRadius = currentHeight;
+                boundingBox.heightRadius = heightVar.currentValue;
             }
 
             //Set reference position for animation vars if we call them later.
@@ -226,10 +225,11 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    public void updateVariableModifiers() {
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
         float frictionLoss = getFrictionLoss();
-        currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
-        currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
+        double currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
+        double currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
         if (flatVar.isActive) {
             currentMotiveFriction /= 10;
             currentLateralFriction /= 10;
@@ -240,29 +240,11 @@ public class PartGroundDevice extends APart {
         if (currentLateralFriction < 0) {
             currentLateralFriction = 0;
         }
-        lastHeight = currentHeight;
-        currentHeight = (float) ((flatVar.isActive ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "motiveFriction":
-                        currentMotiveFriction = adjustVariable(modifier, currentMotiveFriction);
-                        break;
-                    case "lateralFriction":
-                        currentLateralFriction = adjustVariable(modifier, currentLateralFriction);
-                        break;
-                    case "height":
-                    	currentHeight = adjustVariable(modifier, currentHeight);
-                        break;
-                    default:
-                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
-                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
-                        break;
-                }
-            }
-        }
+        motiveFrictionVar.setTo(currentMotiveFriction, false);
+        lateralFrictionVar.setTo(currentLateralFriction, false);
+        lastHeight = heightVar.currentValue;
+        heightVar.setTo((flatVar.isActive ? definition.ground.flatHeight : definition.ground.height) * scale.y, false);
     }
 
     @Override
@@ -302,7 +284,7 @@ public class PartGroundDevice extends APart {
 
     @Override
     public double getHeight() {
-        return currentHeight;
+        return heightVar.currentValue;
     }
 
     /**

@@ -304,6 +304,7 @@ public abstract class EntityManager {
             AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
             //Need to do this before updating as these require knowledge of prior states.
             entity.world.beginProfiling("VariableModifiers", true);
+            definable.setVariableDefaults();
             definable.updateVariableModifiers();
             if (definable instanceof AEntityF_Multipart) {
                 ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());

@@ -66,16 +66,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final IWrapperPlayer placingPlayer;
 
     //Properties
-    @ModifiedValue
-    public double currentSteeringForceIgnoresSpeed;
-    @ModifiedValue
-    public double currentSteeringForceFactor;
-    @ModifiedValue
-    public double currentBrakingFactor;
-    @ModifiedValue
-    public double currentOverSteer;
-    @ModifiedValue
-    public double currentUnderSteer;
+    public final ComputedVariable steeringForceIgnoresSpeedVar;
+    public final ComputedVariable steeringForceFactorVar;
+    public final ComputedVariable brakingFactorVar;
+    public final ComputedVariable overSteerVar;
+    public final ComputedVariable underSteerVar;
 
     //Road-following data.
     protected RoadFollowingState frontFollower;
@@ -141,6 +136,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
         addVariable(this.parkingBrakeVar = new ComputedVariable(this, "p_brake", data));
         addVariable(this.lockedVar = new ComputedVariable(this, "locked", data));
+
+        addVariable(this.steeringForceIgnoresSpeedVar = new ComputedVariable(this, "steeringForceIgnoresSpeed"));
+        addVariable(this.steeringForceFactorVar = new ComputedVariable(this, "steeringForceFactor"));
+        addVariable(this.brakingFactorVar = new ComputedVariable(this, "brakingFactor"));
+        addVariable(this.overSteerVar = new ComputedVariable(this, "overSteer"));
+        addVariable(this.underSteerVar = new ComputedVariable(this, "underSteer"));
     }
 
     @Override
@@ -269,6 +270,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        steeringForceIgnoresSpeedVar.setTo(definition.motorized.steeringForceIgnoresSpeed ? 1 : 0, false);
+        steeringForceFactorVar.setTo(definition.motorized.steeringForceFactor, false);
+        brakingFactorVar.setTo(definition.motorized.brakingFactor, false);
+        overSteerVar.setTo(definition.motorized.overSteer, false);
+        underSteerVar.setTo(definition.motorized.underSteer, false);
+    }
+
+    @Override
     public void updatePartList() {
         super.updatePartList();
         if (ticksExisted > 1) {
@@ -370,7 +381,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private void performGroundOperations() {
         //Get braking force and apply it to the motions.
-        double brakingFactor = towedByConnection == null ? getBrakingForce() * currentBrakingFactor : 0;
+        double brakingFactor = towedByConnection == null ? getBrakingForce() * brakingFactorVar.currentValue : 0;
         if (brakingFactor > 0) {
             double brakingForce = 20F * brakingFactor / currentMass;
             if (brakingForce > velocity) {
@@ -422,16 +433,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (this.towedByConnection == null) {
                 double overSteerForce = Math.max(velocity / 4, 1);
                 if (definition.motorized.overSteerAccel != 0) {
-                    weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * currentOverSteer;
+                    weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * overSteerVar.currentValue;
                     if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)) {
                         weightTransfer = definition.motorized.overSteerAccel;
                     } else if (Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)) {
                         weightTransfer = definition.motorized.overSteerDecel;
                     }
                 } else {
-                    weightTransfer = currentOverSteer;
+                    weightTransfer = overSteerVar.currentValue;
                 }
-                rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
+                rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -underSteerVar.currentValue * turningForce) * overSteerForce;
             }
 
             //If we are offset, adjust our angle.
@@ -472,7 +483,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //This is both grounded ground devices, and liquid collision boxes that are set as such.
         if (brakingPower > 0) {
             for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-                brakingFactor += groundDevice.currentMotiveFriction;
+                brakingFactor += groundDevice.motiveFrictionVar.currentValue;
             }
             if (brakingPower > 0) {
                 brakingFactor += 0.15D * brakingPower * groundDeviceCollective.getNumberBoxesInLiquid();
@@ -491,7 +502,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         float skiddingFactor = 0;
         //First check grounded ground devices.
         for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-            skiddingFactor += groundDevice.currentLateralFriction;
+            skiddingFactor += groundDevice.lateralFrictionVar.currentValue;
         }
 
         //Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
@@ -550,10 +561,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is opposite of the torque-based forces for control surfaces.
                 turningForce = steeringAngle / turningDistance;
                 //Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
-                if (groundVelocity > 0.35D && currentSteeringForceIgnoresSpeed == 0) {
-                    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentSteeringForceFactor) - 0.35D));
-                } else if (currentSteeringForceIgnoresSpeed != 0) {
-                    turningForce *= currentSteeringForceFactor;
+                if (groundVelocity > 0.35D && !steeringForceIgnoresSpeedVar.isActive) {
+                    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - steeringForceFactorVar.currentValue) - 0.35D));
+                } else if (steeringForceIgnoresSpeedVar.isActive) {
+                    turningForce *= steeringForceFactorVar.currentValue;
                 }
                 //Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.

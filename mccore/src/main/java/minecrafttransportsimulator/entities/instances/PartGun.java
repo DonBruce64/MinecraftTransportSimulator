@@ -62,13 +62,10 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
-    //Variables that can be modified using VMs
-    @ModifiedValue
-    private double currentFireDelay;
-    @ModifiedValue
-    private double currentBulletSpreadFactor;
-    @ModifiedValue
-    public double currentIsTwoHandedness;
+    //Variables that can be modified
+    private final ComputedVariable fireDelayVar;
+    private final ComputedVariable bulletSpreadFactorVar;
+    public final ComputedVariable twoHandedVar;
 
     private final boolean resetPosition;
 
@@ -242,6 +239,10 @@ public class PartGun extends APart {
             }
         }
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
+
+        addVariable(this.fireDelayVar = new ComputedVariable(this, "fireDelay"));
+        addVariable(this.bulletSpreadFactorVar = new ComputedVariable(this, "bulletSpreadFactor"));
+        addVariable(this.twoHandedVar = new ComputedVariable(this, "isTwoHanded"));
     }
 
     @Override
@@ -369,7 +370,7 @@ public class PartGun extends APart {
                             int thisGunIndex = gunGroup.indexOf(this);
                             if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
                                 if (gunGroup.size() > 1) {
-                                    camOffset = ((int) currentFireDelay) / gunGroup.size();
+                                    camOffset = ((int) fireDelayVar.currentValue) / gunGroup.size();
                                 } else {
                                     camOffset = 0;
                                 }
@@ -446,7 +447,7 @@ public class PartGun extends APart {
                             }
 
                             //Update states.
-                            cooldownTimeRemaining = (int) currentFireDelay;
+                            cooldownTimeRemaining = (int) fireDelayVar.currentValue;
                             firedThisRequest = true;
                             firedThisCheck = true;
                             cycledGun = true;
@@ -613,24 +614,19 @@ public class PartGun extends APart {
     }
 
     @Override
-    public void updateVariableModifiers() {
-        currentFireDelay = definition.gun.fireDelay;
-        currentBulletSpreadFactor = definition.gun.bulletSpreadFactor;
-        currentIsTwoHandedness = definition.gun.isTwoHanded ? 1 : 0;
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        fireDelayVar.setTo(definition.gun.fireDelay, false);
+        bulletSpreadFactorVar.setTo(definition.gun.bulletSpreadFactor, false);
+        twoHandedVar.setTo(definition.gun.isTwoHanded ? 1 : 0, false);
+    }
 
-        //Adjust current variables to modifiers, if any exist.
+    @Override
+    public void updateVariableModifiers() {
+        //Yaw and pitch are special-case here since they're part of a struct VS a single variable.
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 switch (modifier.variable) {
-                    case "fireDelay":
-                        currentFireDelay = adjustVariable(modifier, currentFireDelay);
-                        break;
-                    case "bulletSpreadFactor":
-                        currentBulletSpreadFactor = adjustVariable(modifier, currentBulletSpreadFactor);
-                        break;
-                    case "isTwoHanded":
-                    	currentIsTwoHandedness = adjustVariable(modifier, currentIsTwoHandedness);
-                        break;
                     case "gun_yaw":
                         internalOrientation.angles.y = adjustVariable(modifier, internalOrientation.angles.y);
                         break;
@@ -1048,13 +1044,13 @@ public class PartGun extends APart {
             //Randomize the spread for normal bullet and pellets
             if (addSpread) {
                 if (loadedBullet == null) {
-                    if (currentBulletSpreadFactor > 0) {
-                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * currentBulletSpreadFactor, (randomGenerator.nextFloat() - 0.5F) * currentBulletSpreadFactor, 0D);
+                    if (bulletSpreadFactorVar.isActive) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * bulletSpreadFactorVar.currentValue, (randomGenerator.nextFloat() - 0.5F) * bulletSpreadFactorVar.currentValue, 0D);
                         bulletVelocity.rotate(firingSpreadRotation);
                     }
                 } else {
-                    if (currentBulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * (currentBulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (randomGenerator.nextFloat() - 0.5F) * (currentBulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
+                    if (bulletSpreadFactorVar.isActive || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+                        firingSpreadRotation.angles.set((randomGenerator.nextFloat() - 0.5F) * (bulletSpreadFactorVar.currentValue + loadedBullet.definition.bullet.pelletSpreadFactor), (randomGenerator.nextFloat() - 0.5F) * (bulletSpreadFactorVar.currentValue + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                         bulletVelocity.rotate(firingSpreadRotation);
                     }
                 }

@@ -7,7 +7,6 @@ import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -24,9 +23,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
 	//Variables
-	public final ComputedVariable clicked;
-	public final ComputedVariable activated;
-    private float lightLevel;
+    public final ComputedVariable clickedVar;
+    public final ComputedVariable activatedVar;
+    private final ComputedVariable lightLevelVar;
     public boolean craftedItem;
 
     public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
@@ -47,8 +46,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
         
-        this.clicked = new ComputedVariable(this, "clicked", data);
-    	this.activated = new ComputedVariable(this, "activated", data);
+        this.clickedVar = new ComputedVariable(this, "clicked", data);
+        this.activatedVar = new ComputedVariable(this, "activated", data);
+        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
     }
 
     @Override
@@ -60,8 +60,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
 
         super.update();
         //Reset clicked state.
-        if(clicked.isActive) {
-        	clicked.toggle(false);
+        if (clickedVar.isActive) {
+            clickedVar.toggle(false);
         }
     }
 
@@ -87,8 +87,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             } else {
-                clicked.setTo(1, true);
-                activated.toggle(true);
+                clickedVar.setTo(1, true);
+                activatedVar.toggle(true);
             }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
@@ -98,8 +98,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            clicked.setTo(1, true);
-            activated.toggle(true);
+            clickedVar.setTo(1, true);
+            activatedVar.toggle(true);
         }
         return true;
     }
@@ -111,26 +111,12 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
 
     @Override
     public float getLightProvided() {
-        return lightLevel;
+        return (float) lightLevelVar.currentValue;
     }
 
     @Override
-    public void updateVariableModifiers() {
-        lightLevel = definition.decor.lightLevel;
-
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "lightLevel":
-                        lightLevel = (float) adjustVariable(modifier, lightLevel);
-                        break;
-                    default:
-                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
-                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
-                        break;
-                }
-            }
-        }
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        lightLevelVar.setTo(definition.decor.lightLevel, false);
     }
 }

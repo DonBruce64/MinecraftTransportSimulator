@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -80,6 +81,32 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem {
+
+    public static final Map<String, String> variableChanges = new HashMap<>();
+
+    static {
+        variableChanges.put("maxRPM", "engine_rpm_max");
+        variableChanges.put("maxSafeRPM", "engine_rpm_safe");
+        variableChanges.put("revlimitRPM", "engine_rpm_revlimit");
+        variableChanges.put("revlimitBounce", "engine_rpm_revlimit_bounce");
+        variableChanges.put("revResistance", "engine_rpm_revresistance");
+        variableChanges.put("idleRPM", "engine_rpm_idle");
+        variableChanges.put("startRPM", "engine_rpm_start");
+        variableChanges.put("stallRPM", "engine_rpm_stall");
+        variableChanges.put("starterPower", "engine_starter_power");
+        variableChanges.put("fuelConsumption", "engine_fuel_consumption");
+        variableChanges.put("heatingCoefficient", "engine_heating_coefficient");
+        variableChanges.put("coolingCoefficient", "engine_cooling_coefficient");
+        variableChanges.put("superchargerFuelConsumption", "engine_supercharger_fuel_consumption");
+        variableChanges.put("superchargerEfficiency", "engine_supercharger_efficiency");
+        variableChanges.put("gearRatio", "engine_gear_ratio");
+        variableChanges.put("forceShift", "engine_forceshift");
+        variableChanges.put("isAutomatic", "engine_isautomatic");
+        variableChanges.put("engineWearFactor", "engine_wear_factor");
+        variableChanges.put("engineWinddownRate", "engine_winddown_rate");
+        variableChanges.put("jetPowerFactor", "engine_jet_power_factor");
+        variableChanges.put("bypassRatio", "engine_bypass_ratio");
+    }
 
     public static void performLegacyCompats(AJSONBase definition) {
         if (definition instanceof AJSONItem) {
@@ -172,6 +199,16 @@ public final class LegacyCompatSystem {
                         }
                     }
                 }
+            }
+
+            //Update variable names.
+            if (provider.variableModifiers != null) {
+                provider.variableModifiers.forEach(modifier -> {
+                    String newVariable = variableChanges.get(modifier.variable);
+                    if (newVariable != null) {
+                        modifier.variable = newVariable;
+                    }
+                });
             }
         }
 

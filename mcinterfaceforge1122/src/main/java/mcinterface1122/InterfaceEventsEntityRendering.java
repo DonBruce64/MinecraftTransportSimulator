@@ -278,7 +278,7 @@ public class InterfaceEventsEntityRendering {
                     } else {
                         leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
                     }
-                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.currentIsTwoHandedness != 0) {
+                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.twoHandedVar.isActive) {
                         heldVector = heldVector.copy();
                         heldVector.x = 0.3125 * 2 - heldVector.x;
                         heldVectorLength = heldVector.length();

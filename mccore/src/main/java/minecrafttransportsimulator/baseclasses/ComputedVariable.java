@@ -158,6 +158,10 @@ public class ComputedVariable {
         }
     }
     
+    public final void setActive(boolean active, boolean sendPacket) {
+        setTo(active ? 1 : 0, sendPacket);
+    }
+
     public final void adjustBy(double value, boolean sendPacket) {
         if (!isConstant) {
             setInternal(currentValue + value);

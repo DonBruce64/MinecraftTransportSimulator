@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
@@ -14,10 +13,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  * @author don_bruce
  */
 public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
-    private float lightLevel;
+    private ComputedVariable lightLevelVar;
 
     public TileEntityPole_StreetLight(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
         super(core, placingPlayer, axis, item, data);
+        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
     }
 
     @Override
@@ -32,26 +32,12 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
 
     @Override
     public float getLightProvided() {
-        return lightLevel;
+        return (float) lightLevelVar.currentValue;
     }
 
     @Override
-    public void updateVariableModifiers() {
-        lightLevel = 12F / 15F;
-
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "lightLevel":
-                        lightLevel = (float) adjustVariable(modifier, lightLevel);
-                        break;
-                    default:
-                    	ComputedVariable variable = getOrCreateVariable(modifier.variable);
-                    	variable.setTo(adjustVariable(modifier, variable.currentValue), false);
-                        break;
-                }
-            }
-        }
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        lightLevelVar.setTo(12F / 15F, false);
     }
 }
