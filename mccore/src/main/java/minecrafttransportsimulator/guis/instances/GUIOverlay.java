@@ -34,6 +34,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel mouseoverLabel;
     private GUIComponentItem scannerItem;
     private final List<String> tooltipText = new ArrayList<>();
+    private EntityInteractResult lastInteractResult;
 
     @Override
     public void setupComponents() {
@@ -66,6 +67,14 @@ public class GUIOverlay extends AGUIBase {
         Point3D startPosition = player.getEyePosition();
         Point3D endPosition = player.getLineOfSight(10).add(startPosition);
         EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+
+        if (lastInteractResult != null && interactResult == null) {
+            lastInteractResult.entity.playerCursorHoveredVar.setActive(false, false);
+            lastInteractResult = null;
+        } else if (lastInteractResult == null && interactResult != null) {
+            interactResult.entity.playerCursorHoveredVar.setActive(true, false);
+            lastInteractResult = interactResult;
+        }
 
         mouseoverLabel.text = "";
         if (interactResult != null && interactResult.entity instanceof PartInteractable) {

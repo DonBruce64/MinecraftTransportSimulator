@@ -103,6 +103,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
   	public final ComputedVariable damageVar;
   	//Although we can't tow anything, we could have a request for something to tow, so this is defined here. 
     public final ComputedVariable towingConnectionVar;
+    public final ComputedVariable playerCursorHoveredVar;
     public boolean outOfHealth;
 
     protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
@@ -193,6 +194,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
         addVariable(this.damageVar = new ComputedVariable(this, DAMAGE_VARIABLE, data));
         addVariable(this.towingConnectionVar = new ComputedVariable(this, "connection_requested", data));
+        addVariable(this.playerCursorHoveredVar = new ComputedVariable(this, "player_cursor_hovered"));
         //Need to set this to prevent state-changes on load.
         outOfHealth = damageVar.currentValue == definition.general.health && definition.general.health != 0;
     }
