@@ -36,7 +36,7 @@ public class PacketPartChange_Remove extends APacketEntity<AEntityF_Multipart<?>
     public boolean handle(AWrapperWorld world, AEntityF_Multipart<?> entity) {
         APart part = world.getEntity(partUUID);
         if (part != null) {
-            part.entityOn.removePart(part);
+            part.remove();
         }
         return false;
     }

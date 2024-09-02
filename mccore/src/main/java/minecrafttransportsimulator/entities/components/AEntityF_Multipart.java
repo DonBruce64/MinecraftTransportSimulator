@@ -387,9 +387,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public void remove() {
         super.remove();
-        //Call all the part removal methods to ensure they save their states properly.
+        //Remove all parts, but don't notify clients.  We don't want them to get removal packets before we ourselves are gone.
+        //IF they do, bad states will occur.
         while (!parts.isEmpty()) {
-            parts.get(0).remove();
+            removePart(parts.get(0), false);
         }
     }
 
@@ -592,9 +593,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
     /**
      * Removes the passed-in part from the entity.  Calls the part's {@link APart#remove()} method to
-     * let it process removal, and sync with clients.
+     * let it process removal, and sync with clients.  This is primarily an internal method, for general
+     * part removal, simply call the part's {@link #remove()} method as it calls this as appropriate.
      */
-    public void removePart(APart part) {
+    public void removePart(APart part, boolean notifyClients) {
         if (parts.contains(part)) {
             parts.remove(part);
             if(part.isValid) {
@@ -609,7 +611,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
 
             //If we are on the server, notify all clients of this change.
-            if (!world.isClient()) {
+            if (!world.isClient() && notifyClients) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange_Remove(part));
             }
 

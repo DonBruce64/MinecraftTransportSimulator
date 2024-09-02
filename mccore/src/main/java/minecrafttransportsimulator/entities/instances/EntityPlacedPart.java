@@ -113,8 +113,8 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     }
 
     @Override
-    public void removePart(APart part) {
-        super.removePart(part);
+    public void removePart(APart part, boolean notifyClients) {
+        super.removePart(part, notifyClients);
         currentPart = null;
     }
 

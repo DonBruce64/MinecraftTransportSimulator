@@ -307,7 +307,7 @@ public class PartGroundDevice extends APart {
             //Valid conditions, send packet before continuing.
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
         }
-        flatVar.setTo(setFlat ? 1 : 0, false);
+        flatVar.setActive(setFlat, false);
     }
 
     public double getDesiredAngularVelocity() {

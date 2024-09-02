@@ -1,7 +1,11 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
@@ -46,7 +50,7 @@ public class GUIPanel extends AGUIBase {
     private final EntityVehicleF_Physics vehicle;
     private final JSONPanel definition;
     private final List<SwitchEntry> trailerSwitchDefs = new ArrayList<>();
-    private final List<String> customVariables = new ArrayList<>();
+    private final Map<String, List<ComputedVariable>> customVariables = new LinkedHashMap<>();
 
     //Created components.
     private final List<GUIPanelButton> componentButtons = new ArrayList<>();
@@ -139,17 +143,13 @@ public class GUIPanel extends AGUIBase {
         customVariables.clear();
         if (vehicle.definition.rendering.customVariables != null) {
             for (String variable : vehicle.definition.rendering.customVariables) {
-                if (!customVariables.contains(variable)) {
-                    customVariables.add(variable);
-                }
+                customVariables.computeIfAbsent(variable, key -> new ArrayList<>()).add(vehicle.getOrCreateVariable(variable));
             }
         }
         for (APart part : vehicle.allParts) {
             if (part.definition.rendering != null && part.definition.rendering.customVariables != null) {
                 for (String variable : part.definition.rendering.customVariables) {
-                    if (!customVariables.contains(variable)) {
-                        customVariables.add(variable);
-                    }
+                    customVariables.computeIfAbsent(variable, key -> new ArrayList<>()).add(part.getOrCreateVariable(variable));
                 }
             }
         }
@@ -186,7 +186,7 @@ public class GUIPanel extends AGUIBase {
                 };
                 text = panelComponent.text;
             } else {
-                ComputedVariable buttonVariable = null;
+                final List<ComputedVariable> buttonVariables = new ArrayList<>();
                 switch (panelComponent.specialComponent) {
                     case CAR_LIGHT: {
                         if (vehicle.definition.motorized.hasRunningLights || vehicle.definition.motorized.hasHeadlights) {
@@ -252,28 +252,28 @@ public class GUIPanel extends AGUIBase {
                     }
                     case NAVIGATION_LIGHT: {
                         if (vehicle.definition.motorized.hasNavLights) {
-                            buttonVariable = vehicle.navigationLightVar;
+                            buttonVariables.add(vehicle.navigationLightVar);
                             text = "NAV";
                         }
                         break;
                     }
                     case STROBE_LIGHT: {
                         if (vehicle.definition.motorized.hasStrobeLights) {
-                            buttonVariable = vehicle.strobeLightVar;
+                            buttonVariables.add(vehicle.strobeLightVar);
                             text = "STROBE";
                         }
                         break;
                     }
                     case TAXI_LIGHT: {
                         if (vehicle.definition.motorized.hasTaxiLights) {
-                            buttonVariable = vehicle.taxiLightVar;
+                            buttonVariables.add(vehicle.taxiLightVar);
                             text = "TAXI";
                         }
                         break;
                     }
                     case LANDING_LIGHT: {
                         if (vehicle.definition.motorized.hasLandingLights) {
-                            buttonVariable = vehicle.landingLightVar;
+                            buttonVariables.add(vehicle.landingLightVar);
                             text = "LAND";
                         }
                         break;
@@ -362,9 +362,15 @@ public class GUIPanel extends AGUIBase {
                     }
                     case CUSTOM_VARIABLE: {
                         if (customVariables.size() > customVariableIndex) {
-                            String customVariable = customVariables.get(customVariableIndex++);
-                            buttonVariable = vehicle.getOrCreateVariable(customVariable);
-                            text = customVariable;
+                            int i = 0;
+                            Iterator<Entry<String, List<ComputedVariable>>> iterator = customVariables.entrySet().iterator();
+                            while (i++ < customVariableIndex) {
+                                iterator.next();
+                            }
+                            Entry<String, List<ComputedVariable>> entry = iterator.next();
+                            buttonVariables.addAll(entry.getValue());
+                            text = entry.getKey();
+                            customVariableIndex++;
                         }
                         break;
                     }
@@ -401,18 +407,17 @@ public class GUIPanel extends AGUIBase {
                     }
                 }
 
-                if (buttonVariable != null) {
+                if (!buttonVariables.isEmpty()) {
                     //Need this to make complier shut up.
-                    final ComputedVariable finalVar = buttonVariable;
                     newComponent = new GUIPanelButton(this, panelComponent) {
                         @Override
                         public void onClicked(boolean leftSide) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(finalVar));
+                            buttonVariables.forEach(variable -> InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(variable)));
                         }
 
                         @Override
                         public int getState() {
-                            return finalVar.isActive ? 1 : 0;
+                            return buttonVariables.get(0).isActive ? 1 : 0;
                         }
                     };
                 }

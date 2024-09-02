@@ -31,7 +31,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
- * and {@link AEntityF_Multipart#removePart(APart)} to remove them.
+ * and {@link AEntityF_Multipart#removePart(APart, boolean)} to remove them.
  * You may extend {@link AEntityF_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -268,7 +268,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public void remove() {
         super.remove();
         //Call this after removal since we don't want to get stuck in an infinite loop since part removal also calls this method.
-        entityOn.removePart(this);
+        entityOn.removePart(this, !world.isClient());
     }
 
     @Override
