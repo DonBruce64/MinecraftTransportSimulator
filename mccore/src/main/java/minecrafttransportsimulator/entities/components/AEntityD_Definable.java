@@ -921,6 +921,20 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     } else {
                         return new ComputedVariable(false);
                     }
+                } else if (variable.startsWith("blockname_")) {
+                    final String blockName = variable.substring("blockname_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        return world.getBlockName(position).equals(blockName) ? 1 : 0;
+                    }, false);
+                } else if (variable.startsWith("terrain_blockname_")) {
+                    final String blockName = variable.substring("terrain_blockname_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        double height = world.getHeight(position) + 1;
+                        position.y -= height;
+                        String actualBlockName = world.getBlockName(position);
+                        position.y += height;
+                        return actualBlockName.equals(blockName) ? 1 : 0;
+                    }, false);
                 } else if (variable.startsWith("blockmaterial_")) {
                     final String materialName = variable.substring("blockmaterial_".length()).toUpperCase();
                     return new ComputedVariable(this, variable, partialTicks -> {

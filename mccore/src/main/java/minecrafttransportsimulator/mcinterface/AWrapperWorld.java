@@ -168,6 +168,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract ABlockBase getBlock(Point3D position);
 
     /**
+     * Returns the name of the block.
+     */
+    public abstract String getBlockName(Point3D position);
+
+    /**
      * Returns the hardness of the block at the passed-in point.
      */
     public abstract float getBlockHardness(Point3D position);

@@ -49,7 +49,8 @@ public class PartGroundDevice extends APart {
     private final ComputedVariable heightVar;
     private double lastHeight;
     private final Point3D groundPosition = new Point3D();
-    private BlockMaterial materialBelow;
+    private BlockMaterial blockMaterialBelow;
+    private String blockNameBelow;
     public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
@@ -184,7 +185,7 @@ public class PartGroundDevice extends APart {
                     boundingBox.depthRadius -= 0.25;
                 }
 
-                //Check for material below.
+                //Check for name/material below.
                 groundPosition.set(position);
                 groundPosition.y -= getHeight() / 2D;
                 double yPositionFraction = groundPosition.y % 1;
@@ -195,7 +196,8 @@ public class PartGroundDevice extends APart {
                     //We are above a block, but not close to the top, floor to use current block position.
                     groundPosition.y = Math.floor(groundPosition.y) - 1;
                 }
-                materialBelow = world.getBlockMaterial(groundPosition);
+                blockNameBelow = world.getBlockName(groundPosition);
+                blockMaterialBelow = world.getBlockMaterial(groundPosition);
             } else {
                 if (!drivenLastTick) {
                     if (vehicleOn.brakeVar.isActive || vehicleOn.parkingBrakeVar.isActive) {
@@ -209,7 +211,8 @@ public class PartGroundDevice extends APart {
                 if (animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)) {
                     animateAsOnGround = false;
                 }
-                materialBelow = null;
+                blockNameBelow = null;
+                blockMaterialBelow = null;
             }
             prevAngularPosition = angularPosition;
 
@@ -267,9 +270,12 @@ public class PartGroundDevice extends APart {
             case ("ground_distance"):
                 return new ComputedVariable(this, variable, partialTicks -> world.getHeight(zeroReferencePosition), false);
             default: {
-                if (variable.startsWith("ground_blockmaterial")) {
-                    String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
-                    return new ComputedVariable(this, variable, partialTicks -> materialBelow != null && materialBelow.name().equals(materialName) ? 1 : 0, false);
+                if (variable.startsWith("ground_blockname")) {
+                    final String blockName = variable.substring("ground_blockname_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> blockNameBelow != null && blockNameBelow.equals(blockName) ? 1 : 0, false);
+                } else if (variable.startsWith("ground_blockmaterial")) {
+                    final String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> blockMaterialBelow != null && blockMaterialBelow.name().equals(materialName) ? 1 : 0, false);
                 } else {
                     return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }
@@ -335,7 +341,7 @@ public class PartGroundDevice extends APart {
     private float getFrictionLoss() {
         if (!world.isAir(groundPosition)) {
             float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
-            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
+            Float modifier = definition.ground.frictionModifiers.get(blockMaterialBelow);
             if (modifier != null) {
                 penalty -= modifier;
             }

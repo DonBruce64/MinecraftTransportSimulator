@@ -418,6 +418,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public String getBlockName(Point3D position) {
+        return world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock().getRegistryName().toString();
+    }
+
+    @Override
     public float getBlockHardness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         float hardness = world.getBlockState(pos).getDestroySpeed(world, pos);
