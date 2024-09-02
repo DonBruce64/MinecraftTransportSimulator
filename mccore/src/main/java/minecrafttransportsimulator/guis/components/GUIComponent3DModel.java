@@ -38,7 +38,7 @@ public class GUIComponent3DModel extends AGUIComponent {
     public final boolean staticScaling;
 
     public boolean spin;
-    public float scale;
+    public float scale = 1.0F;
     public String modelLocation;
     public String textureLocation;
 

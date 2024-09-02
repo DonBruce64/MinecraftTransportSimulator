@@ -475,15 +475,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Called to update the text on this entity.  Variable is a map with the key as a field name,
-     * and the value as the value of that field.  Normally just sets the text to the passed-in values,
+     * Called to update the text on this entity.  Normally just sets the text to the passed-in values,
      * but may do supplemental logic if desired.
      */
-    public void updateText(LinkedHashMap<String, String> textLines) {
+    public void updateText(String textKey, String textValue) {
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            String newLine = textLines.get(textEntry.getKey().fieldName);
-            if (newLine != null) {
-                textEntry.setValue(newLine);
+            if (textKey.equals(textEntry.getKey().fieldName)) {
+                textEntry.setValue(textValue);
             }
         }
     }

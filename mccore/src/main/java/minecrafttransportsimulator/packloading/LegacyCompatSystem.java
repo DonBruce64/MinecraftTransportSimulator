@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -1786,7 +1787,7 @@ public final class LegacyCompatSystem {
 
                 JSONText nameTextObject = new JSONText();
                 nameTextObject.pos = new Point3D(0, -500, 0);
-                nameTextObject.fieldName = "Beacon Name";
+                nameTextObject.fieldName = TileEntityBeacon.BEACON_NAME_TEXT_KEY;
                 nameTextObject.defaultText = "NONE";
                 nameTextObject.maxLength = 5;
                 nameTextObject.color = ColorRGB.WHITE;
@@ -1794,7 +1795,7 @@ public final class LegacyCompatSystem {
 
                 JSONText glideslopeTextObject = new JSONText();
                 glideslopeTextObject.pos = new Point3D(0, -500, 0);
-                glideslopeTextObject.fieldName = "Glide Slope (Deg)";
+                glideslopeTextObject.fieldName = TileEntityBeacon.BEACON_GLIDESLOPE_TEXT_KEY;
                 glideslopeTextObject.defaultText = "10.0";
                 glideslopeTextObject.maxLength = 5;
                 glideslopeTextObject.color = ColorRGB.WHITE;
@@ -1802,7 +1803,7 @@ public final class LegacyCompatSystem {
 
                 JSONText bearingTextObject = new JSONText();
                 bearingTextObject.pos = new Point3D(0, -500, 0);
-                bearingTextObject.fieldName = "Bearing (Deg)";
+                bearingTextObject.fieldName = TileEntityBeacon.BEACON_BEARING_TEXT_KEY;
                 bearingTextObject.defaultText = "0.0";
                 bearingTextObject.maxLength = 5;
                 bearingTextObject.color = ColorRGB.WHITE;

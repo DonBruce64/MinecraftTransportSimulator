@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -411,12 +410,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             stack.setData(stackData);
         }
         return stack;
-    }
-
-    @Override
-    public void updateText(LinkedHashMap<String, String> textLines) {
-        super.updateText(textLines);
-        parts.forEach(part -> part.updateText(textLines));
     }
 
     @Override
