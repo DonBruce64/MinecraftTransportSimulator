@@ -290,10 +290,12 @@ public final class PartInteractable extends APart {
     @Override
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
-            case ("interactable_count"):
-                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() : 0, false);
+            case ("interactable_count_stacks"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedStackCount : 0, false);
+            case ("interactable_count_items"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedItemCount : 0, false);
             case ("interactable_percent"):
-                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() / (double) inventory.getSize() : (tank != null ? tank.getFluidLevel() / tank.getMaxLevel() : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedStackCount / (double) inventory.getSize() : (tank != null ? tank.getFluidLevel() / tank.getMaxLevel() : 0), false);
             case ("interactable_capacity"):
                 return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : (tank != null ? tank.getMaxLevel() / 1000 : 0), false);
             case ("interactable_active"):

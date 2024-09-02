@@ -59,9 +59,9 @@ public class TileEntityChest extends TileEntityDecor {
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("inventory_count"):
-                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getStackCount() : 0, false);
             case ("inventory_percent"):
-                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getCount() / (double) inventory.getSize() : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getStackCount() / (double) inventory.getSize() : 0, false);
             case ("inventory_capacity"):
                 return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : 0, false);
             default:

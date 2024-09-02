@@ -74,7 +74,7 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
 
     @Override
     protected boolean canOperate() {
-        return isUnloader() ? inventory.getCount() < inventory.getSize() : inventory.getCount() > 0;
+        return isUnloader() ? inventory.getStackCount() < inventory.getSize() : inventory.getStackCount() > 0;
     }
 
     @Override

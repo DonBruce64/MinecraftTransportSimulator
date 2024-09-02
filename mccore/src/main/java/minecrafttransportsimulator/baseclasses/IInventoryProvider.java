@@ -57,14 +57,25 @@ public interface IInventoryProvider {
     }
 
     /**
-     * Gets the number of items currently in this container.
+     * Gets the number of stacks currently in this container.
      */
-    default int getCount() {
+    default int getStackCount() {
         int count = 0;
         for (int i = 0; i < getSize(); ++i) {
             if (!getStack(i).isEmpty()) {
                 ++count;
             }
+        }
+        return count;
+    }
+
+    /**
+     * Gets the number of items currently in this container.
+     */
+    default int getItemCount() {
+        int count = 0;
+        for (int i = 0; i < getSize(); ++i) {
+            count += getStack(i).getSize();
         }
         return count;
     }
@@ -86,6 +97,9 @@ public interface IInventoryProvider {
     /**
      * Sets the stack in the inventory, overwriting anything that was previously in this slot.
      * Mainly used for packet operations, as it can result in the destruction of items.
+     * Note that all methods that modify stacks should call this method for the final
+     * modification.  This is to allow sub-classes to implement state-dependent logic
+     * in a common area.
      */
     void setStack(IWrapperItemStack stackToSet, int index);
 
