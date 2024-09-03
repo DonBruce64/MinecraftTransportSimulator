@@ -27,14 +27,14 @@ public class PacketPartGun extends APacketEntity<PartGun> {
 
     public PacketPartGun(PartGun gun, ItemBullet bullet) {
         super(gun);
-        this.stateRequest = Request.RELOAD;
+        this.stateRequest = Request.RELOAD_ONCLIENT;
         this.bulletItem = bullet;
     }
 
     public PacketPartGun(ByteBuf buf) {
         super(buf);
         this.stateRequest = Request.values()[buf.readByte()];
-        if (stateRequest == Request.RELOAD) {
+        if (stateRequest == Request.RELOAD_ONCLIENT) {
             this.bulletItem = readItemFromBuffer(buf);
         } else {
             this.bulletItem = null;
@@ -45,7 +45,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         buf.writeByte(stateRequest.ordinal());
-        if (stateRequest == Request.RELOAD) {
+        if (stateRequest == Request.RELOAD_ONCLIENT) {
             writeItemToBuffer(bulletItem, buf);
         }
     }
@@ -53,8 +53,16 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     @Override
     public boolean handle(AWrapperWorld world, PartGun gun) {
         switch (stateRequest) {
-            case RELOAD: {
+            case RELOAD_ONCLIENT: {
                 gun.clientNextBullet = bulletItem;
+                break;
+            }
+            case RELOAD_HAND_ON: {
+                gun.isHandHeldGunReloadRequested = true;
+                break;
+            }
+            case RELOAD_HAND_OFF: {
+                gun.isHandHeldGunReloadRequested = false;
                 break;
             }
             case TRIGGER_ON: {
@@ -90,7 +98,9 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     }
 
     public static enum Request {
-        RELOAD(false),
+        RELOAD_ONCLIENT(false),
+        RELOAD_HAND_ON(false),
+        RELOAD_HAND_OFF(false),
         TRIGGER_ON(true),
         TRIGGER_OFF(true),
         AIM_ON(true),

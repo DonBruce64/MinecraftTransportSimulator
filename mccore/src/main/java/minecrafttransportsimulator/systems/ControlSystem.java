@@ -45,6 +45,7 @@ public final class ControlSystem {
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
 
+    private static boolean reloadPressedLastCheck = false;
     private static boolean throttlePressedLastCheck = false;
     private static boolean parkingBrakePressedLastCheck = false;
     private static boolean hornPressedLastCheck = false;
@@ -78,30 +79,39 @@ public final class ControlSystem {
 
     public static void controlGlobal(IWrapperPlayer player) {
         //FIXME re-order global controals on higher MC versions.
+        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
         if (InterfaceManager.inputInterface.isLeftMouseButtonDown()) {
             if (!clickingLeft) {
                 clickingLeft = true;
-                handleClick(player);
+                handleClick(player, playerGun);
             }
         } else if (clickingLeft) {
             clickingLeft = false;
-            handleClick(player);
+            handleClick(player, playerGun);
         }
         if (InterfaceManager.inputInterface.isRightMouseButtonDown()) {
             if (!clickingRight) {
                 clickingRight = true;
-                handleClick(player);
+                handleClick(player, playerGun);
             }
         } else if (clickingRight) {
             clickingRight = false;
-            handleClick(player);
+            handleClick(player, playerGun);
+        }
+        if (playerGun != null && playerGun.activeGun != null && ControlsKeyboard.GENERAL_RELOAD.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
+            if (!reloadPressedLastCheck) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_ON));
+                reloadPressedLastCheck = true;
+            }
+        } else if (reloadPressedLastCheck) {
+            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_OFF));
+            reloadPressedLastCheck = false;
         }
     }
 
-    private static void handleClick(IWrapperPlayer player) {
+    private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
-        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
         if (playerGun != null && playerGun.activeGun != null) {
             if (clickingLeft) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_ON));
@@ -659,6 +669,8 @@ public final class ControlSystem {
      * @author don_bruce
      */
     public enum ControlsKeyboard {
+        GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, false, "R", LanguageSystem.INPUT_GUN_RELOAD),
+
         AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
         AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", LanguageSystem.INPUT_YAW_L),
@@ -750,6 +762,8 @@ public final class ControlSystem {
     }
 
     public enum ControlsJoystick {
+        GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
+
         AIRCRAFT_MOD(false, false, LanguageSystem.INPUT_MOD),
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, LanguageSystem.INPUT_YAW),

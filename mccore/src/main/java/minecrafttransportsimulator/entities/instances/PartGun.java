@@ -91,6 +91,7 @@ public class PartGun extends APart {
     public boolean playerHoldingTrigger;
     public boolean isHandHeldGunAimed;
     public boolean isHandHeldGunEquipped;
+    public boolean isHandHeldGunReloadRequested;
     public boolean isRunningInCoaxialMode;
     private int camOffset;
     private int cooldownTimeRemaining;
@@ -345,19 +346,12 @@ public class PartGun extends APart {
                 }
             }
 
-            //Set or decrement reloadDelay.
-            if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                reloadDelayRemaining = definition.gun.reloadDelay;
-            } else if (reloadDelayRemaining > 0) {
-                --reloadDelayRemaining;
-            }
-
             //Set final gun active state and variables, and fire if those line up with conditions.
             //Note that this code runs concurrently on the client and server.  This prevents the need for packets for bullet
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
-            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && (!definition.gun.isSemiAuto || !firedThisRequest);
+            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && reloadTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
             if (ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)) {
                 //Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
                 //If we don't wait, we can bypass the cooldown by toggling the trigger.
@@ -479,12 +473,19 @@ public class PartGun extends APart {
                 }
             }
 
+            //Set or decrement reloadDelay.
+            if (state.isAtLeast(GunState.FIRING_CURRENTLY)) {
+                reloadDelayRemaining = definition.gun.reloadDelay;
+            } else if (reloadDelayRemaining > 0) {
+                --reloadDelayRemaining;
+            }
+
             //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
             if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null && reloadDelayRemaining == 0) {
                 if (entityOn instanceof EntityPlayerGun) {
-                    if (definition.gun.autoReload || bulletsLeft == 0) {
+                    if ((bulletsLeft == 0 && state == GunState.FIRING_REQUESTED) || isHandHeldGunReloadRequested) {
                         //Check the player's inventory for bullets.
                         IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
                         for (int i = 0; i < inventory.getSize(); ++i) {
@@ -493,12 +494,14 @@ public class PartGun extends APart {
                             if (item instanceof ItemBullet) {
                                 if (tryToReload((ItemBullet) item)) {
                                     //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-                                    if (!ConfigSystem.settings.general.devMode.value)
+                                    if (!ConfigSystem.settings.general.devMode.value) {
                                         inventory.removeFromSlot(i, 1);
+                                    }
                                     break;
                                 }
                             }
                         }
+                        isHandHeldGunReloadRequested = false;
                     }
                 } else {
                     if (definition.gun.autoReload) {
@@ -513,8 +516,9 @@ public class PartGun extends APart {
                                         if (tryToReload((ItemBullet) item)) {
                                             //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
                                             //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-                                            if (!ConfigSystem.settings.general.devMode.value)
+                                            if (!ConfigSystem.settings.general.devMode.value) {
                                                 inventory.removeFromSlot(i, 1);
+                                            }
                                             break;
                                         }
                                     }
