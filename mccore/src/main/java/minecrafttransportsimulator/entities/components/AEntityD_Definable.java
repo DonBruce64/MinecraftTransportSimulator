@@ -363,7 +363,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (Entry<JSONText, String> textEntry : text.entrySet()) {
                 JSONText textDef = textEntry.getKey();
                 if (textDef.variableName != null) {
-                    textEntry.setValue(getAnimatedTextVariableValue(textDef, 0));
+                    String value = getRawTextVariableValue(textDef, 0);
+                    if (value != null) {
+                        value = String.format(textDef.variableFormat, value);
+                    } else {
+                        value = String.format(textDef.variableFormat, getOrCreateVariable(textDef.variableName).computeValue(0) * textDef.variableFactor + textDef.variableOffset);
+                    }
+                    textEntry.setValue(value);
                 }
             }
         }
@@ -977,8 +983,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Similar to {@link #getRawVariableValue(String, float)}, but returns
-     * a String for text-based parameters rather than a double.  If no match
+     * Returns a String for text-based parameters rather than a double.  If no match
      * is found, return null.  Otherwise, return the string.
      */
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
@@ -993,14 +998,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
         double value = getOrCreateVariable(clock.animation.variable).computeValue(partialTicks);
-        if (clock.animation.absolute && value < 0) {
-            value = -value;
-        }
-        if (!clock.isUseful) {
-            return clampAndScale(value, clock.animation, scaleFactor, offset);
-        } else {
-            return clampAndScale(clock.getFactoredState(this, value, partialTicks), clock.animation, scaleFactor, offset);
-        }
+        return clock.clampAndScale(this, value, scaleFactor, offset, partialTicks);
     }
 
     /**
@@ -1009,38 +1007,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {
         return getAnimatedVariableValue(clock, scaleFactor, 0.0, partialTicks);
-    }
-
-    /**
-     * Helper method to clamp and scale the passed-in variable value based on the passed-in animation,
-     * returning it in the proper form.
-     */
-    private static double clampAndScale(double value, JSONAnimationDefinition animation, double scaleFactor, double offset) {
-        if (animation.axis != null) {
-            value = value * scaleFactor + animation.offset + offset;
-            if (animation.clampMin != 0 && value < animation.clampMin) {
-                value = animation.clampMin;
-            } else if (animation.clampMax != 0 && value > animation.clampMax) {
-                value = animation.clampMax;
-            }
-            return value;
-        } else {
-            return value * scaleFactor + animation.offset;
-        }
-    }
-
-    /**
-     * Returns the value for the passed-in variable, subject to the formatting and factoring in the
-     * text definition.
-     */
-    public final String getAnimatedTextVariableValue(JSONText textDef, float partialTicks) {
-        //Check text values first, then animated values.
-        String value = getRawTextVariableValue(textDef, 0);
-        if (value == null) {
-            return String.format(textDef.variableFormat, getOrCreateVariable(textDef.variableName).computeValue(partialTicks) * textDef.variableFactor + textDef.variableOffset);
-        } else {
-            return String.format(textDef.variableFormat, value);
-        }
     }
 
     /**
