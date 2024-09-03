@@ -341,6 +341,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
+                    } else {
+                        bullet.displayDebugMessage("BULLET PENETRATED ARMOR");
+                        return EntityBullet.HitType.ARMORPEN;
                     }
                 } else {
                     //Not a bullet, but hit armor, 100% stopping power with no damage.
