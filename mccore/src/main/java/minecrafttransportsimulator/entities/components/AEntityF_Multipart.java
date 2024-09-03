@@ -292,9 +292,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     /**
-     * Called when the entity is attacked by a projectile.  Returns a {@link EntityBullet.HitType} if the projectile hit something
-     * and should be removed from the world.  Null if it can keep going.  Note that returning false does
-     * NOT imply no damage was applied: some entities/parts allow for projectiles to damage and pass through them.
+     * Called when the entity is attacked by a projectile.  Returns a {@link EntityBullet.HitType} if the projectile hit something.
+     * Actual hit logic is handled here, with specific code for bullets calling the appropriate method based on what they hit.
+     * Bullets may also be flagged for removal here depending on what they hit; this may not happen with all hit types, nor
+     * does the returning of a hit type imply this entity was damaged, as some entities allow for projectiles to damage and pass through them.
      * Also note that unlike {@link #attack(Damage)}, this method functions both on client and servers, though you must only
      * call it on a single client in a group or on the server.  Calling it on every client will result in duplicate attacks.
      */
