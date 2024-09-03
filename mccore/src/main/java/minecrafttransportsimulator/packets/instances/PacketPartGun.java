@@ -18,17 +18,20 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 public class PacketPartGun extends APacketEntity<PartGun> {
     private final Request stateRequest;
     private final ItemBullet bulletItem;
+    private final int bulletQty;
 
     public PacketPartGun(PartGun gun, Request stateRequest) {
         super(gun);
         this.stateRequest = stateRequest;
         this.bulletItem = null;
+        this.bulletQty = 0;
     }
 
-    public PacketPartGun(PartGun gun, ItemBullet bullet) {
+    public PacketPartGun(PartGun gun, ItemBullet bullet, int bulletQty) {
         super(gun);
         this.stateRequest = Request.RELOAD_ONCLIENT;
         this.bulletItem = bullet;
+        this.bulletQty = bulletQty;
     }
 
     public PacketPartGun(ByteBuf buf) {
@@ -36,8 +39,10 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         this.stateRequest = Request.values()[buf.readByte()];
         if (stateRequest == Request.RELOAD_ONCLIENT) {
             this.bulletItem = readItemFromBuffer(buf);
+            this.bulletQty = buf.readInt();
         } else {
             this.bulletItem = null;
+            this.bulletQty = 0;
         }
     }
 
@@ -47,14 +52,20 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         buf.writeByte(stateRequest.ordinal());
         if (stateRequest == Request.RELOAD_ONCLIENT) {
             writeItemToBuffer(bulletItem, buf);
+            buf.writeInt(bulletQty);
         }
     }
 
     @Override
     public boolean handle(AWrapperWorld world, PartGun gun) {
         switch (stateRequest) {
+            case CLEAR_ONCLIENT: {
+                gun.bulletsLeft = 0;
+                break;
+            }
             case RELOAD_ONCLIENT: {
                 gun.clientNextBullet = bulletItem;
+                gun.clientNextBulletQty = bulletQty;
                 break;
             }
             case RELOAD_HAND_ON: {
@@ -98,6 +109,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     }
 
     public static enum Request {
+        CLEAR_ONCLIENT(false),
         RELOAD_ONCLIENT(false),
         RELOAD_HAND_ON(false),
         RELOAD_HAND_OFF(false),

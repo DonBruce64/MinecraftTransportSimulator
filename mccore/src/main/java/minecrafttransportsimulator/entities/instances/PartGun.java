@@ -62,25 +62,29 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
+    private final boolean resetPosition;
+    private final boolean isHandHeld;
+    private final IWrapperPlayer holdingPlayer;
+
     //Variables that can be modified
     private final ComputedVariable fireDelayVar;
     private final ComputedVariable bulletSpreadFactorVar;
     public final ComputedVariable twoHandedVar;
 
-    private final boolean resetPosition;
-
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
 
     //Stored variables used to determine bullet firing behavior.
     public int bulletsFired;
-    private int bulletsLeft;
+    public int bulletsLeft;
     private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
     private final RotationMatrix prevInternalOrientation;
     public ItemBullet loadedBullet;
     public ItemBullet lastLoadedBullet;
     private ItemBullet reloadingBullet;
+    private int reloadingBulletQty;
     public ItemBullet clientNextBullet;
+    public int clientNextBulletQty;
     private final Random randomGenerator;
 
     //These variables are used during firing and will be reset on loading.
@@ -190,6 +194,8 @@ public class PartGun extends APart {
         }
         
         this.resetPosition = definition.gun.resetPosition || placementDefinition.resetPosition;
+        this.isHandHeld = entityOn instanceof EntityPlayerGun;
+        this.holdingPlayer = ((EntityPlayerGun) entityOn).player;
 
         //Load saved data.
         if (data != null) {
@@ -250,11 +256,9 @@ public class PartGun extends APart {
     public boolean interact(IWrapperPlayer player) {
         //Check to see if we have any bullets in our hands.
         //If so, try to re-load this gun with them.
-        AItemBase heldItem = player.getHeldItem();
-        if (heldItem instanceof ItemBullet) {
-            if (tryToReload((ItemBullet) heldItem) && !player.isCreative()) {
-                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
-            }
+        IWrapperItemStack heldStack = player.getHeldStack();
+        if (tryToReload(heldStack, false) && !player.isCreative()) {
+            player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
         }
         return true;
     }
@@ -274,7 +278,7 @@ public class PartGun extends APart {
             IWrapperEntity controller = getGunController();
             if (controller != null) {
                 lastController = controller;
-                if (entityOn instanceof EntityPlayerGun) {
+                if (isHandHeld) {
                     state = state.promote(GunState.CONTROLLED);
                 } else {
                     //If this gun type can only have one selected at a time, check that this has the selected index.
@@ -328,7 +332,7 @@ public class PartGun extends APart {
                 if (controller == null) {
                     state = state.demote(GunState.ACTIVE);
                     //If we are hand-held, we need to die since we aren't a valid gun.
-                    if (entityOn instanceof EntityPlayerGun) {
+                    if (isHandHeld) {
                         remove();
                         return;
                     }
@@ -415,7 +419,7 @@ public class PartGun extends APart {
                                         world.addEntity(newBullet);
                                         
                                         //Now do knockback, if it exists.
-                                        if (entityOn instanceof EntityPlayerGun && definition.gun.knockback != 0) {
+                                        if (isHandHeld && definition.gun.knockback != 0) {
                                             if(!world.isClient()) {
                                                 performGunKnockback();
                                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
@@ -484,21 +488,17 @@ public class PartGun extends APart {
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
             if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null && reloadDelayRemaining == 0) {
-                if (entityOn instanceof EntityPlayerGun) {
+                if (isHandHeld) {
                     if ((bulletsLeft == 0 && state == GunState.FIRING_REQUESTED) || isHandHeldGunReloadRequested) {
                         //Check the player's inventory for bullets.
                         IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
                         for (int i = 0; i < inventory.getSize(); ++i) {
-                            IWrapperItemStack stack = inventory.getStack(i);
-                            AItemBase item = stack.getItem();
-                            if (item instanceof ItemBullet) {
-                                if (tryToReload((ItemBullet) item)) {
-                                    //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-                                    if (!ConfigSystem.settings.general.devMode.value) {
-                                        inventory.removeFromSlot(i, 1);
-                                    }
-                                    break;
+                            if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested)) {
+                                //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
+                                if (!ConfigSystem.settings.general.devMode.value) {
+                                    inventory.removeFromSlot(i, 1);
                                 }
+                                break;
                             }
                         }
                         isHandHeldGunReloadRequested = false;
@@ -510,17 +510,13 @@ public class PartGun extends APart {
                             if (crate.isActive) {
                                 EntityInventoryContainer inventory = crate.inventory;
                                 for (int i = 0; i < inventory.getSize(); ++i) {
-                                    IWrapperItemStack stack = inventory.getStack(i);
-                                    AItemBase item = stack.getItem();
-                                    if (item instanceof ItemBullet) {
-                                        if (tryToReload((ItemBullet) item)) {
-                                            //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-                                            //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-                                            if (!ConfigSystem.settings.general.devMode.value) {
-                                                inventory.removeFromSlot(i, 1);
-                                            }
-                                            break;
+                                    if (tryToReload(inventory.getStack(i), false)) {
+                                        //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+                                        //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+                                        if (!ConfigSystem.settings.general.devMode.value) {
+                                            inventory.removeFromSlot(i, 1);
                                         }
+                                        break;
                                     }
                                 }
                             }
@@ -541,6 +537,7 @@ public class PartGun extends APart {
         //If we are a client, this is where we get our bullets.
         if (clientNextBullet != null) {
             reloadingBullet = clientNextBullet;
+            reloadingBulletQty = clientNextBulletQty;
             reloadTimeRemaining = definition.gun.reloadTime;
             clientNextBullet = null;
         }
@@ -555,7 +552,7 @@ public class PartGun extends APart {
         } else if (reloadingBullet != null) {
             loadedBullet = reloadingBullet;
             lastLoadedBullet = loadedBullet;
-            bulletsLeft += reloadingBullet.definition.bullet.quantity;
+            bulletsLeft += reloadingBulletQty;
             reloadingBullet = null;
             if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
@@ -968,18 +965,57 @@ public class PartGun extends APart {
      * Attempts to reload the gun with the passed-in item.  Returns true if the item is a bullet
      * and was loaded, false if not.  Provider methods are then called for packet callbacks.
      */
-    public boolean tryToReload(ItemBullet item) {
-        //Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
-        //Also don't fill bullets if we are currently reloading bullets.
-        if (!definition.gun.blockReloading && item.definition.bullet != null) {
-            boolean isNewBulletValid = item.definition.bullet.diameter == definition.gun.diameter && item.definition.bullet.caseLength >= definition.gun.minCaseLength && item.definition.bullet.caseLength <= definition.gun.maxCaseLength;
-            if (reloadingBullet == null && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) {
-                //Make sure we don't over-fill the gun.
-                if (item.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity) {
-                    reloadingBullet = item;
-                    reloadTimeRemaining = definition.gun.reloadTime;
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, reloadingBullet));
-                    return true;
+    public boolean tryToReload(IWrapperItemStack stack, boolean swapIfFull) {
+        //Check to make sure this is a bullet stack.
+        AItemBase item = stack.getItem();
+        if(item instanceof ItemBullet) {
+            ItemBullet bulletItem = (ItemBullet) item;
+            //Check to make sure this is a bullet, the gun isn't reloading and can accept reloads.
+            if (!definition.gun.blockReloading && bulletItem.definition.bullet != null && reloadingBullet == null) {
+                //Check bullet parameters match.
+                if (bulletItem.definition.bullet.diameter == definition.gun.diameter && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength) {
+                    if (!swapIfFull && loadedBullet != null && !loadedBullet.equals(bulletItem)) {
+                        //Can't swap bullets and this one doesn't match what we have, can't reload.
+                        return false;
+                    }
+                    
+                    //If we are hand held with a partial capacity left, swap the clip out.
+                    if (isHandHeld && bulletsLeft > 0) {
+                        //First remove old clip.
+                        IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
+                        data.setInteger(ItemBullet.BULLET_QTY_KEY, bulletsLeft);
+                        IWrapperItemStack bulletStack = loadedBullet.getNewStack(data);
+                        if (holdingPlayer.getInventory().addStack(bulletStack)) {
+                            loadedBullet = null;
+                            bulletsLeft = 0;
+                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_ONCLIENT));
+                        } else {
+                            //Can't add the clip to the player's inventory.
+                            return false;
+                        }
+                    }
+
+                    //Get quantity, which might be partial if we're using hand-held clips.
+                    final int bulletQty;
+                    if(isHandHeld) {
+                        IWrapperNBT data = stack.getData();
+                        if(data != null) {
+                            bulletQty = data.getInteger(ItemBullet.BULLET_QTY_KEY);
+                        }else {
+                            bulletQty = bulletItem.definition.bullet.quantity;
+                        }
+                    }else {
+                        bulletQty = bulletItem.definition.bullet.quantity;
+                    }
+                    
+                    if (bulletQty + bulletsLeft <= definition.gun.capacity) {
+                        //Able to load, do so now (above check shouldn't matter for hand-helds since those always have capacity, but common code is common).
+                        reloadingBullet = bulletItem;
+                        reloadingBulletQty = bulletQty;
+                        reloadTimeRemaining = definition.gun.reloadTime;
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, reloadingBullet, reloadingBulletQty));
+                        return true;
+                    }
                 }
             }
         }
@@ -999,8 +1035,8 @@ public class PartGun extends APart {
         }
 
         //Check if the entity we are on is a player-holding entity.
-        if (entityOn instanceof EntityPlayerGun) {
-            return ((EntityPlayerGun) entityOn).player;
+        if (isHandHeld) {
+            return holdingPlayer;
         }
 
         //Check if our parent entity is a seat and has a rider.
@@ -1033,7 +1069,7 @@ public class PartGun extends APart {
         if (lastLoadedBullet.definition.bullet.pellets != 0) {
             knockback /= lastLoadedBullet.definition.bullet.pellets;
         }
-        ((EntityPlayerGun) entityOn).player.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(knockback));
+        holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(knockback));
     }
 
     /**
@@ -1165,9 +1201,9 @@ public class PartGun extends APart {
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("gun_inhand"):
-                return new ComputedVariable(this, variable, partialTicks -> entityOn instanceof EntityPlayerGun ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> isHandHeld ? 1 : 0, false);
             case ("gun_inhand_sneaking"):
-                return new ComputedVariable(this, variable, partialTicks -> entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> isHandHeld && holdingPlayer.isSneaking() ? 1 : 0, false);
             case ("gun_inhand_aiming"):
                 return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunAimed ? 1 : 0, false);
             case ("gun_inhand_equipped"):

@@ -10,6 +10,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet> {
+    public static final String BULLET_QTY_KEY = "bulletQty";
 
     public ItemBullet(JSONBullet definition, JSONSubDefinition subDefinition, String sourcePackID) {
         super(definition, subDefinition, sourcePackID);
@@ -40,6 +41,6 @@ public class ItemBullet extends AItemSubTyped<JSONBullet> {
         tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_DIAMETER.getCurrentValue() + definition.bullet.diameter);
         tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_CASELENGTH.getCurrentValue() + definition.bullet.caseLength);
         tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_PENETRATION.getCurrentValue() + definition.bullet.armorPenetration);
-        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_QUANTITY.getCurrentValue() + definition.bullet.quantity);
+        tooltipLines.add(LanguageSystem.ITEMINFO_BULLET_QUANTITY.getCurrentValue() + (data.hasKey(BULLET_QTY_KEY) ? data.getInteger(BULLET_QTY_KEY) : definition.bullet.quantity));
     }
 }
