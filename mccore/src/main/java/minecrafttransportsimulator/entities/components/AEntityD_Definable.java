@@ -920,12 +920,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         return new ComputedVariable(false);
                     }
                 } else if (variable.startsWith("blockname_")) {
-                    final String blockName = variable.substring("blockname_".length()).toUpperCase();
+                    final String blockName = variable.substring("blockname_".length()).toLowerCase();
                     return new ComputedVariable(this, variable, partialTicks -> {
                         return world.getBlockName(position).equals(blockName) ? 1 : 0;
                     }, false);
                 } else if (variable.startsWith("terrain_blockname_")) {
-                    final String blockName = variable.substring("terrain_blockname_".length()).toUpperCase();
+                    final String blockName = variable.substring("terrain_blockname_".length()).toLowerCase();
                     return new ComputedVariable(this, variable, partialTicks -> {
                         double height = world.getHeight(position) + 1;
                         position.y -= height;

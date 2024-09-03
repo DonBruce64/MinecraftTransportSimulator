@@ -271,7 +271,7 @@ public class PartGroundDevice extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> world.getHeight(zeroReferencePosition), false);
             default: {
                 if (variable.startsWith("ground_blockname")) {
-                    final String blockName = variable.substring("ground_blockname_".length()).toUpperCase();
+                    final String blockName = variable.substring("ground_blockname_".length()).toLowerCase();
                     return new ComputedVariable(this, variable, partialTicks -> blockNameBelow != null && blockNameBelow.equals(blockName) ? 1 : 0, false);
                 } else if (variable.startsWith("ground_blockmaterial")) {
                     final String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
