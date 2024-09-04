@@ -39,7 +39,7 @@ public class GUIConfig extends AGUIBase {
     //Keybind selection variables.
     private ControlTypeEnum controlConfiguring;
     private final Map<GUIComponentButton, String> controlSelectionButtons = new HashMap<>();
-    private GUIComponentLabel vehicleSelectionFaultLabel;
+    private GUIComponentLabel controlSelectionFaultLabel;
     private GUIComponentButton finishKeyboardBindingsButton;
 
     //Sound and radio level variables.
@@ -145,7 +145,7 @@ public class GUIConfig extends AGUIBase {
 
         //Control selection buttons and text.
         controlSelectionButtons.clear();
-        addComponent(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 90, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
+        addComponent(controlSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 100, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
         for (ControlTypeEnum controlType : ControlTypeEnum.values()) {
             GUIComponentButton buttonKeyboard = new GUIComponentButton(this, guiLeft + getWidth() / 2 - 110, guiTop + 30 + 20 * controlSelectionButtons.size() / 2, 110, 20, controlType.keyboardLanguage.getCurrentValue()) {
                 @Override
@@ -471,16 +471,16 @@ public class GUIConfig extends AGUIBase {
         }
 
         //If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
-        vehicleSelectionFaultLabel.visible = !InterfaceManager.inputInterface.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
-        if (vehicleSelectionFaultLabel.visible) {
-            vehicleSelectionFaultLabel.text = InterfaceManager.inputInterface.isJoystickSupportBlocked() ? LanguageSystem.GUI_CONFIG_JOYSTICK_DISABLED.getCurrentValue() : LanguageSystem.GUI_CONFIG_JOYSTICK_ERROR.getCurrentValue();
+        controlSelectionFaultLabel.visible = !InterfaceManager.inputInterface.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
+        if (controlSelectionFaultLabel.visible) {
+            controlSelectionFaultLabel.text = InterfaceManager.inputInterface.isJoystickSupportBlocked() ? LanguageSystem.GUI_CONFIG_JOYSTICK_DISABLED.getCurrentValue() : LanguageSystem.GUI_CONFIG_JOYSTICK_ERROR.getCurrentValue();
         }
         for (GUIComponentButton button : controlSelectionButtons.keySet()) {
             button.visible = configuringControls && controlConfiguring == null && (!controlSelectionButtons.get(button).endsWith(".joystick") || InterfaceManager.inputInterface.isJoystickSupportEnabled());
         }
 
         //If we haven't selected anything, render the volume controls.
-        if (configuringControls && controlConfiguring == null) {
+        if (!configuringControls && !configuringRendering) {
             soundVolumeUpButton.visible = true;
             soundVolumeUpButton.enabled = ConfigSystem.client.controlSettings.soundVolume.value < 1.5;
             soundVolumeDownButton.visible = true;

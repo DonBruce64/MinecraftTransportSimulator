@@ -104,7 +104,9 @@ public final class ControlSystem {
                 reloadPressedLastCheck = true;
             }
         } else if (reloadPressedLastCheck) {
-            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_OFF));
+            if (playerGun != null && playerGun.activeGun != null) {
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_OFF));
+            }
             reloadPressedLastCheck = false;
         }
     }
