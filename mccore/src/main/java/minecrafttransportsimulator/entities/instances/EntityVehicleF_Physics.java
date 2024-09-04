@@ -752,9 +752,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("lateral_acceleration_scaled"):
                 return new ComputedVariable(this, variable, partialTicks -> -((Math.toRadians(rotation.angles.y) * 20F) * (indicatedSpeed / speedFactor)), false);
             case ("load_factor"):
-                return new ComputedVariable(this, variable, partialTicks -> -Math.sqrt((((Math.toRadians(rotation.angles.x) * 20F) * indicatedSpeed) / 9.8) + 9.8) , false);
+                return new ComputedVariable(this, variable, partialTicks -> (((Math.toRadians(-rotation.angles.x) * 20F) * indicatedSpeed) + 9.8) / 9.8, false);
             case ("load_factor_scaled"):
-                return new ComputedVariable(this, variable, partialTicks -> -Math.sqrt((((Math.toRadians(rotation.angles.x) * 20F) * (indicatedSpeed / speedFactor)) / 9.8) + 9.8) , false);
+                return new ComputedVariable(this, variable, partialTicks -> (((Math.toRadians(-rotation.angles.x) * 20F) * (indicatedSpeed / speedFactor)) + 9.8) / 9.8, false);
             //State cases generally used on aircraft.
             case ("flaps_moving"):
                 return new ComputedVariable(this, variable, partialTicks -> flapActualAngleVar.currentValue != flapDesiredAngleVar.currentValue ? 1 : 0, false);
