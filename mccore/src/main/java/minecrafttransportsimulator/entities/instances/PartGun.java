@@ -195,7 +195,7 @@ public class PartGun extends APart {
         
         this.resetPosition = definition.gun.resetPosition || placementDefinition.resetPosition;
         this.isHandHeld = entityOn instanceof EntityPlayerGun;
-        this.holdingPlayer = ((EntityPlayerGun) entityOn).player;
+        this.holdingPlayer = isHandHeld ? ((EntityPlayerGun) entityOn).player : null;
 
         //Load saved data.
         if (data != null) {
@@ -203,7 +203,10 @@ public class PartGun extends APart {
             this.bulletsFired = data.getInteger("bulletsFired");
             this.bulletsLeft = data.getInteger("bulletsLeft");
             this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-            this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
+            this.internalOrientation = new RotationMatrix();
+            if (!isHandHeld) {
+                internalOrientation.setToAngles(data.getPoint3d("internalAngles"));
+            }
             String loadedBulletPack = data.getString("loadedBulletPack");
             if (!loadedBulletPack.isEmpty()) {
                 String loadedBulletName = data.getString("loadedBulletName");
