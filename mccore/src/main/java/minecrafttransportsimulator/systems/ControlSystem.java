@@ -49,7 +49,6 @@ public final class ControlSystem {
 
     private static boolean reloadPressedLastCheck = false;
     private static boolean throttlePressedLastCheck = false;
-    private static boolean parkingBrakePressedLastCheck = false;
 
     private static EntityInteractResult interactResult = null;
 
@@ -227,20 +226,13 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake) {
-        //If the analog brake is set, do brake state based on that rather than the keyboard.
-        boolean isParkingBrakePressed = brakeMod.isPressed() || pBrake.isPressed();
-        if (isParkingBrakePressed) {
-            if (!parkingBrakePressedLastCheck) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.parkingBrakeVar));
-                parkingBrakePressedLastCheck = true;
-            }
-        } else {
-            parkingBrakePressedLastCheck = false;
-            double brakeValue = brakeJoystick.isJoystickActive() ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-            if (brakeValue != vehicle.brakeVar.currentValue) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.brakeVar, brakeValue));
-            }
+    private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsJoystick joystickBrakeAxis, ControlsJoystick joystickBrakeButton, ControlsKeyboard keyboardBrakeButton, ControlsKeyboard parkingBrakeButton) {
+        if (parkingBrakeButton.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.parkingBrakeVar));
+        }
+        double brakeValue = joystickBrakeAxis.isJoystickActive() ? joystickBrakeAxis.getAxisState(true) : ((joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed()) ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+        if (brakeValue != vehicle.brakeVar.currentValue) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.brakeVar, brakeValue));
         }
     }
 
@@ -344,7 +336,7 @@ public final class ControlSystem {
         controlPanel(aircraft, ControlsKeyboard.AIRCRAFT_PANEL);
 
         //Check brake status.
-        controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE, ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL, ControlsJoystick.AIRCRAFT_PARK);
+        controlBrake(aircraft, ControlsJoystick.AIRCRAFT_BRAKE, ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL, ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_PARK);
 
         //Check for thrust reverse button.
         if (ControlsJoystick.AIRCRAFT_REVERSE.isPressed()) {
@@ -443,7 +435,7 @@ public final class ControlSystem {
         //Check brake and gas.  Depends on how the controls are configured.
         if (powered.definition.motorized.hasIncrementalThrottle) {
             //Check brake and gas.  Brake always changes, gas goes up-down.
-            controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
+            controlBrake(powered, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_PARK);
             if (ControlsJoystick.CAR_GAS.isJoystickActive()) {
                 //Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
                 double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
@@ -520,7 +512,7 @@ public final class ControlSystem {
                 }
             } else {
                 //Check brake and gas and set to on or off.
-                controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
+                controlBrake(powered, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_PARK);
                 if (ControlsJoystick.CAR_GAS.isJoystickActive()) {
                     //Send throttle over if throttle if cruise control is off, or if throttle is greater than the current value.
                     double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
@@ -688,7 +680,6 @@ public final class ControlSystem {
         GENERAL_CUSTOM4(ControlsJoystick.GENERAL_CUSTOM4, true, "NUMPAD3", LanguageSystem.INPUT_CUSTOM4),
         GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, true, "R", LanguageSystem.INPUT_GUN_RELOAD),
 
-        AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", LanguageSystem.INPUT_MOD),
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
         AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", LanguageSystem.INPUT_YAW_L),
         AIRCRAFT_PITCH_U(ControlsJoystick.AIRCRAFT_PITCH, false, "S", LanguageSystem.INPUT_PITCH_U),
@@ -700,6 +691,7 @@ public final class ControlSystem {
         AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", LanguageSystem.INPUT_FLAPS_D),
         AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", LanguageSystem.INPUT_BRAKE),
+        AIRCRAFT_PARK(ControlsJoystick.AIRCRAFT_PARK, true, "N", LanguageSystem.INPUT_PARK),
         AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
         AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS", LanguageSystem.INPUT_RADIO),
         AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE", LanguageSystem.INPUT_GUN_FIRE),
@@ -714,6 +706,7 @@ public final class ControlSystem {
         CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A", LanguageSystem.INPUT_TURN_L),
         CAR_GAS(ControlsJoystick.CAR_GAS, false, "W", LanguageSystem.INPUT_GAS),
         CAR_BRAKE(ControlsJoystick.CAR_BRAKE, false, "S", LanguageSystem.INPUT_BRAKE),
+        CAR_PARK(ControlsJoystick.CAR_PARK, true, "N", LanguageSystem.INPUT_PARK),
         CAR_PANEL(ControlsJoystick.CAR_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
         CAR_SHIFT_U(ControlsJoystick.CAR_SHIFT_U, true, "R", LanguageSystem.INPUT_SHIFT_U),
         CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F", LanguageSystem.INPUT_SHIFT_D),
@@ -790,7 +783,6 @@ public final class ControlSystem {
         GENERAL_CUSTOM4(false, true, LanguageSystem.INPUT_CUSTOM4),
         GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
 
-        AIRCRAFT_MOD(false, false, LanguageSystem.INPUT_MOD),
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, LanguageSystem.INPUT_YAW),
         AIRCRAFT_PITCH(true, false, LanguageSystem.INPUT_PITCH),
@@ -948,9 +940,6 @@ public final class ControlSystem {
     }
 
     public enum ControlsKeyboardDynamic {
-        AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, LanguageSystem.INPUT_PARK),
-
-        CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_PARK),
         CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SLOW),
         CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N),
         CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD, LanguageSystem.INPUT_SHIFT_N);
