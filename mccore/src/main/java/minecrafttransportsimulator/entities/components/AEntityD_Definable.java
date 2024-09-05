@@ -27,6 +27,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAction;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
@@ -74,7 +75,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Map containing text lines for saved text provided by this entity.
      **/
-    public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<>();
+    public final Map<JSONText, String> text = new HashMap<>();
 
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
@@ -1094,6 +1095,38 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         } //No lists found for this entry, therefore no variables are false.
 
         return true;
+    }
+
+    /**
+     * Performs the requested action.  Only call this on servers!
+     */
+    public void performAction(JSONAction action, boolean conditionsTrue) {
+        switch (action.action) {
+            case BUTTON: {
+                if (conditionsTrue) {
+                    getOrCreateVariable(action.variable).setTo(action.value, true);
+                } else {
+                    getOrCreateVariable(action.variable).setTo(0, true);
+                }
+                break;
+            }
+            case INCREMENT:
+                if (conditionsTrue) {
+                    getOrCreateVariable(action.variable).increment(action.value, action.clampMin, action.clampMax, true);
+                }
+                break;
+            case SET:
+                if (conditionsTrue) {
+                    getOrCreateVariable(action.variable).setTo(action.value, true);
+                }
+                break;
+            case TOGGLE: {
+                if (conditionsTrue) {
+                    getOrCreateVariable(action.variable).toggle(true);
+                }
+                break;
+            }
+        }
     }
 
     /**

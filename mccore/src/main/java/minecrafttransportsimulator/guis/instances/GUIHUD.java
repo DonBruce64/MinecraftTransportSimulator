@@ -1,9 +1,14 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -15,6 +20,7 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 
 /**
  * A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
@@ -27,11 +33,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class GUIHUD extends AGUIBase {
     private static final int HUD_WIDTH = 400;
     private static final int HUD_HEIGHT = 140;
+    private static final ControlsKeyboard[] customKeybindControls = new ControlsKeyboard[] { ControlsKeyboard.GENERAL_CUSTOM1, ControlsKeyboard.GENERAL_CUSTOM2, ControlsKeyboard.GENERAL_CUSTOM3, ControlsKeyboard.GENERAL_CUSTOM4 };
+
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
     private final List<GUIComponentInstrument> instruments = new ArrayList<>();
     private GUIComponentLabel healthLabel;
     private GUIComponentLabel gunTypeLabel;
+    private Map<Byte, GUIComponentLabel> customKeybindLabels = new HashMap<>();
+    private Map<Byte, Set<String>> customKeybindNames = new HashMap<>();
 
     private boolean halfHUDActive;
 
@@ -85,6 +95,22 @@ public class GUIHUD extends AGUIBase {
         healthLabel.ignoreGUILightingState = true;
         addComponent(gunTypeLabel = new GUIComponentLabel(screenWidth, 8, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
         gunTypeLabel.ignoreGUILightingState = true;
+        customKeybindLabels.clear();
+        populateKeybindLabel(vehicle);
+        vehicle.allParts.forEach(part -> populateKeybindLabel(part));
+    }
+
+    private void populateKeybindLabel(AEntityE_Interactable<?> entity) {
+        if (entity.definition.customKeybinds != null) {
+            entity.definition.customKeybinds.forEach(customKeybind -> {
+                if (!customKeybindLabels.containsKey(customKeybind.keyIndex)) {
+                    GUIComponentLabel keybindLabel = new GUIComponentLabel(screenWidth, 16 + 8 * customKeybindLabels.size(), ColorRGB.WHITE, "" + customKeybind.name, TextAlignment.RIGHT_ALIGNED, 1.0F);
+                    addComponent(keybindLabel);
+                    customKeybindLabels.put(customKeybind.keyIndex, keybindLabel);
+                }
+                customKeybindNames.computeIfAbsent(customKeybind.keyIndex, f -> new HashSet<>()).add(customKeybind.name);
+            });
+        }
     }
 
     @Override
@@ -121,6 +147,19 @@ public class GUIHUD extends AGUIBase {
         } else {
             gunTypeLabel.visible = false;
         }
+
+        //Set custom keybind text.
+        customKeybindLabels.entrySet().forEach(entry -> {
+            byte keyIndex = entry.getKey();
+            GUIComponentLabel label = entry.getValue();
+            label.text = InterfaceManager.inputInterface.getNameForKeyCode(customKeybindControls[keyIndex - 1].config.keyCode) + "->";
+            customKeybindNames.get(keyIndex).forEach(name -> {
+                if (!label.text.endsWith(">")) {
+                    label.text += ", ";
+                }
+                label.text += name;
+            });
+        });
     }
 
     @Override

@@ -338,6 +338,20 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
+     * Handles the custom keypress for this entity.
+     */
+    public final void handleCustomKeypress(byte keyIndex, boolean keyPressed) {
+        if (definition.customKeybinds != null) {
+            definition.customKeybinds.forEach(customKeybind -> {
+                if (customKeybind.keyIndex == keyIndex) {
+                    performAction(customKeybind.action, keyPressed);
+                    return;
+                }
+            });
+        }
+    }
+
+    /**
      * Called when the entity is attacked.
      * This should ONLY be called on the server; clients will sync via packets.
      * If calling this method in a loop, make sure to check if this entity is valid.

@@ -479,6 +479,11 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_BATTERY_EMPTY = new LanguageEntry("iteminfo.battery.empty", "This battery is currently empty.");
     public static final LanguageEntry ITEMINFO_BATTERY_FULL = new LanguageEntry("iteminfo.battery.full", "This battery is currently full.");
 
+    public static final LanguageEntry INPUT_CUSTOM1 = new LanguageEntry("input.custom1", "Custom1");
+    public static final LanguageEntry INPUT_CUSTOM2 = new LanguageEntry("input.custom2", "Custom2");
+    public static final LanguageEntry INPUT_CUSTOM3 = new LanguageEntry("input.custom3", "Custom3");
+    public static final LanguageEntry INPUT_CUSTOM4 = new LanguageEntry("input.custom4", "Custom4");
+
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
     public static final LanguageEntry INPUT_YAW = new LanguageEntry("input.yaw", "Yaw");

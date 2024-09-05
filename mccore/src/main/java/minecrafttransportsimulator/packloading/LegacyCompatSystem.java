@@ -25,6 +25,7 @@ import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONAction;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -2364,7 +2365,20 @@ public final class LegacyCompatSystem {
             for (JSONCollisionGroup group : interactableDef.collisionGroups) {
                 for (JSONCollisionBox box : group.collisions) {
                     if (box.variableName != null && box.variableType == null) {
-                        box.variableType = JSONCollisionBox.VariableType.TOGGLE;
+                        box.variableType = JSONAction.ActionType.TOGGLE;
+                    }
+                    if (box.variableName != null) {
+                        box.action = new JSONAction();
+                        box.action.action = box.variableType;
+                        box.action.variable = box.variableName;
+                        box.action.value = box.variableValue;
+                        box.action.clampMin = box.clampMin;
+                        box.action.clampMax = box.clampMax;
+                        box.variableType = null;
+                        box.variableName = null;
+                        box.variableValue = 0;
+                        box.clampMin = 0;
+                        box.clampMax = 0;
                     }
                 }
             }

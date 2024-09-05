@@ -17,6 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExtern
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityCustomKeypress;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
@@ -227,6 +228,7 @@ public abstract class APacketBase {
         //Entity packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCameraChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityColorChange.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCustomKeypress.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityKeyChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);

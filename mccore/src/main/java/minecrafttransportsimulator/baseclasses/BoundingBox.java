@@ -292,8 +292,8 @@ public class BoundingBox {
         if (wireframeRenderable == null) {
             wireframeRenderable = new RenderableData(new RenderableVertices(false));
             if (definition != null) {
-                if (definition.variableName != null) {
-                    //Green for boxes that activate variables.
+                if (definition.action != null) {
+                    //Green for boxes that have actions.
                     wireframeRenderable.setColor(ColorRGB.GREEN);
                 } else if (groupDef != null && groupDef.collisionTypes.contains(CollisionType.BULLET)) {
                     //Orange for bullet collisions.

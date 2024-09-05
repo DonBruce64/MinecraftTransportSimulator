@@ -128,39 +128,16 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             }
         }
 
-        //Check if we clicked a box with a variable attached.
-        if (!leftClick && hitBox.definition != null && hitBox.definition.variableName != null) {
+        //Check if we clicked a box with am action attached.
+        if (!leftClick && hitBox.definition != null && hitBox.definition.action != null) {
             if (vehicle != null && vehicle.lockedVar.isActive) {
                 //Can't touch locked vehicles.
                 if (rightClick) {
                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
                 }
             } else {
-                switch (hitBox.definition.variableType) {
-                    case BUTTON: {
-                        if (rightClick) {
-                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
-                        } else {
-                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(0, true);
-                        }
-                        break;
-                    }
-                    case INCREMENT:
-                        if (rightClick) {
-                            entity.getOrCreateVariable(hitBox.definition.variableName).increment(hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax, true);
-                        }
-                        break;
-                    case SET:
-                        if (rightClick) {
-                            entity.getOrCreateVariable(hitBox.definition.variableName).setTo(hitBox.definition.variableValue, true);
-                        }
-                        break;
-                    case TOGGLE: {
-                        if (rightClick) {
-                            entity.getOrCreateVariable(hitBox.definition.variableName).toggle(true);
-                        }
-                        break;
-                    }
+                if (hitBox.definition.action != null) {
+                    entity.performAction(hitBox.definition.action, rightClick);
                 }
             }
             return false;

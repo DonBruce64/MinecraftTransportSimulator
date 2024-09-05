@@ -220,7 +220,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 vehicle.toggleLock();
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_UNLOCK));
                                 if (hitBox.definition != null) {
-                                    if (hitBox.definition.variableName != null && !entity.getOrCreateVariable(hitBox.definition.variableName).isActive && hitBox.definition.variableName.startsWith("door")) {
+                                    if (hitBox.definition.action != null && !entity.getOrCreateVariable(hitBox.definition.action.variable).isActive && hitBox.definition.action.variable.startsWith("door")) {
                                         return CallbackType.SKIP;
                                     }
                                 }
@@ -230,7 +230,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 vehicle.toggleLock();
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_KEY_LOCK));
                                 if (hitBox.definition != null) {
-                                    if (hitBox.definition.variableName != null && entity.getOrCreateVariable(hitBox.definition.variableName).isActive && !hitBox.definition.variableName.startsWith("door")) {
+                                    if (hitBox.definition.action.variable != null && entity.getOrCreateVariable(hitBox.definition.action.variable).isActive && !hitBox.definition.action.variable.startsWith("door")) {
                                         return CallbackType.SKIP;
                                     }
                                 }

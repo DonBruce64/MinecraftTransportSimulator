@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.jsondefs.JSONAction.ActionType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -18,32 +19,8 @@ public class JSONCollisionBox {
     @JSONDescription("If true, the collision box will behave like a ground device set to float.  Note that if you make a boat that uses only these boxes, you'll need one for every corner like you would wheels on a car.  Failing to do so will result in your boat doing a Titanic, just without an iceberg.")
     public boolean collidesWithLiquids;
 
-    @JSONDescription("If set, clicking this collision box will do variable operations.  The exact operation depends on the variableType and variableValue.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
-    public String variableName;
-
-    @JSONRequired(dependentField = "variableName")
-    @JSONDescription("The type of variable this box represents, and how to act when clicked.")
-    public VariableType variableType;
-
-    @JSONDescription("The value to set the variable to for SET types, or the amount to increment by for INCREMENT types.")
-    public float variableValue;
-
-    @JSONDescription("The min value for this box to set.  Only used when the variable type is increment.")
-    public float clampMin;
-
-    @JSONDescription("The max value for this box to set.  Only used when the variable type is increment.")
-    public float clampMax;
-
-    public static enum VariableType {
-        @JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
-        TOGGLE,
-        @JSONDescription("Clicking this box will set the variable to the defined value.")
-        SET,
-        @JSONDescription("Clicking this box will increment the variable by the defined value.")
-        INCREMENT,
-        @JSONDescription("Clicking this box will set the variable to the value. When the player lets go of the mouse button, it will be set back to 0.")
-        BUTTON
-    }
+    @JSONDescription("The action to perform when clicking this hitbox, if any.")
+    public JSONAction action;
 
     @Deprecated
     public boolean isInterior;
@@ -53,4 +30,14 @@ public class JSONCollisionBox {
     public float heatArmorThickness;
     @Deprecated
     public float damageMultiplier;
+    @Deprecated
+    public String variableName;
+    @Deprecated
+    public ActionType variableType;
+    @Deprecated
+    public float variableValue;
+    @Deprecated
+    public float clampMin;
+    @Deprecated
+    public float clampMax;
 }
