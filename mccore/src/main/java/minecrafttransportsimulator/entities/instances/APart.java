@@ -347,7 +347,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public double getMass() {
-        return definition.generic.mass;
+        return super.getMass() + definition.generic.mass;
     }
 
     @Override
