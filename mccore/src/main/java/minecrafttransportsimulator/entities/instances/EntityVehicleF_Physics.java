@@ -705,6 +705,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> indicatedSpeed, false);
             case ("speed_scaled"):
                 return new ComputedVariable(this, variable, partialTicks -> indicatedSpeed / speedFactor, false);
+            case ("velocity"):
+                return new ComputedVariable(this, variable, partialTicks -> velocity * speedFactor * 20F, false);
+            case ("velocity_scaled"):
+                return new ComputedVariable(this, variable, partialTicks -> velocity * 20F, false);
             case ("speed_factor"):
                 return new ComputedVariable(this, variable, partialTicks -> speedFactor, false);
             case ("acceleration"):
