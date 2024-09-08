@@ -47,7 +47,6 @@ public final class ControlSystem {
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
 
-    private static boolean reloadPressedLastCheck = false;
     private static boolean throttlePressedLastCheck = false;
 
     private static EntityInteractResult interactResult = null;
@@ -98,16 +97,8 @@ public final class ControlSystem {
             handleClick(player, playerGun);
         }
 
-        if (playerGun != null && playerGun.activeGun != null && ControlsKeyboard.GENERAL_RELOAD.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
-            if (!reloadPressedLastCheck) {
-                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_ON));
-                reloadPressedLastCheck = true;
-            }
-        } else if (reloadPressedLastCheck) {
-            if (playerGun != null && playerGun.activeGun != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND_OFF));
-            }
-            reloadPressedLastCheck = false;
+        if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
         }
     }
 

@@ -83,16 +83,15 @@ public class PartGun extends APart {
     public ItemBullet lastLoadedBullet;
     private ItemBullet reloadingBullet;
     private int reloadingBulletQty;
-    public ItemBullet clientNextBullet;
-    public int clientNextBulletQty;
     private final Random randomGenerator;
 
     //These variables are used during firing and will be reset on loading.
     public GunState state;
     public boolean bulletsPresentOnServer;
-    public boolean firedThisRequest;
-    public boolean firedThisCheck;
+    public boolean firedThisTick;
+    public boolean isReloading;
     public boolean playerHoldingTrigger;
+    public boolean playerPressedTrigger;
     public boolean isHandHeldGunAimed;
     public boolean isHandHeldGunEquipped;
     public boolean isHandHeldGunReloadRequested;
@@ -100,7 +99,9 @@ public class PartGun extends APart {
     private int camOffset;
     private int cooldownTimeRemaining;
     private int reloadDelayRemaining;
-    private int reloadTimeRemaining;
+    private int reloadStartTimeRemaining;
+    private int reloadMainTimeRemaining;
+    private int reloadEndTimeRemaining;
     private int windupTimeCurrent;
     private int windupRotation;
     private long lastMillisecondFired;
@@ -225,8 +226,10 @@ public class PartGun extends APart {
             if (!reloadingBulletPack.isEmpty()) {
                 String reloadingBulletName = data.getString("reloadingBulletName");
                 this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
-                reloadTimeRemaining = definition.gun.reloadTime;
             }
+            reloadStartTimeRemaining = data.getInteger("reloadStartTimeRemaining");
+            reloadMainTimeRemaining = data.getInteger("reloadMainTimeRemaining");
+            reloadEndTimeRemaining = data.getInteger("reloadEndTimeRemaining");
             if (data.getBoolean("savedSeed")) {
                 long randomSeed = (((long) data.getInteger("randomSeedPart1")) << 32) | (data.getInteger("randomSeedPart2") & 0xffffffffL);
                 randomGenerator = new Random(randomSeed);
@@ -269,7 +272,7 @@ public class PartGun extends APart {
     @Override
     public void update() {
         //Set gun state and do updates.
-        firedThisCheck = false;
+        firedThisTick = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
         if (currentBullet != null && !currentBullet.isValid) {
@@ -358,126 +361,118 @@ public class PartGun extends APart {
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
-            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && reloadTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
+            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!definition.gun.isSemiAuto || playerPressedTrigger);
             if (ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                //Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
-                //If we don't wait, we can bypass the cooldown by toggling the trigger.
-                if (cooldownTimeRemaining == 0) {
-                    //Get current group and use it to determine firing offset.
-                    //Don't calculate this if we already did on a prior firing command.
-                    if (camOffset <= 0) {
-                        if (!definition.gun.fireSolo && lastControllerSeat != null) {
-                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
-                            int thisGunIndex = gunGroup.indexOf(this);
-                            if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
-                                if (gunGroup.size() > 1) {
-                                    camOffset = ((int) fireDelayVar.currentValue) / gunGroup.size();
-                                } else {
-                                    camOffset = 0;
-                                }
+                //Get current group and use it to determine firing offset.
+                //Don't calculate this if we already did on a prior firing command.
+                if (camOffset <= 0) {
+                    if (!definition.gun.fireSolo && lastControllerSeat != null) {
+                        List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
+                        int thisGunIndex = gunGroup.indexOf(this);
+                        if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
+                            if (gunGroup.size() > 1) {
+                                camOffset = ((int) fireDelayVar.currentValue) / gunGroup.size();
                             } else {
-                                //Wait for our turn.
-                                camOffset = -1;
+                                camOffset = 0;
                             }
+                        } else {
+                            //Wait for our turn.
+                            camOffset = -1;
                         }
-                    } else {
-                        --camOffset;
                     }
+                } else {
+                    --camOffset;
+                }
 
-                    //If we have bullets, try and fire them.
-                    //The only exception is if the server is the controller, in that case fire until we are told to stop.
-                    //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
-                    boolean cycledGun = false;
-                    boolean serverIsPrimaryController = loadedBullet != null && (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
-                    if (bulletsLeft > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
-                        state = state.promote(GunState.FIRING_CURRENTLY);
+                //If we have bullets, try and fire them.
+                //The only exception is if the server is the controller, in that case fire until we are told to stop.
+                //This can happen if the gun fires quickly and bullet counts get de-synced with on/off states.
+                boolean cycledGun = false;
+                boolean serverIsPrimaryController = loadedBullet != null && (loadedBullet.definition.bullet.isLongRange || !(lastController instanceof IWrapperPlayer));
+                if (bulletsLeft > 0 || (world.isClient() && serverIsPrimaryController && bulletsPresentOnServer)) {
+                    state = state.promote(GunState.FIRING_CURRENTLY);
 
-                        //If we are in our cam, fire the bullets.
-                        if (camOffset == 0) {
-                            for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                                for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
-                                    ++bulletsFired;
-                                    if (world.isClient() || serverIsPrimaryController) {
-                                        //Get the bullet's state.
-                                        setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
+                    //If we are in our cam, fire the bullets.
+                    if (camOffset == 0) {
+                        for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
+                            for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
+                                ++bulletsFired;
+                                if (world.isClient() || serverIsPrimaryController) {
+                                    //Get the bullet's state.
+                                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 
-                                        //Add the bullet to the world.
-                                        //If the bullet is a missile, give it a target.
-                                        EntityBullet newBullet;
-                                        if (loadedBullet.definition.bullet.turnRate > 0) {
-                                            if (entityTarget != null) {
-                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-                                            } else if (engineTarget != null) {
-                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
-                                            } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
-                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
-                                                activeManualBullets.add(newBullet);
-                                            } else {
-                                                //No entity found, just fire missile off in direction facing.
-                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-                                            }
+                                    //Add the bullet to the world.
+                                    //If the bullet is a missile, give it a target.
+                                    EntityBullet newBullet;
+                                    if (loadedBullet.definition.bullet.turnRate > 0) {
+                                        if (entityTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+                                        } else if (engineTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                        } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, targetPosition);
+                                            activeManualBullets.add(newBullet);
                                         } else {
+                                            //No entity found, just fire missile off in direction facing.
                                             newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                         }
-                                        world.addEntity(newBullet);
-                                        
-                                        //Now do knockback, if it exists.
-                                        if (isHandHeld && definition.gun.knockback != 0) {
-                                            if(!world.isClient()) {
-                                                performGunKnockback();
-                                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
-                                            }else if(InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
-                                                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
-                                            }
+                                    } else {
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                    }
+                                    world.addEntity(newBullet);
+
+                                    //Now do knockback, if it exists.
+                                    if (isHandHeld && definition.gun.knockback != 0) {
+                                        if (!world.isClient()) {
+                                            performGunKnockback();
+                                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                        } else if (InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
+                                            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
                                         }
                                     }
                                 }
-
-                                //Decrement bullets, but check to make sure we still have some.
-                                //We might have a partial volley with only some muzzles firing in this group.
-                                if (bulletsLeft > 0 && --bulletsLeft == 0) {
-                                    //Only set the bullet to null on the server. This lets the server choose a different bullet to load.
-                                    //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
-                                    //That would cause us to finish the reload with a null bullet, and crash later.
-                                    if (!world.isClient()) {
-                                        loadedBullet = null;
-                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_OUT));
-                                    }
-                                    break;
-                                }
                             }
 
-                            //Update states.
-                            cooldownTimeRemaining = (int) fireDelayVar.currentValue;
-                            firedThisRequest = true;
-                            firedThisCheck = true;
-                            cycledGun = true;
-                            lastMillisecondFired = System.currentTimeMillis();
-                            if (definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex) {
-                                currentMuzzleGroupIndex = 0;
+                            //Decrement bullets, but check to make sure we still have some.
+                            //We might have a partial volley with only some muzzles firing in this group.
+                            if (bulletsLeft > 0 && --bulletsLeft == 0) {
+                                //Only set the bullet to null on the server. This lets the server choose a different bullet to load.
+                                //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
+                                //That would cause us to finish the reload with a null bullet, and crash later.
+                                if (!world.isClient()) {
+                                    loadedBullet = null;
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_OUT));
+                                }
+                                break;
                             }
                         }
-                    } else if (camOffset == 0) {
-                        //Got to end of cam with no bullets, cycle gun.
+
+                        //Update states.
+                        cooldownTimeRemaining = (int) fireDelayVar.currentValue;
+                        firedThisTick = true;
                         cycledGun = true;
+                        lastMillisecondFired = System.currentTimeMillis();
+                        if (definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex) {
+                            currentMuzzleGroupIndex = 0;
+                        }
                     }
-                    if (cycledGun) {
-                        if (lastControllerSeat != null) {
-                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
-                            int currentIndex = gunGroup.indexOf(this);
-                            if (currentIndex + 1 < gunGroup.size()) {
-                                lastControllerSeat.gunGroupIndex = currentIndex + 1;
-                            } else {
-                                lastControllerSeat.gunGroupIndex = 0;
-                            }
+                } else if (camOffset == 0) {
+                    //Got to end of cam with no bullets, cycle gun.
+                    cycledGun = true;
+                }
+                if (cycledGun) {
+                    if (lastControllerSeat != null) {
+                        List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(cachedItem);
+                        int currentIndex = gunGroup.indexOf(this);
+                        if (currentIndex + 1 < gunGroup.size()) {
+                            lastControllerSeat.gunGroupIndex = currentIndex + 1;
+                        } else {
+                            lastControllerSeat.gunGroupIndex = 0;
                         }
                     }
                 }
             } else if (!ableToFire) {
                 state = state.demote(GunState.FIRING_REQUESTED);
-                if (!state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                    firedThisRequest = false;
-                }
             }
 
             //Set or decrement reloadDelay.
@@ -490,36 +485,37 @@ public class PartGun extends APart {
             //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
-            if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null && reloadDelayRemaining == 0) {
-                if (isHandHeld) {
-                    if ((bulletsLeft == 0 && state == GunState.FIRING_REQUESTED) || isHandHeldGunReloadRequested) {
-                        //Check the player's inventory for bullets.
-                        IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
-                        for (int i = 0; i < inventory.getSize(); ++i) {
-                            if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested)) {
-                                //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-                                if (!ConfigSystem.settings.general.devMode.value) {
+            if (!world.isClient()) {
+                //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
+                //Clipped guns we can't reload if we're already reloading.
+                if (!definition.gun.blockReloading && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+                    if (isHandHeld) {
+                        if ((bulletsLeft == 0 && !firedThisTick && playerPressedTrigger) || isHandHeldGunReloadRequested) {
+                            //Check the player's inventory for bullets.
+                            IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
+                            for (int i = 0; i < inventory.getSize(); ++i) {
+                                if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested && !definition.gun.isClipless)) {
+                                    //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
                                     inventory.removeFromSlot(i, 1);
+                                    break;
                                 }
-                                break;
                             }
                         }
-                        isHandHeldGunReloadRequested = false;
-                    }
-                } else {
-                    if (definition.gun.autoReload) {
-                        //Iterate through all the inventory slots in crates to try to find matching ammo.
-                        for (PartInteractable crate : connectedCrates) {
-                            if (crate.isActive) {
-                                EntityInventoryContainer inventory = crate.inventory;
-                                for (int i = 0; i < inventory.getSize(); ++i) {
-                                    if (tryToReload(inventory.getStack(i), false)) {
-                                        //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-                                        //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-                                        if (!ConfigSystem.settings.general.devMode.value) {
-                                            inventory.removeFromSlot(i, 1);
+                    } else {
+                        if (definition.gun.autoReload) {
+                            //Iterate through all the inventory slots in crates to try to find matching ammo.
+                            for (PartInteractable crate : connectedCrates) {
+                                if (crate.isActive) {
+                                    EntityInventoryContainer inventory = crate.inventory;
+                                    for (int i = 0; i < inventory.getSize(); ++i) {
+                                        if (tryToReload(inventory.getStack(i), false)) {
+                                            //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+                                            //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+                                            if (!ConfigSystem.settings.general.devMode.value) {
+                                                inventory.removeFromSlot(i, 1);
+                                            }
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                             }
@@ -537,28 +533,48 @@ public class PartGun extends APart {
             }
         }
 
-        //If we are a client, this is where we get our bullets.
-        if (clientNextBullet != null) {
-            reloadingBullet = clientNextBullet;
-            reloadingBulletQty = clientNextBulletQty;
-            reloadTimeRemaining = definition.gun.reloadTime;
-            clientNextBullet = null;
-        }
-
         //If we are reloading, decrement the reloading timer.
         //If we are done reloading, add the new bullets.
         //This comes after the reloading block as we need a 0/1 state-change for the various animations,
         //so at some point the reload time needs to hit 0.
         //This is something we do regardless of active status, since even inactive guns can have bullets put into them.
-        if (reloadTimeRemaining > 0) {
-            --reloadTimeRemaining;
-        } else if (reloadingBullet != null) {
-            loadedBullet = reloadingBullet;
-            lastLoadedBullet = loadedBullet;
-            bulletsLeft += reloadingBulletQty;
-            reloadingBullet = null;
-            if (!world.isClient()) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
+
+        if (reloadStartTimeRemaining > 0) {
+            --reloadStartTimeRemaining;
+        } else if (reloadMainTimeRemaining > 0) {
+            --reloadMainTimeRemaining;
+            if (reloadMainTimeRemaining == 0) {
+                loadedBullet = reloadingBullet;
+                lastLoadedBullet = loadedBullet;
+                if (definition.gun.isClipless) {
+                    bulletsLeft += loadedBullet.definition.bullet.quantity;
+                    reloadingBulletQty -= loadedBullet.definition.bullet.quantity;
+                    if (reloadingBulletQty == 0) {
+                        reloadingBullet = null;
+                    }
+                } else {
+                    bulletsLeft += reloadingBulletQty;
+                    reloadingBulletQty = 0;
+                    reloadingBullet = null;
+                    if (reloadEndTimeRemaining == 0) {
+                        isReloading = false;
+                    }
+                }
+                if (!world.isClient()) {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
+                }
+            }
+        } else {
+            if (reloadMainTimeRemaining == 0 && isReloading && reloadingBulletQty != 0) {
+                //Go around again, we just needed to wait 1 tick for systems to see a 0->1 state change.
+                reloadMainTimeRemaining = definition.gun.reloadTime;
+            } else if (reloadEndTimeRemaining > 0) {
+                --reloadEndTimeRemaining;
+                if (reloadEndTimeRemaining == 0) {
+                    isReloading = false;
+                }
+            } else if (isReloading) {
+                isReloading = false;
             }
         }
 
@@ -573,15 +589,14 @@ public class PartGun extends APart {
         }
         windupRotation += windupTimeCurrent;
 
-        //Reset fire command bit if we aren't firing.
-        if (!state.isAtLeast(GunState.FIRING_REQUESTED)) {
-            firedThisRequest = false;
-        }
-
         //Decrement cooldown, if we have it.
         if (cooldownTimeRemaining > 0) {
             --cooldownTimeRemaining;
         }
+
+        //Reset flags.
+        isHandHeldGunReloadRequested = false;
+        playerPressedTrigger = false;
 
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
@@ -974,7 +989,7 @@ public class PartGun extends APart {
         if(item instanceof ItemBullet) {
             ItemBullet bulletItem = (ItemBullet) item;
             //Check to make sure this is a bullet, the gun isn't reloading and can accept reloads.
-            if (!definition.gun.blockReloading && bulletItem.definition.bullet != null && reloadingBullet == null) {
+            if (bulletItem.definition.bullet != null) {
                 //Check bullet parameters match.
                 if (bulletItem.definition.bullet.diameter == definition.gun.diameter && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength) {
                     if (!swapIfFull && loadedBullet != null && !loadedBullet.equals(bulletItem)) {
@@ -982,8 +997,8 @@ public class PartGun extends APart {
                         return false;
                     }
                     
-                    //If we are hand held with a partial capacity left, swap the clip out.
-                    if (isHandHeld && bulletsLeft > 0) {
+                    //If we are hand held with a partial capacity left, and use clips, swap the clip out.
+                    if (isHandHeld && bulletsLeft > 0 && !definition.gun.isClipless) {
                         //First remove old clip.
                         IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
                         data.setInteger(ItemBullet.BULLET_QTY_KEY, bulletsLeft);
@@ -1011,18 +1026,31 @@ public class PartGun extends APart {
                         bulletQty = bulletItem.definition.bullet.quantity;
                     }
                     
-                    if (bulletQty + bulletsLeft <= definition.gun.capacity) {
+                    if (bulletQty + bulletsLeft + reloadingBulletQty <= definition.gun.capacity) {
                         //Able to load, do so now (above check shouldn't matter for hand-helds since those always have capacity, but common code is common).
-                        reloadingBullet = bulletItem;
-                        reloadingBulletQty = bulletQty;
-                        reloadTimeRemaining = definition.gun.reloadTime;
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, reloadingBullet, reloadingBulletQty));
+                        setReloadVars(bulletItem, bulletQty);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, bulletItem, bulletQty));
                         return true;
                     }
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Sets reloading times and variables for a reload.
+     */
+    public void setReloadVars(ItemBullet bulletItem, int bulletQty) {
+        if (reloadingBullet == null) {
+            //Set reload windup time to reload time since this is first reload of the type.
+            reloadStartTimeRemaining = definition.gun.reloadStartTime;
+        }
+        reloadingBullet = bulletItem;
+        reloadingBulletQty += bulletQty;
+        reloadMainTimeRemaining = definition.gun.reloadTime;
+        reloadEndTimeRemaining = definition.gun.reloadEndTime;
+        isReloading = true;
     }
 
     /**
@@ -1218,9 +1246,9 @@ public class PartGun extends APart {
             case ("gun_firing"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0, false);
             case ("gun_fired"):
-                return new ComputedVariable(this, variable, partialTicks -> firedThisCheck ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> firedThisTick ? 1 : 0, false);
             case ("gun_muzzleflash"):
-                return new ComputedVariable(this, variable, partialTicks -> firedThisCheck && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> firedThisTick && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, false);
             case ("gun_lockedon"):
                 return new ComputedVariable(this, variable, partialTicks -> entityTarget != null || engineTarget != null ? 1 : 0, false);
             case ("gun_lockedon_x"):
@@ -1260,7 +1288,13 @@ public class PartGun extends APart {
             case ("gun_windup_complete"):
                 return new ComputedVariable(this, variable, partialTicks -> windupTimeCurrent == definition.gun.windupTime ? 1 : 0, false);
             case ("gun_reload"):
-                return new ComputedVariable(this, variable, partialTicks -> reloadTimeRemaining > 0 ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> isReloading ? 1 : 0, false);
+            case ("gun_reload_windup"):
+                return new ComputedVariable(this, variable, partialTicks -> isReloading && reloadStartTimeRemaining > 0 ? 1 : 0, false);
+            case ("gun_reload_main"):
+                return new ComputedVariable(this, variable, partialTicks -> isReloading && reloadStartTimeRemaining == 0 && reloadMainTimeRemaining > 0 ? 1 : 0, false);
+            case ("gun_reload_winddown"):
+                return new ComputedVariable(this, variable, partialTicks -> isReloading && reloadStartTimeRemaining == 0 && reloadMainTimeRemaining == 0 && reloadEndTimeRemaining > 0 ? 1 : 0, false);
             case ("gun_ammo_count"):
                 return new ComputedVariable(this, variable, partialTicks -> bulletsLeft, false);
             case ("gun_ammo_count_reloading"):
@@ -1282,7 +1316,12 @@ public class PartGun extends APart {
             case ("gun_bullet_pitch"):
                 return new ComputedVariable(this, variable, partialTicks -> currentBullet != null ? currentBullet.orientation.angles.x - orientation.angles.x : 0, false);
             default:
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                if (variable.startsWith("gun_ammo_") && variable.endsWith("_loaded")) {
+                    final int index = Integer.parseInt(variable.substring("gun_ammo_".length(), "gun_ammo_".length() + 1));
+                    return new ComputedVariable(this, variable, partialTicks -> bulletsLeft >= index ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
         }
     }
 
@@ -1323,6 +1362,9 @@ public class PartGun extends APart {
             data.setString("reloadingBulletPack", reloadingBullet.definition.packID);
             data.setString("reloadingBulletName", reloadingBullet.definition.systemName);
         }
+        data.setInteger("reloadStartTimeRemaining", reloadStartTimeRemaining);
+        data.setInteger("reloadMainTimeRemaining", reloadMainTimeRemaining);
+        data.setInteger("reloadEndTimeRemaining", reloadEndTimeRemaining);
         long randomSeed = randomGenerator.nextLong();
         data.setBoolean("savedSeed", true);
         data.setInteger("randomSeedPart1", (int) (randomSeed >> 32));

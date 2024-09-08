@@ -64,20 +64,16 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 break;
             }
             case RELOAD_ONCLIENT: {
-                gun.clientNextBullet = bulletItem;
-                gun.clientNextBulletQty = bulletQty;
+                gun.setReloadVars(bulletItem, bulletQty);
                 break;
             }
-            case RELOAD_HAND_ON: {
+            case RELOAD_HAND: {
                 gun.isHandHeldGunReloadRequested = true;
-                break;
-            }
-            case RELOAD_HAND_OFF: {
-                gun.isHandHeldGunReloadRequested = false;
                 break;
             }
             case TRIGGER_ON: {
                 gun.playerHoldingTrigger = true;
+                gun.playerPressedTrigger = true;
                 break;
             }
             case TRIGGER_OFF: {
@@ -111,8 +107,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     public static enum Request {
         CLEAR_ONCLIENT(false),
         RELOAD_ONCLIENT(false),
-        RELOAD_HAND_ON(false),
-        RELOAD_HAND_OFF(false),
+        RELOAD_HAND(false),
         TRIGGER_ON(true),
         TRIGGER_OFF(true),
         AIM_ON(true),
