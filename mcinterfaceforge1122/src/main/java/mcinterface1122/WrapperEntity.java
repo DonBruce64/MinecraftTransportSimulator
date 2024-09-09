@@ -228,9 +228,8 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void applyMotion(Point3D motion) {
-        entity.motionX += motion.x;
-        entity.motionY += motion.y;
-        entity.motionZ += motion.z;
+        entity.addVelocity(motion.x, motion.y, motion.z);
+        entity.velocityChanged = true;
     }
 
     @Override
