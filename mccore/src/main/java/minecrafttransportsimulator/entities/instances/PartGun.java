@@ -992,7 +992,7 @@ public class PartGun extends APart {
             if (bulletItem.definition.bullet != null) {
                 //Check bullet parameters match.
                 if (bulletItem.definition.bullet.diameter == definition.gun.diameter && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength) {
-                    if (!swapIfFull && loadedBullet != null && !loadedBullet.equals(bulletItem)) {
+                    if (!swapIfFull && (loadedBullet != null && !loadedBullet.equals(bulletItem) || reloadingBullet != null && !reloadingBullet.equals(bulletItem))) {
                         //Can't swap bullets and this one doesn't match what we have, can't reload.
                         return false;
                     }
