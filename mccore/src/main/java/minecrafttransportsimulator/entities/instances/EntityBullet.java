@@ -77,10 +77,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Generic constructor for no target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
-        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber) {
+        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.lastLoadedBullet);
         this.gun = gun;
-        this.bulletNumber = gun.bulletsFired;
+        this.bulletNumber = bulletNumber;
         gun.currentBullet = this;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter / 1000D / 2D;
@@ -103,16 +103,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Positional target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
-        this(position, motion, orientation, gun);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, Point3D targetPosition) {
+        this(position, motion, orientation, gun, bulletNumber);
         this.targetPosition = targetPosition;
     }
 
     /**
      * Engine target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
-        this(position, motion, orientation, gun, engineTargeted.position);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, PartEngine engineTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, engineTargeted.position);
         this.engineTargeted = engineTargeted;
         engineTargeted.vehicleOn.missilesIncoming.add(this);
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
@@ -121,8 +121,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * IWrapper target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, IWrapperEntity externalEntityTargeted) {
-        this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, IWrapperEntity externalEntityTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }

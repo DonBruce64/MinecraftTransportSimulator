@@ -39,7 +39,6 @@ public class GUIHUD extends AGUIBase {
     private final PartSeat seat;
     private final List<GUIComponentInstrument> instruments = new ArrayList<>();
     private GUIComponentLabel healthLabel;
-    private GUIComponentLabel gunTypeLabel;
     private Map<Byte, GUIComponentLabel> customKeybindLabels = new HashMap<>();
     private Map<Byte, Set<String>> customKeybindNames = new HashMap<>();
 
@@ -91,10 +90,8 @@ public class GUIHUD extends AGUIBase {
         }
 
         //Add labels.
-        addComponent(healthLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
+        addComponent(healthLabel = new GUIComponentLabel(screenWidth, 8, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
         healthLabel.ignoreGUILightingState = true;
-        addComponent(gunTypeLabel = new GUIComponentLabel(screenWidth, 8, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
-        gunTypeLabel.ignoreGUILightingState = true;
         customKeybindLabels.clear();
         populateKeybindLabel(vehicle);
         vehicle.allParts.forEach(part -> populateKeybindLabel(part));
@@ -133,20 +130,6 @@ public class GUIHUD extends AGUIBase {
         healthLabel.text = String.format("Health: %d/%d", (int) Math.ceil(vehicle.definition.general.health - vehicle.damageVar.currentValue), vehicle.definition.general.health);
         healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
         healthLabel.color = vehicle.outOfHealth ? ColorRGB.RED : ColorRGB.WHITE;
-
-        //Set gun label text, if we are in a seat that has one.
-        //If we are in a seat controlling a gun, render a text line for it.
-        if (seat.canControlGuns && !InterfaceManager.clientInterface.isChatOpen()) {
-            gunTypeLabel.visible = true;
-            gunTypeLabel.text = "Active Gun: ";
-            if (seat.activeGunItem != null) {
-                gunTypeLabel.text += seat.activeGunItem.getItemName() + (seat.activeGunItem.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "");
-            } else {
-                gunTypeLabel.text += "None";
-            }
-        } else {
-            gunTypeLabel.visible = false;
-        }
 
         //Set custom keybind text.
         customKeybindLabels.entrySet().forEach(entry -> {

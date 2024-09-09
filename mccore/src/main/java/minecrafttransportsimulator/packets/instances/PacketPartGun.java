@@ -60,7 +60,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     public boolean handle(AWrapperWorld world, PartGun gun) {
         switch (stateRequest) {
             case CLEAR_ONCLIENT: {
-                gun.bulletsLeft = 0;
+                gun.clearBullets();
                 break;
             }
             case RELOAD_ONCLIENT: {
