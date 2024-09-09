@@ -874,40 +874,48 @@ public class PartEngine extends APart {
                     //Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
                     //i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
                     //When suffixed with _cam, it will instead return the sector the camshaft rotation.
+                    //Note that some packs omit the third offset number, so we need to account for that here.
 
-                    //If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
-                    final int camMultiplier;
-                    if (variable.endsWith("_crank")) {
-                        camMultiplier = 1;
-                        variable = variable.substring(0, variable.length() - "_crank".length());
-                    } else if (variable.endsWith("_cam")) {
-                        camMultiplier = 2;
-                        variable = variable.substring(0, variable.length() - "_cam".length());
-                    } else {
-                        //Invaild variable.
-                        return new ComputedVariable(false);
-                    }
-
-                    //Extract the values we need
-                    String[] parsedVariable = variable.substring("engine_piston_".length()).split("_");
-                    final int pistonNumber = Integer.parseInt(parsedVariable[0]);
-                    final int totalPistons = Integer.parseInt(parsedVariable[1]);
+                    //Extract the values we need.  Need these to be final for lambdas.
+                    String[] parsedVariable = variable.split("_");
+                    final int pistonNumber;
+                    final int totalPistons;
 
                     //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
-                    if (pistonNumber <= totalPistons && totalPistons > 1) {
-                        final double sector = (360D * camMultiplier) / totalPistons;
-                        final int offset = parsedVariable.length >= 3 ? camMultiplier * Integer.parseInt(parsedVariable[2]) : 0;
-                        return new ComputedVariable(this, variable, partialTicks -> {
-                            //Map the shaft rotation to a value between 0 and 359.99...
-                            double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
-
-                            //If the crank is in the requested sector, return 1, otherwise return 0.
-                            return (0 + (sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
-                        }, true);
+                    int parsedPistonNumber = Integer.parseInt(parsedVariable[2]);
+                    int parsedTotalPistons = Integer.parseInt(parsedVariable[3]);
+                    if (parsedPistonNumber > parsedTotalPistons || parsedTotalPistons == 1) {
+                        pistonNumber = 1;
+                        totalPistons = 2;
                     } else {
-                        //Invalid piston arrangement.
-                        return new ComputedVariable(false);
+                        pistonNumber = parsedPistonNumber;
+                        totalPistons = parsedTotalPistons;
                     }
+
+                    final int camMultiplier;
+                    switch (parsedVariable[parsedVariable.length - 1]) {
+                        case "crank": {
+                            camMultiplier = 1;
+                            break;
+                        }
+                        case "cam": {
+                            camMultiplier = 2;
+                            break;
+                        }
+                        default: {
+                            //Invaild variable.
+                            return new ComputedVariable(false);
+                        }
+                    }
+                    final int offset = parsedVariable.length == 6 ? camMultiplier * Integer.parseInt(parsedVariable[4]) : 0;
+                    final double sector = (360D * camMultiplier) / totalPistons;
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        //Map the shaft rotation to a value between 0 and 359.99...
+                        double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
+
+                        //If the crank is in the requested sector, return 1, otherwise return 0.
+                        return ((sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
+                    }, true);
                 } else {
                     return super.createComputedVariable(variable, createDefaultIfNotPresent);
                 }
