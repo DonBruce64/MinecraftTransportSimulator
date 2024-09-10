@@ -293,6 +293,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_TITLE = new LanguageEntry("gui.config.controls.title", "Choose a configuration to change: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_SOUNDVOLUME = new LanguageEntry("gui.config.controls.soundvolume", "Sound Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD = new LanguageEntry("gui.config.controls.general.keyboard", "GENERAL KEYBOARD");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK = new LanguageEntry("gui.config.controls.general.joystick", "GENERAL JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
@@ -330,7 +332,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_FUELPUMP_NOENGINE = new LanguageEntry("interact.fuelpump.noengine", "There is no engine in this vehicle.  Engines with different fuel types will reset fuel, so put an engine in first to avoid fuel loss!");
     public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The contents in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
     public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Connected and fueling.");
-    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_FULL = new LanguageEntry("interact.fuelpump.full", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Paid fuel has been dispensed, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Pump is empty, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_DISCONNECT = new LanguageEntry("interact.fuelpump.disconnect", "Disconnecting and stopping pumping.");
 
@@ -476,6 +479,11 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_BATTERY_EMPTY = new LanguageEntry("iteminfo.battery.empty", "This battery is currently empty.");
     public static final LanguageEntry ITEMINFO_BATTERY_FULL = new LanguageEntry("iteminfo.battery.full", "This battery is currently full.");
 
+    public static final LanguageEntry INPUT_CUSTOM1 = new LanguageEntry("input.custom1", "Custom1");
+    public static final LanguageEntry INPUT_CUSTOM2 = new LanguageEntry("input.custom2", "Custom2");
+    public static final LanguageEntry INPUT_CUSTOM3 = new LanguageEntry("input.custom3", "Custom3");
+    public static final LanguageEntry INPUT_CUSTOM4 = new LanguageEntry("input.custom4", "Custom4");
+
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
     public static final LanguageEntry INPUT_YAW = new LanguageEntry("input.yaw", "Yaw");
@@ -498,6 +506,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_PARK = new LanguageEntry("input.park", "ParkingBrake");
     public static final LanguageEntry INPUT_GUN_FIRE = new LanguageEntry("input.gun_fire", "Gun");
     public static final LanguageEntry INPUT_GUN_SWITCH = new LanguageEntry("input.gun_switch", "Switch Gun");
+    public static final LanguageEntry INPUT_GUN_RELOAD = new LanguageEntry("input.gun.reload", "Reload Gun");
     public static final LanguageEntry INPUT_RADIO = new LanguageEntry("input.radio", "Radio");
     public static final LanguageEntry INPUT_ZOOM_I = new LanguageEntry("input.zoom_i", "ZoomIn");
     public static final LanguageEntry INPUT_ZOOM_O = new LanguageEntry("input.zoom_o", "ZoomOut");

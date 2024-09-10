@@ -102,7 +102,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     /**
      * Constructor for synced entities
      **/
-    public AEntityB_Existing(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+    public AEntityB_Existing(AWrapperWorld world, IWrapperNBT data) {
         super(world, data);
         if (data != null) {
             this.position = data.getPoint3d("position");
@@ -328,6 +328,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 riderTempPoint.set(0, 0, 1).rotate(rider.getOrientation()).reOrigin(orientation);
                 riderRelativeOrientation.setToVector(riderTempPoint, false);
             }
+            riderRelativeOrientation.convertToAngles();
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);

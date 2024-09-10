@@ -1,13 +1,12 @@
 package minecrafttransportsimulator.rendering;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -52,6 +51,9 @@ public final class RenderInstrument {
 
         //Set the part number for switchbox reference.
         partNumber = slotDefinition.optionalPartNumber;
+        if (partNumber == 0) {
+            partNumber = 1;
+        }
 
         //Finally, render the instrument based on the JSON instrument.definitions.
         //We cache up all the draw calls for this blend pass, and then render them all at once.
@@ -70,16 +72,13 @@ public final class RenderInstrument {
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
-                        int variablePartNumber = AEntityF_Multipart.getVariableNumber(component.textObject.variableName);
-                        final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
-                        if (addSuffix) {
-                            String oldName = component.textObject.variableName;
-                            component.textObject.variableName += "_" + partNumber;
-                            RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
-                            component.textObject.variableName = oldName;
+                        String value = entity.getRawTextVariableValue(component.textObject, partialTicks);
+                        if (value != null) {
+                            value = String.format(component.textObject.variableFormat, value);
                         } else {
-                            RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
+                            value = String.format(component.textObject.variableFormat, getInstrumentVariableValue(entity, null, component.textObject.variableName, component.textObject.variableFactor, partialTicks) + component.textObject.variableOffset);
                         }
+                        RenderText.draw3DText(value, entity, textTransform, component.textObject, true);
                     }
                 } else {
                     //Init variables.
@@ -131,6 +130,24 @@ public final class RenderInstrument {
         }
     }
 
+    private static double getInstrumentVariableValue(AEntityD_Definable<?> entity, DurationDelayClock clock, String variable, double axis, float partialTicks) {
+        double value;
+        if (ComputedVariable.isNumberedVariable(variable)) {
+            //Variable has a defined part index on it.  No modifications required.
+            value = entity.getOrCreateVariable(variable).computeValue(partialTicks);
+        } else {
+            value = entity.getOrCreateVariable(variable + "_" + partNumber).computeValue(partialTicks);
+            if (value == 0) {
+                //Could be 0, or part might not exist and we need to check the main entity.  Use that one instead.
+                value = entity.getOrCreateVariable(variable).computeValue(partialTicks);
+            }
+        }
+        if (clock != null) {
+            value = clock.clampAndScale(entity, value, axis, 0.0, partialTicks);
+        }
+        return value;
+    }
+
     /**
      * Custom instrument switchbox class.
      */
@@ -142,33 +159,12 @@ public final class RenderInstrument {
             this.component = component;
         }
 
-        private String convertAnimationPartNumber(DurationDelayClock clock) {
-            //If the partNumber is non-zero, we need to check if we are applying a part-based animation.
-            //If so, we need to let the animation system know by adding a suffix to the variable.
-            //Otherwise, as we don't pass-in the part, it will assume it's an entity variable.
-            //We also need to set the partNumber to 1 if we have a part number of 0 and we're
-            //doing a part-specific animation.
-            //Skip adding a suffix if one already exists.
-            int variablePartNumber = AEntityF_Multipart.getVariableNumber(clock.animation.variable);
-            final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
-            if (partNumber == 0 && addSuffix) {
-                partNumber = 1;
-            }
-            String oldVariable = clock.animation.variable;
-            if (partNumber != 0) {
-                clock.animation.variable += "_" + partNumber;
-            }
-            return oldVariable;
-        }
-
         @Override
         public void runTranslation(DurationDelayClock clock, float partialTicks) {
             //Offset the coords based on the translated amount.
             //Adjust the window to either move or scale depending on settings.
-            String oldVariable = convertAnimationPartNumber(clock);
-            double xTranslation = entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
-            double yTranslation = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
-            clock.animation.variable = oldVariable;
+            double xTranslation = getInstrumentVariableValue(entity, clock, clock.animation.variable, clock.animation.axis.x, partialTicks);
+            double yTranslation = getInstrumentVariableValue(entity, clock, clock.animation.variable, clock.animation.axis.y, partialTicks);
 
             if (component.extendWindow) {
                 //We need to add to the edge of the window in this case rather than move the entire window.
@@ -197,10 +193,10 @@ public final class RenderInstrument {
                 //We don't want to do an OpenGL translation here as that would move the texture's
                 //rendered position on the instrument rather than change what texture is rendered.
                 if (clock.animation.axis.x != 0) {
-                    textureCoord1.y += xTranslation;
-                    textureCoord2.y += xTranslation;
-                    textureCoord3.y += xTranslation;
-                    textureCoord4.y += xTranslation;
+                    textureCoord1.x += xTranslation;
+                    textureCoord2.x += xTranslation;
+                    textureCoord3.x += xTranslation;
+                    textureCoord4.x += xTranslation;
                 }
                 if (clock.animation.axis.y != 0) {
                     textureCoord1.y += yTranslation;
@@ -213,9 +209,7 @@ public final class RenderInstrument {
 
         @Override
         public void runRotation(DurationDelayClock clock, float partialTicks) {
-            String oldVariable = convertAnimationPartNumber(clock);
-            double variableValue = -entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks);
-            clock.animation.variable = oldVariable;
+            double variableValue = -getInstrumentVariableValue(entity, clock, clock.animation.variable, clock.animation.axis.z, partialTicks);
 
             //Depending on what variables are set we do different rendering operations.
             //If we are rotating the window, but not the texture we should offset the texture points to that rotated point.

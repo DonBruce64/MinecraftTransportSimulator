@@ -231,7 +231,8 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void applyMotion(Point3D motion) {
-        entity.setDeltaMovement(entity.getDeltaMovement().add(motion.x, motion.y, motion.z));
+        entity.push(motion.x, motion.y, motion.z);
+        entity.hurtMarked = true;
     }
 
     @Override

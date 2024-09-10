@@ -124,6 +124,7 @@ public interface IWrapperEntity {
     /**
      * Applies a motive force to the entity of the passed-in amount.
      */
+    //FIXME update higher versions to use the proper functions for marking.
     void applyMotion(Point3D offset);
 
     /**

@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -151,7 +149,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 if (activeGun != null && gunStack == null) {
                     //Either the player's held item changed, or the pack did.
                     //Held gun is invalid, so don't use or save it.
-                    removePart(activeGun, true, null);
+                    activeGun.remove();
                     return;
                 }
             }
@@ -266,14 +264,9 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     }
 
     @Override
-    public void removePart(APart part, boolean removeFromWorld, Iterator<APart> iterator) {
-        //Prior to removal, flag the gun as not being held and tick one last time.
-        //This allows the gun to perform any holstering tasks.
-        if (part == activeGun) {
-            activeGun.isHandHeldGunEquipped = false;
-            EntityManager.doTick(activeGun);
-        }
-        super.removePart(part, removeFromWorld, iterator);
+    public void removePart(APart part, boolean doFinalTick, boolean notifyClients) {
+        super.removePart(part, doFinalTick, notifyClients);
+        //No matter how we remove our gun, it's not ours anymore.
         activeGun = null;
     }
 
@@ -328,7 +321,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         gunStack.setData(activeGun.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         didGunFireLastTick = false;
         if (remove) {
-            removePart(activeGun, true, null);
+            removePart(activeGun, true, true);
         }
     }
 

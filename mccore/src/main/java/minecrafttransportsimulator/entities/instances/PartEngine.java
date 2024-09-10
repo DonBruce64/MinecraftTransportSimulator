@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -11,12 +12,10 @@ import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -30,16 +29,8 @@ public class PartEngine extends APart {
     public boolean backfired;
     public boolean badShift;
     public boolean running;
-    @DerivedValue
-    public boolean magnetoOn;
-    @DerivedValue
-    public boolean electricStarterEngaged;
-    @DerivedValue
-    public boolean handStarterEngaged;
     public byte forwardsGears;
     public byte reverseGears;
-    @DerivedValue
-    public byte currentGear;
     public int upshiftCountdown;
     public int downshiftCountdown;
     public int internalFuel;
@@ -47,52 +38,12 @@ public class PartEngine extends APart {
     public double rpm;
     public double temp;
     public double pressure;
-    public float propellerGearboxRatio;
+    public double propellerGearboxRatio;
 
     //Runtime calculated values.
     public double fuelFlow;
     public double rocketFuelUsed;
     public PartEngine linkedEngine;
-
-    //Internal properties
-    @ModifiedValue
-    private float currentMaxRPM;
-    @ModifiedValue
-    private float currentMaxSafeRPM;
-    @ModifiedValue
-    private float currentRevlimitRPM;
-    @ModifiedValue
-    private float currentRevlimitBounce;
-    @ModifiedValue
-    private float currentRevResistance;
-    @ModifiedValue
-    private float currentIdleRPM;
-    @ModifiedValue
-    private float currentStartRPM;
-    @ModifiedValue
-    private float currentStallRPM;
-    @ModifiedValue
-    private float currentStarterPower;
-    @ModifiedValue
-    private float currentFuelConsumption;
-    @ModifiedValue
-    private float currentHeatingCoefficient;
-    @ModifiedValue
-    private float currentCoolingCoefficient;
-    @ModifiedValue
-    private float currentSuperchargerFuelConsumption;
-    @ModifiedValue
-    private float currentSuperchargerEfficiency;
-    @ModifiedValue
-    private float currentGearRatio;
-    @ModifiedValue
-    private float currentForceShift;
-    @ModifiedValue
-    public float currentIsAutomatic;
-    @ModifiedValue
-    private float currentWearFactor;
-    @ModifiedValue
-    private float currentWinddownRate;
 
     //Internal variables.
     private boolean autoStarterEngaged;
@@ -109,8 +60,6 @@ public class PartEngine extends APart {
     private double prevEngineRotation;
     private double driveshaftRotation;
     private double prevDriveshaftRotation;
-    private double currentJetPowerFactor;
-    private double currentBypassRatio;
     private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
     private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
     private final List<PartPropeller> linkedPropellers = new ArrayList<>();
@@ -118,16 +67,40 @@ public class PartEngine extends APart {
     private final Point3D engineForce = new Point3D();
     private double engineForceValue;
 
-    //Constants and static variables.
-    public static final String MAGNETO_VARIABLE = "engine_magneto";
-    public static final String ELECTRIC_STARTER_VARIABLE = "engine_starter";
-    public static final String HAND_STARTER_VARIABLE = "engine_starter_hand";
-    public static final String UP_SHIFT_VARIABLE = "engine_shift_up";
-    public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
-    public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
-    public static final String GEAR_SHIFT_VARIABLE = "engine_shift_request";
-    public static final String GEAR_VARIABLE = "engine_gear";
+    //Constants and variables.
     public static final String HOURS_VARIABLE = "hours";
+    public final ComputedVariable magnetoVar;
+    public final ComputedVariable electricStarterVar;
+    public final ComputedVariable handStarterVar;
+    public final ComputedVariable currentGearVar;
+    public final ComputedVariable shiftUpVar;
+    public final ComputedVariable shiftDownVar;
+    public final ComputedVariable shiftNeutralVar;
+    public final ComputedVariable shiftSelectionVar;
+    public final ComputedVariable hoursVar;
+
+    private final ComputedVariable maxRPMVar;
+    private final ComputedVariable maxSafeRPMVar;
+    private final ComputedVariable revLimitRPMVar;
+    private final ComputedVariable revLimitBounceVar;
+    private final ComputedVariable revResistanceVar;
+    private final ComputedVariable idleRPMVar;
+    private final ComputedVariable startRPMVar;
+    private final ComputedVariable stallRPMVar;
+    private final ComputedVariable starterPowerVar;
+    private final ComputedVariable fuelConsumptionVar;
+    private final ComputedVariable heatingCoefficientVar;
+    private final ComputedVariable coolingCoefficientVar;
+    private final ComputedVariable superchargerFuelConsumptionVar;
+    private final ComputedVariable superchargerEfficiencyVar;
+    private final ComputedVariable gearRatioVar;
+    private final ComputedVariable forceShiftVar;
+    public final ComputedVariable isAutomaticVar;
+    private final ComputedVariable wearFactorVar;
+    private final ComputedVariable winddownRateVar;
+    private final ComputedVariable jetPowerFactorVar;
+    private final ComputedVariable bypassRatioVar;
+
     public static final float COLD_TEMP = 30F;
     public static final float OVERHEAT_TEMP_1 = 115.556F;
     public static final float OVERHEAT_TEMP_2 = 121.111F;
@@ -139,13 +112,11 @@ public class PartEngine extends APart {
         super(entityOn, placingPlayer, placementDefinition, item, data);
         if (data != null) {
             this.running = data.getBoolean("running");
-            this.hours = data.getDouble(HOURS_VARIABLE);
             this.rpm = data.getDouble("rpm");
             this.temp = data.getDouble("temp");
             this.pressure = data.getDouble("pressure");
             this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
         }
-
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
                 ++reverseGears;
@@ -153,10 +124,47 @@ public class PartEngine extends APart {
                 ++forwardsGears;
             }
         }
+        addVariable(this.magnetoVar = new ComputedVariable(this, "engine_magneto", data));
+        addVariable(this.electricStarterVar = new ComputedVariable(this, "engine_starter", data));
+        addVariable(this.handStarterVar = new ComputedVariable(this, "engine_starter_hand", data));
+        addVariable(this.currentGearVar = new ComputedVariable(this, "engine_gear", data));
+        addVariable(this.shiftUpVar = new ComputedVariable(this, "engine_shift_up", data));
+        addVariable(this.shiftDownVar = new ComputedVariable(this, "engine_shift_down", data));
+        addVariable(this.shiftNeutralVar = new ComputedVariable(this, "engine_shift_neutral", data));
+        addVariable(this.shiftSelectionVar = new ComputedVariable(this, "engine_shift_request", data));
+        addVariable(this.hoursVar = new ComputedVariable(this, HOURS_VARIABLE, data));
+
+        addVariable(this.maxRPMVar = new ComputedVariable(this, "engine_rpm_max"));
+        addVariable(this.maxSafeRPMVar = new ComputedVariable(this, "engine_rpm_safe"));
+        addVariable(this.revLimitRPMVar = new ComputedVariable(this, "engine_rpm_revlimit"));
+        addVariable(this.revLimitBounceVar = new ComputedVariable(this, "engine_rpm_revlimit_bounce"));
+        addVariable(this.revResistanceVar = new ComputedVariable(this, "engine_rpm_revresistance"));
+        addVariable(this.idleRPMVar = new ComputedVariable(this, "engine_rpm_idle"));
+        addVariable(this.startRPMVar = new ComputedVariable(this, "engine_rpm_start"));
+        addVariable(this.stallRPMVar = new ComputedVariable(this, "engine_rpm_stall"));
+        addVariable(this.starterPowerVar = new ComputedVariable(this, "engine_starter_power"));
+        addVariable(this.fuelConsumptionVar = new ComputedVariable(this, "engine_fuel_consumption"));
+        addVariable(this.heatingCoefficientVar = new ComputedVariable(this, "engine_heating_coefficient"));
+        addVariable(this.coolingCoefficientVar = new ComputedVariable(this, "engine_cooling_coefficient"));
+        addVariable(this.superchargerFuelConsumptionVar = new ComputedVariable(this, "engine_supercharger_fuel_consumption"));
+        addVariable(this.superchargerEfficiencyVar = new ComputedVariable(this, "engine_supercharger_efficiency"));
+        addVariable(this.gearRatioVar = new ComputedVariable(this, "engine_gear_ratio"));
+        addVariable(this.forceShiftVar = new ComputedVariable(this, "engine_forceshift"));
+        addVariable(this.isAutomaticVar = new ComputedVariable(this, "engine_isautomatic"));
+        addVariable(this.wearFactorVar = new ComputedVariable(this, "engine_wear_factor"));
+        addVariable(this.winddownRateVar = new ComputedVariable(this, "engine_winddown_rate"));
+        addVariable(this.jetPowerFactorVar = new ComputedVariable(this, "engine_jet_power_factor"));
+        addVariable(this.bypassRatioVar = new ComputedVariable(this, "engine_bypass_ratio"));
 
         //Verify gears aren't out of range.  This can happen if a pack updates to lower number of gears.
-        if (definition.engine.gearRatios.size() <= getVariable(GEAR_VARIABLE) + reverseGears) {
-            setVariable(GEAR_VARIABLE, currentGear + reverseGears - 1);
+        if (definition.engine.gearRatios.size() <= currentGearVar.currentValue + reverseGears) {
+        	currentGearVar.setTo(forwardsGears + reverseGears - 1, false);
+        }
+
+        //If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
+        //Well, except blimps, but that's a special case.
+        if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
+        	currentGearVar.setTo(1, false);
         }
 
         //Verify the vehicle has the right fuel for us.  If not, clear it out.
@@ -184,12 +192,6 @@ public class PartEngine extends APart {
                 }
             }
         }
-
-        //If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
-        //Well, except blimps, but that's a special case.
-        if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
-            setVariable(GEAR_VARIABLE, 1);
-        }
     }
 
     @Override
@@ -201,10 +203,6 @@ public class PartEngine extends APart {
                 if (damage.entityResponsible instanceof IWrapperPlayer && ((IWrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()) {
                     //Don't hand-start engines from seated players.  Lazy bums...
                     if (!masterEntity.allParts.contains(damage.entityResponsible.getEntityRiding())) {
-                        if (!magnetoOn) {
-                            setVariable(MAGNETO_VARIABLE, 1);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
-                        }
                         handStartEngine();
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
                         return;
@@ -231,13 +229,9 @@ public class PartEngine extends APart {
         //Reset states.
         backfired = false;
         badShift = false;
-        magnetoOn = isVariableActive(MAGNETO_VARIABLE);
-        electricStarterEngaged = isVariableActive(ELECTRIC_STARTER_VARIABLE);
-        handStarterEngaged = isVariableActive(HAND_STARTER_VARIABLE);
-        currentGear = (byte) getVariable(GEAR_VARIABLE);
 
         //If the engine is running, but the magneto is off, turn the engine off.
-        if (running && !magnetoOn) {
+        if (running && !magnetoVar.isActive) {
             running = false;
             if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                 internalFuel = 200;
@@ -286,20 +280,19 @@ public class PartEngine extends APart {
             //Add cooling for ambient temp.
             ambientTemp = (25 * world.getTemperature(position) + 5) * ConfigSystem.settings.general.engineBiomeTempFactor.value;
             if (running) {
-                coolingFactor = 0.001 * currentCoolingCoefficient - (currentSuperchargerEfficiency / 1000F) * (rpm / 2000F) + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+                coolingFactor = 0.001 * coolingCoefficientVar.currentValue - (superchargerEfficiencyVar.currentValue / 1000F) * (rpm / 2000F) + (vehicleOn.velocity / 1000F) * coolingCoefficientVar.currentValue;
             } else {
-                coolingFactor = 0.001 * currentCoolingCoefficient + (vehicleOn.velocity / 1000F) * currentCoolingCoefficient;
+                coolingFactor = 0.001 * coolingCoefficientVar.currentValue + (vehicleOn.velocity / 1000F) * coolingCoefficientVar.currentValue;
             }
             temp -= (temp - ambientTemp) * coolingFactor;
 
             //Check to see if electric or hand starter can keep running.
-            if (electricStarterEngaged) {
+            if (electricStarterVar.isActive) {
                 if (starterLevel == 0) {
                     if (vehicleOn.electricPower > 1) {
                         starterLevel += 4;
                     } else if (!world.isClient()) {
-                        setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
+                    	electricStarterVar.toggle(true);
                     }
                 }
                 if (starterLevel > 0) {
@@ -312,13 +305,12 @@ public class PartEngine extends APart {
                 }
                 if (autoStarterEngaged) {
                     if (!world.isClient() && running) {
-                        setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
+                    	electricStarterVar.setTo(0, true);
                     }
                 }
-            } else if (handStarterEngaged) {
+            } else if (handStarterVar.isActive) {
                 if (starterLevel == 0) {
-                    setVariable(HAND_STARTER_VARIABLE, 0);
+                	handStarterVar.setTo(0, false);
                 }
             } else {
                 starterLevel = 0;
@@ -328,51 +320,52 @@ public class PartEngine extends APart {
             //If the starter is running, adjust RPM.
             if (starterLevel > 0) {
                 --starterLevel;
-                if (rpm < currentStartRPM * 2) {
-                    rpm = Math.min(rpm + currentStarterPower, currentStartRPM * 2);
+                if (rpm < startRPMVar.currentValue * 2) {
+                    rpm = Math.min(rpm + starterPowerVar.currentValue, startRPMVar.currentValue * 2);
                 } else {
-                    rpm = Math.max(rpm - currentStarterPower, currentStartRPM * 2);
+                    rpm = Math.max(rpm - starterPowerVar.currentValue, startRPMVar.currentValue * 2);
                 }
             }
 
             //Add extra hours if we are running the engine too fast.
-            if (!vehicleOn.isCreative && rpm > currentMaxSafeRPM) {
-                hours += (rpm - currentMaxSafeRPM) / currentMaxSafeRPM * getTotalWearFactor();
+            if (!vehicleOn.isCreative && rpm > maxSafeRPMVar.currentValue) {
+                hours += (rpm - maxSafeRPMVar.currentValue) / maxSafeRPMVar.currentValue * getTotalWearFactor();
             }
 
             //Check for any shifting requests.
             if (!world.isClient()) {
-                if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
-                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+                if (shiftNeutralVar.isActive) {
+                	shiftNeutralVar.toggle(false);
                     shiftNeutral();
                 }
-                if (isVariableActive(UP_SHIFT_VARIABLE)) {
-                    toggleVariable(UP_SHIFT_VARIABLE);
+                if (shiftUpVar.isActive) {
+                	shiftUpVar.toggle(false);
                     shiftUp();
-                } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
-                    toggleVariable(DOWN_SHIFT_VARIABLE);
-                    shiftDown();
-                } else if (isVariableActive(GEAR_SHIFT_VARIABLE)) {
-                    double shiftValue = getVariable(GEAR_SHIFT_VARIABLE);
-                    if (shiftValue < 10) {
-                        while (currentGear < shiftValue && shiftUp())
-                            ;
-                    } else if (shiftValue == 10) {
-                        if (currentGear == 0) {
-                            shiftDown();
+                }else {
+                	if (shiftDownVar.isActive) {
+                		shiftDownVar.toggle(false);
+                        shiftDown();
+                    } else if (shiftSelectionVar.isActive) {
+                    	if (shiftSelectionVar.currentValue < 10) {
+                            while (currentGearVar.currentValue < shiftSelectionVar.currentValue && shiftUp())
+                                ;
+                        } else if (shiftSelectionVar.currentValue == 10) {
+                            if (currentGearVar.currentValue == 0) {
+                                shiftDown();
+                            }
+                        } else if (shiftSelectionVar.currentValue == 11) {
+                            shiftNeutral();
                         }
-                    } else if (shiftValue == 11) {
-                        shiftNeutral();
                     }
                 }
             }
 
             //Check for reversing if we are on a blimp with reversed thrust.
             if (vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()) {
-                if (vehicleOn.reverseThrust && currentGear > 0) {
-                    currentGear = -1;
-                } else if (!vehicleOn.reverseThrust && currentGear < 0) {
-                    currentGear = 1;
+                if (vehicleOn.reverseThrustVar.isActive && currentGearVar.currentValue > 0) {
+                	currentGearVar.setTo(-1, false);
+                } else if (!vehicleOn.reverseThrustVar.isActive && currentGearVar.currentValue < 0) {
+                    currentGearVar.setTo(1, false);
                 }
             }
 
@@ -408,22 +401,22 @@ public class PartEngine extends APart {
                 }
 
                 //Do automatic transmission functions if needed.
-                if (currentIsAutomatic != 0 && !world.isClient() && currentGear != 0) {
+                if (isAutomaticVar.isActive && !world.isClient() && currentGearVar.currentValue != 0) {
                     if (shiftCooldown == 0) {
-                        if (currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears) {
+                        if (currentGearVar.currentValue > 0 ? currentGearVar.currentValue < forwardsGears : -currentGearVar.currentValue < reverseGears) {
                             //Can shift up, try to do so.
-                            if (rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (currentMaxSafeRPM * 0.9)) * 0.5F * (1.0F + vehicleOn.throttle)) {
-                                if (currentGear > 0) {
+                            if (rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get((int) (currentGearVar.currentValue + reverseGears)) : (maxSafeRPMVar.currentValue * 0.9)) * 0.5F * (1.0F + vehicleOn.throttleVar.currentValue)) {
+                                if (currentGearVar.currentValue > 0) {
                                     shiftUp();
                                 } else {
                                     shiftDown();
                                 }
                             }
                         }
-                        if (currentGear > 1 || currentGear < -1) {
+                        if (currentGearVar.currentValue > 1 || currentGearVar.currentValue < -1) {
                             //Can shift down, try to do so.
-                            if (rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears) * 0.5 * (1.0F + vehicleOn.throttle) : (currentMaxSafeRPM * 0.9) * 0.25 * (1.0F + vehicleOn.throttle))) {
-                                if (currentGear > 0) {
+                            if (rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get((int) (currentGearVar.currentValue + reverseGears)) * 0.5 * (1.0F + vehicleOn.throttleVar.currentValue) : (maxSafeRPMVar.currentValue * 0.9) * 0.25 * (1.0F + vehicleOn.throttleVar.currentValue))) {
+                                if (currentGearVar.currentValue > 0) {
                                     shiftDown();
                                 } else {
                                     shiftUp();
@@ -449,28 +442,28 @@ public class PartEngine extends APart {
                 case NORMAL: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / currentMaxRPM, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Add temp based on engine speed.
-                        temp += Math.max(0, (7 * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
+                        temp += Math.max(0, (7 * rpm / maxRPMVar.currentValue - temp / (COLD_TEMP * 2)) / 20) * heatingCoefficientVar.currentValue * ConfigSystem.settings.general.engineSpeedTempFactor.value;
 
                         //Adjust oil pressure based on RPM and leak status.
-                        pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (pressure / LOW_OIL_PRESSURE));
+                        pressure = Math.min(90 - temp / 10, pressure + rpm / idleRPMVar.currentValue - 0.5 * (pressure / LOW_OIL_PRESSURE));
 
                         //Add extra hours and temp if we have low oil.
                         if (pressure < LOW_OIL_PRESSURE && !vehicleOn.isCreative) {
-                            temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
+                            temp += Math.max(0, (20 * rpm / maxRPMVar.currentValue) / 20);
                             hours += 0.01 * getTotalWearFactor();
                         }
 
                         //If the engine has high hours, give a chance for a backfire.
                         if (hours >= 500 && !world.isClient()) {
-                            if (Math.random() < (hours / 3) / (500 + (10000 - hours)) * (currentMaxSafeRPM / (rpm + currentMaxSafeRPM / 1.5))) {
+                            if (Math.random() < (hours / 3) / (500 + (10000 - hours)) * (maxSafeRPMVar.currentValue / (rpm + maxSafeRPMVar.currentValue / 1.5))) {
                                 backfireEngine();
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
                             }
@@ -484,7 +477,7 @@ public class PartEngine extends APart {
                             } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                            } else if (rpm < currentStallRPM) {
+                            } else if (rpm < stallRPMVar.currentValue) {
                                 stallEngine(Signal.TOO_SLOW);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
                             }
@@ -501,9 +494,9 @@ public class PartEngine extends APart {
                         //Start engine if the RPM is high enough to cause it to start by itself.
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
-                        if (rpm >= currentStartRPM && !world.isClient() && !vehicleOn.outOfHealth) {
+                        if (rpm >= startRPMVar.currentValue && !world.isClient() && !vehicleOn.outOfHealth) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
-                                if (!isInLiquid() && magnetoOn) {
+                                if (!isInLiquid() && magnetoVar.isActive) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
                                 }
@@ -522,7 +515,7 @@ public class PartEngine extends APart {
                         }
                     } else {
                         //If the magneto comes on, and we have fuel, ignite.
-                        if (magnetoOn && rocketFuelUsed < definition.engine.rocketFuel) {
+                        if (magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
                             running = true;
                         }
                     }
@@ -532,11 +525,11 @@ public class PartEngine extends APart {
                 case ELECTRIC: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / currentMaxRPM, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Check if we need to stall the engine for various conditions.
@@ -550,7 +543,7 @@ public class PartEngine extends APart {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
                             if (isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
-                                if (magnetoOn) {
+                                if (magnetoVar.isActive) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
                                 }
@@ -563,12 +556,12 @@ public class PartEngine extends APart {
                 case MAGIC: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
                     } else {
                         //Turn on engine if the magneto is onl.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
                             if (isActive) {
-                                if (magnetoOn) {
+                                if (magnetoVar.isActive){
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
                                 }
@@ -587,60 +580,60 @@ public class PartEngine extends APart {
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
                 wheelFriction = 0;
-                engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM : currentStartRPM;
+                engineTargetRPM = !electricStarterVar.isActive ? vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue : startRPMVar.currentValue;
 
                 //Update wheel friction and velocity.
                 for (PartGroundDevice wheel : drivenWheels) {
                     //If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
                     //This means the wheel is spinning in the air and can't provide force or feedback.
                     if (vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)) {
-                        wheelFriction += wheel.currentMotiveFriction;
+                        wheelFriction += wheel.motiveFrictionVar.currentValue;
                         lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
                         desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
                     }
                 }
 
                 //Adjust RPM of the engine to wheels.
-                if (currentGearRatio != 0 && starterLevel == 0) {
+                if (gearRatioVar.currentValue != 0 && starterLevel == 0) {
                     //Don't adjust it down to stall the engine, that can only be done via backfire.
                     if (wheelFriction > 0) {
-                        double desiredRPM = lowestWheelVelocity * 1200F * currentGearRatio * vehicleOn.currentAxleRatio;
-                        rpm += (desiredRPM - rpm) / currentRevResistance;
-                        if (rpm < (currentIdleRPM - ((currentIdleRPM - currentStallRPM) * 0.5)) && running) {
-                            rpm = currentIdleRPM - ((currentIdleRPM - currentStallRPM) * 0.5);
+                        double desiredRPM = lowestWheelVelocity * 1200F * gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue;
+                        rpm += (desiredRPM - rpm) / revResistanceVar.currentValue;
+                        if (rpm < (idleRPMVar.currentValue - ((idleRPMVar.currentValue - stallRPMVar.currentValue) * 0.5)) && running) {
+                            rpm = idleRPMVar.currentValue - ((idleRPMVar.currentValue - stallRPMVar.currentValue) * 0.5);
                         }
                     } else {
                         //No wheel force.  Adjust wheels to engine speed.
                         for (PartGroundDevice wheel : drivenWheels) {
-                            wheel.angularVelocity = rpm / currentGearRatio / vehicleOn.currentAxleRatio / 1200D;
+                            wheel.angularVelocity = rpm / gearRatioVar.currentValue / vehicleOn.axleRatioVar.currentValue / 1200D;
                         }
                     }
                 }
             }
 
             //Do logic for those propellers now.
-            propellerGearboxRatio = Math.signum(currentGearRatio) * (definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
+            propellerGearboxRatio = Math.signum(gearRatioVar.currentValue) * (definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(gearRatioVar.currentValue));
             for (PartPropeller attachedPropeller : linkedPropellers) {
                 //Don't try and do logic for the propeller on their first tick.
                 //They need to update once to init their properties.
                 //Also don't let the propeller affect the engine speed if we are powering wheels.
                 //Those take priority over air resistance.
-                if (attachedPropeller.ticksExisted != 0 && wheelFriction == 0 && currentGearRatio != 0) {
+                if (attachedPropeller.ticksExisted != 0 && wheelFriction == 0 && gearRatioVar.currentValue != 0) {
                     boolean isPropellerInLiquid = attachedPropeller.isInLiquid();
-                    double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75) / (50 * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) - 15));
+                    double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75) / (50 * (fuelConsumptionVar.currentValue + (superchargerFuelConsumptionVar.currentValue * superchargerEfficiencyVar.currentValue)) - 15));
                     double propellerFeedback = -Math.abs(attachedPropeller.airstreamLinearVelocity - attachedPropeller.desiredLinearVelocity) * (isPropellerInLiquid ? 6.5 : 2);
                     if (running) {
                         propellerFeedback -= propellerForcePenalty * 50;
-                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
+                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue;
                         double engineRPMDifference = engineTargetRPM - rpm;
 
                         //propellerFeedback can't make an engine stall, but hours can.
-                        if (rpm + engineRPMDifference / currentRevResistance > currentStallRPM && rpm + engineRPMDifference / currentRevResistance + propellerFeedback < currentStallRPM) {
-                            rpm = currentStallRPM;
+                        if (rpm + engineRPMDifference / revResistanceVar.currentValue > stallRPMVar.currentValue && rpm + engineRPMDifference / revResistanceVar.currentValue + propellerFeedback < stallRPMVar.currentValue) {
+                            rpm = stallRPMVar.currentValue;
                         } else {
-                            rpm += engineRPMDifference / currentRevResistance + propellerFeedback;
+                            rpm += engineRPMDifference / revResistanceVar.currentValue + propellerFeedback;
                         }
-                    } else if (!electricStarterEngaged && !handStarterEngaged) {
+                    } else if (!electricStarterVar.isActive && !handStarterVar.isActive) {
                         rpm += (propellerFeedback - 1) * Math.abs(propellerGearboxRatio);
 
                         //Don't let the engine RPM go negative.  This results in physics errors.
@@ -653,25 +646,25 @@ public class PartEngine extends APart {
 
             //If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
             //Or, if we are not on, just slowly spin the engine down.
-            if ((wheelFriction == 0 && linkedPropellers.isEmpty()) || currentGearRatio == 0) {
+            if ((wheelFriction == 0 && linkedPropellers.isEmpty()) || gearRatioVar.currentValue == 0) {
                 if (running) {
                     if (rocketFuelUsed < definition.engine.rocketFuel) {
-                        engineTargetRPM = currentMaxRPM;
+                        engineTargetRPM = maxRPMVar.currentValue;
                     } else {
-                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1500) + currentIdleRPM;
+                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue;
                     }
-                    rpm += (engineTargetRPM - rpm) / (currentRevResistance * 3);
-                    if (currentRevlimitRPM == -1) {
-                        if (rpm > currentMaxSafeRPM) {
+                    rpm += (engineTargetRPM - rpm) / (revResistanceVar.currentValue * 3);
+                    if (revLimitRPMVar.currentValue == -1) {
+                        if (rpm > maxSafeRPMVar.currentValue) {
                             rpm -= Math.abs(engineTargetRPM - rpm) / 60;
                         }
                     } else {
-                        if (rpm > currentRevlimitRPM) {
-                            rpm -= Math.abs(engineTargetRPM - rpm) / currentRevlimitBounce;
+                        if (rpm > revLimitRPMVar.currentValue) {
+                            rpm -= Math.abs(engineTargetRPM - rpm) / revLimitBounceVar.currentValue;
                         }
                     }
-                } else if (!electricStarterEngaged && !handStarterEngaged) {
-                    rpm = Math.max(rpm - currentWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, 10 rpm a tick by default
+                } else if (!electricStarterVar.isActive && !handStarterVar.isActive) {
+                    rpm = Math.max(rpm - winddownRateVar.currentValue, 0); //engineWinddownRate tells us how quickly to slow down the engine, 10 rpm a tick by default
                 }
             }
 
@@ -762,103 +755,29 @@ public class PartEngine extends APart {
     }
 
     @Override
-    public void updateVariableModifiers() {
-        currentMaxRPM = definition.engine.maxRPM;
-        currentMaxSafeRPM = definition.engine.maxSafeRPM;
-        currentRevlimitRPM = definition.engine.revlimitRPM;
-        currentRevlimitBounce = definition.engine.revlimitBounce;
-        currentRevResistance = definition.engine.revResistance;
-        currentIdleRPM = definition.engine.idleRPM;
-        currentStartRPM = definition.engine.startRPM;
-        currentStallRPM = definition.engine.stallRPM;
-        currentStarterPower = definition.engine.starterPower;
-        currentFuelConsumption = definition.engine.fuelConsumption;
-        currentHeatingCoefficient = definition.engine.heatingCoefficient;
-        currentCoolingCoefficient = definition.engine.coolingCoefficient;
-        currentSuperchargerFuelConsumption = definition.engine.superchargerFuelConsumption;
-        currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
-        currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
-        currentForceShift = definition.engine.forceShift ? 1 : 0;
-        currentIsAutomatic = definition.engine.isAutomatic ? 1 : 0;
-        currentWearFactor = definition.engine.engineWearFactor;
-        currentWinddownRate = definition.engine.engineWinddownRate;
-        currentJetPowerFactor = definition.engine.jetPowerFactor;
-        currentBypassRatio = definition.engine.bypassRatio;
-
-
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "maxRPM":
-                        currentMaxRPM = adjustVariable(modifier, currentMaxRPM);
-                        break;
-                    case "maxSafeRPM":
-                        currentMaxSafeRPM = adjustVariable(modifier, currentMaxSafeRPM);
-                        break;
-                    case "revlimitRPM":
-                        currentRevlimitRPM = adjustVariable(modifier, currentRevlimitRPM);
-                        break;
-                    case "revlimitBounce":
-                        currentRevlimitBounce = adjustVariable(modifier, currentRevlimitBounce);
-                        break;
-                    case "revResistance":
-                        currentRevResistance = adjustVariable(modifier, currentRevResistance);
-                        break;
-                    case "idleRPM":
-                        currentIdleRPM = adjustVariable(modifier, currentIdleRPM);
-                        break;
-                    case "startRPM":
-                        currentStartRPM = adjustVariable(modifier, currentStartRPM);
-                        break;
-                    case "stallRPM":
-                        currentStallRPM = adjustVariable(modifier, currentStallRPM);
-                        break;
-                    case "starterPower":
-                        currentStarterPower = adjustVariable(modifier, currentStarterPower);
-                        break;
-                    case "fuelConsumption":
-                        currentFuelConsumption = adjustVariable(modifier, currentFuelConsumption);
-                        break;
-                    case "heatingCoefficient":
-                        currentHeatingCoefficient = adjustVariable(modifier, currentHeatingCoefficient);
-                        break;
-                    case "coolingCoefficient":
-                        currentCoolingCoefficient = adjustVariable(modifier, currentCoolingCoefficient);
-                        break;
-                    case "superchargerFuelConsumption":
-                        currentSuperchargerFuelConsumption = adjustVariable(modifier, currentSuperchargerFuelConsumption);
-                        break;
-                    case "superchargerEfficiency":
-                        currentSuperchargerEfficiency = adjustVariable(modifier, currentSuperchargerEfficiency);
-                        break;
-                    case "currentGearRatio":
-                        currentGearRatio = adjustVariable(modifier, currentGearRatio);
-                        break;
-                    case "forceShift":
-                    	currentForceShift = adjustVariable(modifier, currentForceShift);
-                        break;
-                    case "isAutomatic":
-                    	currentIsAutomatic = adjustVariable(modifier, currentIsAutomatic);
-                        break;
-                    case "engineWearFactor":
-                        currentWearFactor = adjustVariable(modifier, currentWearFactor);
-                        break;
-                    case "engineWinddownRate":
-                        currentWinddownRate = adjustVariable(modifier, currentWinddownRate);
-                        break;
-                    case "jetPowerFactor":
-                        currentJetPowerFactor = adjustVariable(modifier,(float) currentJetPowerFactor);
-                        break;
-                    case "bypassRatio":
-                        currentBypassRatio = adjustVariable(modifier,(float) currentBypassRatio);
-                        break;
-                    default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
-                        break;
-                }
-            }
-        }
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        maxRPMVar.setTo(definition.engine.maxRPM, false);
+        maxSafeRPMVar.setTo(definition.engine.maxSafeRPM, false);
+        revLimitRPMVar.setTo(definition.engine.revlimitRPM, false);
+        revLimitBounceVar.setTo(definition.engine.revlimitBounce, false);
+        revResistanceVar.setTo(definition.engine.revResistance, false);
+        idleRPMVar.setTo(definition.engine.idleRPM, false);
+        startRPMVar.setTo(definition.engine.startRPM, false);
+        stallRPMVar.setTo(definition.engine.stallRPM, false);
+        starterPowerVar.setTo(definition.engine.starterPower, false);
+        fuelConsumptionVar.setTo(definition.engine.fuelConsumption, false);
+        heatingCoefficientVar.setTo(definition.engine.heatingCoefficient, false);
+        coolingCoefficientVar.setTo(definition.engine.coolingCoefficient, false);
+        superchargerFuelConsumptionVar.setTo(definition.engine.superchargerFuelConsumption, false);
+        superchargerEfficiencyVar.setTo(definition.engine.superchargerEfficiency, false);
+        gearRatioVar.setTo(definition.engine.gearRatios.get((int) currentGearVar.currentValue + reverseGears), false);
+        forceShiftVar.setActive(definition.engine.forceShift, false);
+        isAutomaticVar.setActive(definition.engine.isAutomatic, false);
+        wearFactorVar.setTo(definition.engine.engineWearFactor, false);
+        winddownRateVar.setTo(definition.engine.engineWinddownRate, false);
+        jetPowerFactorVar.setTo(definition.engine.jetPowerFactor, false);
+        bypassRatioVar.setTo(definition.engine.bypassRatio, false);
     }
 
     @Override
@@ -878,155 +797,130 @@ public class PartEngine extends APart {
         }
     }
 
+
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
-            case ("engine_isautomatic"):
-                return currentIsAutomatic != 0 ? 1 : 0;
             case ("engine_rotation"):
-                return getEngineRotation(partialTicks);
+                return new ComputedVariable(this, variable, partialTicks -> getEngineRotation(partialTicks), true);
             case ("engine_sin"):
-                return Math.sin(Math.toRadians(getEngineRotation(partialTicks)));
+                return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getEngineRotation(partialTicks))), true);
             case ("engine_cos"):
-                return Math.cos(Math.toRadians(getEngineRotation(partialTicks)));
+                return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getEngineRotation(partialTicks))), true);
             case ("engine_driveshaft_rotation"):
-                return getDriveshaftRotation(partialTicks);
+                return new ComputedVariable(this, variable, partialTicks -> getDriveshaftRotation(partialTicks), true);
             case ("engine_driveshaft_sin"):
-                return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks)));
+                return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks))), true);
             case ("engine_driveshaft_cos"):
-                return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks)));
+                return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks))), true);
             case ("engine_rpm"):
-                return rpm;
-            case ("engine_rpm_safe"):
-                return currentMaxSafeRPM;
-            case ("engine_rpm_max"):
-                return currentMaxRPM;
-            case ("engine_rpm_revlimit"):
-                return currentRevlimitRPM;
+                return new ComputedVariable(this, variable, partialTicks -> rpm, false);
             case ("engine_rpm_percent"):
-                return rpm / currentMaxRPM;
+                return new ComputedVariable(this, variable, partialTicks -> rpm / maxRPMVar.currentValue, false);
             case ("engine_rpm_percent_safe"):
-                return rpm / currentMaxSafeRPM;
+                return new ComputedVariable(this, variable, partialTicks -> rpm / maxSafeRPMVar.currentValue, false);
             case ("engine_rpm_percent_revlimit"):
-                return currentRevlimitRPM != -1 ? rpm / currentRevlimitRPM : rpm / currentMaxSafeRPM;
+                return new ComputedVariable(this, variable, partialTicks -> revLimitRPMVar.currentValue != -1 ? rpm / revLimitRPMVar.currentValue : rpm / maxSafeRPMVar.currentValue, false);
             case ("engine_rpm_target"):
-            	return engineTargetRPM;
-            case ("engine_rpm_idle"):
-            	return currentIdleRPM;
-            case ("engine_rpm_start"):
-            	return currentStartRPM;
-            case ("engine_rpm_stall"):
-            	return currentStallRPM;
-            case ("engine_starter_power"):
-            	return currentStarterPower;
-            case ("engine_fuel_consumption"):
-                return currentFuelConsumption;
-            case ("engine_supercharger_fuel_consumption"):
-                return currentSuperchargerFuelConsumption;
-            case ("engine_supercharger_efficiency"):
-                return currentSuperchargerEfficiency;
+                return new ComputedVariable(this, variable, partialTicks -> engineTargetRPM, false);
             case ("engine_fuel_flow"):
-                return fuelFlow * 20D * 60D / 1000D;
+                return new ComputedVariable(this, variable, partialTicks -> fuelFlow * 20D * 60D / 1000D, false);
             case ("engine_fuel_remaining"):
-                return (definition.engine.rocketFuel - rocketFuelUsed) / definition.engine.rocketFuel;
+                return new ComputedVariable(this, variable, partialTicks -> (definition.engine.rocketFuel - rocketFuelUsed) / definition.engine.rocketFuel, false);
             case ("engine_temp"):
-                return temp;
+                return new ComputedVariable(this, variable, partialTicks -> temp, false);
             case ("engine_temp_ambient"):
-                return ambientTemp;
+                return new ComputedVariable(this, variable, partialTicks -> ambientTemp, false);
             case ("engine_pressure"):
-                return pressure;
-            case ("engine_gear"):
-                return currentGear;
+                return new ComputedVariable(this, variable, partialTicks -> pressure, false);
             case ("engine_gearshift"):
-                return getGearshiftRotation();
+                return new ComputedVariable(this, variable, partialTicks -> getGearshiftRotation(), false);
             case ("engine_gearshift_hvertical"):
-                return getGearshiftPosition_Vertical();
+                return new ComputedVariable(this, variable, partialTicks -> getGearshiftPosition_Vertical(), false);
             case ("engine_gearshift_hhorizontal"):
-                return getGearshiftPosition_Horizontal();
+                return new ComputedVariable(this, variable, partialTicks -> getGearshiftPosition_Horizontal(), false);
             case ("engine_clutch_upshift"):
-                return upshiftCountdown > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> upshiftCountdown > 0 ? 1 : 0, false);
             case ("engine_clutch_downshift"):
-                return downshiftCountdown > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> downshiftCountdown > 0 ? 1 : 0, false);
             case ("engine_badshift"):
-                return badShift ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> badShift ? 1 : 0, false);
             case ("engine_reversed"):
-                return currentGear < 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> currentGearVar.currentValue < 0 ? 1 : 0, false);
             case ("engine_running"):
-                return running ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> running ? 1 : 0, false);
             case ("engine_powered"):
-                return running || internalFuel > 0 ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> running || internalFuel > 0 ? 1 : 0, false);
             case ("engine_backfired"):
-                return backfired ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> backfired ? 1 : 0, false);
             case ("engine_jumper_cable"):
-                return linkedEngine != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> linkedEngine != null ? 1 : 0, false);
             case ("engine_hours"):
-                return hours;
-            case ("engine_bypass_ratio"):
-                return currentBypassRatio;
-            case ("engine_jet_power_factor"):
-                return currentJetPowerFactor;
-        }
-        if (variable.startsWith("engine_sin_")) {
-        	//engine_sin_X This will offset the engine rotation INPUT to the trig function by X
-            int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
-        	return Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset));
-        }
-        if (variable.startsWith("engine_cos_")) {
-        	//engine_cos_X This will offset the engine rotation INPUT to the trig function by X
-            int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
-        	return Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset));
-        }
-        if (variable.startsWith("engine_driveshaft_sin_")) {
-        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
-            int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
-        	return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
-        }
-        if (variable.startsWith("engine_driveshaft_cos_")) {
-        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
-            int offset = Integer.parseInt(variable.substring("engine_driveshaft_cos_".length()));
-        	return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
-        }
-        if (variable.startsWith("engine_piston_")) {
-        	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
-        	//i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
-        	//When suffixed with _cam, it will instead return the sector the camshaft rotation.
+                return new ComputedVariable(this, variable, partialTicks -> hours, false);
+            default: {
+                if (variable.startsWith("engine_sin_")) {
+                    final int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset)), true);
+                } else if (variable.startsWith("engine_cos_")) {
+                    final int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset)), true);
+                } else if (variable.startsWith("engine_driveshaft_sin_")) {
+                    final int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset)), true);
+                } else if (variable.startsWith("engine_driveshaft_cos_")) {
+                    final int offset = Integer.parseInt(variable.substring("engine_driveshaft_cos_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset)), true);
+                } else if (variable.startsWith("engine_piston_")) {
+                    //Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
+                    //i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
+                    //When suffixed with _cam, it will instead return the sector the camshaft rotation.
+                    //Note that some packs omit the third offset number, so we need to account for that here.
 
-        	//If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
-        	int camMultiplier = 1;
-        	if (variable.endsWith("_crank")) {
-        		variable = variable.substring(0, variable.length() - "_crank".length());
-        	}
-        	if (variable.endsWith("_cam")) {
-        		camMultiplier = 2;
-        		variable = variable.substring(0, variable.length() - "_cam".length());
-        	}
-        	
-        	//Extract the values we need
-            String[] parsedVariable = variable.substring("engine_piston_".length()).split("_");
-            int pistonNumber = Integer.parseInt(parsedVariable[0]);
-            int totalPistons = Integer.parseInt(parsedVariable[1]);
-            int offset = 0;
-            if (parsedVariable.length >= 3) {
-                offset = camMultiplier * Integer.parseInt(parsedVariable[2]);
-            }
-            
-            //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
-            if (pistonNumber > totalPistons || totalPistons == 1) {
-            	pistonNumber = 1;
-            	totalPistons = 2;
-            }
-            
-            //Map the shaft rotation to a value between 0 and 359.99...
-            double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
-            
-            //Calculate the angle of a 'sector'
-            double sector = (360D * camMultiplier) / totalPistons;
-            
-            //If the crank is in the requested sector, return 1, otherwise return 0.
-            return (0 + (sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
-        }
+                    //Extract the values we need.  Need these to be final for lambdas.
+                    String[] parsedVariable = variable.split("_");
+                    final int pistonNumber;
+                    final int totalPistons;
 
-        return super.getRawVariableValue(variable, partialTicks);
+                    //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
+                    int parsedPistonNumber = Integer.parseInt(parsedVariable[2]);
+                    int parsedTotalPistons = Integer.parseInt(parsedVariable[3]);
+                    if (parsedPistonNumber > parsedTotalPistons || parsedTotalPistons == 1) {
+                        pistonNumber = 1;
+                        totalPistons = 2;
+                    } else {
+                        pistonNumber = parsedPistonNumber;
+                        totalPistons = parsedTotalPistons;
+                    }
+
+                    final int camMultiplier;
+                    switch (parsedVariable[parsedVariable.length - 1]) {
+                        case "crank": {
+                            camMultiplier = 1;
+                            break;
+                        }
+                        case "cam": {
+                            camMultiplier = 2;
+                            break;
+                        }
+                        default: {
+                            //Invaild variable.
+                            return new ComputedVariable(false);
+                        }
+                    }
+                    final int offset = parsedVariable.length == 6 ? camMultiplier * Integer.parseInt(parsedVariable[4]) : 0;
+                    final double sector = (360D * camMultiplier) / totalPistons;
+                    return new ComputedVariable(this, variable, partialTicks -> {
+                        //Map the shaft rotation to a value between 0 and 359.99...
+                        double shaftRotation = Math.floorMod(Math.round(10 * (offset + getEngineRotation(partialTicks))), Math.round(3600D * camMultiplier)) / 10;
+
+                        //If the crank is in the requested sector, return 1, otherwise return 0.
+                        return ((sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
+                    }, true);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
+            }
+        }
     }
 
     //--------------------START OF ENGINE STATE CHANGE METHODS--------------------
@@ -1041,7 +935,8 @@ public class PartEngine extends APart {
     }
 
     public void handStartEngine() {
-        setVariable(HAND_STARTER_VARIABLE, 1);
+    	magnetoVar.setTo(1, false);
+    	handStarterVar.setTo(1, false);
 
         //Add a small amount to the starter level from the player's hand.
         starterLevel += 4;
@@ -1050,10 +945,10 @@ public class PartEngine extends APart {
     public void autoStartEngine() {
         //Only engage auto-starter if we aren't running and we have the right fuel.
         if (!running && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
-            setVariable(MAGNETO_VARIABLE, 1);
+        	magnetoVar.setTo(1, false);
             if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                 autoStarterEngaged = true;
-                setVariable(ELECTRIC_STARTER_VARIABLE, 1);
+                electricStarterVar.setTo(1, false);
             }
         }
     }
@@ -1073,7 +968,7 @@ public class PartEngine extends APart {
     public void backfireEngine() {
         //Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
         backfired = true;
-        rpm -= currentMaxRPM < 15000 ? Math.round((0.05*rpm)+((hours*0.05)-25)) : Math.round((0.1*rpm)+((hours*0.1)-50));
+        rpm -= maxRPMVar.currentValue < 15000 ? Math.round((0.05 * rpm) + ((hours * 0.05) - 25)) : Math.round((0.1 * rpm) + ((hours * 0.1) - 50));
     }
 
     public void badShiftEngine() {
@@ -1092,33 +987,33 @@ public class PartEngine extends APart {
 
     //--------------------START OF ENGINE GEAR METHODS--------------------
 
-    public float getGearshiftRotation() {
-        return currentIsAutomatic != 0 ? Math.min(1, currentGear) * 15F : currentGear * 5;
+    public double getGearshiftRotation() {
+        return isAutomaticVar.isActive ? Math.min(1, currentGearVar.currentValue) * 15F : currentGearVar.currentValue * 5;
     }
 
     public float getGearshiftPosition_Vertical() {
-        if (currentGear < 0) {
+        if (currentGearVar.currentValue < 0) {
             return definition.engine.gearRatios.size() % 2 == 0 ? 15 : -15;
-        } else if (currentGear == 0) {
+        } else if (currentGearVar.currentValue == 0) {
             return 0;
         } else {
-            return currentGear % 2 == 0 ? -15 : 15;
+            return currentGearVar.currentValue % 2 == 0 ? -15 : 15;
         }
     }
 
-    public float getGearshiftPosition_Horizontal() {
+    public double getGearshiftPosition_Horizontal() {
         int columns = (definition.engine.gearRatios.size()) / 2;
         int firstColumnAngle = columns / 2 * -5;
         float columnAngleDelta = columns != 1 ? -firstColumnAngle * 2 / (columns - 1) : 0;
-        if (currentGear < 0) {
+        if (currentGearVar.currentValue < 0) {
             return -firstColumnAngle;
-        } else if (currentGear == 0) {
+        } else if (currentGearVar.currentValue == 0) {
             return 0;
         } else {
             //Divide the currentGear-1 by two to get our column (0 for column 1, 1 for 2).
             //Then add multiply that by columnAngleDelta to get our delta for this column.
             //Return that value, plus the initial angle.
-            return firstColumnAngle + (currentGear - 1) / 2 * columnAngleDelta;
+            return firstColumnAngle + (currentGearVar.currentValue - 1) / 2 * columnAngleDelta;
         }
     }
 
@@ -1127,21 +1022,20 @@ public class PartEngine extends APart {
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
             //Check to make sure we can shift.
-            if (currentGear == forwardsGears) {
+            if (currentGearVar.currentValue == forwardsGears) {
                 //Already at highest gear, don't process things.
                 return false;
-            } else if (currentGear == 0) {
+            } else if (currentGearVar.currentValue == 0) {
                 //Neutral to 1st.
                 nextGear = 1;
-                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse || currentForceShift != 0;
+                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse || forceShiftVar.isActive;
             } else {//Gear to next gear.
-                nextGear = (byte) (currentGear + 1);
+                nextGear = (byte) (currentGearVar.currentValue + 1);
                 doShift = true;
             }
 
             if (doShift) {
-                currentGear = nextGear;
-                setVariable(GEAR_VARIABLE, currentGear);
+                currentGearVar.setTo(nextGear, false);
                 shiftCooldown = definition.engine.shiftSpeed;
                 upshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
@@ -1159,21 +1053,20 @@ public class PartEngine extends APart {
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
             //Check to make sure we can shift.
-            if (currentGear < 0 && -currentGear == reverseGears) {
+            if (currentGearVar.currentValue < 0 && -currentGearVar.currentValue == reverseGears) {
                 //Already at lowest gear.
                 return false;
-            } else if (currentGear == 0) {
+            } else if (currentGearVar.currentValue == 0) {
                 //Neutral to 1st reverse.
                 nextGear = -1;
-                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse || currentForceShift != 0;
+                doShift = world.isClient() || vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse || forceShiftVar.isActive;
             } else {//Gear to next gear.
-                nextGear = (byte) (currentGear - 1);
+                nextGear = (byte) (currentGearVar.currentValue - 1);
                 doShift = true;
             }
-
+            
             if (doShift) {
-                currentGear = nextGear;
-                setVariable(GEAR_VARIABLE, currentGear);
+                currentGearVar.setTo(nextGear, false);
                 shiftCooldown = definition.engine.shiftSpeed;
                 downshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
@@ -1188,15 +1081,14 @@ public class PartEngine extends APart {
 
     public void shiftNeutral() {
         if (definition.engine.jetPowerFactor == 0) {
-            if (currentGear != 0) {//Any gear to neutral.
-                if (currentGear > 0) {
+            if (currentGearVar.currentValue != 0) {//Any gear to neutral.
+                if (currentGearVar.currentValue > 0) {
                     downshiftCountdown = definition.engine.clutchTime;
                 } else {
                     upshiftCountdown = definition.engine.clutchTime;
                 }
                 shiftCooldown = definition.engine.shiftSpeed;
-                currentGear = 0;
-                setVariable(GEAR_VARIABLE, currentGear);
+                currentGearVar.setTo(0, false);
                 if (!world.isClient()) {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_NEUTRAL));
                 }
@@ -1205,15 +1097,15 @@ public class PartEngine extends APart {
     }
 
     //--------------------START OF ENGINE PROPERTY METHODS--------------------
-    public float getTotalFuelConsumption() {
-        return currentFuelConsumption + currentSuperchargerFuelConsumption;
+    public double getTotalFuelConsumption() {
+        return fuelConsumptionVar.currentValue + superchargerFuelConsumptionVar.currentValue;
     }
 
     public double getTotalWearFactor() {
-        if (currentSuperchargerEfficiency > 1.0F) {
-            return currentWearFactor * currentSuperchargerEfficiency * ConfigSystem.settings.general.engineHoursFactor.value;
+        if (superchargerEfficiencyVar.currentValue > 1.0F) {
+            return wearFactorVar.currentValue * superchargerEfficiencyVar.currentValue * ConfigSystem.settings.general.engineHoursFactor.value;
         } else {
-            return currentWearFactor * ConfigSystem.settings.general.engineHoursFactor.value;
+            return wearFactorVar.currentValue * ConfigSystem.settings.general.engineHoursFactor.value;
         }
     }
 
@@ -1229,14 +1121,14 @@ public class PartEngine extends APart {
         engineForce.set(0D, 0D, 0D);
         engineForceValue = 0;
         //First get wheel forces, if we have friction to do so.
-        if (currentJetPowerFactor == 0 && wheelFriction != 0) {
+        if (!jetPowerFactorVar.isActive && wheelFriction != 0) {
             double wheelForce;
             //If running, use the friction of the wheels to determine the new speed.
-            if (running || electricStarterEngaged) {
-                if (rpm > currentRevlimitRPM && currentRevlimitRPM != -1) {
-                    wheelForce = -rpm / currentMaxRPM * Math.signum(currentGear) * 60;
+            if (running || electricStarterVar.isActive) {
+                if (rpm > revLimitRPMVar.currentValue && revLimitRPMVar.currentValue != -1) {
+                    wheelForce = -rpm / maxRPMVar.currentValue * Math.signum(currentGearVar.currentValue) * 60;
                 } else {
-                    wheelForce = (engineTargetRPM - rpm) / currentMaxRPM * currentGearRatio * vehicleOn.currentAxleRatio * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) * 0.6F * 30F;
+                    wheelForce = (engineTargetRPM - rpm) / maxRPMVar.currentValue * gearRatioVar.currentValue * vehicleOn.axleRatioVar.currentValue * (fuelConsumptionVar.currentValue + (superchargerFuelConsumptionVar.currentValue * superchargerEfficiencyVar.currentValue)) * 0.6F * 30F;
                 }
 
                 if (wheelForce != 0) {
@@ -1246,9 +1138,9 @@ public class PartEngine extends APart {
                         wheelForce *= vehicleOn.currentMass / 100000D * wheelFriction / Math.abs(wheelForce / 300F);
                         for (PartGroundDevice wheel : drivenWheels) {
                             if (wheelForce >= 0) {
-                                wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
+                                wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / gearRatioVar.currentValue / vehicleOn.axleRatioVar.currentValue, wheel.angularVelocity + 0.01D);
                             } else {
-                                wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
+                                wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / gearRatioVar.currentValue / vehicleOn.axleRatioVar.currentValue, wheel.angularVelocity - 0.01D);
                             }
                             wheel.skipAngularCalcs = true;
                         }
@@ -1261,7 +1153,7 @@ public class PartEngine extends APart {
                             }
                         }
                     }
-                } else if (currentGearRatio == 0) {
+                } else if (gearRatioVar.currentValue == 0) {
                     //Tell the wheels to not skid if they are already doing so.
                     for (PartGroundDevice wheel : drivenWheels) {
                         wheel.skipAngularCalcs = false;
@@ -1270,12 +1162,12 @@ public class PartEngine extends APart {
 
                 //Don't let us have negative engine force at low speeds.
                 //This causes odd reversing behavior when the engine tries to maintain speed.
-                if (((wheelForce < 0 && currentGearRatio > 0) || (wheelForce > 0 && currentGearRatio < 0)) && vehicleOn.velocity < 0.25) {
+                if (((wheelForce < 0 && gearRatioVar.currentValue > 0) || (wheelForce > 0 && gearRatioVar.currentValue < 0)) && vehicleOn.velocity < 0.25) {
                     wheelForce = 0;
                 }
             } else {
                 //Not running, do engine braking.
-                wheelForce = -rpm / currentMaxRPM * Math.signum(currentGear) * 30;
+                wheelForce = -rpm / maxRPMVar.currentValue * Math.signum(currentGearVar.currentValue) * 30;
             }
             engineForceValue += wheelForce;
             engineForce.set(0, 0, wheelForce).rotate(vehicleOn.orientation);
@@ -1284,21 +1176,21 @@ public class PartEngine extends APart {
 
         //If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
         //Propellers max out at about 25 force, so use that to determine this force.
-        if (currentJetPowerFactor > 0 && running) {
+        if (jetPowerFactorVar.isActive && running) {
             //First we need the air density (sea level 1.225) so we know how much air we are moving.
             //We then multiply that by the RPM and the fuel consumption to get the raw power produced
             //by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
             //Note that due to a lack of jet physics formulas available, this is "hacky math".
-            double safeRPMFactor = rpm / currentMaxSafeRPM;
-            double coreContribution = Math.max(10 * vehicleOn.airDensity * currentFuelConsumption * safeRPMFactor - currentBypassRatio, 0);
+            double safeRPMFactor = rpm / maxSafeRPMVar.currentValue;
+            double coreContribution = Math.max(10 * vehicleOn.airDensity * fuelConsumptionVar.currentValue * safeRPMFactor - bypassRatioVar.currentValue, 0);
 
             //The fan portion is calculated similarly to how propellers are calculated.
             //This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
             //Again, this is "hacky math", as for some reason there's no data on fan pitches.
             //In this case, however, we don't care about the fuelConsumption as that's only used by the core.
             double fanVelocityFactor = (0.0254 * 250 * rpm / 60 / 20 - engineAxialVelocity) / 200D;
-            double fanContribution = 10 * vehicleOn.airDensity * safeRPMFactor * fanVelocityFactor * currentBypassRatio;
-            double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * currentJetPowerFactor;
+            double fanContribution = 10 * vehicleOn.airDensity * safeRPMFactor * fanVelocityFactor * bypassRatioVar.currentValue;
+            double thrust = (vehicleOn.reverseThrustVar.isActive ? -(coreContribution + fanContribution) : coreContribution + fanContribution) * jetPowerFactorVar.currentValue;
 
             //Add the jet force to the engine.  Use the engine rotation to define the power vector.
             engineForceValue += thrust;
@@ -1314,7 +1206,6 @@ public class PartEngine extends APart {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setBoolean("running", running);
-        data.setDouble(HOURS_VARIABLE, hours);
         data.setDouble("rpm", rpm);
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);

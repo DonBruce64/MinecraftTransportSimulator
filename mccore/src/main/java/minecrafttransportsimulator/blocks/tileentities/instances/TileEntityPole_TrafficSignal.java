@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.LightType;
@@ -27,11 +28,11 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
         if (linkedController != null) {
             //Remove all old lights, then add our new one.
             for (LightType light : LightType.values()) {
-                light.lightNames.forEach(name -> setVariable(name, 0));
+                light.lightNames.forEach(name -> getOrCreateVariable(name).setTo(0, false));
             }
             if (linkedController.isValid) {
                 for (SignalGroup group : linkedController.signalGroups.get(axis)) {
-                    group.currentLight.lightNames.forEach(name -> setVariable(name, 1));
+                    group.currentLight.lightNames.forEach(name -> getOrCreateVariable(name).setTo(1, false));
                 }
             } else {
                 linkedController = null;
@@ -40,12 +41,12 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("linked"):
-                return linkedController != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> linkedController != null ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 }

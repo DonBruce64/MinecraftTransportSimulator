@@ -15,6 +15,20 @@ public abstract class AJSONInteractableEntity extends AJSONMultiModelProvider {
     @JSONDescription("A list of instruments definitions.  Instrument definitions are used to tell MTS where to render instruments on the object, and where they correspond to on the HUD.  They may also specfy which part the instrument goes to.")
     public List<JSONInstrumentDefinition> instruments;
 
+    @JSONDescription("A list of custom keybinds.  These will show up in the overlay and perform the requested actions when pressed.  A max of four customs are available for everything on a vehicle, parts included.")
+    public List<JSONCustomKeybind> customKeybinds;
+
+    public static class JSONCustomKeybind {
+        @JSONDescription("The name of this keybind.  Will be displayed on the overlay and will be grouped together with same-named keybinds.")
+        public String name;
+
+        @JSONDescription("The index of the key to use.  This determines which bound key should be attached to this binding.")
+        public byte keyIndex;
+
+        @JSONDescription("The action to perform when this keybind is pressed.")
+        public JSONAction action;
+    }
+
     @Deprecated
     public List<JSONConnection> connections;
     @Deprecated

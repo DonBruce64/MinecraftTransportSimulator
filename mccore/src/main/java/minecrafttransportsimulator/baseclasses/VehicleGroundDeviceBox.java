@@ -27,7 +27,7 @@ public class VehicleGroundDeviceBox {
     private final boolean isFront;
     private final boolean isLeft;
     private boolean isLongTread;
-    private int treadZBestOffset;
+    private double treadZBestOffset;
     private float climbHeight;
     private static final Set<CollisionType> groundBoxCollisionTypes = new HashSet<>(Arrays.asList(CollisionType.BLOCK));
     private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false, groundBoxCollisionTypes);
@@ -185,6 +185,7 @@ public class VehicleGroundDeviceBox {
         solidBox.localCenter.x *= 1D / groundDevices.size();
         solidBox.localCenter.z *= 1D / groundDevices.size();
         solidBoxNormalPos.set(solidBox.localCenter);
+        treadZBestOffset = solidBoxNormalPos.z;
 
         //Update liquid box local center and size.
         liquidBox.localCenter.set(0D, Double.MAX_VALUE, 0D);
@@ -235,23 +236,26 @@ public class VehicleGroundDeviceBox {
         }
         Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
         if (!groundDevices.isEmpty()) {
-            if (updateGroundDeviceTreadPosition) {
-                int treadZCurrentOffset = isLongTread ? (int) -(solidBoxNormalPos.z > 0 ? Math.floor(solidBoxNormalPos.z) : Math.ceil(solidBoxNormalPos.z)) : 0;
-                boolean treadZFoundBestOffset = treadZCurrentOffset == 0; //Not a tread or short tread, ensures we use current offset.
-                int treadZLastGroundOffset = 0;
+            if (updateGroundDeviceTreadPosition && isLongTread) {
+                //If we are over an air block, move the collision towards the center to account for this.
+                //Of all the places we collide, pick the one that's the most collided.
+                int treadSteps;
+                double treadZCurrentOffset;
+                if (solidBoxNormalPos.z > 0) {
+                    treadSteps = (int) (Math.floor(solidBoxNormalPos.z) + 1) * 2;
+                } else {
+                    treadSteps = (int) (Math.floor(-solidBoxNormalPos.z) + 1) * 2;
+                }
+                treadZCurrentOffset = solidBoxNormalPos.z;
+                treadZBestOffset = solidBoxNormalPos.z;
 
-                //Search for deepest collision at farthest point.
-                //Start at the inner-most offset point, and go out.
-                //This ensure if all points are equal, the farthest one is selected.
-                while (true) {
+                boolean foundCollidingBlock = false;
+                for (int currentStep = 0; currentStep <= treadSteps; ++currentStep) {
                     solidBox.localCenter.set(solidBoxNormalPos);
-                    solidBox.localCenter.z += treadZCurrentOffset;
+                    solidBox.localCenter.z = treadZCurrentOffset;
                     contactPoint.set(solidBox.localCenter);
                     contactPoint.add(0D, -solidBox.heightRadius, 0D);
                     solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
-                    vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-                    contactedEntity = checkEntityCollisions(vehicleMotionOffset);
-                    isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
 
                     //Check for air at position and below.  We might not be colliding with any blocks, but might have air below some.
                     //We need to not be either in or on top of air blocks to function properly.
@@ -264,31 +268,37 @@ public class VehicleGroundDeviceBox {
                         ++solidBox.globalCenter.y;
                     }
                     if (!airAtPosition) {
-                        treadZLastGroundOffset = treadZCurrentOffset;
+                        //Check the collisions at this solid block area to see if it's more collided than others.
+                        //Use a debounce of 0.02 here to prevent small collisions from changing the boxes constantly.
+                        vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
                         if (-solidBox.currentCollisionDepth.y > collisionDepth) {
+                            foundCollidingBlock = true;
                             collisionDepth = -solidBox.currentCollisionDepth.y;
                             treadZBestOffset = treadZCurrentOffset;
-                            treadZFoundBestOffset = true;
                         }
                     }
 
-                    if (treadZCurrentOffset > 0) {
-                        --treadZCurrentOffset;
-                    } else if (treadZCurrentOffset < 0) {
-                        ++treadZCurrentOffset;
-                    } else {
-                        break;
-                    }
+                    //Adjust offset and try again, if applicable.
+                    treadZCurrentOffset -= solidBoxNormalPos.z / treadSteps;
                 }
 
-                //If we didn't find a best offset, just use the furthest non-air block.
-                if (!treadZFoundBestOffset) {
-                    treadZBestOffset = treadZLastGroundOffset;
+                //If we never found a colliding block to have a good offset, re-do some calculations since these won't have been done before.
+                if (!foundCollidingBlock) {
+                    solidBox.localCenter.set(solidBoxNormalPos);
+                    solidBox.localCenter.z = treadZBestOffset;
+                    contactPoint.set(solidBox.localCenter);
+                    contactPoint.add(0D, -solidBox.heightRadius, 0D);
+                    solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
+                    vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
                 }
+
+                //Always check for entities here since we don't in the above loop.
+                contactedEntity = checkEntityCollisions(vehicleMotionOffset);
+                isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
             } else {
-                //Just use current best offset for tread.
+                //Just use current best offset.  For wheels, this will just be 0 and won't matter.
                 solidBox.localCenter.set(solidBoxNormalPos);
-                solidBox.localCenter.z += treadZBestOffset;
+                solidBox.localCenter.z = treadZBestOffset;
                 contactPoint.set(solidBox.localCenter);
                 contactPoint.add(0D, -solidBox.heightRadius, 0D);
                 solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
@@ -296,18 +306,6 @@ public class VehicleGroundDeviceBox {
                 contactedEntity = checkEntityCollisions(vehicleMotionOffset);
                 isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
                 collisionDepth = -solidBox.currentCollisionDepth.y;
-            }
-
-            //If the treadZBestOffset isn't equal to 0, it means our last check wasn't the deepest, and we need to set to that one.
-            if (treadZBestOffset != 0) {
-                solidBox.localCenter.set(solidBoxNormalPos);
-                solidBox.localCenter.z += treadZBestOffset;
-                contactPoint.set(solidBox.localCenter);
-                contactPoint.add(0D, -solidBox.heightRadius, 0D);
-                solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
-                vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-                contactedEntity = checkEntityCollisions(vehicleMotionOffset);
-                isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
             }
 
             //If we are collided, do other things now to handle collision.

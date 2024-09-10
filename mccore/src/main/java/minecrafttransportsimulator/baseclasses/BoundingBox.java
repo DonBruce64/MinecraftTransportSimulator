@@ -147,7 +147,7 @@ public class BoundingBox {
             globalCenter.set(localCenter);
         }
         globalCenter.multiply(entity.scale).rotate(entity.orientation).add(entity.position);
-        if (definition != null) {
+        if (groupDef != null && (groupDef.collisionTypes.contains(CollisionType.ENTITY) || groupDef.collisionTypes.contains(CollisionType.VEHICLE))) {
             //Need to round box to prevent floating-point errors for player and entity collision.
             globalCenter.x = ((int) (globalCenter.x / HITBOX_CLAMP)) * HITBOX_CLAMP;
             globalCenter.y = ((int) (globalCenter.y / HITBOX_CLAMP)) * HITBOX_CLAMP;
@@ -292,8 +292,8 @@ public class BoundingBox {
         if (wireframeRenderable == null) {
             wireframeRenderable = new RenderableData(new RenderableVertices(false));
             if (definition != null) {
-                if (definition.variableName != null) {
-                    //Green for boxes that activate variables.
+                if (definition.action != null) {
+                    //Green for boxes that have actions.
                     wireframeRenderable.setColor(ColorRGB.GREEN);
                 } else if (groupDef != null && groupDef.collisionTypes.contains(CollisionType.BULLET)) {
                     //Orange for bullet collisions.

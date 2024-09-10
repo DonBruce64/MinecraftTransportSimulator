@@ -21,6 +21,7 @@ public abstract class ABuilderEntityBase extends Entity {
      * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
      **/
     private boolean needDataFromServer = true;
+    private int ticksWaitedForServerData;
     /**
      * Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
      * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
@@ -79,6 +80,12 @@ public abstract class ABuilderEntityBase extends Entity {
             if (needDataFromServer) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityCSHandshakeClient(InterfaceManager.clientInterface.getClientPlayer(), this));
                 needDataFromServer = false;
+            } else if (!loadedFromSavedNBT) {
+                if (ticksWaitedForServerData++ == 100) {
+                    //Re-send request for server data since it timed out.
+                    ticksWaitedForServerData = 0;
+                    needDataFromServer = true;
+                }
             }
         } else if (loadedFromSavedNBT) {
             //Send any packets to clients that requested them.

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
@@ -17,7 +17,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEntityFluidTankProvider {
@@ -28,25 +27,14 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
         this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, definition.decor.fuelCapacity) {
             @Override
             public double fill(String fluid, double maxAmount, boolean doFill) {
-                double amountFilled = maxAmount;
-                if (!isCreative) {
-                    double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase;
+                //Block filling of the tank if we haven't purchased anything.
+                if (!isCreative && !world.isClient()) {
+                    double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase - getFluidLevel();
                     if (maxAmount > amountPurchasedRemaining) {
                         maxAmount = amountPurchasedRemaining;
                     }
                 }
-                amountFilled = super.fill(fluid, maxAmount, doFill);
-                if (doFill) {
-                    fuelDispensedThisPurchase += amountFilled;
-                }
-                return amountFilled;
-            }
-
-            @Override
-            public double drain(String fluid, double maxAmount, boolean doDrain) {
-                double drained = super.drain(fluid, maxAmount, doDrain);
-                fuelDispensedThisConnection += drained;
-                return drained;
+                return super.fill(fluid, maxAmount, doFill);
             }
         };
         world.addEntity(tank);
@@ -111,27 +99,23 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
-    public void fuelVehicle(double amount) {
-        //Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
-        if (!world.isClient()) {
-            //If we have room for fuel, try to add it to the vehicle.
-            if (amount > 0 && tank.getFluidLevel() > 0) {
-                double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), amount, false);
-                if (amountToFill > 0) {
-                    //Keep fluid reference since if we drain the tank fully it won't persist to fill the vehicle tank.
-                    String fluid = tank.getFluid();
-                    double amountToDrain = tank.drain(tank.getFluid(), amountToFill, true);
-                    connectedVehicle.fuelTank.fill(fluid, amountToDrain, true);
-                }
-            } else {
-                //No more fuel in tank or purchased.  Disconnect vehicle.
-                setConnection(null);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
-                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELPUMP_EMPTY));
-                }
+    public double fuelVehicle(double amount) {
+        //If we have room for fuel, try to add it to the vehicle.
+        if (amount > 0 && tank.getFluidLevel() > 0) {
+            double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), amount, false);
+            if (amountToFill > 0) {
+                //Keep fluid reference since if we drain the tank fully it won't persist to fill the vehicle tank.
+                String fluid = tank.getFluid();
+                double amountToDrain = tank.drain(tank.getFluid(), amountToFill, true);
+                connectedVehicle.fuelTank.fill(fluid, amountToDrain, true);
+                return amountToDrain;
             }
+        } else {
+            //No more fuel in tank.  Disconnect vehicle.
+            playerUsing.sendPacket(new PacketPlayerChatMessage(playerUsing, LanguageSystem.INTERACT_FUELPUMP_EMPTY));
+            setConnection(null);
         }
+        return 0;
     }
 
     @Override
@@ -140,21 +124,21 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("fuelpump_active"):
-                return connectedVehicle != null ? 1 : 0;
-            case ("fuelpump_stored"):
-                return tank.getFluidLevel();
+                return new ComputedVariable(this, variable, partialTicks -> connectedVehicle != null ? 1 : 0, false);
             case ("fuelpump_dispensed"):
-                return fuelDispensedThisConnection;
+                return new ComputedVariable(this, variable, partialTicks -> fuelDispensedThisConnection, false);
             case ("fuelpump_free"):
-                return isCreative ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> isCreative ? 1 : 0, false);
             case ("fuelpump_purchased"):
-                return fuelPurchased;
+                return new ComputedVariable(this, variable, partialTicks -> fuelPurchased, false);
+            case ("fuelpump_stored"):
+                return new ComputedVariable(this, variable, partialTicks -> tank.getFluidLevel(), false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

@@ -42,19 +42,4 @@ public class TileEntityRadio extends TileEntityDecor {
             return false;
         }
     }
-
-    @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //Radio-specific variables.
-        switch (variable) {
-            case ("radio_active"):
-                return radio.isPlaying() ? 1 : 0;
-            case ("radio_volume"):
-                return radio.volume;
-            case ("radio_preset"):
-                return radio.preset;
-        }
-
-        return super.getRawVariableValue(variable, partialTicks);
-    }
 }

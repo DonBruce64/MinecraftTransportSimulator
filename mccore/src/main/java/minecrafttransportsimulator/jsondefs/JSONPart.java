@@ -382,6 +382,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
+        @JSONDescription("Normally, reloading in the hand swaps clips.  If set, this won't happen, and rather the gun will load bullets with other bullets.")
+        public boolean isClipless;
+
         @JSONDescription("If set, then this gun will never be able to be reloaded.  Useful for single-use weapons.")
         public boolean blockReloading;
 
@@ -414,6 +417,12 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("How long, in ticks, this gun takes to reload.  This is applied for hand-held reloading as well as automatic reloading.  This value should be similar to the duration of your gun _reloading sound to ensure players don't get confused about why they can't fire their guns.")
         public int reloadTime;
+
+        @JSONDescription("Like reloadTime, but this is applied only at the start of a reload. Used for opening breaches on multiple bullet guns where there's a start/end animation.")
+        public int reloadStartTime;
+
+        @JSONDescription("Like reloadStartTime, but the end.")
+        public int reloadEndTime;
 
         @JSONDescription("How long, in ticks, this gun has to wait after firing a shot to reload.  This differs from reloadTime, as it blocks the reload sequence from starting, rather than changes how long it takes.")
         public int reloadDelay;
@@ -598,6 +607,14 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
 
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Inputs for the crafting type effector.")
+        public List<String> crafterInputs;
+
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Outputs for the crafting type effector.")
+        public List<String> crafterOutputs;
+
         @Deprecated
         public int placerDelay;
     }
@@ -622,7 +639,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
         DROPPER,
         @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
-        SPRAYER;
+        SPRAYER,
+        @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.  Note that while this can put the resulting item into any inventory, it can only pull from linked inventories that have feedsVehicles as true.  Use this for separate input/output inventories if desired.")
+        CRAFTER;
     }
 
     @Deprecated

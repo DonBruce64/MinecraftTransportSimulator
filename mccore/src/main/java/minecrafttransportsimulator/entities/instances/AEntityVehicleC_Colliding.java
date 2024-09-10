@@ -53,23 +53,19 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         world.beginProfiling("VehicleC_Level", true);
 
         //Set vectors to current velocity and orientation.
-        world.beginProfiling("SetVectors", true);
         headingVector.set(0D, 0D, 1D);
         headingVector.rotate(orientation);
         axialVelocity = Math.abs(motion.dotProduct(headingVector, false));
 
         //Update mass.
-        world.beginProfiling("SetMass", false);
         currentMass = getMass();
 
         //Auto-close any open doors that should be closed.
         //Only do this once a second to prevent lag.
-        if (velocity > 0.5 && ticksExisted % 20 == 0) {
-            world.beginProfiling("CloseDoors", false);
-            variables.keySet().removeIf(s -> s.startsWith("door"));
+        if (!world.isClient() && velocity > 0.5 && ticksExisted % 20 == 0) {
+            closeDoors();
         }
 
-        world.endProfiling();
         world.endProfiling();
     }
 

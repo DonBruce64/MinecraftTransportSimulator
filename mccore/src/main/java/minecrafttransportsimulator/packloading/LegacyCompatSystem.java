@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -14,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -23,6 +25,7 @@ import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONAction;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -80,6 +83,32 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem {
+
+    public static final Map<String, String> variableChanges = new HashMap<>();
+
+    static {
+        variableChanges.put("maxRPM", "engine_rpm_max");
+        variableChanges.put("maxSafeRPM", "engine_rpm_safe");
+        variableChanges.put("revlimitRPM", "engine_rpm_revlimit");
+        variableChanges.put("revlimitBounce", "engine_rpm_revlimit_bounce");
+        variableChanges.put("revResistance", "engine_rpm_revresistance");
+        variableChanges.put("idleRPM", "engine_rpm_idle");
+        variableChanges.put("startRPM", "engine_rpm_start");
+        variableChanges.put("stallRPM", "engine_rpm_stall");
+        variableChanges.put("starterPower", "engine_starter_power");
+        variableChanges.put("fuelConsumption", "engine_fuel_consumption");
+        variableChanges.put("heatingCoefficient", "engine_heating_coefficient");
+        variableChanges.put("coolingCoefficient", "engine_cooling_coefficient");
+        variableChanges.put("superchargerFuelConsumption", "engine_supercharger_fuel_consumption");
+        variableChanges.put("superchargerEfficiency", "engine_supercharger_efficiency");
+        variableChanges.put("gearRatio", "engine_gear_ratio");
+        variableChanges.put("forceShift", "engine_forceshift");
+        variableChanges.put("isAutomatic", "engine_isautomatic");
+        variableChanges.put("engineWearFactor", "engine_wear_factor");
+        variableChanges.put("engineWinddownRate", "engine_winddown_rate");
+        variableChanges.put("jetPowerFactor", "engine_jet_power_factor");
+        variableChanges.put("bypassRatio", "engine_bypass_ratio");
+    }
 
     public static void performLegacyCompats(AJSONBase definition) {
         if (definition instanceof AJSONItem) {
@@ -173,6 +202,16 @@ public final class LegacyCompatSystem {
                     }
                 }
             }
+
+            //Update variable names.
+            if (provider.variableModifiers != null) {
+                provider.variableModifiers.forEach(modifier -> {
+                    String newVariable = variableChanges.get(modifier.variable);
+                    if (newVariable != null) {
+                        modifier.variable = newVariable;
+                    }
+                });
+            }
         }
 
         //Do JSON-specific compats.
@@ -210,20 +249,20 @@ public final class LegacyCompatSystem {
                 JSONVehicle vehicleDef = (JSONVehicle) provider;
                 if (vehicleDef.motorized.litVariable == null) {
                     if (vehicleDef.motorized.hasRunningLights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "running_light";
                     } else if (vehicleDef.motorized.hasHeadlights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "headlight";
                     } else if (vehicleDef.motorized.hasNavLights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "navigation_light";
                     } else if (vehicleDef.motorized.hasStrobeLights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "strobe_light";
                     } else if (vehicleDef.motorized.hasTaxiLights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "taxi_light";
                     } else if (vehicleDef.motorized.hasLandingLights) {
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "landing_light";
                     } else {
                         //Probably a trailer, just use running lights.
-                        vehicleDef.motorized.litVariable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                        vehicleDef.motorized.litVariable = "running_light";
                     }
                 }
             }
@@ -1749,7 +1788,7 @@ public final class LegacyCompatSystem {
 
                 JSONText nameTextObject = new JSONText();
                 nameTextObject.pos = new Point3D(0, -500, 0);
-                nameTextObject.fieldName = "Beacon Name";
+                nameTextObject.fieldName = TileEntityBeacon.BEACON_NAME_TEXT_KEY;
                 nameTextObject.defaultText = "NONE";
                 nameTextObject.maxLength = 5;
                 nameTextObject.color = ColorRGB.WHITE;
@@ -1757,7 +1796,7 @@ public final class LegacyCompatSystem {
 
                 JSONText glideslopeTextObject = new JSONText();
                 glideslopeTextObject.pos = new Point3D(0, -500, 0);
-                glideslopeTextObject.fieldName = "Glide Slope (Deg)";
+                glideslopeTextObject.fieldName = TileEntityBeacon.BEACON_GLIDESLOPE_TEXT_KEY;
                 glideslopeTextObject.defaultText = "10.0";
                 glideslopeTextObject.maxLength = 5;
                 glideslopeTextObject.color = ColorRGB.WHITE;
@@ -1765,7 +1804,7 @@ public final class LegacyCompatSystem {
 
                 JSONText bearingTextObject = new JSONText();
                 bearingTextObject.pos = new Point3D(0, -500, 0);
-                bearingTextObject.fieldName = "Bearing (Deg)";
+                bearingTextObject.fieldName = TileEntityBeacon.BEACON_BEARING_TEXT_KEY;
                 bearingTextObject.defaultText = "0.0";
                 bearingTextObject.maxLength = 5;
                 bearingTextObject.color = ColorRGB.WHITE;
@@ -2326,7 +2365,20 @@ public final class LegacyCompatSystem {
             for (JSONCollisionGroup group : interactableDef.collisionGroups) {
                 for (JSONCollisionBox box : group.collisions) {
                     if (box.variableName != null && box.variableType == null) {
-                        box.variableType = JSONCollisionBox.VariableType.TOGGLE;
+                        box.variableType = JSONAction.ActionType.TOGGLE;
+                    }
+                    if (box.variableName != null) {
+                        box.action = new JSONAction();
+                        box.action.action = box.variableType;
+                        box.action.variable = box.variableName;
+                        box.action.value = box.variableValue;
+                        box.action.clampMin = box.clampMin;
+                        box.action.clampMax = box.clampMax;
+                        box.variableType = null;
+                        box.variableName = null;
+                        box.variableValue = 0;
+                        box.clampMin = 0;
+                        box.clampMax = 0;
                     }
                 }
             }
@@ -2463,41 +2515,41 @@ public final class LegacyCompatSystem {
                         String lowerCaseName = object.name.toLowerCase(Locale.ROOT);
                         JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                         if (lowerCaseName.contains("brakelight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.BRAKE_VARIABLE;
+                            activeAnimation.variable = "brake";
                         } else if (lowerCaseName.contains("backuplight")) {
                             activeAnimation.variable = "engine_reversed_1";
                         } else if (lowerCaseName.contains("daytimelight")) {
                             activeAnimation.variable = "engines_on";
                         } else if (lowerCaseName.contains("navigationlight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE;
+                            activeAnimation.variable = "navigation_light";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasNavLights = true;
                         } else if (lowerCaseName.contains("strobelight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.STROBELIGHT_VARIABLE;
+                            activeAnimation.variable = "strobe_light";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasStrobeLights = true;
                         } else if (lowerCaseName.contains("taxilight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.TAXILIGHT_VARIABLE;
+                            activeAnimation.variable = "taxi_light";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTaxiLights = true;
                         } else if (lowerCaseName.contains("landinglight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE;
+                            activeAnimation.variable = "landing_light";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasLandingLights = true;
                         } else if (lowerCaseName.contains("runninglight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE;
+                            activeAnimation.variable = "running_light";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasRunningLights = true;
                         } else if (lowerCaseName.contains("headlight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.HEADLIGHT_VARIABLE;
+                            activeAnimation.variable = "headlight";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasHeadlights = true;
                         } else if (lowerCaseName.contains("leftturnlight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE;
+                            activeAnimation.variable = "left_turn_signal";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTurnSignals = true;
                         } else if (lowerCaseName.contains("rightturnlight")) {
-                            activeAnimation.variable = EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE;
+                            activeAnimation.variable = "right_turn_signal";
                             if (definition instanceof JSONVehicle)
                                 ((JSONVehicle) definition).motorized.hasTurnSignals = true;
                         } else if (lowerCaseName.contains("emergencylight")) {

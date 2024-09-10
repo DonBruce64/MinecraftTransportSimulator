@@ -39,7 +39,7 @@ public abstract class BipedModelMixin<T extends LivingEntity> {
                     renderCurrentRiderStanding = seat.definition.seat.standing;
 
                     if (seat.vehicleOn != null && seat.placementDefinition.isController) {
-                        double turningAngle = seat.vehicleOn.rudderInput / 2D;
+                        double turningAngle = seat.vehicleOn.rudderInputVar.currentValue / 2D;
                         model.rightArm.xRot = (float) Math.toRadians(-75 + turningAngle);
                         model.rightArm.yRot = -yArmAngleRad;
                         model.rightArm.zRot = 0;
@@ -93,7 +93,7 @@ public abstract class BipedModelMixin<T extends LivingEntity> {
                     }
 
                     //If needed, set rotation on off-hand.
-                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.currentIsTwoHandedness != 0) {
+                    if (gunEntity.activeGun.isHandHeldGunAimed || gunEntity.activeGun.twoHandedVar.isActive) {
                         heldVector = heldVector.copy();
                         heldVector.x = 0.3125 * 2 - heldVector.x;
                         heldVectorLength = heldVector.length();

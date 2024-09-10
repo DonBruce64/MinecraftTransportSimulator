@@ -1,48 +1,42 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.LinkedHashMap;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
- * Packet sent to entities to update their text lines.  This is sent from the
+ * Packet sent to entities to update their text.  This is sent from the
  * text GUI to servers to update the text, and then sent back to all clients for syncing.
  *
  * @author don_bruce
  */
 public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>> {
-    private final LinkedHashMap<String, String> textLines;
+    private final String textKey;
+    private final String textValue;
 
-    public PacketEntityTextChange(AEntityD_Definable<?> entity, LinkedHashMap<String, String> textLines) {
+    public PacketEntityTextChange(AEntityD_Definable<?> entity, String textKey, String textValue) {
         super(entity);
-        this.textLines = textLines;
+        this.textKey = textKey;
+        this.textValue = textValue;
     }
 
     public PacketEntityTextChange(ByteBuf buf) {
         super(buf);
-        byte textLineCount = buf.readByte();
-        this.textLines = new LinkedHashMap<>();
-        for (byte i = 0; i < textLineCount; ++i) {
-            textLines.put(readStringFromBuffer(buf), readStringFromBuffer(buf));
-        }
+        this.textKey = readStringFromBuffer(buf);
+        this.textValue = readStringFromBuffer(buf);
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        buf.writeByte(textLines.size());
-        textLines.forEach((key, value) -> {
-            writeStringToBuffer(key, buf);
-            writeStringToBuffer(value, buf);
-        });
+        writeStringToBuffer(textKey, buf);
+        writeStringToBuffer(textValue, buf);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
-        entity.updateText(textLines);
+        entity.updateText(textKey, textValue);
         return true;
     }
 }

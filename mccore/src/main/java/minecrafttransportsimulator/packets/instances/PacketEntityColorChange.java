@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -42,20 +44,22 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
-        IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(newItem, recipeIndex, false, true, false, false))) {
-            //Remove livery materials (if required) and set new subName.
-            if (!player.isCreative()) {
-                inventory.removeMaterials(newItem, recipeIndex, false, true, false);
+        //Make sure we can handle this packet by removing materials if applicable.
+        if (!world.isClient() && !player.isCreative()) {
+            IWrapperInventory inventory = player.getInventory();
+            List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(newItem, recipeIndex, false, true, false, false);
+            if (inventory.hasMaterials(materials)) {
+                inventory.removeMaterials(materials);
+            } else {
+                return false;
             }
-            entity.updateSubDefinition(newItem.subDefinition.subName);
-
-            //If we have parts, and have a second tone, change parts to match if possible.
-            if (entity instanceof AEntityF_Multipart) {
-                ((AEntityF_Multipart<?>) entity).parts.forEach(part -> part.updateTone(true));
-            }
-            return true;
         }
-        return false;
+        entity.updateSubDefinition(newItem.subDefinition.subName);
+
+        //If we have parts, and have a second tone, change parts to match if possible.
+        if (entity instanceof AEntityF_Multipart) {
+            ((AEntityF_Multipart<?>) entity).parts.forEach(part -> part.updateTone(true));
+        }
+        return true;
     }
 }

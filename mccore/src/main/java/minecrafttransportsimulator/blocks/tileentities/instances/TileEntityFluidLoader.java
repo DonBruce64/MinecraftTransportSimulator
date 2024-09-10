@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
@@ -14,17 +15,31 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEntityFluidTankProvider {
     private final EntityFluidTank tank;
+    private final ComputedVariable loadingActiveVar;
+    private final ComputedVariable unloadingActiveVar;
 
     public TileEntityFluidLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
         this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, definition.decor.fuelCapacity);
         world.addEntity(tank);
+        addVariable(loadingActiveVar = new ComputedVariable(this, "tank_loading_active"));
+        addVariable(unloadingActiveVar = new ComputedVariable(this, "tank_unloading_active"));
     }
 
     @Override
     public void remove() {
         super.remove();
         tank.remove();
+    }
+
+    @Override
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
+        switch (variable) {
+            case ("tank_buffer_active"):
+                return new ComputedVariable(this, variable, partialTicks -> tank.getFluidLevel() > 0 ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+        }
     }
 
     @Override
@@ -53,8 +68,10 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
         if (amountToLoad > 0) {
             amountToLoad = tank.drain(fluidToLoad, amountToLoad, true);
             connectedPart.tank.fill(fluidToLoad, amountToLoad, true);
+            loadingActiveVar.setActive(amountToLoad > 0, true);
         } else {
             updateNearestPart();
+            loadingActiveVar.setActive(false, true);
         }
     }
 
@@ -65,8 +82,10 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
         if (amountToUnload > 0) {
             amountToUnload = tank.fill(fluidToUnload, amountToUnload, true);
             connectedPart.tank.drain(fluidToUnload, amountToUnload, true);
+            unloadingActiveVar.setActive(amountToUnload > 0, true);
         } else {
             updateNearestPart();
+            unloadingActiveVar.setActive(false, true);
         }
     }
 

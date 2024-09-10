@@ -7,6 +7,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -76,10 +77,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Generic constructor for no target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
-        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber) {
+        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.lastLoadedBullet);
         this.gun = gun;
-        this.bulletNumber = gun.bulletsFired;
+        this.bulletNumber = bulletNumber;
         gun.currentBullet = this;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter / 1000D / 2D;
@@ -102,16 +103,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Positional target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
-        this(position, motion, orientation, gun);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, Point3D targetPosition) {
+        this(position, motion, orientation, gun, bulletNumber);
         this.targetPosition = targetPosition;
     }
 
     /**
      * Engine target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
-        this(position, motion, orientation, gun, engineTargeted.position);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, PartEngine engineTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, engineTargeted.position);
         this.engineTargeted = engineTargeted;
         engineTargeted.vehicleOn.missilesIncoming.add(this);
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
@@ -120,8 +121,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * IWrapper target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, IWrapperEntity externalEntityTargeted) {
-        this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, IWrapperEntity externalEntityTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }
@@ -655,25 +656,27 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("bullet_hit"):
-                return lastHit != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> lastHit != null ? 1 : 0, false);
             case ("bullet_burntime"):
-                return ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted;
+                return new ComputedVariable(this, variable, partialTicks -> ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted, false);
             case ("bullet_hit_block"):
-                return HitType.BLOCK == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BLOCK == lastHit ? 1 : 0, false);
             case ("bullet_hit_entity"):
-                return HitType.ENTITY == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ENTITY == lastHit ? 1 : 0, false);
             case ("bullet_hit_vehicle"):
-                return HitType.VEHICLE == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.VEHICLE == lastHit ? 1 : 0, false);
             case ("bullet_hit_armor"):
-                return HitType.ARMOR == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMOR == lastHit ? 1 : 0, false);
             case ("bullet_hit_burst"):
-                return HitType.BURST == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BURST == lastHit ? 1 : 0, false);
+            case ("bullet_hit_penetrated"):
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMORPEN == lastHit ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override
@@ -691,6 +694,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         ENTITY,
         VEHICLE,
         ARMOR,
-        BURST
+        ARMORPEN,
+        BURST,
     }
 }

@@ -18,26 +18,31 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 public class PacketPartGun extends APacketEntity<PartGun> {
     private final Request stateRequest;
     private final ItemBullet bulletItem;
+    private final int bulletQty;
 
     public PacketPartGun(PartGun gun, Request stateRequest) {
         super(gun);
         this.stateRequest = stateRequest;
         this.bulletItem = null;
+        this.bulletQty = 0;
     }
 
-    public PacketPartGun(PartGun gun, ItemBullet bullet) {
+    public PacketPartGun(PartGun gun, ItemBullet bullet, int bulletQty) {
         super(gun);
-        this.stateRequest = Request.RELOAD;
+        this.stateRequest = Request.RELOAD_ONCLIENT;
         this.bulletItem = bullet;
+        this.bulletQty = bulletQty;
     }
 
     public PacketPartGun(ByteBuf buf) {
         super(buf);
         this.stateRequest = Request.values()[buf.readByte()];
-        if (stateRequest == Request.RELOAD) {
+        if (stateRequest == Request.RELOAD_ONCLIENT) {
             this.bulletItem = readItemFromBuffer(buf);
+            this.bulletQty = buf.readInt();
         } else {
             this.bulletItem = null;
+            this.bulletQty = 0;
         }
     }
 
@@ -45,20 +50,30 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         buf.writeByte(stateRequest.ordinal());
-        if (stateRequest == Request.RELOAD) {
+        if (stateRequest == Request.RELOAD_ONCLIENT) {
             writeItemToBuffer(bulletItem, buf);
+            buf.writeInt(bulletQty);
         }
     }
 
     @Override
     public boolean handle(AWrapperWorld world, PartGun gun) {
         switch (stateRequest) {
-            case RELOAD: {
-                gun.clientNextBullet = bulletItem;
+            case CLEAR_ONCLIENT: {
+                gun.clearBullets();
+                break;
+            }
+            case RELOAD_ONCLIENT: {
+                gun.setReloadVars(bulletItem, bulletQty);
+                break;
+            }
+            case RELOAD_HAND: {
+                gun.isHandHeldGunReloadRequested = true;
                 break;
             }
             case TRIGGER_ON: {
                 gun.playerHoldingTrigger = true;
+                gun.playerPressedTrigger = true;
                 break;
             }
             case TRIGGER_OFF: {
@@ -90,7 +105,9 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     }
 
     public static enum Request {
-        RELOAD(false),
+        CLEAR_ONCLIENT(false),
+        RELOAD_ONCLIENT(false),
+        RELOAD_HAND(false),
         TRIGGER_ON(true),
         TRIGGER_OFF(true),
         AIM_ON(true),

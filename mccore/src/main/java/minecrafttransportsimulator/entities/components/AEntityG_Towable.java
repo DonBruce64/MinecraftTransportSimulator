@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -37,8 +38,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> disconnectedTowingConnections = new ArrayList<>();
     private final List<TowingConnection> savedDisconnectedTowingConnections = new ArrayList<>();
-
-    public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
@@ -157,37 +156,35 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         }
 
         //If we have a connection request, handle it now.
-        int connectionRequestIndex = (int) getVariable(TOWING_CONNECTION_REQUEST_VARIABLE);
-        if (connectionRequestIndex != 0) {
+        if (towingConnectionVar.isActive) {
+        	//Don't handle requests on the client.  These get packets.
             if (!world.isClient()) {
-                //Don't handle requests on the client.  These get packets.
-                handleConnectionRequest(this, connectionRequestIndex - 1);
+                handleConnectionRequest(this, (int) towingConnectionVar.currentValue - 1);
             }
-            setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+            towingConnectionVar.setTo(0, false);
         } else if (!world.isClient() && !snapConnectionIndexes.isEmpty() && ticksExisted % (10 / snapConnectionIndexes.size()) == 0) {
             if (++lastSnapConnectionTried == snapConnectionIndexes.size()) {
                 lastSnapConnectionTried = 0;
             }
             if (!connectionGroupsIndexesInUse.contains(lastSnapConnectionTried)) {
-                setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, lastSnapConnectionTried + 1);
+            	towingConnectionVar.setTo(lastSnapConnectionTried + 1, false);
                 bypassConnectionPacket = true;
             }
         }
         //Also check parts, in case they got a request.
         for (APart part : allParts) {
-            connectionRequestIndex = (int) part.getVariable(TOWING_CONNECTION_REQUEST_VARIABLE);
-            if (connectionRequestIndex != 0) {
+            if (part.towingConnectionVar.isActive) {
+            	//Don't handle requests on the client.  These get packets.
                 if (!world.isClient()) {
-                    //Don't handle requests on the client.  These get packets.
-                    handleConnectionRequest(part, connectionRequestIndex - 1);
+                    handleConnectionRequest(part, (int) part.towingConnectionVar.currentValue - 1);
                 }
-                part.setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
+                part.towingConnectionVar.setTo(0, false);
             } else if (!world.isClient() && towedByConnection == null && !part.snapConnectionIndexes.isEmpty() && part.ticksExisted % (10 / part.snapConnectionIndexes.size()) == 0) {
                 if (++part.lastSnapConnectionTried == part.snapConnectionIndexes.size()) {
                     part.lastSnapConnectionTried = 0;
                 }
                 if (!part.connectionGroupsIndexesInUse.contains(part.lastSnapConnectionTried)) {
-                    part.setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, part.lastSnapConnectionTried + 1);
+                	part.towingConnectionVar.setTo(part.lastSnapConnectionTried + 1, false);
                     part.bypassConnectionPacket = true;
                     break;
                 }
@@ -206,8 +203,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //Check if this is a hookup or hitch variable.
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (variable.startsWith("connection")) {
             //Format is (hitch/hookup)_groupIndex_connectionIndex_animationType.
             TowingConnection foundConnection = null;
@@ -231,25 +227,53 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     }
                 }
                 variable = variableData[variableData.length == 4 ? 3 : 2];
+                final boolean finalIsHookup = isHookup;
+                final TowingConnection finalfoundConnection = foundConnection;
                 if (foundConnection != null) {
                     switch (variable) {
                         case ("connected"):
-                            return 1;
-                        case ("pitch"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).x : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).x;
-                        case ("yaw"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).y : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).y;
-                        case ("roll"):
-                            return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z : new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z;
+                            return new ComputedVariable(true);
+                        case ("pitch"): {
+                            final Point3D helperPoint = new Point3D();
+                            return new ComputedVariable(this, variable, partialTicks -> {
+                                if (finalIsHookup) {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).x;
+                                } else {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).x;
+                                }
+                            }, false);
+                        }
+                        case ("yaw"): {
+                            final Point3D helperPoint = new Point3D();
+                            return new ComputedVariable(this, variable, partialTicks -> {
+                                if (finalIsHookup) {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).y;
+                                } else {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).y;
+                                }
+                            }, false);
+                        }
+                        case ("roll"): {
+                            final Point3D helperPoint = new Point3D();
+                            return new ComputedVariable(this, variable, partialTicks -> {
+                                if (finalIsHookup) {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z;
+                                } else {
+                                    return helperPoint.set(0, 0, 1).rotate(finalfoundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z;
+                                }
+                            }, false);
+                        }
                     }
                 } else if (variable.equals("present")) {
-                    return definition.connectionGroups != null && definition.connectionGroups.size() > groupIndex ? 1 : 0;
+                    return new ComputedVariable(this, variable, partialTicks -> definition.connectionGroups != null && definition.connectionGroups.size() > groupIndex ? 1 : 0, true);
                 }
             }
-        }
 
-        //Not a towing variable, check others.
-        return super.getRawVariableValue(variable, partialTicks);
+            //Invalid variable, or connection not yet set.
+            return new ComputedVariable(false);
+        } else {
+            return super.createComputedVariable(variable, createDefaultIfNotPresent);
+        }
     }
 
     @Override
@@ -503,6 +527,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         ((AEntityG_Towable<?>) connection.towedVehicle).savedTowedByConnection = null;
         savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
 
+        //Clear connection variables, since our connections have changed and those affect them.
+        resetAllVariables();
+
         //Handle connection update requests.
         if (!world.isClient()) {
             if (notifyClient) {
@@ -526,6 +553,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             connection.towingEntity.connectionGroupsIndexesInUse.remove(connection.hitchGroupIndex);
             connection.towedEntity.connectionGroupsIndexesInUse.remove(connection.hookupGroupIndex);
         }
+        
+        resetAllVariables();
 
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
