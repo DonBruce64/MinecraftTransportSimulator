@@ -380,7 +380,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
                         updateSubDefinition(partTone);
-                        return;
+                        break;
                     }
                 }
             }
