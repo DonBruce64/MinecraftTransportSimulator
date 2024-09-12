@@ -299,7 +299,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set air density.
-            double altitude = (position.y-seaLevel) / ConfigSystem.settings.general.AtmosphereScaleFactor.value;//meter
+            double altitude = (position.y-seaLevel) / ConfigSystem.settings.general.atmosphereScaleFactor.value;//meter
             double temperature = 15.04;//centigrade
             double pressure = 101.325;//kpa
             //atmospheric pressure and temperature calculation can also be updated in future
