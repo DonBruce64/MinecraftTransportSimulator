@@ -298,8 +298,26 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
-            //Set moments and air density.
-            airDensity = 1.225 * Math.pow(2, -(position.y-seaLevel) / Math.max(ConfigSystem.settings.general.airDensityDeclineRate.value,1) );
+            //Set air density.
+            double altitude = (position.y-seaLevel) / ConfigSystem.settings.general.AtmosphereScaleFactor.value;//meter
+            double temperature = 15.04;//centigrade
+            double pressure = 101.325;//kpa
+            //atmospheric pressure and temperature calculation can also be updated in future
+
+            if(altitude<11000){
+                temperature = 15.04 - 0.00649 * altitude;
+                pressure = 101.29 * Math.pow( ( temperature + 273.1) / 288.08 , 5.256);
+            }else if(altitude >= 11000 && altitude < 25000){
+                temperature = -56.46;
+                pressure = 22.65 * Math.exp(1.73 - 0.000157 * altitude);
+            }else if(altitude >= 25000){
+                temperature = -131.21 + 0.00299 * altitude;
+                pressure = 2.488 * Math.pow( ( temperature + 273.1) / 216.6 , -11.388);
+            }
+
+            airDensity = pressure / (0.2869 * ( temperature + 273.1));
+
+            //Set moments
             momentRoll = definition.motorized.emptyMass * (1.5F + fuelTank.getFluidLevel() / 10000F);
             momentPitch = 2D * currentMass;
             momentYaw = 3D * currentMass;
