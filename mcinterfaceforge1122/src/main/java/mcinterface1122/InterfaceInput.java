@@ -244,6 +244,8 @@ public class InterfaceInput implements IInterfaceInput {
             //Make sure we're not calling this on non-axis.
             if (joystickMap.containsKey(joystickName)) {
                 if (isJoystickComponentAxis(joystickName, index)) {
+                    //lwjgl might add a default DeadZone for input so just disable it before using
+                    joystickMap.get(joystickName).setDeadZone(index,0);
                     joystickMap.get(joystickName).poll();
                     return joystickMap.get(joystickName).getAxisValue(index);
                 } else {
