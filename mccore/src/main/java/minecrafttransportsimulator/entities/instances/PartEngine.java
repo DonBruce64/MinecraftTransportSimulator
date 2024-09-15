@@ -474,12 +474,15 @@ public class PartEngine extends APart {
                             if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-                            } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                            } else  if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
                             } else if (rpm < stallRPMVar.currentValue) {
                                 stallEngine(Signal.TOO_SLOW);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
+                            } else if (!isActive) {
+                                stallEngine(Signal.INACTIVE);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                             }
                         }
                     } else {
@@ -496,7 +499,7 @@ public class PartEngine extends APart {
                         //have the ability to engage a starter.
                         if (rpm >= startRPMVar.currentValue && !world.isClient() && !vehicleOn.outOfHealth) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
-                                if (!isInLiquid() && magnetoVar.isActive) {
+                                if (isActive && !isInLiquid() && magnetoVar.isActive) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
                                 }
