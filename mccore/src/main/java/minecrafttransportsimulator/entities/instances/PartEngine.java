@@ -474,7 +474,7 @@ public class PartEngine extends APart {
                             if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-                            } else  if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                            } else if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
                             } else if (rpm < stallRPMVar.currentValue) {
