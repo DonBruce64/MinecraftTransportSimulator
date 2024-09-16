@@ -513,12 +513,12 @@ public class PartEngine extends APart {
                     if (running) {
                         //Remove fuel, and if we don't have any, turn ourselves off.
                         rocketFuelUsed += getTotalFuelConsumption();
-                        if (rocketFuelUsed >= definition.engine.rocketFuel) {
+                        if (!isActive || rocketFuelUsed >= definition.engine.rocketFuel) {
                             running = false;
                         }
                     } else {
                         //If the magneto comes on, and we have fuel, ignite.
-                        if (magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
+                        if (isActive && magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
                             running = true;
                         }
                     }
