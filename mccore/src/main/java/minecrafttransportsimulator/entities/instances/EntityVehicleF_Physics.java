@@ -4,12 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -66,6 +61,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     //Autopilot.
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
+    public final ComputedVariable autopilotPositionX;
+    public final ComputedVariable autopilotPositionY;
+    public final ComputedVariable autopilotPositionZ;
+    public final ComputedVariable autopilotHeading;
+    public final ComputedVariable autopilotAltitude;
+    public final ComputedVariable autopilotSpeed;
+    public final ComputedVariable autopilotVerticalSpeed;
+    private PIDController verticalSpeedController = new PIDController(0.001, 0.000005, 0.01);
+    private PIDController speedController = new PIDController(0.15, 0.000375, 0.00003);
+    private PIDController cdiDeflectionController = new PIDController(4.5, 0.002, 0.0);
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -154,6 +159,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
         addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
+        addVariable(this.autopilotHeading = new ComputedVariable(this, "autopilot_heading", data));
+        addVariable(this.autopilotAltitude = new ComputedVariable(this, "autopilot_altitude", data));
+        addVariable(this.autopilotVerticalSpeed = new ComputedVariable(this, "autopilot_vertical_speed", data));
+        addVariable(this.autopilotSpeed = new ComputedVariable(this, "autopilot_speed", data));
+        addVariable(this.autopilotPositionX = new ComputedVariable(this, "autopilot_position_x", data));
+        addVariable(this.autopilotPositionY = new ComputedVariable(this, "autopilot_position_y", data));
+        addVariable(this.autopilotPositionZ = new ComputedVariable(this, "autopilot_position_z", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
         addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
@@ -611,19 +623,41 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
         } else if (definition.motorized.isAircraft && autopilotValueVar.isActive) {
-            //Normal aircraft.  Do autopilot operations if required.
-            //If we are not flying at a steady elevation, angle the elevator to compensate
-            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
-            	elevatorTrimVar.adjustBy(0.1, true);
-            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
-            	elevatorTrimVar.adjustBy(-0.1, true);
+            if (autopilotPositionX.isActive) {
+                navGPS();
             }
-            //Keep the roll angle at 0.
-            if (-orientation.angles.z > aileronTrimVar.currentValue + 0.1 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
-            	aileronTrimVar.adjustBy(0.1, true);
-            } else if (-orientation.angles.z < aileronTrimVar.currentValue - 0.1 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
-            	aileronTrimVar.adjustBy(-0.1, true);
+            if (selectedBeacon != null) {
+                navILS();
+            } else {
+                cdiDeflectionController.clear();
             }
+            if (autopilotHeading.isActive) {
+                setHeading();
+            }
+            if (autopilotAltitude.isActive) {
+                setAltitude();
+            }
+            if (autopilotSpeed.isActive) {
+                setSpeed();
+            } else {
+                speedController.clear();
+            }
+            if (autopilotVerticalSpeed.isActive) {
+                setVerticalSpeed();
+            } else {
+                verticalSpeedController.clear();
+            }
+//            if (selectedBeacon == null) {
+//                autopilotPositionX.setTo(0, true);
+//                autopilotPositionZ.setTo(0, true);
+//            }
+//            autopilotPositionY.setTo(100, true);
+//            navGPS();
+//            autopilotHeading.setTo(360, true);
+//            setHeading();
+//            autopilotVerticalSpeed.setTo(1, true);
+//            setVerticalSpeed();
+//            navILS();
         }
 
         //If we don't have controllers, reset control states to 0.
@@ -653,6 +687,141 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             	rudderInputVar.setTo(0, true);
             }
 
+        }
+    }
+
+    public void autolevel() {
+        //If we are not flying at a steady elevation, angle the elevator to compensate
+        if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+            elevatorTrimVar.adjustBy(0.1, true);
+        } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+            elevatorTrimVar.adjustBy(-0.1, true);
+        }
+
+        if (-orientation.angles.z > aileronTrimVar.currentValue + 0.1 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
+            aileronTrimVar.adjustBy(0.1, true);
+        } else if (-orientation.angles.z < aileronTrimVar.currentValue - 0.1 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
+            aileronTrimVar.adjustBy(-0.1, true);
+        }
+    }
+
+    public void navGPS() {
+//        double heading = Math.toDegrees(Math.atan2(autopilotPositionZ.currentValue - position.z , autopilotPositionX.currentValue - position.x));
+        double heading;
+        heading = Math.toDegrees(Math.atan2(autopilotPositionX.currentValue - position.x, autopilotPositionZ.currentValue - position.z));
+        if (ConfigSystem.client.controlSettings.north360.value)
+            heading += 180;
+        heading = (heading + 360) % 360;
+        autopilotHeading.setTo(heading, true);
+        autopilotAltitude.setTo(autopilotPositionY.currentValue, true);
+    }
+
+    public void navILS() {
+        double delta = selectedBeacon.getBearingDelta(this);
+        double output = cdiDeflectionController.loop(delta, 1);
+        if (output < -45) {
+            output = -45;
+        } else if (output > 45) {
+            output = 45;
+        }
+        double heading = output + selectedBeacon.bearing + 180;
+        autopilotHeading.setTo(heading, true);
+    }
+
+    public void setSpeed() {
+        double delta = autopilotSpeed.currentValue - indicatedSpeed;
+        double output = speedController.loop(delta, 1);
+        if (output < 0) {
+            output = 0;
+        } else if (output > 1) {
+            output = 1;
+        }
+        double signalDelta = output;
+        if (signalDelta > 0 && throttleVar.currentValue < MAX_THROTTLE) {
+            if (signalDelta > 0.0125) {
+                signalDelta = 0.0125;
+            }
+            throttleVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0 && throttleVar.currentValue > -MAX_THROTTLE) {
+            if (signalDelta < -0.0125) {
+                signalDelta = -0.0125;
+            }
+            throttleVar.adjustBy(signalDelta, true);
+        }
+    }
+
+    public void setHeading() {
+        double currentHeading = -orientation.angles.y;
+        if (ConfigSystem.client.controlSettings.north360.value)
+            currentHeading += 180;
+        currentHeading = (currentHeading + 360) %360;
+        double delta = (autopilotHeading.currentValue + currentHeading) % 360;
+        if (delta > 180) {
+            delta = -(360 - delta);
+        }
+//        double delta = orientation.angles.getClampedYDelta(autopilotHeading.currentValue);
+        double output = delta * 1.0;
+        // Clamp banking angle to 45 deg
+        if (output > 45) {
+            output = 45;
+        } else if (output < -45) {
+            output = -45;
+        }
+        System.out.println("Heading " + delta + " " + output);
+//        This was the control before tranforming
+//        -orientation.angles.z - output > aileronTrimVar.currentValue + 0.1
+        double signalDelta = -orientation.angles.z - output - aileronTrimVar.currentValue - 0.1;
+        if (signalDelta > 0 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
+            if (signalDelta > 0.75) {
+                signalDelta = 0.75;
+            }
+            aileronTrimVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
+            if (signalDelta < -0.75) {
+                signalDelta = -0.75;
+            }
+            aileronTrimVar.adjustBy(signalDelta, true);
+        }
+    }
+
+    public void setAltitude() {
+        if (!autopilotVerticalSpeed.isActive) {
+            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+                elevatorTrimVar.adjustBy(0.1, true);
+            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+                elevatorTrimVar.adjustBy(-0.1, true);
+            }
+            return;
+        }
+        double delta = autopilotAltitude.currentValue - (position.y - seaLevel);
+        double output = delta * 0.50;
+        if ((delta > 0 && output < autopilotVerticalSpeed.currentValue) || (delta < 0 && output > autopilotVerticalSpeed.currentValue)) {
+            autopilotVerticalSpeed.setTo(output, true);
+        }
+        System.out.println("Altitude " + delta + " " + output);
+        autopilotVerticalSpeed.setTo(output, true);
+    }
+
+    public void setVerticalSpeed() {
+        double delta = autopilotVerticalSpeed.currentValue - motion.y * speedFactor * 20;
+        double output = verticalSpeedController.loop(delta, 1);
+        if (output < -10) {
+            output = -10;
+        } else if (output > 10) {
+            output = 10;
+        }
+        System.out.println("Vertical speed " + delta + " " + output);
+        double signalDelta = output - elevatorTrimVar.currentValue;
+        if (signalDelta > 0 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+            if (signalDelta > 0.75) {
+                signalDelta = 0.75;
+            }
+            elevatorTrimVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+            if (signalDelta < -0.75) {
+                signalDelta = -0.75;
+            }
+            elevatorTrimVar.adjustBy(signalDelta, true);
         }
     }
 
