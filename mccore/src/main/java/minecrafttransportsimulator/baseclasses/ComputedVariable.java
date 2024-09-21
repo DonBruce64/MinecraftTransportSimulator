@@ -29,8 +29,8 @@ public class ComputedVariable {
     private ComputedVariableOperator function;
     private boolean changesOnPartialTicks;
     private boolean randomVariable;
-    public boolean isConstant;
-    public boolean shouldSaveToNBT;
+    private boolean isConstant;
+    private boolean shouldSaveToNBT;
     public boolean shouldReset = true;
     private long lastTickChecked;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/

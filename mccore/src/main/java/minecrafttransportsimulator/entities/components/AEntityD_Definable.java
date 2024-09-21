@@ -173,8 +173,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (definition.rendering != null && definition.rendering.textObjects != null) {
                 for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
                     JSONText textDef = definition.rendering.textObjects.get(i);
-                    //Check for text value in case we added a text line after wr created this entity.
-                    text.put(textDef, data.hasKey("textLine" + i) ? data.getString("textLine" + i) : textDef.defaultText);
+                    //Check for text value in case we added a text line after we created this entity.
+                    text.put(textDef, data.hasKey("text" + textDef.fieldName) ? data.getString("text" + textDef.fieldName) : textDef.defaultText);
                 }
             }
 
@@ -1267,12 +1267,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setPackItem(definition, subDefinition.subName);
-        if (!text.isEmpty()) {
-            int lineNumber = 0;
-            for (String textLine : text.values()) {
-                data.setString("textLine" + lineNumber++, textLine);
-            }
-        }
+        text.entrySet().forEach(textEntry -> data.setString("text" + textEntry.getKey().fieldName, textEntry.getValue()));
         List<String> savedNames = new ArrayList<>();
         computedVariables.values().forEach(variable -> {
             if (variable.entity == this) {
@@ -1280,6 +1275,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         });
         if (!savedNames.isEmpty()) {
+            //Don't want to save variables if we don't have any set since it prevents stacking.
             data.setStrings("variables", savedNames);
         }
         return data;
