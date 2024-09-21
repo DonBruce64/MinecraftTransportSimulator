@@ -130,7 +130,7 @@ public final class RenderInstrument {
         }
     }
 
-    private static double getInstrumentVariableValue(AEntityD_Definable<?> entity, DurationDelayClock clock, String variable, double axis, float partialTicks) {
+    private static double getInstrumentVariableValue(AEntityD_Definable<?> entity, DurationDelayClock clock, String variable, double scaleFactor, float partialTicks) {
         double value;
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Variable has a defined part index on it.  No modifications required.
@@ -143,7 +143,9 @@ public final class RenderInstrument {
             }
         }
         if (clock != null) {
-            value = clock.clampAndScale(entity, value, axis, 0.0, partialTicks);
+            value = clock.clampAndScale(entity, value, scaleFactor, 0, partialTicks);
+        } else {
+            value *= scaleFactor;
         }
         return value;
     }
