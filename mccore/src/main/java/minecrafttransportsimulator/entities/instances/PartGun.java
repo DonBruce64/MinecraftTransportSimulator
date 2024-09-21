@@ -552,33 +552,34 @@ public class PartGun extends APart {
         //This comes after the reloading block as we need a 0/1 state-change for the various animations,
         //so at some point the reload time needs to hit 0.
         //This is something we do regardless of active status, since even inactive guns can have bullets put into them.
-
-        if (reloadStartTimeRemaining > 0) {
-            --reloadStartTimeRemaining;
-        } else if (reloadMainTimeRemaining > 0) {
-            --reloadMainTimeRemaining;
-            if (reloadMainTimeRemaining == 0) {
-                ItemBullet bulletToLoad = reloadingBullets.remove(0);
-                int countToLoad = reloadingBulletCounts.remove(0);
-                loadedBullets.add(bulletToLoad);
-                loadedBulletCounts.add(countToLoad);
-                if (loadedBullets.size() == 1) {
-                    //Just got our first bullet, set variable.
-                    lastLoadedBullet = bulletToLoad;
+        if (isReloading) {
+            if (reloadStartTimeRemaining > 0) {
+                --reloadStartTimeRemaining;
+            } else if (reloadMainTimeRemaining > 0) {
+                --reloadMainTimeRemaining;
+                if (reloadMainTimeRemaining == 0) {
+                    ItemBullet bulletToLoad = reloadingBullets.remove(0);
+                    int countToLoad = reloadingBulletCounts.remove(0);
+                    loadedBullets.add(bulletToLoad);
+                    loadedBulletCounts.add(countToLoad);
+                    if (loadedBullets.size() == 1) {
+                        //Just got our first bullet, set variable.
+                        lastLoadedBullet = bulletToLoad;
+                    }
+                    loadedBulletCount += countToLoad;
+                    reloadingBulletCount -= countToLoad;
+                    if (!world.isClient()) {
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
+                    }
+                    if (reloadingBullets.isEmpty() && reloadEndTimeRemaining == 0) {
+                        //No winddown, and no bullets left to reload, reloading ends here.
+                        isReloading = false;
+                    }
                 }
-                loadedBulletCount += countToLoad;
-                reloadingBulletCount -= countToLoad;
-                if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
-                }
-            }
-        } else {
-            if (reloadMainTimeRemaining == 0 && isReloading && !reloadingBullets.isEmpty()) {
+            } else if (!reloadingBullets.isEmpty()) {
                 //Go around again, we just needed to wait 1 tick for systems to see a 0->1 state change.
                 reloadMainTimeRemaining = definition.gun.reloadTime;
-            } else if (reloadEndTimeRemaining > 0) {
-                --reloadEndTimeRemaining;
-            } else if (isReloading) {
+            } else if (--reloadEndTimeRemaining == 0) {
                 isReloading = false;
             }
         }
