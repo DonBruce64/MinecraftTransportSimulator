@@ -518,6 +518,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_GUN_FIRE = new LanguageEntry("input.gun_fire", "Gun");
     public static final LanguageEntry INPUT_GUN_SWITCH = new LanguageEntry("input.gun_switch", "Switch Gun");
     public static final LanguageEntry INPUT_GUN_RELOAD = new LanguageEntry("input.gun.reload", "Reload Gun");
+    public static final LanguageEntry INPUT_WAYPOINT_MANAGER = new LanguageEntry("input.waypoint.manager", "Manage Waypoints");
     public static final LanguageEntry INPUT_RADIO = new LanguageEntry("input.radio", "Radio");
     public static final LanguageEntry INPUT_ZOOM_I = new LanguageEntry("input.zoom_i", "ZoomIn");
     public static final LanguageEntry INPUT_ZOOM_O = new LanguageEntry("input.zoom_o", "ZoomOut");

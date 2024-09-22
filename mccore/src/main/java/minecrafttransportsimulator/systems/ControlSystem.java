@@ -17,8 +17,10 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
+import minecrafttransportsimulator.guis.instances.GUIWaypointManager;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
@@ -100,7 +102,20 @@ public final class ControlSystem {
         if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
         }
+
+        ControlSystem.controlWaypoint(player,null);
     }
+
+    public static void controlWaypoint(IWrapperPlayer player, EntityVehicleF_Physics vehicle) {
+        if (!InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_WAYPOINT_MANAGER.isPressed()) {
+            if (AGUIBase.activeInputGUI instanceof GUIPanel && !AGUIBase.activeInputGUI.editingText) {
+                AGUIBase.activeInputGUI.close();
+            } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
+                new GUIWaypointManager(player,null);
+            }
+        }
+    }
+
 
     private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun, boolean leftClickDown, boolean leftClickUp, boolean rightClickDown, boolean rightClickUp) {
         //Either change the gun trigger state (if we are holding a gun),
@@ -333,6 +348,8 @@ public final class ControlSystem {
         }
         //Open or close the panel.
         controlPanel(aircraft, ControlsKeyboard.AIRCRAFT_PANEL);
+
+        controlWaypoint(clientPlayer,aircraft);
 
         //Check brake status.
         controlBrake(aircraft, ControlsJoystick.AIRCRAFT_BRAKE, ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL, ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_PARK);
@@ -688,6 +705,7 @@ public final class ControlSystem {
         GENERAL_CUSTOM3(ControlsJoystick.GENERAL_CUSTOM3, true, "NUMPAD2", LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(ControlsJoystick.GENERAL_CUSTOM4, true, "NUMPAD3", LanguageSystem.INPUT_CUSTOM4),
         GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, true, "R", LanguageSystem.INPUT_GUN_RELOAD),
+        GENERAL_WAYPOINT_MANAGER(ControlsJoystick.GENERAL_WAYPOINT_MANAGER, true, "5", LanguageSystem.INPUT_WAYPOINT_MANAGER),
 
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
         AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", LanguageSystem.INPUT_YAW_L),
@@ -791,6 +809,7 @@ public final class ControlSystem {
         GENERAL_CUSTOM3(false, true, LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(false, true, LanguageSystem.INPUT_CUSTOM4),
         GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
+        GENERAL_WAYPOINT_MANAGER(false, true, LanguageSystem.INPUT_WAYPOINT_MANAGER),
 
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, LanguageSystem.INPUT_YAW),

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.NavWaypoint;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -61,7 +62,12 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double electricPower;
     public double electricFlow;
     public String selectedBeaconName;
+    public String selectedWaypointName;
     public NavBeacon selectedBeacon;
+
+    public NavWaypoint selectedWaypoint;
+    //For Flight plan.
+    public List<NavWaypoint> selectedWaypointList;
     public final EntityFluidTank fuelTank;
     public static final double BATTERY_DEFAULT_CHARGE = 0.85715D;
 
