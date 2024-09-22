@@ -127,15 +127,15 @@ public class PartPropeller extends APart {
                 if (definition.propeller.isRotor) {
                     double throttlePitchSetting = (vehicleOn.throttleVar.currentValue * 1.35 - 0.35) * definition.propeller.pitch;
                     if (throttlePitchSetting < currentPitch) {
-                        --currentPitch;
+                        currentPitch -= definition.propeller.pitchChangeRate;
                     } else if (throttlePitchSetting > currentPitch) {
-                        ++currentPitch;
+                        currentPitch += definition.propeller.pitchChangeRate;
                     }
                 } else if (definition.propeller.isDynamicPitch) {
                     if (decreasePitch || (vehicleOn.reverseThrustVar.isActive && currentPitch > -MIN_DYNAMIC_PITCH)) {
-                        --currentPitch;
+                        currentPitch -= definition.propeller.pitchChangeRate;
                     } else if (increasePitch || (!vehicleOn.reverseThrustVar.isActive && currentPitch < MIN_DYNAMIC_PITCH)) {
-                        ++currentPitch;
+                        currentPitch += definition.propeller.pitchChangeRate;
                     }
                 }
             }

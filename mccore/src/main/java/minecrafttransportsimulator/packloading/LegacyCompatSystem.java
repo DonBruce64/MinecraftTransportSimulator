@@ -877,6 +877,13 @@ public final class LegacyCompatSystem {
             }
         }
 
+        //Do propeller compats.
+        if (definition.propeller != null) {
+            if (definition.propeller.pitchChangeRate == 0) {
+                definition.propeller.pitchChangeRate = 1;
+            }
+        }
+
         //Do various ground device compats.
         if (definition.ground != null) {
             //Set flat height if it's not set.
