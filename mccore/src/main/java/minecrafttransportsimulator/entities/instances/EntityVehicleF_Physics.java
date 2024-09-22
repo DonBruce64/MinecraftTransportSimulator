@@ -449,7 +449,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 aileronTorque = -orientation.angles.z * 2;
             }
             if (!definition.motorized.isAircraft) {
-                gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
+                gravitationalForce *= 4.5;
             }
 
             //Add all forces to the main force matrix and apply them.
