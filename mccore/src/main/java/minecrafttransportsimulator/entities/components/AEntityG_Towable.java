@@ -530,6 +530,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         //Clear connection variables, since our connections have changed and those affect them.
         resetAllVariables();
         connection.towedVehicle.resetAllVariables();
+        connection.towedVehicle.parkingBrakeVar.setTo(0, false);
 
         //Handle connection update requests.
         if (!world.isClient()) {
@@ -557,6 +558,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         
         resetAllVariables();
         connection.towedVehicle.resetAllVariables();
+        connection.towedVehicle.parkingBrakeVar.setTo(1, false);
 
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));

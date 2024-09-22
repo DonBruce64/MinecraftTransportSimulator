@@ -132,19 +132,8 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         //Otherwise, do normal update logic for DRLs.
         if (definition.motorized.isTrailer) {
             //If we are being towed set the brake state to the same as the towing vehicle.
-            //If we aren't being towed, set the parking brake.
             if (towedByConnection != null) {
-                if (parkingBrakeVar.isActive) {
-                	parkingBrakeVar.setTo(0, false);
-                }
                 brakeVar.setTo(towedByConnection.towingVehicle.brakeVar.currentValue, false);
-            } else {
-                if (!parkingBrakeVar.isActive) {
-                    parkingBrakeVar.setTo(1, false);
-                }
-                if (brakeVar.isActive) {
-                	brakeVar.setTo(0, false);
-                }
             }
         } else {
             //Set engine state mapping variables.
