@@ -213,14 +213,14 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 int groupIndex = Integer.parseInt(variableData[1]) - 1;
                 int connectionIndex = variableData.length == 4 ? Integer.parseInt(variableData[2]) - 1 : -1;
                 if (towedByConnection != null) {
-                    if (towedByConnection.hookupGroupIndex == groupIndex && (connectionIndex == -1 || towedByConnection.hookupConnectionIndex == connectionIndex)) {
+                    if (towedByConnection.towedEntity == this && towedByConnection.hookupGroupIndex == groupIndex && (connectionIndex == -1 || towedByConnection.hookupConnectionIndex == connectionIndex)) {
                         isHookup = true;
                         foundConnection = towedByConnection;
                     }
                 }
                 if (foundConnection == null && !towingConnections.isEmpty()) {
                     for (TowingConnection towingConnection : towingConnections) {
-                        if (towingConnection.hitchGroupIndex == groupIndex && (connectionIndex == -1 || towingConnection.hitchConnectionIndex == connectionIndex)) {
+                        if (towingConnection.towingEntity == this && towingConnection.hitchGroupIndex == groupIndex && (connectionIndex == -1 || towingConnection.hitchConnectionIndex == connectionIndex)) {
                             foundConnection = towingConnection;
                             break;
                         }
