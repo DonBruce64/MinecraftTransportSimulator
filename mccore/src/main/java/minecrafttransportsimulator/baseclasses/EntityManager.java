@@ -306,9 +306,6 @@ public abstract class EntityManager {
             entity.world.beginProfiling("VariableModifiers", true);
             definable.setVariableDefaults();
             definable.updateVariableModifiers();
-            if (definable instanceof AEntityF_Multipart) {
-                ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());
-            }
             entity.world.beginProfiling("MainUpdate", false);
             entity.update();
             entity.world.beginProfiling("PostUpdate", false);
