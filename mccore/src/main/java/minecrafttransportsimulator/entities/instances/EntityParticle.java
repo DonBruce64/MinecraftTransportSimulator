@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
@@ -187,8 +188,17 @@ public class EntityParticle extends AEntityC_Renderable {
         } else if (definition.type == ParticleType.BREAK) {
             texture = RenderableData.GLOBAL_TEXTURE_NAME;
         } else if (definition.type == ParticleType.CASING) {
-            texture = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingTexture;
-            model = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingModel;
+            PartGun gun = (PartGun) entitySpawning;
+            if(!gun.firedBullets.isEmpty()) {
+                ItemBullet bullet = gun.firedBullets.get(0);
+                gun.firedBullets.remove(0);
+                texture = bullet.definition.bullet.casingTexture;
+                model = bullet.definition.bullet.casingModel;
+            }else {
+                //Invalid particle since we haven't fired anything yet to have a casing for.
+                texture = null;
+                model = null;
+            }
             if (texture == null) {
                 //Not supposed to be spawning any casings for this bullet.
                 this.staticColor = null;

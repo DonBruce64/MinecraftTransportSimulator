@@ -75,6 +75,7 @@ public class PartGun extends APart {
 
     //Stored variables used to determine bullet firing behavior.
     public ItemBullet lastLoadedBullet;
+    public final List<ItemBullet> firedBullets = new ArrayList<>();
     private int bulletsFired;
     private int loadedBulletCount;
     private int reloadingBulletCount;
@@ -400,7 +401,10 @@ public class PartGun extends APart {
                     //If we are in our cam, fire the bullets.
                     if (camOffset == 0) {
                         for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
+                            //Spawn a bullet for each pellet.
                             for (int i = 0; i < (lastLoadedBullet.definition.bullet.pellets > 0 ? lastLoadedBullet.definition.bullet.pellets : 1); i++) {
+                                //Need to increment the bullet count, even if we're not actually firing the bullet, so we sync state.
+                                //Note that this takes into account pellets too since they are each their own entity.
                                 ++bulletsFired;
                                 if (world.isClient() || serverIsPrimaryController) {
                                     //Get the bullet's state.
@@ -425,21 +429,23 @@ public class PartGun extends APart {
                                         newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, bulletsFired);
                                     }
                                     world.addEntity(newBullet);
+                                }
+                            }
 
-                                    //Now do knockback, if it exists.
-                                    if (isHandHeld && definition.gun.knockback != 0) {
-                                        if (!world.isClient()) {
-                                            performGunKnockback();
-                                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
-                                        } else if (InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
-                                            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
-                                        }
-                                    }
+                            //Now do knockback, if it exists.
+                            if (isHandHeld) {
+                                if (!world.isClient()) {
+                                    performGunKnockback();
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                } else if (InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
                                 }
                             }
 
                             //Decrement bullets, but check to make sure we still have some.
                             //We might have a partial volley with only some muzzles firing in this group, so if we did, break out early.
+                            //Also add a bullet to the fired list, since the last loaded could be changed if we change ammo.
+                            firedBullets.add(lastLoadedBullet);
                             if (loadedBulletCount > 0) {
                                 --loadedBulletCount;
                                 int count = loadedBulletCounts.get(0);
@@ -568,6 +574,7 @@ public class PartGun extends APart {
                     }
                     loadedBulletCount += countToLoad;
                     reloadingBulletCount -= countToLoad;
+                    firedBullets.clear();//Clear fired bullets in case we haven't used them for any animations, don't want an overflow list.
                     if (!world.isClient()) {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.BULLETS_PRESENT));
                     }
@@ -1117,11 +1124,9 @@ public class PartGun extends APart {
      * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
      */
     public void performGunKnockback() {
-        double knockback = -definition.gun.knockback;
-        if (lastLoadedBullet.definition.bullet.pellets != 0) {
-            knockback /= lastLoadedBullet.definition.bullet.pellets;
+        if (definition.gun.knockback != 0) {
+            holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-definition.gun.knockback));
         }
-        holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(knockback));
     }
 
     /**
