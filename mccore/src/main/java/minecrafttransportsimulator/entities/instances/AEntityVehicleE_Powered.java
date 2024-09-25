@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.baseclasses.NavBeacon;
-import minecrafttransportsimulator.baseclasses.NavWaypoint;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -63,9 +60,11 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public String selectedWaypointName;
     public NavBeacon selectedBeacon;
 
-    public NavWaypoint selectedWaypoint;
-    //For Flight plan.
-    public List<NavWaypoint> selectedWaypointList;
+
+    //For Flight plan, selectedWaypoint should always be the last one of selectedWaypointList.
+    public List<NavWaypointUpdater> selectedWaypointList;
+
+
     public final EntityFluidTank fuelTank;
 
     //Engines.
@@ -292,6 +291,35 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     hasReverseThrust = true;
                     break;
                 }
+            }
+        }
+    }
+
+    //Update selected waypoint state
+    public void UpdateWaypointList(String operation,String index,String name,String targetSpeed,String bearing,String StrX,String StrY,String StrZ) {
+        int Index = -1;
+        try{
+            Index = Integer.parseInt(index);
+        }catch (Exception e){
+        }
+
+        switch (operation){
+            case "INSERT":{
+                try{
+                    Point3D position = new Point3D(Double.parseDouble(StrX),Double.parseDouble(StrY),Double.parseDouble(StrZ));
+                    NavWaypoint waypoint = new NavWaypoint(world,index,name,Double.parseDouble(targetSpeed),Double.parseDouble(bearing),position);
+                    selectedWaypointList.add(Index,new NavWaypointUpdater(waypoint));
+                }catch (Exception e){
+                }
+            }
+            case "REMOVE":{
+                if(selectedWaypointList.size()>0){
+                    NavWaypointUpdater waypointUpdater = selectedWaypointList.get(Index);
+                    waypointUpdater.destroy(world);
+                    selectedWaypointList.remove(Index);
+                }
+            }
+            default:{
             }
         }
     }

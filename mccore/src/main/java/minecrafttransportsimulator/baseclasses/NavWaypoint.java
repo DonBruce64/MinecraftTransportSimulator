@@ -1,5 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
-import java.util.Collections;
+import java.util.*;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -7,13 +7,17 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * waypoint class
+ */
 public class NavWaypoint {
     private static final String WAYPOINT_LISTING_KEY = "waypoints";
+
     private static final Map<AWrapperWorld, Map<String, NavWaypoint>> cachedWaypointMaps = new HashMap<>();
 
+    //use an editable value as key
+    public final String index;
+    //information
     public final String name;
     public final double targetSpeed;
     public final double bearing;
@@ -25,8 +29,8 @@ public class NavWaypoint {
             IWrapperNBT waypointListing = world.getData(WAYPOINT_LISTING_KEY);
             if (waypointListing != null) {
                 Map<String, NavWaypoint> waypointMap = new HashMap<>();
-                for (String waypointName : waypointListing.getAllNames()) {
-                    waypointMap.put(waypointName, new NavWaypoint(waypointListing.getData(waypointName)));
+                for (String waypointIndex : waypointListing.getAllNames()) {
+                    waypointMap.put(waypointIndex, new NavWaypoint(waypointListing.getData(waypointIndex)));
                 }
                 cachedWaypointMaps.put(world, waypointMap);
             } else {
@@ -37,13 +41,14 @@ public class NavWaypoint {
         return cachedWaypointMaps.get(world);
     }
 
-    public static NavWaypoint getByNameFromWorld(AWrapperWorld world, String name) {
+
+    public static NavWaypoint getByIndexFromWorld(AWrapperWorld world, String index) {
         if (!cachedWaypointMaps.containsKey(world)) {
             IWrapperNBT waypointListing = world.getData(WAYPOINT_LISTING_KEY);
             if (waypointListing != null) {
                 Map<String, NavWaypoint> waypointMap = new HashMap<>();
-                for (String waypointName : waypointListing.getAllNames()) {
-                    waypointMap.put(waypointName, new NavWaypoint(waypointListing.getData(waypointName)));
+                for (String waypointIndex : waypointListing.getAllNames()) {
+                    waypointMap.put(waypointIndex, new NavWaypoint(waypointListing.getData(waypointIndex)));
                 }
                 cachedWaypointMaps.put(world, waypointMap);
             } else {
@@ -51,31 +56,33 @@ public class NavWaypoint {
             }
         }
 
-        return cachedWaypointMaps.get(world).get(name);
+        return cachedWaypointMaps.get(world).get(index);
     }
 
-    public static void removeFromWorld(AWrapperWorld world, String name) {
-        if (name != null) {
+    public static void removeFromWorld(AWrapperWorld world, String index) {
+        if (index != null) {
             if (cachedWaypointMaps.containsKey(world)) {
-                cachedWaypointMaps.get(world).remove(name);
+                cachedWaypointMaps.get(world).remove(index);
             }
 
             IWrapperNBT waypointListing = world.getData(WAYPOINT_LISTING_KEY);
             if (waypointListing != null) {
-                waypointListing.deleteEntry(name);
+                waypointListing.deleteEntry(index);
                 world.setData(WAYPOINT_LISTING_KEY, waypointListing);
             }
         }
     }
 
     private NavWaypoint(IWrapperNBT data) {
+        this.index = data.getString("index");
         this.name = data.getString("name");
         this.targetSpeed = data.getDouble("targetSpeed");
         this.bearing = data.getDouble("bearing");
         this.position = data.getPoint3dCompact("location");
     }
 
-    public NavWaypoint(AWrapperWorld world, String name, double targetspeed, double bearing, Point3D position) {
+    public NavWaypoint(AWrapperWorld world, String index, String name, double targetspeed, double bearing, Point3D position) {
+        this.index = index;
         this.name = name;
         this.targetSpeed = targetspeed;
         this.bearing = bearing;
@@ -84,7 +91,7 @@ public class NavWaypoint {
         if (waypointListing == null) {
             waypointListing = InterfaceManager.coreInterface.getNewNBTWrapper();
         }
-        waypointListing.setData(name, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        waypointListing.setData(index, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         world.setData(WAYPOINT_LISTING_KEY, waypointListing);
         cachedWaypointMaps.remove(world);
 
@@ -100,10 +107,29 @@ public class NavWaypoint {
     }
 
     public IWrapperNBT save(IWrapperNBT data) {
+        data.setString("index",index);
         data.setString("name", name);
         data.setDouble("targetSpeed", targetSpeed);
         data.setDouble("bearing", bearing);
         data.setPoint3dCompact("location", position);
         return data;
+    }
+
+    public static void sortWaypointListByIndex(List<NavWaypoint> globalWaypointList) {
+        // 使用 Comparator 对列表按照 NavWaypoint.index 排序
+        Collections.sort(globalWaypointList, new Comparator<NavWaypoint>() {
+            @Override
+            public int compare(NavWaypoint wp1, NavWaypoint wp2) {
+                try {
+                    // 将字符串 index 转换为 int 进行比较
+                    int index1 = Integer.parseInt(wp1.index);
+                    int index2 = Integer.parseInt(wp2.index);
+                    return Integer.compare(index1, index2);
+                } catch (NumberFormatException e) {
+                    // 如果 index 无法转换为整数，返回 0 代表它们相等（可以进一步处理）
+                    return 0;
+                }
+            }
+        });
     }
 }
