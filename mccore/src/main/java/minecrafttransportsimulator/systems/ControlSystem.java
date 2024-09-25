@@ -103,7 +103,7 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
         }
 
-        ControlSystem.controlWaypoint(player,null);
+        if(player.getEntityRiding() == null)ControlSystem.controlWaypoint(player,null);
     }
 
     public static void controlWaypoint(IWrapperPlayer player, EntityVehicleF_Physics vehicle) {
@@ -111,7 +111,7 @@ public final class ControlSystem {
             if (AGUIBase.activeInputGUI instanceof GUIPanel && !AGUIBase.activeInputGUI.editingText) {
                 AGUIBase.activeInputGUI.close();
             } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
-                new GUIWaypointManager(player,null);
+                new GUIWaypointManager(player,vehicle);
             }
         }
     }
@@ -349,6 +349,7 @@ public final class ControlSystem {
         //Open or close the panel.
         controlPanel(aircraft, ControlsKeyboard.AIRCRAFT_PANEL);
 
+        //Open or close waypointManager
         controlWaypoint(clientPlayer,aircraft);
 
         //Check brake status.

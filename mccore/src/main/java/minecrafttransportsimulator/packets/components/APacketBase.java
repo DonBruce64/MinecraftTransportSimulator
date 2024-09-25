@@ -263,6 +263,8 @@ public abstract class APacketBase {
         //GUI packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketGUIRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityGUIRequest.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWaypointUpdate.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWaypointUpdateRequest.class);
 
         //Part packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Add.class);
@@ -296,7 +298,8 @@ public abstract class APacketBase {
 
         //Vehicle packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointChange.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointUpdate.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointUpdateRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 
