@@ -10,6 +10,7 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketVehicleWaypointUpdate extends APacketEntity<EntityVehicleF_Physics> {
     private final String operation;
+    private final String opIndex;
     private final String index;
     private final String name;
     private final String targetSpeed;
@@ -18,9 +19,10 @@ public class PacketVehicleWaypointUpdate extends APacketEntity<EntityVehicleF_Ph
     private final String StrY;
     private final String StrZ;
 
-    public PacketVehicleWaypointUpdate(EntityVehicleF_Physics vehicle, String operation, String index, String name, String targetSpeed, String bearing, String StrX, String StrY, String StrZ) {
+    public PacketVehicleWaypointUpdate(EntityVehicleF_Physics vehicle, String operation,String opIndex, String index, String name, String targetSpeed, String bearing, String StrX, String StrY, String StrZ) {
         super(vehicle);
         this.operation = operation;
+        this.opIndex = opIndex;
         this.index = index;
         this.name = name;
         this.targetSpeed = targetSpeed;
@@ -33,6 +35,7 @@ public class PacketVehicleWaypointUpdate extends APacketEntity<EntityVehicleF_Ph
     public PacketVehicleWaypointUpdate(ByteBuf buf) {
         super(buf);
         this.operation = readStringFromBuffer(buf);
+        this.opIndex = readStringFromBuffer(buf);
         this.index = readStringFromBuffer(buf);
         this.name = readStringFromBuffer(buf);
         this.targetSpeed = readStringFromBuffer(buf);
@@ -46,6 +49,7 @@ public class PacketVehicleWaypointUpdate extends APacketEntity<EntityVehicleF_Ph
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writeStringToBuffer(operation, buf);
+        writeStringToBuffer(opIndex, buf);
         writeStringToBuffer(index, buf);
         writeStringToBuffer(name, buf);
         writeStringToBuffer(targetSpeed, buf);
@@ -57,7 +61,7 @@ public class PacketVehicleWaypointUpdate extends APacketEntity<EntityVehicleF_Ph
 
     @Override
     public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
-        vehicle.UpdateWaypointList(operation,index,name,targetSpeed,bearing,StrX,StrY,StrZ);
+        vehicle.UpdateWaypointList(operation,opIndex,index,name,targetSpeed,bearing,StrX,StrY,StrZ);
         return true;
     }
 }
