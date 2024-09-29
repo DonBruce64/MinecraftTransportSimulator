@@ -10,10 +10,13 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 /**
  * waypoint class
  */
-public class NavWaypoint {
-    private static final String WAYPOINT_LISTING_KEY = "waypoints";
 
+//structure:{waypoints:{index:value,name:value,targetSpeed:value,bearing:value,position:value}}
+
+public class NavWaypoint {
+    public static final String WAYPOINT_LISTING_KEY = "waypoints";
     private static final Map<AWrapperWorld, Map<String, NavWaypoint>> cachedWaypointMaps = new HashMap<>();
+    private static final Map<AEntityD_Definable, Map<String, NavWaypoint>> v_cachedWaypointMaps = new HashMap<>();
 
     //use an editable value as key
     public final String index;
@@ -24,6 +27,8 @@ public class NavWaypoint {
     public final Point3D position;
 
 
+
+    //Global Operation
     public static Map<String, NavWaypoint> getAllWaypointsFromWorld(AWrapperWorld world) {
         if (!cachedWaypointMaps.containsKey(world)) {
             IWrapperNBT waypointListing = world.getData(WAYPOINT_LISTING_KEY);
@@ -73,13 +78,6 @@ public class NavWaypoint {
         }
     }
 
-    private NavWaypoint(IWrapperNBT data) {
-        this.index = data.getString("index");
-        this.name = data.getString("name");
-        this.targetSpeed = data.getDouble("targetSpeed");
-        this.bearing = data.getDouble("bearing");
-        this.position = data.getPoint3dCompact("location");
-    }
 
     public NavWaypoint(AWrapperWorld world, String index, String name, double targetspeed, double bearing, Point3D position) {
         this.index = index;
@@ -94,7 +92,91 @@ public class NavWaypoint {
         waypointListing.setData(index, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         world.setData(WAYPOINT_LISTING_KEY, waypointListing);
         cachedWaypointMaps.remove(world);
+    }
 
+
+    //Vehicle Operation
+
+    public NavWaypoint(AEntityD_Definable<?> entity, String index, String name, double targetspeed, double bearing, Point3D position, IWrapperNBT data) {
+        this.index = index;
+        this.name = name;
+        this.targetSpeed = targetspeed;
+        this.bearing = bearing;
+        this.position = position;
+        IWrapperNBT waypointListing = data.getData(WAYPOINT_LISTING_KEY);
+        if (waypointListing == null) {
+            waypointListing = InterfaceManager.coreInterface.getNewNBTWrapper();
+        }
+        waypointListing.setData(index, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        data.setData(WAYPOINT_LISTING_KEY, waypointListing);
+        v_cachedWaypointMaps.remove(entity);
+    }
+
+    public static NavWaypoint getByIndexFromVehicle(AEntityD_Definable entity, String index, IWrapperNBT data) {
+        //check data
+        if(data == null)return null;
+
+        if (!v_cachedWaypointMaps.containsKey(entity)) {
+            IWrapperNBT waypointListing = data.getData(WAYPOINT_LISTING_KEY);
+            if (waypointListing != null) {
+                Map<String, NavWaypoint> waypointMap = new HashMap<>();
+                for (String waypointIndex : waypointListing.getAllNames()) {
+                    waypointMap.put(waypointIndex, new NavWaypoint(waypointListing.getData(waypointIndex)));
+                }
+                v_cachedWaypointMaps.put(entity, waypointMap);
+            } else {
+                return null;
+            }
+        }
+
+        //check if this index is existed
+        if(v_cachedWaypointMaps.get(entity)!=null)return v_cachedWaypointMaps.get(entity).get(index);
+        else return null;
+    }
+    public static Map<String, NavWaypoint> getAllWaypointsFromVehicle(AEntityD_Definable entity, IWrapperNBT data) {
+        //check data
+        if(data == null)return null;
+
+        if (!v_cachedWaypointMaps.containsKey(entity)) {
+            IWrapperNBT waypointListing = data.getData(WAYPOINT_LISTING_KEY);
+            if (waypointListing != null) {
+                Map<String, NavWaypoint> waypointMap = new HashMap<>();
+                for (String waypointIndex : waypointListing.getAllNames()) {
+                    waypointMap.put(waypointIndex, new NavWaypoint(waypointListing.getData(waypointIndex)));
+                }
+                v_cachedWaypointMaps.put(entity, waypointMap);
+            } else {
+                return null;
+            }
+        }
+
+        return v_cachedWaypointMaps.get(entity);
+    }
+    public static void removeFromVehicle(AEntityD_Definable entity, String index, IWrapperNBT data) {
+        if (index != null) {
+            if (v_cachedWaypointMaps.containsKey(entity)) {
+                v_cachedWaypointMaps.get(entity).remove(index);
+            }
+
+            IWrapperNBT waypointListing = data.getData(WAYPOINT_LISTING_KEY);
+            if (waypointListing != null) {
+                waypointListing.deleteEntry(index);
+                data.setData(WAYPOINT_LISTING_KEY, waypointListing);
+            }
+        }
+    }
+
+
+
+    //Universal Operation
+
+    //internal init
+    private NavWaypoint(IWrapperNBT data) {
+        this.index = data.getString("index");
+        this.name = data.getString("name");
+        this.targetSpeed = data.getDouble("targetSpeed");
+        this.bearing = data.getDouble("bearing");
+        this.position = data.getPoint3dCompact("location");
     }
 
     public double getBearingDelta(AEntityB_Existing entity) {
@@ -116,17 +198,14 @@ public class NavWaypoint {
     }
 
     public static void sortWaypointListByIndex(List<NavWaypoint> globalWaypointList) {
-        // 使用 Comparator 对列表按照 NavWaypoint.index 排序
         Collections.sort(globalWaypointList, new Comparator<NavWaypoint>() {
             @Override
             public int compare(NavWaypoint wp1, NavWaypoint wp2) {
                 try {
-                    // 将字符串 index 转换为 int 进行比较
                     int index1 = Integer.parseInt(wp1.index);
                     int index2 = Integer.parseInt(wp2.index);
                     return Integer.compare(index1, index2);
                 } catch (NumberFormatException e) {
-                    // 如果 index 无法转换为整数，返回 0 代表它们相等（可以进一步处理）
                     return 0;
                 }
             }

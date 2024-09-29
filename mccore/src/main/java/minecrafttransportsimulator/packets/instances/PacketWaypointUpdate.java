@@ -60,6 +60,6 @@ public class PacketWaypointUpdate extends APacketBase {
     @Override
     public void handle(AWrapperWorld world) {
         NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(NavWaypoint.getByIndexFromWorld(world,index));
-        waypointUpdater.updateState(world,index,name,targetSpeed,bearing,positionX,positionY,positionZ,isDeleted);
+        waypointUpdater.updateStateFromWorld(world,index,name,targetSpeed,bearing,positionX,positionY,positionZ,isDeleted);
     }
 }

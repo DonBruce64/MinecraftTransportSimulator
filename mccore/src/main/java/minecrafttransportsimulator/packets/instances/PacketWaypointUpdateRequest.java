@@ -5,18 +5,20 @@ import minecrafttransportsimulator.baseclasses.NavWaypoint;
 import minecrafttransportsimulator.baseclasses.NavWaypointUpdater;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**
  * Request waypoint update from client to server
  *
  */
-public class PacketWaypointUpdateRequest extends APacketPlayer {
+public class PacketWaypointUpdateRequest extends APacketBase {
 
     public final String index;
 
-    public PacketWaypointUpdateRequest(IWrapperPlayer player,String waypointName) {
-        super(player);
+    public PacketWaypointUpdateRequest(String waypointName) {
+        super(null);
         this.index = waypointName;
     }
 
@@ -32,11 +34,11 @@ public class PacketWaypointUpdateRequest extends APacketPlayer {
     }
 
     @Override
-    protected void handle(AWrapperWorld world, IWrapperPlayer player) {
+    public void handle(AWrapperWorld world) {
         if(NavWaypoint.getByIndexFromWorld(world, index)!=null){
             NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(NavWaypoint.getByIndexFromWorld(world, index));
             NavWaypoint currentWaypoint = waypointUpdater.currentWaypoint;
-            player.sendPacket(new PacketWaypointUpdate(
+            InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(
                             currentWaypoint.index,
                             currentWaypoint.name,
                             Double.toString(currentWaypoint.targetSpeed),
@@ -48,7 +50,7 @@ public class PacketWaypointUpdateRequest extends APacketPlayer {
                     )
             );
         }else{
-            player.sendPacket(new PacketWaypointUpdate(index,"null","0.0","0.0","0.0","0.0","0.0","true"));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(index,"null","0.0","0.0","0.0","0.0","0.0","true"));
         }
     }
 }

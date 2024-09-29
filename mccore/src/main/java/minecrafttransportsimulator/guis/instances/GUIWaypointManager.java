@@ -10,6 +10,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketVehicleWaypointUpdate;
+import minecrafttransportsimulator.packets.instances.PacketVehicleWaypointUpdateRequest;
 import minecrafttransportsimulator.packets.instances.PacketWaypointUpdate;
 import minecrafttransportsimulator.packets.instances.PacketWaypointUpdateRequest;
 
@@ -60,14 +62,16 @@ public class GUIWaypointManager extends AGUIBase {
     private final List<GUIComponentTextBox> V_waypointYList = new ArrayList<>();
     private final List<GUIComponentTextBox> V_waypointZList = new ArrayList<>();
 
-    //cache map directly from getAllWaypointsFromWorld()
-    private Map<String, NavWaypoint> V_globalWaypoint;
     //cache list should be shown
     private List<NavWaypoint> V_globalWaypointList;
     private NavWaypoint V_currentWaypoint;
     private int V_currentWaypointIndex = -1;
     //cache max index
     private int V_maxWaypointIndex;
+
+    private final int lineHeight = 11;
+    private final int globalOffset = 10;
+    private final int vehicleOffet = 98;
 
 
     public GUIWaypointManager(IWrapperPlayer player,EntityVehicleF_Physics vehicle)
@@ -118,7 +122,7 @@ public class GUIWaypointManager extends AGUIBase {
             int finalpageIndex = pageIndex;
 
             //Index button init
-            GUIComponentButton button = new GUIComponentButton(this, guiLeft + 10, guiTop + 10 + 12 * waypointSelectionButtons.size(), 25, 12, Integer.toString(pageIndex+scrollSpot+1)) {//width205
+            GUIComponentButton button = new GUIComponentButton(this, guiLeft + 10, guiTop + 10 + lineHeight * waypointSelectionButtons.size() + globalOffset, 25, lineHeight, Integer.toString(pageIndex+scrollSpot+1)) {//width205
                 @Override
                 public void onClicked(boolean leftSide) {
                     for(GUIComponentButton IndexButton:waypointSelectionButtons){
@@ -149,39 +153,39 @@ public class GUIWaypointManager extends AGUIBase {
             }
 
             //init TextBox
-            GUIComponentTextBox waypointName = new GUIComponentTextBox(this, guiLeft + 36, guiTop + 10 + 12 * waypointNameList.size(), 32, 10, waypointNameString, ColorRGB.WHITE, 5) {
+            GUIComponentTextBox waypointName = new GUIComponentTextBox(this, guiLeft + 36, guiTop + 10 + lineHeight * waypointNameList.size() + globalOffset, 32, 10, waypointNameString, ColorRGB.WHITE, 5) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
                     InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(currentWaypoint.index,getText(),Double.toString(currentWaypoint.targetSpeed),Double.toString(currentWaypoint.bearing),Double.toString(currentWaypoint.position.x),Double.toString(currentWaypoint.position.y),Double.toString(currentWaypoint.position.z),"false"));
-                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player,currentWaypoint.index));
+                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(currentWaypoint.index));
                 }
             };
 
-            GUIComponentTextBox waypointX = new GUIComponentTextBox(this, guiLeft + 70, guiTop + 10 + 12 * waypointXList.size(), 45, 10, waypointXString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointX = new GUIComponentTextBox(this, guiLeft + 70, guiTop + 10 + lineHeight * waypointXList.size() + globalOffset, 45, 10, waypointXString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
                     InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(currentWaypoint.index,currentWaypoint.name,Double.toString(currentWaypoint.targetSpeed),Double.toString(currentWaypoint.bearing),getText(),Double.toString(currentWaypoint.position.y),Double.toString(currentWaypoint.position.z),"false"));
-                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player, currentWaypoint.index));
+                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(currentWaypoint.index));
                 }
             };
 
-            GUIComponentTextBox waypointY = new GUIComponentTextBox(this, guiLeft + 117, guiTop + 10 + 12 * waypointXList.size(), 45, 10, waypointYString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointY = new GUIComponentTextBox(this, guiLeft + 117, guiTop + 10 + lineHeight * waypointXList.size() + globalOffset, 45, 10, waypointYString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
                     InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(currentWaypoint.index,currentWaypoint.name,Double.toString(currentWaypoint.targetSpeed),Double.toString(currentWaypoint.bearing),Double.toString(currentWaypoint.position.x),getText(),Double.toString(currentWaypoint.position.z),"false"));
-                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player, currentWaypoint.index));
+                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(currentWaypoint.index));
                 }
             };
 
-            GUIComponentTextBox waypointZ = new GUIComponentTextBox(this, guiLeft + 164, guiTop + 10 + 12 * waypointXList.size(), 45, 10, waypointZString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointZ = new GUIComponentTextBox(this, guiLeft + 164, guiTop + 10 + lineHeight * waypointXList.size() + globalOffset, 45, 10, waypointZString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
                     InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(currentWaypoint.index,currentWaypoint.name,Double.toString(currentWaypoint.targetSpeed),Double.toString(currentWaypoint.bearing),Double.toString(currentWaypoint.position.x),Double.toString(currentWaypoint.position.y),getText(),"false"));
-                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player, currentWaypoint.index));
+                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(currentWaypoint.index));
                 }
             };
 
@@ -197,7 +201,7 @@ public class GUIWaypointManager extends AGUIBase {
             waypointYList.add(waypointY);
             waypointZList.add(waypointZ);
         }
-        addComponent(PageUpButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 10, 20, 20, "/\\") {
+        addComponent(PageUpButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 10 + globalOffset, 20, 20, "/\\") {
             @Override
             public void onClicked(boolean leftSide) {
 
@@ -205,7 +209,7 @@ public class GUIWaypointManager extends AGUIBase {
 
             }
         });
-        addComponent(PageDownButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 74, 20, 20, "\\/") {
+        addComponent(PageDownButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 67 + globalOffset, 20, 20, "\\/") {
             @Override
             public void onClicked(boolean leftSide) {
 
@@ -213,34 +217,70 @@ public class GUIWaypointManager extends AGUIBase {
             }
         });
 
-        addComponent(addWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 13, guiTop + 34, 22+13, 16, "ADD") {
+        addComponent(addWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 15, guiTop + 34 + globalOffset, 22+15, 16, "ADD") {
             @Override
             public void onClicked(boolean leftSide) {
                 updateMaxWaypointIndex();
 
                 InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(Integer.toString(maxWaypointIndex+1),"P"+Integer.toString(maxWaypointIndex+1),"0.0","0.0",Double.toString(player.getPosition().x),Double.toString(player.getPosition().y),Double.toString(player.getPosition().z),"false"));
-                InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player,Integer.toString(maxWaypointIndex+1)));
+                InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(Integer.toString(maxWaypointIndex+1)));
             }
         });
-        addComponent(removeWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 13, guiTop + 54, 22+13, 16, "DELETE") {
+        addComponent(removeWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 15, guiTop + 50 + globalOffset, 22+15, 16, "DELETE") {
             @Override
             public void onClicked(boolean leftSide) {
                 if(currentWaypoint != null){
                     InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdate(currentWaypoint.index,currentWaypoint.name,Double.toString(currentWaypoint.targetSpeed),Double.toString(currentWaypoint.bearing),Double.toString(currentWaypoint.position.x),Double.toString(currentWaypoint.position.y),Double.toString(currentWaypoint.position.z),"true"));
-                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(player, currentWaypoint.index));
+                    InterfaceManager.packetInterface.sendToServer(new PacketWaypointUpdateRequest(currentWaypoint.index));
+                    globalWaypointList.remove(currentWaypointIndex);
+                    if(globalWaypointList.size()<=currentWaypointIndex) {
+                        disableAllTextBoxFocus();
+
+                    };
                     updateCurrentWaypoint(-1);
                 }
             }
         });
     }
 
+    public void disableAllTextBoxFocus() {
+        for(GUIComponentTextBox box:waypointNameList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:waypointXList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:waypointYList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:waypointZList){
+            box.focused = false;
+        }
+    }
+    public void V_disableAllTextBoxFocus() {
+        for(GUIComponentTextBox box:V_waypointNameList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:V_waypointXList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:V_waypointYList){
+            box.focused = false;
+        }
+        for(GUIComponentTextBox box:V_waypointZList){
+            box.focused = false;
+        }
+    }
+
     /**
      * Vehicle
      * */
     public void V_updateGlobalWaypointList() {
-        V_globalWaypoint = NavWaypoint.getAllWaypointsFromWorld(world);
-        V_globalWaypointList = new ArrayList<>(V_globalWaypoint.values());
-        NavWaypoint.sortWaypointListByIndex(V_globalWaypointList);
+        if(vehicle != null){
+            V_globalWaypointList = new ArrayList<>(vehicle.selectedWaypointList);
+        }else{
+            V_globalWaypointList = new ArrayList<>();
+        }
     }
     public void V_updateCurrentWaypoint(int index) {
         if(index<V_globalWaypointList.size() && index>-1){
@@ -262,7 +302,7 @@ public class GUIWaypointManager extends AGUIBase {
         }
     }
 
-    private final int VehiclePartTop = 90;
+
     public void setupVehiclePart() {
         V_updateGlobalWaypointList();
         V_waypointSelectionButtons.clear();
@@ -275,7 +315,7 @@ public class GUIWaypointManager extends AGUIBase {
             int finalpageIndex = pageIndex;
 
             //Index button init
-            GUIComponentButton button = new GUIComponentButton(this, guiLeft + 10, guiTop + 10 + 12 * V_waypointSelectionButtons.size() + VehiclePartTop, 25, 12, Integer.toString(pageIndex+V_scrollSpot+1)) {//width205
+            GUIComponentButton button = new GUIComponentButton(this, guiLeft + 10, guiTop + 10 + lineHeight * V_waypointSelectionButtons.size() + vehicleOffet, 25, lineHeight, Integer.toString(pageIndex+V_scrollSpot+1)) {//width205
                 @Override
                 public void onClicked(boolean leftSide) {
                     for(GUIComponentButton IndexButton:V_waypointSelectionButtons){
@@ -306,35 +346,42 @@ public class GUIWaypointManager extends AGUIBase {
             }
 
             //init TextBox
-            GUIComponentTextBox waypointName = new GUIComponentTextBox(this, guiLeft + 36, guiTop + 10 + 12 * V_waypointNameList.size() + VehiclePartTop, 32, 10, waypointNameString, ColorRGB.WHITE, 5) {
+            GUIComponentTextBox waypointName = new GUIComponentTextBox(this, guiLeft + 36, guiTop + 10 + lineHeight * V_waypointNameList.size() + vehicleOffet, 32, 10, waypointNameString, ColorRGB.WHITE, 5) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
-                    //TODO
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,getText(),Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,getText(),Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
                 }
             };
 
-            GUIComponentTextBox waypointX = new GUIComponentTextBox(this, guiLeft + 70, guiTop + 10 + 12 * V_waypointXList.size() + VehiclePartTop, 45, 10, waypointXString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointX = new GUIComponentTextBox(this, guiLeft + 70, guiTop + 10 + lineHeight * V_waypointXList.size() + vehicleOffet, 45, 10, waypointXString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
-                    //TODO
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),getText(),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),getText(),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
+
                 }
             };
 
-            GUIComponentTextBox waypointY = new GUIComponentTextBox(this, guiLeft + 117, guiTop + 10 + 12 * V_waypointXList.size() + VehiclePartTop, 45, 10, waypointYString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointY = new GUIComponentTextBox(this, guiLeft + 117, guiTop + 10 + lineHeight * V_waypointXList.size() + vehicleOffet, 45, 10, waypointYString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
-                    //TODO
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),getText(),Double.toString(V_currentWaypoint.position.z)));
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),getText(),Double.toString(V_currentWaypoint.position.z)));
+
                 }
             };
 
-            GUIComponentTextBox waypointZ = new GUIComponentTextBox(this, guiLeft + 164, guiTop + 10 + 12 * V_waypointXList.size() + VehiclePartTop, 45, 10, waypointZString, ColorRGB.WHITE, 7) {
+            GUIComponentTextBox waypointZ = new GUIComponentTextBox(this, guiLeft + 164, guiTop + 10 + lineHeight * V_waypointXList.size() + vehicleOffet, 45, 10, waypointZString, ColorRGB.WHITE, 7) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                     super.handleKeyTyped(typedChar, typedCode, control);
-                    //TODO
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),getText()));
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"EDIT",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),getText()));
+
                 }
             };
 
@@ -350,35 +397,55 @@ public class GUIWaypointManager extends AGUIBase {
             V_waypointYList.add(waypointY);
             V_waypointZList.add(waypointZ);
         }
-        addComponent(V_PageUpButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 10 + VehiclePartTop, 20, 20, "/\\") {
+        addComponent(V_PageUpButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 10 + vehicleOffet, 20, 20, "/\\") {
             @Override
             public void onClicked(boolean leftSide) {
 
-                scrollSpot -= 7;
+                V_scrollSpot -= 7;
 
             }
         });
-        addComponent(V_PageDownButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 74 + VehiclePartTop, 20, 20, "\\/") {
+        addComponent(V_PageDownButton = new GUIComponentButton(this, guiLeft + 225, guiTop + 67 + vehicleOffet, 20, 20, "\\/") {
             @Override
             public void onClicked(boolean leftSide) {
 
-                scrollSpot += 7;
+                V_scrollSpot += 7;
             }
         });
 
-        addComponent(V_addWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 13, guiTop + 34 + VehiclePartTop, 22+13, 16, "INSERT") {
+        addComponent(V_addWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 15, guiTop + 34 + vehicleOffet, 22+15, 16, "INSERT") {
             @Override
             public void onClicked(boolean leftSide) {
-                V_updateMaxWaypointIndex();
-                //TODO
+
+
+                if(currentWaypoint!=null){
+                    V_updateMaxWaypointIndex();
+                    int opIndex = 0;
+                    if(V_currentWaypointIndex == -1){
+                        opIndex = Math.max(V_globalWaypointList.size(),0);
+                    }else{
+                        opIndex = V_currentWaypointIndex+1;
+                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"INSERT",Integer.toString(opIndex),Integer.toString(V_maxWaypointIndex+1), currentWaypoint.name, "0.0","0.0",Double.toString(currentWaypoint.position.x),Double.toString(currentWaypoint.position.y),Double.toString(currentWaypoint.position.z)));
+
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"INSERT",Integer.toString(opIndex),Integer.toString(V_maxWaypointIndex+1),currentWaypoint.name,"0.0","0.0",Double.toString(currentWaypoint.position.x),Double.toString(currentWaypoint.position.y),Double.toString(currentWaypoint.position.z)));
+                }
+
             }
         });
-        addComponent(V_removeWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 13, guiTop + 54 + VehiclePartTop, 22+13, 16, "REMOVE") {
+        addComponent(V_removeWaypointButton = new GUIComponentButton(this, guiLeft + 225 - 15, guiTop + 50 + vehicleOffet, 22+15, 16, "REMOVE") {
             @Override
             public void onClicked(boolean leftSide) {
-                if(currentWaypoint != null){
-                    //TODO
+                if(V_currentWaypoint != null){
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdate(vehicle,"REMOVE",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointUpdateRequest(vehicle,"REMOVE",Integer.toString(V_currentWaypointIndex),V_currentWaypoint.index,V_currentWaypoint.name,Double.toString(V_currentWaypoint.targetSpeed),Double.toString(V_currentWaypoint.bearing),Double.toString(V_currentWaypoint.position.x),Double.toString(V_currentWaypoint.position.y),Double.toString(V_currentWaypoint.position.z)));
+                    V_globalWaypointList.remove(V_currentWaypointIndex);
+                    if(V_globalWaypointList.size()<=V_currentWaypointIndex){
+                        V_disableAllTextBoxFocus();
+
+                    }
                     V_updateCurrentWaypoint(-1);
+
                 }
             }
         });
@@ -389,9 +456,9 @@ public class GUIWaypointManager extends AGUIBase {
         super.setupComponents();
         //setupComponents will be executed every time the window is resized!
 
-        GUIComponentLabel GlobalWaypointLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 2, ColorRGB.GREEN, "Global Waypoints");
-        GUIComponentLabel V_GlobalWaypointLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 2 + VehiclePartTop, ColorRGB.GREEN, "Flight Plan Waypoints");
-        GUIComponentLabel V_isEnabled = new GUIComponentLabel(guiLeft + 130, guiTop + 2 + VehiclePartTop, ColorRGB.RED, "(Not Usable Without AIRCRAFT)");
+        GUIComponentLabel GlobalWaypointLabel = new GUIComponentLabel(guiLeft + 20, guiTop + globalOffset, ColorRGB.WHITE, "Global Waypoints");
+        GUIComponentLabel V_GlobalWaypointLabel = new GUIComponentLabel(guiLeft + 20, guiTop + vehicleOffet, ColorRGB.WHITE, "F-Plan Waypoints");
+        GUIComponentLabel V_isEnabled = new GUIComponentLabel(guiLeft + 120, guiTop + vehicleOffet, ColorRGB.WHITE, "(Ride An Aircraft To Use)");
         setupGlobalPart();
 
         addComponent(GlobalWaypointLabel);
@@ -521,9 +588,14 @@ public class GUIWaypointManager extends AGUIBase {
         V_updateGlobalWaypointList();
 
         //avoid invalid page button state
-        if(scrollSpot==0) V_PageUpButton.enabled = false;
+        if(scrollSpot==0) PageUpButton.enabled = false;
+        else PageUpButton.enabled = true;
+        if(scrollSpot+7+1>globalWaypointList.size()) PageDownButton.enabled = false;
+        else PageDownButton.enabled = true;
+
+        if(V_scrollSpot==0) V_PageUpButton.enabled = false;
         else V_PageUpButton.enabled = true;
-        if(scrollSpot+7+1>globalWaypointList.size()) V_PageDownButton.enabled = false;
+        if(V_scrollSpot+7+1>V_globalWaypointList.size()) V_PageDownButton.enabled = false;
         else V_PageDownButton.enabled = true;
 
         for (int i = 0; i < 7; ++i){
@@ -585,32 +657,32 @@ public class GUIWaypointManager extends AGUIBase {
     public void V_updateNameText(int i){
         GUIComponentTextBox waypointName = V_waypointNameList.get(i);
         String waypointNameString = "NONE";
-        if(i+scrollSpot<V_globalWaypointList.size()){
-            waypointNameString = V_globalWaypointList.get(i+scrollSpot).name;
+        if(i+V_scrollSpot<V_globalWaypointList.size()){
+            waypointNameString = V_globalWaypointList.get(i+V_scrollSpot).name;
         }
         waypointName.setText(waypointNameString);
     }
     public void V_updateYText(int i){
         GUIComponentTextBox waypointY = V_waypointYList.get(i);
         String waypointYString = "NONE";
-        if(i+scrollSpot<V_globalWaypointList.size()){
-            waypointYString = Double.toString(V_globalWaypointList.get(i+scrollSpot).position.y);
+        if(i+V_scrollSpot<V_globalWaypointList.size()){
+            waypointYString = Double.toString(V_globalWaypointList.get(i+V_scrollSpot).position.y);
         }
         waypointY.setText(waypointYString);
     }
     public void V_updateXText(int i){
         GUIComponentTextBox waypointX = V_waypointXList.get(i);
         String waypointXString = "NONE";
-        if(i+scrollSpot<V_globalWaypointList.size()){
-            waypointXString = Double.toString(V_globalWaypointList.get(i+scrollSpot).position.x);
+        if(i+V_scrollSpot<V_globalWaypointList.size()){
+            waypointXString = Double.toString(V_globalWaypointList.get(i+V_scrollSpot).position.x);
         }
         waypointX.setText(waypointXString);
     }
     public void V_updateZText(int i){
         GUIComponentTextBox waypointZ = V_waypointZList.get(i);
         String waypointZString = "NONE";
-        if(i+scrollSpot<V_globalWaypointList.size()){
-            waypointZString = Double.toString(V_globalWaypointList.get(i+scrollSpot).position.z);
+        if(i+V_scrollSpot<V_globalWaypointList.size()){
+            waypointZString = Double.toString(V_globalWaypointList.get(i+V_scrollSpot).position.z);
         }
         waypointZ.setText(waypointZString);
     }
