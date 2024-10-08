@@ -362,6 +362,48 @@ public class PartGun extends APart {
                 }
             }
 
+            //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
+            //While the reload method checks for reload time, we check here to save on code processing.
+            //No sense in looking for bullets if we can't load them anyways.
+            if (!world.isClient()) {
+                //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
+                //Clipped guns we can't reload if we're already reloading.
+                if (!definition.gun.blockReloading && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+                    if (isHandHeld) {
+                        if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested) {
+                            //Check the player's inventory for bullets.
+                            IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
+                            for (int i = 0; i < inventory.getSize(); ++i) {
+                                if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested && !definition.gun.isClipless)) {
+                                    //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
+                                    inventory.removeFromSlot(i, 1);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        if (definition.gun.autoReload) {
+                            //Iterate through all the inventory slots in crates to try to find matching ammo.
+                            for (PartInteractable crate : connectedCrates) {
+                                if (crate.isActive) {
+                                    EntityInventoryContainer inventory = crate.inventory;
+                                    for (int i = 0; i < inventory.getSize(); ++i) {
+                                        if (tryToReload(inventory.getStack(i), false)) {
+                                            //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+                                            //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+                                            if (!ConfigSystem.settings.general.devMode.value) {
+                                                inventory.removeFromSlot(i, 1);
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             //Set final gun active state and variables, and fire if those line up with conditions.
             //Note that this code runs concurrently on the client and server.  This prevents the need for packets for bullet
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
@@ -500,48 +542,6 @@ public class PartGun extends APart {
                 reloadDelayRemaining = definition.gun.reloadDelay;
             } else if (reloadDelayRemaining > 0) {
                 --reloadDelayRemaining;
-            }
-
-            //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
-            //While the reload method checks for reload time, we check here to save on code processing.
-            //No sense in looking for bullets if we can't load them anyways.
-            if (!world.isClient()) {
-                //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
-                //Clipped guns we can't reload if we're already reloading.
-                if (!definition.gun.blockReloading && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
-                    if (isHandHeld) {
-                        if ((loadedBulletCount == 0 && !firedThisTick && playerPressedTrigger) || isHandHeldGunReloadRequested) {
-                            //Check the player's inventory for bullets.
-                            IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
-                            for (int i = 0; i < inventory.getSize(); ++i) {
-                                if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested && !definition.gun.isClipless)) {
-                                    //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-                                    inventory.removeFromSlot(i, 1);
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        if (definition.gun.autoReload) {
-                            //Iterate through all the inventory slots in crates to try to find matching ammo.
-                            for (PartInteractable crate : connectedCrates) {
-                                if (crate.isActive) {
-                                    EntityInventoryContainer inventory = crate.inventory;
-                                    for (int i = 0; i < inventory.getSize(); ++i) {
-                                        if (tryToReload(inventory.getStack(i), false)) {
-                                            //Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-                                            //Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-                                            if (!ConfigSystem.settings.general.devMode.value) {
-                                                inventory.removeFromSlot(i, 1);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         } else {
             //Inactive gun, set as such and set to default position if we have one.
