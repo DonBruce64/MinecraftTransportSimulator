@@ -49,9 +49,9 @@ import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponen
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.CrafterComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
-import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -960,27 +960,41 @@ public final class LegacyCompatSystem {
             definition.gun.length = 0;
         }
 
-        //Convert old furnaces.
-        if (definition.interactable != null && definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
-            if (definition.interactable.furnaceType == null) {
-                definition.interactable.furnaceType = FurnaceComponentType.STANDARD;
-                definition.interactable.furnaceRate = 1.0F;
-                definition.interactable.furnaceEfficiency = 1.0F;
+        if (definition.interactable != null) {
+            if (definition.interactable.interactionType == InteractableComponentType.FURNACE) {
+                //Convert old furnaces.
+                if (definition.interactable.crafterType == null) {
+                    definition.interactable.crafterType = CrafterComponentType.STANDARD;
+                    definition.interactable.crafterRate = 1.0F;
+                    definition.interactable.crafterEfficiency = 1.0F;
+                }
+
+                //Convert furnaces to crafters.
+                if (definition.interactable.furnaceType != null) {
+                    definition.interactable.crafterType = definition.interactable.furnaceType;
+                    definition.interactable.furnaceType = null;
+                    definition.interactable.crafterRate = definition.interactable.furnaceRate;
+                    definition.interactable.furnaceRate = 0;
+                    definition.interactable.crafterEfficiency = definition.interactable.furnaceEfficiency;
+                    definition.interactable.furnaceEfficiency = 0;
+                }
             }
         }
 
-        //Convert old effector delay.
-        if (definition.effector != null && definition.effector.placerDelay != 0) {
-            definition.effector.operationDelay = definition.effector.placerDelay;
-            definition.effector.placerDelay = 0;
-        }
+        if (definition.effector != null) {
+            //Convert old effector delay.
+            if (definition.effector.placerDelay != 0) {
+                definition.effector.operationDelay = definition.effector.placerDelay;
+                definition.effector.placerDelay = 0;
+            }
 
-        //Convert old effector hitboxes.
-        if (definition.effector != null && definition.collisionGroups != null) {
-            for (JSONCollisionGroup collisionGroup : definition.collisionGroups) {
-                if (collisionGroup.collisionTypes == null) {
-                    collisionGroup.collisionTypes = new HashSet<>();
-                    collisionGroup.collisionTypes.add(CollisionType.EFFECTOR);
+            //Convert old effector hitboxes.
+            if (definition.collisionGroups != null) {
+                for (JSONCollisionGroup collisionGroup : definition.collisionGroups) {
+                    if (collisionGroup.collisionTypes == null) {
+                        collisionGroup.collisionTypes = new HashSet<>();
+                        collisionGroup.collisionTypes.add(CollisionType.EFFECTOR);
+                    }
                 }
             }
         }

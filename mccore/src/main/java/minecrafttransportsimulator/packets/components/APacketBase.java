@@ -30,8 +30,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
+import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketCrafterTimeSet;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
@@ -255,8 +255,8 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketItemInteractable.class);
 
         //Furnace packets.
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceFuelAdd.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceTimeSet.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterFuelAdd.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterTimeSet.class);
 
         //GUI packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketGUIRequest.class);

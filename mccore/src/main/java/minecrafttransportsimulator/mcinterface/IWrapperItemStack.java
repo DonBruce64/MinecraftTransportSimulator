@@ -20,10 +20,10 @@ public interface IWrapperItemStack {
     boolean isCompleteMatch(IWrapperItemStack other);
 
     /**
-     * Returns the fuel amount (in ticks) for this item.
+     * Returns the furnace burning fuel amount (in ticks) for this item.
      * Only returns the value for one item in the stack, not all items.
      */
-    int getFuelValue();
+    int getFurnaceFuelValue();
 
     /**
      * Returns the item that this item can be smelted to make, or an empty stack
@@ -38,6 +38,28 @@ public interface IWrapperItemStack {
      * that method should be checked before this one.
      */
     int getSmeltingTime(AWrapperWorld world);
+
+    /**
+     * Returns true if this item can be used as brewing fuel.
+     */
+    boolean isBrewingFuel();
+
+    /**
+     * Returns true if this item can be brewed with any modifer.
+     */
+    boolean isBrewingVessel();
+
+    /**
+     * Returns true if this item can be brewed with a vessel to make a potion.
+     */
+    boolean isBrewingModifier();
+
+    /**
+     * Returns the item that this item can be brewed to make with the specified modifier,
+     * or an empty stack if it can't be brewed into anything.  Note the the returned stack is 
+     * a new instance and may be modified without affecting future calls to this method.
+     */
+    IWrapperItemStack getBrewedItem(IWrapperItemStack modifierStack);
 
     /**
      * Returns the item for this stack.

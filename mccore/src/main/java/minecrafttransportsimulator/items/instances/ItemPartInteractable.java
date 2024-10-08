@@ -5,8 +5,8 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.AEntityCrafter;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -22,7 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -101,7 +101,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                     String jerrrycanFluid = data != null ? data.getString(PartInteractable.JERRYCAN_FLUID_NAME) : "";
 
                     //If we clicked a tank part, attempt to pull from it rather than fill a vehicle.
-                    //Unless this is a liquid furnace, in which case we fill that instead.
+                    //Unless this is a liquid crafter, in which case we fill that instead.
                     if (entity instanceof PartInteractable) {
                         EntityFluidTank tank = ((PartInteractable) entity).tank;
                         if (tank != null) {
@@ -117,16 +117,16 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                             }
                         }
 
-                        EntityFurnace furnace = ((PartInteractable) entity).furnace;
-                        if (furnace != null && !jerrrycanFluid.isEmpty()) {
-                            if (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)) {
+                        AEntityCrafter crafter = ((PartInteractable) entity).crafter;
+                        if (crafter != null && !jerrrycanFluid.isEmpty()) {
+                            if (ConfigSystem.settings.fuel.fuels.get(crafter.getFuelName()).containsKey(jerrrycanFluid)) {
                                 //Packet assumes we add at 0, need to "fool" it.
-                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid) * 1000 * 20 * furnace.definition.furnaceEfficiency);
-                                int priorFuel = furnace.ticksLeftOfFuel;
-                                furnace.ticksLeftOfFuel = addedFuel;
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
-                                furnace.ticksLeftOfFuel += priorFuel;
-                                furnace.ticksAddedOfFuel = furnace.ticksLeftOfFuel;
+                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(crafter.getFuelName()).get(jerrrycanFluid) * 1000 * 20 * crafter.definition.crafterEfficiency);
+                                int priorFuel = crafter.ticksLeftOfFuel;
+                                crafter.ticksLeftOfFuel = addedFuel;
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
+                                crafter.ticksLeftOfFuel += priorFuel;
+                                crafter.ticksFuelProvides = crafter.ticksLeftOfFuel;
 
                                 data.deleteEntry(PartInteractable.JERRYCAN_FLUID_NAME);
                                 stack.setData(data);

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import minecrafttransportsimulator.entities.instances.EntityBrewer;
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
@@ -167,11 +168,16 @@ public class JSONConfigSettings {
                     }
                 }
 
-                //Also add furnace fuel.
+                //Also add furnace and brewing stand fuel.
                 if (!fuels.containsKey(EntityFurnace.FURNACE_FUEL_NAME)) {
                     Map<String, Double> fluids = new HashMap<>();
                     fluids.put("lava", 1.0);
                     fuels.put(EntityFurnace.FURNACE_FUEL_NAME, fluids);
+                }
+                if (!fuels.containsKey(EntityBrewer.BREWER_FUEL_NAME)) {
+                    Map<String, Double> fluids = new HashMap<>();
+                    fluids.put("lava", 1.0);
+                    fuels.put(EntityBrewer.BREWER_FUEL_NAME, fluids);
                 }
             }
             return fuels;

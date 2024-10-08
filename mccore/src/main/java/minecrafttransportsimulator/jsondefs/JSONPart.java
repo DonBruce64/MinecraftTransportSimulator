@@ -535,15 +535,15 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("What this interactable does when interacted with.")
         public InteractableComponentType interactionType;
 
-        @JSONRequired(dependentField = "interactionType", dependentValues = {"FURNACE"})
-        @JSONDescription("What type of furnace this is.  Only required if this is a furnace component.")
-        public FurnaceComponentType furnaceType;
+        @JSONRequired(dependentField = "interactionType", dependentValues = { "FURNACE", "BREWER" })
+        @JSONDescription("What type of crafter this is.  Only required if this is a furnace or brewing stand component.")
+        public CrafterComponentType crafterType;
 
-        @JSONDescription("The processing rate of this furnace.  This will make the furnace process items faster.  This does NOT affect the fuel used, so a 2x multiplier here will make the furnace process and use fuel twice as fast.")
-        public float furnaceRate;
+        @JSONDescription("The processing rate of this crafter.  This will make the crafter process items faster.  This does NOT affect the fuel used, so a 2x multiplier here will make the crafter process and use fuel twice as fast.")
+        public float crafterRate;
 
-        @JSONDescription("The efficiency of the furnace.  A value of 1.0 will make it use the standard rate of fuel for processing.  Lower values will use less fuel, higher values more fuel.  For FUEL furnaces, a value of 1.0 makes for 20 ticks of burn time for 1mb.  For ELECTRIC furnaces, a value of 1.0 gives 500 ticks burn time for 1 electric unit.")
-        public float furnaceEfficiency;
+        @JSONDescription("The efficiency of the crafter.  A value of 1.0 will make it use the standard rate of fuel for processing.  Lower values will use less fuel, higher values more fuel.  For FUEL crafters, a value of 1.0 makes for 20 ticks of run time for 1mb.  For ELECTRIC furnaces, a value of 1.0 gives 500 ticks run time for 1 electric unit.")
+        public float crafterEfficiency;
 
         @JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
         public boolean feedsVehicles;
@@ -565,6 +565,13 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
+
+        @Deprecated
+        public CrafterComponentType furnaceType;
+        @Deprecated
+        public float furnaceRate;
+        @Deprecated
+        public float furnaceEfficiency;
     }
 
     public enum InteractableComponentType {
@@ -574,8 +581,10 @@ public class JSONPart extends AJSONPartProvider {
         BARREL,
         @JSONDescription("Works as a standard crafting table when clicked.")
         CRAFTING_TABLE,
-        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
+        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the crafter type.")
         FURNACE,
+        @JSONDescription("Works as a brewing stand when clicked.  Will take fuel internally, or externally depending on the crafter type.")
+        BREWER,
         @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
         JERRYCAN,
         @JSONDescription("Works as a battery, allowing a charge to be stored inside and then used to charge electric vehicles without a charger.")
@@ -584,8 +593,8 @@ public class JSONPart extends AJSONPartProvider {
         CRAFTING_BENCH
     }
 
-    public enum FurnaceComponentType {
-        @JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
+    public enum CrafterComponentType {
+        @JSONDescription("Standard crafter with Vanilla fuel.  Will pull from crates if those feed vehicles.")
         STANDARD,
         @JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
         FUEL,

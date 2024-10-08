@@ -10,11 +10,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.crafting.FurnaceRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
@@ -36,7 +38,7 @@ public class WrapperItemStack implements IWrapperItemStack {
     }
 
     @Override
-    public int getFuelValue() {
+    public int getFurnaceFuelValue() {
         return ForgeHooks.getBurnTime(stack, null);
     }
 
@@ -51,6 +53,26 @@ public class WrapperItemStack implements IWrapperItemStack {
     public int getSmeltingTime(AWrapperWorld world) {
         World mcWorld = ((WrapperWorld) world).world;
         return mcWorld.getRecipeManager().getAllRecipesFor(IRecipeType.SMELTING).get(0).getCookingTime();
+    }
+
+    @Override
+    public boolean isBrewingFuel() {
+        return stack.getItem() == Items.BLAZE_POWDER;
+    }
+
+    @Override
+    public boolean isBrewingVessel() {
+        return BrewingRecipeRegistry.isValidInput(stack);
+    }
+
+    @Override
+    public boolean isBrewingModifier() {
+        return BrewingRecipeRegistry.isValidIngredient(stack);
+    }
+
+    @Override
+    public IWrapperItemStack getBrewedItem(IWrapperItemStack modifierStack) {
+        return new WrapperItemStack(BrewingRecipeRegistry.getOutput(stack, ((WrapperItemStack) modifierStack).stack).copy());
     }
 
     @Override
