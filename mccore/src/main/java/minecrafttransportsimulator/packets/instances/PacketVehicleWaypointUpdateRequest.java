@@ -1,9 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.NavWaypoint;
-import minecrafttransportsimulator.baseclasses.NavWaypointUpdater;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -65,12 +62,14 @@ public class PacketVehicleWaypointUpdateRequest extends APacketEntity<EntityVehi
 
     @Override
     public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
-
-        if(vehicle.selectedWaypointList != null && vehicle.selectedWaypointList.size()>Integer.parseInt(opIndex)){
-            InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleWaypointUpdate(vehicle,operation,opIndex,index,name,targetSpeed,bearing,StrX,StrY,StrZ));
-        }else{
-            InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleWaypointUpdate(vehicle,"REMOVE",opIndex,index,"null","0.0","0.0","0.0","0.0","0.0"));
+        if(world.isClient()==false){
+            if(vehicle.selectedWaypointList != null && vehicle.selectedWaypointList.size()>Integer.parseInt(opIndex)){
+                InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleWaypointUpdate(vehicle,operation,opIndex,index,name,targetSpeed,bearing,StrX,StrY,StrZ));
+            }else{
+                InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleWaypointUpdate(vehicle,"REMOVE",opIndex,index,"null","0.0","0.0","0.0","0.0","0.0"));
+            }
         }
+
 
         return true;
     }
