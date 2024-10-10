@@ -89,8 +89,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             try{
                 this.waypointData = data.getData(SELECTED_WAYPOINT_LIST_KEY);
                 if(this.waypointData != null){
-//                Map<String,NavWaypoint>selectedWaypointMap = NavWaypoint.getAllWaypointsFromVehicle(this,waypointData);
-//                if(selectedWaypointMap!=null)selectedWaypointList = new ArrayList<>(selectedWaypointMap.values());
                     IWrapperNBT waypointOrderData = data.getData(WAYPOINT_ORDER_KEY);
                     int ListIndex = 0;
                     for(String line:waypointOrderData.getAllNames()){

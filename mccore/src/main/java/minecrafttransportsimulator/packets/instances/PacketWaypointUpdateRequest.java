@@ -35,22 +35,24 @@ public class PacketWaypointUpdateRequest extends APacketBase {
 
     @Override
     public void handle(AWrapperWorld world) {
-        if(NavWaypoint.getByIndexFromWorld(world, index)!=null){
-            NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(NavWaypoint.getByIndexFromWorld(world, index));
-            NavWaypoint currentWaypoint = waypointUpdater.currentWaypoint;
-            InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(
-                            currentWaypoint.index,
-                            currentWaypoint.name,
-                            Double.toString(currentWaypoint.targetSpeed),
-                            Double.toString(currentWaypoint.bearing),
-                            Double.toString(currentWaypoint.position.x),
-                            Double.toString(currentWaypoint.position.y),
-                            Double.toString(currentWaypoint.position.z),
-                            "false"
-                    )
-            );
-        }else{
-            InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(index,"null","0.0","0.0","0.0","0.0","0.0","true"));
+        if(world.isClient()==false) {
+            if (NavWaypoint.getByIndexFromWorld(world, index) != null) {
+                NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(NavWaypoint.getByIndexFromWorld(world, index));
+                NavWaypoint currentWaypoint = waypointUpdater.currentWaypoint;
+                InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(
+                                currentWaypoint.index,
+                                currentWaypoint.name,
+                                Double.toString(currentWaypoint.targetSpeed),
+                                Double.toString(currentWaypoint.bearing),
+                                Double.toString(currentWaypoint.position.x),
+                                Double.toString(currentWaypoint.position.y),
+                                Double.toString(currentWaypoint.position.z),
+                                "false"
+                        )
+                );
+            } else {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketWaypointUpdate(index, "null", "0.0", "0.0", "0.0", "0.0", "0.0", "true"));
+            }
         }
     }
 }
