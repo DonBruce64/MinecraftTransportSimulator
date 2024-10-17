@@ -333,29 +333,32 @@ public class PartEngine extends APart {
             }
 
             //Check for any shifting requests.
-            if (!world.isClient()) {
-                if (shiftNeutralVar.isActive) {
-                	shiftNeutralVar.toggle(false);
+            if (shiftNeutralVar.isActive) {
+                shiftNeutralVar.toggle(false);
+                if (!world.isClient()) {
                     shiftNeutral();
                 }
-                if (shiftUpVar.isActive) {
-                	shiftUpVar.toggle(false);
+            } else if (shiftUpVar.isActive) {
+                shiftUpVar.toggle(false);
+                if (!world.isClient()) {
                     shiftUp();
-                }else {
-                	if (shiftDownVar.isActive) {
-                		shiftDownVar.toggle(false);
-                        shiftDown();
-                    } else if (shiftSelectionVar.isActive) {
-                    	if (shiftSelectionVar.currentValue < 10) {
-                            while (currentGearVar.currentValue < shiftSelectionVar.currentValue && shiftUp())
-                                ;
-                        } else if (shiftSelectionVar.currentValue == 10) {
-                            if (currentGearVar.currentValue == 0) {
-                                shiftDown();
-                            }
-                        } else if (shiftSelectionVar.currentValue == 11) {
-                            shiftNeutral();
+                }
+            } else if (shiftDownVar.isActive) {
+                shiftDownVar.toggle(false);
+                if (!world.isClient()) {
+                    shiftDown();
+                }
+            } else if (shiftSelectionVar.isActive) {
+                if (!world.isClient()) {
+                    if (shiftSelectionVar.currentValue < 10) {
+                        while (currentGearVar.currentValue < shiftSelectionVar.currentValue && shiftUp())
+                            ;
+                    } else if (shiftSelectionVar.currentValue == 10) {
+                        if (currentGearVar.currentValue == 0) {
+                            shiftDown();
                         }
+                    } else if (shiftSelectionVar.currentValue == 11) {
+                        shiftNeutral();
                     }
                 }
             }
