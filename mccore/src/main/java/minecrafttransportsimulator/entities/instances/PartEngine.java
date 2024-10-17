@@ -941,7 +941,6 @@ public class PartEngine extends APart {
     }
 
     public void handStartEngine() {
-    	magnetoVar.setTo(1, false);
     	handStarterVar.setTo(1, false);
 
         //Add a small amount to the starter level from the player's hand.
