@@ -1274,7 +1274,7 @@ public class PartGun extends APart {
             case ("gun_fired"):
                 return new ComputedVariable(this, variable, partialTicks -> firedThisTick ? 1 : 0, false);
             case ("gun_muzzleflash"):
-                return new ComputedVariable(this, variable, partialTicks -> firedThisTick && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> firedThisTick && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, true);
             case ("gun_lockedon"):
                 return new ComputedVariable(this, variable, partialTicks -> entityTarget != null || engineTarget != null ? 1 : 0, false);
             case ("gun_lockedon_x"):
