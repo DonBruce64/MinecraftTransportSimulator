@@ -21,7 +21,7 @@ public class JSONRendering {
     @JSONDescription("Camera objects allow you to define new camera points on entities.  These points, unlike the normal user camera, are locked to the position and rotation you specify, so they can be used for special areas, such as airplane landing gear, bus doors, and gun barrel edges.  To facilitate the last of these, camera objects may be rotated and translated via animations.")
     public List<JSONCameraObject> cameraObjects;
 
-    @JSONDescription("A list of custom variable names.  Currently only supported on vehicles, and will appear as switches in the panel with the names below them.  These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined definitions.  You may have up to 4 custom variables on any vehicle.  Surely, that's enough?")
+    @JSONDescription("A list of custom variable names. These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined variables. The default panel will fit up to 4 of these. However, custom panels may be used to fit as many as you can put on the screen itself.")
     public List<String> customVariables;
 
     @JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.  While you can hook sounds to animations, they are rather limited in how they can be triggered and manipulated.  Sounds here allow for looping, pitch-shifting, volume control, etc.  This is where you'll want to define your sounds for engines, horns, and annoying carnival music.")

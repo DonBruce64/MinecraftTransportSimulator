@@ -234,6 +234,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         if (definition.rendering != null) {
+            if (definition.rendering.customVariables != null) {
+                definition.rendering.customVariables.forEach(variable -> {
+                    //Need to check if we have ourselves defined from data before we make ourselves new.
+                    if (!containsVariable(variable)) {
+                        addVariable(new ComputedVariable(this, variable, null));
+                    }
+                });
+            }
+
             if (definition.rendering.sounds != null) {
                 for (JSONSound soundDef : definition.rendering.sounds) {
                     allSoundDefs.add(soundDef);
