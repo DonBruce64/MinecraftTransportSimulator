@@ -121,18 +121,15 @@ public class WrapperItemStack implements IWrapperItemStack {
     public boolean interactWith(EntityFluidTank tank, IWrapperPlayer player) {
         IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
         if (handler != null) {
-            if (!player.isSneaking()) {
+            FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+            if (drainedStack != null && drainedStack.amount > 0) {
                 //Item can provide fluid.  Check if the tank can accept it.
-                FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+                int amountToDrain = (int) tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
+                drainedStack = handler.drain(amountToDrain, !player.isCreative());
                 if (drainedStack != null) {
-                    //Able to take fluid from item, attempt to do so.
-                    int amountToDrain = (int) tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
-                    drainedStack = handler.drain(amountToDrain, !player.isCreative());
-                    if (drainedStack != null) {
-                        //Was able to provide liquid from item.  Fill the tank.
-                        tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
-                        player.setHeldStack(new WrapperItemStack(handler.getContainer()));
-                    }
+                    //Was able to provide liquid from item.  Fill the tank.
+                    tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
+                    player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                 }
             } else {
                 //Item can hold fluid.  Check if we can fill it.
