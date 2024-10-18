@@ -595,9 +595,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     case ("part_removed_vehicle"):
                         return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && !isValid) ? 1 : 0, false);
                     case ("part_added_ground"):
-                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn == null && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
+                        return new ComputedVariable(this, variable, partialTicks -> (entityOn instanceof EntityPlacedPart && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
                     case ("part_removed_ground"):
-                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn == null && !isValid) ? 1 : 0, false);
+                        return new ComputedVariable(this, variable, partialTicks -> (entityOn instanceof EntityPlacedPart && !isValid) ? 1 : 0, false);
                     default: {
                         ComputedVariable computedVariable = super.createComputedVariable(variable, false);
                         if (computedVariable == null) {
