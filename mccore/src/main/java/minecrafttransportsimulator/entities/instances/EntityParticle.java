@@ -133,7 +133,6 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.type == ParticleType.BREAK) {
             if (world.isAir(blockCheckPosition)) {
                 //Don't spawn break particles in the air, they're null textures.
-                System.out.println("AIR?" + entitySpawning.getClass());
                 this.staticColor = null;
                 this.renderable = null;
                 this.model = null;
