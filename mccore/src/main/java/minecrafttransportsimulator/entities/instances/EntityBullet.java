@@ -70,6 +70,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private IWrapperEntity externalEntityTargeted;
     public HitType lastHit;
     public Axis sideHit;
+    private BlockHitResult hitBlock;
     private Point3D relativeGunPos;
     private Point3D prevRelativeGunPos;
     private final List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
@@ -130,6 +131,17 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     @Override
     public void update() {
         super.update();
+        //If we hit a block last tick, process hit logic this tick.  We delay it 1 tick for packets to get to clients for their processing.
+        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
+        //particles and sounds prior to the request from the internal system for the destruction of this block.
+        if (hitBlock != null) {
+            if (world.isClient()) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side));
+            } else {
+                performBlockHitLogic(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side);
+            }
+            hitBlock = null;
+        }
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
         if (impactDespawnTimer >= 0) {
@@ -298,7 +310,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 AEntityF_Multipart<?> hitMultipart = null;
                 Collection<BoundingBoxHitResult> hitMultipartBoxes = null;
                 IWrapperEntity hitExternalEntity = null;
-                BlockHitResult hitBlock = world.getBlockHit(position, motion);
+                hitBlock = world.getBlockHit(position, motion);
                 
                 //Check for collided external entities.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
@@ -418,14 +430,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         hitBlock.hitPosition.z -= 0.000001;
                     }
                     if (world.isClient()) {
-                        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
-                        //particles and sounds prior to the request from the internal system for the destruction of this block.
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitBlock.hitPosition, hitBlock.side, HitType.BLOCK));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side));
                         waitingOnActionPacket = true;
                     } else {
                         performGenericHitLogic(gun, bulletNumber, hitBlock.hitPosition, hitBlock.side, HitType.BLOCK);
-                        performBlockHitLogic(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side);
                     }
                     displayDebugMessage("HIT BLOCK AT " + hitBlock.blockPosition + " WITH ACTUAL POSITION " + hitBlock.hitPosition);
                     return;
@@ -593,6 +601,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public static void performBlockHitLogic(PartGun gun, int bulletNumber, Point3D blockPosition, Axis blockSide) {
         //This is for block state-changes.  Particles and animations are handled in generic.
         if (!gun.world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
                 gun.world.extinguish(blockPosition, blockSide);
             } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
@@ -604,7 +613,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     gun.world.setToFire(blockPosition, blockSide);
                 }
             }
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
         	//Don't do a state-change on the client, just make a breaking sound.
             //Fancy bullets don't make block-breaking sounds.  They do other things instead.

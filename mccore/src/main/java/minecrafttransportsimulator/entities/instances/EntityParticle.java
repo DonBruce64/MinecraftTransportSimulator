@@ -119,19 +119,6 @@ public class EntityParticle extends AEntityC_Renderable {
         setPositionToSpawn(spawningPosition);
         prevPosition.set(position);
 
-        //Now that position is set, check to make sure we aren't an invalid particle.
-        if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(position)) {
-                //Don't spawn break particles in the air, they're null textures.
-                this.staticColor = null;
-                this.renderable = null;
-                this.model = null;
-                this.initialVelocity = null;
-                this.killBadParticle = true;
-                return;
-            }
-        }
-
         //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
         Point3D blockCheckPosition;
         if (definition.getBlockPropertiesFromGround) {
@@ -140,6 +127,20 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             //Use spawning position here since block properties for particles are usually from bullets, which are slightly in the block.
             blockCheckPosition = spawningPosition;
+        }
+
+        //Now that position is set, check to make sure we aren't an invalid particle.
+        if (definition.type == ParticleType.BREAK) {
+            if (world.isAir(blockCheckPosition)) {
+                //Don't spawn break particles in the air, they're null textures.
+                System.out.println("AIR?" + entitySpawning.getClass());
+                this.staticColor = null;
+                this.renderable = null;
+                this.model = null;
+                this.initialVelocity = null;
+                this.killBadParticle = true;
+                return;
+            }
         }
 
         //Set orientation.
