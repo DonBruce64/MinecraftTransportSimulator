@@ -409,6 +409,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
         public boolean fireSolo;
 
+        @JSONDescription("If true, then when this gun has windup it will wind down instantly.  This allows for essentially charged-shot guns.")
+        public boolean windsDownInstantly;
+
         @JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
         public boolean resetPosition;
 
