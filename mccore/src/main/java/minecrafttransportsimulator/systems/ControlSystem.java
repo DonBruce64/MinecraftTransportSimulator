@@ -81,20 +81,20 @@ public final class ControlSystem {
         if (InterfaceManager.inputInterface.isLeftMouseButtonDown()) {
             if (!clickingLeft) {
                 clickingLeft = true;
-                handleClick(player, playerGun);
+                handleClick(player, playerGun, true, false);
             }
         } else if (clickingLeft) {
             clickingLeft = false;
-            handleClick(player, playerGun);
+            handleClick(player, playerGun, false, false);
         }
         if (InterfaceManager.inputInterface.isRightMouseButtonDown()) {
             if (!clickingRight) {
                 clickingRight = true;
-                handleClick(player, playerGun);
+                handleClick(player, playerGun, false, true);
             }
         } else if (clickingRight) {
             clickingRight = false;
-            handleClick(player, playerGun);
+            handleClick(player, playerGun, false, false);
         }
 
         if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
@@ -102,28 +102,28 @@ public final class ControlSystem {
         }
     }
 
-    private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun) {
+    private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun, boolean leftClick, boolean rightClick) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
         if (playerGun != null && playerGun.activeGun != null) {
-            if (clickingLeft) {
+            if (leftClick) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_ON));
             } else {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.TRIGGER_OFF));
             }
-            if (clickingRight) {
+            if (rightClick) {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_ON));
             } else {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_OFF));
             }
         }
-        if (clickingLeft || clickingRight) {
+        if (leftClick || rightClick) {
             Point3D startPosition = player.getEyePosition();
             Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, clickingLeft, clickingRight));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, leftClick, rightClick));
             }
         } else if (interactResult != null) {
             //Fire off un-click to entity last clicked.
