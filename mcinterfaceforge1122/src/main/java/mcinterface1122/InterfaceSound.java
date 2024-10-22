@@ -68,6 +68,11 @@ public class InterfaceSound implements IInterfaceSound {
     private static final List<SoundInstance> queuedSounds = new ArrayList<>();
 
     /**
+     * List of radios paused.  Needs to be separate from normal paused sound this those get re-added to the sound set.
+     **/
+    private static final List<SoundInstance> pausedRadioSounds = new ArrayList<>();
+
+    /**
      * This gets incremented whenever we try to get a source and fail.  If we get to 10, the sound system
      * will stop attempting to play sounds.  Used for when mods take all the sources.
      **/
@@ -94,17 +99,23 @@ public class InterfaceSound implements IInterfaceSound {
                 for (SoundInstance sound : playingSounds) {
                     //Stop playing sounds when paused as they can get corrupted.
                     if (sound.radio != null) {
-                        sound.radio.stop();
+                        pausedRadioSounds.add(sound);
+                        sound.radio.currentStation.removeRadio(sound.radio);
                     } else {
                         sound.stopSound = true;
                     }
                 }
+                playingSounds.removeAll(pausedRadioSounds);
             }
             return;
         } else if (isSystemPaused) {
             for (SoundInstance sound : playingSounds) {
                 AL10.alSourcePlay(sound.sourceIndex);
             }
+            for (SoundInstance sound : pausedRadioSounds) {
+                sound.radio.currentStation.addRadio(sound.radio);
+            }
+            pausedRadioSounds.clear();
             isSystemPaused = false;
         }
 
