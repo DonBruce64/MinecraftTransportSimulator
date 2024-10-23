@@ -441,23 +441,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
             int partNumber = ComputedVariable.getVariableNumber(variable);
             String partVariable = variable.substring(0, variable.lastIndexOf("_"));
-            if (partType.equals("part")) {
-                //Shortcut as we can just get the part for the slot.
-                //Check index just in case someone screwed up a JSON.
-                APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
-                if (partFound != null) {
-                    return partFound.createComputedVariable(partVariable, true);
-                }
-            } else if (definition.parts != null) {
+
+            //Get the "general" part variable.  If we find a specific part later, we use that one instead.
+            APart generalPart = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
+            if (definition.parts != null) {
                 for (int i = 0; i < definition.parts.size(); ++i) {
                     JSONPartDefinition partDef = definition.parts.get(i);
                     for (String partDefType : partDef.types) {
                         if (partDefType.startsWith(partType)) {
                             if (partNumber == 0) {
+                                //Found the slot def that matches this specific variable prefix, get part.
                                 APart partFound = partsInSlots.get(i);
                                 if (partFound != null) {
+                                    //Part is present, forward to part for lookup, stripping suffix index.
                                     return partFound.createComputedVariable(partVariable, true);
                                 } else {
+                                    //Part slot found, but is empty, return 0.
                                     return new ComputedVariable(false);
                                 }
                             } else {
@@ -468,9 +467,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                 }
             }
-
-            //Couldn't find the part, set to 0.
-            return new ComputedVariable(false);
+            if (generalPart != null) {
+                //Using general part variable since we didn't find anything specific.
+                return generalPart.createComputedVariable(partVariable, true);
+            } else {
+                //No general part found, and no specifics.  Part simply does not exist.  Return 0.
+                return new ComputedVariable(false);
+            }
         } else {
             return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
