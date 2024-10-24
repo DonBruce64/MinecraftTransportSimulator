@@ -101,7 +101,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Add slot definition constants.
         if (placementDefinition.constantValues != null) {
-            placementDefinition.constantValues.forEach((constantKey, constantValue) -> getOrCreateVariable(constantKey).setTo(constantValue, false));
+            placementDefinition.constantValues.forEach((constantKey, constantValue) -> {
+                ComputedVariable newVariable = new ComputedVariable(this, constantKey);
+                newVariable.setTo(constantValue, false);
+                addVariable(newVariable);
+            });
         }
 
         //Set initial position, rotation, and scale.  This ensures part doesn't "warp" the first tick.
