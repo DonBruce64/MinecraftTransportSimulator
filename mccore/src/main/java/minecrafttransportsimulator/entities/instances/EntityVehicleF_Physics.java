@@ -354,7 +354,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             if (definition.motorized.crossSectionalArea > 0) {
                 dragForce = 0.5F * airDensity * velocity * velocity * definition.motorized.crossSectionalArea * dragCoeff;
             } else if (wingSpanVar.currentValue > 0) {
-                dragForce = 0.5F * airDensity * velocity * velocity * wingAreaVar.currentValue * (dragCoeff + wingLiftCoeff * wingLiftCoeff / (Math.PI * definition.motorized.wingSpan * definition.motorized.wingSpan / wingAreaVar.currentValue * 0.8));
+                dragForce = 0.5F * airDensity * velocity * velocity * wingAreaVar.currentValue * (dragCoeff + wingLiftCoeff * wingLiftCoeff / (Math.PI * wingSpanVar.currentValue * wingSpanVar.currentValue / wingAreaVar.currentValue * 0.8));
             } else {
                 dragForce = 0.5F * airDensity * velocity * velocity * 5.0F * dragCoeff;
             }
