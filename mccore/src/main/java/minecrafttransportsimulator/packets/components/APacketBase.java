@@ -300,6 +300,8 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointUpdate.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointUpdateRequest.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointSelect.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleWaypointSelectRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 

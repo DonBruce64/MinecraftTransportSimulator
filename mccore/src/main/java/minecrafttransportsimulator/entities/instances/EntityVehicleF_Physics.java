@@ -61,6 +61,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     //Autopilot.
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
+    public final ComputedVariable autopilotNavEnabledVar;
+    public final ComputedVariable autopilotHeadingEnabledVar;
+    public final ComputedVariable autopilotAltitudeEnabledVar;
+    public final ComputedVariable autopilotSpeedEnabledVar;
+    public final ComputedVariable autopilotVerticalSpeedEnabledVar;
     public final ComputedVariable autopilotPositionX;
     public final ComputedVariable autopilotPositionY;
     public final ComputedVariable autopilotPositionZ;
@@ -68,9 +73,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable autopilotAltitude;
     public final ComputedVariable autopilotSpeed;
     public final ComputedVariable autopilotVerticalSpeed;
-    private PIDController verticalSpeedController = new PIDController(0.001, 0.000005, 0.01);
+//    private PIDController verticalSpeedController = new PIDController(0.001, 0.000005, 0.01);
+    private PIDController verticalSpeedController = new PIDController(0.003, 10, 0.01);
     private PIDController speedController = new PIDController(0.15, 0.000375, 0.00003);
-    private PIDController cdiDeflectionController = new PIDController(4.5, 0.002, 0.0);
+//    private PIDController cdiDeflectionController = new PIDController(4.5, 0.4, 0.0);
+    private PIDController cdiDeflectionController = new PIDController(20, 0.4, 0.4);
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -159,6 +166,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
         addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
+        addVariable(this.autopilotNavEnabledVar = new ComputedVariable(this, "autopilot_nav_enable"));
+        addVariable(this.autopilotHeadingEnabledVar = new ComputedVariable(this, "autopilot_heading_enable"));
+        addVariable(this.autopilotAltitudeEnabledVar = new ComputedVariable(this, "autopilot_altitude_enable"));
+        addVariable(this.autopilotSpeedEnabledVar = new ComputedVariable(this, "autopilot_speed_enable"));
+        addVariable(this.autopilotVerticalSpeedEnabledVar = new ComputedVariable(this, "autopilot_vertical_speed_enable"));
         addVariable(this.autopilotHeading = new ComputedVariable(this, "autopilot_heading", data));
         addVariable(this.autopilotAltitude = new ComputedVariable(this, "autopilot_altitude", data));
         addVariable(this.autopilotVerticalSpeed = new ComputedVariable(this, "autopilot_vertical_speed", data));
@@ -623,26 +635,50 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
         } else if (definition.motorized.isAircraft && autopilotValueVar.isActive) {
-            if (autopilotPositionX.isActive) {
-                navGPS();
-            }
-            if (selectedBeacon != null) {
-                navILS();
-            } else {
-                cdiDeflectionController.clear();
-            }
-            if (autopilotHeading.isActive) {
+//            if (autopilotNavEnabledVar.isActive) {
+                if (selectedBeacon != null) {
+                    autopilotPositionX.setTo(selectedBeacon.position.x, true);
+                    autopilotPositionY.setTo(selectedBeacon.position.y, true);
+                    autopilotPositionZ.setTo(selectedBeacon.position.z, true);
+                    System.out.println("Naving beacon");
+                    navILS();
+                    setHeading();
+                    setVerticalSpeed();
+                } else if (!selectedWaypointIndex.equals("-1")) {
+                    NavWaypoint waypoint = selectedWaypointList.get(Integer.parseInt(selectedWaypointIndex));
+                    autopilotPositionX.setTo(waypoint.position.x, true);
+                    autopilotPositionY.setTo(waypoint.position.y, true);
+                    autopilotPositionZ.setTo(waypoint.position.z, true);
+                    System.out.println("Going waypoint guided");
+                    navGPS();
+                    setHeading();
+                    setAltitude();
+                    setVerticalSpeed();
+                } else {
+//                    autopilotNavEnabledVar.setActive(false, true);
+                    //TODO: this is potential bug where player use beacon nav first, change to waypoint then back to beacon, all without turning off nav mode
+                    cdiDeflectionController.clear();
+                    System.out.println("Leveling out");
+                    autopilotAltitude.setTo(position.y - seaLevel, true);
+                    autopilotHeading.setTo(-orientation.angles.y, true);
+                    setHeading();
+                    setAltitude();
+                    setVerticalSpeed();
+                }
+//            }
+            if (autopilotHeadingEnabledVar.isActive) {
+                System.out.println("Heading to " + autopilotHeading.currentValue);
                 setHeading();
             }
-            if (autopilotAltitude.isActive) {
+            if (autopilotAltitudeEnabledVar.isActive) {
                 setAltitude();
             }
-            if (autopilotSpeed.isActive) {
+            if (autopilotSpeedEnabledVar.isActive) {
                 setSpeed();
             } else {
                 speedController.clear();
             }
-            if (autopilotVerticalSpeed.isActive) {
+            if (autopilotVerticalSpeedEnabledVar.isActive) {
                 setVerticalSpeed();
             } else {
                 verticalSpeedController.clear();
@@ -717,8 +753,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     public void navILS() {
+        // Horizontal navigation
         double delta = selectedBeacon.getBearingDelta(this);
-        double output = cdiDeflectionController.loop(delta, 1);
+        double output = cdiDeflectionController.loop(delta, 0.05);
         if (output < -45) {
             output = -45;
         } else if (output > 45) {
@@ -726,6 +763,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
         double heading = output + selectedBeacon.bearing + 180;
         autopilotHeading.setTo(heading, true);
+
+        // Vertical navigation
+        delta = selectedBeacon.getGlideSlopeDelta(this);
+        output = delta * 45;
+        if (output > 20) {
+            output = 20;
+        } else if (output < -45) {
+            output = -45;
+        }
+        // Output = Math.toDegress(Math.asin(motion.y / velocity))
+        autopilotVerticalSpeed.setTo(Math.sin(Math.toRadians(output))*velocity*speedFactor*20, true);
     }
 
     public void setSpeed() {
@@ -733,16 +781,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         double output = speedController.loop(delta, 1);
         if (output < 0) {
             output = 0;
-        } else if (output > 1) {
+        } else if (output > MAX_THROTTLE) {
             output = 1;
         }
-        double signalDelta = output;
-        if (signalDelta > 0 && throttleVar.currentValue < MAX_THROTTLE) {
+        double signalDelta = output - throttleVar.currentValue;
+        if (signalDelta > 0) {
             if (signalDelta > 0.0125) {
                 signalDelta = 0.0125;
             }
             throttleVar.adjustBy(signalDelta, true);
-        } else if (signalDelta < 0 && throttleVar.currentValue > -MAX_THROTTLE) {
+        } else if (signalDelta < 0) {
             if (signalDelta < -0.0125) {
                 signalDelta = -0.0125;
             }
@@ -760,7 +808,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             delta = -(360 - delta);
         }
 //        double delta = orientation.angles.getClampedYDelta(autopilotHeading.currentValue);
-        double output = delta * 1.0;
+        double output = delta;
         // Clamp banking angle to 45 deg
         if (output > 45) {
             output = 45;
@@ -785,39 +833,43 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     public void setAltitude() {
-        if (!autopilotVerticalSpeed.isActive) {
-            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
-                elevatorTrimVar.adjustBy(0.1, true);
-            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
-                elevatorTrimVar.adjustBy(-0.1, true);
-            }
-            return;
-        }
-        double delta = autopilotAltitude.currentValue - (position.y - seaLevel);
-        double output = delta * 0.50;
-        if ((delta > 0 && output < autopilotVerticalSpeed.currentValue) || (delta < 0 && output > autopilotVerticalSpeed.currentValue)) {
+//        if (autopilotSpeed.isActive) {
+
+//        }
+        double deltaAltitude = autopilotAltitude.currentValue - (position.y - seaLevel);
+        double output = deltaAltitude * 0.50;
+//        if (!autopilotVerticalSpeed.isActive) {
+//            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+//                elevatorTrimVar.adjustBy(0.1, true);
+//            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+//                elevatorTrimVar.adjustBy(-0.1, true);
+//            }
+//            return;
+            autopilotVerticalSpeed.setTo(output, true);
+//        }
+        // Slow down the ascending
+        if ((deltaAltitude > 0 && output < autopilotVerticalSpeed.currentValue) || (deltaAltitude < 0 && output > autopilotVerticalSpeed.currentValue)) {
             autopilotVerticalSpeed.setTo(output, true);
         }
-        System.out.println("Altitude " + delta + " " + output);
-        autopilotVerticalSpeed.setTo(output, true);
+        System.out.println("Altitude " + deltaAltitude + " " + output);
     }
 
     public void setVerticalSpeed() {
         double delta = autopilotVerticalSpeed.currentValue - motion.y * speedFactor * 20;
-        double output = verticalSpeedController.loop(delta, 1);
-        if (output < -10) {
-            output = -10;
-        } else if (output > 10) {
-            output = 10;
+        double output = verticalSpeedController.loop(delta, 0.05);
+        if (output < -MAX_ELEVATOR_TRIM) {
+            output = -MAX_ELEVATOR_TRIM;
+        } else if (output > MAX_ELEVATOR_TRIM) {
+            output = MAX_ELEVATOR_TRIM;
         }
         System.out.println("Vertical speed " + delta + " " + output);
         double signalDelta = output - elevatorTrimVar.currentValue;
-        if (signalDelta > 0 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+        if (signalDelta > 0) {
             if (signalDelta > 0.75) {
                 signalDelta = 0.75;
             }
             elevatorTrimVar.adjustBy(signalDelta, true);
-        } else if (signalDelta < 0 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+        } else if (signalDelta < 0) {
             if (signalDelta < -0.75) {
                 signalDelta = -0.75;
             }
@@ -997,9 +1049,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("beacon_glideslope_setpoint"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope : 0, false);
             case ("beacon_glideslope_actual"):
-                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? -selectedBeacon.getGlideSlopeDelta(this) + selectedBeacon.glideSlope : 0, false);
             case ("beacon_glideslope_delta"):
-                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.getGlideSlopeDelta(this) : 0, false);
             case ("beacon_distance"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0, false);
             case ("radar_detected"):

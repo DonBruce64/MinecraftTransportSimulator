@@ -10,10 +10,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketVehicleWaypointUpdate;
-import minecrafttransportsimulator.packets.instances.PacketVehicleWaypointUpdateRequest;
-import minecrafttransportsimulator.packets.instances.PacketWaypointUpdate;
-import minecrafttransportsimulator.packets.instances.PacketWaypointUpdateRequest;
+import minecrafttransportsimulator.packets.instances.*;
 
 import java.util.*;
 
@@ -323,6 +320,7 @@ public class GUIWaypointManager extends AGUIBase {
                     }
                     this.enabled = false;
                     V_updateCurrentWaypoint(finalpageIndex+V_scrollSpot);
+                    InterfaceManager.packetInterface.sendToServer(new PacketVehicleWaypointSelectRequest(vehicle, Integer.toString(finalpageIndex+V_scrollSpot)));
                 }
             };
             addComponent(button);

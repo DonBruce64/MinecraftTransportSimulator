@@ -121,6 +121,10 @@ public class JSONPanel extends AJSONBase {
         CUSTOM_VARIABLE,
         @JSONDescription("Makes this a beacon box, which allows changing the selected beacon.  Will not be visible if hasRadioNav is false for the vehicle and allPlanesWithNav is false in the config.")
         BEACON_BOX,
+        @JSONDescription("Make this a heading input box, which allows changing the autopilot heading.")
+        HEADING,
+        @JSONDescription("Heading autopilot on or st")
+        HEADING_ENABLE,
         @JSONDescription("Makes this a roll trim button.  Clicking the left and right will adjust the trim in the limits.")
         ROLL_TRIM,
         @JSONDescription("Makes this a pitch trim button.  Clicking the left and right will adjust the trim in the limits.")

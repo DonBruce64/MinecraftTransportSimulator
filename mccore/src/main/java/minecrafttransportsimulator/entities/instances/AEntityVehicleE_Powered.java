@@ -90,6 +90,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             //init selectedWaypoints
             try{
                 this.waypointData = data.getData(SELECTED_WAYPOINT_LIST_KEY);
+                this.selectedWaypointIndex = "-1";
                 if(this.waypointData != null){
                     IWrapperNBT waypointOrderData = data.getData(WAYPOINT_ORDER_KEY);
                     int ListIndex = 0;

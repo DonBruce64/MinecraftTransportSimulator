@@ -62,7 +62,7 @@ public class PacketVehicleWaypointUpdateRequest extends APacketEntity<EntityVehi
 
     @Override
     public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
-        if(world.isClient()==false){
+        if(!world.isClient()){
             if(vehicle.selectedWaypointList != null && vehicle.selectedWaypointList.size()>Integer.parseInt(opIndex)){
                 InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleWaypointUpdate(vehicle,operation,opIndex,index,name,targetSpeed,bearing,StrX,StrY,StrZ));
             }else{
