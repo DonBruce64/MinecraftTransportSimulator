@@ -171,6 +171,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 List<BoundingBox> boxes = new ArrayList<>();
                 for (JSONCollisionBox boxDef : groupDef.collisions) {
                     boxes.add(new BoundingBox(boxDef, groupDef));
+                    //Add a computed variable to our list if we don't have one for the box.
+                    //This variable needs to maintain state since boxes persist over reloads.
+                    if (boxDef.action != null) {
+                        if (!containsVariable(boxDef.action.variable)) {
+                            addVariable(new ComputedVariable(this, boxDef.action.variable, null));
+                        }
+                    }
                 }
                 definitionCollisionBoxes.add(boxes);
                 if (groupDef.animations != null || groupDef.applyAfter != null) {
