@@ -139,7 +139,7 @@ public class InterfaceRender implements IInterfaceRender {
         } else {
             String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
             final RenderType renderType;
-            if (data.vertexObject.cacheVertices && !renderingGUI) {
+            if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 BufferData buffer = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));

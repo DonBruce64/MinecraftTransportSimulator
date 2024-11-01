@@ -987,7 +987,7 @@ public class PartEngine extends APart {
         } else {
             world.spawnExplosion(position, 0F, false);
         }
-        remove();
+        entityOn.removePart(this, false, true);
     }
 
     //--------------------START OF ENGINE GEAR METHODS--------------------

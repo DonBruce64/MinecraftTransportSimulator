@@ -94,7 +94,6 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
 
     @Override
     public double getChargeAmount() {
-        //FIXME make this reference config in higher version interfaces.
         double amount = MAX_BUFFER - internalBuffer;
         //Don't let the charger fill the buffer to charge things if we haven't purchased fuel.
         if (!isCreative) {

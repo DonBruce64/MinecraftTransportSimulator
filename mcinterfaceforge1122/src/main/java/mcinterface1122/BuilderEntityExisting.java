@@ -120,7 +120,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                         //Make sure the collision bounds for MC are big enough to collide with this entity.
                         if (World.MAX_ENTITY_RADIUS < interactable.encompassingBox.widthRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.heightRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.depthRadius) {
                             double maxEntityRadius = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
-                            if (maxEntityRadius < 150) {
+                            if (maxEntityRadius < AEntityE_Interactable.MAX_ENTITY_RADIUS) {
                                 World.MAX_ENTITY_RADIUS = maxEntityRadius;
                             } else {
                                 InterfaceManager.coreInterface.logError("Attempted to set the world entity max size to way too big of a number (" + maxEntityRadius + ") for " + entity + "  Removing entity from world as this is likely a pack error that will cause lots of TPS loss!");

@@ -69,7 +69,6 @@ public abstract class EntityManager {
      * constructors won't complete before the entity is accessed from this list.
      */
     public <EntityType extends AEntityA_Base> void addEntity(EntityType entity) {
-        //FIXME need to make sure this occurs before part addition in higher MC builds.
         allEntities.add(entity);
         if (entity.getUpdateTime() == EntityAutoUpdateTime.NORMAL) {
             allNormalTickableEntities.add(entity);
@@ -161,7 +160,6 @@ public abstract class EntityManager {
      * are not parts, since parts are ticked by their parents.
      */
     public void tickAll(boolean beforePlayer) {
-        //FIXME remove profiling from world callers in higher MC versions.
         AWrapperWorld world = getWorld();
         if (world.isClient()) {
             if (beforePlayer) {
@@ -373,7 +371,6 @@ public abstract class EntityManager {
         }
     }
     
-    //FIXME need to put this on newer MC versions.
     public void adjustHeightForRain(Point3D position) {
         for (EntityVehicleF_Physics vehicle : getEntitiesOfType(EntityVehicleF_Physics.class)) {
             if (vehicle.encompassingBox.isPointInsideAndBelow(position)) {

@@ -315,6 +315,10 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_AXISMODE = new LanguageEntry("gui.config.joystick.axismode", "Axis mode: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NORMAL = new LanguageEntry("gui.config.joystick.normal", "Normal");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_INVERT = new LanguageEntry("gui.config.joystick.invert", "Inverted");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_LABEL = new LanguageEntry("gui.config.rendering.label", "Rendering mode. Slower modes have more compatibility with shaders and performance mods at the cost of FPS.");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE0 = new LanguageEntry("gui.config.rendering.mode0", "Superfast");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE1 = new LanguageEntry("gui.config.rendering.mode1", "Fast");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE2 = new LanguageEntry("gui.config.rendering.mode2", "Slow");
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
     public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");

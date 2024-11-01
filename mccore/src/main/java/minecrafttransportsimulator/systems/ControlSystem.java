@@ -76,7 +76,6 @@ public final class ControlSystem {
     }
 
     public static void controlGlobal(IWrapperPlayer player) {
-        //FIXME re-order global controals on higher MC versions.
         EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
         if (InterfaceManager.inputInterface.isLeftMouseButtonDown()) {
             if (!clickingLeft) {

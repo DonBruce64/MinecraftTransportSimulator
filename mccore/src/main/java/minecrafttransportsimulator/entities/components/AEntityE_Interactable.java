@@ -48,6 +48,11 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  */
 public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition> {
     /**
+     * Max allowed radius for entities.  Any with encompassing boxes larger will be removed as invalid by the main game system interfaces.
+     **/
+    public static final int MAX_ENTITY_RADIUS = 150;
+
+    /**
      * Static helper matrix for transforming instrument positions.
      **/
     private static final TransformationMatrix instrumentTransform = new TransformationMatrix();

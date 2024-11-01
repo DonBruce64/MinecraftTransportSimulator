@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="All rights reserved"
+issueTrackerURL="https://github.com/DonBruce64/MinecraftTransportSimulator/issues"
+
+# Mod Info
+[[mods]]
+modId="mts"
+version="${file.jarVersion}"
+displayName="Immersive Vehicles (formerly MTS)"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/minecraft-transport-simulator"
+logoFile="vingette.png"
+credits="Don Bruce & The Modeling Crew."
+description='''
+Realistic planes and cars for Minecraft!
+'''
+# Forge Dependency
+[[dependencies.mts]]
+    modId="forge"
+    mandatory=true
+    versionRange="[40.2.0,)"
+    ordering="NONE"
+    side="BOTH"

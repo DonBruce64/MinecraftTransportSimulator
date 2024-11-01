@@ -120,7 +120,6 @@ public class RadioStation {
         //If we are an internet stream, and we killed the last radio, abort us.
         //This is because internet streams are constant feeds and can't be cached.
         if (playingRadios.isEmpty() && queuedRadios.isEmpty() && source != RadioSources.LOCAL && decoder != null) {
-            //FIXME update InterfaceSound to use this VS stop in higher MC versions.
             decoder.stop();
             decoder = null;
         }

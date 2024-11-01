@@ -162,7 +162,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                 if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                    partToTransfer.remove();
+                    partToTransfer.entityOn.removePart(partToTransfer, true, true);
                     addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
                     return;
                 }
@@ -182,7 +182,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true)) {
                                     IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                                    currentPart.remove();
+                                    currentPart.entityOn.removePart(currentPart, true, true);
                                     entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
                                     return;
                                 }
@@ -194,7 +194,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 //Remove the part from ourselves.
                 IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 IWrapperEntity partRider = currentPart.rider;
-                currentPart.remove();
+                currentPart.entityOn.removePart(currentPart, true, true);
                 
                 //Create placed part and align to part location.
                 IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
@@ -391,11 +391,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public void remove() {
         super.remove();
-        //Remove all parts, but don't notify clients.  We don't want them to get removal packets before we ourselves are gone.
-        //If they do, bad states will occur.
-        while (!parts.isEmpty()) {
-            removePart(parts.get(0), false, false);
-        }
+        //Remove all parts on us, since they're now invalid.
+        parts.forEach(part -> part.remove());
     }
 
     @Override
@@ -914,8 +911,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.save(data);
         data.setBoolean("spawnedDefaultParts", true);
         for (APart part : parts) {
-            //Don't save the part if it's not valid or a fake part.
-            if (part.isValid && !part.isFake()) {
+            //Don't save the part if it's a fake part.
+            if (!part.isFake()) {
                 IWrapperNBT partData = part.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 //We need to set some extra data here for the part to allow this entity to know where it went.
                 //This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.

@@ -35,6 +35,9 @@ public class GUIConfig extends AGUIBase {
     private boolean configuringRendering = false;
     private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<>();
     private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<>();
+    private GUIComponentButton renderMode0Button;
+    private GUIComponentButton renderMode1Button;
+    private GUIComponentButton renderMode2Button;
 
     //Keybind selection variables.
     private ControlTypeEnum controlConfiguring;
@@ -142,6 +145,30 @@ public class GUIConfig extends AGUIBase {
         //We have two sets here.  One for rendering, one for controls.
         populateConfigButtonList(renderConfigButtons, ConfigSystem.client.renderingSettings);
         populateConfigButtonList(controlConfigButtons, ConfigSystem.client.controlSettings);
+
+        //Add render mode components.
+        addComponent(renderMode0Button = new GUIComponentButton(this, guiLeft + 20, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE0.getCurrentValue()) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.renderingSettings.renderingMode.value = 0;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(renderMode1Button = new GUIComponentButton(this, guiLeft + 90, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE1.getCurrentValue()) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.renderingSettings.renderingMode.value = 1;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(renderMode2Button = new GUIComponentButton(this, guiLeft + 160, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE2.getCurrentValue()) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                ConfigSystem.client.renderingSettings.renderingMode.value = 2;
+                ConfigSystem.saveToDisk();
+            }
+        });
+        addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 140, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_RENDERING_LABEL.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F, getWidth() - 20).setComponent(renderMode1Button));
 
         //Control selection buttons and text.
         controlSelectionButtons.clear();
@@ -466,6 +493,13 @@ public class GUIConfig extends AGUIBase {
         for (GUIComponentButton button : renderConfigButtons.keySet()) {
             button.visible = !renderConfigScreenButton.enabled;
         }
+        renderMode0Button.visible = !renderConfigScreenButton.enabled;
+        renderMode0Button.enabled = ConfigSystem.client.renderingSettings.renderingMode.value != 0;
+        renderMode1Button.visible = !renderConfigScreenButton.enabled;
+        renderMode1Button.enabled = ConfigSystem.client.renderingSettings.renderingMode.value != 1;
+        renderMode2Button.visible = !renderConfigScreenButton.enabled;
+        renderMode2Button.enabled = ConfigSystem.client.renderingSettings.renderingMode.value != 2;
+
         for (GUIComponentButton button : controlConfigButtons.keySet()) {
             button.visible = !controlConfigScreenButton.enabled;
         }
@@ -491,7 +525,6 @@ public class GUIConfig extends AGUIBase {
             radioVolumeDownButton.visible = true;
             radioVolumeDownButton.enabled = ConfigSystem.client.controlSettings.radioVolume.value > 0;
             radioVolumeLabel.text = LanguageSystem.GUI_CONFIG_CONTROLS_RADIOVOLUME.getCurrentValue() + ConfigSystem.client.controlSettings.radioVolume.value;
-            //FIXME make sure radio volume gets applies in interfaces for ports.
         } else {
             soundVolumeUpButton.visible = false;
             soundVolumeDownButton.visible = false;

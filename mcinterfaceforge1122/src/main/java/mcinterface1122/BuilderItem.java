@@ -157,8 +157,9 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (hand.equals(EnumHand.MAIN_HAND)) {
-            EnumActionResult result = item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
-            if (result == EnumActionResult.FAIL && player.isSneaking()) {
+            if (item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name()))) {
+                return EnumActionResult.SUCCESS;
+            } else if (player.isSneaking()) {
                 //Forward sneak click too, since blocks don't get these.
                 if (!world.isRemote) {
                     TileEntity tile = world.getTileEntity(pos);
@@ -170,7 +171,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 }
                 return EnumActionResult.FAIL;
             }
-            return result;
+            return item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 ? EnumActionResult.PASS : EnumActionResult.FAIL;
         } else {
             return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
         }

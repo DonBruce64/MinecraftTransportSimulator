@@ -1,0 +1,125 @@
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net" }
+        maven { url = "https://maven.parchmentmc.org" }
+        maven { url = "https://repo.spongepowered.org/maven" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
+        classpath group: "org.parchmentmc", name: "librarian", version: "1.+"
+        classpath group: "org.spongepowered", name: "mixingradle", version: "0.7.+"
+    }
+}
+
+//Apply plugins
+apply plugin: "net.minecraftforge.gradle"
+apply plugin: "org.parchmentmc.librarian.forgegradle"
+apply plugin: "eclipse"
+apply plugin: "org.spongepowered.mixin"
+
+
+//Set file name.
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+archivesBaseName = project.archive_name
+
+//Options for Java version to compile to.
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+compileJava {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+//Minecraft mappings and run configs.
+minecraft {
+    // The mappings can be changed at any time, and must be in the following format.
+    // Channel:   Version:
+    // snapshot   YYYYMMDD   Snapshot are built nightly.
+    // stable     #          Stables are built at the discretion of the MCP team.
+    // official   MCVersion  Official field/method names from Mojang mapping files
+    //mappings channel: "official", version: "1.18.2"
+    mappings channel: project.mappings_channel, version: "${project.mappings_version}-${project.mc_version}"
+
+    //Run configurations.
+    runs {
+        client {
+            workingDirectory project.file("run")
+            arg "-mixin.config=mts.mixins.json"
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file("runServer")
+
+            mods {
+                minecrafttransportsimulator {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    // location of the maven that hosts JEI files before January 2023
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+		// location of the maven that hosts JEI files since January 2023
+		maven { url = "https://maven.blamejared.com/" }
+}
+
+//Configuration that holds jars to include in the jar
+configurations {
+    embed
+    minecraftLibrary.extendsFrom(embed)
+}
+
+//Specify dependencies.
+dependencies {
+    //Minecraft to use.
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+    //Make mixin annotations actually do something
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
+    //Core to use.
+		//Need to compile core first.  Can't figure out how to do this, manually execute for now.
+		//project(':mccore').tasks.build.execute()
+    embed project(":mccore")
+		
+		//Compile against the JEI API but do not include it at runtime
+    compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
+    //At runtime, use the full JEI jar
+    runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+}
+
+mixin {
+    add sourceSets.main, project.mixin_refmap
+    config project.mixin_config
+}
+
+//Here is where we zip up all embeds and add them to our jar.
+jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    manifest {
+        attributes([
+                "TweakClass"    : project.mixin_tweaker,
+                "TweakOrder"    : "0",
+                "MixinConfigs"  : project.mixin_config,
+                "MixinConnector": project.mixin_connector
+        ])
+    }
+}
+
+//Now compile the mod.
+jar.finalizedBy("reobfJar")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
+}

@@ -27,6 +27,7 @@ import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -116,7 +117,7 @@ public class InterfaceRender implements IInterfaceRender {
 
         GL11.glPushMatrix();
         applyTransformOpenGL(data.transform);
-        if (data.vertexObject.cacheVertices) {
+        if (data.vertexObject.cacheVertices && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
         	//Add entity to the rendering mapping once rendered.
             objectMap.computeIfAbsent(data.vertexObject, k -> new HashSet<>()).add(data);
             int cachedVertexIndex = cachedIndexMap.computeIfAbsent(data.vertexObject, k -> {

@@ -285,13 +285,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public void remove() {
-        super.remove();
-        //Call this after removal since we don't want to get stuck in an infinite loop since part removal also calls this method.
-        entityOn.removePart(this, false, !world.isClient());
-    }
-
-    @Override
     public boolean requiresDeltaUpdates() {
         return entityOn.requiresDeltaUpdates() || isMoveable || super.requiresDeltaUpdates();
     }
@@ -322,7 +315,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             	}else if (!player.getInventory().addStack(getStack())) {
                 	world.spawnItemStack(getStack(), position, null);
                 }
-                remove();
+                entityOn.removePart(this, false, true);
             }
         } else {
             //Not a removable part, or is an actual attack.

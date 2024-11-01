@@ -411,7 +411,6 @@ public abstract class AWrapperWorld extends EntityManager {
      * Normally, items are spawned as if they're on top of blocks in a default MC behavior.
      * You can specify a motion to override this and spawn them right at the point with the requested motion.
      */
-    //FIXME make newer interfaces utilize the optional motion.
     public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion);
 
     /**

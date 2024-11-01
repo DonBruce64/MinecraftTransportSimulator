@@ -316,7 +316,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Set blimp-specific states before calculating forces.
             if (definition.motorized.isBlimp) {
-                //FIXME make sure to fix entity sizes in higher MC versions for maxEntityRadius for blimps.  Also make it a variable.
                 thrustTorque.x = 0;
                 thrustTorque.z = 0;
                 //If we have the brake pressed at a slow speed, stop the blimp.

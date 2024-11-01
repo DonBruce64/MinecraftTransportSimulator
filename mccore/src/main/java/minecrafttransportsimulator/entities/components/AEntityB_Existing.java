@@ -262,7 +262,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             riderRelativeOrientation.updateToAngles();
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);
-            //FIXME need to fix rider seat offset position in higher interfaces.
             riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
             riderHeadPosition.set(riderEyePosition);
 
