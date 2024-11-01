@@ -206,7 +206,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
         
         //Update permanent-ness
-        isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
+        isPermanent = placementDefinition.lockingVariables != null ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
