@@ -19,6 +19,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -307,6 +308,7 @@ public class InterfaceRender implements IInterfaceRender {
             if (!datas.isEmpty() && ConfigSystem.client.renderingSettings.renderingMode.value == 0) {
                 //Setup common render states.
                 renderType.setupRenderState();
+                BufferUploader.reset();
 
                 //Shader is set now, get it and set values.
                 ShaderInstance shaderInstance = RenderSystem.getShader();
