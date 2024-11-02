@@ -580,13 +580,13 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                     case ("part_present"):
                         return new ComputedVariable(true);
                     case ("part_ismirrored"):
-                        return new ComputedVariable(this, variable, partialTicks -> isMirrored ? 1 : 0, false);
+                        return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):
-                        return new ComputedVariable(this, variable, partialTicks -> placementDefinition.pos.z > 0 ? 1 : 0, false);
+                        return new ComputedVariable(placementDefinition.pos.z > 0);
                     case ("part_isspare"):
-                        return new ComputedVariable(this, variable, partialTicks -> isSpare ? 1 : 0, false);
+                        return new ComputedVariable(isSpare);
                     case ("part_onvehicle"):
-                        return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? 1 : 0, false);
+                        return new ComputedVariable(vehicleOn != null);
                     case ("part_added_vehicle"):
                         return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
                     case ("part_removed_vehicle"):
