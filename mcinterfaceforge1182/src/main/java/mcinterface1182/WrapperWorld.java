@@ -527,7 +527,7 @@ public class WrapperWorld extends AWrapperWorld {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         //Need to go down till we find a block.
         boolean bottomSlab = false;
-        while (pos.getY() > 0) {
+        while (pos.getY() > world.getMinBuildHeight()) {
             if (!world.isEmptyBlock(pos)) {
                 //Check for a slab, since this affects distance.
                 BlockState state = world.getBlockState(pos);
