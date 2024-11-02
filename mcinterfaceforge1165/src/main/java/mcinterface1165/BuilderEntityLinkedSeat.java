@@ -91,12 +91,13 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 remove();
         	}
         }else if (loadFromSavedNBT) {
-            entityUUID = lastLoadedNBT.getUUID("entityUUID");
-            if(entityUUID == null) {
-            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
+            if (lastLoadedNBT.contains("entityUUID")) {
+                entityUUID = lastLoadedNBT.getUUID("entityUUID");
+                loadedFromSavedNBT = true;
+            } else {
+                InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
                 remove();
             }
-            loadedFromSavedNBT = true;
         }
     }
 
