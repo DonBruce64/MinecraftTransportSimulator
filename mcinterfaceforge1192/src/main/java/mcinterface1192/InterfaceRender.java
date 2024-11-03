@@ -392,11 +392,7 @@ public class InterfaceRender implements IInterfaceRender {
             } else if (data.isTranslucent) {
                 stateBuilder.setShaderState(RENDERTYPE_ENTITY_SOLID_SHADER);
             } else {
-                if (data.vertexObject.cacheVertices) {
-                    stateBuilder.setShaderState(RENDERTYPE_ENTITY_CUTOUT_SHADER);
-                } else {
-                    stateBuilder.setShaderState(RENDERTYPE_ENTITY_CUTOUT_SHADER);
-                }
+                stateBuilder.setShaderState(RENDERTYPE_ENTITY_CUTOUT_SHADER);
             }
 
             //Set transparency.
