@@ -667,8 +667,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
             	//First check the animated conditionals, since those drive on/off state.
+                //Need to check if we are valid, since we tick when invalid for one tick at death and don't want to re-start any stopped looping sounds.
             	AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-                boolean shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
+                boolean shouldSoundStartPlaying = (!soundDef.looping || isValid) && activeSwitchbox.runSwitchbox(partialTicks, true);
                     
                 //If we aren't a looping or repeating sound, check if we were true last check.
                 //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.

@@ -795,7 +795,6 @@ public class PartEngine extends APart {
     public void remove() {
         super.remove();
         //Turn off and tell wheels to stop skipping calcs from being controlled by the engine.
-        running = false;
         if (vehicleOn != null) {
             for (PartGroundDevice wheel : drivenWheels) {
                 wheel.skipAngularCalcs = false;
