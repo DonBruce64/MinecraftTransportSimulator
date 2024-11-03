@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.IItemEntityProvider.IItemEntityFactory;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -222,9 +223,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     public boolean isPickable() {
-        //This need to return true.  Even though the returned collision boxes don't include interaction boxes like those for parts, projectiles
+        //This needs to return true when using vehicles.  Even though the returned collision boxes don't include interaction boxes like those for parts, projectiles
         //use this method with their raytracing to see if they can hit us.
-        return true;
+        return entity instanceof EntityVehicleF_Physics || entity instanceof EntityPlacedPart;
     }
 
     @Override
