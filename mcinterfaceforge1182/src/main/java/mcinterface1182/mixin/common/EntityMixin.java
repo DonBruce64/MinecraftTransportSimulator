@@ -3,12 +3,10 @@ package mcinterface1182.mixin.common;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
@@ -19,7 +17,6 @@ import mcinterface1182.BuilderEntityLinkedSeat;
 import mcinterface1182.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -27,6 +24,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin {
+    private Vec3 pVec;
+
     /**
      * Need this to force eye position while in vehicles.
      * Otherwise, MC uses standard position, which will be wrong.
@@ -37,42 +36,53 @@ public abstract class EntityMixin {
         Entity riding = entity.getVehicle();
         if (riding instanceof BuilderEntityLinkedSeat) {
             BuilderEntityLinkedSeat builder = (BuilderEntityLinkedSeat) riding;
-            if(builder.entity != null) {
+            if (builder.entity != null) {
                 ci.setReturnValue(new Vec3(builder.entity.riderHeadPosition.x, builder.entity.riderHeadPosition.y, builder.entity.riderHeadPosition.z));
             }
         }
     }
 
     /**
-     * Need this to force collision with vehicles.
+     * Need this to force collision with vehicles.  First we get variables when function is called, then
+     * we overwrite the collided boxes.
      */
-    @Redirect(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntityCollisions(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
-    public List<VoxelShape> redirect_collide(Level accessor, @Nullable Entity pEntity, AABB pCollisionBox) {
-        if (pEntity != null) {
-            List<VoxelShape> otherShapes = null;
-            for (BuilderEntityExisting builder : pEntity.level.getEntitiesOfClass(BuilderEntityExisting.class, pCollisionBox)) {
-                if (builder.collisionBoxes != null) {
-                    if (builder.collisionBoxes.intersects(pCollisionBox)) {
-                        for (BoundingBox box : builder.collisionBoxes.getBoxes()) {
-                            AABB convertedBox = WrapperWorld.convert(box);
-                            if (convertedBox.intersects(pCollisionBox)) {
-                                if (otherShapes == null) {
-                                    otherShapes = new ArrayList<>();
-                                }
-                                otherShapes.add(Shapes.create(convertedBox));
+    @Inject(method = "collide", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntityCollisions(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
+    private void inject_collide(Vec3 pVec, CallbackInfoReturnable<Vec3> ci) {
+        this.pVec = pVec;
+    }
+
+    @ModifyVariable(method = "collide", at = @At(value = "STORE"), name = "list")
+    private List<VoxelShape> modify_collidelist(List<VoxelShape> existingCollisions) {
+        Entity entity = (Entity) ((Object) this);
+        AABB pCollisionBox = entity.getBoundingBox().expandTowards(pVec);
+        List<VoxelShape> vehicleCollisions = null;
+        for (BuilderEntityExisting builder : entity.level.getEntitiesOfClass(BuilderEntityExisting.class, pCollisionBox)) {
+            if (builder.collisionBoxes != null) {
+                if (builder.collisionBoxes.intersects(pCollisionBox)) {
+                    for (BoundingBox box : builder.collisionBoxes.getBoxes()) {
+                        AABB convertedBox = WrapperWorld.convert(box);
+                        if (convertedBox.intersects(pCollisionBox)) {
+                            if (vehicleCollisions == null) {
+                                vehicleCollisions = new ArrayList<>();
                             }
+                            vehicleCollisions.add(Shapes.create(convertedBox));
                         }
                     }
                 }
             }
-            if (otherShapes != null) {
-                List<VoxelShape> oldImmutableList = accessor.getEntityCollisions(pEntity, pCollisionBox);
-                Builder<VoxelShape> builder = ImmutableList.builderWithExpectedSize(oldImmutableList.size() + otherShapes.size());
-                builder.addAll(oldImmutableList);
-                builder.addAll(otherShapes);
-                return builder.build();
-            }
         }
-        return accessor.getEntityCollisions(pEntity, pCollisionBox);
+        if (vehicleCollisions != null) {
+            if (!existingCollisions.isEmpty()) {
+                List<VoxelShape> oldImmutableList = entity.level.getEntityCollisions(entity, pCollisionBox);
+                Builder<VoxelShape> builder = ImmutableList.builderWithExpectedSize(oldImmutableList.size() + vehicleCollisions.size());
+                builder.addAll(oldImmutableList);
+                builder.addAll(vehicleCollisions);
+                return builder.build();
+            } else {
+                return vehicleCollisions;
+            }
+        } else {
+            return existingCollisions;
+        }
     }
 }
