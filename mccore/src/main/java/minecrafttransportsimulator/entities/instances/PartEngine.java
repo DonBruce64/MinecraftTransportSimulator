@@ -582,10 +582,10 @@ public class PartEngine extends APart {
             //First check to see if we need to check driven wheels.
             //While doing this we also get the friction those wheels are providing.
             //This is used later in force calculations.
+            wheelFriction = 0;
             if (definition.engine.jetPowerFactor == 0 && !drivenWheels.isEmpty()) {
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
-                wheelFriction = 0;
                 engineTargetRPM = !electricStarterVar.isActive ? vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue : startRPMVar.currentValue;
 
                 //Update wheel friction and velocity.
