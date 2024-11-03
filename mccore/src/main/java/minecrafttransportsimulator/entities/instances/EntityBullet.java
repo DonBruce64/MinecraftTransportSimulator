@@ -160,6 +160,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             return;
         }
 
+        //Check to make sure we didn't go past the world border.
+        if (!world.isInsideBorder(position)) {
+            displayDebugMessage("OUTSIDE OF WORLD");
+            remove();
+            return;
+        }
+
         //If we are waiting on an action packet from the server, don't do any updates and just hold for packet or expire timer.
         if (!waitingOnActionPacket) {
             //Update distance traveled.

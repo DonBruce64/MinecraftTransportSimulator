@@ -157,6 +157,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract void removeItemStackEntity(IWrapperEntity entity);
 
     /**
+     * Returns true if the position is inside the world border.
+     */
+    public abstract boolean isInsideBorder(Point3D position);
+
+    /**
      * Returns true if the chunk that contains the position is loaded.
      */
     public abstract boolean chunkLoaded(Point3D position);
