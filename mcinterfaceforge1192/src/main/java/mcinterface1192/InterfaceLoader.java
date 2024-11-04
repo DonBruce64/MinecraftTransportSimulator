@@ -89,6 +89,8 @@ public class InterfaceLoader {
         if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
             FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::onIVRegisterShadersEvent);
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(InterfaceRender::onIVRegisterRenderersEvent);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }

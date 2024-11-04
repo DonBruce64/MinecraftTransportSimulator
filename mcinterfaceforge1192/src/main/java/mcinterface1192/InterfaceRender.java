@@ -59,11 +59,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.event.RegisterShadersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -71,7 +68,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
  *
  * @author don_bruce
  */
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, ResourceLocation> onlineTextures = new HashMap<>();
     private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
@@ -88,9 +84,9 @@ public class InterfaceRender implements IInterfaceRender {
     private static final ResourceLocation BLOCK_TEXTURE_LOCATION = TextureAtlas.LOCATION_BLOCKS;
     private static RenderStateShard.TextureStateShard MISSING_STATE;
     private static RenderStateShard.TextureStateShard BLOCK_STATE;
-    private static PoseStack matrixStack;
+    public static PoseStack matrixStack;
     public static Matrix4f projectionMatrix;
-    private static MultiBufferSource renderBuffer;
+    public static MultiBufferSource renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
@@ -100,7 +96,6 @@ public class InterfaceRender implements IInterfaceRender {
     private static final RenderStateShard.ShaderStateShard MTS_ENTITY_LIGHTS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityLightsShader);
     private static final RenderStateShard.ShaderStateShard MTS_ENTITY_CUTOUT_NOSHADOWS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityCutoutNoshadowsShader);
 
-    @SubscribeEvent
     public static void onIVRegisterShadersEvent(RegisterShadersEvent event) {
         try {
             event.registerShader(new ShaderInstance(event.getResourceManager(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
@@ -115,7 +110,6 @@ public class InterfaceRender implements IInterfaceRender {
      * Event that's called to setup the client.  We register our render wrapper
      * class here.
      */
-    @SubscribeEvent
     public static void onIVRegisterRenderersEvent(RegisterRenderers event) {
         //Register the global entity rendering class.
         event.registerEntityRenderer(BuilderEntityRenderForwarder.E_TYPE4.get(), manager -> new EntityRenderer<BuilderEntityRenderForwarder>(manager) {
@@ -137,7 +131,9 @@ public class InterfaceRender implements IInterfaceRender {
                     renderCameraOffset.set(Mth.lerp(partialTicks, builder.xOld, builder.getX()), Mth.lerp(partialTicks, builder.yOld, builder.getY()), Mth.lerp(partialTicks, builder.zOld, builder.getZ()));
 
                     //Set the stack variables and render.
-                    doRenderCall(stack, buffer, partialTicks);
+                    matrixStack = stack;
+                    renderBuffer = buffer;
+                    doRenderCall(false, partialTicks);
                 }
             }
         });
@@ -273,9 +269,7 @@ public class InterfaceRender implements IInterfaceRender {
         matrixStack.popPose();
     }
 
-    public static void doRenderCall(PoseStack stack, MultiBufferSource buffer, float partialTicks) {
-        matrixStack = stack;
-        renderBuffer = buffer;
+    public static void doRenderCall(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
@@ -286,8 +280,7 @@ public class InterfaceRender implements IInterfaceRender {
             for (AEntityC_Renderable entity : allEntities) {
                 matrixStack.pushPose();
                 matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
-                entity.render(false, partialTicks);
-                entity.render(true, partialTicks);
+                entity.render(blendingEnabled, partialTicks);
                 matrixStack.popPose();
             }
 

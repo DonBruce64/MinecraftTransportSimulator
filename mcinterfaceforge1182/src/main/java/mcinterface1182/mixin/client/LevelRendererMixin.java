@@ -39,17 +39,23 @@ public abstract class LevelRendererMixin {
     }
 
     /**
-     * Need this to render for replay mod, which doesn't render via the main entity.
+     * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
+     * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
      */
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void inject_renderLevelBlended(PoseStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
+        MultiBufferSource.BufferSource irendertypebuffer$impl = renderBuffers.bufferSource();
+        //Set camera offset point for later.
+        Vec3 position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
+        InterfaceRender.matrixStack = pMatrixStack;
+        InterfaceRender.renderBuffer = irendertypebuffer$impl;
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
-            MultiBufferSource.BufferSource irendertypebuffer$impl = renderBuffers.bufferSource();
-            //Set camera offset point for later.
-            Vec3 position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-            InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
-            InterfaceRender.doRenderCall(pMatrixStack, irendertypebuffer$impl, pPartialTicks);
+            InterfaceRender.doRenderCall(false, pPartialTicks);
         }
+        InterfaceRender.doRenderCall(true, pPartialTicks);
+        //Need to end batch after drawing translucents, otherwise they'll get other matrices applied.
+        irendertypebuffer$impl.endBatch();
     }
 
     /**

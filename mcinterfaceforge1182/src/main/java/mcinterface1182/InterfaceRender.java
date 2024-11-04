@@ -89,9 +89,9 @@ public class InterfaceRender implements IInterfaceRender {
     private static final ResourceLocation BLOCK_TEXTURE_LOCATION = TextureAtlas.LOCATION_BLOCKS;
     private static RenderStateShard.TextureStateShard MISSING_STATE;
     private static RenderStateShard.TextureStateShard BLOCK_STATE;
-    private static PoseStack matrixStack;
+    public static PoseStack matrixStack;
     public static Matrix4f projectionMatrix;
-    private static MultiBufferSource renderBuffer;
+    public static MultiBufferSource renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
     private static float[] matrixConvertArray = new float[16];
@@ -138,7 +138,9 @@ public class InterfaceRender implements IInterfaceRender {
                     renderCameraOffset.set(Mth.lerp(partialTicks, builder.xOld, builder.getX()), Mth.lerp(partialTicks, builder.yOld, builder.getY()), Mth.lerp(partialTicks, builder.zOld, builder.getZ()));
 
                     //Set the stack variables and render.
-                    doRenderCall(stack, buffer, partialTicks);
+                    matrixStack = stack;
+                    renderBuffer = buffer;
+                    doRenderCall(false, partialTicks);
                 }
             }
         });
@@ -273,9 +275,7 @@ public class InterfaceRender implements IInterfaceRender {
         matrixStack.popPose();
     }
 
-    public static void doRenderCall(PoseStack stack, MultiBufferSource buffer, float partialTicks) {
-        matrixStack = stack;
-        renderBuffer = buffer;
+    public static void doRenderCall(boolean blendingEnabled, float partialTicks) {
         AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
@@ -286,8 +286,7 @@ public class InterfaceRender implements IInterfaceRender {
             for (AEntityC_Renderable entity : allEntities) {
                 matrixStack.pushPose();
                 matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
-                entity.render(false, partialTicks);
-                entity.render(true, partialTicks);
+                entity.render(blendingEnabled, partialTicks);
                 matrixStack.popPose();
             }
 
