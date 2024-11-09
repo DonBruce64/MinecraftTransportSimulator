@@ -418,6 +418,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, then this gun will fire bullets to align with itself only, and not with the muzzle rot paramter.  However, the initial velocity will still align with the rot parameter.  This allows the muzzle to be rotated to adjust the firing direction without modifying the orientation of the spawned bullet.  Think bomb bays and rocket launchers with a jettison before burn.")
         public boolean disableMuzzleOrientation;
 
+        @JSONDescription("If true, then the bullets fired from this gun will not inherit the motion of the gun upon firing. Useful for handheld guns where merely walking can throw the projectile off.")
+        public boolean disableInheritedMotion;
+
         @JSONDescription("The capacity of the gun, in number of bullets.")
         public int capacity;
 
