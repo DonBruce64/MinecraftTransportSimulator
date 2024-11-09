@@ -1174,10 +1174,12 @@ public class PartGun extends APart {
         }
 
         //Add gun velocity to bullet to ensure we spawn with the offset.
-        if (vehicleOn != null) {
-            bulletVelocity.addScaled(motion, vehicleOn.speedFactor);
-        } else {
-            bulletVelocity.add(motion);
+        if (!definition.gun.disableInheritedMotion) {
+            if (vehicleOn != null) {
+                bulletVelocity.addScaled(motion, vehicleOn.speedFactor);
+            } else {
+                bulletVelocity.add(motion);
+            }
         }
 
         //Set position.
