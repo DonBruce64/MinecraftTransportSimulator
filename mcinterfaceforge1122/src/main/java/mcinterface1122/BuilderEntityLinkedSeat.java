@@ -87,32 +87,10 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 setDead();
         	}
         }else if (loadFromSavedNBT) {
+            //Unlike modern MC, UUID isn't saved as a single key, and thus we can't "test" for it.
+            //We can only get the UUID and fail in the above block.
             entityUUID = lastLoadedNBT.getUniqueId("entityUUID");
-            if(entityUUID == null) {
-            	InterfaceManager.coreInterface.logError("Found a seat not linked to an entity?  The heck?");
-                setDead();
-            }
             loadedFromSavedNBT = true;
-        }
-        
-        
-        else {
-            //If we have NBT, and haven't loaded it, do so now.
-            if (!loadedFromSavedNBT && loadFromSavedNBT) {
-                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-                try {
-                    entity = worldWrapper.getEntity(lastLoadedNBT.getUniqueId("entityUUID"));
-                    //If entity doesn't exist, wait until it does.
-                    if (entity != null) {
-                        loadedFromSavedNBT = true;
-                        lastLoadedNBT = null;
-                    }
-                } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
-                    setDead();
-                }
-            }
         }
         if (rider == null && ticksExisted > 100) {
             //We have existed for over 5 seconds without the rider loading in.  Clearly, they don't exist.

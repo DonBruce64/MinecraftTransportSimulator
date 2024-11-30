@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
@@ -10,7 +11,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -18,32 +19,43 @@ import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 public final class PartInteractable extends APart {
-    public final EntityFurnace furnace;
+    public final AEntityCrafter crafter;
     public final EntityInventoryContainer inventory;
     public final EntityFluidTank tank;
     public String jerrycanFluid;
+    public boolean batteryCharged;
     public PartInteractable linkedPart;
     public EntityVehicleF_Physics linkedVehicle;
+
+    public static final String JERRYCAN_FLUID_NAME = "jerrycanFluid";
+    public static final String BATTERY_CHARGED_NAME = "batteryCharged";
 
     public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
         switch (definition.interactable.interactionType) {
             case FURNACE: {
-                this.furnace = new EntityFurnace(world, data != null ? data.getData("furnace") : null, definition.interactable);
-                this.inventory = furnace;
+                this.crafter = new EntityFurnace(world, data != null ? data.getData("crafter") : null, definition.interactable);
+                this.inventory = crafter;
                 this.tank = null;
-                world.addEntity(furnace);
+                world.addEntity(crafter);
+                break;
+            }
+            case BREWER: {
+                this.crafter = new EntityBrewer(world, data != null ? data.getData("crafter") : null, definition.interactable);
+                this.inventory = crafter;
+                this.tank = null;
+                world.addEntity(crafter);
                 break;
             }
             case CRATE: {
-                this.furnace = null;
+                this.crafter = null;
                 this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 this.tank = null;
                 world.addEntity(inventory);
                 break;
             }
             case BARREL: {
-                this.furnace = null;
+                this.crafter = null;
                 this.inventory = null;
                 this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, (int) (definition.interactable.inventoryUnits * 10000));
                 world.addEntity(tank);
@@ -51,14 +63,25 @@ public final class PartInteractable extends APart {
             }
             case JERRYCAN: {
                 if (data != null) {
-                    this.jerrycanFluid = data.getString("jerrycanFluid");
+                    this.jerrycanFluid = data.getString(JERRYCAN_FLUID_NAME);
                 } else {
                     this.jerrycanFluid = "";
+                }
+                this.crafter = null;
+                this.inventory = null;
+                this.tank = null;
+                break;
+            }
+            case BATTERY: {
+                if (data != null) {
+                    this.batteryCharged = data.getBoolean(BATTERY_CHARGED_NAME);
+                } else {
+                    this.batteryCharged = false;
                 }
                 //No break statement here, fall-down to default to null things.
             }
             default: {
-                this.furnace = null;
+                this.crafter = null;
                 this.inventory = null;
                 this.tank = null;
             }
@@ -67,16 +90,29 @@ public final class PartInteractable extends APart {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (vehicleOn == null || !vehicleOn.locked) {
-            if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
-                player.sendPacket(new PacketPartInteractable(this, player));
-            } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {
-                player.openCraftingGUI();
-            } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
-                entityOn.removePart(this, true, null);
-                world.spawnItemStack(getStack(), position, null);
-            } else if (tank != null) {
-                player.getHeldStack().interactWith(tank, player);
+        if (vehicleOn == null || !vehicleOn.lockedVar.isActive) {
+            switch (definition.interactable.interactionType) {
+                case CRATE:
+                case CRAFTING_BENCH:
+                case FURNACE:
+                case BREWER: {
+                    player.sendPacket(new PacketPartInteractable(this, player));
+                    break;
+                }
+                case CRAFTING_TABLE: {
+                    player.openCraftingGUI();
+                    break;
+                }
+                case JERRYCAN:
+                case BATTERY: {
+                    remove();
+                    world.spawnItemStack(getStack(), position, null);
+                    break;
+                }
+                case BARREL: {
+                    player.getHeldStack().interactWith(tank, player);
+                    break;
+                }
             }
         } else {
             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
@@ -133,15 +169,15 @@ public final class PartInteractable extends APart {
     @Override
     public void update() {
         super.update();
-        if (furnace != null) {
-            furnace.update();
-            if (furnace.ticksLeftToSmelt > 0) {
+        if (crafter != null) {
+            crafter.update();
+            if (crafter.ticksLeftToCraft > 0) {
                 //Only look for fuel when we're processing and don't have any.
-                if (!world.isClient() && furnace.ticksLeftOfFuel == 0) {
-                    addFurnaceFuel();
+                if (!world.isClient() && crafter.ticksLeftOfFuel == 0) {
+                    addCrafterFuel();
                 }
                 if (vehicleOn != null) {
-                    vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+                    vehicleOn.electricUsage += crafter.powerToDrawPerTick;
                 }
             }
         }
@@ -197,27 +233,27 @@ public final class PartInteractable extends APart {
     }
 
     /**
-     * Helper method to check for fuels for furnaces and add them.
-     * Only call on the server-side, except for electric furnaces.
+     * Helper method to check for fuels for crafters and add them.
+     * Only call on the server-side, except for electric crafters.
      */
-    private void addFurnaceFuel() {
+    private void addCrafterFuel() {
         //Try to fill the furnace with the appropriate fuel type, if we have it.
-        switch (furnace.definition.furnaceType) {
+        switch (crafter.definition.crafterType) {
             case STANDARD: {
-                IWrapperItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
+                IWrapperItemStack currentFuel = crafter.getStack(AEntityCrafter.FUEL_ITEM_SLOT);
                 if (currentFuel.isEmpty() || currentFuel.getMaxSize() < currentFuel.getSize()) {
                     //Try to find a matching burnable item from the entity.
                     for (APart part : linkedParts) {
                         if (part instanceof PartInteractable) {
-                            if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+                            if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType == InteractableComponentType.CRATE) {
                                 PartInteractable crate = (PartInteractable) part;
                                 for (int i = 0; i < crate.inventory.getSize(); ++i) {
                                     IWrapperItemStack stack = crate.inventory.getStack(i);
-                                    if (stack.getFuelValue() != 0 && (currentFuel.isEmpty() || stack.isCompleteMatch(currentFuel))) {
-                                        furnace.ticksAddedOfFuel = stack.getFuelValue();
-                                        furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
+                                    if (crafter.getFuelTime(stack) != 0 && (currentFuel.isEmpty() || stack.isCompleteMatch(currentFuel))) {
+                                        crafter.ticksFuelProvides = stack.getFurnaceFuelValue();
+                                        crafter.ticksLeftOfFuel = crafter.ticksFuelProvides;
                                         crate.inventory.removeFromSlot(i, 1);
-                                        InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
                                         return;
                                     }
                                 }
@@ -231,13 +267,13 @@ public final class PartInteractable extends APart {
                 //Try to find a barrel with fuel in it.
                 for (APart part : linkedParts) {
                     if (part instanceof PartInteractable) {
-                        if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.BARREL)) {
+                        if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType == InteractableComponentType.BARREL) {
                             PartInteractable barrel = (PartInteractable) part;
                             if (barrel.tank.getFluidLevel() > 0 && ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(barrel.tank.getFluid())) {
-                                furnace.ticksAddedOfFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid()) * 20 * furnace.definition.furnaceEfficiency);
-                                furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
+                                crafter.ticksFuelProvides = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid()) * 20 * crafter.definition.crafterEfficiency);
+                                crafter.ticksLeftOfFuel = crafter.ticksFuelProvides;
                                 barrel.tank.drain(barrel.tank.getFluid(), 1, true);
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
                             }
                         }
                     }
@@ -246,13 +282,13 @@ public final class PartInteractable extends APart {
             }
             case ELECTRIC: {
                 //Reduce electric power from vehicle, if we can.
-                furnace.powerToDrawPerTick = 0;
+                crafter.powerToDrawPerTick = 0;
                 if (vehicleOn != null && vehicleOn.electricPower > 1) {
-                    int ticksToDrawPower = (int) (500 * furnace.definition.furnaceEfficiency);
-                    furnace.powerToDrawPerTick = 1D / ticksToDrawPower;
-                    furnace.ticksAddedOfFuel = ticksToDrawPower;
-                    furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+                    int ticksToDrawPower = (int) (500 * crafter.definition.crafterEfficiency);
+                    crafter.powerToDrawPerTick = 1D / ticksToDrawPower;
+                    crafter.ticksFuelProvides = ticksToDrawPower;
+                    crafter.ticksLeftOfFuel = crafter.ticksFuelProvides;
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
                 }
                 break;
             }
@@ -272,50 +308,25 @@ public final class PartInteractable extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
-            case ("interactable_count"): {
-                if (inventory != null) {
-                    return inventory.getCount();
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_percent"): {
-                if (inventory != null) {
-                    return inventory.getCount() / (double) inventory.getSize();
-                } else if (tank != null) {
-                    return tank.getFluidLevel() / tank.getMaxLevel();
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_capacity"): {
-                if (inventory != null) {
-                    return inventory.getSize();
-                } else if (tank != null) {
-                    return tank.getMaxLevel() / 1000;
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_furnace_fuel"): {
-                if (furnace != null) {
-                    return furnace.ticksLeftOfFuel;
-                } else {
-                    return 0;
-                }
-            }
-            case ("interactable_furnace_remaining"): {
-                if (furnace != null) {
-                    return furnace.ticksLeftToSmelt;
-                } else {
-                    return 0;
-                }
-            }
+            case ("interactable_count_stacks"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedStackCount : 0, false);
+            case ("interactable_count_items"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedItemCount : 0, false);
+            case ("interactable_percent"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.cachedStackCount / (double) inventory.getSize() : (tank != null ? tank.getFluidLevel() / tank.getMaxLevel() : 0), false);
+            case ("interactable_capacity"):
+                return new ComputedVariable(this, variable, partialTicks -> inventory != null ? inventory.getSize() : (tank != null ? tank.getMaxLevel() / 1000 : 0), false);
+            case ("interactable_active"):
+                return new ComputedVariable(this, variable, partialTicks -> !playersInteracting.isEmpty() ? 1 : 0, false);
+            case ("interactable_fuel"):
+                return new ComputedVariable(this, variable, partialTicks -> crafter != null ? crafter.ticksLeftOfFuel : 0, false);
+            case ("interactable_remaining"):
+                return new ComputedVariable(this, variable, partialTicks -> crafter != null ? crafter.ticksLeftToCraft : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     /**
@@ -336,14 +347,16 @@ public final class PartInteractable extends APart {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        if (furnace != null) {
-            data.setData("furnace", furnace.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+        if (crafter != null) {
+            data.setData("crafter", crafter.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         } else if (inventory != null) {
             data.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         } else if (tank != null) {
             data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        } else if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
-            data.setString("jerrycanFluid", jerrycanFluid);
+        } else if (definition.interactable.interactionType == InteractableComponentType.JERRYCAN) {
+            data.setString(JERRYCAN_FLUID_NAME, jerrycanFluid);
+        } else if (definition.interactable.interactionType == InteractableComponentType.BATTERY) {
+            data.setBoolean(BATTERY_CHARGED_NAME, batteryCharged);
         }
         return data;
     }

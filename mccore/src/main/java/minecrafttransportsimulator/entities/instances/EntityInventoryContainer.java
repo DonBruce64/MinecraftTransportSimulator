@@ -21,6 +21,8 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     private static final IWrapperNBT blankData = InterfaceManager.coreInterface.getNewNBTWrapper();
     private final List<IWrapperItemStack> inventory;
     private final int stackSize;
+    public int cachedStackCount;
+    public int cachedItemCount;
 
     public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots) {
         this(world, data, maxSlots, 64);
@@ -35,6 +37,8 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
             this.inventory = blankData.getStacks(maxSlots);
         }
         this.stackSize = stackSize;
+        cachedStackCount = getStackCount();
+        cachedItemCount = getItemCount();
     }
 
     @Override
@@ -66,6 +70,8 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     @Override
     public void setStack(IWrapperItemStack stackToSet, int index) {
         inventory.set(index, stackToSet);
+        cachedStackCount = getStackCount();
+        cachedItemCount = getItemCount();
         if (!world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketInventoryContainerChange(this, index, stackToSet));
         }

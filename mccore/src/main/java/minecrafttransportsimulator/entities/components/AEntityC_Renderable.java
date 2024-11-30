@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
@@ -36,8 +35,8 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     /**
      * Constructor for synced entities
      **/
-    public AEntityC_Renderable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
-        super(world, placingPlayer, data);
+    public AEntityC_Renderable(AWrapperWorld world, IWrapperNBT data) {
+        super(world, data);
     }
 
     /**

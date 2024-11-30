@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -31,7 +31,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
- * and {@link AEntityF_Multipart#removePart(APart, boolean, Iterator)} to remove them.
+ * and {@link AEntityF_Multipart#removePart(APart, boolean, boolean)} to remove them.
  * You may extend {@link AEntityF_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -41,27 +41,27 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     //JSON properties.
-    public JSONPartDefinition placementDefinition;
-    public int placementSlot;
+    public final JSONPartDefinition placementDefinition;
+    public final int placementSlot;
 
     //Instance properties.
     /**
      * The entity this part has been placed on,  can be a vehicle or a part.
      */
-    public AEntityF_Multipart<?> entityOn;
+    public final AEntityF_Multipart<?> entityOn;
     /**
      * The top-most entity for this part.  May be the {@link #entityOn} if the part is only one level deep.
      */
-    public AEntityF_Multipart<?> masterEntity;
+    public final AEntityF_Multipart<?> masterEntity;
     /**
      * The vehicle this part has been placed on.  Identical to {@link #masterEntity}, just saves a cast.
      * Will be null, however, if this part isn't on a vehicle (say if it's on a decor).
      */
-    public EntityVehicleF_Physics vehicleOn;
+    public final EntityVehicleF_Physics vehicleOn;
     /**
      * The part this part is on, or null if it's on a base entity.
      */
-    public APart partOn;
+    public final APart partOn;
     /**
      * All linked parts for this part.  Updated whenever the part set changes.
      */
@@ -70,11 +70,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isInvisible = false;
     public boolean isActive = true;
     public boolean isPermanent = false;
-    public boolean isMoveable;
-    public boolean turnsWithSteer;
-    public boolean isSpare;
-    public boolean isMirrored;
+    public final boolean isMoveable;
+    public final boolean turnsWithSteer;
+    public final boolean isSpare;
+    public final boolean isMirrored;
     private boolean requestedForcedCamera;
+    private final ComputedVariable newlyAddedVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -85,18 +86,27 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final RotationMatrix zeroReferenceOrientation;
     public final RotationMatrix prevZeroReferenceOrientation;
     public final Point3D externalAnglesRotated = new Point3D();
-    private AnimationSwitchbox placementActiveSwitchbox;
-    private AnimationSwitchbox internalActiveSwitchbox;
-    private AnimationSwitchbox placementMovementSwitchbox;
-    private AnimationSwitchbox internalMovementSwitchbox;
-    private static boolean checkingLinkedParts;
+    private final AnimationSwitchbox placementActiveSwitchbox;
+    private final AnimationSwitchbox internalActiveSwitchbox;
+    private final AnimationSwitchbox placementMovementSwitchbox;
+    private final AnimationSwitchbox internalMovementSwitchbox;
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, item, data);
+        //Init locals.
         this.localOffset = placementDefinition.pos.copy();
         this.localOrientation = new RotationMatrix();
         this.zeroReferenceOrientation = new RotationMatrix();
         this.prevZeroReferenceOrientation = new RotationMatrix();
+
+        //Add slot definition constants.
+        if (placementDefinition.constantValues != null) {
+            placementDefinition.constantValues.forEach((constantKey, constantValue) -> {
+                ComputedVariable newVariable = new ComputedVariable(this, constantKey);
+                newVariable.setTo(constantValue, false);
+                addVariable(newVariable);
+            });
+        }
 
         //Set initial position, rotation, and scale.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
@@ -114,15 +124,22 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
         prevScale.set(scale);
 
-        //Now set entity properties.
-        linkToEntity(entityOn, placementDefinition);
-    }
+        //Set switchbox animation properties.
+        //Placement movement needs to take into account applyAfter animations.
+        if (placementDefinition.animations != null || placementDefinition.applyAfter != null) {
+            List<JSONAnimationDefinition> animations = new ArrayList<>();
+            if (placementDefinition.animations != null) {
+                animations.addAll(placementDefinition.animations);
+            }
+            this.placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
+        } else {
+            this.placementMovementSwitchbox = null;
+        }
+        this.internalMovementSwitchbox = definition.generic.movementAnimations != null ? new AnimationSwitchbox(this, definition.generic.movementAnimations, null) : null;
+        this.placementActiveSwitchbox = placementDefinition.activeAnimations != null ? new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null) : null;
+        this.internalActiveSwitchbox = definition.generic.activeAnimations != null ? new AnimationSwitchbox(this, definition.generic.activeAnimations, null) : null;
 
-    /**
-     * Sets the part to be part of the passed-in entity.  This happens during construction, but can also
-     * be called to change the entity the part is located on.
-     */
-    public void linkToEntity(AEntityF_Multipart<?> entityOn, JSONPartDefinition placementDefinition) {
+        //Now set entity properties.  These care about the other things above.
         this.entityOn = entityOn;
         AEntityF_Multipart<?> parentEntity = entityOn;
         while (parentEntity instanceof APart) {
@@ -134,51 +151,24 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.placementDefinition = placementDefinition;
         this.placementSlot = entityOn.definition.parts.indexOf(placementDefinition);
 
+        this.isMoveable = placementMovementSwitchbox != null || internalMovementSwitchbox != null;
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
-        //Set to false to re-create animation since we don't want to use old animations we are linked to.
-        //FIXME need to fix linked animations.
-        //animationsInitialized = false;
-    }
-
-    @Override
-    public void initializeAnimations() {
-        super.initializeAnimations();
-        isMoveable = false;
-        placementMovementSwitchbox = null;
-        if (placementDefinition.animations != null || placementDefinition.applyAfter != null) {
-            List<JSONAnimationDefinition> animations = new ArrayList<>();
-            if (placementDefinition.animations != null) {
-                animations.addAll(placementDefinition.animations);
-            }
-            placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
-            isMoveable = true;
-        }
-        internalMovementSwitchbox = null;
-        if (definition.generic.movementAnimations != null) {
-            internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
-            isMoveable = true;
-        }
-        placementActiveSwitchbox = null;
-        if (placementDefinition.activeAnimations != null) {
-            placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
-        }
-        internalActiveSwitchbox = null;
-        if (definition.generic.activeAnimations != null) {
-            internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
-        }
-
-        //Add parent constants.
-        if (placementDefinition.constantValues != null) {
-            variables.putAll(placementDefinition.constantValues);
+        addVariable(newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        if (placingPlayer != null) {
+            newlyAddedVar.setActive(true, false);
         }
     }
 
     @Override
     public void update() {
         super.update();
+        if (ticksExisted == 5) {
+            newlyAddedVar.setActive(false, false);
+        }
+
         world.beginProfiling("PartAlignment", true);
         isInvisible = partOn != null ? partOn.isInvisible : false;
         
@@ -216,7 +206,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
         
         //Update permanent-ness
-        isPermanent = (placementDefinition.lockingVariables != null) ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
+        isPermanent = placementDefinition.lockingVariables != null ? !isVariableListTrue(placementDefinition.lockingVariables) : placementDefinition.isPermanent;
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
@@ -290,8 +280,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public EntityAutoUpdateTime getUpdateTime() {
-        //Parts are always updated by their parent, not the main update calls.
-        return EntityAutoUpdateTime.NEVER;
+        //Sync with what were are on.
+        return entityOn.getUpdateTime();
     }
 
     @Override
@@ -315,7 +305,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
-            if (vehicleOn != null && vehicleOn.locked) {
+            if (vehicleOn != null && vehicleOn.lockedVar.isActive) {
                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
             } else {
             	LanguageEntry partResult = checkForRemoval(player);
@@ -325,7 +315,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             	}else if (!player.getInventory().addStack(getStack())) {
                 	world.spawnItemStack(getStack(), position, null);
                 }
-            	entityOn.removePart(this, true, null);
+                entityOn.removePart(this, false, true);
             }
         } else {
             //Not a removable part, or is an actual attack.
@@ -346,15 +336,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public void setVariable(String variable, double value) {
-        if (variable.startsWith("parent_")) {
-            entityOn.setVariable(variable.substring("parent_".length()), value);
-        } else {
-            super.setVariable(variable, value);
-        }
-    }
-
-    @Override
     public void updatePartList() {
         super.updatePartList();
         linkedParts.clear();
@@ -363,7 +344,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public double getMass() {
-        return definition.generic.mass;
+        return super.getMass() + definition.generic.mass;
     }
 
     @Override
@@ -396,7 +377,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
                         updateSubDefinition(partTone);
-                        return;
+                        break;
                     }
                 }
             }
@@ -564,58 +545,95 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         return entityOn.renderTextLit();
     }
 
+    private void reinitVariable(String variable) {
+        ComputedVariable computedVar = getOrCreateVariable(variable);
+        if (variable.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+            computedVar.setFunctionTo(createComputedVariable(variable.substring(ComputedVariable.INVERTED_PREFIX.length()), true).invertedVariable);
+        } else {
+            computedVar.setFunctionTo(createComputedVariable(variable, true));
+        }
+    }
+
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
-        //If the variable is prefixed with "parent_", then we need to get our parent's value.
-        if (variable.startsWith("parent_")) {
-            return entityOn.getRawVariableValue(variable.substring("parent_".length()), partialTicks);
-        } else if (definition.parts != null) {
-            //Check sub-parts for the part with the specified index.
-            int partNumber = getVariableNumber(variable);
-            if (partNumber != -1) {
-                return getSpecificPartAnimation(variable, partNumber, partialTicks);
-            }
-        }
-
-        //Check for generic part variables.
-        switch (variable) {
-            case ("part_present"):
-                return 1;
-            case ("part_ismirrored"):
-                return isMirrored ? 1 : 0;
-            case ("part_isonfront"):
-                return placementDefinition.pos.z > 0 ? 1 : 0;
-            case ("part_isspare"):
-                return isSpare ? 1 : 0;
-            case ("part_onvehicle"):
-                return vehicleOn != null ? 1 : 0;
-        }
-
-        //No variables, check super variables before doing generic forwarding.
-        //We need this here for position-specific values, as some
-        //super variables care about position, so we can't forward those.
-        double value = super.getRawVariableValue(variable, partialTicks);
-        if (!Double.isNaN(value)) {
-            return value;
-        }
-
-        //If we are down here, we must have not found a part variable.
-        //First check all linked parts in case we want one of theirs.
-        if (!linkedParts.isEmpty() && !checkingLinkedParts) {
-            checkingLinkedParts = true;
-            for (APart part : linkedParts) {
-                value = part.getRawVariableValue(variable, partialTicks);
-                if (!Double.isNaN(value)) {
-                    checkingLinkedParts = false;
-                    return value;
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
+        if (entityOn == null) {
+            //We don't have the entity set yet if we're constructing, defer to later.
+            return new ComputedVariable(this, variable, partialTicks -> {
+                //Reset ourselves since we should have a value now that we're being asked for one.
+                reinitVariable(variable);
+                return 0;
+            }, false);
+        } else {
+            //If the variable is prefixed with "parent_" or "vehicle_", then we need to get our parent's or vehicle's value.
+            if (variable.startsWith("vehicle_")) {
+                if (vehicleOn != null) {
+                    return entityOn.createComputedVariable(variable.substring("vehicle_".length()), true);
+                } else {
+                    //Not on a vehicle, value will always be 0.
+                    return new ComputedVariable(false);
+                }
+            } else if (variable.startsWith("parent_")) {
+                return entityOn.createComputedVariable(variable.substring("parent_".length()), true);
+            } else {
+                //Not a parent variable we know about, check for part variables.
+                switch (variable) {
+                    case ("part_present"):
+                        return new ComputedVariable(true);
+                    case ("part_ismirrored"):
+                        return new ComputedVariable(isMirrored);
+                    case ("part_isonfront"):
+                        return new ComputedVariable(placementDefinition.pos.z > 0);
+                    case ("part_isspare"):
+                        return new ComputedVariable(isSpare);
+                    case ("part_onvehicle"):
+                        return new ComputedVariable(vehicleOn != null);
+                    case ("part_added_vehicle"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
+                    case ("part_removed_vehicle"):
+                        return new ComputedVariable(this, variable, partialTicks -> (vehicleOn != null && !isValid) ? 1 : 0, false);
+                    case ("part_added_ground"):
+                        return new ComputedVariable(this, variable, partialTicks -> (entityOn instanceof EntityPlacedPart && newlyAddedVar.isActive && ticksExisted == 2) ? 1 : 0, false);
+                    case ("part_removed_ground"):
+                        return new ComputedVariable(this, variable, partialTicks -> (entityOn instanceof EntityPlacedPart && !isValid) ? 1 : 0, false);
+                    default: {
+                        ComputedVariable computedVariable = super.createComputedVariable(variable, false);
+                        if (computedVariable == null) {
+                            //Not a basic part variable or something that the core classes make.
+                            //Check any entities we are on, up to the top-most parent.
+                            AEntityF_Multipart<?> testEntity = entityOn;
+                            while (testEntity != null) {
+                                if (testEntity.containsVariable(variable)) {
+                                    //Variable exists, get as-is.
+                                    return testEntity.getOrCreateVariable(variable);
+                                } else {
+                                    //Try to create the variable, it might be a dynamic variable property.
+                                    computedVariable = testEntity.createComputedVariable(variable, false);
+                                    if (computedVariable == null && testEntity instanceof APart) {
+                                        testEntity = ((APart) testEntity).entityOn;
+                                    } else {
+                                        testEntity = null;
+                                    }
+                                }
+                            }
+                            if (computedVariable != null) {
+                                return computedVariable;
+                            } else {
+                                //System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
+                                if (createDefaultIfNotPresent) {
+                                    ComputedVariable newVariable = new ComputedVariable(this, variable, null);
+                                    addVariable(newVariable);
+                                    return newVariable;
+                                } else {
+                                    return null;
+                                }
+                            }
+                        } else {
+                            return computedVariable;
+                        }
+                    }
                 }
             }
-            checkingLinkedParts = false;
         }
-
-        //Not a linked part variable.
-        //Try to get the parent variable, and return whatever we get, NaN or otherwise.
-        return entityOn.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

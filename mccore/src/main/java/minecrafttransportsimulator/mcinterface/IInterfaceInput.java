@@ -114,13 +114,6 @@ public interface IInterfaceInput {
     boolean getJoystickButtonValue(String joystickName, int index);
 
     /**
-     * Inhibits or enables the joysticks.  Inhibiting the joysticks
-     * will cause {@link #isJoystickPresent(String)} to always return false.
-     * Useful for when you don't want the joystick to interfere with controls.
-     */
-    void inhibitJoysticks(boolean inhibited);
-
-    /**
      * Returns the current  mouse scroll wheel position, if one exists.
      * Note that this method can only get the delta the mouse wheel, not the absolute
      * change, so unless you call this every tick you will get bad data!

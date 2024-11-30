@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -28,7 +29,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -44,21 +44,13 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
-    //Static variables used in logic that are kept in the global map.
-    public static final String LEFTTURNLIGHT_VARIABLE = "left_turn_signal";
-    public static final String RIGHTTURNLIGHT_VARIABLE = "right_turn_signal";
-    public static final String BRAKE_VARIABLE = "brake";
-    public static final String PARKINGBRAKE_VARIABLE = "p_brake";
-
-    //External state control.
-    @DerivedValue
-    public double brake;
-    @DerivedValue
-    public boolean parkingBrakeOn;
+	//Variables
+	public final ComputedVariable leftTurnLightVar;
+	public final ComputedVariable rightTurnLightVar;
+	public final ComputedVariable brakeVar;
+	public final ComputedVariable parkingBrakeVar;
+    public final ComputedVariable lockedVar;
     public static final double MAX_BRAKE = 1D;
-    @DerivedValue
-    public boolean locked;
-    public static final String LOCKED_VARIABLE = "locked";
     public UUID keyUUID;
 
     //Internal states.
@@ -68,6 +60,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean lockedOnRoad;
     private boolean updateGroundDevicesRequest;
     private int lastBlockCollisionBoxesCount;
+    private int crashDebounce;
     public double groundVelocity;
     public double turningForce;
     public double weightTransfer = 0;
@@ -75,16 +68,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final IWrapperPlayer placingPlayer;
 
     //Properties
-    @ModifiedValue
-    public float currentSteeringForceIgnoresSpeed;
-    @ModifiedValue
-    public float currentSteeringForceFactor;
-    @ModifiedValue
-    public float currentBrakingFactor;
-    @ModifiedValue
-    public float currentOverSteer;
-    @ModifiedValue
-    public float currentUnderSteer;
+    public final ComputedVariable steeringForceIgnoresSpeedVar;
+    public final ComputedVariable steeringForceFactorVar;
+    public final ComputedVariable brakingFactorVar;
+    public final ComputedVariable overSteerVar;
+    public final ComputedVariable underSteerVar;
 
     //Road-following data.
     protected RoadFollowingState frontFollower;
@@ -128,7 +116,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
         if (data != null) {
-            this.locked = data.getBoolean("locked");
             this.keyUUID = data.getUUID(ItemItem.KEY_UUID_TAG);
             this.totalPathDelta = data.getDouble("totalPathDelta");
             this.prevTotalPathDelta = totalPathDelta;
@@ -139,11 +126,24 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             this.serverDeltaM = new Point3D();
             this.serverDeltaR = new Point3D();
         }
+
         this.clientDeltaM = serverDeltaM.copy();
         this.clientDeltaR = serverDeltaR.copy();
         this.clientDeltaP = serverDeltaP;
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
+        
+        addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
+        addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
+        addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
+        addVariable(this.parkingBrakeVar = new ComputedVariable(this, "p_brake", data));
+        addVariable(this.lockedVar = new ComputedVariable(this, "locked", data));
+
+        addVariable(this.steeringForceIgnoresSpeedVar = new ComputedVariable(this, "steeringForceIgnoresSpeed"));
+        addVariable(this.steeringForceFactorVar = new ComputedVariable(this, "steeringForceFactor"));
+        addVariable(this.brakingFactorVar = new ComputedVariable(this, "brakingFactor"));
+        addVariable(this.overSteerVar = new ComputedVariable(this, "overSteer"));
+        addVariable(this.underSteerVar = new ComputedVariable(this, "underSteer"));
     }
 
     @Override
@@ -201,11 +201,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
             }
         }
-
-        //Update variable status.  This is used in a lot of locations, so we don't want to query the set every time.
-        brake = getVariable(BRAKE_VARIABLE);
-        parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
-        locked = isVariableActive(LOCKED_VARIABLE);
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
@@ -277,8 +272,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    protected void updateAllpartList() {
-        super.updateAllpartList();
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        steeringForceIgnoresSpeedVar.setTo(definition.motorized.steeringForceIgnoresSpeed ? 1 : 0, false);
+        steeringForceFactorVar.setTo(definition.motorized.steeringForceFactor, false);
+        brakingFactorVar.setTo(definition.motorized.brakingFactor, false);
+        overSteerVar.setTo(definition.motorized.overSteer, false);
+        underSteerVar.setTo(definition.motorized.underSteer, false);
+    }
+
+    @Override
+    public void updatePartList() {
+        super.updatePartList();
         if (ticksExisted > 1) {
             updateGroundDevicesRequest = true;
         }
@@ -303,10 +308,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void connectTrailer(TowingConnection connection, boolean notifyClient) {
         super.connectTrailer(connection, notifyClient);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
-        if (towedVehicle.parkingBrakeOn) {
-            towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 0);
+        if (towedVehicle.parkingBrakeVar.isActive) {
+            towedVehicle.parkingBrakeVar.toggle(false);
         }
-        towedVehicle.setVariable(BRAKE_VARIABLE, 0);
+        towedVehicle.brakeVar.setTo(0, false);
         towedVehicle.frontFollower = null;
         towedVehicle.rearFollower = null;
 
@@ -328,7 +333,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void disconnectTrailer(int connectionIndex) {
         TowingConnection connection = towingConnections.get(connectionIndex);
         if (connection.towedVehicle.definition.motorized.isTrailer) {
-            connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
+            connection.towedVehicle.parkingBrakeVar.setTo(1, false);
         }
         super.disconnectTrailer(connectionIndex);
     }
@@ -378,7 +383,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private void performGroundOperations() {
         //Get braking force and apply it to the motions.
-        float brakingFactor = towedByConnection == null ? getBrakingForce() * currentBrakingFactor : 0;
+        double brakingFactor = towedByConnection == null ? getBrakingForce() * brakingFactorVar.currentValue : 0;
         if (brakingFactor > 0) {
             double brakingForce = 20F * brakingFactor / currentMass;
             if (brakingForce > velocity) {
@@ -430,16 +435,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (this.towedByConnection == null) {
                 double overSteerForce = Math.max(velocity / 4, 1);
                 if (definition.motorized.overSteerAccel != 0) {
-                    weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * currentOverSteer;
+                    weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * overSteerVar.currentValue;
                     if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)) {
                         weightTransfer = definition.motorized.overSteerAccel;
                     } else if (Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)) {
                         weightTransfer = definition.motorized.overSteerDecel;
                     }
                 } else {
-                    weightTransfer = currentOverSteer;
+                    weightTransfer = overSteerVar.currentValue;
                 }
-                rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
+                rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -underSteerVar.currentValue * turningForce) * overSteerForce;
             }
 
             //If we are offset, adjust our angle.
@@ -474,13 +479,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Depends on number of grounded core collision sections and braking ground devices.
      */
     private float getBrakingForce() {
-        double brakingPower = parkingBrakeOn ? MAX_BRAKE : brake;
+        double brakingPower = parkingBrakeVar.isActive ? MAX_BRAKE : brakeVar.currentValue;
         float brakingFactor = 0;
         //First get the ground device braking contributions.
         //This is both grounded ground devices, and liquid collision boxes that are set as such.
         if (brakingPower > 0) {
             for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-                brakingFactor += groundDevice.currentMotiveFriction;
+                brakingFactor += groundDevice.motiveFrictionVar.currentValue;
             }
             if (brakingPower > 0) {
                 brakingFactor += 0.15D * brakingPower * groundDeviceCollective.getNumberBoxesInLiquid();
@@ -499,7 +504,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         float skiddingFactor = 0;
         //First check grounded ground devices.
         for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-            skiddingFactor += groundDevice.currentLateralFriction;
+            skiddingFactor += groundDevice.lateralFrictionVar.currentValue;
         }
 
         //Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
@@ -539,7 +544,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                     }
                                 }
                             } else if (part instanceof PartEngine) {
-                                if (((PartEngine) part).currentGear == 0 && ((PartEngine) part).running) {
+                                if (((PartEngine) part).currentGearVar.currentValue == 0 && ((PartEngine) part).running) {
                                     foundNeutralEngine = true;
                                 }
                             }
@@ -558,10 +563,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is opposite of the torque-based forces for control surfaces.
                 turningForce = steeringAngle / turningDistance;
                 //Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
-                if (groundVelocity > 0.35D && currentSteeringForceIgnoresSpeed == 0) {
-                    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentSteeringForceFactor) - 0.35D));
-                } else if (currentSteeringForceIgnoresSpeed != 0) {
-                    turningForce *= currentSteeringForceFactor;
+                if (groundVelocity > 0.35D && !steeringForceIgnoresSpeedVar.isActive) {
+                    turningForce *= Math.pow(0.3F, (groundVelocity * (1 - steeringForceFactorVar.currentValue) - 0.35D));
+                } else if (steeringForceIgnoresSpeedVar.isActive) {
+                    turningForce *= steeringForceFactorVar.currentValue;
                 }
                 //Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
@@ -679,9 +684,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Check for the potential to change the requested segment.
                 //We can only do this if both our followers are on the same segment.
                 LaneSelectionRequest requestedSegment;
-                if (isVariableActive(LEFTTURNLIGHT_VARIABLE) == isVariableActive(RIGHTTURNLIGHT_VARIABLE)) {
+                if (leftTurnLightVar.isActive == rightTurnLightVar.isActive) {
                     requestedSegment = LaneSelectionRequest.NONE;
-                } else if (isVariableActive(LEFTTURNLIGHT_VARIABLE)) {
+                } else if (leftTurnLightVar.isActive) {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
                 } else {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
@@ -782,6 +787,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This prevents vehicles from phasing through walls even though they are driving on the ground.
                 //If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
                 world.beginProfiling("CollisionCheck_" + lastBlockCollisionBoxesCount, false);
+                if (crashDebounce > 0) {
+                    --crashDebounce;
+                }
                 if (isCollisionBoxCollided()) {
                     world.beginProfiling("CollisionHandling", false);
                     if (towedByConnection != null) {
@@ -974,7 +982,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
                 tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
-                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
+                if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, !world.isClient() && ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
                     return true;
                 }
                 clearedCache = true;
@@ -1005,15 +1013,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 for (Point3D blockPosition : box.collidingBlockPositions) {
                     float blockHardness = world.getBlockHardness(blockPosition);
                     if (!world.isBlockLiquid(blockPosition)) {
-                        if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
+                        if (blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
                             hardnessHitThisBox += blockHardness;
                             if (collisionMotion.y > -0.01) {
                                 //Don't want to blow up from falling fast.
                                 hardnessHitThisTick += blockHardness;
                             }
-                            //Slow down for broken blocks.
-                            motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
-                            if (ticksExisted > 500) {
+                            //If we are supposed to break the block, do so now.
+                            if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && ticksExisted > 500) {
+                                //Scale motion back for broken block, and break block and damage vehicle.
+                                motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
                                 if (!world.isClient()) {
                                     world.destroyBlock(blockPosition, true);
                                     if (box.groupDef != null && blockHardness > 0) {
@@ -1023,21 +1032,27 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                 continue;
                             }
                         }
+                        //Didn't break this block, flag us to stop moving.
                         inhibitMovement = true;
                     }
                 }
 
                 //If we hit too many blocks.  Either remove part this is a box on, or destroy us.
-                if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
-                    if (!world.isClient()) {
+                //If we didn't, reduce health if applicable
+                if (!world.isClient()) {
+                    if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
                         APart partHit = getPartWithBox(box);
                         if (partHit != null) {
                             hardnessHitThisTick -= hardnessHitThisBox;
-                            removePart(partHit, true, null);
+                            partHit.remove();
                         } else {
                             destroy(box);
                             return false;
                         }
+                    } else if (hardnessHitThisTick > 0 && definition.motorized.crashSpeedMax > 0 && velocity > definition.motorized.crashSpeedMin && crashDebounce == 0) {
+                        attack(new Damage(definition.general.health * (velocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin), null, null, null, null));
+                        //Need the debounce so we don't continously apply crash damage during a crash.
+                        crashDebounce = 60;
                     }
                 }
 
@@ -1091,20 +1106,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Call this ONLY on the server.
      */
     public void toggleLock() {
-        locked = !locked;
-        toggleVariable(LOCKED_VARIABLE);
-        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
+        lockedVar.toggle(true);
 
         //Check for doors to close on locking.
-        if (locked) {
-            Iterator<String> iterator = variables.keySet().iterator();
-            while (iterator.hasNext()) {
-                String variable = iterator.next();
-                if (variable.contains("door")) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
-                    iterator.remove();
-                }
-            }
+        if (lockedVar.isActive) {
+            closeDoors();
         }
     }
 
@@ -1137,7 +1143,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("locked", locked);
         if (keyUUID != null) {
             data.setUUID(ItemItem.KEY_UUID_TAG, keyUUID);
         }

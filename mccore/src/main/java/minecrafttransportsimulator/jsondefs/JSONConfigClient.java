@@ -37,6 +37,7 @@ public class JSONConfigClient {
 
         public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false (and restart the game) if mods cause issues, like two-hand rendering or player model issues.  Automatically set to false if some mods are detected.");
 
+        public JSONConfigEntry<Integer> renderingMode = new JSONConfigEntry<>(0, "Internal rendering mode value, don't touch!");
     }
 
     public static class JSONControlSettings {

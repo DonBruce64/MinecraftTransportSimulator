@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aba",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:red_dye"
+        }
+    },
+    "result": {
+        "item": "mts:mts.jerrycan"
+    }
+}

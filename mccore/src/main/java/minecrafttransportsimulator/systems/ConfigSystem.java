@@ -9,6 +9,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemPartEffector;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient;
 import minecrafttransportsimulator.jsondefs.JSONConfigCraftingOverrides;
@@ -125,6 +126,14 @@ public final class ConfigSystem {
                         override.extraMaterialLists.put(subDefinition.subName, subDefinition.extraMaterialLists);
                     }
                     override.repairMaterialLists = packItem.definition.general.repairMaterialLists;
+
+                    if (packItem instanceof ItemPartEffector) {
+                        ItemPartEffector effectorItem = (ItemPartEffector) packItem;
+                        if (effectorItem.definition.effector.crafterInputs != null) {
+                            override.autocrafterInputs = effectorItem.definition.effector.crafterInputs;
+                            override.autocrafterOutputs = effectorItem.definition.effector.crafterOutputs;
+                        }
+                    }
                 }
                 JSONParser.exportStream(overridesObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
@@ -158,6 +167,16 @@ public final class ConfigSystem {
                                 }
                                 if (override.repairMaterialLists != null) {
                                     packItem.definition.general.repairMaterialLists = override.repairMaterialLists;
+                                }
+
+                                if (packItem instanceof ItemPartEffector) {
+                                    ItemPartEffector effectorItem = (ItemPartEffector) packItem;
+                                    if (effectorItem.definition.effector.crafterInputs != null) {
+                                        effectorItem.definition.effector.crafterInputs = override.autocrafterInputs;
+                                    }
+                                    if (effectorItem.definition.effector.crafterOutputs != null) {
+                                        effectorItem.definition.effector.crafterOutputs = override.autocrafterOutputs;
+                                    }
                                 }
                             }
                         }

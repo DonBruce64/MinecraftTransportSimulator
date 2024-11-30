@@ -36,7 +36,8 @@ public class LanguageSystem {
      * Called to init this system.  Must be called after all pack items are loaded, but
      * before any pack item name references are used.
      */
-    public static void init() {
+    public static void init(boolean onClient) {
+        LanguageSystem.onClient = onClient;
 
         //Init all packs, getting their language entries first.
         for (String packID : PackParser.getAllPackIDs()) {
@@ -292,6 +293,8 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_TITLE = new LanguageEntry("gui.config.controls.title", "Choose a configuration to change: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_SOUNDVOLUME = new LanguageEntry("gui.config.controls.soundvolume", "Sound Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD = new LanguageEntry("gui.config.controls.general.keyboard", "GENERAL KEYBOARD");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK = new LanguageEntry("gui.config.controls.general.joystick", "GENERAL JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
@@ -312,6 +315,10 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_AXISMODE = new LanguageEntry("gui.config.joystick.axismode", "Axis mode: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NORMAL = new LanguageEntry("gui.config.joystick.normal", "Normal");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_INVERT = new LanguageEntry("gui.config.joystick.invert", "Inverted");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_LABEL = new LanguageEntry("gui.config.rendering.label", "Rendering mode. Slower modes have more compatibility with shaders and performance mods at the cost of FPS.");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE0 = new LanguageEntry("gui.config.rendering.mode0", "Superfast");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE1 = new LanguageEntry("gui.config.rendering.mode1", "Fast");
+    public static final LanguageEntry GUI_CONFIG_RENDERING_MODE2 = new LanguageEntry("gui.config.rendering.mode2", "Slow");
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
     public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
@@ -329,7 +336,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_FUELPUMP_NOENGINE = new LanguageEntry("interact.fuelpump.noengine", "There is no engine in this vehicle.  Engines with different fuel types will reset fuel, so put an engine in first to avoid fuel loss!");
     public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The contents in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
     public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Connected and fueling.");
-    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_FULL = new LanguageEntry("interact.fuelpump.full", "Vehicle is full, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Paid fuel has been dispensed, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Pump is empty, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_DISCONNECT = new LanguageEntry("interact.fuelpump.disconnect", "Disconnecting and stopping pumping.");
 
@@ -348,6 +356,14 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_JERRYCAN_NOENGINE = new LanguageEntry("interact.jerrycan.noengine", "There is no engine in this vehicle.  Removing engines from vehicles resets their fuel tank, so fueling this vehicle would do nothing!");
     public static final LanguageEntry INTERACT_JERRYCAN_TOOFULL = new LanguageEntry("interact.jerrycan.toofull", "This vehicle is already full of fuel.  You cannot add any more.");
     public static final LanguageEntry INTERACT_JERRYCAN_SUCCESS = new LanguageEntry("interact.jerrycan.success", "Added 1000mb of fluid to this vehicle.");
+
+    public static final LanguageEntry INTERACT_BATTERY_CHARGERLOW = new LanguageEntry("interact.battery.chargerlow", "This charger does not yet have enough power to charge this battery.");
+    public static final LanguageEntry INTERACT_BATTERY_CHARGED = new LanguageEntry("interact.battery.charged", "Battery charged.");
+    public static final LanguageEntry INTERACT_BATTERY_EMPTY = new LanguageEntry("interact.battery.empty", "This battery is empty and cannot charge this vehicle.");
+    public static final LanguageEntry INTERACT_BATTERY_WRONGENGINES = new LanguageEntry("interact.battery.wrongengines", "The engines in this vehicle are not electric and therefore the battery cannot charge them.");
+    public static final LanguageEntry INTERACT_BATTERY_NOENGINE = new LanguageEntry("interact.battery.noengine", "There is no engine in this vehicle.  Removing engines from vehicles resets their charge, so charging this vehicle would do nothing!");
+    public static final LanguageEntry INTERACT_BATTERY_TOOFULL = new LanguageEntry("interact.battery.toofull", "This vehicle is already fully charged.  You cannot charge it any more.");
+    public static final LanguageEntry INTERACT_BATTERY_SUCCESS = new LanguageEntry("interact.battery.success", "Added 1000mj of charge to this vehicle.");
 
     public static final LanguageEntry INTERACT_VEHICLE_SEATTAKEN = new LanguageEntry("interact.vehicle.seattaken", "This seat is taken!");
     public static final LanguageEntry INTERACT_VEHICLE_LOCKED = new LanguageEntry("interact.vehicle.locked", "This vehicle is locked!");
@@ -462,6 +478,16 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_JERRYCAN_EMPTY = new LanguageEntry("iteminfo.jerrycan.empty", "This can is currently empty.");
     public static final LanguageEntry ITEMINFO_JERRYCAN_CONTAINS = new LanguageEntry("iteminfo.jerrycan.contains", "This can contains: ");
 
+    public static final LanguageEntry ITEMINFO_BATTERY_FILL = new LanguageEntry("iteminfo.battery.fill", "Chargethis battery by right-clicking a charger with power.");
+    public static final LanguageEntry ITEMINFO_BATTERY_DRAIN = new LanguageEntry("iteminfo.battery.drain", "Charge a vehicle by right-clicking with a full charge.");
+    public static final LanguageEntry ITEMINFO_BATTERY_EMPTY = new LanguageEntry("iteminfo.battery.empty", "This battery is currently empty.");
+    public static final LanguageEntry ITEMINFO_BATTERY_FULL = new LanguageEntry("iteminfo.battery.full", "This battery is currently full.");
+
+    public static final LanguageEntry INPUT_CUSTOM1 = new LanguageEntry("input.custom1", "Custom1");
+    public static final LanguageEntry INPUT_CUSTOM2 = new LanguageEntry("input.custom2", "Custom2");
+    public static final LanguageEntry INPUT_CUSTOM3 = new LanguageEntry("input.custom3", "Custom3");
+    public static final LanguageEntry INPUT_CUSTOM4 = new LanguageEntry("input.custom4", "Custom4");
+
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
     public static final LanguageEntry INPUT_YAW = new LanguageEntry("input.yaw", "Yaw");
@@ -484,6 +510,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_PARK = new LanguageEntry("input.park", "ParkingBrake");
     public static final LanguageEntry INPUT_GUN_FIRE = new LanguageEntry("input.gun_fire", "Gun");
     public static final LanguageEntry INPUT_GUN_SWITCH = new LanguageEntry("input.gun_switch", "Switch Gun");
+    public static final LanguageEntry INPUT_GUN_RELOAD = new LanguageEntry("input.gun.reload", "Reload Gun");
     public static final LanguageEntry INPUT_RADIO = new LanguageEntry("input.radio", "Radio");
     public static final LanguageEntry INPUT_ZOOM_I = new LanguageEntry("input.zoom_i", "ZoomIn");
     public static final LanguageEntry INPUT_ZOOM_O = new LanguageEntry("input.zoom_o", "ZoomOut");

@@ -77,9 +77,6 @@ public abstract class EntityManager {
         }
         if (entity instanceof AEntityC_Renderable) {
             renderableEntities.add((AEntityC_Renderable) entity);
-            if (entity instanceof AEntityD_Definable) {
-                ((AEntityD_Definable<?>) entity).initializeAnimations();
-            }
         }
         if (entity instanceof PartGun) {
             gunMap.put(entity.uniqueUUID, (PartGun) entity);
@@ -163,7 +160,6 @@ public abstract class EntityManager {
      * are not parts, since parts are ticked by their parents.
      */
     public void tickAll(boolean beforePlayer) {
-        //FIXME remove profiling from world callers in higher MC versions.
         AWrapperWorld world = getWorld();
         if (world.isClient()) {
             if (beforePlayer) {
@@ -306,10 +302,8 @@ public abstract class EntityManager {
             AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
             //Need to do this before updating as these require knowledge of prior states.
             entity.world.beginProfiling("VariableModifiers", true);
+            definable.setVariableDefaults();
             definable.updateVariableModifiers();
-            if (definable instanceof AEntityF_Multipart) {
-                ((AEntityF_Multipart<?>) definable).allParts.forEach(part -> part.updateVariableModifiers());
-            }
             entity.world.beginProfiling("MainUpdate", false);
             entity.update();
             entity.world.beginProfiling("PostUpdate", false);
@@ -377,7 +371,6 @@ public abstract class EntityManager {
         }
     }
     
-    //FIXME need to put this on newer MC versions.
     public void adjustHeightForRain(Point3D position) {
         for (EntityVehicleF_Physics vehicle : getEntitiesOfType(EntityVehicleF_Physics.class)) {
             if (vehicle.encompassingBox.isPointInsideAndBelow(position)) {

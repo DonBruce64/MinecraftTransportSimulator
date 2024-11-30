@@ -276,7 +276,7 @@ public final class PackParser {
             Enumeration<? extends ZipEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                if (entry.getName().endsWith("packdefinition.json")) {
+                if (entry.getName().endsWith("/packdefinition.json")) {
                     //New style, use def as-is.
                     JSONPack packDef = JSONParser.parseStream(jarFile.getInputStream(entry), JSONPack.class, null, null);
                     packJarMap.put(packDef.packID, packJar);

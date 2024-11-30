@@ -57,14 +57,25 @@ public interface IInventoryProvider {
     }
 
     /**
-     * Gets the number of items currently in this container.
+     * Gets the number of stacks currently in this container.
      */
-    default int getCount() {
+    default int getStackCount() {
         int count = 0;
         for (int i = 0; i < getSize(); ++i) {
             if (!getStack(i).isEmpty()) {
                 ++count;
             }
+        }
+        return count;
+    }
+
+    /**
+     * Gets the number of items currently in this container.
+     */
+    default int getItemCount() {
+        int count = 0;
+        for (int i = 0; i < getSize(); ++i) {
+            count += getStack(i).getSize();
         }
         return count;
     }
@@ -86,6 +97,9 @@ public interface IInventoryProvider {
     /**
      * Sets the stack in the inventory, overwriting anything that was previously in this slot.
      * Mainly used for packet operations, as it can result in the destruction of items.
+     * Note that all methods that modify stacks should call this method for the final
+     * modification.  This is to allow sub-classes to implement state-dependent logic
+     * in a common area.
      */
     void setStack(IWrapperItemStack stackToSet, int index);
 
@@ -264,10 +278,25 @@ public interface IInventoryProvider {
      * result in the this method removing the incorrect number of materials.
      * Note that for repair recipes, this will not remove the implicit item to repair.
      */
-    default void removeMaterials(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
-        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair, false)) {
-            for (IWrapperItemStack stack : material.possibleItems) {
-                removeStack(stack, material.qty, false);
+    default void removeMaterials(List<PackMaterialComponent> materials) {
+        for (PackMaterialComponent material : materials) {
+            int requiredMaterialCount = material.qty;
+            for (IWrapperItemStack materialStack : material.possibleItems) {
+                for (int i = 0; i < getSize(); ++i) {
+                    IWrapperItemStack testStack = getStack(i);
+                    if (InterfaceManager.coreInterface.isOredictMatch(testStack, materialStack)) {
+                        int amountToRemove = requiredMaterialCount;
+                        if (testStack.getSize() < amountToRemove) {
+                            amountToRemove = testStack.getSize();
+                        }
+                        removeStack(testStack, amountToRemove, false);
+                        requiredMaterialCount -= amountToRemove;
+                    }
+                    if (requiredMaterialCount == 0) {
+                        //Don't need to search further since we got everything.
+                        break;
+                    }
+                }
             }
         }
     }

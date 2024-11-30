@@ -117,7 +117,8 @@ public abstract class AGUIComponent {
             int linesOfText = 0;
             StringBuilder tooltipCombinedText = new StringBuilder();
             for (String tooltipText : tooltipTextLines) {
-                float lineWidth = RenderText.getStringWidth(tooltipText, null);
+                //Un-sure why we have to multiply by 2 here, but for some reason it mostly works?  Probably some math bad somewhere.
+                float lineWidth = RenderText.getStringWidth(tooltipText, null) * 2;
                 linesOfText += Math.ceil(lineWidth / wrapWidth);
                 tooltipCombinedText.append(tooltipText).append("\n");
                 if (lineWidth > longestLineWidth) {

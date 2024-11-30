@@ -217,7 +217,7 @@ public class RenderableModelObject {
                     //Need >= here instead of above for things where min/max clamps are equal.
                     renderable.setAlpha(1);
                 } else {
-                    renderable.setAlpha((float) (switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
+                    renderable.setAlpha((float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin)));
                 }
             }
 
@@ -379,7 +379,7 @@ public class RenderableModelObject {
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
         //For each remaining point, we only translate the delta of the point.
-        float treadLinearPosition = (float) (tread.getRawVariableValue("ground_rotation", partialTicks) / 360D);
+        float treadLinearPosition = (float) (tread.getOrCreateVariable("ground_rotation").computeValue(partialTicks) / 360D);
         float treadMovementPercentage = (treadLinearPosition % tread.definition.ground.spacing) / tread.definition.ground.spacing;
         if (treadMovementPercentage < 0) {
             ++treadMovementPercentage;

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -23,14 +22,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  */
 public class TileEntityBeacon extends TileEntityDecor {
     public NavBeacon currentBeacon;
+    public static final String BEACON_NAME_TEXT_KEY = "Beacon Name";;
+    public static final String BEACON_GLIDESLOPE_TEXT_KEY = "Glide Slope (Deg)";
+    public static final String BEACON_BEARING_TEXT_KEY = "Bearing (Deg)";
 
     public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
-    }
-
-    @Override
-    public void initializeAnimations() {
-        super.initializeAnimations();
         for (JSONText textDef : text.keySet()) {
             currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));
             return;
@@ -46,7 +43,7 @@ public class TileEntityBeacon extends TileEntityDecor {
     }
 
     @Override
-    public void updateText(LinkedHashMap<String, String> textLines) {
+    public void updateText(String textKey, String textValue) {
         if (currentBeacon != null) {
             NavBeacon.removeFromWorld(world, currentBeacon.name);
             currentBeacon = null;
@@ -54,28 +51,44 @@ public class TileEntityBeacon extends TileEntityDecor {
         try {
             //Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
             //If the object can be created, then we just call super and let it handle this.
-            String name = null;
-            double glideSlope = 0;
-            double bearing = 0;
-            int entry = 0;
-            for (Entry<String, String> textEntry : textLines.entrySet()) {
-                switch (entry++) {
-                    case 0:
-                        name = textEntry.getValue();
-                        break;
-                    case 1:
-                        glideSlope = Double.parseDouble(textEntry.getValue());
-                        break;
-                    case 2:
-                        bearing = Double.parseDouble(textEntry.getValue());
-                        break;
-                    default: //Don't do anything, we don't use this text here.
+            String beaconName = null;
+            String glideslope = null;
+            String bearing = null;
+            for (Entry<JSONText, String> textEntry : text.entrySet()) {
+                String entryKey = textEntry.getKey().fieldName;
+                if (entryKey != null) {
+                    switch (entryKey) {
+                        case BEACON_NAME_TEXT_KEY: {
+                            beaconName = textEntry.getValue();
+                            break;
+                        }
+                        case BEACON_GLIDESLOPE_TEXT_KEY: {
+                            glideslope = textEntry.getValue();
+                            break;
+                        }
+                        case BEACON_BEARING_TEXT_KEY: {
+                            bearing = textEntry.getValue();
+                            break;
+                        }
+                    }
                 }
             }
-
-            NavBeacon newBeacon = new NavBeacon(world, name, glideSlope, bearing, position);
-            super.updateText(textLines);
-            currentBeacon = newBeacon;
+            switch (textKey) {
+                case BEACON_NAME_TEXT_KEY: {
+                    beaconName = textValue;
+                    break;
+                }
+                case BEACON_GLIDESLOPE_TEXT_KEY: {
+                    glideslope = textValue;
+                    break;
+                }
+                case BEACON_BEARING_TEXT_KEY: {
+                    bearing = textValue;
+                    break;
+                }
+            }
+            currentBeacon = new NavBeacon(world, beaconName, Double.parseDouble(glideslope), Double.parseDouble(bearing), position);
+            super.updateText(textKey, textValue);
         } catch (Exception e) {
             //Don't update text.  It's entered invalid.
         }

@@ -271,7 +271,7 @@ public class GUIInstruments extends AGUIBase {
         if (hudSelected) {
             return vehicle.definition.motorized.hudTexture != null ? vehicle.definition.motorized.hudTexture : "mts:textures/guis/hud.png";
         } else {
-            return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
+            return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : panelDef.panel.texture;
         }
     }
 

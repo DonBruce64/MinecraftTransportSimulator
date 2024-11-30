@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "bca",
+        " dd"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:iron_bars"
+        },
+        "c": {
+            "item": "minecraft:red_dye"
+        },
+        "d": {
+            "item": "minecraft:iron_block"
+        }
+    },
+    "result": {
+        "item": "mts:mts.enginebench"
+    }
+}

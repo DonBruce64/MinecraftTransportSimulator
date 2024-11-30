@@ -25,7 +25,7 @@ public class PackMaterialComponent {
     public static final Map<String, String> flattenedNames = generateFlattnedMappings();
     public static final Map<String, String> unflattenedNames = generateUnflattnedMappings();
 
-    private PackMaterialComponent(String itemText) {
+    public PackMaterialComponent(String itemText) {
         possibleItems = new ArrayList<>();
 
         //Format is domain:name:qty or domain:name:meta:qty.

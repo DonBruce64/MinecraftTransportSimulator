@@ -407,6 +407,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public boolean isInsideBorder(Point3D position) {
+        return world.getWorldBorder().isWithinBounds(new BlockPos(position.x, position.y, position.z));
+    }
+
+    @Override
     public boolean chunkLoaded(Point3D position) {
         return world.isLoaded(new BlockPos(position.x, position.y, position.z));
     }
@@ -415,6 +420,11 @@ public class WrapperWorld extends AWrapperWorld {
     public ABlockBase getBlock(Point3D position) {
         Block block = world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock();
         return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
+    }
+
+    @Override
+    public String getBlockName(Point3D position) {
+        return world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock().getRegistryName().toString();
     }
 
     @Override

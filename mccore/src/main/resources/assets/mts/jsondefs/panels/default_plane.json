@@ -150,10 +150,7 @@
 				"text" : "AUTO",
 				"visibilityVariables" : [["autopilot_present"]],
 				"statusVariable" : "autopilot_active",
-				"clickAction" : {
-					"variable" : "autopilot_active",
-					"action" : "toggle"
-				}
+				"specialComponent" : "autopilot"
 			},
 			{
 				//Custom Variable 1.

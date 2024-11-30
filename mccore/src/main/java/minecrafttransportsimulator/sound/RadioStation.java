@@ -117,6 +117,12 @@ public class RadioStation {
     public void removeRadio(EntityRadio radio) {
         playingRadios.remove(radio);
         queuedRadios.remove(radio);
+        //If we are an internet stream, and we killed the last radio, abort us.
+        //This is because internet streams are constant feeds and can't be cached.
+        if (playingRadios.isEmpty() && queuedRadios.isEmpty() && source != RadioSources.LOCAL && decoder != null) {
+            decoder.stop();
+            decoder = null;
+        }
     }
 
     /**
@@ -189,13 +195,6 @@ public class RadioStation {
                     startPlayback();
                 }
             }
-        } else {
-            //If we are an internet stream, and we aren't hooked to anything, abort us.
-            //This is because internet streams are constant feeds and can't be cached.
-            if (!source.equals(RadioSources.LOCAL) && decoder != null) {
-                decoder.stop();
-                decoder = null;
-            }
         }
     }
 
@@ -252,7 +251,7 @@ public class RadioStation {
                     return;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 iterator.remove();
             }
         }
@@ -346,7 +345,7 @@ public class RadioStation {
                         return true;
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     station.displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
                     return false;
                 }

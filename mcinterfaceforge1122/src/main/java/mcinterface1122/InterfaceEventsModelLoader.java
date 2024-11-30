@@ -90,13 +90,14 @@ public class InterfaceEventsModelLoader {
 
                         //Use smooth shading for model rendering.
                         GL11.glShadeModel(GL11.GL_SMOOTH);
-                        //Disable alpha testing on blended pass as it discards transparent fragments.
-                        if (blendingEnabled) {
-                            GlStateManager.disableAlpha();
-                        }
                         //Enable normal re-scaling for model rendering.
                         //This prevents bad lighting.
                         GlStateManager.enableRescaleNormal();
+                        //If we are doing blending, set the alpha test to 0.
+                        //MC defaults to a high one which causes premature fragment discards.
+                        if (blendingEnabled) {
+                            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0F);
+                        }
 
                         //Start master profiling section.
                         for (AEntityC_Renderable entity : allEntities) {
@@ -111,10 +112,10 @@ public class InterfaceEventsModelLoader {
 
                         //Reset states.
                         GL11.glShadeModel(GL11.GL_FLAT);
-                        if (blendingEnabled) {
-                            GlStateManager.enableAlpha();
-                        }
                         GlStateManager.disableRescaleNormal();
+                        if (blendingEnabled) {
+                            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+                        }
                     }
                 }
             }

@@ -34,7 +34,7 @@ public class EntityRadio extends AEntityB_Existing {
     private SoundInstance currentSound;
 
     public EntityRadio(AEntityB_Existing provider, IWrapperNBT data) {
-        super(provider.world, null, data);
+        super(provider.world, data);
         this.provider = provider;
         if (data != null) {
             if (world.isClient()) {

@@ -32,7 +32,6 @@ public class WrapperAABBCollective extends AxisAlignedBB {
         this.collision = collision;
     }
 
-    //FIXME add to higher MC versions.
     public synchronized Set<BoundingBox> getBoxes() {
         if (boxes.isEmpty()) {
             (interactable instanceof AEntityF_Multipart ? ((AEntityF_Multipart<?>) interactable).allCollisionBoxes : interactable.collisionBoxes).forEach(box -> {

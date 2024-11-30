@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
@@ -70,8 +71,8 @@ public class EntityParticle extends AEntityC_Renderable {
     private int colorIndex;
     private int colorDelayIndex;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawingPosition, AnimationSwitchbox spawningSwitchbox) {
-        super(entitySpawning.world, spawingPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, AnimationSwitchbox spawningSwitchbox) {
+        super(entitySpawning.world, spawningPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
         this.entitySpawning = entitySpawning;
         this.definition = definition;
         this.spawningSwitchbox = spawningSwitchbox;
@@ -115,21 +116,8 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Set position.
-        setPositionToSpawn();
+        setPositionToSpawn(spawningPosition);
         prevPosition.set(position);
-
-        //Now that position is set, check to make sure we aren't an invalid particle.
-        if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(position)) {
-                //Don't spawn break particles in the air, they're null textures.
-                this.staticColor = null;
-                this.renderable = null;
-                this.model = null;
-                this.initialVelocity = null;
-                this.killBadParticle = true;
-                return;
-            }
-        }
 
         //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
         Point3D blockCheckPosition;
@@ -138,7 +126,20 @@ public class EntityParticle extends AEntityC_Renderable {
             blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
         } else {
             //Use spawning position here since block properties for particles are usually from bullets, which are slightly in the block.
-            blockCheckPosition = spawingPosition;
+            blockCheckPosition = spawningPosition;
+        }
+
+        //Now that position is set, check to make sure we aren't an invalid particle.
+        if (definition.type == ParticleType.BREAK) {
+            if (world.isAir(blockCheckPosition)) {
+                //Don't spawn break particles in the air, they're null textures.
+                this.staticColor = null;
+                this.renderable = null;
+                this.model = null;
+                this.initialVelocity = null;
+                this.killBadParticle = true;
+                return;
+            }
         }
 
         //Set orientation.
@@ -187,8 +188,17 @@ public class EntityParticle extends AEntityC_Renderable {
         } else if (definition.type == ParticleType.BREAK) {
             texture = RenderableData.GLOBAL_TEXTURE_NAME;
         } else if (definition.type == ParticleType.CASING) {
-            texture = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingTexture;
-            model = ((PartGun) entitySpawning).lastLoadedBullet.definition.bullet.casingModel;
+            PartGun gun = (PartGun) entitySpawning;
+            if(!gun.firedBullets.isEmpty()) {
+                ItemBullet bullet = gun.firedBullets.get(0);
+                gun.firedBullets.remove(0);
+                texture = bullet.definition.bullet.casingTexture;
+                model = bullet.definition.bullet.casingModel;
+            }else {
+                //Invalid particle since we haven't fired anything yet to have a casing for.
+                texture = null;
+                model = null;
+            }
             if (texture == null) {
                 //Not supposed to be spawning any casings for this bullet.
                 this.staticColor = null;
@@ -313,7 +323,8 @@ public class EntityParticle extends AEntityC_Renderable {
         this.killBadParticle = false;
     }
 
-    private void setPositionToSpawn() {
+    /**Make sure helperTransform is set to the orientation before calling this.**/
+    private void setPositionToSpawn(Point3D origin) {
         //Apply transforms to get position.
         if (definition.pos != null) {
             helperPoint.set(definition.pos).multiply(entitySpawning.scale);
@@ -325,7 +336,7 @@ public class EntityParticle extends AEntityC_Renderable {
             helperTransform.multiply(spawningSwitchbox.netMatrix);
         }
         helperPoint.transform(helperTransform);
-        position.add(helperPoint);
+        position.set(origin).add(helperPoint);
     }
 
     private void setOrientationToSpawn() {
@@ -365,10 +376,10 @@ public class EntityParticle extends AEntityC_Renderable {
         //Set movement.
         if (!definition.stopsOnGround || !touchingBlocks) {
             if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
-                position.set(entitySpawning.position);
                 orientation.set(entitySpawning.orientation);
+                helperTransform.resetTransforms();
                 helperTransform.set(orientation);
-                setPositionToSpawn();
+                setPositionToSpawn(entitySpawning.position);
                 setOrientationToSpawn();
             }
             

@@ -1,0 +1,16 @@
+{
+    "parent": "mts:vehiclebench",
+    "display": {
+        "icon": {"item": "mts:mts.ticket"},
+        "title": {"translate": "advancements.mts.ticket.title"},
+        "description": {"translate": "advancements.mts.ticket.description"}
+    },
+    "criteria": {
+        "has_ticket": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.ticket"}]
+            }
+        }
+    }
+}

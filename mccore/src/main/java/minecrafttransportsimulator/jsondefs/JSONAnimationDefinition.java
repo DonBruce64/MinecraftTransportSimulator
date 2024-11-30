@@ -22,15 +22,15 @@ public class JSONAnimationDefinition {
     public Point3D axis;
 
     @JSONDescription("The offset for this animation.  This will add-on to the value returned by the variable.  Clamps are applied to the total value of the variable plus the offset.")
-    public float offset;
+    public double offset;
 
     @JSONRequired(dependentField = "animationType", dependentValues = {"VISIBILITY"})
     @JSONDescription("If included, MTS will clamp the total animation value (the value of variable, times the scale, plus the offsets) to always be greater than this value.  If the animation is a visibility, this is the lowest value the object will be visible at.  If the animation is an inhibitor, this is the lowest value at which animations will be inhibited.")
-    public float clampMin;
+    public double clampMin;
 
     @JSONRequired(dependentField = "animationType", dependentValues = {"VISIBILITY"})
     @JSONDescription("Like clampMin, but for the max value.")
-    public float clampMax;
+    public double clampMax;
 
     @JSONDescription("If true, the absolute value of the variable will be used rather than the actual value.  Note that negative movements are still possible via a negative rotation factor or a large negative offset.")
     public boolean absolute;

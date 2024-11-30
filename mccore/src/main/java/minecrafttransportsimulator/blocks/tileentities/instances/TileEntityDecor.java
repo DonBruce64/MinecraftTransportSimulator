@@ -1,20 +1,18 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 /**
  * Decor tile entity.  Contains the definition so we know how
@@ -24,10 +22,10 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
  * @author don_bruce
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
-
-    public static final String CLICKED_VARIABLE = "clicked";
-    public static final String ACTIVATED_VARIABLE = "activated";
-    private float lightLevel;
+	//Variables
+    public final ComputedVariable clickedVar;
+    public final ComputedVariable activatedVar;
+    private final ComputedVariable lightLevelVar;
     public boolean craftedItem;
 
     public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
@@ -47,6 +45,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.widthRadius = definition.decor.depth / 2D;
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
+        
+        this.clickedVar = new ComputedVariable(this, "clicked", data);
+        this.activatedVar = new ComputedVariable(this, "activated", data);
+        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
     }
 
     @Override
@@ -57,8 +59,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         updateVariableModifiers();
 
         super.update();
-        //Reset clicked state and crafted item.
-        setVariable(CLICKED_VARIABLE, 0);
+        //Reset clicked state.
+        if (clickedVar.isActive) {
+            clickedVar.toggle(false);
+        }
     }
 
     @Override
@@ -82,6 +86,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
+            } else {
+                clickedVar.setTo(1, true);
+                activatedVar.toggle(true);
             }
         } else if (definition.decor.type == DecorComponentType.SEAT) {
             setRider(player, true);
@@ -91,10 +98,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
                 playersInteracting.add(player);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
             }
-            setVariable(CLICKED_VARIABLE, 1);
-            toggleVariable(ACTIVATED_VARIABLE);
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
+            clickedVar.setTo(1, true);
+            activatedVar.toggle(true);
         }
         return true;
     }
@@ -106,25 +111,12 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
 
     @Override
     public float getLightProvided() {
-        return lightLevel;
+        return (float) lightLevelVar.currentValue;
     }
 
     @Override
-    public void updateVariableModifiers() {
-        lightLevel = definition.decor.lightLevel;
-
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "lightLevel":
-                        lightLevel = adjustVariable(modifier, lightLevel);
-                        break;
-                    default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
-                        break;
-                }
-            }
-        }
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        lightLevelVar.setTo(definition.decor.lightLevel, false);
     }
 }

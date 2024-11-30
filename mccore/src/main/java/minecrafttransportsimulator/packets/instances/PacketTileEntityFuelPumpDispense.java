@@ -2,73 +2,37 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
- * Packet sent to pumps to allow dispensing of fluids to vehicles.  This will remove an item
- * from the player's inventory for the use of the pump if they have it, and will then allow
- * the pump to draw that much fluid into it for pumping.  However, if an amount is given, it is
- * assumed that this packet is changing the amount to pump, not requesting the pumping be started.
+ * Packet sent to pumps clients to update that they've dispensed fluids.
  *
  * @author don_bruce
  */
-public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<ATileEntityFuelPump, IWrapperPlayer> {
-    private final int slotClicked;
-    private final int amountChangedTo;
+public class PacketTileEntityFuelPumpDispense extends APacketEntity<ATileEntityFuelPump> {
+    private final double amountDispensed;
 
-    public PacketTileEntityFuelPumpDispense(ATileEntityFuelPump pump, IWrapperPlayer player, int slotClicked, int amountChangedTo) {
-        super(pump, player);
-        this.slotClicked = slotClicked;
-        this.amountChangedTo = amountChangedTo;
-    }
-
-    public PacketTileEntityFuelPumpDispense(ATileEntityFuelPump pump, IWrapperPlayer player, int slotClicked) {
-        super(pump, player);
-        this.slotClicked = slotClicked;
-        this.amountChangedTo = -1;
+    public PacketTileEntityFuelPumpDispense(ATileEntityFuelPump pump, double amountDispensed) {
+        super(pump);
+        this.amountDispensed = amountDispensed;
     }
 
     public PacketTileEntityFuelPumpDispense(ByteBuf buf) {
         super(buf);
-        this.slotClicked = buf.readInt();
-        this.amountChangedTo = buf.readInt();
+        this.amountDispensed = buf.readDouble();
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        buf.writeInt(slotClicked);
-        buf.writeInt(amountChangedTo);
+        buf.writeDouble(amountDispensed);
     }
 
     @Override
-    protected boolean handle(AWrapperWorld world, ATileEntityFuelPump pump, IWrapperPlayer player) {
-        if (amountChangedTo != -1) {
-            pump.fuelAmounts.set(slotClicked, amountChangedTo);
-            return true;
-        } else {
-            IWrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
-            if (world.isClient()) {
-                pump.fuelPurchased = pump.fuelAmounts.get(slotClicked);
-                pump.fuelDispensedThisPurchase = 0;
-                if (player.equals(InterfaceManager.clientInterface.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump) {
-                    AGUIBase.activeInputGUI.close();
-                }
-                return false;
-            } else if (player.getInventory().removeStack(stack, stack.getSize(), true)) {
-                stack = stack.copy();
-                pump.paymentItems.addStack(stack);
-                pump.fuelPurchased = pump.fuelAmounts.get(slotClicked);
-                pump.fuelDispensedThisPurchase = 0;
-                return true;
-            }
-            return false;
-        }
+    protected boolean handle(AWrapperWorld world, ATileEntityFuelPump pump) {
+        pump.fuelDispensedThisConnection += amountDispensed;
+        pump.fuelDispensedThisPurchase += amountDispensed;
+        return false;
     }
 }

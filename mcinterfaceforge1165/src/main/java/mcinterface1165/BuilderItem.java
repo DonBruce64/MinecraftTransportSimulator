@@ -167,8 +167,9 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         if (context.getHand() == Hand.MAIN_HAND) {
-            ActionResultType result = item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
-            if (result == ActionResultType.FAIL && context.getPlayer().isCrouching()) {
+            if (item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name()))) {
+                return ActionResultType.SUCCESS;
+            } else if (context.getPlayer().isCrouching()) {
                 //Forward sneak click too, since blocks don't get these.
                 if (!context.getLevel().isClientSide) {
                     TileEntity tile = context.getLevel().getBlockEntity(context.getClickedPos());
@@ -180,7 +181,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 }
                 return ActionResultType.FAIL;
             }
-            return result;
+            return item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 ? ActionResultType.PASS : ActionResultType.FAIL;
         } else {
             return super.useOn(context);
         }

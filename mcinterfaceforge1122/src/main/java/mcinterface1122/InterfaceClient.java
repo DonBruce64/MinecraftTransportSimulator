@@ -189,10 +189,8 @@ public class InterfaceClient implements IInterfaceClient {
             WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
-                    world.tickAll(true);
-
-                    //Open pack missing screen if we don't have packs.
                     if (!player.isSpectator()) {
+                        //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
                         ControlSystem.controlGlobal(player);
                         if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
                             if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
@@ -200,6 +198,8 @@ public class InterfaceClient implements IInterfaceClient {
                             }
                         }
                     }
+
+                    world.tickAll(true);
 
                     //Complain about compats at 10 second mark.
                     if (ConfigSystem.settings.general.performModCompatFunctions.value) {

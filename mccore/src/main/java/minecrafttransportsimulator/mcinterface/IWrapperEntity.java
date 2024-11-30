@@ -16,7 +16,6 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
  * @author don_bruce
  */
 public interface IWrapperEntity {
-    //FIXME split wrapper maps from common to server/client in higher MC versions.
 
     /**
      * Returns true if this entity is valid.  More specifically, this

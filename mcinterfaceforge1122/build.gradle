@@ -19,6 +19,8 @@ group = project.mod_group
 archivesBaseName = project.archive_name
 
 //Options for Java version to compile to.
+//This won't work with Java 17 compilers, but is required for eclipse file generation.  Un-comment when running gradlew eclipse or manually set IDE version.
+//java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 		options.release = 8

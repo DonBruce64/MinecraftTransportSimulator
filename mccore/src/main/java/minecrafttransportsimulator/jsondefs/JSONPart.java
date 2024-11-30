@@ -354,6 +354,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Pitch is a critical defining characteristic of this part.  In essence, pitch is how far forward, in inches, the propeller tries to move in one revolution.  This, coupled with the RPM and gear ratio of the engine, determines the max possible speed of the aircraft this propeller is attached to.  Note, however, that propellers with higher pitches are less efficient at slower speeds so they require a longer runway.  This should be considered carefully before designing a propeller with a high pitch...")
         public int pitch;
 
+        @JSONDescription("How many inches, per tick, this propeller tries to change pitch.  Defaults to 1 if not set, but can be higher if faster propeller response time is desired.")
+        public int pitchChangeRate;
+
         @JSONDescription("The diameter of this propeller, in inches.  Higher-diameter propellers provide more thrust at the same RPM as lower-diameter units.  However, the higher the diameter the more force they take to turn and the more powerful an engine will need to be to drive them (some low-power engines may not even be able to start with large propellers on them).  Additionally, the higher the diameter the lower the maximum RPM the propeller can turn.  Should the propeller exceed this speed it will break off and the engine it was attached to will suddenly not have a load and will rev up rapidly.")
         public int diameter;
     }
@@ -382,6 +385,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
+        @JSONDescription("Normally, reloading in the hand swaps clips.  If set, this won't happen, and rather the gun will load bullets with other bullets.")
+        public boolean isClipless;
+
         @JSONDescription("If set, then this gun will never be able to be reloaded.  Useful for single-use weapons.")
         public boolean blockReloading;
 
@@ -403,17 +409,29 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
         public boolean fireSolo;
 
+        @JSONDescription("If true, then when this gun has windup it will wind down instantly.  This allows for essentially charged-shot guns.")
+        public boolean windsDownInstantly;
+
         @JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
         public boolean resetPosition;
 
         @JSONDescription("If true, then this gun will fire bullets to align with itself only, and not with the muzzle rot paramter.  However, the initial velocity will still align with the rot parameter.  This allows the muzzle to be rotated to adjust the firing direction without modifying the orientation of the spawned bullet.  Think bomb bays and rocket launchers with a jettison before burn.")
         public boolean disableMuzzleOrientation;
 
+        @JSONDescription("If true, then the bullets fired from this gun will not inherit the motion of the gun upon firing. Useful for handheld guns where merely walking can throw the projectile off.")
+        public boolean disableInheritedMotion;
+
         @JSONDescription("The capacity of the gun, in number of bullets.")
         public int capacity;
 
         @JSONDescription("How long, in ticks, this gun takes to reload.  This is applied for hand-held reloading as well as automatic reloading.  This value should be similar to the duration of your gun _reloading sound to ensure players don't get confused about why they can't fire their guns.")
         public int reloadTime;
+
+        @JSONDescription("Like reloadTime, but this is applied only at the start of a reload. Used for opening breaches on multiple bullet guns where there's a start/end animation.")
+        public int reloadStartTime;
+
+        @JSONDescription("Like reloadStartTime, but the end.")
+        public int reloadEndTime;
 
         @JSONDescription("How long, in ticks, this gun has to wait after firing a shot to reload.  This differs from reloadTime, as it blocks the reload sequence from starting, rather than changes how long it takes.")
         public int reloadDelay;
@@ -523,15 +541,15 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("What this interactable does when interacted with.")
         public InteractableComponentType interactionType;
 
-        @JSONRequired(dependentField = "interactionType", dependentValues = {"FURNACE"})
-        @JSONDescription("What type of furnace this is.  Only required if this is a furnace component.")
-        public FurnaceComponentType furnaceType;
+        @JSONRequired(dependentField = "interactionType", dependentValues = { "FURNACE", "BREWER" })
+        @JSONDescription("What type of crafter this is.  Only required if this is a furnace or brewing stand component.")
+        public CrafterComponentType crafterType;
 
-        @JSONDescription("The processing rate of this furnace.  This will make the furnace process items faster.  This does NOT affect the fuel used, so a 2x multiplier here will make the furnace process and use fuel twice as fast.")
-        public float furnaceRate;
+        @JSONDescription("The processing rate of this crafter.  This will make the crafter process items faster.  This does NOT affect the fuel used, so a 2x multiplier here will make the crafter process and use fuel twice as fast.")
+        public float crafterRate;
 
-        @JSONDescription("The efficiency of the furnace.  A value of 1.0 will make it use the standard rate of fuel for processing.  Lower values will use less fuel, higher values more fuel.  For FUEL furnaces, a value of 1.0 makes for 20 ticks of burn time for 1mb.  For ELECTRIC furnaces, a value of 1.0 gives 500 ticks burn time for 1 electric unit.")
-        public float furnaceEfficiency;
+        @JSONDescription("The efficiency of the crafter.  A value of 1.0 will make it use the standard rate of fuel for processing.  Lower values will use less fuel, higher values more fuel.  For FUEL crafters, a value of 1.0 makes for 20 ticks of run time for 1mb.  For ELECTRIC furnaces, a value of 1.0 gives 500 ticks run time for 1 electric unit.")
+        public float crafterEfficiency;
 
         @JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
         public boolean feedsVehicles;
@@ -553,6 +571,13 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
+
+        @Deprecated
+        public CrafterComponentType furnaceType;
+        @Deprecated
+        public float furnaceRate;
+        @Deprecated
+        public float furnaceEfficiency;
     }
 
     public enum InteractableComponentType {
@@ -562,16 +587,20 @@ public class JSONPart extends AJSONPartProvider {
         BARREL,
         @JSONDescription("Works as a standard crafting table when clicked.")
         CRAFTING_TABLE,
-        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
+        @JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the crafter type.")
         FURNACE,
+        @JSONDescription("Works as a brewing stand when clicked.  Will take fuel internally, or externally depending on the crafter type.")
+        BREWER,
         @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
         JERRYCAN,
+        @JSONDescription("Works as a battery, allowing a charge to be stored inside and then used to charge electric vehicles without a charger.")
+        BATTERY,
         @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
         CRAFTING_BENCH
     }
 
-    public enum FurnaceComponentType {
-        @JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
+    public enum CrafterComponentType {
+        @JSONDescription("Standard crafter with Vanilla fuel.  Will pull from crates if those feed vehicles.")
         STANDARD,
         @JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
         FUEL,
@@ -595,6 +624,14 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("How many blocks the drill can break before it itself breaks.")
         public int drillDurability;
+
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Inputs for the crafting type effector.")
+        public List<String> crafterInputs;
+
+        @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
+        @JSONDescription("Outputs for the crafting type effector.")
+        public List<String> crafterOutputs;
 
         @Deprecated
         public int placerDelay;
@@ -620,7 +657,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Drops items from linked inventories into the world.  Will not drop items if one already exists in the bounding box for the dropper, however.")
         DROPPER,
         @JSONDescription("Hydrates farmland, powdered concrete, and turns lava into cobblestone or obsidian in the block it's in.")
-        SPRAYER;
+        SPRAYER,
+        @JSONDescription("Crafts items from inventories based on the set material parameters.  Will craft as fast as the operations delay is set.  Note that while this can put the resulting item into any inventory, it can only pull from linked inventories that have feedsVehicles as true.  Use this for separate input/output inventories if desired.")
+        CRAFTER;
     }
 
     @Deprecated

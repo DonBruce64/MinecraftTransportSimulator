@@ -46,6 +46,29 @@ public class DurationDelayClock {
     }
 
     /**
+     * Returns the clamped and scaled clock value based on this clock's state.
+     */
+    public double clampAndScale(AEntityD_Definable<?> entity, double value, double scaleFactor, double offset, float partialTicks) {
+        if (isUseful) {
+            value = getFactoredState(entity, value, partialTicks);
+        }
+        if (animation.absolute && value < 0) {
+            value = -value;
+        }
+        if (animation.axis != null) {
+            value = value * scaleFactor + animation.offset + offset;
+            if (animation.clampMin != 0 && value < animation.clampMin) {
+                value = animation.clampMin;
+            } else if (animation.clampMax != 0 && value > animation.clampMax) {
+                value = animation.clampMax;
+            }
+            return value;
+        } else {
+            return value * scaleFactor + animation.offset;
+        }
+    }
+
+    /**
      * Returns the actual 0-1 value for a state-based duration/delay variable.
      * Optionally plays sounds if the state changes appropriately.
      */

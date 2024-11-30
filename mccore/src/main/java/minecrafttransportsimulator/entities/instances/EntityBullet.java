@@ -7,6 +7,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -69,6 +70,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private IWrapperEntity externalEntityTargeted;
     public HitType lastHit;
     public Axis sideHit;
+    private BlockHitResult hitBlock;
     private Point3D relativeGunPos;
     private Point3D prevRelativeGunPos;
     private final List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
@@ -76,10 +78,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Generic constructor for no target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
-        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber) {
+        super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.lastLoadedBullet);
         this.gun = gun;
-        this.bulletNumber = gun.bulletsFired;
+        this.bulletNumber = bulletNumber;
         gun.currentBullet = this;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter / 1000D / 2D;
@@ -102,16 +104,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * Positional target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
-        this(position, motion, orientation, gun);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, Point3D targetPosition) {
+        this(position, motion, orientation, gun, bulletNumber);
         this.targetPosition = targetPosition;
     }
 
     /**
      * Engine target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
-        this(position, motion, orientation, gun, engineTargeted.position);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, PartEngine engineTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, engineTargeted.position);
         this.engineTargeted = engineTargeted;
         engineTargeted.vehicleOn.missilesIncoming.add(this);
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
@@ -120,8 +122,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     /**
      * IWrapper target.
      **/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, IWrapperEntity externalEntityTargeted) {
-        this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, IWrapperEntity externalEntityTargeted) {
+        this(position, motion, orientation, gun, bulletNumber, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }
@@ -129,6 +131,17 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     @Override
     public void update() {
         super.update();
+        //If we hit a block last tick, process hit logic this tick.  We delay it 1 tick for packets to get to clients for their processing.
+        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
+        //particles and sounds prior to the request from the internal system for the destruction of this block.
+        if (hitBlock != null) {
+            if (world.isClient()) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side));
+            } else {
+                performBlockHitLogic(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side);
+            }
+            hitBlock = null;
+        }
 
         //Check if we impacted.  If so, don't process anything and just stay in place.
         if (impactDespawnTimer >= 0) {
@@ -143,6 +156,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (definition.bullet.isLongRange ^ world.isClient()) {
                 displayDebugMessage("TIMEOUT");
             }
+            remove();
+            return;
+        }
+
+        //Check to make sure we didn't go past the world border.
+        if (!world.isInsideBorder(position)) {
+            displayDebugMessage("OUTSIDE OF WORLD");
             remove();
             return;
         }
@@ -297,7 +317,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 AEntityF_Multipart<?> hitMultipart = null;
                 Collection<BoundingBoxHitResult> hitMultipartBoxes = null;
                 IWrapperEntity hitExternalEntity = null;
-                BlockHitResult hitBlock = world.getBlockHit(position, motion);
+                hitBlock = world.getBlockHit(position, motion);
                 
                 //Check for collided external entities.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
@@ -417,14 +437,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         hitBlock.hitPosition.z -= 0.000001;
                     }
                     if (world.isClient()) {
-                        //It is CRITICAL that the generic packet gets sent first.  This allows the bullet on the client to get the request for
-                        //particles and sounds prior to the request from the internal system for the destruction of this block.
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitBlock.hitPosition, hitBlock.side, HitType.BLOCK));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side));
                         waitingOnActionPacket = true;
                     } else {
                         performGenericHitLogic(gun, bulletNumber, hitBlock.hitPosition, hitBlock.side, HitType.BLOCK);
-                        performBlockHitLogic(gun, bulletNumber, hitBlock.blockPosition, hitBlock.side);
                     }
                     displayDebugMessage("HIT BLOCK AT " + hitBlock.blockPosition + " WITH ACTUAL POSITION " + hitBlock.hitPosition);
                     return;
@@ -592,6 +608,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public static void performBlockHitLogic(PartGun gun, int bulletNumber, Point3D blockPosition, Axis blockSide) {
         //This is for block state-changes.  Particles and animations are handled in generic.
         if (!gun.world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
                 gun.world.extinguish(blockPosition, blockSide);
             } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
@@ -603,7 +620,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     gun.world.setToFire(blockPosition, blockSide);
                 }
             }
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
         	//Don't do a state-change on the client, just make a breaking sound.
             //Fancy bullets don't make block-breaking sounds.  They do other things instead.
@@ -655,25 +671,27 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("bullet_hit"):
-                return lastHit != null ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> lastHit != null ? 1 : 0, false);
             case ("bullet_burntime"):
-                return ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted;
+                return new ComputedVariable(this, variable, partialTicks -> ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted, false);
             case ("bullet_hit_block"):
-                return HitType.BLOCK == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BLOCK == lastHit ? 1 : 0, false);
             case ("bullet_hit_entity"):
-                return HitType.ENTITY == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ENTITY == lastHit ? 1 : 0, false);
             case ("bullet_hit_vehicle"):
-                return HitType.VEHICLE == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.VEHICLE == lastHit ? 1 : 0, false);
             case ("bullet_hit_armor"):
-                return HitType.ARMOR == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMOR == lastHit ? 1 : 0, false);
             case ("bullet_hit_burst"):
-                return HitType.BURST == lastHit ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> HitType.BURST == lastHit ? 1 : 0, false);
+            case ("bullet_hit_penetrated"):
+                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMORPEN == lastHit ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override
@@ -691,6 +709,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         ENTITY,
         VEHICLE,
         ARMOR,
-        BURST
+        ARMORPEN,
+        BURST,
     }
 }

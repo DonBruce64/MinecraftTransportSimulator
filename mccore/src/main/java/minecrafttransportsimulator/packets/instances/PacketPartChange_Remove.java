@@ -14,33 +14,33 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketPartChange_Remove extends APacketEntity<AEntityF_Multipart<?>> {
-    private final boolean removeFromWorld;
     private final UUID partUUID;
+    private final boolean doFinalTick;
 
-    public PacketPartChange_Remove(APart partRemoved, boolean removeFromWorld) {
+    public PacketPartChange_Remove(APart partRemoved, boolean doFinalTick) {
         super(partRemoved.entityOn);
-        this.removeFromWorld = removeFromWorld;
         this.partUUID = partRemoved.uniqueUUID;
+        this.doFinalTick = doFinalTick;
     }
 
     public PacketPartChange_Remove(ByteBuf buf) {
         super(buf);
-        this.removeFromWorld = buf.readBoolean();
         this.partUUID = readUUIDFromBuffer(buf);
+        this.doFinalTick = buf.readBoolean();
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        buf.writeBoolean(removeFromWorld);
         writeUUIDToBuffer(partUUID, buf);
+        buf.writeBoolean(doFinalTick);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityF_Multipart<?> entity) {
         APart part = world.getEntity(partUUID);
         if (part != null) {
-            part.entityOn.removePart(part, removeFromWorld, null);
+            part.entityOn.removePart(part, doFinalTick, false);
         }
         return false;
     }

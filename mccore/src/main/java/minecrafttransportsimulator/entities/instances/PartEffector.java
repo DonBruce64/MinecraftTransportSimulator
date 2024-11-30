@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartEffector;
@@ -23,6 +24,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 
 public class PartEffector extends APart {
 
@@ -42,10 +44,32 @@ public class PartEffector extends APart {
     //Variables used for placers.
     private int operationDelay;
 
+    //Variables used for crafters.
+    private final List<PackMaterialComponent> inputMaterials = new ArrayList<>();
+    private final List<PackMaterialComponent> outputMaterials = new ArrayList<>();
+
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
         if (data != null) {
             this.blocksBroken = data.getInteger("blocksBroken");
+        }
+        if (definition.effector.type == EffectorComponentType.CRAFTER) {
+            definition.effector.crafterInputs.forEach(input -> {
+                PackMaterialComponent material = new PackMaterialComponent(input);
+                if (material.possibleItems.isEmpty()) {
+                    InterfaceManager.coreInterface.logError("ERROR: Crafter of type " + definition + " is set with a material input of " + input + " but that's not a valid item.  Contact your modpack, or pack author as this input is being skipped!");
+                } else {
+                    inputMaterials.add(material);
+                }
+            });
+            definition.effector.crafterOutputs.forEach(output -> {
+                PackMaterialComponent material = new PackMaterialComponent(output);
+                if (material.possibleItems.isEmpty()) {
+                    InterfaceManager.coreInterface.logError("ERROR: Crafter of type " + definition + " is set with a material output of " + output + " but that's not a valid item.  Contact your modpack, or pack author as this output is being skipped!");
+                } else {
+                    outputMaterials.add(material);
+                }
+            });
         }
     }
 
@@ -220,6 +244,18 @@ public class PartEffector extends APart {
                             ++box.globalCenter.y;
                             break;
                         }
+                        case CRAFTER: {
+                            if (!outputMaterials.isEmpty()) {
+                                for (PartInteractable crate : linkedPullableCrates) {
+                                    if (crate.isActive && crate.inventory.hasMaterials(inputMaterials)) {
+                                        crate.inventory.removeMaterials(inputMaterials);
+                                        outputMaterials.forEach(material -> drops.add(material.possibleItems.get(0).copy()));
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
                     }
 
                     //Handle any drops we got from our effector.
@@ -293,21 +329,22 @@ public class PartEffector extends APart {
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("effector_active"):
-                return isActive ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> isActive ? 1 : 0, true);
             case ("effector_operated"):
-                return activatedThisTick ? 1 : 0;
+            	return new ComputedVariable(this, variable, partialTicks -> activatedThisTick ? 1 : 0, true);
             case ("effector_drill_broken"):
-                return blocksBroken;
+                return new ComputedVariable(this, variable, partialTicks -> blocksBroken, true);
             case ("effector_drill_max"):
-                return definition.effector.drillDurability;
+                return new ComputedVariable(this, variable, partialTicks -> definition.effector.drillDurability, false);
             case ("effector_drill_percentage"):
-                return blocksBroken / (double) definition.effector.drillDurability;
+                return new ComputedVariable(this, variable, partialTicks -> blocksBroken / (double) definition.effector.drillDurability, false);
+            default: {
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+            }
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override

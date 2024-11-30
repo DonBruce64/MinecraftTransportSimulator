@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:crafting_table"
+        }
+    },
+    "result": {
+        "item": "mts:mts.custombench"
+    }
+}

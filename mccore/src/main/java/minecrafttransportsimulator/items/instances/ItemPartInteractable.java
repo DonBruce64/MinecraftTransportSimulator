@@ -5,10 +5,11 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.AEntityCrafter;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityInteractable;
@@ -21,7 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -66,11 +67,21 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
             case JERRYCAN: {
                 tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_FILL.getCurrentValue());
                 tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_DRAIN.getCurrentValue());
-                String jerrycanFluid = data.getString("jerrycanFluid");
+                String jerrycanFluid = data.getString(PartInteractable.JERRYCAN_FLUID_NAME);
                 if (jerrycanFluid.isEmpty()) {
                     tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_EMPTY.getCurrentValue());
                 } else {
                     tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_CONTAINS.getCurrentValue() + InterfaceManager.clientInterface.getFluidName(jerrycanFluid));
+                }
+                break;
+            }
+            case BATTERY: {
+                tooltipLines.add(LanguageSystem.ITEMINFO_BATTERY_FILL.getCurrentValue());
+                tooltipLines.add(LanguageSystem.ITEMINFO_BATTERY_DRAIN.getCurrentValue());
+                if (data.getBoolean(PartInteractable.BATTERY_CHARGED_NAME)) {
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BATTERY_FULL.getCurrentValue());
+                } else {
+                    tooltipLines.add(LanguageSystem.ITEMINFO_BATTERY_EMPTY.getCurrentValue());
                 }
                 break;
             }
@@ -82,15 +93,15 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
 
     @Override
     public CallbackType doEntityInteraction(AEntityE_Interactable<?> entity, BoundingBox hitBox, IWrapperPlayer player, boolean rightClick) {
-        if (definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)) {
+        if (definition.interactable.interactionType == InteractableComponentType.JERRYCAN) {
             if (!entity.world.isClient()) {
                 if (rightClick) {
                     IWrapperItemStack stack = player.getHeldStack();
                     IWrapperNBT data = stack.getData();
-                    String jerrrycanFluid = data != null ? data.getString("jerrycanFluid") : "";
+                    String jerrrycanFluid = data != null ? data.getString(PartInteractable.JERRYCAN_FLUID_NAME) : "";
 
                     //If we clicked a tank part, attempt to pull from it rather than fill a vehicle.
-                    //Unless this is a liquid furnace, in which case we fill that instead.
+                    //Unless this is a liquid crafter, in which case we fill that instead.
                     if (entity instanceof PartInteractable) {
                         EntityFluidTank tank = ((PartInteractable) entity).tank;
                         if (tank != null) {
@@ -99,25 +110,25 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                     if (data == null) {
                                         data = InterfaceManager.coreInterface.getNewNBTWrapper();
                                     }
-                                    data.setString("jerrycanFluid", tank.getFluid());
+                                    data.setString(PartInteractable.JERRYCAN_FLUID_NAME, tank.getFluid());
                                     stack.setData(data);
                                     tank.drain(tank.getFluid(), 1000, true);
                                 }
                             }
                         }
 
-                        EntityFurnace furnace = ((PartInteractable) entity).furnace;
-                        if (furnace != null && !jerrrycanFluid.isEmpty()) {
-                            if (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)) {
+                        AEntityCrafter crafter = ((PartInteractable) entity).crafter;
+                        if (crafter != null && !jerrrycanFluid.isEmpty()) {
+                            if (ConfigSystem.settings.fuel.fuels.get(crafter.getFuelName()).containsKey(jerrrycanFluid)) {
                                 //Packet assumes we add at 0, need to "fool" it.
-                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid) * 1000 * 20 * furnace.definition.furnaceEfficiency);
-                                int priorFuel = furnace.ticksLeftOfFuel;
-                                furnace.ticksLeftOfFuel = addedFuel;
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
-                                furnace.ticksLeftOfFuel += priorFuel;
-                                furnace.ticksAddedOfFuel = furnace.ticksLeftOfFuel;
+                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(crafter.getFuelName()).get(jerrrycanFluid) * 1000 * 20 * crafter.definition.crafterEfficiency);
+                                int priorFuel = crafter.ticksLeftOfFuel;
+                                crafter.ticksLeftOfFuel = addedFuel;
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
+                                crafter.ticksLeftOfFuel += priorFuel;
+                                crafter.ticksFuelProvides = crafter.ticksLeftOfFuel;
 
-                                data.setString("jerrycanFluid", "");
+                                data.deleteEntry(PartInteractable.JERRYCAN_FLUID_NAME);
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_SUCCESS));
                             } else {
@@ -133,7 +144,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_TOOFULL));
                                     } else {
                                         vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
-                                        data.setString("jerrycanFluid", "");
+                                        data.deleteEntry(PartInteractable.JERRYCAN_FLUID_NAME);
                                         stack.setData(data);
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_SUCCESS));
                                     }
@@ -155,6 +166,48 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                         }
                     } else {
                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_EMPTY));
+                    }
+                }
+            }
+            return CallbackType.NONE;
+        } else if (definition.interactable.interactionType == InteractableComponentType.BATTERY) {
+            if (!entity.world.isClient()) {
+                if (rightClick) {
+                    IWrapperItemStack stack = player.getHeldStack();
+                    IWrapperNBT data = stack.getData();
+                    boolean batteryCharged = data.getBoolean(PartInteractable.BATTERY_CHARGED_NAME);
+
+                    if (batteryCharged) {
+                        if (entity instanceof EntityVehicleF_Physics) {
+                            EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+                            switch (vehicle.checkFuelTankCompatibility(PartEngine.ELECTRICITY_FUEL)) {
+                                case VALID: {
+                                    if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_TOOFULL));
+                                    } else {
+                                        vehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, 1000, true);
+                                        data.deleteEntry(PartInteractable.BATTERY_CHARGED_NAME);
+                                        stack.setData(data);
+                                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_SUCCESS));
+                                    }
+                                    break;
+                                }
+                                case INVALID: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_WRONGENGINES));
+                                    break;
+                                }
+                                case MISMATCH: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_WRONGENGINES));
+                                    break;
+                                }
+                                case NOENGINE: {
+                                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_NOENGINE));
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_EMPTY));
                     }
                 }
             }

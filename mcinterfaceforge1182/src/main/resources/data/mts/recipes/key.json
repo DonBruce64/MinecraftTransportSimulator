@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " a ",
+        " a ",
+        " b "
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:string"
+        }
+    },
+    "result": {
+        "item": "mts:mts.key"
+    }
+}

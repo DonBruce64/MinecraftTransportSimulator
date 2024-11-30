@@ -8,8 +8,11 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -32,14 +35,18 @@ import minecrafttransportsimulator.systems.CameraSystem;
  */
 public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel mouseoverLabel;
+    private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private final List<String> tooltipText = new ArrayList<>();
+    private EntityInteractResult lastInteractResult;
 
     @Override
     public void setupComponents() {
         super.setupComponents();
 
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
+        addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
+        gunLabel.ignoreGUILightingState = true;
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -63,9 +70,45 @@ public class GUIOverlay extends AGUIBase {
     public void setStates() {
         super.setStates();
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+
+        //Set gun label text, if we are controlling a gun.
+        gunLabel.visible = false;
+        if (!InterfaceManager.clientInterface.isChatOpen()) {
+            EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+            if (playerGun != null && playerGun.activeGun != null) {
+                gunLabel.visible = true;
+                gunLabel.text = "Gun:" + playerGun.activeGun.cachedItem.getItemName() + " Loaded:" + playerGun.activeGun.getBulletText();
+            } else {
+                AEntityB_Existing entityRiding = player.getEntityRiding();
+                if (entityRiding instanceof PartSeat) {
+                    PartSeat seat = (PartSeat) entityRiding;
+                    if (seat.canControlGuns) {
+                        gunLabel.visible = true;
+                        gunLabel.text = "Active Gun:";
+                        if (seat.activeGunItem != null) {
+                            gunLabel.text += seat.activeGunItem.getItemName();
+                            if (seat.activeGunItem.definition.gun.fireSolo) {
+                                gunLabel.text += " [" + (seat.gunIndex + 1) + "]";
+                            }
+                        } else {
+                            gunLabel.text += "None";
+                        }
+                    }
+                }
+            }
+        }
+
         Point3D startPosition = player.getEyePosition();
         Point3D endPosition = player.getLineOfSight(10).add(startPosition);
         EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+
+        if (lastInteractResult != null && interactResult == null) {
+            lastInteractResult.entity.playerCursorHoveredVar.setActive(false, false);
+            lastInteractResult = null;
+        } else if (lastInteractResult == null && interactResult != null) {
+            interactResult.entity.playerCursorHoveredVar.setActive(true, false);
+            lastInteractResult = interactResult;
+        }
 
         mouseoverLabel.text = "";
         if (interactResult != null && interactResult.entity instanceof PartInteractable) {

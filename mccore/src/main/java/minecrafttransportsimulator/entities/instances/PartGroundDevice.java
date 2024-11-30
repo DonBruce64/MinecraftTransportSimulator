@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.entities.instances;
 
+import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -31,7 +31,10 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 public class PartGroundDevice extends APart {
     public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
     public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
+    
+    //Variables
     public static final String FLAT_VARIABLE = "isFlat";
+    public final ComputedVariable flatVar;
 
     //External states for animations.
     public boolean drivenLastTick = true;
@@ -41,19 +44,16 @@ public class PartGroundDevice extends APart {
     public double angularVelocity;
 
     //Internal properties
-    @ModifiedValue
-    public float currentMotiveFriction;
-    @ModifiedValue
-    public float currentLateralFriction;
-    @ModifiedValue
-    private float currentHeight;
-    private float lastHeight;
+    public final ComputedVariable motiveFrictionVar;
+    public final ComputedVariable lateralFrictionVar;
+    private final ComputedVariable heightVar;
+    private double lastHeight;
     private final Point3D groundPosition = new Point3D();
-    private BlockMaterial materialBelow;
+    private BlockMaterial blockMaterialBelow;
+    private String blockNameBelow;
     public final Point3D wheelbasePoint;
 
     //Internal states for control and physics.
-    public boolean isFlat;
     public boolean contactThisTick = false;
     public boolean animateAsOnGround;
     private int ticksCalcsSkipped = 0;
@@ -65,7 +65,6 @@ public class PartGroundDevice extends APart {
 
     public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGroundDevice item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
-        this.isFlat = data != null && data.getBoolean(FLAT_VARIABLE);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
         this.wheelbasePoint = placementDefinition.pos.copy();
@@ -78,6 +77,11 @@ public class PartGroundDevice extends APart {
             wheelbasePoint.add(parentPart.placementDefinition.pos);
             parent = parentPart.entityOn;
         }
+        
+        addVariable(this.flatVar = new ComputedVariable(this, FLAT_VARIABLE, data));
+        addVariable(this.motiveFrictionVar = new ComputedVariable(this, "motiveFriction"));
+        addVariable(this.lateralFrictionVar = new ComputedVariable(this, "lateralFriction"));
+        addVariable(this.heightVar = new ComputedVariable(this, "height"));
     }
 
     @Override
@@ -119,9 +123,9 @@ public class PartGroundDevice extends APart {
                 vehicleOn.groundDeviceCollective.updateBounds();
                 prevLocalOffset.set(localOffset);
             }
-            if (lastHeight != currentHeight) {
+            if (lastHeight != heightVar.currentValue) {
                 vehicleOn.groundDeviceCollective.updateBounds();
-                boundingBox.heightRadius = currentHeight;
+                boundingBox.heightRadius = heightVar.currentValue;
             }
 
             //Set reference position for animation vars if we call them later.
@@ -149,7 +153,7 @@ public class PartGroundDevice extends APart {
                     }
 
                     //If we have a slipping wheel, count down and possibly pop it.
-                    if (!vehicleOn.world.isClient() && !isFlat) {
+                    if (!vehicleOn.world.isClient() && !flatVar.isActive) {
                         if (!skipAngularCalcs) {
                             if (ticksCalcsSkipped > 0) {
                                 --ticksCalcsSkipped;
@@ -181,7 +185,7 @@ public class PartGroundDevice extends APart {
                     boundingBox.depthRadius -= 0.25;
                 }
 
-                //Check for material below.
+                //Check for name/material below.
                 groundPosition.set(position);
                 groundPosition.y -= getHeight() / 2D;
                 double yPositionFraction = groundPosition.y % 1;
@@ -192,10 +196,11 @@ public class PartGroundDevice extends APart {
                     //We are above a block, but not close to the top, floor to use current block position.
                     groundPosition.y = Math.floor(groundPosition.y) - 1;
                 }
-                materialBelow = world.getBlockMaterial(groundPosition);
+                blockNameBelow = world.getBlockName(groundPosition);
+                blockMaterialBelow = world.getBlockMaterial(groundPosition);
             } else {
                 if (!drivenLastTick) {
-                    if (vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn) {
+                    if (vehicleOn.brakeVar.isActive || vehicleOn.parkingBrakeVar.isActive) {
                         angularVelocity = 0;
                     } else if (angularVelocity > 0) {
                         angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
@@ -206,7 +211,8 @@ public class PartGroundDevice extends APart {
                 if (animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)) {
                     animateAsOnGround = false;
                 }
-                materialBelow = null;
+                blockNameBelow = null;
+                blockMaterialBelow = null;
             }
             prevAngularPosition = angularPosition;
 
@@ -222,11 +228,12 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    public void updateVariableModifiers() {
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
         float frictionLoss = getFrictionLoss();
-        currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
-        currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
-        if (isFlat) {
+        double currentMotiveFriction = definition.ground.motiveFriction - frictionLoss;
+        double currentLateralFriction = definition.ground.lateralFriction - frictionLoss;
+        if (flatVar.isActive) {
             currentMotiveFriction /= 10;
             currentLateralFriction /= 10;
         }
@@ -236,59 +243,44 @@ public class PartGroundDevice extends APart {
         if (currentLateralFriction < 0) {
             currentLateralFriction = 0;
         }
-        lastHeight = currentHeight;
-        currentHeight = (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height) * scale.y);
 
-        //Adjust current variables to modifiers, if any exist.
-        if (definition.variableModifiers != null) {
-            for (JSONVariableModifier modifier : definition.variableModifiers) {
-                switch (modifier.variable) {
-                    case "motiveFriction":
-                        currentMotiveFriction = adjustVariable(modifier, currentMotiveFriction);
-                        break;
-                    case "lateralFriction":
-                        currentLateralFriction = adjustVariable(modifier, currentLateralFriction);
-                        break;
-                    case "height":
-                    	currentHeight = adjustVariable(modifier, currentHeight);
-                        break;
-                    default:
-                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
-                        break;
-                }
-            }
-        }
+        motiveFrictionVar.setTo(currentMotiveFriction, false);
+        lateralFrictionVar.setTo(currentLateralFriction, false);
+        lastHeight = heightVar.currentValue;
+        heightVar.setTo((flatVar.isActive ? definition.ground.flatHeight : definition.ground.height) * scale.y, false);
     }
 
     @Override
-    public double getRawVariableValue(String variable, float partialTicks) {
+    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         switch (variable) {
             case ("ground_rotation"):
-                return vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0, true);
             case ("ground_rotation_normalized"):
-            	return vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0, true);
             case ("ground_onground"):
-                return vehicleOn != null && animateAsOnGround ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && animateAsOnGround ? 1 : 0, false);
             case ("ground_isflat"):
-                return isFlat ? 1 : 0;
+                return flatVar;
             case ("ground_contacted"):
-                return contactThisTick ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> contactThisTick ? 1 : 0, false);
             case ("ground_skidding"):
-                return skipAngularCalcs ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> skipAngularCalcs ? 1 : 0, false);
             case ("ground_slipping"):
-                return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
+                return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0, false);
             case ("ground_distance"):
-                return world.getHeight(zeroReferencePosition);
-        }
-        if (variable.startsWith("ground_blockmaterial")) {
-            if (materialBelow != null) {
-                return materialBelow.name().equals(variable.substring("ground_blockmaterial_".length()).toUpperCase()) ? 1 : 0;
-            } else {
-                return 0;
+                return new ComputedVariable(this, variable, partialTicks -> world.getHeight(zeroReferencePosition), false);
+            default: {
+                if (variable.startsWith("ground_blockname")) {
+                    final String blockName = variable.substring("ground_blockname_".length()).toLowerCase();
+                    return new ComputedVariable(this, variable, partialTicks -> blockNameBelow != null && blockNameBelow.equals(blockName) ? 1 : 0, false);
+                } else if (variable.startsWith("ground_blockmaterial")) {
+                    final String materialName = variable.substring("ground_blockmaterial_".length()).toUpperCase();
+                    return new ComputedVariable(this, variable, partialTicks -> blockMaterialBelow != null && blockMaterialBelow.name().equals(materialName) ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
             }
         }
-
-        return super.getRawVariableValue(variable, partialTicks);
     }
 
     @Override
@@ -298,7 +290,7 @@ public class PartGroundDevice extends APart {
 
     @Override
     public double getHeight() {
-        return currentHeight;
+        return heightVar.currentValue;
     }
 
     /**
@@ -310,27 +302,27 @@ public class PartGroundDevice extends APart {
             //On the server, can we go flat and does the config let us?
             //Or if we are repairing, are we flat in the first place?
             if (setFlat) {
-                if (isFlat || definition.ground.flatHeight == 0 || !ConfigSystem.settings.damage.wheelBreakage.value) {
+                if (flatVar.isActive || definition.ground.flatHeight == 0 || !ConfigSystem.settings.damage.wheelBreakage.value) {
                     return;
                 }
             } else {
-                if (!isFlat) {
+                if (!flatVar.isActive) {
                     return;
                 }
             }
             //Valid conditions, send packet before continuing.
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
         }
-        isFlat = setFlat;
+        flatVar.setActive(setFlat, false);
     }
 
     public double getDesiredAngularVelocity() {
         if (vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)) {
             if (vehicleOn.skidSteerActive) {
                 if (placementDefinition.pos.x > 0) {
-                    return getLongPartOffset() == 0 ? vehicleOn.rudderAngle / 200D / (getHeight() * Math.PI) : vehicleOn.rudderAngle / 200D;
+                    return getLongPartOffset() == 0 ? vehicleOn.rudderAngleVar.currentValue / 200D / (getHeight() * Math.PI) : vehicleOn.rudderAngleVar.currentValue / 200D;
                 } else if (placementDefinition.pos.x < 0) {
-                    return getLongPartOffset() == 0 ? -vehicleOn.rudderAngle / 200D / (getHeight() * Math.PI) : -vehicleOn.rudderAngle / 200D;
+                    return getLongPartOffset() == 0 ? -vehicleOn.rudderAngleVar.currentValue / 200D / (getHeight() * Math.PI) : -vehicleOn.rudderAngleVar.currentValue / 200D;
                 } else {
                     return 0;
                 }
@@ -349,7 +341,7 @@ public class PartGroundDevice extends APart {
     private float getFrictionLoss() {
         if (!world.isAir(groundPosition)) {
             float penalty = world.getBlockSlipperiness(groundPosition) - 0.6F;
-            Float modifier = definition.ground.frictionModifiers.get(materialBelow);
+            Float modifier = definition.ground.frictionModifiers.get(blockMaterialBelow);
             if (modifier != null) {
                 penalty -= modifier;
             }
@@ -366,12 +358,5 @@ public class PartGroundDevice extends APart {
 
     public float getLongPartOffset() {
         return placementDefinition.extraCollisionBoxOffset != 0 ? placementDefinition.extraCollisionBoxOffset : definition.ground.extraCollisionBoxOffset;
-    }
-
-    @Override
-    public IWrapperNBT save(IWrapperNBT data) {
-        super.save(data);
-        data.setBoolean(FLAT_VARIABLE, isFlat);
-        return data;
     }
 }

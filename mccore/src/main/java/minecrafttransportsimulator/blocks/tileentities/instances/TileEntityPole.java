@@ -126,7 +126,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                     }
                     return true;
                 }
-            } else if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking() && clickedComponent.definition.rendering.textObjects != null) {
+            } else if (player.isHoldingItemType(ItemComponentType.WRENCH) && player.isSneaking() && clickedComponent != null && clickedComponent.definition.rendering.textObjects != null) {
                 //Player clicked a sign with text.  Open the GUI to edit it.
                 player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
                 return true;

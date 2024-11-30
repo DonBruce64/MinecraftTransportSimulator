@@ -4,8 +4,11 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.instances.EntityBrewer;
+import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.guis.instances.GUIBrewer;
 import minecrafttransportsimulator.guis.instances.GUIFurnace;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
@@ -75,7 +78,11 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                     break;
                 }
                 case FURNACE: {
-                    new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
+                    new GUIFurnace((EntityFurnace) interactable.crafter, interactable.definition.interactable.inventoryTexture);
+                    break;
+                }
+                case BREWER: {
+                    new GUIBrewer((EntityBrewer) interactable.crafter, interactable.definition.interactable.inventoryTexture);
                     break;
                 }
                 default:

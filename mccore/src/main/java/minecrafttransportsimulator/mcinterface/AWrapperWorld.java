@@ -157,6 +157,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract void removeItemStackEntity(IWrapperEntity entity);
 
     /**
+     * Returns true if the position is inside the world border.
+     */
+    public abstract boolean isInsideBorder(Point3D position);
+
+    /**
      * Returns true if the chunk that contains the position is loaded.
      */
     public abstract boolean chunkLoaded(Point3D position);
@@ -166,6 +171,11 @@ public abstract class AWrapperWorld extends EntityManager {
      * Only valid for blocks of type {@link ABlockBase} others will return null.
      */
     public abstract ABlockBase getBlock(Point3D position);
+
+    /**
+     * Returns the name of the block.
+     */
+    public abstract String getBlockName(Point3D position);
 
     /**
      * Returns the hardness of the block at the passed-in point.
@@ -406,7 +416,6 @@ public abstract class AWrapperWorld extends EntityManager {
      * Normally, items are spawned as if they're on top of blocks in a default MC behavior.
      * You can specify a motion to override this and spawn them right at the point with the requested motion.
      */
-    //FIXME make newer interfaces utilize the optional motion.
     public abstract void spawnItemStack(IWrapperItemStack stack, Point3D point, Point3D optionalMotion);
 
     /**

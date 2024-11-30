@@ -17,6 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExtern
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityCustomKeypress;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
@@ -29,14 +30,13 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
+import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketCrafterTimeSet;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
-import minecrafttransportsimulator.packets.instances.PacketPartChange_Transfer;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
@@ -47,8 +47,10 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityChargerBattery;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpPayment;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
@@ -226,6 +228,7 @@ public abstract class APacketBase {
         //Entity packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCameraChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityColorChange.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCustomKeypress.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityKeyChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
@@ -252,8 +255,8 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketItemInteractable.class);
 
         //Furnace packets.
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceFuelAdd.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceTimeSet.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterFuelAdd.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCrafterTimeSet.class);
 
         //GUI packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketGUIRequest.class);
@@ -262,7 +265,6 @@ public abstract class APacketBase {
         //Part packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Add.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Remove.class);
-        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange_Transfer.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGun.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEffector.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
@@ -282,6 +284,8 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityLoaderConnection.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpPayment.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityChargerBattery.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityPoleCollisionUpdate.class);

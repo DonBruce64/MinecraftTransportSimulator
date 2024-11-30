@@ -1,0 +1,28 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aba",
+        "cdc",
+        "eee"
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:red_dye"
+        },
+        "b": {
+            "item": "minecraft:glass_pane"
+        },
+        "c": {
+            "item": "minecraft:black_dye"
+        },
+        "d": {
+            "tag": "forge:ingots/iron"
+        },
+        "e": {
+            "item": "minecraft:stone_slab"
+        }
+    },
+    "result": {
+        "item": "mts:mts.fuelpump"
+    }
+}

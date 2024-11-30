@@ -114,7 +114,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                         double maxEntityRadius = level.getMaxEntityRadius();
                         if (maxEntityRadius < interactable.encompassingBox.widthRadius || maxEntityRadius < interactable.encompassingBox.heightRadius || maxEntityRadius < interactable.encompassingBox.depthRadius) {
                             maxEntityRadius = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
-                            if (maxEntityRadius < 150) {
+                            if (maxEntityRadius < AEntityE_Interactable.MAX_ENTITY_RADIUS) {
                                 level.increaseMaxEntityRadius(maxEntityRadius);
                             } else {
                                 InterfaceManager.coreInterface.logError("Attempted to set the world entity max size to way too big of a number (" + maxEntityRadius + ") for " + entity + "  Removing entity from world as this is likely a pack error that will cause lots of TPS loss!");
@@ -132,10 +132,10 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 try {
                     WrapperNBT data = new WrapperNBT(lastLoadedNBT);
                     entity = entityMap.get(lastLoadedNBT.getString("entityid")).restoreEntityFromData(worldWrapper, data);
+                    entity.world.addEntity(entity);
                     if (entity instanceof AEntityF_Multipart) {
                         ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
                     }
-                    entity.world.addEntity(entity);
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {

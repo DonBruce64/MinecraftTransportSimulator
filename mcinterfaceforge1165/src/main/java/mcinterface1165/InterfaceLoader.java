@@ -52,7 +52,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.16.0";
+    public static final String MODVER = "22.17.0";
 
     public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
     private final String gameDirectory;
@@ -135,7 +135,7 @@ public class InterfaceLoader {
         }
 
         //Init the language system for the created items.
-        LanguageSystem.init();
+        LanguageSystem.init(isClient);
 
         //Register all items in our wrapper map.
         for (Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()) {
@@ -241,10 +241,7 @@ public class InterfaceLoader {
     }
 
     public void onPostConstruction(FMLLoadCompleteEvent event) {
-        //Populate language system, since we now know we have a language class.
         if (FMLEnvironment.dist.isClient()) {
-            LanguageSystem.populateNames();
-
             //Put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
