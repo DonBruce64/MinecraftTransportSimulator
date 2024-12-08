@@ -816,7 +816,7 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (world.isEmptyBlock(pos)) {
-            ItemStack mcStack = ((WrapperItemStack) stack).stack;
+            ItemStack mcStack = ((WrapperItemStack) stack).stack.copy();
             if (mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vector3d(position.x, position.y, position.z), Direction.DOWN, pos, true))) == ActionResultType.CONSUME) {
                 return true;
             }

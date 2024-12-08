@@ -799,7 +799,7 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (world.isEmptyBlock(pos)) {
-            ItemStack mcStack = ((WrapperItemStack) stack).stack;
+            ItemStack mcStack = ((WrapperItemStack) stack).stack.copy();
             if (mcStack.useOn(new UseOnContext(world, null, InteractionHand.MAIN_HAND, mcStack, new net.minecraft.world.phys.BlockHitResult(new Vec3(position.x, position.y, position.z), Direction.DOWN, pos, true))) == InteractionResult.CONSUME) {
                 return true;
             }
