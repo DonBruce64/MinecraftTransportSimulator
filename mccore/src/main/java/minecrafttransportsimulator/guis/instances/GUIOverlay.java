@@ -102,10 +102,11 @@ public class GUIOverlay extends AGUIBase {
         Point3D endPosition = player.getLineOfSight(10).add(startPosition);
         EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
 
-        if (lastInteractResult != null && interactResult == null) {
+        if (lastInteractResult != null && (interactResult == null || interactResult.entity != lastInteractResult.entity)) {
             lastInteractResult.entity.playerCursorHoveredVar.setActive(false, false);
             lastInteractResult = null;
-        } else if (lastInteractResult == null && interactResult != null) {
+        }
+        if (lastInteractResult == null && interactResult != null) {
             interactResult.entity.playerCursorHoveredVar.setActive(true, false);
             lastInteractResult = interactResult;
         }
