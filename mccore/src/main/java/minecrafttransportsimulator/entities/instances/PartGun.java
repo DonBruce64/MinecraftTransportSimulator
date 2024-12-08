@@ -228,6 +228,7 @@ public class PartGun extends APart {
             reloadStartTimeRemaining = data.getInteger("reloadStartTimeRemaining");
             reloadMainTimeRemaining = data.getInteger("reloadMainTimeRemaining");
             reloadEndTimeRemaining = data.getInteger("reloadEndTimeRemaining");
+            isReloading = reloadStartTimeRemaining != 0 || reloadMainTimeRemaining != 0 || reloadEndTimeRemaining != 0;
 
             if (!loadedBullets.isEmpty()) {
                 lastLoadedBullet = loadedBullets.get(0);
