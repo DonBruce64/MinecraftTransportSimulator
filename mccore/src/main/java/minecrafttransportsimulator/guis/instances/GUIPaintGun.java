@@ -209,7 +209,7 @@ public class GUIPaintGun extends AGUIBase {
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false, false);
             if (materials == null) {
-                if (++recipeIndex == currentItem.subDefinition.extraMaterialLists.size()) {
+                if (++recipeIndex >= currentItem.subDefinition.extraMaterialLists.size()) {
                     recipeIndex = 0;
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
