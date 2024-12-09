@@ -1,7 +1,7 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
+        " aa",
         "aba",
         "aaa"
     ],
@@ -10,7 +10,7 @@
             "tag": "forge:ingots/iron"
         },
         "b": {
-            "item": "minecraft:red_dye"
+            "item": "minecraft:bucket"
         }
     },
     "result": {

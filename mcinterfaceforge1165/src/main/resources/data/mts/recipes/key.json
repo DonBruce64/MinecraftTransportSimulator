@@ -7,10 +7,10 @@
     ],
     "key": {
         "a": {
-            "tag": "forge:ingots/iron"
+            "tag": "forge:nuggets/iron"
         },
         "b": {
-            "item": "minecraft:string"
+            "tag": "forge:clay"
         }
     },
     "result": {
