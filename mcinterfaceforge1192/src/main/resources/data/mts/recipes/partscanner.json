@@ -1,9 +1,9 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
+        "abg",
         "cde",
-        "afa"
+        "gfa"
     ],
     "key": {
         "a": {
@@ -23,6 +23,9 @@
         },
         "f": {
             "item": "minecraft:stone_button"
+        },
+        "g": {
+            "tag": "forge:ingots/copper"
         }
     },
     "result": {

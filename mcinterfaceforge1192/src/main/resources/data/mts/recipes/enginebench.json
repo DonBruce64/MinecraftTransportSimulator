@@ -2,21 +2,21 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "aaa",
-        "bca",
-        " dd"
+        "b a",
+        "cdd"
     ],
     "key": {
         "a": {
             "tag": "forge:ingots/iron"
         },
         "b": {
-            "item": "minecraft:iron_bars"
+            "item": "minecraft:chain"
         },
         "c": {
-            "item": "minecraft:red_dye"
+            "item": "mts:mts.wrench"
         },
         "d": {
-            "item": "minecraft:iron_block"
+            "item": "minecraft:heavy_weighted_pressure_plate"
         }
     },
     "result": {
