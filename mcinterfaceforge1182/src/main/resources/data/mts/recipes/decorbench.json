@@ -2,7 +2,7 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "a  ",
-        "bbb",
+        "ebb",
         "c d"
     ],
     "key": {
@@ -17,6 +17,9 @@
         },
         "d": {
             "tag": "forge:ingots/iron"
+        },
+        "e": {
+            "tag": "forge:ingots/copper"
         }
     },
     "result": {

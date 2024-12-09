@@ -2,18 +2,24 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "aaa",
-        "aba",
-        "c c"
+        "bcd",
+        "e e"
     ],
     "key": {
         "a": {
             "tag": "minecraft:planks"
         },
         "b": {
-            "tag": "minecraft:wooden_fences"
+            "item": "minecraft:paper"
         },
         "c": {
-            "item": "minecraft:glass_pane"
+            "item": "minecraft:lectern"
+        },
+        "d": {
+            "item": "minecraft:writable_book"
+        },
+        "e": {
+            "tag": "forge:fences/wooden"
         }
     },
     "result": {

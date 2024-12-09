@@ -1,22 +1,16 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        " a ",
-        "cbc",
-        " d "
+        "   ",
+        " ab",
+        "   "
     ],
     "key": {
         "a": {
-            "item": "minecraft:feather"
-        },
-        "b": {
             "item": "minecraft:book"
         },
-        "c": {
-						"item": "minecraft:black_dye"
-        },
-        "d": {
-            "item": "minecraft:paper"
+        "b": {
+			"item": "mts:mts.key"
         }
     },
     "result": {

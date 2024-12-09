@@ -1,25 +1,25 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
-        "cdc",
-        "eee"
+        " a ",
+        "bcd",
+        "ece"
     ],
     "key": {
         "a": {
-            "item": "minecraft:red_dye"
-        },
-        "b": {
             "item": "minecraft:glass_pane"
         },
+        "b": {
+            "item": "minecraft:red_dye"
+        },
         "c": {
-            "item": "minecraft:black_dye"
+            "item": "minecraft:bucket"
         },
         "d": {
-            "tag": "forge:ingots/iron"
+            "item": "mts:mts.fuelhose"
         },
         "e": {
-            "item": "minecraft:stone_slab"
+            "tag": "forge:ingots/iron"
         }
     },
     "result": {
