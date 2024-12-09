@@ -1,9 +1,9 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "a  ",
+        "   ",
         "abb",
-        "cbb"
+        "dcc"
     ],
     "key": {
         "a": {
@@ -13,7 +13,10 @@
             "tag": "minecraft:planks"
         },
         "c": {
-            "item": "minecraft:anvil"
+            "tag": "minecraft:wooden_fences"
+        },
+        "d": {
+            "item": "minecraft:grindstone"
         }
     },
     "result": {

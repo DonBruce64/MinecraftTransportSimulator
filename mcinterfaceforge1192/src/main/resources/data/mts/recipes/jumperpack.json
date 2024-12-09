@@ -2,7 +2,7 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "aaa",
-        "bca",
+        "bea",
         "dcd"
     ],
     "key": {
@@ -17,6 +17,9 @@
         },
         "d": {
             "item": "minecraft:redstone"
+        },
+        "e": {
+            "tag": "forge:storage_blocks/copper"
         }
     },
     "result": {
