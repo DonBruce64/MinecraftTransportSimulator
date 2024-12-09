@@ -2,8 +2,8 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "aaa",
-        "aba",
-        "c c"
+        "abc",
+        "d d"
     ],
     "key": {
         "a": {
@@ -11,11 +11,14 @@
             "ore": "plankWood"
         },
         "b": {
-            "type": "forge:ore_dict",
-            "ore": "fenceWood"
+            "item": "minecraft:paper"
         },
         "c": {
-            "item": "minecraft:glass_pane"
+            "item": "minecraft:writable_book"
+        },
+        "d": {
+            "type": "forge:ore_dict",
+            "ore": "fenceWood"
         }
     },
     "result": {

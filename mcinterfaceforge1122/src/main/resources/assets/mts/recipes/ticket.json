@@ -1,9 +1,8 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
-        "aba",
-        "ccc"
+        "ca",
+        "ab"
     ],
     "key": {
         "a": {

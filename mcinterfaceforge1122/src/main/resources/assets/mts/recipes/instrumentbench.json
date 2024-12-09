@@ -1,24 +1,28 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
-        "cdc",
-        "c c"
+        "abc",
+        "ddd",
+        "e e"
     ],
     "key": {
-        "a": {
+    	"a": {
+            "item": "minecraft:redstone_lamp"
+        },
+        "b": {
             "type": "forge:ore_dict",
             "ore": "ingotIron"
         },
-        "b": {
-            "item": "minecraft:glowstone"
-        },
         "c": {
+            "item": "minecraft:clock"
+        },
+        "d": {
             "type": "forge:ore_dict",
             "ore": "plankWood"
         },
-        "d": {
-            "item": "minecraft:redstone_block"
+        "e": {
+            "type": "forge:ore_dict",
+            "ore": "fenceWood"
         }
     },
     "result": {
