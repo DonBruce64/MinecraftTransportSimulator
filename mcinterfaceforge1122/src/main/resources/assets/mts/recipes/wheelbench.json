@@ -1,7 +1,7 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "a  ",
+        "   ",
         "abb",
         "cbb"
     ],
@@ -15,8 +15,7 @@
             "ore": "plankWood"
         },
         "c": {
-            "item": "minecraft:anvil",
-            "data": 0
+            "item": "minecraft:bucket"
         }
     },
     "result": {

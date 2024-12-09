@@ -1,7 +1,7 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
+        " aa",
         "aba",
         "aaa"
     ],
@@ -11,8 +11,7 @@
             "ore": "ingotIron"
         },
         "b": {
-            "type": "forge:ore_dict",
-            "ore": "dyeRed"
+            "item": "minecraft:bucket"
         }
     },
     "result": {
