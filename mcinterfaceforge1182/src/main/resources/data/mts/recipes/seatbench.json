@@ -2,15 +2,18 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "   ",
-        "aba",
-        "a a"
+        "abb",
+        "c c"
     ],
     "key": {
         "a": {
-            "tag": "forge:ingots/iron"
+            "item": "minecraft:stonecutter"
         },
         "b": {
-            "item": "minecraft:iron_axe"
+            "item": "minecraft:heavy_weighted_pressure_plate"
+        },
+        "c": {
+            "tag": "forge:ingots/iron"
         }
     },
     "result": {

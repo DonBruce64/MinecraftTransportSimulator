@@ -3,20 +3,20 @@
     "pattern": [
         "   ",
         "abc",
-        "dad"
+        "ddd"
     ],
     "key": {
         "a": {
-            "item": "minecraft:iron_block"
+            "tag": "forge:storage_blocks/iron"
         },
         "b": {
             "item": "minecraft:diamond"
         },
         "c": {
-            "item": "minecraft:red_dye"
+            "tag": "forge:ingots/iron"
         },
         "d": {
-            "item": "minecraft:green_dye"
+            "item": "minecraft:smooth_stone"
         }
     },
     "result": {
