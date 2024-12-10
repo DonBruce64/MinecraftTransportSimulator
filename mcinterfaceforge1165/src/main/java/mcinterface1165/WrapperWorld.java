@@ -50,6 +50,9 @@ import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.block.CropsBlock;
 import net.minecraft.block.FarmlandBlock;
 import net.minecraft.block.IGrowable;
+import net.minecraft.block.LadderBlock;
+import net.minecraft.block.LanternBlock;
+import net.minecraft.block.PistonBlock;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
@@ -64,6 +67,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.Items;
+import net.minecraft.item.WallOrFloorItem;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.state.properties.SlabType;
 import net.minecraft.tags.BlockTags;
@@ -817,8 +821,13 @@ public class WrapperWorld extends AWrapperWorld {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (world.isEmptyBlock(pos)) {
             ItemStack mcStack = ((WrapperItemStack) stack).stack.copy();
-            if (mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vector3d(position.x, position.y, position.z), Direction.DOWN, pos, true))) == ActionResultType.CONSUME) {
-                return true;
+            Item mcItem = mcStack.getItem();
+            Block mcBlock = mcItem instanceof BlockItem ? ((BlockItem) mcItem).getBlock() : null;
+            if (mcBlock != null) {
+                //Some items can't be placed as they check for the player, even though it can be null.
+                if (!mcItem.isEdible() && !(mcItem instanceof WallOrFloorItem) && !(mcBlock instanceof PistonBlock) && !(mcBlock instanceof LanternBlock) && !(mcBlock instanceof LadderBlock) && mcStack.useOn(new ItemUseContext(world, null, Hand.MAIN_HAND, mcStack, new BlockRayTraceResult(new Vector3d(position.x, position.y, position.z), Direction.UP, pos, true))) == ActionResultType.CONSUME) {
+                    return true;
+                }
             }
         }
         return false;

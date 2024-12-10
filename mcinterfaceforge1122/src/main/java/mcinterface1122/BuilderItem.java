@@ -159,7 +159,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         if (hand.equals(EnumHand.MAIN_HAND)) {
             if (item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name()))) {
                 return EnumActionResult.SUCCESS;
-            } else if (player.isSneaking()) {
+            } else if (player != null && player.isSneaking()) {
                 //Forward sneak click too, since blocks don't get these.
                 if (!world.isRemote) {
                     TileEntity tile = world.getTileEntity(pos);
