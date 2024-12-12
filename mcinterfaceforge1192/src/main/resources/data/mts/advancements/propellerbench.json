@@ -1,16 +1,38 @@
 {
     "parent": "mts:rtfm",
     "display": {
-        "icon": {"item": "mts:mts.propellerbench"},
-        "title": {"translate": "advancements.mts.propellerbench.title"},
-        "description": {"translate": "advancements.mts.propellerbench.description"}
+        "icon": {
+        	"item": "mts:mts.propellerbench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.propellerbench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.propellerbench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
     },
     "criteria": {
-        "has_propellerbench": {
+        "propellerbench": {
             "trigger": "minecraft:inventory_changed",
             "conditions": {
-                "items": [{"item": "mts:mts.propellerbench"}]
-            }
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.propellerbench"
+            				]
+            			}
+            		]
+            	}
+        	}
         }
-    }
+    },
+    "requirements": [
+        [
+            "propellerbench"
+        ]
+    ]
 }

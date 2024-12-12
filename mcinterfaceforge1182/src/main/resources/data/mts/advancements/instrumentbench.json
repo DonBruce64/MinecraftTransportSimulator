@@ -1,16 +1,38 @@
 {
     "parent": "mts:rtfm",
     "display": {
-        "icon": {"item": "mts:mts.instrumentbench"},
-        "title": {"translate": "advancements.mts.instrumentbench.title"},
-        "description": {"translate": "advancements.mts.instrumentbench.description"}
+        "icon": {
+        	"item": "mts:mts.instrumentbench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.instrumentbench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.instrumentbench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
     },
     "criteria": {
-        "has_instrumentbench": {
+        "instrumentbench": {
             "trigger": "minecraft:inventory_changed",
             "conditions": {
-                "items": [{"item": "mts:mts.instrumentbench"}]
-            }
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.instrumentbench"
+            				]
+            			}
+            		]
+            	}
+        	}
         }
-    }
+    },
+    "requirements": [
+        [
+            "instrumentbench"
+        ]
+    ]
 }
