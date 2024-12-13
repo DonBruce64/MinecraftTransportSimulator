@@ -21,16 +21,6 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
     }
 
     @Override
-    public void update() {
-        //Need to do this before updating as these require knowledge of prior states.
-        //If we call super, then it will overwrite the prior state.
-        //We update both our variables and our part variables here.
-        updateVariableModifiers();
-
-        super.update();
-    }
-
-    @Override
     public float getLightProvided() {
         return (float) lightLevelVar.currentValue;
     }
