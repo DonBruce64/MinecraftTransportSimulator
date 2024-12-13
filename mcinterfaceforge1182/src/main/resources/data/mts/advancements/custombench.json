@@ -36,7 +36,6 @@
         ]
     ],
     "rewards": {
-        "experience": 500,
         "recipes": [
             "mts:fuelpump",
             "mts:jumpercable",
