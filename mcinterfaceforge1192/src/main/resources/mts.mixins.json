@@ -8,6 +8,7 @@
 				"client.HumanoidModelMixin",
 				"client.LevelRendererMixin",
 				"client.ListenerMixin",
+				"client.MinecraftMixin",
 				"client.MultiPackResourceManagerMixin",
 				"client.VillagerModelMixin"
     ],
@@ -15,8 +16,7 @@
 				"common.BiomeMixin",
 				"common.ConcretePowderBlockMixin",
 				"common.DimensionDataStorageMixin",
-				"common.EntityMixin",
-				"common.MinecraftMixin"
+				"common.EntityMixin"
 		],
     "injectors": {
         "defaultRequire": 1

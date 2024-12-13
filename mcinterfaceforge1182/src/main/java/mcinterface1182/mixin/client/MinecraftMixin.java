@@ -1,4 +1,4 @@
-package mcinterface1192.mixin.common;
+package mcinterface1182.mixin.client;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -5,8 +5,7 @@
     "compatibilityLevel": "JAVA_8",
 		"mixins": [
 				"common.ConcretePowderBlockMixin",
-				"common.EntityMixin",
-				"common.MinecraftMixin"
+				"common.EntityMixin"
 		],
     "client": [
         "client.RenderInfoInvokerMixin",
@@ -16,7 +15,8 @@
 				"client.SimpleReloadableResourceManagerMixin",
 				"client.BipedModelMixin",
 				"client.VillagerModelMixin",
-				"client.WorldRendererMixin"
+				"client.WorldRendererMixin",
+				"client.MinecraftMixin"
     ],
     "injectors": {
         "defaultRequire": 1
