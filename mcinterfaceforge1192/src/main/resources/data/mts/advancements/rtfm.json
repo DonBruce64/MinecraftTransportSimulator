@@ -1,18 +1,40 @@
 {
     "parent": "mts:root",
     "display": {
-        "icon": {"item": "mts:mts.handbook_car"},
-        "title": {"translate": "advancements.mts.rtfm.title"},
-        "description": {"translate": "advancements.mts.rtfm.description"}
+        "icon": {
+        	"item": "mts:mts.handbook_car"
+        },
+        "title": {
+        	"translate": "advancements.mts.rtfm.title"
+        },
+        "description": {
+        	"translate": "advancements.mts.rtfm.description"
+        },
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
     },
     "criteria": {
-        "has_manual": {
+        "manual": {
             "trigger": "minecraft:inventory_changed",
             "conditions": {
-                "items": [{"item": "mts:mts.handbook_car"}]
-            }
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.handbook_car"
+            				]
+            			}
+            		]
+            	}
+        	}
         }
     },
+    "requirements": [
+    [
+      "manual"
+    ]
+  ],
     "rewards": {
         "recipes": [
             "mts:partscanner",
