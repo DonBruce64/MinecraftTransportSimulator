@@ -686,13 +686,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 //Now that we know if we are enabled, check if the player has the right viewpoint.
                 AEntityB_Existing entityRiding = null;
                 boolean playerRidingThisEntity = false;
-                boolean hasOpenTop = false;
+                boolean playerRidingOpenTopped = false;
                 if(shouldSoundStartPlaying) {
 		            entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-		            AEntityF_Multipart<?> multipartTopLevel = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
-		            playerRidingThisEntity = multipartTopLevel != null && (multipartTopLevel.equals(this) || multipartTopLevel.allParts.contains(this));
-		            hasOpenTop = multipartTopLevel instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) multipartTopLevel).definition.motorized.hasOpenTop;
-                    shouldSoundStartPlaying = hasOpenTop ? true : ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior);
+		            AEntityF_Multipart<?> playerRidingMasterEntity = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
+                    playerRidingThisEntity = playerRidingMasterEntity != null && (playerRidingMasterEntity.equals(this) || playerRidingMasterEntity.allParts.contains(this));
+		            playerRidingOpenTopped = playerRidingMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) playerRidingMasterEntity).definition.motorized.hasOpenTop;
+                    boolean weAreOpenTopped = this instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) this).definition.motorized.hasOpenTop;
+                    shouldSoundStartPlaying = ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : (!soundDef.isInterior || weAreOpenTopped));
                 }
 
                 //Next, check the distance.
@@ -797,7 +798,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
                         //If the player is in a closed-top vehicle that isn't this one, dampen the sound
                         //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingThisEntity && entityRiding != null && sound.radio == null && !hasOpenTop && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || !CameraSystem.activeCamera.isInterior)) {
+                        if (!playerRidingThisEntity && entityRiding != null && sound.radio == null && !playerRidingOpenTopped && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || !CameraSystem.activeCamera.isInterior)) {
                             sound.volume *= 0.5F;
                         }
 
