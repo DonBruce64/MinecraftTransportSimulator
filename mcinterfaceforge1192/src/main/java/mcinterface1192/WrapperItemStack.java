@@ -134,11 +134,12 @@ public class WrapperItemStack implements IWrapperItemStack {
                 FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, FluidAction.SIMULATE);
                 if (drainedStack != null) {
                     //Able to take fluid from item, attempt to do so.
-                    int amountToDrain = (int) tank.fill(ForgeRegistries.FLUIDS.getKey(drainedStack.getFluid()).getPath(), drainedStack.getAmount(), false);
+                    ResourceLocation fluidLocation = ForgeRegistries.FLUIDS.getKey(drainedStack.getFluid());
+                    int amountToDrain = (int) tank.fill(fluidLocation.getPath(), fluidLocation.getNamespace(), drainedStack.getAmount(), false);
                     drainedStack = handler.drain(amountToDrain, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
                     if (drainedStack != null) {
                         //Was able to provide liquid from item.  Fill the tank.
-                        tank.fill(ForgeRegistries.FLUIDS.getKey(drainedStack.getFluid()).getPath(), drainedStack.getAmount(), true);
+                        tank.fill(fluidLocation.getPath(), fluidLocation.getNamespace(), drainedStack.getAmount(), true);
                         player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                     }
                 }
@@ -146,12 +147,12 @@ public class WrapperItemStack implements IWrapperItemStack {
                 //Item can hold fluid.  Check if we can fill it.
                 //Need to find the mod that registered this fluid, Forge is stupid and has them per-mod vs just all with a single name.
                 for (ResourceLocation fluidKey : ForgeRegistries.FLUIDS.getKeys()) {
-                    if (fluidKey.getPath().equals(tank.getFluid())) {
+                    if ((tank.getFluidMod().equals(EntityFluidTank.WILDCARD_FLUID_MOD) || tank.getFluidMod().equals(fluidKey.getNamespace())) && fluidKey.getPath().equals(tank.getFluid())) {
                         FluidStack containedStack = new FluidStack(ForgeRegistries.FLUIDS.getValue(fluidKey), (int) tank.getFluidLevel());
                         int amountFilled = handler.fill(containedStack, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
                         if (amountFilled > 0) {
                             //Were able to fill the item.  Apply state change to tank and item.
-                            tank.drain(tank.getFluid(), amountFilled, true);
+                            tank.drain(amountFilled, true);
                             player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                         }
                     }

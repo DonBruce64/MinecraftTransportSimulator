@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -52,7 +53,7 @@ public class ItemPartEngine extends AItemPart {
             StringBuilder line = new StringBuilder(LanguageSystem.ITEMINFO_ENGINE_FLUIDS.getCurrentValue());
             for (Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()) {
                 if (InterfaceManager.coreInterface.isFluidValid(fuelEntry.getKey())) {
-                    line.append(InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey())).append("@").append(fuelEntry.getValue()).append(", ");
+                    line.append(InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey(), EntityFluidTank.WILDCARD_FLUID_MOD)).append("@").append(fuelEntry.getValue()).append(", ");
                 }
             }
             tooltipLines.add(line.substring(0, line.length() - 2));

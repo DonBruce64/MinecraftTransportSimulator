@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
 import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered.FuelTankResult;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -87,7 +88,7 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
         if (amount > internalBuffer) {
             amount = internalBuffer;
         }
-        amount = connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount, true);
+        amount = connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, EntityFluidTank.WILDCARD_FLUID_MOD, amount, true);
         internalBuffer -= amount;
         return amount;
     }

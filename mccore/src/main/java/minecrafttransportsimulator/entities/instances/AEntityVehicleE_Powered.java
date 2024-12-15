@@ -108,9 +108,9 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 if (part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles) {
                     EntityFluidTank tank = ((PartInteractable) part).tank;
                     if (tank != null) {
-                        double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
+                        double amountFilled = tank.drain(fuelTank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, 1, true);
                         if (amountFilled > 0) {
-                            fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
+                            fuelTank.fill(fuelTank.getFluid(), fuelTank.getFluidMod(), amountFilled, true);
                         }
                     }
                 }
@@ -249,7 +249,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                             }
                         }
                     }
-                    fuelTank.manuallySet(mostPotentFluid, definition.motorized.defaultFuelQty);
+                    fuelTank.manuallySet(mostPotentFluid, "", definition.motorized.defaultFuelQty);
                     break;
                 }
             }

@@ -178,7 +178,7 @@ public class PartEngine extends APart {
                 case ELECTRIC: {
                     //Check for electricity.
                     if (!vehicleOn.fuelTank.getFluid().equals(ELECTRICITY_FUEL)) {
-                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                        vehicleOn.fuelTank.clear();
                     }
                     break;
                 }
@@ -187,7 +187,7 @@ public class PartEngine extends APart {
                     if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
                         throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
                     } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
-                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                        vehicleOn.fuelTank.clear();
                     }
                 }
             }
@@ -300,7 +300,7 @@ public class PartEngine extends APart {
                         vehicleOn.electricUsage += 0.05F;
                     }
                     if (!vehicleOn.isCreative) {
-                        fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
+                        fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
                     }
                 }
                 if (autoStarterEngaged) {
@@ -449,7 +449,7 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Add temp based on engine speed.
@@ -535,7 +535,7 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / maxRPMVar.currentValue, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Check if we need to stall the engine for various conditions.

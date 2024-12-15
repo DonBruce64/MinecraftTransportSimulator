@@ -119,7 +119,7 @@ public class GUIOverlay extends AGUIBase {
                 if(fluidName.isEmpty()) {
                     mouseoverLabel.text = String.format("%.1f/%.1fb", interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
                 }else {
-                    mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
+                    mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName, interactable.tank.getFluidMod()), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
                 }
             }
         }

@@ -62,7 +62,7 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public String getFluidName(String fluidID) {
+    public String getFluidName(String fluidID, String fluidMod) {
         Fluid fluid = FluidRegistry.getFluid(fluidID);
         return fluid != null ? new FluidStack(fluid, 1).getLocalizedName() : "INVALID";
     }

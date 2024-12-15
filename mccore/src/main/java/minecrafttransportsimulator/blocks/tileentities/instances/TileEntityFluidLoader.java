@@ -55,7 +55,7 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
     @Override
     protected boolean canLoadPart(PartInteractable part) {
         if (part.tank != null) {
-            return isUnloader() ? part.tank.drain(tank.getFluid(), 1, false) > 0 : part.tank.fill(tank.getFluid(), 1, false) > 0;
+            return isUnloader() ? part.tank.drain(tank.getFluid(), tank.getFluidMod(), 1, false) > 0 : part.tank.fill(tank.getFluid(), tank.getFluidMod(), 1, false) > 0;
         } else {
             return false;
         }
@@ -64,10 +64,11 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
     @Override
     protected void doLoading() {
         String fluidToLoad = tank.getFluid();
-        double amountToLoad = connectedPart.tank.fill(fluidToLoad, definition.decor.pumpRate, false);
+        String fluidModToLoad = tank.getFluidMod();
+        double amountToLoad = connectedPart.tank.fill(fluidToLoad, fluidModToLoad, definition.decor.pumpRate, false);
         if (amountToLoad > 0) {
-            amountToLoad = tank.drain(fluidToLoad, amountToLoad, true);
-            connectedPart.tank.fill(fluidToLoad, amountToLoad, true);
+            amountToLoad = tank.drain(fluidToLoad, fluidModToLoad, amountToLoad, true);
+            connectedPart.tank.fill(fluidToLoad, fluidModToLoad, amountToLoad, true);
             loadingActiveVar.setActive(amountToLoad > 0, true);
         } else {
             updateNearestPart();
@@ -78,10 +79,11 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
     @Override
     protected void doUnloading() {
         String fluidToUnload = connectedPart.tank.getFluid();
-        double amountToUnload = connectedPart.tank.drain(fluidToUnload, definition.decor.pumpRate, false);
+        String fluidModToUnload = connectedPart.tank.getFluidMod();
+        double amountToUnload = connectedPart.tank.drain(fluidToUnload, fluidModToUnload, definition.decor.pumpRate, false);
         if (amountToUnload > 0) {
-            amountToUnload = tank.fill(fluidToUnload, amountToUnload, true);
-            connectedPart.tank.drain(fluidToUnload, amountToUnload, true);
+            amountToUnload = tank.fill(fluidToUnload, fluidModToUnload, amountToUnload, true);
+            connectedPart.tank.drain(fluidToUnload, fluidModToUnload, amountToUnload, true);
             unloadingActiveVar.setActive(amountToUnload > 0, true);
         } else {
             updateNearestPart();

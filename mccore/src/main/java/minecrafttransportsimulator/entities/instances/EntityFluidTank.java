@@ -17,8 +17,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class EntityFluidTank extends AEntityA_Base {
+    public static final String WILDCARD_FLUID_MOD = "wildcard";
+
     private final int maxLevel;
     private String currentFluid;
+    private String currentFluidMod;
     private double fluidLevel;
 
     public EntityFluidTank(AWrapperWorld world, IWrapperNBT data, int maxLevel) {
@@ -26,9 +29,14 @@ public class EntityFluidTank extends AEntityA_Base {
         this.maxLevel = maxLevel;
         if (data != null) {
             this.currentFluid = data.getString("currentFluid");
+            this.currentFluidMod = data.getString("currentFluidMod");
             this.fluidLevel = data.getDouble("fluidLevel");
         } else {
             this.currentFluid = "";
+        }
+        //For older versions of saved data, ensure this isn't null.
+        if (currentFluidMod == null) {
+            this.currentFluidMod = WILDCARD_FLUID_MOD;
         }
     }
 
@@ -66,11 +74,20 @@ public class EntityFluidTank extends AEntityA_Base {
     }
 
     /**
+     * Gets the name of the mod that made the fluid in the tank.
+     * If no fluid is in the tank, or if the fluid mod is undefined, then an empty string is returned.
+     */
+    public String getFluidMod() {
+        return currentFluidMod;
+    }
+
+    /**
      * Manually sets the fluid and level of this tank.  Used for initial filling of the tank when
      * you don't want to sent packets or perform any validity checks.  Do NOT use for normal operations!
      */
-    public void manuallySet(String fluidName, double setLevel) {
+    public void manuallySet(String fluidName, String fluidModName, double setLevel) {
         this.currentFluid = fluidName;
+        this.currentFluidMod = fluidModName;
         this.fluidLevel = setLevel;
     }
 
@@ -81,8 +98,8 @@ public class EntityFluidTank extends AEntityA_Base {
      * internal state should be left as-is.  Return value is the
      * amount filled.
      */
-    public double fill(String fluid, double maxAmount, boolean doFill) {
-        if (currentFluid.isEmpty() || currentFluid.equals(fluid)) {
+    public double fill(String fluid, String fluidMod, double maxAmount, boolean doFill) {
+        if (currentFluid.isEmpty() || (currentFluid.equals(fluid) && (currentFluidMod.equals(fluidMod) || fluidMod.equals(WILDCARD_FLUID_MOD)))) {
             if (maxAmount >= getMaxLevel() - fluidLevel) {
                 maxAmount = getMaxLevel() - fluidLevel;
             }
@@ -90,6 +107,7 @@ public class EntityFluidTank extends AEntityA_Base {
                 fluidLevel += maxAmount;
                 if (currentFluid.isEmpty()) {
                     currentFluid = fluid;
+                    currentFluidMod = fluidMod;
                 }
                 //Send off packet now that we know what fluid we will have on this tank.
                 if (!world.isClient()) {
@@ -109,8 +127,8 @@ public class EntityFluidTank extends AEntityA_Base {
      * internal state should be left as-is.  Return value is the
      * amount drained.
      */
-    public double drain(String fluid, double maxAmount, boolean doDrain) {
-        if (!currentFluid.isEmpty() && (currentFluid.equals(fluid) || fluid.isEmpty())) {
+    public double drain(String fluid, String fluidMod, double maxAmount, boolean doDrain) {
+        if (!currentFluid.isEmpty() && ((currentFluid.equals(fluid) && (currentFluidMod.equals(fluidMod) || fluidMod.equals(WILDCARD_FLUID_MOD))) || fluid.isEmpty())) {
             if (maxAmount >= fluidLevel) {
                 maxAmount = fluidLevel;
             }
@@ -122,12 +140,28 @@ public class EntityFluidTank extends AEntityA_Base {
                 fluidLevel -= maxAmount;
                 if (fluidLevel == 0) {
                     currentFluid = "";
+                    currentFluidMod = "";
                 }
             }
             return maxAmount;
         } else {
             return 0;
         }
+    }
+    
+    /**
+     * Like {@link #drain(String, String, double, boolean)}, but doesn't check if the fluid matches.
+     */
+    public double drain(double maxAmount, boolean doDrain) {
+        return drain(currentFluid, currentFluidMod, maxAmount, doDrain);
+    }
+
+    /**
+     * Clears the tank of all fluid in it.  Sends no packets, so make sure to call this on both server and client.
+     */
+    public void clear() {
+        currentFluid = "";
+        currentFluidMod = "";
     }
 
     /**
@@ -151,6 +185,7 @@ public class EntityFluidTank extends AEntityA_Base {
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setString("currentFluid", currentFluid);
+        data.setString("currentFluidMod", currentFluidMod);
         data.setDouble("fluidLevel", fluidLevel);
         return data;
     }

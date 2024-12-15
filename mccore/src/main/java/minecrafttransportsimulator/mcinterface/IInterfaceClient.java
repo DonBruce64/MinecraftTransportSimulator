@@ -40,7 +40,7 @@ public interface IInterfaceClient {
      * Returns the in-game name for the passed-in fluid.  If the passed-in fluid is
      * invalid (i.e. there's no fluid registered with the name), then "INVALID" is returned.
      */
-    String getFluidName(String fluidID);
+    String getFluidName(String fluidID, String fluidMod);
 
     /**
      * Returns all fluid registry and in-game names as a key-value map.
