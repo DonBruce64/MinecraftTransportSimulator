@@ -24,7 +24,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
@@ -326,11 +325,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
             if (outOfHealth && definition.generic.destroyable) {
                 destroy(damage.box);
-                if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(position, 1F, true);
-                } else {
-                    world.spawnExplosion(position, 0F, false);
-                }
+                world.spawnExplosion(position, 0F, false, false);
             }
         }
     }

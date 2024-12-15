@@ -86,7 +86,7 @@ public class JSONConfigSettings {
     public static class ConfigDamage {
         public JSONConfigEntry<Boolean> bulletBlockBreaking = new JSONConfigEntry<>(true, "Whether or not bullets/bombs can break blocks when they hit them.  This will also disable explosive block breakage (though not explosions themselves) and prevent incendiary bullets from setting blocks on fire.");
         public JSONConfigEntry<Boolean> bulletExplosions = new JSONConfigEntry<>(true, "Whether or not bullets/bombs will blow up.  This does not disable block breakage, but it will pretty much nerf all block mass-destruction weapons.");
-        public JSONConfigEntry<Boolean> vehicleBlockBreaking = new JSONConfigEntry<>(true, "Whether or not vehicles can break blocks when they run into them.  If false, vehicles will simply stop when they hit blocks.");
+        public JSONConfigEntry<Boolean> vehicleBlockBreaking = new JSONConfigEntry<>(true, "Whether or not vehicles can break blocks when they run into them or blow up.  If false, vehicles will simply stop when they hit blocks.");
         public JSONConfigEntry<Boolean> vehicleDestruction = new JSONConfigEntry<>(true, "Whether or not vehicles can be destroyed by ramming into blocks at high speeds.  Set this to false if you don't like loosing vehicles to badly-placed walls.");
         public JSONConfigEntry<Boolean> vehicleExplosions = new JSONConfigEntry<>(true, "Whether or not vehicles explode when crashed or shot down.  If this is false, vehicles will simply poof when they crash.");
         public JSONConfigEntry<Boolean> creativePlayerDamage = new JSONConfigEntry<>(false, "If true, damage from vehicles and guns will be applied to creative players.  Not sure why you'd want this, but it's here.");

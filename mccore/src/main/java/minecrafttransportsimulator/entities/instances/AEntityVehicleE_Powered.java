@@ -215,7 +215,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     explosivePower += ((PartInteractable) part).getExplosiveContribution();
                 }
             }
-            world.spawnExplosion(box.globalCenter, explosivePower + fuelTank.getExplosiveness() + 1D, true);
+            world.spawnExplosion(box.globalCenter, explosivePower + fuelTank.getExplosiveness() + 1D, ConfigSystem.settings.damage.vehicleBlockBreaking.value, ConfigSystem.settings.damage.vehicleBlockBreaking.value);
         }
 
         //Now call super, since super might modify parts.

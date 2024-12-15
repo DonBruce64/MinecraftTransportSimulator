@@ -156,9 +156,9 @@ public final class PartInteractable extends APart {
             if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
                 if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(position, explosivePower, true);
+                    world.spawnExplosion(position, explosivePower, ConfigSystem.settings.damage.vehicleBlockBreaking.value, ConfigSystem.settings.damage.vehicleBlockBreaking.value);
                 } else {
-                    world.spawnExplosion(position, 0F, false);
+                    world.spawnExplosion(position, 0F, false, false);
                 }
             }
         } else {

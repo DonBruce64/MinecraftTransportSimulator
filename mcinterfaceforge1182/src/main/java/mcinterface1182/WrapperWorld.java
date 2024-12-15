@@ -1003,8 +1003,8 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames, Explosion.BlockInteraction.DESTROY);
+    public void spawnExplosion(Point3D location, double strength, boolean flames, boolean damageBlocks) {
+        world.explode(null, location.x, location.y, location.z, (float) strength, flames, damageBlocks ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
     }
 
     /**

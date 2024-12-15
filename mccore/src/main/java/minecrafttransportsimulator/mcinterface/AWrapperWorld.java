@@ -421,5 +421,5 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Spawns an explosion of the specified strength at the passed-in point.
      */
-    public abstract void spawnExplosion(Point3D location, double strength, boolean flames);
+    public abstract void spawnExplosion(Point3D location, double strength, boolean flames, boolean damageBlocks);
 }
