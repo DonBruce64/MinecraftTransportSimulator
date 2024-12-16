@@ -227,7 +227,15 @@ public class InterfaceSound implements IInterfaceSound {
     public void playQuickSound(SoundInstance sound) {
         if (ALC.getFunctionProvider() != null && sourceGetFailures < 10) {
             //First get the IntBuffer pointer to where this sound data is stored.
-            Integer dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
+            Integer dataBufferPointer;
+            try {
+                dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
+            } catch (Exception e) {
+                if (++sourceGetFailures == 10) {
+                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSYSTEM);
+                }
+                dataBufferPointer = null;
+            }
             if (dataBufferPointer != null) {
                 //Set the sound's source buffer index.
                 IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
