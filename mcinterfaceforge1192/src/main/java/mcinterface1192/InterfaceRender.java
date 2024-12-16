@@ -609,7 +609,7 @@ public class InterfaceRender implements IInterfaceRender {
     /**
      * Converts internal matrix to new external matrix.
      */
-    protected static Matrix4f convertMatrix4f(TransformationMatrix transform) {
+    public static Matrix4f convertMatrix4f(TransformationMatrix transform) {
         matrixConvertArray[0] = (float) transform.m00;
         matrixConvertArray[1] = (float) transform.m01;
         matrixConvertArray[2] = (float) transform.m02;
