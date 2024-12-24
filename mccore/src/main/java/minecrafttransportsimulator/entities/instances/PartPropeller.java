@@ -242,7 +242,7 @@ public class PartPropeller extends APart {
             }
 
             //If the propeller is in the water, increase thrust.
-            if (isInLiquid()) {
+            if (isInLiquid() && !definition.propeller.isRotor) {
                 thrust *= 50;
             }
 
