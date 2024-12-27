@@ -1,18 +1,40 @@
 {
     "parent": "mts:rtfm",
     "display": {
-        "icon": {"item": "mts:mts.seatbench"},
-        "title": {"translate": "advancements.mts.seatbench.title"},
-        "description": {"translate": "advancements.mts.seatbench.description"}
+        "icon": {
+        	"item": "mts:mts.seatbench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.seatbench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.seatbench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
     },
     "criteria": {
-        "has_seatbench": {
+        "seatbench": {
             "trigger": "minecraft:inventory_changed",
             "conditions": {
-                "items": [{"item": "mts:mts.seatbench"}]
-            }
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.seatbench"
+            				]
+            			}
+            		]
+            	}
+        	}
         }
     },
+    "requirements": [
+        [
+            "seatbench"
+        ]
+    ],
     "rewards": {
         "recipes": ["mts:fuelhose"]
     }

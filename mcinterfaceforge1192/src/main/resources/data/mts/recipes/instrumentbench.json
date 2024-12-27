@@ -1,22 +1,25 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "aba",
-        "cdc",
-        "c c"
+        "abc",
+        "ddd",
+        "e e"
     ],
     "key": {
         "a": {
-            "tag": "forge:ingots/iron"
+            "item": "minecraft:lantern"
         },
         "b": {
-            "item": "minecraft:glowstone"
+            "tag": "forge:ingots/iron"
         },
         "c": {
-            "tag": "minecraft:planks"
+            "item": "minecraft:clock"
         },
         "d": {
-            "item": "minecraft:redstone_block"
+            "tag": "minecraft:planks"
+        },
+        "e": {
+            "tag": "forge:fences/wooden"
         }
     },
     "result": {

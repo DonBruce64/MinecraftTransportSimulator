@@ -13,10 +13,10 @@
             "item": "minecraft:glass_pane"
         },
         "c": {
-            "item": "minecraft:comparator"
+            "tag": "forge:ingots/copper"
         },
         "d": {
-            "item": "minecraft:quartz"
+            "item": "minecraft:comparator"
         }
     },
     "result": {

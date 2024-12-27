@@ -3,7 +3,7 @@
     "pattern": [
         "aaa",
         " ba",
-        "aca"
+        "acd"
     ],
     "key": {
         "a": {
@@ -14,6 +14,9 @@
         },
         "c": {
             "item": "minecraft:anvil"
+        },
+        "d": {
+            "tag": "forge:storage_blocks/copper"
         }
     },
     "result": {

@@ -7,7 +7,7 @@
     ],
     "key": {
         "a": {
-            "tag": "forge:ingots/iron"
+            "tag": "forge:ingots/copper"
         },
         "b": {
             "item": "minecraft:crafting_table"

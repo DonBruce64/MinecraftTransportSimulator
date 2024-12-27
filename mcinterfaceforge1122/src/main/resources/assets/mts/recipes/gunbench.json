@@ -3,7 +3,7 @@
     "pattern": [
         "   ",
         "abc",
-        "dad"
+        "ccc"
     ],
     "key": {
         "a": {
@@ -14,11 +14,7 @@
         },
         "c": {
             "type": "forge:ore_dict",
-            "ore": "dyeRed"
-        },
-        "d": {
-            "type": "forge:ore_dict",
-            "ore": "dyeGreen"
+            "ore": "ingotIron"
         }
     },
     "result": {

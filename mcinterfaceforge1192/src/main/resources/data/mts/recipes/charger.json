@@ -3,7 +3,7 @@
     "pattern": [
         "ada",
         "bcb",
-        "aba"
+        "aea"
     ],
     "key": {
         "a": {
@@ -17,6 +17,9 @@
         },
         "d": {
             "item": "mts:mts.jumpercable"
+        },
+        "e": {
+            "tag": "forge:storage_blocks/copper"
         }
     },
     "result": {

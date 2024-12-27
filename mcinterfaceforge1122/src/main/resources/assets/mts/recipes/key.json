@@ -7,11 +7,10 @@
     ],
     "key": {
         "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
+            "item": "minecraft:iron_nugget"
         },
         "b": {
-            "item": "minecraft:string"
+            "item": "minecraft:clay_ball"
         }
     },
     "result": {

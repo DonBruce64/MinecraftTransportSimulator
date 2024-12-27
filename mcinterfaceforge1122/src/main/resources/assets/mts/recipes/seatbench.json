@@ -2,7 +2,7 @@
     "type": "minecraft:crafting_shaped",
     "pattern": [
         "   ",
-        "aba",
+        "cbc",
         "a a"
     ],
     "key": {
@@ -12,6 +12,9 @@
         },
         "b": {
             "item": "minecraft:iron_axe"
+        },
+        "c": {
+            "item": "minecraft:heavy_weighted_pressure_plate"
         }
     },
     "result": {

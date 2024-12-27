@@ -3,7 +3,7 @@
     "pattern": [
         "aaa",
         "bca",
-        " dd"
+        " ed"
     ],
     "key": {
         "a": {
@@ -19,6 +19,9 @@
         },
         "d": {
             "item": "minecraft:iron_block"
+        },
+        "e": {
+            "item": "minecraft:heavy_weighted_pressure_plate"
         }
     },
     "result": {
