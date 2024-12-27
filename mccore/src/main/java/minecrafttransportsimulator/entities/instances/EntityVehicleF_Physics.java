@@ -785,6 +785,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> definition.motorized.gearSequenceDuration != 0 ? 1 : 0, false);
             case ("gear_moving"):
                 return new ComputedVariable(this, variable, partialTicks -> (retractGearVar.isActive ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0, false);
+            case ("beacon_connected"):
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? 1 : 0, false);
             case ("beacon_direction"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0, false);
             case ("beacon_bearing_setpoint"):
