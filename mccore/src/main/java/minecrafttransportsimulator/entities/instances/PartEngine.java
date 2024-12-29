@@ -397,7 +397,7 @@ public class PartEngine extends APart {
                     } else if (vehicleOn.outOfHealth) {
                         stallEngine(Signal.DEAD_VEHICLE);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
-                    } else if (ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName())) {
+                    } else if (isInvalidDimension()) {
                         stallEngine(Signal.INVALID_DIMENSION);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INVALID_DIMENSION));
                     }
@@ -500,7 +500,7 @@ public class PartEngine extends APart {
                         //Start engine if the RPM is high enough to cause it to start by itself.
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
-                        if (rpm >= startRPMVar.currentValue && !world.isClient() && !vehicleOn.outOfHealth) {
+                        if (rpm >= startRPMVar.currentValue && !world.isClient() && !vehicleOn.outOfHealth && !isInvalidDimension()) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (isActive && !isInLiquid() && magnetoVar.isActive) {
                                     startEngine();
@@ -733,6 +733,10 @@ public class PartEngine extends APart {
                 prevDriveshaftRotation += 3600000;
             }
         }
+    }
+
+    public boolean isInvalidDimension() {
+        return ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName());
     }
 
     @Override
