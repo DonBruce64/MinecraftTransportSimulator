@@ -293,6 +293,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                                 rotorRotation.y = -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE;
                             }
                         }
+                        //Utilize control surface areas to increase or decrease factors for helicopter behaviors.
+                        rotorRotation.x *= (1 + elevatorAreaVar.currentValue);
+                        rotorRotation.y *= (1 + rudderAreaVar.currentValue);
+                        rotorRotation.z *= (1 + aileronAreaVar.currentValue);
                     }
                 }
             }
@@ -385,7 +389,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             wingForce = 0.5F * airDensity * axialVelocity * axialVelocity * wingAreaVar.currentValue * wingLiftCoeff;
             aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
             elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
-            rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
+            //Helicopters have rotors and shouldn't do rudder calculations, the rudder is used in the rotor section for controlling rotation rate.
+            if (hasRotors) {
+                rudderForce = 0;
+            } else {
+                rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
+            }
 
             //Get torques.  Point for ailerons is 0.75% to the edge of the wing.
             aileronTorque = aileronForce * wingSpanVar.currentValue * 0.5F * 0.75F;

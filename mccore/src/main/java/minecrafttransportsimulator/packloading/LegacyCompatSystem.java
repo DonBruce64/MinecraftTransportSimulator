@@ -440,6 +440,13 @@ public final class LegacyCompatSystem {
             }
         }
 
+        //Check to make sure helicopters have area-factors.  Previously this wasn't needed so they could all be 0.
+        if (definition.motorized.isAircraft && definition.motorized.aileronArea == 0 && definition.motorized.elevatorArea == 0 && definition.motorized.rudderArea == 0) {
+            definition.motorized.aileronArea = 1.0F;
+            definition.motorized.elevatorArea = 1.0F;
+            definition.motorized.rudderArea = 1.0F;
+        }
+
         //Check for old flaps.
         if (definition.motorized.hasFlaps) {
             definition.motorized.flapSpeed = 0.1F;
