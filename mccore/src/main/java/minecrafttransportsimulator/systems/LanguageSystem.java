@@ -127,7 +127,7 @@ public class LanguageSystem {
         for (String packID : PackParser.getAllPackIDs()) {
             Map<String, LanguageEntry> packMap = packLanguageEntries.get(packID);
             for (String language : InterfaceManager.clientInterface.getAllLanguages()) {
-                String filePath = "/assets/" + packID + "/language/" + language;
+                String filePath = "/assets/" + packID + "/language/" + language + ".json";
                 InputStream languageStream = InterfaceManager.coreInterface.getPackResource(filePath);
                 if (languageStream != null) {
                     JSONLanguageFile languageFile;
@@ -164,7 +164,7 @@ public class LanguageSystem {
                     dumpToFolder.mkdir();
                     File packFolder = new File(dumpToFolder, packID);
                     packFolder.mkdir();
-                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName()).toPath()));
+                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName() + ".json").toPath()));
                 }
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create template language files.  Report to the mod author!  Or, are you trying to do language stuff on servers?  Cause that's a bad idea...");
