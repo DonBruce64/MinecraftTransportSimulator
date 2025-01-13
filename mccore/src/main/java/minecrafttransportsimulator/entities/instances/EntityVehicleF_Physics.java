@@ -680,8 +680,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     public ComputedVariable getOrCreateVariable(String variable) {
         //If we are a forwarded variable and are a connected trailer, do that now.
-        if (definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)) {
-            return towedByConnection.towingVehicle.getOrCreateVariable(variable);
+        if (definition.motorized.isTrailer && definition.motorized.hookupVariables.contains(variable)) {
+            if (towedByConnection != null) {
+                //We are being towed, send request to towing vehicle.
+                return towedByConnection.towingVehicle.getOrCreateVariable(variable);
+            } else {
+                //Not towed.  Check if variable exists.  If so, use it.  Otherwise, make a 0 variable.
+                ComputedVariable computedVar = computedVariables.get(variable);
+                if (computedVar == null) {
+                    computedVar = new ComputedVariable(false);
+                    computedVariables.put(variable, computedVar);
+                }
+                return computedVar;
+            }
         } else {
             return super.getOrCreateVariable(variable);
         }

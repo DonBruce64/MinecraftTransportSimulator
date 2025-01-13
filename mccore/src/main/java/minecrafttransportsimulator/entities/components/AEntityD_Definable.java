@@ -80,7 +80,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
      **/
-    private final Map<String, ComputedVariable> computedVariables = new HashMap<>();
+    protected final Map<String, ComputedVariable> computedVariables = new HashMap<>();
 
     private final List<JSONSound> allSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();

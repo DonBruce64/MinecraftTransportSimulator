@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -285,8 +286,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             for (TowingConnection connection : towingConnections) {
                 connection.hitchPriorPosition.set(connection.hitchCurrentPosition);
                 connection.hitchCurrentPosition.set(connection.hitchConnection.pos).multiply(connection.towingEntity.scale).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
-                connection.towedVehicle.update();
-                connection.towedVehicle.doPostUpdateLogic();
+                EntityManager.doTick(connection.towedVehicle);
                 //If the towed vehicle is no longer towed, it means we disconnected from this entity.
                 //Bail rather than continue to avoid a CME.
                 if (connection.towedVehicle.towedByConnection == null) {
