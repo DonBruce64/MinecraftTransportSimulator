@@ -387,12 +387,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Get all other forces.
             wingForce = 0.5F * airDensity * axialVelocity * axialVelocity * wingAreaVar.currentValue * wingLiftCoeff;
-            aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
-            elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
-            //Helicopters have rotors and shouldn't do rudder calculations, the rudder is used in the rotor section for controlling rotation rate.
+            //Helicopters have rotors and shouldn't do control surface calculations.
             if (hasRotors) {
+                aileronForce = 0;
+                elevatorForce = 0;
                 rudderForce = 0;
             } else {
+                aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
+                elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
                 rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
             }
 
