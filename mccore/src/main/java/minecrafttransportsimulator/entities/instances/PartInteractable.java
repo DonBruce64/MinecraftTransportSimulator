@@ -156,9 +156,9 @@ public final class PartInteractable extends APart {
             if (!definition.interactable.hasBlowoutPanels) {
                 masterEntity.destroy(masterEntity.boundingBox);
                 if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-                    world.spawnExplosion(position, explosivePower, true);
+                    world.spawnExplosion(position, explosivePower, ConfigSystem.settings.damage.vehicleBlockBreaking.value, ConfigSystem.settings.damage.vehicleBlockBreaking.value);
                 } else {
-                    world.spawnExplosion(position, 0F, false);
+                    world.spawnExplosion(position, 0F, false, false);
                 }
             }
         } else {
@@ -204,12 +204,13 @@ public final class PartInteractable extends APart {
             //If we have a linked tank to transfer to, do so now.
             if (linkedTank != null) {
                 String fluidToTransfer = tank.getFluid();
+                String fluidModToTransfer = tank.getFluidMod();
                 if (!fluidToTransfer.isEmpty()) {
-                    double amountToTransfer = linkedTank.fill(fluidToTransfer, 10, false);
+                    double amountToTransfer = linkedTank.fill(fluidToTransfer, fluidModToTransfer, 10, false);
                     if (amountToTransfer > 0) {
-                        amountToTransfer = tank.drain(fluidToTransfer, amountToTransfer, true);
+                        amountToTransfer = tank.drain(fluidToTransfer, fluidModToTransfer, amountToTransfer, true);
                         if (amountToTransfer > 0) {
-                            linkedTank.fill(fluidToTransfer, amountToTransfer, true);
+                            linkedTank.fill(fluidToTransfer, fluidModToTransfer, amountToTransfer, true);
                         } else {
                             linkedMessage = LanguageSystem.INTERACT_FUELHOSE_TANKEMPTY;
                         }
@@ -272,7 +273,7 @@ public final class PartInteractable extends APart {
                             if (barrel.tank.getFluidLevel() > 0 && ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(barrel.tank.getFluid())) {
                                 crafter.ticksFuelProvides = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid()) * 20 * crafter.definition.crafterEfficiency);
                                 crafter.ticksLeftOfFuel = crafter.ticksFuelProvides;
-                                barrel.tank.drain(barrel.tank.getFluid(), 1, true);
+                                barrel.tank.drain(1, true);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketCrafterFuelAdd(crafter));
                             }
                         }

@@ -102,10 +102,11 @@ public class GUIOverlay extends AGUIBase {
         Point3D endPosition = player.getLineOfSight(10).add(startPosition);
         EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
 
-        if (lastInteractResult != null && interactResult == null) {
+        if (lastInteractResult != null && (interactResult == null || interactResult.entity != lastInteractResult.entity)) {
             lastInteractResult.entity.playerCursorHoveredVar.setActive(false, false);
             lastInteractResult = null;
-        } else if (lastInteractResult == null && interactResult != null) {
+        }
+        if (lastInteractResult == null && interactResult != null) {
             interactResult.entity.playerCursorHoveredVar.setActive(true, false);
             lastInteractResult = interactResult;
         }
@@ -118,7 +119,7 @@ public class GUIOverlay extends AGUIBase {
                 if(fluidName.isEmpty()) {
                     mouseoverLabel.text = String.format("%.1f/%.1fb", interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
                 }else {
-                    mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
+                    mouseoverLabel.text = String.format("%s: %.1f/%.1fb", InterfaceManager.clientInterface.getFluidName(fluidName, interactable.tank.getFluidMod()), interactable.tank.getFluidLevel() / 1000F, interactable.tank.getMaxLevel() / 1000F);
                 }
             }
         }

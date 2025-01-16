@@ -62,8 +62,8 @@ public class RenderableModelObject {
     private static final float FLARE_OFFSET = COLOR_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
     private static final float COVER_OFFSET = FLARE_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
 
-    private final Set<String> downloadingTextures = new HashSet<>();
-    private final Set<String> downloadedTextures = new HashSet<>();
+    private static final Set<String> downloadingTextures = new HashSet<>();
+    private static final Set<String> downloadedTextures = new HashSet<>();
     private static final String ERROR_TEXTURE_NAME = "ERROR";
     private static final Map<String, String> erroredTextures = new HashMap<>();
     private static boolean errorTextureBound;
@@ -196,7 +196,7 @@ public class RenderableModelObject {
                             return;
                         } else {
                             //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
-                            new ConnectorThread(textValue, this).run();
+                            new ConnectorThread(textValue).run();
                             downloadingTextures.add(textValue);
                             return;
                         }
@@ -707,11 +707,9 @@ public class RenderableModelObject {
      */
     private static class ConnectorThread extends Thread {
         private final String urlString;
-        private final RenderableModelObject objectOn;
 
-        public ConnectorThread(String urlString, RenderableModelObject objectOn) {
+        public ConnectorThread(String urlString) {
             this.urlString = urlString;
-            this.objectOn = objectOn;
         }
 
         @Override
@@ -741,8 +739,8 @@ public class RenderableModelObject {
                                     ParsedGIF gif = GIFParser.parseGIF(reader);
                                     if (gif != null) {
                                         if (InterfaceManager.renderingInterface.bindURLGIF(urlString, gif)) {
-                                            objectOn.downloadedTextures.add(urlString);
-                                            objectOn.downloadingTextures.remove(urlString);
+                                            downloadedTextures.add(urlString);
+                                            downloadingTextures.remove(urlString);
                                             return;
                                         } else {
                                             errorString = "ERROR: Could not parse GIF due to an internal MC-system interface error.  Contact the mod author!";
@@ -752,8 +750,8 @@ public class RenderableModelObject {
                                     }
                                 } else {
                                     if (InterfaceManager.renderingInterface.bindURLTexture(urlString, connection.getInputStream())) {
-                                        objectOn.downloadedTextures.add(urlString);
-                                        objectOn.downloadingTextures.remove(urlString);
+                                        downloadedTextures.add(urlString);
+                                        downloadingTextures.remove(urlString);
                                         return;
                                     } else {
                                         errorString = "ERROR: Got a correct image type, but was missing data for the image?  Likely partial data sent by the server source, try again later.";
@@ -777,8 +775,8 @@ public class RenderableModelObject {
             //Set missing texture if we failed to get anything.
             InterfaceManager.renderingInterface.bindURLTexture(urlString, null);
             erroredTextures.put(urlString, errorString);
-            objectOn.downloadingTextures.remove(urlString);
-            objectOn.downloadedTextures.add(urlString);
+            downloadingTextures.remove(urlString);
+            downloadedTextures.add(urlString);
         }
     }
 }

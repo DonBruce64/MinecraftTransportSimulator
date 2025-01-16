@@ -127,7 +127,7 @@ public class LanguageSystem {
         for (String packID : PackParser.getAllPackIDs()) {
             Map<String, LanguageEntry> packMap = packLanguageEntries.get(packID);
             for (String language : InterfaceManager.clientInterface.getAllLanguages()) {
-                String filePath = "/assets/" + packID + "/language/" + language;
+                String filePath = "/assets/" + packID + "/language/" + language + ".json";
                 InputStream languageStream = InterfaceManager.coreInterface.getPackResource(filePath);
                 if (languageStream != null) {
                     JSONLanguageFile languageFile;
@@ -164,7 +164,7 @@ public class LanguageSystem {
                     dumpToFolder.mkdir();
                     File packFolder = new File(dumpToFolder, packID);
                     packFolder.mkdir();
-                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName()).toPath()));
+                    JSONParser.exportStream(jsonFileToWrite, Files.newOutputStream(new File(packFolder, InterfaceManager.clientInterface.getLanguageName() + ".json").toPath()));
                 }
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create template language files.  Report to the mod author!  Or, are you trying to do language stuff on servers?  Cause that's a bad idea...");
@@ -552,6 +552,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
     public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 
-    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. If you have Receiver Gun Mod, un-install it (there is no config for this incopatibility).  Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors. Sounds will not play.");
+    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. If you have Receiver Gun Mod, un-install it (there is no config for this incopatibility).  Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors.");
+    public static final LanguageEntry SYSTEM_SOUNDSYSTEM = new LanguageEntry("sytstem.soundsystem", "IMMERSIVE VEHICLES ERROR: Tried to play a sound but couldn't due to an audio system fault.  Do you have bad audio drivers?");
     public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s");
 }

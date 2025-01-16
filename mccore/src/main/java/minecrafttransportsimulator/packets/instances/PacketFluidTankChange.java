@@ -12,17 +12,20 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketFluidTankChange extends APacketEntity<EntityFluidTank> {
     private final String fluidName;
+    private final String fluidModName;
     private final double fluidDelta;
 
     public PacketFluidTankChange(EntityFluidTank tank, double fluidDelta) {
         super(tank);
         this.fluidName = tank.getFluid();
+        this.fluidModName = tank.getFluidMod();
         this.fluidDelta = fluidDelta;
     }
 
     public PacketFluidTankChange(ByteBuf buf) {
         super(buf);
         this.fluidName = readStringFromBuffer(buf);
+        this.fluidModName = readStringFromBuffer(buf);
         this.fluidDelta = buf.readDouble();
     }
 
@@ -30,15 +33,16 @@ public class PacketFluidTankChange extends APacketEntity<EntityFluidTank> {
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writeStringToBuffer(fluidName, buf);
+        writeStringToBuffer(fluidModName, buf);
         buf.writeDouble(fluidDelta);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, EntityFluidTank tank) {
         if (fluidDelta < 0) {
-            tank.drain(fluidName, -fluidDelta, true);
+            tank.drain(fluidName, fluidModName, -fluidDelta, true);
         } else {
-            tank.fill(fluidName, fluidDelta, true);
+            tank.fill(fluidName, fluidModName, fluidDelta, true);
         }
         return true;
     }

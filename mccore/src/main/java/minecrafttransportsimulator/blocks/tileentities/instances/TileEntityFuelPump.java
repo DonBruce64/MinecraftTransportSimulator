@@ -26,7 +26,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
         super(world, position, placingPlayer, item, data);
         this.tank = new EntityFluidTank(world, data != null ? data.getData("tank") : null, definition.decor.fuelCapacity) {
             @Override
-            public double fill(String fluid, double maxAmount, boolean doFill) {
+            public double fill(String fluid, String fluidMod, double maxAmount, boolean doFill) {
                 //Block filling of the tank if we haven't purchased anything.
                 if (!isCreative && !world.isClient()) {
                     double amountPurchasedRemaining = fuelPurchased - fuelDispensedThisPurchase - getFluidLevel();
@@ -34,7 +34,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                         maxAmount = amountPurchasedRemaining;
                     }
                 }
-                return super.fill(fluid, maxAmount, doFill);
+                return super.fill(fluid, fluidMod, maxAmount, doFill);
             }
         };
         world.addEntity(tank);
@@ -61,7 +61,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                     if (data.getString("jerrycanFluid").isEmpty()) {
                         data.setString("jerrycanFluid", tank.getFluid());
                         stack.setData(data);
-                        tank.drain(tank.getFluid(), 1000, true);
+                        tank.drain(1000, true);
                     }
                 }
                 return true;
@@ -102,12 +102,12 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     public double fuelVehicle(double amount) {
         //If we have room for fuel, try to add it to the vehicle.
         if (amount > 0 && tank.getFluidLevel() > 0) {
-            double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), amount, false);
+            double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, amount, false);
             if (amountToFill > 0) {
                 //Keep fluid reference since if we drain the tank fully it won't persist to fill the vehicle tank.
                 String fluid = tank.getFluid();
-                double amountToDrain = tank.drain(tank.getFluid(), amountToFill, true);
-                connectedVehicle.fuelTank.fill(fluid, amountToDrain, true);
+                double amountToDrain = tank.drain(amountToFill, true);
+                connectedVehicle.fuelTank.fill(fluid, EntityFluidTank.WILDCARD_FLUID_MOD, amountToDrain, true);
                 return amountToDrain;
             }
         } else {
@@ -144,7 +144,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
     @Override
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
         if (textDef.variableName.equals("fuelpump_fluid")) {
-            return tank.getFluidLevel() > 0 ? InterfaceManager.clientInterface.getFluidName(tank.getFluid()) : "";
+            return tank.getFluidLevel() > 0 ? InterfaceManager.clientInterface.getFluidName(tank.getFluid(), tank.getFluidMod()) : "";
         }
 
         return super.getRawTextVariableValue(textDef, partialTicks);

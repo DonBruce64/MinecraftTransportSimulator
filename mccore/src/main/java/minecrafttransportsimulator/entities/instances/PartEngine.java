@@ -134,27 +134,27 @@ public class PartEngine extends APart {
         addVariable(this.shiftSelectionVar = new ComputedVariable(this, "engine_shift_request", data));
         addVariable(this.hoursVar = new ComputedVariable(this, HOURS_VARIABLE, data));
 
-        addVariable(this.maxRPMVar = new ComputedVariable(this, "engine_rpm_max"));
-        addVariable(this.maxSafeRPMVar = new ComputedVariable(this, "engine_rpm_safe"));
-        addVariable(this.revLimitRPMVar = new ComputedVariable(this, "engine_rpm_revlimit"));
-        addVariable(this.revLimitBounceVar = new ComputedVariable(this, "engine_rpm_revlimit_bounce"));
-        addVariable(this.revResistanceVar = new ComputedVariable(this, "engine_rpm_revresistance"));
-        addVariable(this.idleRPMVar = new ComputedVariable(this, "engine_rpm_idle"));
-        addVariable(this.startRPMVar = new ComputedVariable(this, "engine_rpm_start"));
-        addVariable(this.stallRPMVar = new ComputedVariable(this, "engine_rpm_stall"));
-        addVariable(this.starterPowerVar = new ComputedVariable(this, "engine_starter_power"));
-        addVariable(this.fuelConsumptionVar = new ComputedVariable(this, "engine_fuel_consumption"));
-        addVariable(this.heatingCoefficientVar = new ComputedVariable(this, "engine_heating_coefficient"));
-        addVariable(this.coolingCoefficientVar = new ComputedVariable(this, "engine_cooling_coefficient"));
-        addVariable(this.superchargerFuelConsumptionVar = new ComputedVariable(this, "engine_supercharger_fuel_consumption"));
-        addVariable(this.superchargerEfficiencyVar = new ComputedVariable(this, "engine_supercharger_efficiency"));
-        addVariable(this.gearRatioVar = new ComputedVariable(this, "engine_gear_ratio"));
-        addVariable(this.forceShiftVar = new ComputedVariable(this, "engine_forceshift"));
-        addVariable(this.isAutomaticVar = new ComputedVariable(this, "engine_isautomatic"));
-        addVariable(this.wearFactorVar = new ComputedVariable(this, "engine_wear_factor"));
-        addVariable(this.winddownRateVar = new ComputedVariable(this, "engine_winddown_rate"));
-        addVariable(this.jetPowerFactorVar = new ComputedVariable(this, "engine_jet_power_factor"));
-        addVariable(this.bypassRatioVar = new ComputedVariable(this, "engine_bypass_ratio"));
+        addVariable(this.maxRPMVar = new ComputedVariable(this, "maxRPM"));
+        addVariable(this.maxSafeRPMVar = new ComputedVariable(this, "maxSafeRPM"));
+        addVariable(this.revLimitRPMVar = new ComputedVariable(this, "revlimitRPM"));
+        addVariable(this.revLimitBounceVar = new ComputedVariable(this, "revlimitBounce"));
+        addVariable(this.revResistanceVar = new ComputedVariable(this, "revResistance"));
+        addVariable(this.idleRPMVar = new ComputedVariable(this, "idleRPM"));
+        addVariable(this.startRPMVar = new ComputedVariable(this, "startRPM"));
+        addVariable(this.stallRPMVar = new ComputedVariable(this, "stallRPM"));
+        addVariable(this.starterPowerVar = new ComputedVariable(this, "starterPower"));
+        addVariable(this.fuelConsumptionVar = new ComputedVariable(this, "fuelConsumption"));
+        addVariable(this.heatingCoefficientVar = new ComputedVariable(this, "heatingCoefficient"));
+        addVariable(this.coolingCoefficientVar = new ComputedVariable(this, "coolingCoefficient"));
+        addVariable(this.superchargerFuelConsumptionVar = new ComputedVariable(this, "superchargerFuelConsumption"));
+        addVariable(this.superchargerEfficiencyVar = new ComputedVariable(this, "superchargerEfficiency"));
+        addVariable(this.gearRatioVar = new ComputedVariable(this, "gearRatio"));
+        addVariable(this.forceShiftVar = new ComputedVariable(this, "forceShift"));
+        addVariable(this.isAutomaticVar = new ComputedVariable(this, "isAutomatic"));
+        addVariable(this.wearFactorVar = new ComputedVariable(this, "engineWearFactor"));
+        addVariable(this.winddownRateVar = new ComputedVariable(this, "engineWinddownRate"));
+        addVariable(this.jetPowerFactorVar = new ComputedVariable(this, "jetPowerFactor"));
+        addVariable(this.bypassRatioVar = new ComputedVariable(this, "bypassRatio"));
 
         //Verify gears aren't out of range.  This can happen if a pack updates to lower number of gears.
         if (definition.engine.gearRatios.size() <= currentGearVar.currentValue + reverseGears) {
@@ -178,7 +178,7 @@ public class PartEngine extends APart {
                 case ELECTRIC: {
                     //Check for electricity.
                     if (!vehicleOn.fuelTank.getFluid().equals(ELECTRICITY_FUEL)) {
-                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                        vehicleOn.fuelTank.clear();
                     }
                     break;
                 }
@@ -187,7 +187,7 @@ public class PartEngine extends APart {
                     if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
                         throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
                     } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
-                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                        vehicleOn.fuelTank.clear();
                     }
                 }
             }
@@ -300,7 +300,7 @@ public class PartEngine extends APart {
                         vehicleOn.electricUsage += 0.05F;
                     }
                     if (!vehicleOn.isCreative) {
-                        fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
+                        fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
                     }
                 }
                 if (autoStarterEngaged) {
@@ -449,7 +449,7 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Add temp based on engine speed.
@@ -535,7 +535,7 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / maxRPMVar.currentValue, !world.isClient());
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Check if we need to stall the engine for various conditions.
@@ -985,11 +985,7 @@ public class PartEngine extends APart {
     }
 
     protected void explodeEngine() {
-        if (ConfigSystem.settings.damage.vehicleExplosions.value) {
-            world.spawnExplosion(position, 1F, true);
-        } else {
-            world.spawnExplosion(position, 0F, false);
-        }
+        world.spawnExplosion(position, 0F, false, false);
         entityOn.removePart(this, false, true);
     }
 

@@ -637,7 +637,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
             float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            gun.world.spawnExplosion(position, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY));
+            Point3D explosionPosition = position.copy();
+            if (hitType == HitType.BLOCK) {
+                explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
+            }
+            gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
@@ -687,8 +691,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 return new ComputedVariable(this, variable, partialTicks -> HitType.ARMOR == lastHit ? 1 : 0, false);
             case ("bullet_hit_burst"):
                 return new ComputedVariable(this, variable, partialTicks -> HitType.BURST == lastHit ? 1 : 0, false);
-            case ("bullet_hit_penetrated"):
-                return new ComputedVariable(this, variable, partialTicks -> HitType.ARMORPEN == lastHit ? 1 : 0, false);
             default:
                 return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
@@ -709,7 +711,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         ENTITY,
         VEHICLE,
         ARMOR,
-        ARMORPEN,
-        BURST,
+        BURST
     }
 }

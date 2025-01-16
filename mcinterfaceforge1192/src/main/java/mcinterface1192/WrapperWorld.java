@@ -62,6 +62,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Explosion;
@@ -74,8 +75,11 @@ import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.ConcretePowderBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Material;
@@ -800,8 +804,11 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean placeBlock(Point3D position, IWrapperItemStack stack) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (world.isEmptyBlock(pos)) {
-            ItemStack mcStack = ((WrapperItemStack) stack).stack;
-            if (mcStack.useOn(new UseOnContext(world, null, InteractionHand.MAIN_HAND, mcStack, new net.minecraft.world.phys.BlockHitResult(new Vec3(position.x, position.y, position.z), Direction.DOWN, pos, true))) == InteractionResult.CONSUME) {
+            ItemStack mcStack = ((WrapperItemStack) stack).stack.copy();
+            Item mcItem = mcStack.getItem();
+            Block mcBlock = mcItem instanceof BlockItem ? ((BlockItem) mcItem).getBlock() : null;
+            //Some items can't be placed as they check for the player, even though it can be null.
+            if (!mcItem.isEdible() && !(mcItem instanceof StandingAndWallBlockItem) && !(mcBlock instanceof PistonBaseBlock) && !(mcBlock instanceof LanternBlock) && !(mcBlock instanceof LadderBlock) && mcStack.useOn(new UseOnContext(world, null, InteractionHand.MAIN_HAND, mcStack, new net.minecraft.world.phys.BlockHitResult(new Vec3(position.x, position.y, position.z), Direction.UP, pos, true))) == InteractionResult.CONSUME) {
                 return true;
             }
         }
@@ -997,8 +1004,8 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void spawnExplosion(Point3D location, double strength, boolean flames) {
-        world.explode(null, location.x, location.y, location.z, (float) strength, flames, Explosion.BlockInteraction.DESTROY);
+    public void spawnExplosion(Point3D location, double strength, boolean flames, boolean damageBlocks) {
+        world.explode(null, location.x, location.y, location.z, (float) strength, flames, damageBlocks ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
     }
 
     /**

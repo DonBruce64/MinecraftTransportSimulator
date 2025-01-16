@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -29,6 +30,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.SoundType;
@@ -70,9 +72,10 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
-    public String getFluidName(String fluidID) {
+    public String getFluidName(String fluidID, String fluidMod) {
         for (Entry<ResourceKey<Fluid>, Fluid> fluidEntry : ForgeRegistries.FLUIDS.getEntries()) {
-            if (fluidEntry.getKey().location().getPath().equals(fluidID)) {
+            ResourceLocation fluidLocation = fluidEntry.getKey().location();
+            if ((fluidMod.equals(EntityFluidTank.WILDCARD_FLUID_MOD) || fluidLocation.getNamespace().equals(fluidMod)) && fluidLocation.getPath().equals(fluidID)) {
                 return fluidEntry.getValue().getFluidType().getDescription().getString();
             }
         }

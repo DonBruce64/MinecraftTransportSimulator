@@ -87,27 +87,27 @@ public final class LegacyCompatSystem {
     public static final Map<String, String> variableChanges = new HashMap<>();
 
     static {
-        variableChanges.put("maxRPM", "engine_rpm_max");
-        variableChanges.put("maxSafeRPM", "engine_rpm_safe");
-        variableChanges.put("revlimitRPM", "engine_rpm_revlimit");
-        variableChanges.put("revlimitBounce", "engine_rpm_revlimit_bounce");
-        variableChanges.put("revResistance", "engine_rpm_revresistance");
-        variableChanges.put("idleRPM", "engine_rpm_idle");
-        variableChanges.put("startRPM", "engine_rpm_start");
-        variableChanges.put("stallRPM", "engine_rpm_stall");
-        variableChanges.put("starterPower", "engine_starter_power");
-        variableChanges.put("fuelConsumption", "engine_fuel_consumption");
-        variableChanges.put("heatingCoefficient", "engine_heating_coefficient");
-        variableChanges.put("coolingCoefficient", "engine_cooling_coefficient");
-        variableChanges.put("superchargerFuelConsumption", "engine_supercharger_fuel_consumption");
-        variableChanges.put("superchargerEfficiency", "engine_supercharger_efficiency");
-        variableChanges.put("gearRatio", "engine_gear_ratio");
-        variableChanges.put("forceShift", "engine_forceshift");
-        variableChanges.put("isAutomatic", "engine_isautomatic");
-        variableChanges.put("engineWearFactor", "engine_wear_factor");
-        variableChanges.put("engineWinddownRate", "engine_winddown_rate");
-        variableChanges.put("jetPowerFactor", "engine_jet_power_factor");
-        variableChanges.put("bypassRatio", "engine_bypass_ratio");
+        variableChanges.put("engine_rpm_max", "maxRPM");
+        variableChanges.put("engine_rpm_safe", "maxSafeRPM");
+        variableChanges.put("engine_rpm_revlimit", "revlimitRPM");
+        variableChanges.put("engine_rpm_revlimit_bounce", "revlimitBounce");
+        variableChanges.put("engine_rpm_revresistance", "revResistance");
+        variableChanges.put("engine_rpm_idle", "idleRPM");
+        variableChanges.put("engine_rpm_start", "startRPM");
+        variableChanges.put("engine_rpm_stall", "stallRPM");
+        variableChanges.put("engine_starter_power", "starterPower");
+        variableChanges.put("engine_fuel_consumption", "fuelConsumption");
+        variableChanges.put("engine_heating_coefficient", "heatingCoefficient");
+        variableChanges.put("engine_cooling_coefficient", "coolingCoefficient");
+        variableChanges.put("engine_supercharger_fuel_consumption", "superchargerFuelConsumption");
+        variableChanges.put("engine_supercharger_efficiency", "superchargerEfficiency");
+        variableChanges.put("engine_gear_ratio", "gearRatio");
+        variableChanges.put("engine_forceshift", "forceShift");
+        variableChanges.put("engine_isautomatic", "isAutomatic");
+        variableChanges.put("engine_wear_factor", "engineWearFactor");
+        variableChanges.put("engine_winddown_rate", "engineWinddownRate");
+        variableChanges.put("engine_jet_power_factor", "jetPowerFactor");
+        variableChanges.put("engine_bypass_ratio", "bypassRatio");
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -203,12 +203,32 @@ public final class LegacyCompatSystem {
                 }
             }
 
-            //Update variable names.
+            //Update variable names for CV-changed variables.
             if (provider.variableModifiers != null) {
                 provider.variableModifiers.forEach(modifier -> {
                     String newVariable = variableChanges.get(modifier.variable);
                     if (newVariable != null) {
                         modifier.variable = newVariable;
+                    }
+                    if (modifier.animations != null) {
+                        modifier.animations.forEach(animation -> {
+                            String newVariable2 = variableChanges.get(animation.variable);
+                            if (newVariable2 != null) {
+                                animation.variable = newVariable2;
+                            }
+                        });
+                    }
+                });
+            }
+            if (provider.rendering != null && provider.rendering.animatedObjects != null) {
+                provider.rendering.animatedObjects.forEach(animatedObject -> {
+                    if (animatedObject.animations != null) {
+                        animatedObject.animations.forEach(animation -> {
+                            String newVariable = variableChanges.get(animation.variable);
+                            if (newVariable != null) {
+                                animation.variable = newVariable;
+                            }
+                        });
                     }
                 });
             }
@@ -418,6 +438,13 @@ public final class LegacyCompatSystem {
                     def.placeOnPanel = true;
                 }
             }
+        }
+
+        //Check to make sure helicopters have area-factors.  Previously this wasn't needed so they could all be 0.
+        if (definition.motorized.isAircraft && definition.motorized.aileronArea == 0 && definition.motorized.elevatorArea == 0 && definition.motorized.rudderArea == 0) {
+            definition.motorized.aileronArea = 1.0F;
+            definition.motorized.elevatorArea = 1.0F;
+            definition.motorized.rudderArea = 1.0F;
         }
 
         //Check for old flaps.

@@ -36,6 +36,14 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
+    public void update() {
+        //Need to do this as main call doesn't.
+        updateVariableModifiers();
+
+        super.update();
+    }
+
+    @Override
     public boolean shouldLinkBoundsToPosition() {
         return false;
     }
@@ -65,14 +73,15 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
             return new ComputedVariable(this, variable, partialTicks -> world.isBlockSolid(connectionAxis.getOffsetPoint(position), connectionAxis.getOpposite()) ? 1 : 0, false);
         }
 
-        //Check slab variables.
+        //Check slab variables and others.
         switch (variable) {
             case ("slab_present_up"):
                 return new ComputedVariable(this, variable, partialTicks -> world.isBlockAboveTopSlab(position) ? 1 : 0, false);
             case ("slab_present_down"):
                 return new ComputedVariable(this, variable, partialTicks -> world.isBlockBelowBottomSlab(position) ? 1 : 0, false);
+            default:
+                return super.createComputedVariable(variable, createDefaultIfNotPresent);
         }
-        return new ComputedVariable(false);
     }
 
     @Override

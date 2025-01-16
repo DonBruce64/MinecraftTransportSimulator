@@ -71,7 +71,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                 if (jerrycanFluid.isEmpty()) {
                     tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_EMPTY.getCurrentValue());
                 } else {
-                    tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_CONTAINS.getCurrentValue() + InterfaceManager.clientInterface.getFluidName(jerrycanFluid));
+                    tooltipLines.add(LanguageSystem.ITEMINFO_JERRYCAN_CONTAINS.getCurrentValue() + InterfaceManager.clientInterface.getFluidName(jerrycanFluid, EntityFluidTank.WILDCARD_FLUID_MOD));
                 }
                 break;
             }
@@ -112,7 +112,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                     }
                                     data.setString(PartInteractable.JERRYCAN_FLUID_NAME, tank.getFluid());
                                     stack.setData(data);
-                                    tank.drain(tank.getFluid(), 1000, true);
+                                    tank.drain(1000, true);
                                 }
                             }
                         }
@@ -143,7 +143,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                     if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_TOOFULL));
                                     } else {
-                                        vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
+                                        vehicle.fuelTank.fill(jerrrycanFluid, EntityFluidTank.WILDCARD_FLUID_MOD, 1000, true);
                                         data.deleteEntry(PartInteractable.JERRYCAN_FLUID_NAME);
                                         stack.setData(data);
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_JERRYCAN_SUCCESS));
@@ -185,7 +185,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                                     if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_TOOFULL));
                                     } else {
-                                        vehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, 1000, true);
+                                        vehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, EntityFluidTank.WILDCARD_FLUID_MOD, 1000, true);
                                         data.deleteEntry(PartInteractable.BATTERY_CHARGED_NAME);
                                         stack.setData(data);
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_BATTERY_SUCCESS));

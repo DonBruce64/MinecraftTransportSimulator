@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -82,7 +83,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     @Override
     public int fill(FluidStack stack, boolean doFill) {
         if (tileEntity != null) {
-            int fillAmount = (int) tileEntity.getTank().fill(stack.getFluid().getName(), stack.amount, doFill);
+            int fillAmount = (int) tileEntity.getTank().fill(stack.getFluid().getName(), EntityFluidTank.WILDCARD_FLUID_MOD, stack.amount, doFill);
             if (fillAmount > 0 && doFill) {
                 FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(stack.getFluid(), fillAmount), world, getPos(), this, fillAmount));
             }
@@ -102,7 +103,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
     @Override
     public FluidStack drain(FluidStack stack, boolean doDrain) {
-        int drainAmount = (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), stack.amount, doDrain) : 0);
+        int drainAmount = (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), EntityFluidTank.WILDCARD_FLUID_MOD, stack.amount, doDrain) : 0);
         if (drainAmount > 0 && doDrain) {
             FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(stack.getFluid(), drainAmount), world, getPos(), this, drainAmount));
         }

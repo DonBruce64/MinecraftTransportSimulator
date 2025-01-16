@@ -90,6 +90,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
     //Physics properties
     public final ComputedVariable dragCoefficientVar;
+    public final ComputedVariable ballastControlVar;
     public final ComputedVariable ballastVolumeVar;
     public final ComputedVariable waterBallastFactorVar;
     public final ComputedVariable axleRatioVar;
@@ -151,6 +152,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
+        addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
         addVariable(this.ballastVolumeVar = new ComputedVariable(this, "ballastVolume"));
         addVariable(this.waterBallastFactorVar = new ComputedVariable(this, "waterBallastFactor"));
         addVariable(this.axleRatioVar = new ComputedVariable(this, "axleRatio"));
@@ -244,6 +246,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
 
         dragCoefficientVar.setTo(definition.motorized.dragCoefficient, false);
+        ballastControlVar.setTo(elevatorInputVar.currentValue, false);
         ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
         waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
         axleRatioVar.setTo(definition.motorized.axleRatio, false);
@@ -290,6 +293,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                                 rotorRotation.y = -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE;
                             }
                         }
+                        //Utilize control surface areas to increase or decrease factors for helicopter behaviors.
+                        rotorRotation.x *= (1 + elevatorAreaVar.currentValue);
+                        rotorRotation.y *= (1 + rudderAreaVar.currentValue);
+                        rotorRotation.z *= (1 + aileronAreaVar.currentValue);
                     }
                 }
             }
@@ -363,10 +370,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Ballast gets less effective at applying positive lift at higher altitudes.
                 //This prevents blimps from ascending into space.
                 //Also take into account motionY, as we should provide less force if we are already going in the same direction.
-                if (elevatorAngleVar.currentValue < 0) {
-                    ballastForce = airDensity * ballastVolumeVar.currentValue * -elevatorAngleVar.currentValue / 10D;
-                } else if (elevatorAngleVar.currentValue > 0) {
-                    ballastForce = 1.225 * ballastVolumeVar.currentValue * -elevatorAngleVar.currentValue / 10D;
+                if (ballastControlVar.currentValue < 0) {
+                    ballastForce = airDensity * ballastVolumeVar.currentValue * -ballastControlVar.currentValue / 10D;
+                } else if (ballastControlVar.currentValue > 0) {
+                    ballastForce = 1.225 * ballastVolumeVar.currentValue * -ballastControlVar.currentValue / 10D;
                 } else if (motion.y < -0.15 || motion.y > 0.15) {
                     ballastForce = 1.225 * ballastVolumeVar.currentValue * 10D * -motion.y;
                 } else {
@@ -380,9 +387,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Get all other forces.
             wingForce = 0.5F * airDensity * axialVelocity * axialVelocity * wingAreaVar.currentValue * wingLiftCoeff;
-            aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
-            elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
-            rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
+            //Helicopters have rotors and shouldn't do control surface calculations.
+            if (hasRotors) {
+                aileronForce = 0;
+                elevatorForce = 0;
+                rudderForce = 0;
+            } else {
+                aileronForce = 0.5F * airDensity * axialVelocity * axialVelocity * aileronAreaVar.currentValue * aileronLiftCoeff;
+                elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * elevatorAreaVar.currentValue * elevatorLiftCoeff;
+                rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * rudderAreaVar.currentValue * rudderLiftCoeff;
+            }
 
             //Get torques.  Point for ailerons is 0.75% to the edge of the wing.
             aileronTorque = aileronForce * wingSpanVar.currentValue * 0.5F * 0.75F;
@@ -668,8 +682,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     public ComputedVariable getOrCreateVariable(String variable) {
         //If we are a forwarded variable and are a connected trailer, do that now.
-        if (definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)) {
-            return towedByConnection.towingVehicle.getOrCreateVariable(variable);
+        if (definition.motorized.isTrailer && definition.motorized.hookupVariables.contains(variable)) {
+            if (towedByConnection != null) {
+                //We are being towed, send request to towing vehicle.
+                return towedByConnection.towingVehicle.getOrCreateVariable(variable);
+            } else {
+                //Not towed.  Check if variable exists.  If so, use it.  Otherwise, make a 0 variable.
+                ComputedVariable computedVar = computedVariables.get(variable);
+                if (computedVar == null) {
+                    computedVar = new ComputedVariable(false);
+                    computedVariables.put(variable, computedVar);
+                }
+                return computedVar;
+            }
         } else {
             return super.getOrCreateVariable(variable);
         }

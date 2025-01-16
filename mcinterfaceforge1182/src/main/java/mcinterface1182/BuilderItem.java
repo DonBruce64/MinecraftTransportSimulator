@@ -184,7 +184,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         if (context.getHand() == InteractionHand.MAIN_HAND) {
             if (item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name()))) {
                 return InteractionResult.SUCCESS;
-            } else if (context.getPlayer().isCrouching()) {
+            } else if (context.getPlayer() != null && context.getPlayer().isCrouching()) {
                 //Forward sneak click too, since blocks don't get these.
                 if (!context.getLevel().isClientSide) {
                     BlockEntity tile = context.getLevel().getBlockEntity(context.getClickedPos());

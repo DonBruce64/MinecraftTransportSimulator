@@ -138,6 +138,7 @@ public final class ConfigSystem {
                 JSONParser.exportStream(overridesObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
+                InterfaceManager.coreInterface.logError(e.getMessage());
             }
             LanguageSystem.dumpToFolder(new File(configDirectory, "IVLanguageDumps"));
             try {
@@ -145,6 +146,7 @@ public final class ConfigSystem {
                 JSONParser.exportStream(externalDamageOverrides, Files.newOutputStream(externalDamageFile.toPath()));
             } catch (Exception e) {
                 InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh external damage overrides file.  Report to the mod author!");
+                InterfaceManager.coreInterface.logError(e.getMessage());
             }
         } else {
             if (craftingFile.exists()) {
@@ -223,6 +225,7 @@ public final class ConfigSystem {
             JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");
+            InterfaceManager.coreInterface.logError(e.getMessage());
         }
     }
 }

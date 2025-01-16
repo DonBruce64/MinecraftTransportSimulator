@@ -76,6 +76,7 @@ public class InterfaceSound implements IInterfaceSound {
      * will stop attempting to play sounds.  Used for when mods take all the sources.
      **/
     private static byte sourceGetFailures = 0;
+    private static boolean postedSoundWarning;
 
     /**
      * Main update loop.  Call every tick to update playing sounds,
@@ -227,7 +228,15 @@ public class InterfaceSound implements IInterfaceSound {
     public void playQuickSound(SoundInstance sound) {
         if (ALC.getFunctionProvider() != null && sourceGetFailures < 10) {
             //First get the IntBuffer pointer to where this sound data is stored.
-            Integer dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
+            Integer dataBufferPointer;
+            try {
+                dataBufferPointer = loadOGGJarSound(sound.soundPlayingName);
+            } catch (Exception e) {
+                if (++sourceGetFailures == 10) {
+                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSYSTEM);
+                }
+                dataBufferPointer = null;
+            }
             if (dataBufferPointer != null) {
                 //Set the sound's source buffer index.
                 IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
@@ -236,7 +245,10 @@ public class InterfaceSound implements IInterfaceSound {
                 if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                     AL10.alDeleteBuffers(dataBufferPointer);
                     if (++sourceGetFailures == 10) {
-                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
+                        if (!postedSoundWarning) {
+                            InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
+                            postedSoundWarning = true;
+                        }
                         ///Kill off the sound that's furthest from the player to make room if we have a sound we can remove.
                         //This keeps the sounds going, even with limited slots.
                         if (!playingSounds.isEmpty()) {
@@ -288,7 +300,10 @@ public class InterfaceSound implements IInterfaceSound {
             AL10.alGenSources(sourceBuffer);
             if (AL10.alGetError() != AL10.AL_NO_ERROR) {
                 if (++sourceGetFailures == 10) {
-                    InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
+                    if (!postedSoundWarning) {
+                        InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_SOUNDSLOT);
+                        postedSoundWarning = true;
+                    }
                 }
                 return;
             }

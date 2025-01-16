@@ -116,7 +116,8 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
     @Override
     public int fill(FluidStack stack, FluidAction doFill) {
         if (tank != null) {
-            return (int) tank.fill(ForgeRegistries.FLUIDS.getKey(stack.getFluid()).getPath(), stack.getAmount(), doFill == FluidAction.EXECUTE);
+            ResourceLocation fluidLocation = ForgeRegistries.FLUIDS.getKey(stack.getFluid());
+            return (int) tank.fill(fluidLocation.getPath(), fluidLocation.getNamespace(), stack.getAmount(), doFill == FluidAction.EXECUTE);
         } else {
             return 0;
         }
@@ -132,7 +133,8 @@ public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFl
 
     @Override
     public FluidStack drain(FluidStack stack, FluidAction doDrain) {
-        return new FluidStack(stack.getFluid(), (int) (tank != null ? tank.drain(ForgeRegistries.FLUIDS.getKey(stack.getFluid()).getPath(), stack.getAmount(), doDrain == FluidAction.EXECUTE) : 0));
+        ResourceLocation fluidLocation = ForgeRegistries.FLUIDS.getKey(stack.getFluid());
+        return new FluidStack(stack.getFluid(), (int) (tank != null ? tank.drain(fluidLocation.getPath(), fluidLocation.getNamespace(), stack.getAmount(), doDrain == FluidAction.EXECUTE) : 0));
     }
 
     @SuppressWarnings("unchecked")

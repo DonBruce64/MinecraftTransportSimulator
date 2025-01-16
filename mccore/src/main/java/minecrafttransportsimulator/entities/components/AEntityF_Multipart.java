@@ -180,10 +180,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         if(otherMasterEntity != masterEntity && entity.definition.parts != null) {
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
                                 partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
-                                if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true)) {
+                                int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
+                                if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
                                     IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                                     currentPart.entityOn.removePart(currentPart, true, true);
-                                    entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                                    entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
                                     return;
                                 }
                             }
@@ -342,9 +343,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
-                    } else {
-                        bullet.displayDebugMessage("BULLET PENETRATED ARMOR");
-                        return EntityBullet.HitType.ARMORPEN;
                     }
                 } else {
                     //Not a bullet, but hit armor, 100% stopping power with no damage.
