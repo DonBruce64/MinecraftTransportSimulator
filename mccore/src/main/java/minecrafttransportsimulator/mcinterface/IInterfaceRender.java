@@ -27,6 +27,12 @@ public interface IInterfaceRender {
     float[] getDefaultBlockTexture(String name);
 
     /**
+     * Returns the default font texture base-location folder.  This changes between game versions since new MC versions
+     * don't have the texture files and we pack them in ourselves.
+     */
+    String getDefaultFontTextureFolder();
+
+    /**
      * Returns a stream of the texture specified.  This can vary depending on what texture packs are loaded!
      */
     InputStream getTextureStream(String name);

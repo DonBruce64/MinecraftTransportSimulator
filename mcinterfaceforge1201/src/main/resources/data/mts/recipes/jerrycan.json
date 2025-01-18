@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " aa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "item": "minecraft:bucket"
+        }
+    },
+    "result": {
+        "item": "mts:mts.jerrycan"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "mcinterface1201.mixin",
+    "compatibilityLevel": "JAVA_17",
+		"client": [
+				"client.CameraMixin",
+				"client.HumanoidModelMixin",
+				"client.LevelRendererMixin",
+				"client.ListenerMixin",
+				"client.LivingEntityRendererMixin",
+				"client.MinecraftMixin",
+				"client.MultiPackResourceManagerMixin",
+				"client.VillagerModelMixin"
+    ],
+		"mixins": [
+				"common.BiomeMixin",
+				"common.ConcretePowderBlockMixin",
+				"common.DimensionDataStorageMixin",
+				"common.EntityMixin"
+		],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "refmap": "mts.refmap.json"
+}

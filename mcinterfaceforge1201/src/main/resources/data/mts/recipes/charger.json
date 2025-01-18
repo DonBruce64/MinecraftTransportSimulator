@@ -1,0 +1,28 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "ada",
+        "bcb",
+        "aea"
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:ingots/iron"
+        },
+        "b": {
+            "tag": "forge:ingots/gold"
+        },
+        "c": {
+            "tag": "forge:storage_blocks/redstone"
+        },
+        "d": {
+            "item": "mts:mts.jumpercable"
+        },
+        "e": {
+            "tag": "forge:storage_blocks/copper"
+        }
+    },
+    "result": {
+        "item": "mts:mts.charger"
+    }
+}

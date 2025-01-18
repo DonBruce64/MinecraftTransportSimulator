@@ -1,0 +1,46 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.vehiclebench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.vehiclebench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.vehiclebench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "vehiclebench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.vehiclebench"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "rewards": {
+        "recipes": [
+            "mts:key",
+            "mts:paintgun",
+            "mts:ticket",
+            "mts:wrench"
+        ]
+    },
+    "requirements": [
+        [
+            "vehiclebench"
+        ]
+    ]
+}
