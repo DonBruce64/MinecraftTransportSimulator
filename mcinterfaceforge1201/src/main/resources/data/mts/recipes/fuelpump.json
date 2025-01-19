@@ -1,0 +1,28 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " a ",
+        "bcd",
+        "ece"
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:glass_pane"
+        },
+        "b": {
+            "item": "minecraft:red_dye"
+        },
+        "c": {
+            "item": "minecraft:bucket"
+        },
+        "d": {
+            "item": "mts:mts.fuelhose"
+        },
+        "e": {
+            "tag": "forge:ingots/iron"
+        }
+    },
+    "result": {
+        "item": "mts:mts.fuelpump"
+    }
+}

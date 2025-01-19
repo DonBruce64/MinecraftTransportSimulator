@@ -201,7 +201,7 @@ public class RenderText {
             //Get font locations.
             String fontBaseLocation;
             if (fontName == null) {
-                fontBaseLocation = "/assets/minecraft/textures/font/unicode_page_";
+                fontBaseLocation = InterfaceManager.renderingInterface.getDefaultFontTextureFolder() + "/unicode_page_";
             } else {
                 fontBaseLocation = "/assets/" + fontName.substring(0, fontName.indexOf(":")) + "/textures/fonts/" + fontName.substring(fontName.indexOf(":") + 1) + "/unicode_page_";
             }

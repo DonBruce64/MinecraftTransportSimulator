@@ -29,6 +29,7 @@ var mcInterfaceForge1122 = project(":mcinterfaceforge1122")
 var mcInterfaceForge1165 = project(":mcinterfaceforge1165")
 var mcInterfaceForge1182 = project(":mcinterfaceforge1182")
 var mcInterfaceForge1192 = project(":mcinterfaceforge1192")
+var mcInterfaceForge1201 = project(":mcinterfaceforge1201")
 
 tasks.register("buildCore") {
     dependsOn(mcCore.tasks.build)
@@ -69,11 +70,20 @@ tasks.register("buildForge1192") {
     dependsOn(mcInterfaceForge1192.tasks.build)
 }
 
+tasks.register("buildForge1201") {
+    doFirst { preBuild() }
+    doLast {
+        moveToOut(mcInterfaceForge1201, "1.20.1")
+    }
+    dependsOn(mcInterfaceForge1201.tasks.build)
+}
+
 tasks.register("buildForgeAll") {
     dependsOn(tasks.getByName("buildForge1122"))
     dependsOn(tasks.getByName("buildForge1165"))
 		dependsOn(tasks.getByName("buildForge1182"))
 		dependsOn(tasks.getByName("buildForge1192"))
+		dependsOn(tasks.getByName("buildForge1201"))
 }
 
 @OptIn(ExperimentalPathApi::class)

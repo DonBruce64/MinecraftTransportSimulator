@@ -160,6 +160,11 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     @Override
+    public String getDefaultFontTextureFolder() {
+        return "/assets/minecraft/textures/font";
+    }
+
+    @Override
     public InputStream getTextureStream(String name) {
         try {
             String domain = name.substring("/assets/".length(), name.indexOf("/", "/assets/".length()));

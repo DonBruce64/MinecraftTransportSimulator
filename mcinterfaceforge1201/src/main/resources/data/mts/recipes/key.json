@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " a ",
+        " a ",
+        " b "
+    ],
+    "key": {
+        "a": {
+            "tag": "forge:nuggets/iron"
+        },
+        "b": {
+            "item": "minecraft:clay_ball"
+        }
+    },
+    "result": {
+        "item": "mts:mts.key"
+    }
+}

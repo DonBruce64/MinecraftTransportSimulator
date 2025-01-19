@@ -116,6 +116,7 @@ public class InterfaceJEI implements IModPlugin {
             return new ResourceLocation(InterfaceManager.coreModID, benchItem.getRegistrationName());
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public String getTitle() {
             return benchItem.getItemName();
