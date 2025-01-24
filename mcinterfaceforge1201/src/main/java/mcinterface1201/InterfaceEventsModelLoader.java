@@ -45,7 +45,7 @@ public class InterfaceEventsModelLoader {
             super();
             domains = new HashSet<>();
             fakeDomains = new HashSet<>();
-            fakeDomains.add(InterfaceManager.coreModID);
+            fakeDomains.add(InterfaceLoader.MODID);
         }
 
         @Override
