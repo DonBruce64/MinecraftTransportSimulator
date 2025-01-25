@@ -54,7 +54,7 @@ public class InterfaceEventsModelLoader {
             if ((domains.contains(location.getNamespace()) || domains.contains(getPackID(location.getPath()))) && location.getPath().endsWith(".png")) {
                 //Create stream return variable and get raw data.
                 InputStream stream;
-                String domain = !location.getNamespace().equals(InterfaceManager.coreModID) ? location.getNamespace() : getPackID(location.getPath());
+                String domain = !location.getNamespace().equals(InterfaceLoader.MODID) ? location.getNamespace() : getPackID(location.getPath());
                 String rawPackInfo = location.getPath();
                 String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
                 stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
@@ -83,7 +83,7 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public String packId() {
-            return InterfaceManager.coreModID + "_packs";
+            return InterfaceLoader.MODID + "_packs";
         }
 
         @Override
@@ -115,7 +115,7 @@ public class InterfaceEventsModelLoader {
                 }
             }
             //Not an actual pack resource, must be from core.
-            return InterfaceManager.coreModID;
+            return InterfaceLoader.MODID;
         }
     }
 }

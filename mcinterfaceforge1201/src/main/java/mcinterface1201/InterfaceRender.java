@@ -99,8 +99,8 @@ public class InterfaceRender implements IInterfaceRender {
 
     public static void onIVRegisterShadersEvent(RegisterShadersEvent event) {
         try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_cutout_noshadows"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityCutoutNoshadowsShader = createdShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceLoader.MODID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceLoader.MODID, "mts_entity_cutout_noshadows"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityCutoutNoshadowsShader = createdShader);
         } catch (IOException e) {
             InterfaceManager.coreInterface.logError("COULD NOT LOAD SHADER FOR LIGHTS!  THIS WILL END BADLY FOR RENDERING!");
             e.printStackTrace();
