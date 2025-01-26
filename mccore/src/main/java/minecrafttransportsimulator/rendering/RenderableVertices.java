@@ -301,16 +301,24 @@ public class RenderableVertices {
     }
 
     /**
+     * Adds a line to the {@link #vertices} of this object using Point3D objects.
+     * If the last line is added, this function will automatically handle the batch ending.
+     */
+    public void addLine(Point3D start, Point3D end) {
+        addLine((float) start.x, (float) start.y, (float) start.z, (float) end.x, (float) end.y, (float) end.z);
+    }
+
+    /**
      * Adds a line to the {@link #vertices} of this object.
      * If the last line is added, this function will automatically handle the batch ending.
      */
-    public void addLine(Point3D point1, Point3D point2) {
-        vertices.put((float) point1.x);
-        vertices.put((float) point1.y);
-        vertices.put((float) point1.z);
-        vertices.put((float) point2.x);
-        vertices.put((float) point2.y);
-        vertices.put((float) point2.z);
+    public void addLine(float startX, float startY, float startZ, float endX, float endY, float endZ) {
+        vertices.put(startX);
+        vertices.put(startY);
+        vertices.put(startZ);
+        vertices.put(endX);
+        vertices.put(endY);
+        vertices.put(endZ);
         if (!vertices.hasRemaining()) {
             vertices.flip();
         }
