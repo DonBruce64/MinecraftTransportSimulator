@@ -73,6 +73,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public final ComputedVariable brakingFactorVar;
     public final ComputedVariable overSteerVar;
     public final ComputedVariable underSteerVar;
+    public final ComputedVariable maxTiltAngleVar;
+    public final ComputedVariable hasSkidSteerVar;
+    public final ComputedVariable hasPermanentSkidSteerVar;
 
     //Road-following data.
     protected RoadFollowingState frontFollower;
@@ -144,6 +147,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.brakingFactorVar = new ComputedVariable(this, "brakingFactor"));
         addVariable(this.overSteerVar = new ComputedVariable(this, "overSteer"));
         addVariable(this.underSteerVar = new ComputedVariable(this, "underSteer"));
+        addVariable(this.maxTiltAngleVar = new ComputedVariable(this, "maxTiltAngle"));
+        addVariable(this.hasSkidSteerVar = new ComputedVariable(this, "hasSkidSteer"));
+        addVariable(this.hasPermanentSkidSteerVar = new ComputedVariable(this, "hasPermanentSkidSteer"));
     }
 
     @Override
@@ -279,6 +285,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         brakingFactorVar.setTo(definition.motorized.brakingFactor, false);
         overSteerVar.setTo(definition.motorized.overSteer, false);
         underSteerVar.setTo(definition.motorized.underSteer, false);
+        maxTiltAngleVar.setTo(definition.motorized.maxTiltAngle, false);
+        hasSkidSteerVar.setTo(definition.motorized.hasSkidSteer ? 1 : 0, false);
+        hasPermanentSkidSteerVar.setTo(definition.motorized.hasPermanentSkidSteer ? 1 : 0, false);
     }
 
     @Override
@@ -522,14 +531,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         double steeringAngle = getSteeringAngle() * 45;
 
         //Check for permanent skid-steer if we have it.
-        if (definition.motorized.hasPermanentSkidSteer) {
+        if (hasPermanentSkidSteerVar.isActive) {
             return steeringAngle / 20D;
         }
         if (steeringAngle != 0) {
             double turningDistance = groundDeviceCollective.getTurningWheelbase();
             if (turningDistance > 0) {
                 //If we are vehicle that can do skid-steer, and that's active, do so now.
-                if (definition.motorized.hasSkidSteer) {
+                if (hasSkidSteerVar.isActive && !hasPermanentSkidSteerVar.isActive) {
                     if (groundDeviceCollective.isReady() && groundVelocity < 0.05) {
                         boolean foundNeutralEngine = false;
                         boolean leftWheelGrounded = false;
@@ -726,8 +735,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
                         double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
                         double rollDelta = rearFollower.getCurrentRoll();
-                        if (definition.motorized.maxTiltAngle != 0) {
-                            rollDelta -= definition.motorized.maxTiltAngle * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
+                        if (maxTiltAngleVar.currentValue != 0) {
+                            rollDelta -= maxTiltAngleVar.currentValue * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
                         }
                         roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
                         roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
@@ -815,8 +824,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     }
 
                     //If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
-                    if (definition.motorized.maxTiltAngle != 0) {
-                        rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
+                    if (maxTiltAngleVar.currentValue != 0) {
+                        rotation.angles.z = -orientation.angles.z - maxTiltAngleVar.currentValue * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
                     }
                 }
             }
