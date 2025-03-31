@@ -10,16 +10,6 @@ plugins {
 
 repositories {
     mavenCentral()
-//    maven() {
-//        url = uri("https://bmclapi2.bangbang93.com/maven")
-//    }
-//    maven() {
-//        url = uri("http://maven.aliyun.com/nexus/content/groups/public/")
-//    }
-//    maven() {
-//        url = uri("https://maven.aliyun.com/repository/public")
-//    }
-    
 }
 
 dependencies {
