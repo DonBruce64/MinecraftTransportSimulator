@@ -342,7 +342,7 @@
     "iteminfo.y2kbutton": "使用它会全局禁用所有车辆发动机，拉紧手刹并关闭其灯光。\n仅管理员可使用。",
     "iteminfo.engine.automatic": "变速箱：自动",
     "iteminfo.engine.manual": "变速箱：手动",
-    "iteminfo.engine.gearratios": "传动比：",
+    "iteminfo.engine.gearratios": "齿轮比：",
     "iteminfo.engine.jetpowerfactor": "喷气功率：",
     "iteminfo.engine.bypassratio": "涵道比：",
     "iteminfo.engine.maxrpm": "最大转速：",
