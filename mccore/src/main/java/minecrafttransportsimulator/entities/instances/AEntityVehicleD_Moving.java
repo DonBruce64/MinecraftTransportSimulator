@@ -75,7 +75,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public final ComputedVariable underSteerVar;
     public final ComputedVariable maxTiltAngleVar;
     public final ComputedVariable hasSkidSteerVar;
-    public final ComputedVariable hasPermanentSkidSteerVar;
 
     //Road-following data.
     protected RoadFollowingState frontFollower;
@@ -149,7 +148,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.underSteerVar = new ComputedVariable(this, "underSteer"));
         addVariable(this.maxTiltAngleVar = new ComputedVariable(this, "maxTiltAngle"));
         addVariable(this.hasSkidSteerVar = new ComputedVariable(this, "hasSkidSteer"));
-        addVariable(this.hasPermanentSkidSteerVar = new ComputedVariable(this, "hasPermanentSkidSteer"));
     }
 
     @Override
@@ -287,7 +285,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         underSteerVar.setTo(definition.motorized.underSteer, false);
         maxTiltAngleVar.setTo(definition.motorized.maxTiltAngle, false);
         hasSkidSteerVar.setTo(definition.motorized.hasSkidSteer ? 1 : 0, false);
-        hasPermanentSkidSteerVar.setTo(definition.motorized.hasPermanentSkidSteer ? 1 : 0, false);
     }
 
     @Override
@@ -531,14 +528,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         double steeringAngle = getSteeringAngle() * 45;
 
         //Check for permanent skid-steer if we have it.
-        if (hasPermanentSkidSteerVar.isActive) {
+        if (definition.motorized.hasPermanentSkidSteer) {
             return steeringAngle / 20D;
         }
         if (steeringAngle != 0) {
             double turningDistance = groundDeviceCollective.getTurningWheelbase();
             if (turningDistance > 0) {
                 //If we are vehicle that can do skid-steer, and that's active, do so now.
-                if (hasSkidSteerVar.isActive && !hasPermanentSkidSteerVar.isActive) {
+                if (hasSkidSteerVar.isActive && !definition.motorized.hasPermanentSkidSteer) {
                     if (groundDeviceCollective.isReady() && groundVelocity < 0.05) {
                         boolean foundNeutralEngine = false;
                         boolean leftWheelGrounded = false;
