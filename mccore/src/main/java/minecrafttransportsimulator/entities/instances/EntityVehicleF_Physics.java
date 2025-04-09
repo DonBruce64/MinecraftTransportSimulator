@@ -74,10 +74,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable autopilotSpeed;
     public final ComputedVariable autopilotVerticalSpeed;
 //    private PIDController verticalSpeedController = new PIDController(0.001, 0.000005, 0.01);
-    private PIDController verticalSpeedController = new PIDController(0.003, 10, 0.01);
-    private PIDController speedController = new PIDController(0.15, 0.000375, 0.00003);
+    private final PIDController verticalSpeedController = new PIDController(0.003, 10, 0.01);
+    private final PIDController speedController = new PIDController(0.15, 0.000375, 0.00003);
 //    private PIDController cdiDeflectionController = new PIDController(4.5, 0.4, 0.0);
-    private PIDController cdiDeflectionController = new PIDController(20, 0.4, 0.4);
+    private final PIDController cdiDeflectionController = new PIDController(10.0, 0.2, 0.2);
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -758,8 +758,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         double output = cdiDeflectionController.loop(delta, 0.05);
         if (output < -45) {
             output = -45;
+            cdiDeflectionController.clear();
         } else if (output > 45) {
             output = 45;
+            cdiDeflectionController.clear();
         }
         double heading = output + selectedBeacon.bearing + 180;
         autopilotHeading.setTo(heading, true);
@@ -772,7 +774,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else if (output < -45) {
             output = -45;
         }
-        // Output = Math.toDegress(Math.asin(motion.y / velocity))
+        // Output = Math.toDegrees(Math.asin(motion.y / velocity))
         autopilotVerticalSpeed.setTo(Math.sin(Math.toRadians(output))*velocity*speedFactor*20, true);
     }
 
@@ -815,7 +817,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else if (output < -45) {
             output = -45;
         }
-        System.out.println("Heading " + delta + " " + output);
+//        System.out.println("Heading " + delta + " " + output);
 //        This was the control before tranforming
 //        -orientation.angles.z - output > aileronTrimVar.currentValue + 0.1
         double signalDelta = -orientation.angles.z - output - aileronTrimVar.currentValue - 0.1;
@@ -862,7 +864,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         } else if (output > MAX_ELEVATOR_TRIM) {
             output = MAX_ELEVATOR_TRIM;
         }
-        System.out.println("Vertical speed " + delta + " " + output);
+//        System.out.println("Vertical speed " + delta + " " + output);
         double signalDelta = output - elevatorTrimVar.currentValue;
         if (signalDelta > 0) {
             if (signalDelta > 0.75) {
