@@ -1201,7 +1201,12 @@ public class PartEngine extends APart {
             engineForce.set(engineAxisVector).scale(thrust);
             force.add(engineForce);
             engineForce.reOrigin(vehicleOn.orientation);
-            torque.add(localOffset.crossProduct(engineForce));
+            if (definition.engine.allowThrustVector) {
+                torque.add(localOffset.crossProduct(engineForce));
+            } else {
+                torque.y -= engineForce.z * localOffset.x + engineForce.x * localOffset.z;
+                torque.z += engineForce.y * localOffset.x - engineForce.x * localOffset.y;
+            }
         }
         return engineForceValue;
     }
