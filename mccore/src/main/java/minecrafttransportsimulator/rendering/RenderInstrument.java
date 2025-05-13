@@ -112,7 +112,7 @@ public final class RenderInstrument {
                         //Set points to the variables here and render them.
                         //If the shape is lit, disable lighting for blending.
                         renderable.setLightValue(entity.worldLightValue);
-                        if ((component.lightUpTexture && lightsOn) || component.alwaysLit && ConfigSystem.client.renderingSettings.brightLights.value) {
+                        if (((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value) {
                             renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
                         } else {
                             renderable.setLightMode(onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL);
