@@ -252,7 +252,12 @@ public class PartPropeller extends APart {
             propellerForce.set(propellerAxisVector).scale(thrust);
             force.add(propellerForce);
             propellerForce.reOrigin(vehicleOn.orientation);
-            torque.add(localOffset.crossProduct(propellerForce));
+            if (partOn.definition.engine.allowThrustVector) {
+                torque.add(localOffset.crossProduct(propellerForce));
+            } else {
+                torque.y -= propellerForce.z * localOffset.x;
+                torque.z += propellerForce.y * localOffset.x;
+            }
         }
         return propellerForceValue;
     }

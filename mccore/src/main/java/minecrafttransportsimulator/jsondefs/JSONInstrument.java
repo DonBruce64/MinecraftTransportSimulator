@@ -62,6 +62,9 @@ public class JSONInstrument extends AJSONItem {
         @JSONDescription("If this is true, MTS will make this texture bright when the lights on the vehicle are on.  This can be combined with overlays to make faux-instrument lighting.")
         public boolean lightUpTexture;
 
+        @JSONDescription("If this is true, MTS will make this texture bright at all times. This can be combined with overlays to make faux-instrument lighting.")
+        public boolean alwaysLit;
+
         @JSONDescription("If this is true, MTS will render the texture of this section as an overlay.  This does blending on what is rendered below it, though it does not make much of a difference in lighting.  If you want to make a part of an instrument bright, a lightUpTexture is probably the better option.  This overlay is mainly for adding things like instrument glass effects or lighting hues.  Do note that both of these can be combined, however, to give a lighting area of effect for things like dash lights.")
         public boolean overlayTexture;
 

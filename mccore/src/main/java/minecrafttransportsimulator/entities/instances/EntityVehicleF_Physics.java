@@ -455,7 +455,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Finally, get gravity.  Blimps sink when dead.
-            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * (9.8 / 400) : 0;
+            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245 : 0;
             if (waterBallastFactorVar.isActive && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * waterBallastFactorVar.currentValue;
                 elevatorTorque = -orientation.angles.x * 2;
