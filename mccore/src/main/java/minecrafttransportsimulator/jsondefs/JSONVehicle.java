@@ -91,7 +91,7 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If this is set, this vehicle will come pre-fueled with the specified fuel amount.  Note that an engine must be present for MTS to know what type of fuel is required, so make sure you set one via a defaultPart in the parts section of this JSON.")
         public int defaultFuelQty;
 
-        @JSONDescription("The maximum voltage (capacity) of this vehicle's battery. Does not affect 'electric'-type motors, only the electrical system for starters and lights. Defaults to 14 if not set.")
+        @JSONDescription("The maximum voltage (capacity) of this vehicle's battery, accounting for slight overvoltage. Does not affect 'electric'-type motors, only the electrical system for starters and lights. Defaults to 14 if not set, since vehicles will be spawned with 85.71% of their maximum battery charge, which means they'll spawn with 12V charged.")
         public int batteryCapacity;
 
         @JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
