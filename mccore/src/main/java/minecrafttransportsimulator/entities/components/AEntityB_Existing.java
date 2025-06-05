@@ -95,6 +95,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public int zoomLevel;
     public int cameraIndex;
 
+    //Head tracking variables
+    public boolean hasHeadTracking;
+    /**
+     * Save the orientation in the form of rotation angle in relative axis
+     */
+    public final Point3D headTrackingOrientation = new Point3D();
+
     //Internal sound variables.
     public final EntityRadio radio;
     public List<SoundInstance> sounds = new ArrayList<>();//TODO make this a hashmap.
@@ -244,20 +251,25 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
-            riderRelativeOrientation.angles.y += rider.getYawDelta();
-            //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
-            if (riderRelativeOrientation.angles.y > 180) {
-                riderRelativeOrientation.angles.y -= 360;
-                prevRiderRelativeOrientation.angles.y -= 360;
-            } else if (riderRelativeOrientation.angles.y < -180) {
-                riderRelativeOrientation.angles.y += 360;
-                prevRiderRelativeOrientation.angles.y += 360;
-            }
+            // If we don't have head tracking then calculate orientation normally
+            if (!hasHeadTracking) {
+                riderRelativeOrientation.angles.y += rider.getYawDelta();
+                //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
+                if (riderRelativeOrientation.angles.y > 180) {
+                    riderRelativeOrientation.angles.y -= 360;
+                    prevRiderRelativeOrientation.angles.y -= 360;
+                } else if (riderRelativeOrientation.angles.y < -180) {
+                    riderRelativeOrientation.angles.y += 360;
+                    prevRiderRelativeOrientation.angles.y += 360;
+                }
 
-            //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
-            float pitchDelta = rider.getPitchDelta();
-            if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
-                riderRelativeOrientation.angles.x += pitchDelta;
+                //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
+                float pitchDelta = rider.getPitchDelta();
+                if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
+                    riderRelativeOrientation.angles.x += pitchDelta;
+                }
+            } else {
+                riderRelativeOrientation.angles.set(headTrackingOrientation);
             }
             riderRelativeOrientation.updateToAngles();
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
