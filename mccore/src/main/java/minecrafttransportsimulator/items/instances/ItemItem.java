@@ -367,7 +367,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 if (rightClick) {
                     if (entity instanceof EntityVehicleF_Physics) {
                         //Use jumper on vehicle.
-                        ((EntityVehicleF_Physics) entity).electricPower = 12;
+                        ((EntityVehicleF_Physics) entity).electricPower = (((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * 0.857142857);
                         if (!entity.world.isClient()) {
                             InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_JUMPERPACK), player);
                             if (!player.isCreative()) {
@@ -453,6 +453,12 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {
                 for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                    vehicle.runningLightVar.setTo(0, true);
+                    vehicle.headLightVar.setTo(0, true);
+                    vehicle.navigationLightVar.setTo(0, true);
+                    vehicle.strobeLightVar.setTo(0, true);
+                    vehicle.taxiLightVar.setTo(0, true);
+                    vehicle.landingLightVar.setTo(0, true);
                     vehicle.throttleVar.setTo(0, true);
                     vehicle.parkingBrakeVar.setTo(0, true);
                     vehicle.engines.forEach(engine -> engine.magnetoVar.setTo(0, true));
