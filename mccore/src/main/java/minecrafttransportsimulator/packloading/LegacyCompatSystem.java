@@ -50,7 +50,14 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.CrafterComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.EffectorCompon        //Set default health and battery capacity.
+        if (definition.general.health == 0) {
+            definition.general.health = 100;
+        }
+
+        if (definition.motorized.batteryCapacity == 0) {
+            definition.motorized.batteryCapacity = 14;
+        }entType;
 import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -108,6 +115,7 @@ public final class LegacyCompatSystem {
         variableChanges.put("engine_winddown_rate", "engineWinddownRate");
         variableChanges.put("engine_jet_power_factor", "jetPowerFactor");
         variableChanges.put("engine_bypass_ratio", "bypassRatio");
+        variableChanges.put("downForce", "steeringForceFactor");
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -357,9 +365,13 @@ public final class LegacyCompatSystem {
             definition.general.type = null;
         }
 
-        //Set default health.
+        //Set default health and battery capacity.
         if (definition.general.health == 0) {
             definition.general.health = 100;
+        }
+
+        if (definition.motorized.batteryCapacity == 0) {
+            definition.motorized.batteryCapacity = 14;
         }
 
         if (definition.plane != null) {
