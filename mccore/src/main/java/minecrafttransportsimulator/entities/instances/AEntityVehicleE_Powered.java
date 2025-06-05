@@ -81,7 +81,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
             this.fuelTank = new EntityFluidTank(world, data.getData("fuelTank"), definition.motorized.fuelCapacity);
         } else {
-            this.electricPower = 12;
+            this.electricPower = (definition.motorized.batteryCapacity * 0.857142857);
             this.selectedBeaconName = "";
             this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
