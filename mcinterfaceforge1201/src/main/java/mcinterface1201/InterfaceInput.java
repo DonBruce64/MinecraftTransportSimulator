@@ -96,7 +96,7 @@ public class InterfaceInput implements IInterfaceInput {
                             joystickMap.put(joystickID, i);
                             joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
                             joystickAxisCounts.put(joystickID, GLFW.glfwGetJoystickAxes(i).limit());
-                            joystickHatCounts.put(joystickID, GLFW.glfwGetJoystickHats(i).limit());
+                            joystickHatCounts.put(joystickID, GLFW.glfwGetJoystickHats(i) == null ? 0 : GLFW.glfwGetJoystickHats(i).limit());
                             joystickButtonCounts.put(joystickID, GLFW.glfwGetJoystickButtons(i).limit());
                             joystickComponentCounts.put(joystickID, joystickAxisCounts.get(joystickID) + joystickHatCounts.get(joystickID) + joystickButtonCounts.get(joystickID));
                         }
