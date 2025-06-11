@@ -9,7 +9,7 @@
   "definitions": [
     {
       "subName": "",
-      "name": "Vehicle Charger",
+      "name": "Electric Vehicle Charger",
       "extraMaterialLists": [
         []
       ]
@@ -18,59 +18,75 @@
   "rendering": {
     "textObjects": [
       {
-        "pos": [-0.054688,0.7125,0.484586],
+        "pos": [0.0,1.4,0.06875],
         "rot": [0.0,0.0,0.0],
         "scale": 0.125,
-        "variableFactor": 1,
         "variableName": "charger_dispensed",
+        "variableFactor": 1.0,
         "variableFormat": "DSP:%01.0f",
-        "wrapWidth": 6,
         "defaultText": "",
-        "color": "BA7C35",
+        "color": "FFFFFF",
+        "wrapWidth": 6,
         "lightsUp": true,
         "autoScale": true
       },
       {
-        "pos": [-0.054688,0.61875,0.484586],
+        "pos": [0.0,1.3,0.06875],
         "rot": [0.0,0.0,0.0],
         "scale": 0.125,
-        "variableFactor": 1,
         "variableName": "charger_purchased",
+        "variableFactor": 1.0,
         "variableFormat": "PUR:%01.0f",
-        "wrapWidth": 6,
         "defaultText": "",
-        "color": "BA7C35",
+        "color": "FFFFFF",
+        "wrapWidth": 6,
         "lightsUp": true,
         "autoScale": true
       }
     ],
-    "lightObjects": [
+    "animatedObjects": [
       {
-        "objectName": "light",
-        "emissive": true,
-        "color": "DE3121",
-        "brightnessAnimations": [
+        "objectName": "cable",
+        "animations": [
           {
             "animationType": "visibility",
-            "variable": "10_20_10_cycle",
-            "clampMin": 1.0,
-            "clampMax": 1.0
-          },
+            "variable": "charger_active",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          }
+        ]
+      }
+    ],
+    "lightObjects": [],
+    "sounds": [
+      {
+        "name": "mtsofficialpack:spotlight_loop",
+        "activeAnimations": [
           {
             "animationType": "visibility",
             "variable": "charger_active",
             "clampMin": 1.0,
             "clampMax": 1.0
           }
-        ]
+        ],
+        "looping": true,
+        "minDistance": 0.0,
+        "minDistanceVolume": 1.0,
+        "middleDistance": 0.0,
+        "middleDistanceVolume": 0.0,
+        "maxDistance": 10.0,
+        "maxDistanceVolume": 0.0,
+        "conicalAngle": 0.0
       }
     ],
     "modelType": "obj"
   },
   "general": {
-    "name": "Vehicle Charger",
+    "name": "Electric Vehicle Charger",
     "materialLists": [
       []
-    ]
+    ],
+    "radarWidth": 0.0,
+    "radarRange": 0.0
   }
 }
