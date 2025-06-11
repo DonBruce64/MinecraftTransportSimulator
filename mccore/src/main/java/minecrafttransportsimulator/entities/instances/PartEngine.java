@@ -116,6 +116,7 @@ public class PartEngine extends APart {
             this.temp = data.getDouble("temp");
             this.pressure = data.getDouble("pressure");
             this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
+            this.hours = data.getDouble("hours");
         }
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
@@ -1219,6 +1220,7 @@ public class PartEngine extends APart {
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);
         data.setDouble("rocketFuelUsed", rocketFuelUsed);
+        data.setDouble("hours", hours);
         return data;
     }
 }
