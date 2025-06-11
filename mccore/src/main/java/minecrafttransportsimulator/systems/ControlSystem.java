@@ -184,9 +184,9 @@ public final class ControlSystem {
                 riding.hasHeadTracking = false;
                 riding.headTrackingOrientation.set(0, 0, 0);
             } else {
-                    riding.hasHeadTracking = true;
-                    riding.headTrackingOrientation.x = -(viewUD.getAxisState(true) - 0.5) * 170;
-                    riding.headTrackingOrientation.y = -(viewLR.getAxisState(true) - 0.5) * 180;
+                riding.hasHeadTracking = true;
+                riding.headTrackingOrientation.x = -(viewUD.getAxisState(true) - 0.5) * 170;
+                riding.headTrackingOrientation.y = -(viewLR.getAxisState(true) - 0.5) * 180;
             }
         }
     }
