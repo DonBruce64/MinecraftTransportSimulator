@@ -515,6 +515,8 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_ZOOM_I = new LanguageEntry("input.zoom_i", "ZoomIn");
     public static final LanguageEntry INPUT_ZOOM_O = new LanguageEntry("input.zoom_o", "ZoomOut");
     public static final LanguageEntry INPUT_CHANGEVIEW = new LanguageEntry("input.changeview", "ChangeView");
+    public static final LanguageEntry INPUT_LOOK_UD = new LanguageEntry("input.look_ud", "LookUpDown");
+    public static final LanguageEntry INPUT_LOOK_LR = new LanguageEntry("input.look_lr", "LookLeftRight");
     public static final LanguageEntry INPUT_LOOK_L = new LanguageEntry("input.look_l", "LookLeft");
     public static final LanguageEntry INPUT_LOOK_R = new LanguageEntry("input.look_r", "LookRight");
     public static final LanguageEntry INPUT_LOOK_U = new LanguageEntry("input.look_u", "LookUp");
