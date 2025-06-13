@@ -159,7 +159,7 @@
     "mts.jumpercable.description": "",
     "mts.jumpercable.name": "Cabos de Chupeta",
     "mts.jumperpack.description": "",
-    "mts.jumperpack.name": "Bateria Auxiliar Portátil"
+    "mts.jumperpack.name": "Bateria Auxiliar Portátil",
     "mts.key.description": "Deixar um carro destrancado no Minecraft é como deixar destrancado no GTA...",
     "mts.key.name": "Chave",
     "mts.paintgun.description": "",
@@ -278,7 +278,7 @@
     "interact.fuelpump.noengine": "Não há motor neste veículo. Motores com tipos de combustível diferentes irão redefinir o combustível, então instale um motor primeiro para evitar perda!",
     "interact.fuelpump.wrongengines": "O conteúdo desta bomba não é um combustível válido para os motores deste veículo. Consulte o manual para mais detalhes.",
     "interact.fuelpump.connect": "Conectado e abastecendo.",
-    "interact.fuelpump.full": "O Veículo está cheio. Desconectando."
+    "interact.fuelpump.full": "O Veículo está cheio. Desconectando.",
     "interact.fuelpump.complete": "Combustível pago foi abastecido. Desconectando.",
     "interact.fuelpump.empty": "A bomba está vazia. Desconectando.",
     "interact.fuelpump.disconnect": "Desconectando e interrompendo o abastecimento.",
