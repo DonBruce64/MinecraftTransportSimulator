@@ -401,6 +401,44 @@ public class GUIPanel extends AGUIBase {
                         }
                         break;
                     }
+                    case HEADING: {
+                        if (ConfigSystem.settings.general.allPlanesWithNav.value) {
+                            beaconBox = new GUIComponentTextBox(this, 0, -10, panelComponent.width, panelComponent.height, vehicle.autopilotHeading.currentValue + "", ColorRGB.WHITE, 5, (int) panelComponent.textureStart.x, (int) panelComponent.textureStart.y, panelComponent.width, panelComponent.height) {
+                                @Override
+                                public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
+                                    super.handleKeyTyped(typedChar, typedCode, control);
+                                    //Update the vehicle beacon state.
+                                    try {
+                                        int heading = Integer.parseInt(getText());
+                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotHeading, heading));
+                                    } catch (Exception e) {}
+                                }
+                            };
+                            addComponent(beaconBox);
+                            newComponent = beaconBox;
+                            text = "Hdg";
+                        }
+                        break;
+                    }
+                    case HEADING_ENABLE: {
+                        newComponent = new GUIPanelButton(this, panelComponent) {
+                            @Override
+                            public void onClicked(boolean leftSide) {
+                                if (vehicle.autopilotHeadingEnabledVar.isActive) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotHeadingEnabledVar, 0));
+                                } else if (vehicle.definition.motorized.isAircraft) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.autopilotHeadingEnabledVar, 1));
+                                }
+                            }
+
+                            @Override
+                            public int getState() {
+                                return vehicle.autopilotValueVar.isActive ? 1 : 0;
+                            }
+                        };
+                        text = vehicle.definition.motorized.isAircraft ? "AUTO" : "CRUISE";
+                        break;
+                    }
                     case ROLL_TRIM: {
                         newComponent = new GUIPanelTrimButton(this, panelComponent, vehicle.aileronTrimVar, -0.1, EntityVehicleF_Physics.MAX_AILERON_TRIM);
                         text = "ROLL TRIM";
