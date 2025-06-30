@@ -627,7 +627,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
     }
 
-    public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
+public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
         //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
         //any block-breaking packets arrive.
         if (!gun.world.isClient()) {
@@ -642,6 +642,18 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
             }
             gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
+
+            double blastRadius = blastSize;
+            List<IWrapperEntity> entities = gun.world.getEntitiesWithin(new BoundingBox(explosionPosition, blastRadius));
+            for (IWrapperEntity entity : entities) {
+                if (entity instanceof IWrapperPlayer && entity.isValid()) {
+                    double distance = entity.getPosition().distanceTo(explosionPosition);
+                    if (distance <= blastRadius) {
+                        double damageAmount = gun.lastLoadedBullet.definition.bullet.damage;
+                        entity.attack(new Damage(gun, null, damageAmount).setExplosive());
+                    }
+                }
+            }
         }
 
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
