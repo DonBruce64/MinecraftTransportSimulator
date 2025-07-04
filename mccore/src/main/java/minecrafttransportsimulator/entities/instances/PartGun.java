@@ -372,7 +372,7 @@ public class PartGun extends APart {
                 //Clipped guns we can't reload if we're already reloading.
                 if (!definition.gun.blockReloading && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
                     if (isHandHeld) {
-                        if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested) {
+                        if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || definition.gun.autoReload) {
                             //Check the player's inventory for bullets.
                             IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
                             for (int i = 0; i < inventory.getSize(); ++i) {
