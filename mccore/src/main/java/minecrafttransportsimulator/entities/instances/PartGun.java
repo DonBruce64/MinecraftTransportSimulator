@@ -67,7 +67,6 @@ public class PartGun extends APart {
     private final IWrapperPlayer holdingPlayer;
 
     //Variables that can be modified
-
     private final ComputedVariable muzzleVelocityVar;
     private final ComputedVariable fireDelayVar;
     private final ComputedVariable bulletSpreadFactorVar;
@@ -78,10 +77,6 @@ public class PartGun extends APart {
     private final ComputedVariable canLockTargetsVar;
     private final ComputedVariable firingRequestedVar;
     public final ComputedVariable twoHandedVar;
-
-    //private final ComputedVariable fireDelayVar;
-    //private final ComputedVariable bulletSpreadFactorVar;
-    //public final ComputedVariable twoHandedVar;
 
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
 
