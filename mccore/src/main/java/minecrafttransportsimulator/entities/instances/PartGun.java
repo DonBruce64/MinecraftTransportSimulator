@@ -870,7 +870,7 @@ public class PartGun extends APart {
 
             //If we have any manual bullets, do tracking for them.
             if (!activeManualBullets.isEmpty()) {
-                Point3D laserStart = controller.getPosition().copy();
+                Point3D laserStart = controller.getEyePosition().copy();
                 BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
                 if (laserHit != null) {
                     targetPosition.set(laserHit.hitPosition);
