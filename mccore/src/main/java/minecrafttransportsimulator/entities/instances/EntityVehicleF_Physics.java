@@ -833,9 +833,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.
-                if (variable.startsWith("missile_")) {
+                if (variable.startsWith("missile_") && !variable.endsWith("incoming")) {
                     final String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
-                    final int missileNumber = ComputedVariable.getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
+                    final int missileNumber = ComputedVariable.getVariableNumber(variable.replaceAll("\\D", ""));
                     return new ComputedVariable(this, variable, partialTicks -> {
                         if (missilesIncoming.size() > missileNumber) {
                             switch (missileVariable) {
