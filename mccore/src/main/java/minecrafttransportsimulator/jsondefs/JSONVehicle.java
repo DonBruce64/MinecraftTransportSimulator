@@ -31,6 +31,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
 
+        @JSONDescription("Set this to true if you want the vehicle to have thrust vectoring.  False means only yaw-vectoring will occur for things like engine out situations.")
+        public boolean hasThrustVectoring;
+
         @JSONDescription("Tells MTS that this vehicle does not have a roof.  This is used only for the SoundSystem and lets MTS know that sounds should be quieter when inside this vehicle.  This does not have an effect when in third-person, however, as the camera is considered outside of the vehicle so having a top or not does not matter.")
         public boolean hasOpenTop;
 

@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import mcinterface1201.InterfaceEventsModelLoader;
+import mcinterface1201.InterfaceLoader;
 import mcinterface1201.InterfaceSound;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -39,7 +40,7 @@ public abstract class MultiPackResourceManagerMixin {
         packs2.addAll(packs);
         packs2.add(InterfaceEventsModelLoader.packPack);
         packs = packs2;
-        namespacedManagers.computeIfAbsent(InterfaceManager.coreModID, k -> new FallbackResourceManager(pType, InterfaceManager.coreModID)).push(InterfaceEventsModelLoader.packPack);
+        namespacedManagers.computeIfAbsent(InterfaceLoader.MODID, k -> new FallbackResourceManager(pType, InterfaceLoader.MODID)).push(InterfaceEventsModelLoader.packPack);
         PackParser.getAllPackIDs().forEach(packID -> namespacedManagers.computeIfAbsent(packID, k -> new FallbackResourceManager(pType, packID)).push(InterfaceEventsModelLoader.packPack));
     }
 
