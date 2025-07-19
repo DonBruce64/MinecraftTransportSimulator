@@ -44,6 +44,8 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 	public final ComputedVariable retractGearVar;
 	public final ComputedVariable throttleVar;
 	public final ComputedVariable reverseThrustVar;
+	public final ComputedVariable electricUsageVar;
+	public final ComputedVariable batteryCapacityVar;
     public static final double MAX_THROTTLE = 1.0D;
 
     //Internal states.
@@ -61,6 +63,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
     public final EntityFluidTank fuelTank;
+    public static final double BATTERY_DEFAULT_CHARGE = 0.85715D;
 
     //Engines.
     public final List<PartEngine> engines = new ArrayList<>();
@@ -79,7 +82,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
             this.fuelTank = new EntityFluidTank(world, data.getData("fuelTank"), definition.motorized.fuelCapacity);
         } else {
-            this.electricPower = 12;
+            this.electricPower = (definition.motorized.batteryCapacity * BATTERY_DEFAULT_CHARGE);
             this.selectedBeaconName = "";
             this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
@@ -95,8 +98,17 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     	addVariable(this.retractGearVar = new ComputedVariable(this, "gear_setpoint", data));
     	addVariable(this.throttleVar = new ComputedVariable(this, "throttle", data));
     	addVariable(this.reverseThrustVar = new ComputedVariable(this, "reverser", data));
+    	addVariable(this.electricUsageVar = new ComputedVariable(this, "electric_usage", data));
+    	addVariable(this.batteryCapacityVar = new ComputedVariable(this, "batteryCapacity", data));
     }
-
+	
+    @Override
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        electricUsageVar.setTo(electricUsage, false);
+        batteryCapacityVar.setTo(definition.motorized.batteryCapacity, false);
+    }
+	
     @Override
     public void update() {
         super.update();
@@ -161,7 +173,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 electricPower = towedByConnection.towingVehicle.electricPower;
             }
         } else if (!outOfHealth) {
-            electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+            electricPower = Math.max(0, Math.min(batteryCapacityVar.currentValue, electricPower -= electricUsageVar.currentValue));
             electricFlow = electricUsage;
             electricUsage = 0;
         } else {
