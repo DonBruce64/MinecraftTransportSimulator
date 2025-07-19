@@ -63,7 +63,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
     public final EntityFluidTank fuelTank;
-    public static final double batteryDefaultCharge = 0.85715D;
+    public static final double BATTERY_DEFAULT_CHARGE = 0.85715D;
 
     //Engines.
     public final List<PartEngine> engines = new ArrayList<>();
@@ -82,7 +82,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
             this.fuelTank = new EntityFluidTank(world, data.getData("fuelTank"), definition.motorized.fuelCapacity);
         } else {
-            this.electricPower = (definition.motorized.batteryCapacity * batteryDefaultCharge);
+            this.electricPower = (definition.motorized.batteryCapacity * BATTERY_DEFAULT_CHARGE);
             this.selectedBeaconName = "";
             this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
