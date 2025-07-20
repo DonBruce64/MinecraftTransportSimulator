@@ -297,7 +297,7 @@ public class PartEngine extends APart {
                 }
                 if (starterLevel > 0) {
                     if (!vehicleOn.isCreative) {
-                        vehicleOn.electricUsage += 0.05F;
+                        vehicleOn.electricUsageVar.adjustBy(0.05F, true);
                     }
                     if (!vehicleOn.isCreative) {
                         fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
@@ -445,7 +445,7 @@ public class PartEngine extends APart {
                 case NORMAL: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
+                        vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, true);
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
@@ -531,7 +531,7 @@ public class PartEngine extends APart {
                 case ELECTRIC: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
+                        vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, true);
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
@@ -562,7 +562,7 @@ public class PartEngine extends APart {
                 case MAGIC: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsage -= 0.05 * rpm / maxRPMVar.currentValue;
+                        vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, true);
                     } else {
                         //Turn on engine if the magneto is onl.
                         if (!world.isClient() && !vehicleOn.outOfHealth) {
