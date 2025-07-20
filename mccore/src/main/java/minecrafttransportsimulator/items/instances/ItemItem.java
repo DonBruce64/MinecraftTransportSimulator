@@ -367,7 +367,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 if (rightClick) {
                     if (entity instanceof EntityVehicleF_Physics) {
                         //Use jumper on vehicle.
-                        ((EntityVehicleF_Physics) entity).electricPower = (((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * 0.857142857);
+                        ((EntityVehicleF_Physics) entity).electricPower = (((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * ((EntityVehicleF_Physics) entity).BATTERY_DEFAULT_CHARGE);
                         if (!entity.world.isClient()) {
                             InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_JUMPERPACK), player);
                             if (!player.isCreative()) {
