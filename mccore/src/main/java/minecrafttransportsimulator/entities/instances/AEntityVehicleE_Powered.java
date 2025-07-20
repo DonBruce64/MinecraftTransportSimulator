@@ -58,7 +58,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public int gearMovementTime;
     public int ticksOutOfHealth;
     public double electricPower;
-    public double electricUsage;
     public double electricFlow;
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
@@ -87,7 +86,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.fuelTank = new EntityFluidTank(world, null, definition.motorized.fuelCapacity);
         }
         world.addEntity(fuelTank);
-        
+
         addVariable(this.runningLightVar = new ComputedVariable(this, "running_light", data));
         addVariable(this.headLightVar = new ComputedVariable(this, "headlight", data));
     	addVariable(this.navigationLightVar = new ComputedVariable(this, "navigation_light", data));
@@ -101,14 +100,13 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     	addVariable(this.electricUsageVar = new ComputedVariable(this, "electric_usage", data));
     	addVariable(this.batteryCapacityVar = new ComputedVariable(this, "batteryCapacity", data));
     }
-	
+
     @Override
     public void setVariableDefaults() {
         super.setVariableDefaults();
-        electricUsageVar.setTo(electricUsage, false);
         batteryCapacityVar.setTo(definition.motorized.batteryCapacity, false);
     }
-	
+
     @Override
     public void update() {
         super.update();
@@ -174,12 +172,12 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             }
         } else if (!outOfHealth) {
             electricPower = Math.max(0, Math.min(batteryCapacityVar.currentValue, electricPower -= electricUsageVar.currentValue));
-            electricFlow = electricUsage;
-            electricUsage = 0;
+            electricFlow = electricUsageVar.currentValue;
+            electricUsageVar.setTo(0, true);
         } else {
             electricPower = 0;
             electricFlow = 0;
-            electricUsage = 0;
+            electricUsageVar.setTo(0, true);
         }
 
         //Adjust gear variables.
