@@ -93,6 +93,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable ballastControlVar;
     public final ComputedVariable ballastVolumeVar;
     public final ComputedVariable waterBallastFactorVar;
+    public final ComputedVariable gravityFactorVar;
     public final ComputedVariable axleRatioVar;
 
     //Coefficients.
@@ -155,6 +156,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
         addVariable(this.ballastVolumeVar = new ComputedVariable(this, "ballastVolume"));
         addVariable(this.waterBallastFactorVar = new ComputedVariable(this, "waterBallastFactor"));
+        addVariable(this.gravityFactorVar = new ComputedVariable(this, "gravityFactor"));
         addVariable(this.axleRatioVar = new ComputedVariable(this, "axleRatio"));
     }
 
@@ -249,6 +251,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         ballastControlVar.setTo(elevatorInputVar.currentValue, false);
         ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
         waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
+        gravityFactorVar.setTo(definition.motorized.gravityFactor,false);
         axleRatioVar.setTo(definition.motorized.axleRatio, false);
     }
 
@@ -455,14 +458,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Finally, get gravity.  Blimps sink when dead.
-            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245 : 0;
+            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? (currentMass * (0.0245D * (definition.motorized.gravityFactor != 0 ? gravityFactorVar.currentValue : ConfigSystem.settings.general.gravityFactor.value))) : 0;
+
             if (waterBallastFactorVar.isActive && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * waterBallastFactorVar.currentValue;
                 elevatorTorque = -orientation.angles.x * 2;
                 aileronTorque = -orientation.angles.z * 2;
-            }
-            if (!definition.motorized.isAircraft) {
-                gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
 
             //Add all forces to the main force matrix and apply them.
@@ -771,6 +772,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> beingFueled ? 1 : 0, false);
             case ("thrust"):
                 return new ComputedVariable(this, variable, partialTicks -> thrustForceValue, false);
+            case ("gravityFactor"):
+                return new ComputedVariable(this, variable, partialTicks -> gravityFactorVar.currentValue, false);
             case ("vertical_acceleration"):
                 return new ComputedVariable(this, variable, partialTicks -> -((Math.toRadians(rotation.angles.x) * 20F) * indicatedSpeed), false);
             case ("lateral_acceleration"):

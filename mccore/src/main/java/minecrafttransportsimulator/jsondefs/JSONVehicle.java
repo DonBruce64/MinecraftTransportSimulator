@@ -167,6 +167,10 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
         public float waterBallastFactor;
 
+        @ModifiableValue
+        @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
+        public float gravityFactor;
+
         @JSONDescription("The speed at which 0% damage will be applied during crashes.")
         public float crashSpeedMin;
 
