@@ -324,10 +324,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             //Get the track angle.  This is used for control surfaces.
             trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector, true)));
 
-            //Set blimp-specific states before calculating forces.
-            if (definition.motorized.isBlimp) {
+            //Remove pitch and roll torque if we aren't supposed to use it.
+            if (!definition.motorized.hasThrustVectoring) {
                 thrustTorque.x = 0;
                 thrustTorque.z = 0;
+            }
+
+            //Set blimp-specific states before calculating forces.
+            if (definition.motorized.isBlimp) {
                 //If we have the brake pressed at a slow speed, stop the blimp.
                 //This is needed to prevent runaway blimps.
                 if (Math.hypot(motion.x, motion.z) < 0.15 && (brakeVar.isActive || parkingBrakeVar.isActive)) {
@@ -836,9 +840,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.
-                if (variable.startsWith("missile_")) {
+                if (variable.startsWith("missile_") && !variable.endsWith("incoming")) {
                     final String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
-                    final int missileNumber = ComputedVariable.getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
+                    final int missileNumber = ComputedVariable.getVariableNumber(variable.replaceAll("\\D", ""));
                     return new ComputedVariable(this, variable, partialTicks -> {
                         if (missilesIncoming.size() > missileNumber) {
                             switch (missileVariable) {

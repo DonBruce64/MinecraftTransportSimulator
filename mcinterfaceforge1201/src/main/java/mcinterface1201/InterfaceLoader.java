@@ -64,7 +64,7 @@ public class InterfaceLoader {
     public static final String MODVER = "22.17.0";
 
     private final FMLJavaModLoadingContext context;
-    public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+    public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
     private final String gameDirectory;
     public static Set<String> packIDs = new HashSet<>();
 
@@ -74,9 +74,9 @@ public class InterfaceLoader {
     private static List<BuilderBlock> chargerBlocks = new ArrayList<>();
     protected static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, InterfaceLoader.MODID);
 
-    public InterfaceLoader(FMLJavaModLoadingContext context) {
-        this.context = context;
-        gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
+    public InterfaceLoader() {
+        this.context = FMLJavaModLoadingContext.get();
+        this.gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
         context.getModEventBus().addListener(this::init);
         context.getModEventBus().addListener(this::onPostConstruction);
     }
@@ -149,7 +149,7 @@ public class InterfaceLoader {
                     //Check if the creative tab is set/created.
                     //The only exception is for "invisible" parts of the core mod, these are internal.
                     boolean hideOnCreativeTab = item.definition.general.hideOnCreativeTab || (item instanceof AItemSubTyped && ((AItemSubTyped<?>) item).subDefinition.hideOnCreativeTab);
-                    if (!hideOnCreativeTab && (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible"))) {
+                    if (!hideOnCreativeTab && (!item.definition.packID.equals(InterfaceLoader.MODID) || !item.definition.systemName.contains("invisible"))) {
                         creativeTabsRequired.computeIfAbsent(item.getCreativeTabID(), k -> new ArrayList<>()).add(item);
                     }
                 }
@@ -195,7 +195,7 @@ public class InterfaceLoader {
             CREATIVE_TABS.register(tabID, () -> {
                 JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
                 AItemPack<?> tabIconItem = packConfiguration.packItem != null ? PackParser.getItem(packConfiguration.packID, packConfiguration.packItem) : null;
-                ItemStack tabIconStack = new ItemStack(BuilderItem.itemMap.get(tabIconItem));
+                ItemStack tabIconStack = tabIconItem != null ? new ItemStack(BuilderItem.itemMap.get(tabIconItem)) : null;
                 DisplayItemsGenerator validItemsGenerator = (pParameters, pOutput) -> tabItems.forEach(tabItem -> pOutput.accept(BuilderItem.itemMap.get(tabItem)));
                 Supplier<ItemStack> iconSupplier = tabIconStack != null ? () -> tabIconStack : () -> new ItemStack(BuilderItem.itemMap.get(tabItems.get((int) (System.currentTimeMillis() / 1000 % tabItems.size()))));
                 return CreativeModeTab.builder().title(Component.literal(packConfiguration.packName)).icon(iconSupplier).displayItems(validItemsGenerator).build();
