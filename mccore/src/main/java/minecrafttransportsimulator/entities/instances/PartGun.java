@@ -76,6 +76,7 @@ public class PartGun extends APart {
     private final ComputedVariable isSemiAutoVar;
     private final ComputedVariable canLockTargetsVar;
     private final ComputedVariable firingRequestedVar;
+    private final ComputedVariable ableToFireVar;
     public final ComputedVariable twoHandedVar;
 
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
@@ -276,6 +277,7 @@ public class PartGun extends APart {
         addVariable(this.blockReloadingVar = new ComputedVariable(this, "blockReloading"));
         addVariable(this.isSemiAutoVar = new ComputedVariable(this, "isSemiAuto"));
         addVariable(this.canLockTargetsVar = new ComputedVariable(this, "canLockTargets"));
+        addVariable(this.ableToFireVar = new ComputedVariable(this, "ableToFire"));
         addVariable(this.firingRequestedVar = new ComputedVariable(this, "firingRequested"));
         addVariable(this.twoHandedVar = new ComputedVariable(this, "isTwoHanded"));
     }
@@ -426,8 +428,8 @@ public class PartGun extends APart {
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!isSemiAutoVar.isActive || !firedSinceRequested);
-                if (ableToFire) {
+                //boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!isSemiAutoVar.isActive || !firedSinceRequested);
+                if (ableToFireVar.isActive) {
                     //Get current group and use it to determine firing offset.
                     //Don't calculate this if we already did on a prior firing command.
                     if (camOffset <= 0) {
@@ -682,6 +684,8 @@ public class PartGun extends APart {
         isSemiAutoVar.setTo(definition.gun.isSemiAuto ? 1 : 0, false);
         canLockTargetsVar.setTo(definition.gun.canLockTargets ? 1 : 0, false);
         twoHandedVar.setTo(definition.gun.isTwoHanded ? 1 : 0, false);
+        ableToFireVar.setTo(windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!isSemiAutoVar.isActive || !firedSinceRequested) ? 1 : 0, false);
+        firingRequestedVar.setTo(playerHoldingTrigger ? 1 : 0, false);
     }
 
     @Override
@@ -880,7 +884,7 @@ public class PartGun extends APart {
             }
 
             //If we are holding the trigger, request to fire.
-            if (playerHoldingTrigger || firingRequestedVar.isActive) {
+            if (firingRequestedVar.isActive) {
                 state = state.promote(GunState.FIRING_REQUESTED);
             } else {
                 state = state.demote(GunState.CONTROLLED);
