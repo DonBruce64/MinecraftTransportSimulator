@@ -189,23 +189,17 @@ public class InterfaceEventsModelLoader {
             InputStream stream;
             String rawPackInfo = location.getPath();
 
-            //If we are for an item JSON, try to find that JSON, or generate one automatically.
-            //If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
-            //Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
-            if (rawPackInfo.endsWith(".json")) {
-                //Strip the suffix from the packInfo, and then test to see if it's an internal
-                //JSON reference from an item JSON, or if it's the primary JSON for the item being loaded..
-                String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
-                if (!strippedSuffix.contains(".")) {
-                    //JSON reference.  Get the specified file.
-                    stream = InterfaceManager.coreInterface.getPackResource("/assets/" + domain + "/" + rawPackInfo);
-                    if (stream == null) {
-                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
-                            InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
-                        }
-                        throw new FileNotFoundException(rawPackInfo);
-                    }
-                } else {
+            //Try to get the specified file as-is first.
+            stream = InterfaceManager.coreInterface.getPackResource("/assets/" + domain + "/" + rawPackInfo);
+            if (stream == null) {
+                //If we are for an item JSON, try to find that JSON, or generate one automatically.
+                //If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
+                //Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
+                if (rawPackInfo.endsWith(".json")) {
+                    //Strip the suffix from the packInfo, and then test to see if it's an internal
+                    //JSON reference from an item JSON, or if it's the primary JSON for the item being loaded..
+                    String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
+
                     String resourcePath = "";
                     String itemTexturePath = "";
 
@@ -216,29 +210,34 @@ public class InterfaceEventsModelLoader {
                     //Get the pack information, and try to load the resource.
                     try {
                         String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf("."));
-                        String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(".") + 1);
-                        AItemPack<?> packItem = PackParser.getItem(packID, systemName);
-                        resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 
-                        //Try to load the item JSON, or create it if it doesn't exist.
-                        stream = InterfaceManager.coreInterface.getPackResource(resourcePath);
+                        //See if this is a built-in JSON with the pack specified.
+                        stream = InterfaceManager.coreInterface.getPackResource("/assets/" + packID + "/" + rawPackInfo);
                         if (stream == null) {
-                            //Get the actual texture path.
-                            itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+                            String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(".") + 1);
+                            AItemPack<?> packItem = PackParser.getItem(packID, systemName);
+                            resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 
-                            //Remove the "/assets/packID/" portion as it's implied with JSON.
-                            itemTexturePath = itemTexturePath.substring(("/assets/" + packID + "/").length());
+                            //Try to load the item JSON, or create it if it doesn't exist.
+                            stream = InterfaceManager.coreInterface.getPackResource(resourcePath);
+                            if (stream == null) {
+                                //Get the actual texture path.
+                                itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
 
-                            //Remove the .png suffix as it's also implied.
-                            itemTexturePath = itemTexturePath.substring(0, itemTexturePath.length() - ".png".length());
+                                //Remove the "/assets/packID/" portion as it's implied with JSON.
+                                itemTexturePath = itemTexturePath.substring(("/assets/" + packID + "/").length());
 
-                            //Need to add packID domain to this to comply with JSON domains.
-                            //If we don't, the PNG won't get sent to the right loader.
-                            itemTexturePath = packID + ":" + itemTexturePath;
+                                //Remove the .png suffix as it's also implied.
+                                itemTexturePath = itemTexturePath.substring(0, itemTexturePath.length() - ".png".length());
 
-                            //Generate fake JSON and return as stream to MC loader.
-                            String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + itemTexturePath + "\"}}";
-                            stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+                                //Need to add packID domain to this to comply with JSON domains.
+                                //If we don't, the PNG won't get sent to the right loader.
+                                itemTexturePath = packID + ":" + itemTexturePath;
+
+                                //Generate fake JSON and return as stream to MC loader.
+                                String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + itemTexturePath + "\"}}";
+                                stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+                            }
                         }
                     } catch (Exception e) {
                         if (enableDebug && ConfigSystem.settings.general.devMode.value) {
@@ -246,77 +245,77 @@ public class InterfaceEventsModelLoader {
                         }
                         throw new FileNotFoundException(rawPackInfo);
                     }
-                }
-            } else {
-                try {
-                    //First check if this is for an item or a model.
-                    boolean isItemPNG = rawPackInfo.contains("/items/") || rawPackInfo.contains("_item");
 
-                    //Strip off the auto-generated prefix and suffix data.
-                    String combinedPackInfo = rawPackInfo;
-                    combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
-
-                    //Get the pack information.
-                    //If we are ending in _item, it means we are getting a JSON for a modular-pack's item PNG.
-                    //Need to remove this suffix to get the correct systemName to look-up in the systems.
-                    String packID = domain;
-                    String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('/') + 1);
-                    if (systemName.endsWith("_item")) {
-                        systemName = systemName.substring(0, systemName.length() - "_item".length());
-                    }
-                    AItemPack<?> packItem = PackParser.getItem(packID, systemName);
-
-                    if (packItem != null) {
-                        //Get the actual resource path for this resource and return its stream.
-                        String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
-                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
-
-                        if (stream == null) {
-                            if (isItemPNG) {
-                                //We might not have this file, but we also might have a JSON-defined item here.
-                                //Try the JSON standards before throwing an error.
-                                String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
-                                stream = InterfaceManager.coreInterface.getPackResource(streamJSONLocation);
-                                if (stream == null) {
-                                    if (enableDebug && ConfigSystem.settings.general.devMode.value) {
-                                        if (streamLocation != null) {
-                                            InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
-                                        } else {
-                                            InterfaceManager.coreInterface.logError("Could not find JSON PNG: " + streamJSONLocation);
+                } else {
+                    try {
+                        //First check if this is for an item or a model.
+                        boolean isItemPNG = rawPackInfo.contains("/items/") || rawPackInfo.contains("_item");
+    
+                        //Strip off the auto-generated prefix and suffix data.
+                        String combinedPackInfo = rawPackInfo;
+                        combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
+    
+                        //Get the pack information.
+                        //If we are ending in _item, it means we are getting a JSON for a modular-pack's item PNG.
+                        //Need to remove this suffix to get the correct systemName to look-up in the systems.
+                        String packID = domain;
+                        String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('/') + 1);
+                        if (systemName.endsWith("_item")) {
+                            systemName = systemName.substring(0, systemName.length() - "_item".length());
+                        }
+                        AItemPack<?> packItem = PackParser.getItem(packID, systemName);
+    
+                        if (packItem != null) {
+                            //Get the actual resource path for this resource and return its stream.
+                            String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
+                            stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
+    
+                            if (stream == null) {
+                                if (isItemPNG) {
+                                    //We might not have this file, but we also might have a JSON-defined item here.
+                                    //Try the JSON standards before throwing an error.
+                                    String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
+                                    stream = InterfaceManager.coreInterface.getPackResource(streamJSONLocation);
+                                    if (stream == null) {
+                                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
+                                            if (streamLocation != null) {
+                                                InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+                                            } else {
+                                                InterfaceManager.coreInterface.logError("Could not find JSON PNG: " + streamJSONLocation);
+                                            }
                                         }
+                                        throw new FileNotFoundException(rawPackInfo);
+                                    }
+                                } else {
+                                    if (enableDebug && ConfigSystem.settings.general.devMode.value) {
+                                        InterfaceManager.coreInterface.logError("Could not find OBJ PNG: " + streamLocation);
                                     }
                                     throw new FileNotFoundException(rawPackInfo);
                                 }
-                            } else {
+                            }
+                        } else {
+                            //No pack item for this texture.  Must be an internal texture for other things.
+                            //In this case, we just get the stream exact location.
+                            String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
+                            stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
+                            if (stream == null) {
                                 if (enableDebug && ConfigSystem.settings.general.devMode.value) {
-                                    InterfaceManager.coreInterface.logError("Could not find OBJ PNG: " + streamLocation);
+                                    InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
                                 }
                                 throw new FileNotFoundException(rawPackInfo);
                             }
                         }
-                    } else {
-                        //No pack item for this texture.  Must be an internal texture for other things.
-                        //In this case, we just get the stream exact location.
-                        String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
-                        stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
-                        if (stream == null) {
+                    } catch (Exception e) {
+                        if (e instanceof FileNotFoundException) {
+                            throw e;
+                        } else {
                             if (enableDebug && ConfigSystem.settings.general.devMode.value) {
-                                InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
+                                InterfaceManager.coreInterface.logError("Could not parse which item PNG to get from: " + rawPackInfo);
                             }
                             throw new FileNotFoundException(rawPackInfo);
                         }
                     }
-                } catch (Exception e) {
-                    if (e instanceof FileNotFoundException) {
-                        throw e;
-                    } else {
-                        if (enableDebug && ConfigSystem.settings.general.devMode.value) {
-                            InterfaceManager.coreInterface.logError("Could not parse which item PNG to get from: " + rawPackInfo);
-                        }
-                        throw new FileNotFoundException(rawPackInfo);
-                    }
                 }
-
             }
 
             //Return whichever stream we found.
@@ -326,10 +325,14 @@ public class InterfaceEventsModelLoader {
         @Override
         public boolean resourceExists(ResourceLocation location) {
             try {
-                enableDebug = false;
-                boolean returnValue = getInputStream(location) != null;
-                enableDebug = true;
-                return returnValue;
+                if (!location.getPath().contains("blockstates/") && !location.getPath().contains("armatures/") && !location.getPath().contains(".mcmeta") && !location.getPath().contains("advancements/") && !location.getPath().contains("recipes/") && !location.getPath().contains("lang/") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"))) {
+                    enableDebug = false;
+                    boolean returnValue = getInputStream(location) != null;
+                    enableDebug = true;
+                    return returnValue;
+                } else {
+                    return false;
+                }
             } catch (IOException e) {
                 return false;
             }
