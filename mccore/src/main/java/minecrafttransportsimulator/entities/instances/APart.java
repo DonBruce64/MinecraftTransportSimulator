@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -328,6 +329,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 world.spawnExplosion(position, 0F, false, false);
             }
         }
+    }
+
+    @Override
+    public void destroy(BoundingBox box) {
+        //Don't remove normally, remove as a part.
+        entityOn.removePart(this, true, true);
     }
 
     @Override
