@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
@@ -77,9 +78,9 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
 
-    private static final Map<String, RenderType> renderTypes = new HashMap<>();
-    private static final Map<RenderableData, BufferData> buffers = new HashMap<>();
-    private static final Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static final ConcurrentHashMap<String, RenderType> renderTypes = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RenderableData, BufferData> buffers = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RenderType, List<RenderData>> queuedRenders = new ConcurrentHashMap<>();
     private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
     @SuppressWarnings("deprecation")
