@@ -253,10 +253,7 @@ public class InterfaceLoader {
     }
 
     public void onPostConstruction(FMLLoadCompleteEvent event) {
-        //Populate language system, since we now know we have a language class.
         if (FMLEnvironment.dist.isClient()) {
-            LanguageSystem.populateNames();
-
             //Put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
