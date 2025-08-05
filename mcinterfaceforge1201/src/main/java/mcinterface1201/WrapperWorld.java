@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +72,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BonemealableBlock;
@@ -80,7 +80,6 @@ import net.minecraft.world.level.block.ConcretePowderBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.GrassBlock;
-import net.minecraft.world.level.block.GravelBlock;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.SlabBlock;
@@ -88,7 +87,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
@@ -98,6 +96,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -437,25 +436,32 @@ public class WrapperWorld extends AWrapperWorld {
         return state.getBlock().getFriction(state, world, pos, null);
     }
 
-    private static HashMap<TagKey<Block>, BlockMaterial> blockTagMap = new HashMap<>();
-    private static HashMap<TagKey<Fluid>, BlockMaterial> fluidTagMap = new HashMap<>();
+    private static final HashMap<TagKey<?>, BlockMaterial> tagMap = new LinkedHashMap<>();
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
-        if (blockTagMap.isEmpty()) {
-            //FIXME decide what to do about other materials.
-            //blockTagMap.put(BlockTags.CLAY, BlockMaterial.CLAY);
-            blockTagMap.put(BlockTags.DIRT, BlockMaterial.DIRT);
-            blockTagMap.put(BlockTags.ICE, BlockMaterial.ICE);
-            blockTagMap.put(BlockTags.LEAVES, BlockMaterial.LEAVES);
-            //blockTagMap.put(BlockTags.METAL, BlockMaterial.METAL);
-            blockTagMap.put(BlockTags.SAND, BlockMaterial.SAND);
-            blockTagMap.put(BlockTags.SNOW, BlockMaterial.SNOW);
-            //blockTagMap.put(BlockTags.STONE, BlockMaterial.STONE);
-            blockTagMap.put(BlockTags.PLANKS, BlockMaterial.WOOD);
-            blockTagMap.put(BlockTags.WOOL, BlockMaterial.WOOL);
+        if (tagMap.isEmpty()) {
+            tagMap.put(Tags.Blocks.GRAVEL, BlockMaterial.GRAVEL);
+            tagMap.put(BlockTags.DIRT, BlockMaterial.DIRT);
+            tagMap.put(Tags.Blocks.GLASS, BlockMaterial.GLASS);
+            tagMap.put(BlockTags.ICE, BlockMaterial.ICE);
+            tagMap.put(BlockTags.LEAVES, BlockMaterial.LEAVES);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_RAW_IRON, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_IRON, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_RAW_GOLD, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_GOLD, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_RAW_COPPER, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_COPPER, BlockMaterial.METAL);
+            tagMap.put(Tags.Blocks.STORAGE_BLOCKS_NETHERITE, BlockMaterial.METAL);
+            tagMap.put(BlockTags.SAND, BlockMaterial.SAND);
+            tagMap.put(BlockTags.SNOW, BlockMaterial.SNOW);
+            tagMap.put(Tags.Blocks.STONE, BlockMaterial.STONE);
+            tagMap.put(Tags.Blocks.COBBLESTONE, BlockMaterial.STONE);
+            tagMap.put(BlockTags.PLANKS, BlockMaterial.WOOD);
+            tagMap.put(BlockTags.WOODEN_FENCES, BlockMaterial.WOOD);
+            tagMap.put(BlockTags.WOOL, BlockMaterial.WOOL);
 
-            fluidTagMap.put(FluidTags.LAVA, BlockMaterial.LAVA);
-            fluidTagMap.put(FluidTags.WATER, BlockMaterial.WATER);
+            tagMap.put(FluidTags.LAVA, BlockMaterial.LAVA);
+            tagMap.put(FluidTags.WATER, BlockMaterial.WATER);
         }
         BlockPos pos = BlockPos.containing(position.x, position.y, position.z);
         if (world.isEmptyBlock(pos)) {
@@ -468,16 +474,9 @@ public class WrapperWorld extends AWrapperWorld {
                 return BlockMaterial.GRASS;
             }
 
-            //Check for specific blocks without tags.
-            if (block instanceof AbstractGlassBlock) {
-                return BlockMaterial.GLASS;
-            } else if (block instanceof GravelBlock) {
-                return BlockMaterial.GRAVEL;
-            }
-
             //Check block tags.
             for (TagKey<?> tagKey : Streams.concat(state.getTags(), state.getFluidState().getTags()).toList()) {
-                BlockMaterial material = blockTagMap.get(tagKey);
+                BlockMaterial material = tagMap.get(tagKey);
                 if (material != null) {
                     return material;
                 }
