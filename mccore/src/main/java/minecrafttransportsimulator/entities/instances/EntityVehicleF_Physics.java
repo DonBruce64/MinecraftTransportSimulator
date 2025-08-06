@@ -776,8 +776,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> beingFueled ? 1 : 0, false);
             case ("thrust"):
                 return new ComputedVariable(this, variable, partialTicks -> thrustForceValue, false);
-            case ("gravityFactor"):
-                return new ComputedVariable(this, variable, partialTicks -> gravityFactorVar.currentValue, false);
             case ("vertical_acceleration"):
                 return new ComputedVariable(this, variable, partialTicks -> -((Math.toRadians(rotation.angles.x) * 20F) * indicatedSpeed), false);
             case ("lateral_acceleration"):
