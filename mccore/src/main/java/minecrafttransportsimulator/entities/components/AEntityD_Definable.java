@@ -692,8 +692,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		            AEntityF_Multipart<?> playerRidingMasterEntity = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
                     playerRidingThisEntity = playerRidingMasterEntity != null && (playerRidingMasterEntity.equals(this) || playerRidingMasterEntity.allParts.contains(this));
 		            playerRidingOpenTopped = playerRidingMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) playerRidingMasterEntity).definition.motorized.hasOpenTop;
-                    boolean weAreOpenTopped = this instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) this).definition.motorized.hasOpenTop;
-                    shouldSoundStartPlaying = ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : (!soundDef.isInterior || weAreOpenTopped));
+
+                    AEntityF_Multipart<?> soundMasterEntity = this instanceof APart ? ((APart) this).masterEntity : (this instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) this : null);
+                    boolean weAreOpenTopped = soundMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) soundMasterEntity).definition.motorized.hasOpenTop;
+                    shouldSoundStartPlaying = weAreOpenTopped || ((playerRidingThisEntity && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior)) ? !soundDef.isExterior : !soundDef.isInterior);
                 }
 
                 //Next, check the distance.
