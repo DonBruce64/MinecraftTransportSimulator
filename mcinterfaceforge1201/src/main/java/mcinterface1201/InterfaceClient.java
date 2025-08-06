@@ -128,8 +128,13 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public void setFOV(float setting) {
-        Minecraft.getInstance().options.fov().set((int) setting);
+        ((Ifov) ((Object) Minecraft.getInstance().options.fov())).setManual((int) setting);
     }
+
+    //Linked to the OptionInstanceMixin so we can implement a common interface.
+    public static interface Ifov {
+        public void setManual(Integer value);
+    };
 
     @Override
     public float getMouseSensitivity() {
