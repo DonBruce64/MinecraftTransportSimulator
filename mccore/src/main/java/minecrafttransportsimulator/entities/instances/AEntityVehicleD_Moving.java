@@ -61,6 +61,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private boolean updateGroundDevicesRequest;
     private int lastBlockCollisionBoxesCount;
     private int crashDebounce;
+    private int blockBreakDelay;
     public double groundVelocity;
     public double turningForce;
     public double weightTransfer = 0;
@@ -134,6 +135,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.clientDeltaP = serverDeltaP;
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
+        this.blockBreakDelay = 500;
         
         addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
         addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
@@ -155,6 +157,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         super.update();
         world.beginProfiling("VehicleD_Level", true);
         //Update block collision box list with current boxes.
+        if (blockBreakDelay > 0) {
+            --blockBreakDelay;
+        }
         allBlockCollisionBoxes.clear();
         for (BoundingBox box : allCollisionBoxes) {
             if (box.collisionTypes.contains(CollisionType.BLOCK)) {
@@ -307,6 +312,21 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //Really, we should just do a state-change check since we could enable/disable these at the same time
             //which would still skip this check.
             lastBlockCollisionBoxesCount = allBlockCollisionBoxes.size();
+        }
+    }
+
+    @Override
+    public void removePart(APart part, boolean doFinalTick, boolean notifyClients) {
+        super.removePart(part, doFinalTick, notifyClients);
+        boolean foundGroundDevice = false;
+        for (APart testPart : allParts) {
+            if (testPart instanceof PartGroundDevice) {
+                foundGroundDevice = true;
+                break;
+            }
+        }
+        if (!foundGroundDevice) {
+            blockBreakDelay = 500;
         }
     }
 
@@ -1026,7 +1046,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                 hardnessHitThisTick += blockHardness;
                             }
                             //If we are supposed to break the block, do so now.
-                            if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && ticksExisted > 500) {
+                            if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockBreakDelay == 0) {
                                 //Scale motion back for broken block, and break block and damage vehicle.
                                 motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
                                 if (!world.isClient()) {
