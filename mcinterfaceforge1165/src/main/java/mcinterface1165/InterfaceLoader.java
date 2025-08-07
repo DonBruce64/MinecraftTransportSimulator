@@ -1,11 +1,12 @@
 package mcinterface1165;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.Map.Entry;
 
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -92,16 +93,26 @@ public class InterfaceLoader {
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
-        List<File> packDirectories = new ArrayList<>();
+        Set<File> packDirectories = new HashSet<>(2);
+
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
+        }
 
+        //Add this mod jar parent directory, other mods may also be loaded also from there. #1943
+        IModFile modFile = ModList.get().getModFileById(MODID).getFile();
+        Path thizJarPath = modFile.getFilePath();
+        if (thizJarPath != null) {
+            packDirectories.add(thizJarPath.getParent().toFile());
+        }
+
+        if (packDirectories.isEmpty()) {
+            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+        } else {
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
-        } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
 
         //Create all pack items.  We need to do this before anything else.
