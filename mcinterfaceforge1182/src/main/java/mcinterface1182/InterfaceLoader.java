@@ -108,7 +108,7 @@ public class InterfaceLoader {
             packDirectories.add(modDirectory);
         }
 
-        //Add this mod jar parent directory, other mods may also be loaded also from there. #1943
+        //Add this mod jar parent directory, other mods/packs may be loaded from there as well. #1943
         IModFile modFile = ModList.get().getModFileById(MODID).getFile();
         Path thizJarPath = modFile.getFilePath();
         if (thizJarPath != null) {
