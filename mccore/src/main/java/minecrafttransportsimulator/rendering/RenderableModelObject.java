@@ -393,7 +393,7 @@ public class RenderableModelObject {
         //Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
         //We need to undo the offset of the tread part for this routine.
         if (!(tread.entityOn instanceof APart)) {
-            renderable.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
+            renderable.transform.applyTranslation(0, -tread.localOffset.y / tread.entityOn.scale.y, -tread.localOffset.z / tread.entityOn.scale.z);
         }
 
         //Add initial translation for the first point

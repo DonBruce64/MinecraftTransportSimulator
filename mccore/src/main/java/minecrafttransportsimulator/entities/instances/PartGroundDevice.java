@@ -67,7 +67,7 @@ public class PartGroundDevice extends APart {
         super(entityOn, placingPlayer, placementDefinition, item, data);
         this.prevLocalOffset = localOffset.copy();
         this.zeroReferencePosition = position.copy();
-        this.wheelbasePoint = placementDefinition.pos.copy();
+        this.wheelbasePoint = placementDefinition.pos.copy().multiply(scale);
         AEntityF_Multipart<?> parent = entityOn;
         while(parent instanceof APart) {
             APart parentPart = (APart) parent;
