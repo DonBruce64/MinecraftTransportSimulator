@@ -175,7 +175,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Update forced camera mode if we are supposed to be forcing it.
         //We need to one-shot this though to ensure that we don't sent infinite packets.
         world.beginProfiling("CameraModeCheck", true);
-        if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
+        if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && riderIsClient && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
         }else if(requestedForcedCamera && activeCamera != null) {
         	requestedForcedCamera = false;
