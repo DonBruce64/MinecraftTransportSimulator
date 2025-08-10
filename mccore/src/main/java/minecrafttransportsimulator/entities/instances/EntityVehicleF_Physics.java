@@ -251,7 +251,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         ballastControlVar.setTo(elevatorInputVar.currentValue, false);
         ballastVolumeVar.setTo(definition.motorized.ballastVolume, false);
         waterBallastFactorVar.setTo(definition.motorized.waterBallastFactor, false);
-        gravityFactorVar.setTo(definition.motorized.gravityFactor,false);
+        if (definition.motorized.gravityFactor != 0) {
+            gravityFactorVar.setTo(definition.motorized.gravityFactor,false);
+        } else if (!definition.motorized.isAircraft) {
+            gravityFactorVar.setTo(ConfigSystem.settings.general.gravityFactor.value,false);
+        } else {
+            gravityFactorVar.setTo(1,false);
+        }
         axleRatioVar.setTo(definition.motorized.axleRatio, false);
     }
 
@@ -462,14 +468,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
 
             //Finally, get gravity.  Blimps sink when dead.
-            if (definition.motorized.gravityFactor != 0) {
-                gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245 * gravityFactorVar.currentValue : 0;
-            } else if (!definition.motorized.isAircraft) {
-                gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245 * ConfigSystem.settings.general.gravityFactor.value: 0;
-            } else {
-                gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245 : 0;
-            }
-
+            gravitationalForce = !ballastVolumeVar.isActive || outOfHealth ? currentMass * 0.0245D * gravityFactorVar.currentValue : 0;
 
             if (waterBallastFactorVar.isActive && world.isBlockLiquid(position)) {
                 gravitationalForce -= gravitationalForce * waterBallastFactorVar.currentValue;
