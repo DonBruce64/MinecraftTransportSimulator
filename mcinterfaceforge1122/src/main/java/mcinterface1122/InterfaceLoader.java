@@ -55,7 +55,7 @@ public final class InterfaceLoader {
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
-        List<File> packDirectories = new ArrayList<>();
+        List<File> packDirectories = new ArrayList<>(2);
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
