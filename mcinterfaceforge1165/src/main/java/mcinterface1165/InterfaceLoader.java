@@ -102,9 +102,9 @@ public class InterfaceLoader {
             }
 
             //Add this mod jar parent directory, other mods/packs may be loaded from there as well. #1943
-            File modFile = ModList.get().getModFileById(MODID).getFile().getFilePath().getParent().toFile().getCanonicalFile();
-            if (!packDirectories.contains(modFile)) {
-                packDirectories.add(modFile);
+            File modFileParent = ModList.get().getModFileById(MODID).getFile().getFilePath().getParent().toFile().getCanonicalFile();
+            if (!packDirectories.contains(modFileParent)) {
+                packDirectories.add(modFileParent);
             }
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("Something went wrong while evaluating mods directories! " + e.getMessage());
