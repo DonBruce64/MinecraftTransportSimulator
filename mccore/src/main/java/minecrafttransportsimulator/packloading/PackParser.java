@@ -142,7 +142,7 @@ public final class PackParser {
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
      * for pack definitions.  After this, they will be created and loaded into the main mod.
      */
-    public static void parsePacks(Set<File> packDirectories) {
+    public static void parsePacks(List<File> packDirectories) {
         //First get all pack definitions from the passed-in directories.
         for (File directory : packDirectories) {
             for (File file : directory.listFiles()) {

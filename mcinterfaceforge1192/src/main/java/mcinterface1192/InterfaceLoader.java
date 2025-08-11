@@ -1,7 +1,7 @@
 package mcinterface1192;
 
 import java.io.File;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +9,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,23 +101,26 @@ public class InterfaceLoader {
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
-        Set<File> packDirectories = new HashSet<>(2);
+        List<File> packDirectories = new ArrayList<>(2);
 
-        File modDirectory = new File(gameDirectory, "mods");
-        if (modDirectory.exists()) {
-            packDirectories.add(modDirectory);
+        try {
+            File modDirectory = new File(gameDirectory, "mods").getCanonicalFile();
+            if (modDirectory.exists()) {
+                packDirectories.add(modDirectory);
+            } else {
+                InterfaceManager.coreInterface.logError("Could not find mods directory! Game directory is confirmed to: " + gameDirectory);
+            }
+
+            //Add this mod jar parent directory, other mods/packs may be loaded from there as well. #1943
+            File modFile = ModList.get().getModFileById(MODID).getFile().getFilePath().getParent().toFile().getCanonicalFile();
+            if (!packDirectories.contains(modFile)) {
+                packDirectories.add(modFile);
+            }
+        } catch (IOException e) {
+            InterfaceManager.coreInterface.logError("Failed to get canonical file! " + e.getMessage());
         }
 
-        //Add this mod jar parent directory, other mods/packs may be loaded from there as well. #1943
-        IModFile modFile = ModList.get().getModFileById(MODID).getFile();
-        Path thizJarPath = modFile.getFilePath();
-        if (thizJarPath != null) {
-            packDirectories.add(thizJarPath.getParent().toFile());
-        }
-
-        if (packDirectories.isEmpty()) {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
-        } else {
+        if (!packDirectories.isEmpty()) {
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
