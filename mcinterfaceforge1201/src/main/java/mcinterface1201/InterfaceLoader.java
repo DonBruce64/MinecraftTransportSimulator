@@ -1,7 +1,6 @@
 package mcinterface1201;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -129,8 +128,8 @@ public class InterfaceLoader {
             if (!packDirectories.contains(modFile)) {
                 packDirectories.add(modFile);
             }
-        } catch (IOException e) {
-            InterfaceManager.coreInterface.logError("Failed to get canonical file! " + e.getMessage());
+        } catch (Exception e) {
+            InterfaceManager.coreInterface.logError("Something went wrong while evaluating mods directories! " + e.getMessage());
         }
 
         if (!packDirectories.isEmpty()) {
