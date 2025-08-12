@@ -67,6 +67,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
 
+    //Open top.
+    public final ComputedVariable openTopVar;
+
     //External state control.
     public boolean turningLeft;
     public boolean turningRight;
@@ -151,6 +154,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
+        addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
         addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
@@ -246,6 +250,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 flapActualAngleVar.setTo(flapDesiredAngleVar.currentValue, false);
             }
         }
+        openTopVar.setActive(definition.motorized.hasOpenTop, false);
 
         dragCoefficientVar.setTo(definition.motorized.dragCoefficient, false);
         ballastControlVar.setTo(elevatorInputVar.currentValue, false);

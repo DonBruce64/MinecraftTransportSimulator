@@ -670,9 +670,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             AEntityF_Multipart<?> playerRidingMasterEntity = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
             boolean cameraIsInterior = InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON && (CameraSystem.activeCamera == null || CameraSystem.activeCamera.isInterior);
             boolean playerRidingThisEntity = playerRidingMasterEntity != null && (playerRidingMasterEntity.equals(this) || playerRidingMasterEntity.allParts.contains(this));
-            boolean playerRidingExteriorSeat = entityRiding instanceof PartSeat && ((PartSeat) entityRiding).placementDefinition.isExterior;
-            boolean weAreOpenTop = soundMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) soundMasterEntity).definition.motorized.hasOpenTop;
-            boolean playerRidingClosedTop = playerRidingMasterEntity instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) playerRidingMasterEntity).definition.motorized.hasOpenTop && cameraIsInterior && !playerRidingExteriorSeat;
+            boolean playerRidingExteriorSeat = entityRiding instanceof PartSeat && ((PartSeat) entityRiding).isExteriorVar.isActive;
+            boolean weAreOpenTop = soundMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) soundMasterEntity).openTopVar.isActive;
+            boolean playerRidingClosedTop = playerRidingMasterEntity instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) playerRidingMasterEntity).openTopVar.isActive && cameraIsInterior && !playerRidingExteriorSeat;
 
             for (JSONSound soundDef : allSoundDefs) {
                 if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {

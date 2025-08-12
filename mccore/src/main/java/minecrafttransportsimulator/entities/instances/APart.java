@@ -76,6 +76,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final boolean isMirrored;
     private boolean requestedForcedCamera;
     private final ComputedVariable newlyAddedVar;
+    public final ComputedVariable isExteriorVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -156,7 +157,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
-        addVariable(newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
         }
@@ -287,6 +289,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public boolean requiresDeltaUpdates() {
         return entityOn.requiresDeltaUpdates() || isMoveable || super.requiresDeltaUpdates();
+    }
+
+    @Override
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        isExteriorVar.setActive(placementDefinition.isExterior, false);
     }
 
     @Override
