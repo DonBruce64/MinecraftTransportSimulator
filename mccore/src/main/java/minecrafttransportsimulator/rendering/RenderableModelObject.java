@@ -354,10 +354,6 @@ public class RenderableModelObject {
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
-        //Treads only render on solid passes.
-        if (treadPoints != null && blendingEnabled) {
-            return false;
-        }
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
             return false;
