@@ -329,7 +329,12 @@ public final class PartInteractable extends APart {
             case ("interactable_remaining"):
                 return new ComputedVariable(this, variable, partialTicks -> crafter != null ? crafter.ticksLeftToCraft : 0, false);
             default:
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                if (variable.startsWith("interactable_fluid_")) {
+                    final String fluidName = variable.substring(variable.lastIndexOf("_") + 1);
+                    return new ComputedVariable(this, variable, partialTicks -> tank.getFluid().equals(fluidName) ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
         }
     }
 
