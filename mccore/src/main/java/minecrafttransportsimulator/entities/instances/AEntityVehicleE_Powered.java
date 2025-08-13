@@ -173,11 +173,11 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         } else if (!outOfHealth) {
             electricPower = Math.max(0, Math.min(batteryCapacityVar.currentValue, electricPower -= electricUsageVar.currentValue));
             electricFlow = electricUsageVar.currentValue;
-            electricUsageVar.setTo(0, true);
+            electricUsageVar.setTo(0, false);
         } else {
             electricPower = 0;
             electricFlow = 0;
-            electricUsageVar.setTo(0, true);
+            electricUsageVar.setTo(0, false);
         }
 
         //Adjust gear variables.
