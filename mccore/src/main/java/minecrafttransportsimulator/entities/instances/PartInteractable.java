@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -101,6 +102,8 @@ public final class PartInteractable extends APart {
                 }
                 case CRAFTING_TABLE: {
                     player.openCraftingGUI();
+                    playersInteracting.add(player);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
                     break;
                 }
                 case JERRYCAN:
