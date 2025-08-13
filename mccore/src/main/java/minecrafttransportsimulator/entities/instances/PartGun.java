@@ -386,7 +386,7 @@ public class PartGun extends APart {
             if (!world.isClient()) {
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
-                if (!blockReloadingVar.isActive && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+                if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
                     if (isHandHeld) {
                         if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || autoReloadVar.isActive) {
                             //Check the player's inventory for bullets.
