@@ -1036,26 +1036,27 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (box.updateCollisions(world, collisionMotion, true)) {
                 float hardnessHitThisBox = 0;
                 boolean inhibitMovement = false;
+                boolean hitBlock = false;
                 for (Point3D blockPosition : box.collidingBlockPositions) {
                     float blockHardness = world.getBlockHardness(blockPosition);
                     if (!world.isBlockLiquid(blockPosition)) {
-                        if (blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
-                            hardnessHitThisBox += blockHardness;
-                            if (collisionMotion.y > -0.01) {
-                                //Don't want to blow up from falling fast.
+                        if (blockBreakDelay == 0 && blockHardness >= 0) {
+                            hitBlock = true;
+                            if (blockHardness <= velocity * currentMass / 250F) {
+                                hardnessHitThisBox += blockHardness;
                                 hardnessHitThisTick += blockHardness;
-                            }
-                            //If we are supposed to break the block, do so now.
-                            if (ConfigSystem.settings.damage.vehicleBlockBreaking.value && blockBreakDelay == 0) {
-                                //Scale motion back for broken block, and break block and damage vehicle.
-                                motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
-                                if (!world.isClient()) {
-                                    world.destroyBlock(blockPosition, true);
-                                    if (box.groupDef != null && blockHardness > 0) {
-                                        damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
+                                //If we are supposed to break the block, do so now.
+                                if (ConfigSystem.settings.damage.vehicleBlockBreaking.value) {
+                                    //Scale motion back for broken block, and break block and damage vehicle.
+                                    motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
+                                    if (!world.isClient()) {
+                                        world.destroyBlock(blockPosition, true);
+                                        if (box.groupDef != null && blockHardness > 0) {
+                                            damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
+                                        }
                                     }
+                                    continue;
                                 }
-                                continue;
                             }
                         }
                         //Didn't break this block, flag us to stop moving.
@@ -1064,21 +1065,42 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 //If we hit too many blocks.  Either remove part this is a box on, or destroy us.
-                //If we didn't, reduce health if applicable
+                //If we didn't, reduce health if applicable.
+                //Use crash speed if defined, otherwise use default auto-hardness logic.
                 if (!world.isClient()) {
-                    if (ConfigSystem.settings.damage.vehicleDestruction.value && hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
-                        APart partHit = getPartWithBox(box);
-                        if (partHit != null) {
-                            hardnessHitThisTick -= hardnessHitThisBox;
-                            partHit.remove();
-                        } else {
-                            destroy(box);
-                            return false;
+                    if (ConfigSystem.settings.damage.vehicleDestruction.value) {
+                        boolean destroyThisHit = false;
+                        if (definition.motorized.crashSpeedMax > 0) {
+                            if (hitBlock) {
+                                double scaledVelocity = velocity * 20;
+                                if (crashDebounce == 0 && scaledVelocity > definition.motorized.crashSpeedMin) {
+                                    double damage = definition.general.health * (scaledVelocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin);
+                                    if (damage >= definition.general.health) {
+                                        if (scaledVelocity > definition.motorized.crashSpeedDestroyed) {
+                                            destroyThisHit = true;
+                                        } else {
+                                            attack(new Damage(definition.general.health, null, null, null, null));
+                                        }
+                                    } else {
+                                        attack(new Damage(definition.general.health * (scaledVelocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin), null, null, null, null));
+                                    }
+                                    //Need the debounce so we don't continously apply crash damage during a crash.
+                                    crashDebounce = 60;
+                                }
+                            }
+                        } else if (hardnessHitThisTick > currentMass / (0.75 + velocity) / 250F) {
+                            destroyThisHit = true;
                         }
-                    } else if (hardnessHitThisTick > 0 && definition.motorized.crashSpeedMax > 0 && velocity > definition.motorized.crashSpeedMin && crashDebounce == 0) {
-                        attack(new Damage(definition.general.health * (velocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin), null, null, null, null));
-                        //Need the debounce so we don't continously apply crash damage during a crash.
-                        crashDebounce = 60;
+                        if (destroyThisHit) {
+                            APart partHit = getPartWithBox(box);
+                            if (partHit != null) {
+                                hardnessHitThisTick -= hardnessHitThisBox;
+                                partHit.remove();
+                            } else {
+                                destroy(box);
+                                return false;
+                            }
+                        }
                     }
                 }
 

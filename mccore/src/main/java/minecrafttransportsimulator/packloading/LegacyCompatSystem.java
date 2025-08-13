@@ -362,6 +362,11 @@ public final class LegacyCompatSystem {
             definition.general.health = 100;
         }
 
+        //Set default crash speed totaled if not set.
+        if (definition.motorized.crashSpeedMax != 0 && definition.motorized.crashSpeedDestroyed == 0) {
+            definition.motorized.crashSpeedDestroyed = definition.motorized.crashSpeedMax;
+        }
+
         if (definition.plane != null) {
             definition.general.isAircraft = true;
             definition.motorized.hasFlaps = definition.plane.hasFlaps;
