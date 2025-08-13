@@ -428,7 +428,6 @@ public class PartGun extends APart {
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                //boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!isSemiAutoVar.isActive || !firedSinceRequested);
                 if (ableToFireVar.isActive) {
                     //Get current group and use it to determine firing offset.
                     //Don't calculate this if we already did on a prior firing command.
