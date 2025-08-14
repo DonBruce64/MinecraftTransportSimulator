@@ -498,10 +498,8 @@ public final class ControlSystem {
                         powered.engines.forEach(engine -> {
                             //If we don't have velocity, and we have the appropriate control, shift.
                             if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGearVar.currentValue >= 0 && powered.axialVelocity < 0.01F) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftNeutralVar, 1));
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftDownVar, 1));
                             } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGearVar.currentValue <= 0 && powered.axialVelocity < 0.01F) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftNeutralVar, 1));
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftUpVar, 1));
                             }
                         });
