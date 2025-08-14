@@ -51,11 +51,11 @@ public final class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 	    
-	LOGGER.info("Welcome to MTS VERSION:" + MODVER);
+        LOGGER.info("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
-        List<File> packDirectories = new ArrayList<>();
+        List<File> packDirectories = new ArrayList<>(2);
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
@@ -70,7 +70,7 @@ public final class InterfaceLoader {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
         } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceManager.coreInterface.logError("Could not find mods directory! Game directory is confirmed to: " + gameDirectory);
         }
 
         //Init language system.
