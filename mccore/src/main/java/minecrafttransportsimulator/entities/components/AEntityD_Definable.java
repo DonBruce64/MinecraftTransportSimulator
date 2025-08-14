@@ -922,6 +922,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return new ComputedVariable(this, variable, partialTicks -> !playersInteracting.isEmpty() ? 1 : 0, false);
             case ("player_crafteditem"):
                 return new ComputedVariable(this, variable, partialTicks -> playerCraftedItem ? 1 : 0, false);
+            case ("distance_client"):
+                return new ComputedVariable(this, variable, partialTicks -> position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition()), false);
             case ("config_simplethrottle"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0, false);
             case ("config_innerwindows"):
