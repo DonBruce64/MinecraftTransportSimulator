@@ -287,7 +287,7 @@ public final class ControlSystem {
     private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, ComputedVariable variable, double dampenRate) {
         if (axis.isJoystickActive()) {
             double axisValue = axis.getAxisState(false);
-            if (Double.isNaN(axisValue)) {
+            if (axisValue == 0) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(variable, 0));
             } else {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(variable, bounds * (-1 + 2 * axisValue)));
@@ -901,7 +901,7 @@ public final class ControlSystem {
 
         private double getAxisState(boolean ignoreDeadzone) {
             double pollValue = getMultistateValue();
-            if (ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.client.controlSettings.joystickDeadZone.value) {
+            if ((config.axisMaxTravel != config.axisMinTravel) && (ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.client.controlSettings.joystickDeadZone.value)) {
                 //Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
                 pollValue = Math.max(config.axisMinTravel, pollValue);
                 pollValue = Math.min(config.axisMaxTravel, pollValue);
@@ -917,7 +917,7 @@ public final class ControlSystem {
                 //Now return the value.
                 return pollValue;
             } else {
-                return Double.NaN;
+                return 0;
             }
         }
 

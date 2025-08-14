@@ -354,10 +354,6 @@ public class RenderableModelObject {
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
-        //Treads only render on solid passes.
-        if (treadPoints != null && blendingEnabled) {
-            return false;
-        }
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
             return false;
@@ -393,7 +389,7 @@ public class RenderableModelObject {
         //Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
         //We need to undo the offset of the tread part for this routine.
         if (!(tread.entityOn instanceof APart)) {
-            renderable.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
+            renderable.transform.applyTranslation(0, -tread.localOffset.y / tread.entityOn.scale.y, -tread.localOffset.z / tread.entityOn.scale.z);
         }
 
         //Add initial translation for the first point

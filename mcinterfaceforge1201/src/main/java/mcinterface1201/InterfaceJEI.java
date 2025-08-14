@@ -18,7 +18,6 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.network.chat.Component;
@@ -104,13 +103,13 @@ public class InterfaceJEI implements IModPlugin {
         private BenchRecipeCategory(ItemDecor benchItem, List<PackRecipeWrapper> benchRecipes, IGuiHelper guiHelper) {
             this.benchItem = benchItem;
             this.benchRecipes = benchRecipes;
-            this.background = guiHelper.createDrawable(new ResourceLocation(InterfaceManager.coreModID, "textures/guis/jei_crafting.png"), 0, 0, 134, 97);
+            this.background = guiHelper.createDrawable(new ResourceLocation(InterfaceLoader.MODID, "textures/guis/jei_crafting.png"), 0, 0, 134, 97);
             this.icon = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK, ((WrapperItemStack) benchItem.getNewStack(null)).stack);
         }
 
         @Override
         public RecipeType<PackRecipeWrapper> getRecipeType() {
-            return RecipeType.create(InterfaceManager.coreModID, benchItem.getRegistrationName(), PackRecipeWrapper.class);
+            return RecipeType.create(InterfaceLoader.MODID, benchItem.getRegistrationName(), PackRecipeWrapper.class);
         }
 
         @Override

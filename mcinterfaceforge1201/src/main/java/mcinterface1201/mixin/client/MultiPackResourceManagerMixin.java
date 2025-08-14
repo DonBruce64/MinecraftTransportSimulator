@@ -12,11 +12,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import mcinterface1201.InterfaceEventsModelLoader;
+import mcinterface1201.InterfaceLoader;
 import mcinterface1201.InterfaceSound;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.FallbackResourceManager;
@@ -29,6 +31,7 @@ public abstract class MultiPackResourceManagerMixin {
     @Shadow
     @Mutable
     private List<PackResources> packs;
+    private static boolean populatedLanguages;
 
     /**
      * Need this to add our packs to the fallback pack location to properly load.
@@ -39,8 +42,17 @@ public abstract class MultiPackResourceManagerMixin {
         packs2.addAll(packs);
         packs2.add(InterfaceEventsModelLoader.packPack);
         packs = packs2;
-        namespacedManagers.computeIfAbsent(InterfaceManager.coreModID, k -> new FallbackResourceManager(pType, InterfaceManager.coreModID)).push(InterfaceEventsModelLoader.packPack);
+        namespacedManagers.computeIfAbsent(InterfaceLoader.MODID, k -> new FallbackResourceManager(pType, InterfaceLoader.MODID)).push(InterfaceEventsModelLoader.packPack);
         PackParser.getAllPackIDs().forEach(packID -> namespacedManagers.computeIfAbsent(packID, k -> new FallbackResourceManager(pType, packID)).push(InterfaceEventsModelLoader.packPack));
+
+        //Need to do this here since languages happen on pack loading vs on boot.
+        //Keep checking until we get more than one: MC starts with only en_us on boot.
+        if (!populatedLanguages && InterfaceManager.clientInterface != null) {
+            if (InterfaceManager.clientInterface.getAllLanguages().size() > 1) {
+                LanguageSystem.populateNames();
+                populatedLanguages = true;
+            }
+        }
     }
 
     /**

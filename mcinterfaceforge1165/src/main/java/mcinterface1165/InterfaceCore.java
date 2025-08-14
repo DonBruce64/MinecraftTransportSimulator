@@ -38,7 +38,12 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public boolean isFluidValid(String fluidID) {
-        return ForgeRegistries.FLUIDS.containsKey(new ResourceLocation(fluidID));
+        for (ResourceLocation location : ForgeRegistries.FLUIDS.getKeys()) {
+            if (location.getPath().equals(fluidID)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

@@ -286,9 +286,11 @@ public class PartGun extends APart {
     public boolean interact(IWrapperPlayer player) {
         //Check to see if we have any bullets in our hands.
         //If so, try to re-load this gun with them.
-        IWrapperItemStack heldStack = player.getHeldStack();
-        if (tryToReload(heldStack, false) && !player.isCreative()) {
-            player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+        if (reloadDelayRemaining == 0) {
+            IWrapperItemStack heldStack = player.getHeldStack();
+            if (tryToReload(heldStack, false) && !player.isCreative()) {
+                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+            }
         }
         return true;
     }
@@ -387,6 +389,7 @@ public class PartGun extends APart {
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
                 if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+
                     if (isHandHeld) {
                         if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || autoReloadVar.isActive) {
                             //Check the player's inventory for bullets.

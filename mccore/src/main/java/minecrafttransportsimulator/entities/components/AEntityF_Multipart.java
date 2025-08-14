@@ -162,8 +162,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                 if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                    IWrapperEntity partRider = partToTransfer.rider;
                     partToTransfer.entityOn.removePart(partToTransfer, true, true);
-                    addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                    APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                    if (partRider != null) {
+                        newPart.setRider(partRider, false);
+                    }
                     return;
                 }
             }
@@ -183,8 +187,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
                                 if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
                                     IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                                    IWrapperEntity partRider = currentPart.rider;
                                     currentPart.entityOn.removePart(currentPart, true, true);
-                                    entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
+                                    APart newPart = entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
+                                    if (partRider != null) {
+                                        newPart.setRider(partRider, false);
+                                    }
                                     return;
                                 }
                             }

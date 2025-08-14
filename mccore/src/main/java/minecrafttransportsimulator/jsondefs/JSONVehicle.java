@@ -31,6 +31,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
 
+        @JSONDescription("Set this to true if you want the vehicle to have thrust vectoring.  False means only yaw-vectoring will occur for things like engine out situations.")
+        public boolean hasThrustVectoring;
+
         @JSONDescription("Tells MTS that this vehicle does not have a roof.  This is used only for the SoundSystem and lets MTS know that sounds should be quieter when inside this vehicle.  This does not have an effect when in third-person, however, as the camera is considered outside of the vehicle so having a top or not does not matter.")
         public boolean hasOpenTop;
 
@@ -167,11 +170,18 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
         public float waterBallastFactor;
 
-        @JSONDescription("The speed at which 0% damage will be applied during crashes.")
+        @ModifiableValue
+        @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
+        public float gravityFactor;
+
+        @JSONDescription("The speed at which 0% damage will be applied during crashes.  Crash damage values are optional and a default will be used if these are missing.")
         public float crashSpeedMin;
 
-        @JSONDescription("The speed at which 100% damage will be applied.  Leave at 0 to disable crash damage.")
+        @JSONDescription("The speed at which 100% damage will be applied.")
         public float crashSpeedMax;
+
+        @JSONDescription("The speed at which the vehicle will blow up and be destroyed.  Needs to be higher than crashSpeedMax.")
+        public float crashSpeedDestroyed;
 
         @JSONRequired
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
