@@ -360,10 +360,10 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (LivingEntity entity : world.getEntitiesOfClass(LivingEntity.class, WrapperWorld.convert(box))) {
-            if (entity.getVehicle() == null && !(entity instanceof Monster)) {
+            if (entity.getVehicle() == null && !(entity instanceof Player)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
-                        if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                        if (part instanceof PartSeat && part.rider == null) {
                             part.setRider(new WrapperEntity(entity), true);
                             break;
                         }
