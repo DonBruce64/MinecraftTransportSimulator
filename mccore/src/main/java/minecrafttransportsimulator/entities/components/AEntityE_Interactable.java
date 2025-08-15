@@ -292,6 +292,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             double amountActuallyNeeded = damageAmount - (currentDamage - box.groupDef.health);
             currentDamage = box.groupDef.health;
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(variable, amountActuallyNeeded));
+            getOrCreateVariable("collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_totaled").setActive(true, true);
         } else {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(variable, damageAmount));
         }
