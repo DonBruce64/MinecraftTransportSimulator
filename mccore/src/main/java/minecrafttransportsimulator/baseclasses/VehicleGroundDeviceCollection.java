@@ -136,13 +136,18 @@ public class VehicleGroundDeviceCollection {
         turningDistance = furthestFrontPoint - furthestRearPoint;
 
         //If we didn't find any ground devices to make us turn, check propellers in the water.
-        //If there is a propeller, we know we are a valid wheelbase system that can turn.
-        //If there isn't, then we're a barge that can't turn.
+        //If there is a propeller, we know we are a boat that can turn.
         if (turningDistance == 0) {
             for (APart part : vehicle.allParts) {
                 if (part instanceof PartPropeller) {
                     if (part.isInLiquid()) {
                         foundTurningDevice = true;
+                        if (part.localOffset.z > furthestFrontPoint) {
+                            furthestFrontPoint = part.localOffset.z;
+                        }
+                        if (part.localOffset.z < furthestRearPoint) {
+                            furthestRearPoint = part.localOffset.z;
+                        }
                     }
                 } else if (part instanceof PartGroundDevice) {
                     PartGroundDevice groundDevice = (PartGroundDevice) part;

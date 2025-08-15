@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -292,7 +293,7 @@ public class InterfaceSound implements IInterfaceSound {
     }
 
     @Override
-    public void addRadioSound(SoundInstance sound, List<Integer> buffers) {
+    public void addRadioSound(SoundInstance sound, Collection<Integer> buffers) {
         if (ALC.getFunctionProvider() != null && sourceGetFailures < 10) {
             //Set the sound's source buffer index.
             IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
@@ -336,7 +337,7 @@ public class InterfaceSound implements IInterfaceSound {
     }
 
     @Override
-    public int getFreeStationBuffer(Set<EntityRadio> playingRadios) {
+    public int getFreeStationBuffer(Collection<EntityRadio> playingRadios) {
         boolean freeBuffer = true;
         EntityRadio badRadio = null;
         AL10.alGetError();

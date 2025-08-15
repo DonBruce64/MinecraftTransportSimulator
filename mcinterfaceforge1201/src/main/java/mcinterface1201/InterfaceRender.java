@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
@@ -77,9 +78,9 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final List<GUIComponentItem> stacksToRender = new ArrayList<>();
 
-    private static final Map<String, RenderType> renderTypes = new HashMap<>();
-    private static final Map<RenderableData, BufferData> buffers = new HashMap<>();
-    private static final Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static final ConcurrentHashMap<String, RenderType> renderTypes = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RenderableData, BufferData> buffers = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RenderType, List<RenderData>> queuedRenders = new ConcurrentHashMap<>();
     private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
 
     @SuppressWarnings("deprecation")
@@ -99,8 +100,8 @@ public class InterfaceRender implements IInterfaceRender {
 
     public static void onIVRegisterShadersEvent(RegisterShadersEvent event) {
         try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_cutout_noshadows"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityCutoutNoshadowsShader = createdShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceLoader.MODID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation(InterfaceLoader.MODID, "mts_entity_cutout_noshadows"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityCutoutNoshadowsShader = createdShader);
         } catch (IOException e) {
             InterfaceManager.coreInterface.logError("COULD NOT LOAD SHADER FOR LIGHTS!  THIS WILL END BADLY FOR RENDERING!");
             e.printStackTrace();
@@ -592,11 +593,14 @@ public class InterfaceRender implements IInterfaceRender {
                     posestack.translate(0, 0, (float) (component.translation.z - 100));
                     if (component.scale != 1.0) {
                         posestack.scale(component.scale, component.scale, 1.0F);
+                        RenderSystem.applyModelViewMatrix();
                         mcGUI.renderItem(((WrapperItemStack) component.stackToRender).stack, (int) (component.translation.x / component.scale), (int) (-component.translation.y / component.scale) + 1);
                     } else {
+                        RenderSystem.applyModelViewMatrix();
                         mcGUI.renderItem(((WrapperItemStack) component.stackToRender).stack, (int) component.translation.x, (int) -component.translation.y);
                     }
                     posestack.popPose();
+                    RenderSystem.applyModelViewMatrix();
                 }
             }
             stacksToRender.clear();

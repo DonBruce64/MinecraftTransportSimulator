@@ -69,7 +69,11 @@ public class InterfaceRender implements IInterfaceRender {
         //Get normal model.
         IBlockState state = ((WrapperWorld) world).world.getBlockState(new BlockPos(position.x, position.y, position.z));
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(state);
-        return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
+        if (sprite != null) {
+            return new float[] { sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV() };
+        } else {
+            return new float[] { 0, 0, 0, 0 };
+        }
     }
 
     @Override

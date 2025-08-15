@@ -515,6 +515,8 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_ZOOM_I = new LanguageEntry("input.zoom_i", "ZoomIn");
     public static final LanguageEntry INPUT_ZOOM_O = new LanguageEntry("input.zoom_o", "ZoomOut");
     public static final LanguageEntry INPUT_CHANGEVIEW = new LanguageEntry("input.changeview", "ChangeView");
+    public static final LanguageEntry INPUT_LOOK_UD = new LanguageEntry("input.look_ud", "LookUpDown");
+    public static final LanguageEntry INPUT_LOOK_LR = new LanguageEntry("input.look_lr", "LookLeftRight");
     public static final LanguageEntry INPUT_LOOK_L = new LanguageEntry("input.look_l", "LookLeft");
     public static final LanguageEntry INPUT_LOOK_R = new LanguageEntry("input.look_r", "LookRight");
     public static final LanguageEntry INPUT_LOOK_U = new LanguageEntry("input.look_u", "LookUp");
@@ -552,7 +554,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
     public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 
-    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. If you have Receiver Gun Mod, un-install it (there is no config for this incopatibility).  Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors.");
+    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. If you have Receiver Gun Mod, un-install it (there is no config for this incopatibility).  If you have fixRTM, set expandPlayableSoundSlotCount to false.  Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors.");
     public static final LanguageEntry SYSTEM_SOUNDSYSTEM = new LanguageEntry("sytstem.soundsystem", "IMMERSIVE VEHICLES ERROR: Tried to play a sound but couldn't due to an audio system fault.  Do you have bad audio drivers?");
     public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s");
 }

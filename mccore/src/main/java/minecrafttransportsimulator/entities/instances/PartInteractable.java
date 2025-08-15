@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -101,6 +102,8 @@ public final class PartInteractable extends APart {
                 }
                 case CRAFTING_TABLE: {
                     player.openCraftingGUI();
+                    playersInteracting.add(player);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
                     break;
                 }
                 case JERRYCAN:
@@ -326,7 +329,12 @@ public final class PartInteractable extends APart {
             case ("interactable_remaining"):
                 return new ComputedVariable(this, variable, partialTicks -> crafter != null ? crafter.ticksLeftToCraft : 0, false);
             default:
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                if (variable.startsWith("interactable_fluid_")) {
+                    final String fluidName = variable.substring(variable.lastIndexOf("_") + 1);
+                    return new ComputedVariable(this, variable, partialTicks -> tank.getFluid().equals(fluidName) ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
         }
     }
 

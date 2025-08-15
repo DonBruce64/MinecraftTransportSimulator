@@ -23,7 +23,7 @@ public final class PartGroundDeviceFake extends PartGroundDevice {
     public void update() {
         super.update();
         if (!masterPart.isValid) {
-            remove();
+            masterPart.entityOn.removePart(this, false, false);
         }
     }
 

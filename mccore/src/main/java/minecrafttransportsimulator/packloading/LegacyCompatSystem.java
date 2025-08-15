@@ -365,6 +365,10 @@ public final class LegacyCompatSystem {
 
         if (definition.motorized.batteryCapacity == 0) {
             definition.motorized.batteryCapacity = 14;
+
+        //Set default crash speed totaled if not set.
+        if (definition.motorized.crashSpeedMax != 0 && definition.motorized.crashSpeedDestroyed == 0) {
+            definition.motorized.crashSpeedDestroyed = definition.motorized.crashSpeedMax;
         }
 
         if (definition.plane != null) {

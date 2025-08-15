@@ -399,6 +399,7 @@ public class InterfaceEventsEntityRendering {
                     this.bipedRightLeg.rotateAngleY = 0;
                     this.bipedRightLeg.rotateAngleZ = 0;
                     copyModelAngles(this.bipedRightLeg, this.bipedRightLegwear);
+
                 }
                 this.bipedLeftArm.rotateAngleX = (float) leftArmAngles.x;
                 this.bipedLeftArm.rotateAngleY = (float) leftArmAngles.y;
@@ -408,6 +409,20 @@ public class InterfaceEventsEntityRendering {
                 this.bipedRightArm.rotateAngleY = (float) rightArmAngles.y;
                 this.bipedRightArm.rotateAngleZ = (float) rightArmAngles.z;
                 copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
+
+                //Copy model information to the core model in case other mods are referencing it.
+                copyModelAngles(this.bipedLeftLeg, base.bipedLeftLeg);
+                copyModelAngles(this.bipedLeftLeg, base.bipedLeftLegwear);
+                copyModelAngles(this.bipedRightLeg, base.bipedRightLeg);
+                copyModelAngles(this.bipedRightLeg, base.bipedRightLegwear);
+                copyModelAngles(this.bipedLeftArm, base.bipedLeftArm);
+                copyModelAngles(this.bipedLeftArm, base.bipedLeftArmwear);
+                copyModelAngles(this.bipedRightArm, base.bipedRightArm);
+                copyModelAngles(this.bipedRightArm, base.bipedRightArmwear);
+                copyModelAngles(this.bipedHead, base.bipedHead);
+                copyModelAngles(this.bipedHeadwear, base.bipedHeadwear);
+                copyModelAngles(this.bipedBody, base.bipedBody);
+                copyModelAngles(this.bipedBodyWear, base.bipedBodyWear);
             }
         }
     }

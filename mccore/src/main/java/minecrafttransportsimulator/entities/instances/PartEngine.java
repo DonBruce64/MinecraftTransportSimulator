@@ -116,6 +116,7 @@ public class PartEngine extends APart {
             this.temp = data.getDouble("temp");
             this.pressure = data.getDouble("pressure");
             this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
+            this.hours = data.getDouble("hours");
         }
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
@@ -288,35 +289,41 @@ public class PartEngine extends APart {
 
             //Check to see if electric or hand starter can keep running.
             if (electricStarterVar.isActive) {
-                if (starterLevel == 0) {
-                    if (vehicleOn.electricPower > 1) {
-                        starterLevel += 4;
-                    } else if (!world.isClient()) {
-                    	electricStarterVar.toggle(true);
+                if ((outOfHealth || vehicleOn.outOfHealth) && !world.isClient()) {
+                    electricStarterVar.toggle(true);
+                    starterLevel = 0;
+                    autoStarterEngaged = false;
+                } else {
+                    if (starterLevel == 0) {
+                        if (vehicleOn.electricPower > 1) {
+                            starterLevel += 4;
+                        } else if (!world.isClient()) {
+                            electricStarterVar.toggle(true);
+                        }
                     }
-                }
-                if (starterLevel > 0) {
-                    if (!vehicleOn.isCreative) {
-                        vehicleOn.electricUsageVar.adjustBy(0.05F, false);
+                    if (starterLevel > 0) {
+                        if (!vehicleOn.isCreative) {
+                            vehicleOn.electricUsageVar.adjustBy(0.05F, false);
+                        }
+                        if (!vehicleOn.isCreative) {
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
+                        }
                     }
-                    if (!vehicleOn.isCreative) {
-                        fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
-                    }
-                }
-                if (autoStarterEngaged) {
-                    if (!world.isClient() && running) {
-                    	electricStarterVar.setTo(0, true);
+                    if (autoStarterEngaged) {
+                        if (!world.isClient() && running) {
+                            electricStarterVar.setTo(0, true);
+                        }
                     }
                 }
             } else if (handStarterVar.isActive) {
                 if (starterLevel == 0) {
-                	handStarterVar.setTo(0, false);
+                    handStarterVar.setTo(0, false);
                 }
             } else {
                 starterLevel = 0;
                 autoStarterEngaged = false;
             }
-
+          
             //If the starter is running, adjust RPM.
             if (starterLevel > 0) {
                 --starterLevel;
@@ -394,9 +401,9 @@ public class PartEngine extends APart {
                     if (!isActive) {
                         stallEngine(Signal.INACTIVE);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
-                    } else if (vehicleOn.outOfHealth) {
-                        stallEngine(Signal.DEAD_VEHICLE);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
+                    } else if (outOfHealth || vehicleOn.outOfHealth) {
+                        stallEngine(Signal.OUT_OF_HEALTH);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.OUT_OF_HEALTH));
                     } else if (isInvalidDimension()) {
                         stallEngine(Signal.INVALID_DIMENSION);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INVALID_DIMENSION));
@@ -500,7 +507,7 @@ public class PartEngine extends APart {
                         //Start engine if the RPM is high enough to cause it to start by itself.
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
-                        if (rpm >= startRPMVar.currentValue && !world.isClient() && !vehicleOn.outOfHealth && !isInvalidDimension()) {
+                        if (rpm >= startRPMVar.currentValue && !world.isClient() && !outOfHealth && !vehicleOn.outOfHealth && !isInvalidDimension()) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (isActive && !isInLiquid() && magnetoVar.isActive) {
                                     startEngine();
@@ -521,7 +528,7 @@ public class PartEngine extends APart {
                         }
                     } else {
                         //If the magneto comes on, and we have fuel, ignite.
-                        if (isActive && magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
+                        if (isActive && !outOfHealth && magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
                             running = true;
                         }
                     }
@@ -547,7 +554,7 @@ public class PartEngine extends APart {
                         }
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
-                        if (!world.isClient() && !vehicleOn.outOfHealth) {
+                        if (!world.isClient() && !outOfHealth && !vehicleOn.outOfHealth) {
                             if (isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
                                 if (magnetoVar.isActive) {
                                     startEngine();
@@ -565,7 +572,7 @@ public class PartEngine extends APart {
                         vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, false);
                     } else {
                         //Turn on engine if the magneto is onl.
-                        if (!world.isClient() && !vehicleOn.outOfHealth) {
+                        if (!world.isClient() && !outOfHealth && !vehicleOn.outOfHealth) {
                             if (isActive) {
                                 if (magnetoVar.isActive){
                                     startEngine();
@@ -951,8 +958,8 @@ public class PartEngine extends APart {
     }
 
     public void autoStartEngine() {
-        //Only engage auto-starter if we aren't running and we have the right fuel.
-        if (!running && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+        //Only engage auto-starter if we aren't running, have health, and we have the right fuel.
+        if (!running && !outOfHealth && !vehicleOn.outOfHealth && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
         	magnetoVar.setTo(1, false);
             if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                 autoStarterEngaged = true;
@@ -1219,6 +1226,7 @@ public class PartEngine extends APart {
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);
         data.setDouble("rocketFuelUsed", rocketFuelUsed);
+        data.setDouble("hours", hours);
         return data;
     }
 }

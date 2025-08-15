@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -75,6 +76,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final boolean isMirrored;
     private boolean requestedForcedCamera;
     private final ComputedVariable newlyAddedVar;
+    public final ComputedVariable isExteriorVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -155,7 +157,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
-        addVariable(newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
+        addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
         }
@@ -174,7 +177,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Update forced camera mode if we are supposed to be forcing it.
         //We need to one-shot this though to ensure that we don't sent infinite packets.
         world.beginProfiling("CameraModeCheck", true);
-        if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
+        if (!requestedForcedCamera && placementDefinition.forceCameras && world.isClient() && riderIsClient && activeCamera == null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCameraChange(this));
         }else if(requestedForcedCamera && activeCamera != null) {
         	requestedForcedCamera = false;
@@ -289,6 +292,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public void setVariableDefaults() {
+        super.setVariableDefaults();
+        isExteriorVar.setActive(placementDefinition.isExterior, false);
+    }
+
+    @Override
     protected void updateCollisionBoxes(boolean requiresDeltaUpdates) {
         //Add collision if we aren't a fake part.
         if (!isFake()) {
@@ -328,6 +337,12 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 world.spawnExplosion(position, 0F, false, false);
             }
         }
+    }
+
+    @Override
+    public void destroy(BoundingBox box) {
+        //Don't remove normally, remove as a part.
+        entityOn.removePart(this, true, true);
     }
 
     @Override

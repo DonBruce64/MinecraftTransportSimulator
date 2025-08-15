@@ -40,7 +40,12 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public boolean isFluidValid(String fluidID) {
-        return ForgeRegistries.FLUIDS.containsKey(new ResourceLocation(fluidID));
+        for (ResourceLocation location : ForgeRegistries.FLUIDS.getKeys()) {
+            if (location.getPath().equals(fluidID)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -58,7 +63,7 @@ class InterfaceCore implements IInterfaceCore {
             InputStream stream = optional.get().getMod().getClass().getResourceAsStream(resource);
             if (stream != null) {
                 return stream;
-            } else if (modID.equals(InterfaceManager.coreModID)) {
+            } else if (modID.equals(InterfaceLoader.MODID)) {
                 //For dev builds, the core files aren't in the main jar yet and are in their own compiled one.
                 //This requires us to check a class of that jar vs the mod jar for the resource.
                 return InterfaceManager.class.getResourceAsStream(resource);

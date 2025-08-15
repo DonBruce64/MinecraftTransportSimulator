@@ -416,7 +416,6 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
         if(materialMap.isEmpty()) {
-            materialMap.put(Material.CLAY, BlockMaterial.CLAY);
             materialMap.put(Material.GROUND, BlockMaterial.DIRT);
             materialMap.put(Material.GLASS, BlockMaterial.GLASS);
             materialMap.put(Material.GRASS, BlockMaterial.GRASS);

@@ -67,8 +67,16 @@ public class PartGun extends APart {
     private final IWrapperPlayer holdingPlayer;
 
     //Variables that can be modified
+    private final ComputedVariable muzzleVelocityVar;
     private final ComputedVariable fireDelayVar;
     private final ComputedVariable bulletSpreadFactorVar;
+    private final ComputedVariable knockbackVar;
+    private final ComputedVariable autoReloadVar;
+    private final ComputedVariable blockReloadingVar;
+    private final ComputedVariable isSemiAutoVar;
+    private final ComputedVariable canLockTargetsVar;
+    private final ComputedVariable firingRequestedVar;
+    private final ComputedVariable ableToFireVar;
     public final ComputedVariable twoHandedVar;
 
     private final List<PartInteractable> connectedCrates = new ArrayList<>();
@@ -261,8 +269,16 @@ public class PartGun extends APart {
         }
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
 
+        addVariable(this.muzzleVelocityVar = new ComputedVariable(this, "muzzleVelocity"));
         addVariable(this.fireDelayVar = new ComputedVariable(this, "fireDelay"));
         addVariable(this.bulletSpreadFactorVar = new ComputedVariable(this, "bulletSpreadFactor"));
+        addVariable(this.knockbackVar = new ComputedVariable(this, "knockback"));
+        addVariable(this.autoReloadVar = new ComputedVariable(this, "autoReload"));
+        addVariable(this.blockReloadingVar = new ComputedVariable(this, "blockReloading"));
+        addVariable(this.isSemiAutoVar = new ComputedVariable(this, "isSemiAuto"));
+        addVariable(this.canLockTargetsVar = new ComputedVariable(this, "canLockTargets"));
+        addVariable(this.ableToFireVar = new ComputedVariable(this, "ableToFire"));
+        addVariable(this.firingRequestedVar = new ComputedVariable(this, "firingRequested"));
         addVariable(this.twoHandedVar = new ComputedVariable(this, "isTwoHanded"));
     }
 
@@ -270,9 +286,11 @@ public class PartGun extends APart {
     public boolean interact(IWrapperPlayer player) {
         //Check to see if we have any bullets in our hands.
         //If so, try to re-load this gun with them.
-        IWrapperItemStack heldStack = player.getHeldStack();
-        if (tryToReload(heldStack, false) && !player.isCreative()) {
-            player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+        if (reloadDelayRemaining == 0) {
+            IWrapperItemStack heldStack = player.getHeldStack();
+            if (tryToReload(heldStack, false) && !player.isCreative()) {
+                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+            }
         }
         return true;
     }
@@ -370,9 +388,10 @@ public class PartGun extends APart {
             if (!world.isClient()) {
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
-                if (!definition.gun.blockReloading && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+                if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+
                     if (isHandHeld) {
-                        if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested) {
+                        if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || autoReloadVar.isActive) {
                             //Check the player's inventory for bullets.
                             IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
                             for (int i = 0; i < inventory.getSize(); ++i) {
@@ -384,7 +403,7 @@ public class PartGun extends APart {
                             }
                         }
                     } else {
-                        if (definition.gun.autoReload) {
+                        if (autoReloadVar.isActive) {
                             //Iterate through all the inventory slots in crates to try to find matching ammo.
                             for (PartInteractable crate : connectedCrates) {
                                 if (crate.isActive) {
@@ -412,8 +431,7 @@ public class PartGun extends APart {
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
             if (state.isAtLeast(GunState.FIRING_REQUESTED)) {
-                boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!definition.gun.isSemiAuto || !firedSinceRequested);
-                if (ableToFire) {
+                if (ableToFireVar.isActive) {
                     //Get current group and use it to determine firing offset.
                     //Don't calculate this if we already did on a prior firing command.
                     if (camOffset <= 0) {
@@ -659,9 +677,17 @@ public class PartGun extends APart {
     @Override
     public void setVariableDefaults() {
         super.setVariableDefaults();
+        muzzleVelocityVar.setTo(definition.gun.muzzleVelocity, false);
         fireDelayVar.setTo(definition.gun.fireDelay, false);
         bulletSpreadFactorVar.setTo(definition.gun.bulletSpreadFactor, false);
+        knockbackVar.setTo(definition.gun.knockback, false);
+        autoReloadVar.setTo(definition.gun.autoReload ? 1 : 0, false);
+        blockReloadingVar.setTo(definition.gun.blockReloading ? 1 : 0, false);
+        isSemiAutoVar.setTo(definition.gun.isSemiAuto ? 1 : 0, false);
+        canLockTargetsVar.setTo(definition.gun.canLockTargets ? 1 : 0, false);
         twoHandedVar.setTo(definition.gun.isTwoHanded ? 1 : 0, false);
+        ableToFireVar.setTo(windupTimeCurrent == definition.gun.windupTime && cooldownTimeRemaining == 0 && !isReloading && (!isSemiAutoVar.isActive || !firedSinceRequested) ? 1 : 0, false);
+        firingRequestedVar.setTo(playerHoldingTrigger ? 1 : 0, false);
     }
 
     @Override
@@ -743,7 +769,7 @@ public class PartGun extends APart {
             //Check for a target for this gun if we have a lock-on missile.
             //Only do this once every 1/2 second.
             //First, check if the loaded bullet is guided
-            if (definition.gun.canLockTargets || (lastLoadedBullet != null && lastLoadedBullet.definition.bullet.turnRate > 0)) {
+            if (canLockTargetsVar.isActive || (lastLoadedBullet != null && lastLoadedBullet.definition.bullet.turnRate > 0)) {
                 //We are the type of bullet to get a target, figure out if we need one, or we don't do auto-targeting.
                 //If we do auto-target, we need to create a vector to look though.
                 Point3D startPoint = null;
@@ -850,7 +876,7 @@ public class PartGun extends APart {
 
             //If we have any manual bullets, do tracking for them.
             if (!activeManualBullets.isEmpty()) {
-                Point3D laserStart = controller.getPosition().copy();
+                Point3D laserStart = controller.getEyePosition().copy();
                 BlockHitResult laserHit = world.getBlockHit(laserStart, controller.getLineOfSight(2048));
                 if (laserHit != null) {
                     targetPosition.set(laserHit.hitPosition);
@@ -860,7 +886,7 @@ public class PartGun extends APart {
             }
 
             //If we are holding the trigger, request to fire.
-            if (playerHoldingTrigger) {
+            if (firingRequestedVar.isActive) {
                 state = state.promote(GunState.FIRING_REQUESTED);
             } else {
                 state = state.demote(GunState.CONTROLLED);
@@ -1135,8 +1161,8 @@ public class PartGun extends APart {
      * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
      */
     public void performGunKnockback() {
-        if (definition.gun.knockback != 0) {
-            holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-definition.gun.knockback));
+        if (knockbackVar.currentValue != 0) {
+            holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-knockbackVar.currentValue));
         }
     }
 
@@ -1147,8 +1173,8 @@ public class PartGun extends APart {
      */
     public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle, boolean addSpread) {
         //Set velocity.
-        if (definition.gun.muzzleVelocity != 0) {
-            bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D);
+        if (muzzleVelocityVar.currentValue != 0) {
+            bulletVelocity.set(0, 0, muzzleVelocityVar.currentValue / 20D);
             //Randomize the spread for normal bullet and pellets
             if (addSpread) {
                 if (lastLoadedBullet == null) {
@@ -1235,10 +1261,10 @@ public class PartGun extends APart {
         Point3D leadPoint = new Point3D();
         double ticksToTarget = 0;
         if (engineTarget != null) {
-            ticksToTarget = engineTarget.vehicleOn.position.distanceTo(position) / (definition.gun.muzzleVelocity / 20D);
+            ticksToTarget = engineTarget.vehicleOn.position.distanceTo(position) / (muzzleVelocityVar.currentValue / 20D);
             leadPoint.set(engineTarget.vehicleOn.position).addScaled(engineTarget.vehicleOn.motion, (engineTarget.vehicleOn.speedFactor) * ticksToTarget);
         } else if (entityTarget != null) {
-            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (definition.gun.muzzleVelocity / 20D);
+            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (knockbackVar.currentValue / 20D);
             leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), ticksToTarget);
         }
         return leadPoint;
