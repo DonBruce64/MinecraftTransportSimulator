@@ -108,6 +108,7 @@ public final class LegacyCompatSystem {
         variableChanges.put("engine_winddown_rate", "engineWinddownRate");
         variableChanges.put("engine_jet_power_factor", "jetPowerFactor");
         variableChanges.put("engine_bypass_ratio", "bypassRatio");
+        variableChanges.put("downForce", "steeringForceFactor");
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -357,10 +358,13 @@ public final class LegacyCompatSystem {
             definition.general.type = null;
         }
 
-        //Set default health.
+        //Set default health and battery capacity.
         if (definition.general.health == 0) {
             definition.general.health = 100;
         }
+
+        if (definition.motorized.batteryCapacity == 0) {
+            definition.motorized.batteryCapacity = 14;
 
         //Set default crash speed totaled if not set.
         if (definition.motorized.crashSpeedMax != 0 && definition.motorized.crashSpeedDestroyed == 0) {
