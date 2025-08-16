@@ -32,6 +32,9 @@ public class JSONSubDefinition {
     @JSONDescription("Like modelName, but used to override the texture.  Useful if you have multiple models with the same texture (say different orientations of the same thing).")
     public String textureName;
 
+    @JSONDescription("The texture for the GUI for this interactable thing.  Only used if this thing has a GUI.  If not set, the default is used.")
+    public String inventoryTexture;
+
     @JSONDescription("The name of this component.  Will be displayed in item form and in the benches.  Note that this is just a display name, and is NOT used in any file-linking operations like subName is, so you can put whatever you want here.  Also note that this overrides the 'name' parameter in the general section.")
     public String name;
 

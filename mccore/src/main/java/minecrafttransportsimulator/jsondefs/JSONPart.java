@@ -569,12 +569,11 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("An optional max stack size for each inventory slot.  Defaults to 64 if not set.")
         public int inventoryStackSize;
 
-        @JSONDescription("The texture for the GUI for this interactable part.  Only used if this part has a GUI.  If not set, the default is used.")
-        public String inventoryTexture;
-
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
 
+        @Deprecated
+        public String inventoryTexture;
         @Deprecated
         public CrafterComponentType furnaceType;
         @Deprecated

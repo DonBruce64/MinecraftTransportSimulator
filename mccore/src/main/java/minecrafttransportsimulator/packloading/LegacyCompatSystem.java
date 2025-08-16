@@ -993,6 +993,13 @@ public final class LegacyCompatSystem {
         }
 
         if (definition.interactable != null) {
+            if (definition.interactable.inventoryTexture != null) {
+                for (JSONSubDefinition subDef : definition.definitions) {
+                    subDef.inventoryTexture = definition.interactable.inventoryTexture;
+                }
+                definition.interactable.inventoryTexture = null;
+            }
+
             if (definition.interactable.interactionType == InteractableComponentType.FURNACE) {
                 //Convert old furnaces.
                 if (definition.interactable.crafterType == null) {
@@ -1725,6 +1732,12 @@ public final class LegacyCompatSystem {
             definition.general.partTypes = null;
             definition.decor.items = definition.general.items;
             definition.general.items = null;
+            if (definition.decor.inventoryTexture != null) {
+                for (JSONSubDefinition subDef : definition.definitions) {
+                    subDef.inventoryTexture = definition.decor.inventoryTexture;
+                }
+                definition.decor.inventoryTexture = null;
+            }
         }
 
         //If we are a decor without a type, set us to generic.
