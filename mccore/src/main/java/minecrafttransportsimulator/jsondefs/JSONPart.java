@@ -569,6 +569,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("An optional max stack size for each inventory slot.  Defaults to 64 if not set.")
         public int inventoryStackSize;
 
+        @JSONDescription("A optional list of items that will be in this inventory when first spawned.")
+        public List<String> defaultInventory;
+
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
 

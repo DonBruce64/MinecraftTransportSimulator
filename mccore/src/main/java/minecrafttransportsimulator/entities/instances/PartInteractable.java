@@ -15,6 +15,7 @@ import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
@@ -53,6 +54,16 @@ public final class PartInteractable extends APart {
                 this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 this.tank = null;
                 world.addEntity(inventory);
+                if (data == null && definition.interactable.defaultInventory != null) {
+                    for (String itemText : definition.interactable.defaultInventory) {
+                        PackMaterialComponent component = new PackMaterialComponent(itemText);
+                        if (!component.possibleItems.isEmpty()) {
+                            inventory.addStack(component.possibleItems.get(0));
+                        } else {
+                            InterfaceManager.coreInterface.logError("Tried to get a default item named " + itemText + " on " + this + " but couldn't as the item doesn't exist!  Report this to the pack author!");
+                        }
+                    }
+                }
                 break;
             }
             case BARREL: {
