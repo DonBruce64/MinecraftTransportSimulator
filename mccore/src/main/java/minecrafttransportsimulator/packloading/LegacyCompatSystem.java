@@ -2001,6 +2001,14 @@ public final class LegacyCompatSystem {
             particleDef.scale *= particleDef.hitboxSize;
             particleDef.toScale *= particleDef.hitboxSize;
         }
+        if (particleDef.fadeTransparencyTime != 0) {
+            particleDef.fadeOutTransparencyTime = particleDef.fadeTransparencyTime;
+            particleDef.fadeTransparencyTime = 0;
+        }
+        if (particleDef.fadeScaleTime != 0) {
+            particleDef.fadeOutScaleTime = particleDef.fadeScaleTime;
+            particleDef.fadeScaleTime = 0;
+        }
     }
 
     private static void performPartSlotListingLegacyCompats(List<JSONPartDefinition> partDefs, boolean linkFrontWheels, boolean linkRearWheels) {
