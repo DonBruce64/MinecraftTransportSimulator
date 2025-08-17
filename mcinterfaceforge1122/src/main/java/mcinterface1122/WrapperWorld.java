@@ -341,7 +341,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
-            if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof EntityPlayer)) {
+            if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob) && !(entity instanceof EntityPlayer)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
                         if (part instanceof PartSeat && part.rider == null) {
