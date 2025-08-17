@@ -57,6 +57,7 @@ import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.IChargeableMob;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
@@ -380,7 +381,7 @@ public class WrapperWorld extends AWrapperWorld {
             if (entity.getVehicle() == null && !(entity instanceof MonsterEntity) && !(entity instanceof PlayerEntity)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
-                        if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                        if (part instanceof PartSeat && part.rider == null) {
                             part.setRider(new WrapperEntity(entity), true);
                             break;
                         }
