@@ -305,9 +305,6 @@ public class PartEngine extends APart {
                         if (!vehicleOn.isCreative) {
                             vehicleOn.electricUsageVar.adjustBy(0.05F, false);
                         }
-                        if (!vehicleOn.isCreative) {
-                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
-                        }
                     }
                     if (autoStarterEngaged) {
                         if (!world.isClient() && running) {
