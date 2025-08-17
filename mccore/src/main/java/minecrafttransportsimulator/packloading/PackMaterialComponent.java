@@ -73,7 +73,7 @@ public class PackMaterialComponent {
         List<String> itemTexts = new ArrayList<String>();
         String currentSubName = "";
         if (forRepair) {
-            itemTexts.addAll(item.getRepairMaterials(recipeIndex));
+            item.populateRepairMaterials(itemTexts, recipeIndex);
             if (includeRepair && !itemTexts.isEmpty()) {
                 if (InterfaceManager.coreInterface.isGameFlattened()) {
                     itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":1");

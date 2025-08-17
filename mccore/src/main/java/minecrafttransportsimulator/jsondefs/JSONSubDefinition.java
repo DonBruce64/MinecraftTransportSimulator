@@ -45,6 +45,9 @@ public class JSONSubDefinition {
     @JSONDescription("Like the materials in the general section, except these are added to the base materials to allow crafting of the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Note that the number of lists here must match the number of lists in the materialLists, as each materialList entry is paired with an entry in this variable.  Also note that these are not used for repair recipes.")
     public List<List<String>> extraMaterialLists;
 
+    @JSONDescription("Like extraMaterialLists, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
+    public List<List<String>> extraRepairMaterialLists;
+
     @Deprecated
     public List<String> extraMaterials;
 }

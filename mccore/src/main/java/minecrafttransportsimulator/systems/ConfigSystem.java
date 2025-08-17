@@ -105,25 +105,21 @@ public final class ConfigSystem {
                 JSONConfigCraftingOverrides overridesObject = new JSONConfigCraftingOverrides();
                 overridesObject.overrides = new LinkedHashMap<>();
                 for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
-                    Map<String, JSONCraftingOverride> packOverrides = overridesObject.overrides.get(packItem.definition.packID);
-                    if (packOverrides == null) {
-                        packOverrides = new LinkedHashMap<>();
-                        overridesObject.overrides.put(packItem.definition.packID, packOverrides);
-                    }
-
-                    JSONCraftingOverride override = packOverrides.get(packItem.definition.systemName);
-                    if (override == null) {
-                        override = new JSONCraftingOverride();
-                        packOverrides.put(packItem.definition.systemName, override);
-                    }
-
+                    Map<String, JSONCraftingOverride> packOverrides = overridesObject.overrides.computeIfAbsent(packItem.definition.packID, k -> new LinkedHashMap<>());
+                    JSONCraftingOverride override = packOverrides.computeIfAbsent(packItem.definition.systemName, k -> new JSONCraftingOverride());
                     override.commonMaterialLists = packItem.definition.general.materialLists;
                     if (packItem instanceof AItemSubTyped) {
+                        JSONSubDefinition subDefinition = ((AItemSubTyped<?>) packItem).subDefinition;
                         if (override.extraMaterialLists == null) {
                             override.extraMaterialLists = new HashMap<>();
                         }
-                        JSONSubDefinition subDefinition = ((AItemSubTyped<?>) packItem).subDefinition;
                         override.extraMaterialLists.put(subDefinition.subName, subDefinition.extraMaterialLists);
+                        if (subDefinition.extraRepairMaterialLists != null) {
+                            if (override.extraRepairMaterialLists == null) {
+                                override.extraRepairMaterialLists = new HashMap<>();
+                            }
+                            override.extraRepairMaterialLists.put(subDefinition.subName, subDefinition.extraMaterialLists);
+                        }
                     }
                     override.repairMaterialLists = packItem.definition.general.repairMaterialLists;
 
@@ -165,6 +161,9 @@ public final class ConfigSystem {
                                     List<List<String>> extraMaterialLists = override.extraMaterialLists.get(subDefinition.subName);
                                     if (extraMaterialLists != null) {
                                         subDefinition.extraMaterialLists = extraMaterialLists;
+                                    }
+                                    if (override.extraRepairMaterialLists != null) {
+                                        subDefinition.extraRepairMaterialLists = override.extraMaterialLists.get(subDefinition.subName);
                                     }
                                 }
                                 if (override.repairMaterialLists != null) {

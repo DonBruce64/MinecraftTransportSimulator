@@ -24,6 +24,7 @@ public class JSONConfigCraftingOverrides {
         public List<List<String>> commonMaterialLists;
         public Map<String, List<List<String>>> extraMaterialLists;
         public List<List<String>> repairMaterialLists;
+        public Map<String, List<List<String>>> extraRepairMaterialLists;
         public List<String> autocrafterInputs;
         public List<String> autocrafterOutputs;
     }
