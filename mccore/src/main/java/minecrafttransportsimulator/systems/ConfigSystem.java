@@ -120,8 +120,15 @@ public final class ConfigSystem {
                             }
                             override.extraRepairMaterialLists.put(subDefinition.subName, subDefinition.extraMaterialLists);
                         }
+                        if (subDefinition.extraReturnedMaterialLists != null) {
+                            if (override.extraReturnedMaterialLists == null) {
+                                override.extraReturnedMaterialLists = new HashMap<>();
+                            }
+                            override.extraReturnedMaterialLists.put(subDefinition.subName, subDefinition.extraReturnedMaterialLists);
+                        }
                     }
                     override.repairMaterialLists = packItem.definition.general.repairMaterialLists;
+                    override.returnedMaterialLists = packItem.definition.general.returnedMaterialLists;
 
                     if (packItem instanceof ItemPartEffector) {
                         ItemPartEffector effectorItem = (ItemPartEffector) packItem;
@@ -164,6 +171,9 @@ public final class ConfigSystem {
                                     }
                                     if (override.extraRepairMaterialLists != null) {
                                         subDefinition.extraRepairMaterialLists = override.extraMaterialLists.get(subDefinition.subName);
+                                    }
+                                    if (override.extraReturnedMaterialLists != null) {
+                                        subDefinition.extraReturnedMaterialLists = override.extraReturnedMaterialLists.get(subDefinition.subName);
                                     }
                                 }
                                 if (override.repairMaterialLists != null) {

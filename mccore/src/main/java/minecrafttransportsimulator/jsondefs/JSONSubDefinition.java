@@ -48,6 +48,9 @@ public class JSONSubDefinition {
     @JSONDescription("Like extraMaterialLists, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
     public List<List<String>> extraRepairMaterialLists;
 
+    @JSONDescription("Like extraMaterialLists, but these materials are dropped after crafting.  Think returning a bucket after needing a bucket of water.")
+    public List<List<String>> extraReturnedMaterialLists;
+
     @Deprecated
     public List<String> extraMaterials;
 }
