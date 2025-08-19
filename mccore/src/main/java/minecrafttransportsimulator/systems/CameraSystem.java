@@ -55,14 +55,7 @@ public class CameraSystem {
         AEntityB_Existing cameraProvider = sittingSeat != null ? sittingSeat : playerGunEntity;
 
         //Reset FOV, sensitivity, overlay, and effect.
-        if (currentFOV != 0) {
-            InterfaceManager.clientInterface.setFOV(currentFOV);
-            currentFOV = 0;
-        }
-        if (currentMouseSensitivity != 0) {
-            InterfaceManager.clientInterface.setMouseSensitivity(currentMouseSensitivity);
-            currentMouseSensitivity = 0;
-        }
+        resetCameraProperties();
         if (nightVisionEnabled) {
             player.removePotionEffect(NIGHT_VISION_CAMERA_POTION);
             nightVisionEnabled = false;
@@ -147,6 +140,17 @@ public class CameraSystem {
         }
     }
     
+    public static void resetCameraProperties() {
+        if (currentFOV != 0) {
+            InterfaceManager.clientInterface.setFOV(currentFOV);
+            currentFOV = 0;
+        }
+        if (currentMouseSensitivity != 0) {
+            InterfaceManager.clientInterface.setMouseSensitivity(currentMouseSensitivity);
+            currentMouseSensitivity = 0;
+        }
+    }
+
     public static enum CameraMode{
     	FIRST_PERSON(false),
     	THIRD_PERSON(true),

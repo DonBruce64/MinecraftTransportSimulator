@@ -26,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.systems.CameraSystem;
 
 /**
  * Class that manages entities in a world.
@@ -421,6 +422,13 @@ public abstract class EntityManager {
                     }
                 }
             }
+        }
+    }
+
+    public void onUnload() {
+        allEntities.forEach(entity -> entity.remove());
+        if (getWorld().isClient()) {
+            CameraSystem.resetCameraProperties();
         }
     }
 
