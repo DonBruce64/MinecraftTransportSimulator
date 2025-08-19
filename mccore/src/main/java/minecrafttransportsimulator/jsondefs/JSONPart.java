@@ -627,9 +627,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How fast a drill can break a block at the specified hardness.  Softer blocks will break quicker.")
         public float drillSpeed;
 
-        @JSONDescription("How many blocks the drill can break before it itself breaks.")
-        public int drillDurability;
-
         @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
         @JSONDescription("Inputs for the crafting type effector.")
         public List<String> crafterInputs;
@@ -638,6 +635,8 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Outputs for the crafting type effector.")
         public List<String> crafterOutputs;
 
+        @Deprecated
+        public int drillDurability;
         @Deprecated
         public int placerDelay;
     }

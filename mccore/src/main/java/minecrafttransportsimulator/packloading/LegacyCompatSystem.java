@@ -108,6 +108,9 @@ public final class LegacyCompatSystem {
         variableChanges.put("engine_winddown_rate", "engineWinddownRate");
         variableChanges.put("engine_jet_power_factor", "jetPowerFactor");
         variableChanges.put("engine_bypass_ratio", "bypassRatio");
+        variableChanges.put("effector_active", "part_active");
+        variableChanges.put("effector_drill_percentage", "damage_percent");
+        variableChanges.put("effector_drill_broken", "damage");
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -1035,6 +1038,12 @@ public final class LegacyCompatSystem {
                         collisionGroup.collisionTypes.add(CollisionType.EFFECTOR);
                     }
                 }
+            }
+
+            //Convert old drill properties.
+            if (definition.effector.drillDurability != 0) {
+                definition.general.health = definition.effector.drillDurability;
+                definition.effector.drillDurability = 0;
             }
         }
 
