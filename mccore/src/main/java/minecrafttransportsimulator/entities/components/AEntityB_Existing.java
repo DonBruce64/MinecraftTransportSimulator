@@ -458,14 +458,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     }
 
     /**
-     * Returns true if this entity should render light beams.  This is entity-specific in the config,
-     * so the method is abstract here.
-     */
-    public boolean shouldRenderBeams() {
-        return false;
-    }
-
-    /**
      * Returns true if this entity has a radio.  Radios are updated to sync with the entity and
      * will save on them as applicable.
      */

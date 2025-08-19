@@ -14,7 +14,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Entity class responsible for being a part placed in the world.
@@ -121,11 +120,6 @@ public class EntityPlacedPart extends AEntityF_Multipart<JSONDummyPartProvider> 
     @Override
     public boolean requiresDeltaUpdates() {
         return partRequiresDeltaUpdates;
-    }
-
-    @Override
-    public boolean shouldRenderBeams() {
-        return ConfigSystem.client.renderingSettings.vehicleBeams.value;
     }
 
     @Override
