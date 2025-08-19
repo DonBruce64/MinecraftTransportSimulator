@@ -583,7 +583,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 totalScale = 1.0;
             }
             if (definition.fadeInScaleTime >= ticksExisted) {
-                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeInScaleTime;
+                totalScale *= (1 - ((definition.fadeInScaleTime - ticksExisted) / (float) definition.fadeInScaleTime));
             }
             if (definition.fadeOutScaleTime > maxAge - ticksExisted) {
                 totalScale *= (maxAge - ticksExisted) / (float) definition.fadeOutScaleTime;
