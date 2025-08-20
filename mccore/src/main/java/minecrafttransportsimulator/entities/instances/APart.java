@@ -589,6 +589,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 switch (variable) {
                     case ("part_present"):
                         return new ComputedVariable(true);
+                    case ("part_active"):
+                        return new ComputedVariable(isActive);
                     case ("part_ismirrored"):
                         return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):

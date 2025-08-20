@@ -569,12 +569,14 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("An optional max stack size for each inventory slot.  Defaults to 64 if not set.")
         public int inventoryStackSize;
 
-        @JSONDescription("The texture for the GUI for this interactable part.  Only used if this part has a GUI.  If not set, the default is used.")
-        public String inventoryTexture;
+        @JSONDescription("A optional list of items that will be in this inventory when first spawned.")
+        public List<String> defaultInventory;
 
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
 
+        @Deprecated
+        public String inventoryTexture;
         @Deprecated
         public CrafterComponentType furnaceType;
         @Deprecated
@@ -625,9 +627,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How fast a drill can break a block at the specified hardness.  Softer blocks will break quicker.")
         public float drillSpeed;
 
-        @JSONDescription("How many blocks the drill can break before it itself breaks.")
-        public int drillDurability;
-
         @JSONRequired(dependentField = "type", dependentValues = "CRAFTER")
         @JSONDescription("Inputs for the crafting type effector.")
         public List<String> crafterInputs;
@@ -636,6 +635,8 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Outputs for the crafting type effector.")
         public List<String> crafterOutputs;
 
+        @Deprecated
+        public int drillDurability;
         @Deprecated
         public int placerDelay;
     }

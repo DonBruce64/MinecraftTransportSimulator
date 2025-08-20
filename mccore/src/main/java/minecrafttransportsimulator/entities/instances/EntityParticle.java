@@ -552,8 +552,11 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             renderable.setAlpha(definition.transparency != 0 ? definition.transparency : 1.0F);
         }
-        if (definition.fadeTransparencyTime > maxAge - ticksExisted) {
-            renderable.setAlpha(renderable.alpha * (maxAge - ticksExisted) / definition.fadeTransparencyTime);
+        if (definition.fadeInTransparencyTime >= ticksExisted) {
+            renderable.setAlpha(renderable.alpha * ticksExisted / definition.fadeInTransparencyTime);
+        }
+        if (definition.fadeOutTransparencyTime > maxAge - ticksExisted) {
+            renderable.setAlpha(renderable.alpha * (maxAge - ticksExisted) / definition.fadeOutTransparencyTime);
         }
         if (definition.daytimeReductionFactor != 0) {
             //Get world light and factor this into the alpha value.
@@ -579,8 +582,11 @@ public class EntityParticle extends AEntityC_Renderable {
             } else {
                 totalScale = 1.0;
             }
-            if (definition.fadeScaleTime > maxAge - ticksExisted) {
-                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeScaleTime;
+            if (definition.fadeInScaleTime >= ticksExisted) {
+                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeInScaleTime;
+            }
+            if (definition.fadeOutScaleTime > maxAge - ticksExisted) {
+                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeOutScaleTime;
             }
             renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
             renderable.setLightValue(worldLightValue);

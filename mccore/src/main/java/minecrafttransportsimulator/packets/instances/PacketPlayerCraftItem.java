@@ -5,6 +5,7 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -76,6 +77,14 @@ public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Defina
                     if (inventory.addStack(itemToCraft.getNewStack(null))) {
                         if (!player.isCreative()) {
                             inventory.removeMaterials(materials);
+                        }
+                        if (itemToCraft.definition.general.returnedMaterialLists != null) {
+                            itemToCraft.definition.general.returnedMaterialLists.get(recipeIndex).forEach(itemName -> world.spawnItemStack(new PackMaterialComponent(itemName).possibleItems.get(0), player.getPosition(), null));
+                        }
+                        if (itemToCraft instanceof AItemSubTyped) {
+                            if (((AItemSubTyped<?>) itemToCraft).subDefinition.extraReturnedMaterialLists != null) {
+                                ((AItemSubTyped<?>) itemToCraft).subDefinition.extraReturnedMaterialLists.get(recipeIndex).forEach(itemName -> world.spawnItemStack(new PackMaterialComponent(itemName).possibleItems.get(0), player.getPosition(), null));
+                            }
                         }
                         return true;
                     }

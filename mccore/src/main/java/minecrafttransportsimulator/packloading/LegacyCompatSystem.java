@@ -109,6 +109,9 @@ public final class LegacyCompatSystem {
         variableChanges.put("engine_jet_power_factor", "jetPowerFactor");
         variableChanges.put("engine_bypass_ratio", "bypassRatio");
         variableChanges.put("downForce", "steeringForceFactor");
+        variableChanges.put("effector_active", "part_active");
+        variableChanges.put("effector_drill_percentage", "damage_percent");
+        variableChanges.put("effector_drill_broken", "damage");
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -997,6 +1000,13 @@ public final class LegacyCompatSystem {
         }
 
         if (definition.interactable != null) {
+            if (definition.interactable.inventoryTexture != null) {
+                for (JSONSubDefinition subDef : definition.definitions) {
+                    subDef.inventoryTexture = definition.interactable.inventoryTexture;
+                }
+                definition.interactable.inventoryTexture = null;
+            }
+
             if (definition.interactable.interactionType == InteractableComponentType.FURNACE) {
                 //Convert old furnaces.
                 if (definition.interactable.crafterType == null) {
@@ -1032,6 +1042,12 @@ public final class LegacyCompatSystem {
                         collisionGroup.collisionTypes.add(CollisionType.EFFECTOR);
                     }
                 }
+            }
+
+            //Convert old drill properties.
+            if (definition.effector.drillDurability != 0) {
+                definition.general.health = definition.effector.drillDurability;
+                definition.effector.drillDurability = 0;
             }
         }
 
@@ -1729,6 +1745,12 @@ public final class LegacyCompatSystem {
             definition.general.partTypes = null;
             definition.decor.items = definition.general.items;
             definition.general.items = null;
+            if (definition.decor.inventoryTexture != null) {
+                for (JSONSubDefinition subDef : definition.definitions) {
+                    subDef.inventoryTexture = definition.decor.inventoryTexture;
+                }
+                definition.decor.inventoryTexture = null;
+            }
         }
 
         //If we are a decor without a type, set us to generic.
@@ -1991,6 +2013,14 @@ public final class LegacyCompatSystem {
             particleDef.hitboxSize = particleDef.type == ParticleType.BREAK ? 0.1F : 0.2F;
             particleDef.scale *= particleDef.hitboxSize;
             particleDef.toScale *= particleDef.hitboxSize;
+        }
+        if (particleDef.fadeTransparencyTime != 0) {
+            particleDef.fadeOutTransparencyTime = particleDef.fadeTransparencyTime;
+            particleDef.fadeTransparencyTime = 0;
+        }
+        if (particleDef.fadeScaleTime != 0) {
+            particleDef.fadeOutScaleTime = particleDef.fadeScaleTime;
+            particleDef.fadeScaleTime = 0;
         }
     }
 

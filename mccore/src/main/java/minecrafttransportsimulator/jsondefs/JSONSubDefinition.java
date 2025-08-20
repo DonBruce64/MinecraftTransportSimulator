@@ -32,6 +32,9 @@ public class JSONSubDefinition {
     @JSONDescription("Like modelName, but used to override the texture.  Useful if you have multiple models with the same texture (say different orientations of the same thing).")
     public String textureName;
 
+    @JSONDescription("The texture for the GUI for this interactable thing.  Only used if this thing has a GUI.  If not set, the default is used.")
+    public String inventoryTexture;
+
     @JSONDescription("The name of this component.  Will be displayed in item form and in the benches.  Note that this is just a display name, and is NOT used in any file-linking operations like subName is, so you can put whatever you want here.  Also note that this overrides the 'name' parameter in the general section.")
     public String name;
 
@@ -41,6 +44,12 @@ public class JSONSubDefinition {
     @JSONRequired
     @JSONDescription("Like the materials in the general section, except these are added to the base materials to allow crafting of the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Note that the number of lists here must match the number of lists in the materialLists, as each materialList entry is paired with an entry in this variable.  Also note that these are not used for repair recipes.")
     public List<List<String>> extraMaterialLists;
+
+    @JSONDescription("Like extraMaterialLists, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
+    public List<List<String>> extraRepairMaterialLists;
+
+    @JSONDescription("Like extraMaterialLists, but these materials are dropped after crafting.  Think returning a bucket after needing a bucket of water.")
+    public List<List<String>> extraReturnedMaterialLists;
 
     @Deprecated
     public List<String> extraMaterials;

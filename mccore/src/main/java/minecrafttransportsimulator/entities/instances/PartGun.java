@@ -729,7 +729,7 @@ public class PartGun extends APart {
             boolean checkForCloser = entityTarget != null && ticksExisted % 20 == 0;
             if (entityTarget == null || checkForCloser) {
                 for (IWrapperEntity entity : world.getEntitiesHostile(controller, 48)) {
-                    if (validateTarget(entity)) {
+                    if (validateTarget(controller, entity)) {
                         if (entityTarget != null) {
                             double distanceToBeat = position.distanceTo(entityTarget.getPosition());
                             if (checkForCloser) {
@@ -746,7 +746,7 @@ public class PartGun extends APart {
 
             //If we have a target, validate it and try to hit it.
             if (entityTarget != null) {
-                if (validateTarget(entityTarget)) {
+                if (validateTarget(controller, entityTarget)) {
                     controllerAngles.set(targetVector).getAngles(true);
                     controller.setYaw(controllerAngles.y);
                     controller.setPitch(controllerAngles.x);
@@ -926,14 +926,22 @@ public class PartGun extends APart {
      * is behind any blocks.  Returns true if the target is valid.
      * Also sets {@link #targetVector} and {@link #targetAngles}
      */
-    private boolean validateTarget(IWrapperEntity target) {
+    private boolean validateTarget(IWrapperEntity controller, IWrapperEntity target) {
         if (target.isValid()) {
             //Get vector from gun center to target.
             //Target we aim for the middle, as it's more accurate.
             //We also take into account tracking for bullet speed.
+            JSONMuzzle muzzleDef = definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.get(0);
+            if (muzzleDef.center != null) {
+                bulletPosition.set(muzzleDef.center);
+            } else {
+                bulletPosition.set(0, 0, 0);
+            }
+            bulletPosition.rotate(internalOrientation).add(position);
+
             targetVector.set(target.getPosition());
             targetVector.y += target.getEyeHeight() / 2D;
-            targetVector.subtract(position);
+            targetVector.subtract(bulletPosition);
 
             //Transform vector to gun's coordinate system.
             //Get the angles the gun has to rotate to match the target.
@@ -953,7 +961,7 @@ public class PartGun extends APart {
             }
 
             //Check block raytracing.
-            return world.getBlockHit(position, targetVector) == null;
+            return world.getBlockHit(bulletPosition, targetVector) == null;
         }
         return false;
     }
