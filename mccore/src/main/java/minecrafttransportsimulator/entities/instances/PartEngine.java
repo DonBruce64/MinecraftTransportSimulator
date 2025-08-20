@@ -449,7 +449,7 @@ public class PartEngine extends APart {
                 case NORMAL: {
                     if (running) {
                         //Provide electric power to the vehicle we're in.
-                        vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, true);
+                        vehicleOn.electricUsageVar.adjustBy(-0.05 * rpm / maxRPMVar.currentValue, false);
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
