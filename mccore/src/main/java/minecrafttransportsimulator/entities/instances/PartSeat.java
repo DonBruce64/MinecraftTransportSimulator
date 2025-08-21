@@ -28,7 +28,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.AIVehicleDriver;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -42,7 +41,6 @@ public final class PartSeat extends APart {
     public int gunSequenceCooldown;
     public int gunGroupIndex;
     public int gunIndex;
-    private AIVehicleDriver aiDriver;
     public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
 
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartSeat item, IWrapperNBT data) {
@@ -340,15 +338,6 @@ public final class PartSeat extends APart {
             //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
             if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && riderIsClient) {
                 ControlSystem.controlMultipart(masterEntity, placementDefinition.isController);
-            }
-
-            if (!world.isClient() && placementDefinition.isController && rider != null && !(rider instanceof IWrapperPlayer)) {
-                // Инициализировать контроллер один раз.
-                if (aiDriver == null) {
-                    // Предполагаем, что masterEntity является AEntityVehicleE_Powered.
-                    aiDriver = new AIVehicleDriver((AEntityVehicleE_Powered) masterEntity, 0.6);
-                }
-                aiDriver.update();
             }
 
             return true;
