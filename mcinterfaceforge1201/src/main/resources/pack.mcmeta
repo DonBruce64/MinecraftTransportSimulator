@@ -1,7 +1,7 @@
 {
     "pack": {
         "description": "Immersive Vehicles Resources",
-        "pack_format": 10,
-        "_comment": "A pack_format of 10 required for 1.19.2. Note: we require v6 pack meta for all mods."
+        "pack_format": 15,
+        "_comment": "A pack_format of 15 required for 1.20. Note: we require v15 pack meta for all mods."
     }
 }
