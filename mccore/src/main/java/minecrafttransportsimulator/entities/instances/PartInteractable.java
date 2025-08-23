@@ -191,7 +191,7 @@ public final class PartInteractable extends APart {
                     addCrafterFuel();
                 }
                 if (vehicleOn != null) {
-                    vehicleOn.electricUsage += crafter.powerToDrawPerTick;
+                    vehicleOn.electricUsageVar.adjustBy(crafter.powerToDrawPerTick, false);
                 }
             }
         }
