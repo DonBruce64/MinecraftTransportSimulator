@@ -24,6 +24,7 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -269,8 +270,12 @@ public abstract class EntityManager {
                             }
                         } else {
                             //Server manager, load back all seated riders.
+                            //Double-check some mod or some nonsense hasn't changed them too.
                             hotloadedRiderIDs.forEach((seatID, riderID) -> {
-                                getWorld().getExternalEntity(riderID).setRiding(getWorld().getEntity(seatID));
+                                IWrapperEntity rider = getWorld().getExternalEntity(riderID);
+                                if (rider != null) {
+                                    rider.setRiding(getWorld().getEntity(seatID));
+                                }
                             });
                             hotloadedRiderIDs.clear();
 
