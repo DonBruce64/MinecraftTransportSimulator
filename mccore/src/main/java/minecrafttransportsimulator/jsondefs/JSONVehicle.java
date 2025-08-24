@@ -94,6 +94,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If this is set, this vehicle will come pre-fueled with the specified fuel amount.  Note that an engine must be present for MTS to know what type of fuel is required, so make sure you set one via a defaultPart in the parts section of this JSON.")
         public int defaultFuelQty;
 
+        @JSONDescription("The maximum voltage (capacity) of this vehicle's battery, accounting for slight overvoltage. Does not affect 'electric'-type motors, only the electrical system for starters and lights. Defaults to 14 if not set, since vehicles will be spawned with 85.71% of their maximum battery charge, which means they'll spawn with 12V charged.")
+        public int batteryCapacity;
+
         @JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
         public int gearSequenceDuration;
 
@@ -170,11 +173,18 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor of which to apply ballast for water operations.  0 is no change, 0.5 makes them fall half speed, 1.0 makes vehicles neither float nor sink, and anything higher makes them float up.  Only applied when the vehicle is in water.")
         public float waterBallastFactor;
 
-        @JSONDescription("The speed at which 0% damage will be applied during crashes.")
+        @ModifiableValue
+        @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
+        public float gravityFactor;
+
+        @JSONDescription("The speed at which 0% damage will be applied during crashes.  Crash damage values are optional and a default will be used if these are missing.")
         public float crashSpeedMin;
 
-        @JSONDescription("The speed at which 100% damage will be applied.  Leave at 0 to disable crash damage.")
+        @JSONDescription("The speed at which 100% damage will be applied.")
         public float crashSpeedMax;
+
+        @JSONDescription("The speed at which the vehicle will blow up and be destroyed.  Needs to be higher than crashSpeedMax.")
+        public float crashSpeedDestroyed;
 
         @JSONRequired
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")

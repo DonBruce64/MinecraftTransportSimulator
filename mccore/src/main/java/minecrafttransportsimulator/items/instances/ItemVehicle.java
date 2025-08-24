@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -12,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider {
 
@@ -60,6 +62,14 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
     public void repair(IWrapperNBT data) {
         super.repair(data);
         data.setDouble("electricPower", 12);
+    }
+
+    @Override
+    public void populateRepairMaterials(List<String> materials, int recipeIndex) {
+        super.populateRepairMaterials(materials, recipeIndex);
+        if (!ConfigSystem.settings.general.defaultVehicleRepairMaterials.value.isEmpty()) {
+            materials.addAll(ConfigSystem.settings.general.defaultVehicleRepairMaterials.value);
+        }
     }
 
     @Override

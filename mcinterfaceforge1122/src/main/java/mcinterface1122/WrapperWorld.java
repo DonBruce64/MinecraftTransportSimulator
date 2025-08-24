@@ -341,10 +341,10 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
-            if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
+            if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob) && !(entity instanceof EntityPlayer)) {
                 if (entityToLoad instanceof EntityVehicleF_Physics) {
                     for (APart part : ((EntityVehicleF_Physics) entityToLoad).allParts) {
-                        if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                        if (part instanceof PartSeat && part.rider == null) {
                             part.setRider(new WrapperEntity(entity), true);
                             break;
                         }
@@ -416,7 +416,6 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
         if(materialMap.isEmpty()) {
-            materialMap.put(Material.CLAY, BlockMaterial.CLAY);
             materialMap.put(Material.GROUND, BlockMaterial.DIRT);
             materialMap.put(Material.GLASS, BlockMaterial.GLASS);
             materialMap.put(Material.GRASS, BlockMaterial.GRASS);

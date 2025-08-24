@@ -162,8 +162,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
                 if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                    IWrapperEntity partRider = partToTransfer.rider;
                     partToTransfer.entityOn.removePart(partToTransfer, true, true);
-                    addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                    APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                    if (partRider != null) {
+                        newPart.setRider(partRider, false);
+                    }
                     return;
                 }
             }
@@ -183,8 +187,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
                                 if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
                                     IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                                    IWrapperEntity partRider = currentPart.rider;
                                     currentPart.entityOn.removePart(currentPart, true, true);
-                                    entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
+                                    APart newPart = entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
+                                    if (partRider != null) {
+                                        newPart.setRider(partRider, false);
+                                    }
                                     return;
                                 }
                             }
@@ -316,10 +324,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
                 //This is a server-only action that does NOT cause us to stop processing.
                 //Send off packet to damage the health hitbox (or damage directly on server) and continue as if we didn't hit anything.
+                double actualDamage = hitEntry.box.groupDef.damageMultiplier != 0 ? damage.amount * hitEntry.box.groupDef.damageMultiplier : damage.amount;
                 if (world.isClient()) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitEntry.box, damage.amount));
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitCollision(hitEntity, hitEntry.box, actualDamage));
                 } else {
-                    hitEntity.damageCollisionBox(hitEntry.box, damage.amount);
+                    hitEntity.damageCollisionBox(hitEntry.box, actualDamage);
                 }
                 hitOperationalHitbox = true;
             }
@@ -356,7 +365,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     //Didn't hit health or armor, must have hit something we can damage.
                     //Need to re-create damage object to reference this hitbox.
                     //Remove bullet if we are applying damage to a core group, or a part that forwards damage.
-                    damage = new Damage(bullet.gun, hitEntry.box, damage.amount);
+                    double actualDamage = (hitEntry.box.groupDef != null && hitEntry.box.groupDef.damageMultiplier != 0) ? damage.amount * hitEntry.box.groupDef.damageMultiplier : damage.amount;
+                    damage = new Damage(bullet.gun, hitEntry.box, actualDamage);
                     boolean applyDamage = ((hitEntry.box.groupDef != null && (hitEntry.box.groupDef.health == 0 || damage.isWater)) || hitPart != null);
                     boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
 

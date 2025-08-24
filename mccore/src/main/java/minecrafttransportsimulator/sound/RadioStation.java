@@ -6,11 +6,10 @@ import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
@@ -31,18 +30,17 @@ public class RadioStation {
     private final boolean randomOrder;
     private final String url;
     private final List<File> musicFiles;
-    private final Set<EntityRadio> queuedRadios = new HashSet<>();
-    private final Set<EntityRadio> playingRadios = new HashSet<>();
 
     //Runtime variables.
     //Due to how the mp3 parser works, we can only have one equalizer per station.
     public String displayText = "";
     public String infoText = "";
     public final Equalizer equalizer;
-    private final List<Integer> activeBuffers = new ArrayList<>();
+    private final ConcurrentLinkedQueue<EntityRadio> queuedRadios = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<EntityRadio> playingRadios = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Integer> activeBuffers = new ConcurrentLinkedQueue<>();
     private volatile LinkingThread linkingThread;
     private volatile DecoderThread decoderThread;
-    private volatile IStreamDecoder decoder;
     private volatile int faultedDecodes;
 
     public RadioStation(int index, boolean randomOrder) {
@@ -72,36 +70,6 @@ public class RadioStation {
     }
 
     /**
-     * Generates a new buffer for this station from the current decoder and
-     * stores it in the list of active buffers.  Also updates the displayText
-     * to reflect the buffer count.  Returns the index of the newly-created
-     * buffer, or 0 if the buffer wasn't able to be created.
-     */
-    private int generateBufferIndex(boolean updateDisplay) {
-        ByteBuffer buffer = decoder.readBlock();
-        if (buffer != null) {
-            //Get new buffer index from the audio system and add it to our radios.
-            int bufferIndex = InterfaceManager.soundInterface.createBuffer(buffer, decoder);
-            activeBuffers.add(bufferIndex);
-
-            if (updateDisplay) {
-                //Update station buffer counts and return buffer index.
-                int bufferTextIndex = displayText.indexOf("Buffers:");
-                if (bufferTextIndex != -1) {
-                    displayText = displayText.substring(0, bufferTextIndex + "Buffers:".length());
-                    for (byte i = 0; i < activeBuffers.size(); ++i) {
-                        displayText += "X";
-                    }
-                } else {
-                    displayText = "DISPLAY MALFUNCTION!\nTURN RADIO OFF AND ON TO RESET!";
-                }
-            }
-            return bufferIndex;
-        }
-        return 0;
-    }
-
-    /**
      * Adds a radio to this station for playback.  If the station isn't playing to any radios, then
      * the station is started and the radio will start playing as soon as its ready.  If the station
      * is playing, then the radio is queued to start on the next buffer call.  This allows for syncing
@@ -119,9 +87,9 @@ public class RadioStation {
         queuedRadios.remove(radio);
         //If we are an internet stream, and we killed the last radio, abort us.
         //This is because internet streams are constant feeds and can't be cached.
-        if (playingRadios.isEmpty() && queuedRadios.isEmpty() && source != RadioSources.LOCAL && decoder != null) {
-            decoder.stop();
-            decoder = null;
+        if (playingRadios.isEmpty() && queuedRadios.isEmpty() && source != RadioSources.LOCAL && decoderThread != null) {
+            decoderThread.kill();
+            decoderThread = null;
         }
     }
 
@@ -132,15 +100,12 @@ public class RadioStation {
      */
     public void update() {
         if (!playingRadios.isEmpty() || !queuedRadios.isEmpty()) {
-            if (linkingThread == null && decoderThread == null && decoder == null) {
+            if (linkingThread == null && decoderThread == null) {
                 //Need to start trying to do playback since we don't have any threads.
                 if (faultedDecodes < 5) {
                     startPlayback();
-                } else {
-                    //Clear out radios since we can't get this station.
-
                 }
-            } else if (decoderThread == null && decoder != null) {
+            } else if (decoderThread != null && decoderThread.initDone) {
                 //Have an active and ready decoder, start decoding.
                 int freeBufferIndex = 0;
 
@@ -149,7 +114,7 @@ public class RadioStation {
                     //First check if we have any buffers that are done playing that we can re-claim.
                     freeBufferIndex = InterfaceManager.soundInterface.getFreeStationBuffer(playingRadios);
                     if (freeBufferIndex != 0) {
-                        activeBuffers.remove((Integer) freeBufferIndex);
+                        activeBuffers.remove(freeBufferIndex);
                         InterfaceManager.soundInterface.deleteBuffer(freeBufferIndex);
                     }
                 }
@@ -170,28 +135,25 @@ public class RadioStation {
                     }
                 }
 
-                //If we have less than 5 buffers, try to get another one.
-                if (activeBuffers.size() < 5) {
-                    int newIndex = generateBufferIndex(true);
-                    if (newIndex != 0 && !playingRadios.isEmpty()) {
-                        Iterator<EntityRadio> iterator = playingRadios.iterator();
-                        while (iterator.hasNext()) {
-                            EntityRadio radio = iterator.next();
-                            //If the radio isn't in rage, stop playing it.
-                            //Just kill the sound, since the stop command is for the stop button and it won't restart.
-                            if (!radio.position.isDistanceToCloserThan(InterfaceManager.clientInterface.getClientPlayer().getPosition(), SoundInstance.DEFAULT_MAX_DISTANCE)) {
-                                radio.getPlayingSound().stopSound = true;
-                                queuedRadios.add(radio);
-                                iterator.remove();
-                            }
-                            InterfaceManager.soundInterface.bindBuffer(radio.getPlayingSound(), newIndex);
-                        }
+                //Check if the radio is out of player audio range and stop playing it here if so.
+                Iterator<EntityRadio> iterator = playingRadios.iterator();
+                while (iterator.hasNext()) {
+                    EntityRadio radio = iterator.next();
+                    //If the radio isn't in rage, stop playing it.
+                    //Just kill the sound, since the stop command is for the stop button and it won't restart.
+                    if (!radio.position.isDistanceToCloserThan(InterfaceManager.clientInterface.getClientPlayer().getPosition(), SoundInstance.DEFAULT_MAX_DISTANCE)) {
+                        radio.getPlayingSound().stopSound = true;
+                        queuedRadios.add(radio);
+                        iterator.remove();
                     }
                 }
 
                 //If we have 0 buffers, clear out the decoder and start the station again.
                 //This happens if we reach an EOF, or the stream cuts out.
                 if (activeBuffers.isEmpty()) {
+                    if (decoderThread != null) {
+                        decoderThread.kill();
+                    }
                     startPlayback();
                 }
             }
@@ -244,7 +206,6 @@ public class RadioStation {
                 } else {
                     infoText = "Station: " + musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName();
                     infoText += "\nBuffers:";
-                    decoder = null;
                     decoderThread = new DecoderThread(this, musicFiles.get(0));
                     decoderThread.start();
                     iterator.remove();
@@ -262,7 +223,6 @@ public class RadioStation {
      */
     private void playFromInternet() {
         displayText = "CONNECTING";
-        decoder = null;
         decoderThread = null;
         linkingThread = new LinkingThread(this);
         linkingThread.start();
@@ -368,6 +328,9 @@ public class RadioStation {
         private final String contentType;
         private final URLConnection contentConnection;
         private final File contentFile;
+        private IStreamDecoder decoder;
+        private boolean stopDecoding;
+        public boolean initDone;
 
         public DecoderThread(RadioStation station, String contentType, URLConnection contentConnection) {
             this.station = station;
@@ -393,24 +356,33 @@ public class RadioStation {
                     if (contentConnection != null) {
                         switch (contentType) {
                             case ("audio/mpeg"):
-                                station.decoder = new MP3Decoder(contentConnection.getInputStream(), station.equalizer);
+                                decoder = new MP3Decoder(contentConnection.getInputStream(), station.equalizer);
                                 break;
                             case ("application/ogg"):
-                                station.decoder = new OGGDecoder(contentConnection.getInputStream());
+                                decoder = new OGGDecoder(contentConnection.getInputStream());
                                 break;
                         }
                     } else {
-                        station.decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
+                        decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
                     }
                     //Prime the buffers before setting the thread to null.
                     //This prevents the buffers from running out from starting too quickly.
                     //Because this is in a thread, it also saves on processing power.
                     for (byte i = 0; i < 5; ++i) {
-                        station.generateBufferIndex(false);
+                        generateBufferIndex(false);
                     }
-                    //Done starting decoding, note ourselves as dead and update text.
-                    station.decoderThread = null;
+                    initDone = true;
+
+                    //Done starting decoding, update text and go into main parsing loop.
                     station.displayText = station.infoText;
+                    while (!stopDecoding) {
+                        if (station.activeBuffers.size() < 5) {
+                            int newIndex = generateBufferIndex(true);
+                            if (newIndex != 0) {
+                                station.playingRadios.forEach(radio -> InterfaceManager.soundInterface.bindBuffer(radio.getPlayingSound(), newIndex));
+                            }
+                        }
+                    }
                     return;
                 } catch (Exception e) {
                     //e.printStackTrace();
@@ -419,6 +391,42 @@ public class RadioStation {
             station.displayText = "ERROR: Was able to connect to URL but not open stream.  Try again later?";
             //Something is wrong with the radio station, abort all radio playback.
             station.queuedRadios.clear();
+        }
+
+        public void kill() {
+            stopDecoding = true;
+            if (decoder != null) {
+                decoder.stop();
+            }
+        }
+
+        /**
+         * Generates a new buffer for this station from the current decoder and
+         * stores it in the list of active buffers.  Also updates the displayText
+         * to reflect the buffer count.  Returns the index of the newly-created
+         * buffer, or 0 if the buffer wasn't able to be created.
+         */
+        private int generateBufferIndex(boolean updateDisplay) {
+            ByteBuffer buffer = decoder.readBlock();
+            if (buffer != null) {
+                //Get new buffer index from the audio system and add it to our radios.
+                int bufferIndex = InterfaceManager.soundInterface.createBuffer(buffer, decoder);
+                station.activeBuffers.add(bufferIndex);
+                if (updateDisplay) {
+                    //Update station buffer counts and return buffer index.
+                    int bufferTextIndex = station.displayText.indexOf("Buffers:");
+                    if (bufferTextIndex != -1) {
+                        station.displayText = station.displayText.substring(0, bufferTextIndex + "Buffers:".length());
+                        for (byte i = 0; i < station.activeBuffers.size(); ++i) {
+                            station.displayText += "X";
+                        }
+                    } else {
+                        station.displayText = "DISPLAY MALFUNCTION!\nTURN RADIO OFF AND ON TO RESET!";
+                    }
+                }
+                return bufferIndex;
+            }
+            return 0;
         }
     }
 }

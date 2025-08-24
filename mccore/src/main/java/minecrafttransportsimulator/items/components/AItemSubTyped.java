@@ -30,4 +30,12 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
             Collections.addAll(tooltipLines, text.split("\n"));
         }
     }
+
+    @Override
+    public void populateRepairMaterials(List<String> materials, int recipeIndex) {
+        super.populateRepairMaterials(materials, recipeIndex);
+        if (subDefinition.extraRepairMaterialLists != null) {
+            materials.addAll(subDefinition.extraRepairMaterialLists.get(recipeIndex));
+        }
+    }
 }

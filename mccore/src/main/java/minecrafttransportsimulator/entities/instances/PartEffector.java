@@ -11,6 +11,7 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartEffector;
@@ -23,7 +24,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 
 public class PartEffector extends APart {
@@ -33,9 +33,11 @@ public class PartEffector extends APart {
     private final List<IWrapperItemStack> drops = new ArrayList<>();
     private final Map<IWrapperEntity, IWrapperItemStack> entityItems = new HashMap<>();
 
+    //Variables used for all effectors.
+    private final ComputedVariable operatedThisTickVar;
+    private final Damage OPERATION_DAMAGE = new Damage(1.0D, boundingBox, null, null, null);
+
     //Variables used for drills.
-    public int blocksBroken;
-    public boolean activatedThisTick;
     private final Point3D flooredCenter = new Point3D();
     private final Map<BoundingBox, Point3D> boxLastPositionsFloored = new HashMap<>();
     private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<>();
@@ -50,9 +52,6 @@ public class PartEffector extends APart {
 
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEffector item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
-        if (data != null) {
-            this.blocksBroken = data.getInteger("blocksBroken");
-        }
         if (definition.effector.type == EffectorComponentType.CRAFTER) {
             definition.effector.crafterInputs.forEach(input -> {
                 PackMaterialComponent material = new PackMaterialComponent(input);
@@ -71,19 +70,20 @@ public class PartEffector extends APart {
                 }
             });
         }
+        addVariable(this.operatedThisTickVar = new ComputedVariable(this, "effector_operated"));
     }
 
     @Override
     public void update() {
         super.update();
         //If we are active, do effector things.  Only do these on the server, clients get packets.
-        activatedThisTick = false;
+        boolean operatedThisTick = false;
         if (operationDelay < definition.effector.operationDelay) {
             ++operationDelay;
         } else {
             operationDelay = 0;
         }
-        if (isActive && !world.isClient() && !outOfHealth && operationDelay == definition.effector.operationDelay) {
+        if (!world.isClient() && isActive && !outOfHealth && operationDelay == definition.effector.operationDelay) {
             drops.clear();
             entityItems.clear();
             blockFlooredPositionsBrokeThisTick.clear();
@@ -98,7 +98,7 @@ public class PartEffector extends APart {
                                         IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.fertilizeBlock(box.globalCenter, stack)) {
                                             crate.inventory.removeFromSlot(i, 1);
-                                            activatedThisTick = true;
+                                            operatedThisTick = true;
                                             break;
                                         }
                                     }
@@ -111,7 +111,7 @@ public class PartEffector extends APart {
                             List<IWrapperItemStack> blockDrops = world.harvestBlock(box.globalCenter);
                             if (!blockDrops.isEmpty()) {
                                 drops.addAll(blockDrops);
-                                activatedThisTick = true;
+                                operatedThisTick = true;
                             }
                             break;
                         }
@@ -123,7 +123,7 @@ public class PartEffector extends APart {
                                         IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.plantBlock(box.globalCenter, stack)) {
                                             crate.inventory.removeFromSlot(i, 1);
-                                            activatedThisTick = true;
+                                            operatedThisTick = true;
                                             break;
                                         }
                                     }
@@ -133,7 +133,7 @@ public class PartEffector extends APart {
                         }
                         case PLOW: {
                             if (world.plowBlock(box.globalCenter)) {
-                                activatedThisTick = true;
+                                operatedThisTick = true;
                                 //Harvest blocks on top of this block in case they need to be dropped.
                                 List<IWrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
                                 if (!harvestedDrops.isEmpty()) {
@@ -148,7 +148,7 @@ public class PartEffector extends APart {
                         }
                         case SNOWPLOW: {
                             if (world.removeSnow(box.globalCenter)) {
-                                activatedThisTick = true;
+                                operatedThisTick = true;
                             }
                             break;
                         }
@@ -169,12 +169,7 @@ public class PartEffector extends APart {
                                             world.destroyBlock(flooredCenter, false);
                                             boxTimeSpentAtPosition.put(box, 0);
                                             blockFlooredPositionsBrokeThisTick.add(flooredCenter.copy());
-                                            if (++blocksBroken == definition.effector.drillDurability) {
-                                                remove();
-                                            } else {
-                                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this, true));
-                                            }
-                                            activatedThisTick = true;
+                                            operatedThisTick = true;
                                         } else {
                                             boxTimeSpentAtPosition.put(box, timeSpentBreaking + 1);
                                         }
@@ -195,12 +190,12 @@ public class PartEffector extends APart {
                                             IWrapperItemStack stack = crate.inventory.getStack(i);
                                             if (world.placeBlock(box.globalCenter, stack)) {
                                                 crate.inventory.removeFromSlot(i, 1);
-                                                activatedThisTick = true;
+                                                operatedThisTick = true;
                                                 break;
                                             }
                                         }
                                     }
-                                    if (activatedThisTick) {
+                                    if (operatedThisTick) {
                                         break;
                                     }
                                 }
@@ -225,7 +220,7 @@ public class PartEffector extends APart {
                                             stackToDrop.add(-stackToDrop.getSize() + 1);
                                             crate.inventory.removeFromSlot(i, 1);
                                             world.spawnItemStack(stackToDrop, box.globalCenter, new Point3D(Math.random() * 0.2D - 0.1D, -0.2D, Math.random() * 0.2D - 0.1D).rotate(orientation));
-                                            activatedThisTick = true;
+                                            operatedThisTick = true;
                                             placedItem = true;
                                             break;
                                         }
@@ -269,7 +264,7 @@ public class PartEffector extends APart {
                                     //Therefore, we need to simulate the addition first to make sure things fit.
                                     if (definition.effector.type == EffectorComponentType.COLLECTOR) {
                                         if (crate.inventory.addStack(dropStack, dropStack.getSize(), false)) {
-                                            activatedThisTick = true;
+                                            operatedThisTick = true;
                                             for (Entry<IWrapperEntity, IWrapperItemStack> entry : entityItems.entrySet()) {
                                                 if (entry.getValue() == dropStack) {
                                                     world.removeItemStackEntity(entry.getKey());
@@ -297,8 +292,13 @@ public class PartEffector extends APart {
                     }
                 }
             }
-            if (activatedThisTick) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this, false));
+            if (operatedThisTick) {
+                attack(OPERATION_DAMAGE);
+                if (!operatedThisTickVar.isActive) {
+                    operatedThisTickVar.setActive(true, true);
+                }
+            }else if(operatedThisTickVar.isActive) {
+                operatedThisTickVar.setActive(false, true);
             }
         }
     }
@@ -326,31 +326,5 @@ public class PartEffector extends APart {
                 }
             }
         }
-    }
-
-    @Override
-    public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
-        switch (variable) {
-            case ("effector_active"):
-            	return new ComputedVariable(this, variable, partialTicks -> isActive ? 1 : 0, true);
-            case ("effector_operated"):
-            	return new ComputedVariable(this, variable, partialTicks -> activatedThisTick ? 1 : 0, true);
-            case ("effector_drill_broken"):
-                return new ComputedVariable(this, variable, partialTicks -> blocksBroken, true);
-            case ("effector_drill_max"):
-                return new ComputedVariable(this, variable, partialTicks -> definition.effector.drillDurability, false);
-            case ("effector_drill_percentage"):
-                return new ComputedVariable(this, variable, partialTicks -> blocksBroken / (double) definition.effector.drillDurability, false);
-            default: {
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
-            }
-        }
-    }
-
-    @Override
-    public IWrapperNBT save(IWrapperNBT data) {
-        super.save(data);
-        data.setInteger("blocksBroken", blocksBroken);
-        return data;
     }
 }

@@ -151,15 +151,9 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
      * Returns the repair materials for this item with the specific recipe, or null if none exist.
      * This also queries the default repair lists in case we don't have any defined on ourselves.
      */
-    public List<String> getRepairMaterials(int recipeIndex) {
+    public void populateRepairMaterials(List<String> materials, int recipeIndex) {
         if (definition.general.repairMaterialLists != null && !definition.general.repairMaterialLists.isEmpty()) {
-            return definition.general.repairMaterialLists.get(recipeIndex);
-        } else if (this instanceof ItemVehicle && !ConfigSystem.settings.general.defaultVehicleRepairMaterials.value.isEmpty()) {
-            return ConfigSystem.settings.general.defaultVehicleRepairMaterials.value;
-        } else if (this instanceof AItemPart && !ConfigSystem.settings.general.defaultPartRepairMaterials.value.isEmpty()) {
-            return ConfigSystem.settings.general.defaultPartRepairMaterials.value;
-        } else {
-            return null;
+            materials.addAll(definition.general.repairMaterialLists.get(recipeIndex));
         }
     }
 }

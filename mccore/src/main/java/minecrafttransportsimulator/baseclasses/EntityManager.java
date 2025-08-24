@@ -175,6 +175,12 @@ public abstract class EntityManager {
             }
         }
         if (beforePlayer) {
+            //Need to do this before updating since defaults have to be set on all entities to ensure VMs run properly.
+            for (AEntityA_Base entity : allNormalTickableEntities) {
+                if (entity instanceof AEntityD_Definable) {
+                    ((AEntityD_Definable<?>) entity).setVariableDefaults();
+                }
+            }
             for (AEntityA_Base entity : allNormalTickableEntities) {
                 if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
                     doTick(entity);
@@ -287,6 +293,12 @@ public abstract class EntityManager {
                 }
             }
         } else {
+            //Need to do this before updating since defaults have to be set on all entities to ensure VMs run properly.
+            for (AEntityA_Base entity : allPlayerTickableEntities) {
+                if (entity instanceof AEntityD_Definable) {
+                    ((AEntityD_Definable<?>) entity).setVariableDefaults();
+                }
+            }
             for (AEntityA_Base entity : allPlayerTickableEntities) {
                 if (!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())) {
                     doTick(entity);
@@ -302,7 +314,6 @@ public abstract class EntityManager {
             AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
             //Need to do this before updating as these require knowledge of prior states.
             entity.world.beginProfiling("VariableModifiers", true);
-            definable.setVariableDefaults();
             definable.updateVariableModifiers();
             entity.world.beginProfiling("MainUpdate", false);
             entity.update();

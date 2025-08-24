@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -13,6 +14,7 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Base class for part items.  Contains methods on what part to spawn from
@@ -42,6 +44,14 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
             return true;
         } else {
             return false;
+        }
+    }
+
+    @Override
+    public void populateRepairMaterials(List<String> materials, int recipeIndex) {
+        super.populateRepairMaterials(materials, recipeIndex);
+        if (!ConfigSystem.settings.general.defaultPartRepairMaterials.value.isEmpty()) {
+            materials.addAll(ConfigSystem.settings.general.defaultPartRepairMaterials.value);
         }
     }
 

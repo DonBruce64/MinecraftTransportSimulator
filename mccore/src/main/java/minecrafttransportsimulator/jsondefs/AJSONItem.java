@@ -40,8 +40,11 @@ public abstract class AJSONItem extends AJSONBase {
         @JSONDescription("A set of lists of material lists that are required to create this component.  Normally, items have just one list, but can have multiple for multiple ways to craft the item.  This allows for incorperation of modded items, as well as different Minecraft versions.  The format for each material entry in each list is <GiveString:Metadata:Qty> on 1.12.2, and <GiveString:Qty> on higher versions.  Where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials (and no extraMaterialLists, if it uses definitions) it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter if on 1.12.2.")
         public List<List<String>> materialLists;
 
-        @JSONDescription("Like materials, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
+        @JSONDescription("Like materialLists, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
         public List<List<String>> repairMaterialLists;
+
+        @JSONDescription("Like materialLists, but these materials are dropped after crafting.  Think returning a bucket after needing a bucket of water.")
+        public List<List<String>> returnedMaterialLists;
 
         @JSONDescription("An optional oreDict name for this item.  This will make the item be part of the specified oreDict.  Note that you may use custom oreDict names if you want multiple items to be the same ingredient.")
         public String oreDict;

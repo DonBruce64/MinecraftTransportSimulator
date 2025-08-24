@@ -156,7 +156,6 @@ public abstract class ABlockBase {
      * but instead are materials that blocks in the world may be made of.
      */
     public enum BlockMaterial {
-        CLAY,
         DIRT,
         GLASS,
         GRASS,
@@ -174,6 +173,8 @@ public abstract class ABlockBase {
         NORMAL,
 
         //Don't use, these are old but are required here to parse old packs.
+        @Deprecated
+        CLAY,
         @Deprecated
         DIRT_WET,
         @Deprecated

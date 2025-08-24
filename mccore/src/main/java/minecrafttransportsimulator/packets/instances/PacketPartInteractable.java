@@ -74,15 +74,15 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                     break;
                 }
                 case CRATE: {
-                    new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
+                    new GUIInventoryContainer(interactable.inventory, interactable.subDefinition.inventoryTexture, false);
                     break;
                 }
                 case FURNACE: {
-                    new GUIFurnace((EntityFurnace) interactable.crafter, interactable.definition.interactable.inventoryTexture);
+                    new GUIFurnace((EntityFurnace) interactable.crafter, interactable.subDefinition.inventoryTexture);
                     break;
                 }
                 case BREWER: {
-                    new GUIBrewer((EntityBrewer) interactable.crafter, interactable.definition.interactable.inventoryTexture);
+                    new GUIBrewer((EntityBrewer) interactable.crafter, interactable.subDefinition.inventoryTexture);
                     break;
                 }
                 default:

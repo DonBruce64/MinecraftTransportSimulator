@@ -47,7 +47,8 @@ public final class ControlSystem {
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
 
-    private static boolean throttlePressedLastCheck = false;
+    private static double throttleRequestLastCheck;
+    private static double brakeRequestLastCheck;
 
     private static EntityInteractResult interactResult = null;
 
@@ -228,9 +229,10 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.parkingBrakeVar));
         }
         double brakeValue = joystickBrakeAxis.isJoystickActive() ? joystickBrakeAxis.getAxisState(true) : ((joystickBrakeButton.isPressed() || keyboardBrakeButton.isPressed()) ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-        if (brakeValue != vehicle.brakeVar.currentValue) {
+        if (brakeValue != brakeRequestLastCheck) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle.brakeVar, brakeValue));
         }
+        brakeRequestLastCheck = brakeValue;
     }
 
     private static void controlGun(AEntityF_Multipart<?> multipart, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
@@ -287,7 +289,7 @@ public final class ControlSystem {
     private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, ComputedVariable variable, double dampenRate) {
         if (axis.isJoystickActive()) {
             double axisValue = axis.getAxisState(false);
-            if (Double.isNaN(axisValue)) {
+            if (axisValue == 0) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(variable, 0));
             } else {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(variable, bounds * (-1 + 2 * axisValue)));
@@ -449,10 +451,10 @@ public final class ControlSystem {
             }
         } else {
             double throttleRequest = -999;
-            double brakeRequest = -999;
             if (ConfigSystem.client.controlSettings.simpleThrottle.value) {
                 if (!powered.engines.isEmpty()) {
                     //Get the brake value.
+                    double brakeRequest = -999;
                     final double brakeValue;
                     if (ControlsJoystick.CAR_BRAKE.isJoystickActive()) {
                         brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState(true);
@@ -485,9 +487,8 @@ public final class ControlSystem {
                         brakeRequest = brakeValue;
 
                         //Send throttle over if throttle if cruise control is off, or if the throttle is pressed, or was released this check.
-                        if (!powered.autopilotValueVar.isActive || throttleValue > 0 || throttlePressedLastCheck) {
+                        if (!powered.autopilotValueVar.isActive || throttleValue > 0 || throttleRequestLastCheck > 0) {
                             throttleRequest = throttleValue;
-                            throttlePressedLastCheck = throttleValue > 0;
                         }
                     } else {
                         throttleRequest = brakeValue;
@@ -498,14 +499,17 @@ public final class ControlSystem {
                         powered.engines.forEach(engine -> {
                             //If we don't have velocity, and we have the appropriate control, shift.
                             if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGearVar.currentValue >= 0 && powered.axialVelocity < 0.01F) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftNeutralVar, 1));
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftDownVar, 1));
                             } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGearVar.currentValue <= 0 && powered.axialVelocity < 0.01F) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftNeutralVar, 1));
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftUpVar, 1));
                             }
                         });
                     }
+
+                    if (brakeRequest != -999 && brakeRequestLastCheck != brakeRequest) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.brakeVar, brakeRequest));
+                    }
+                    brakeRequestLastCheck = brakeRequest;
                 }
             } else {
                 //Check brake and gas and set to on or off.
@@ -518,14 +522,12 @@ public final class ControlSystem {
                     }
                 } else {
                     if (ControlsKeyboardDynamic.CAR_SLOW.isPressed()) {
-                        throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
                             throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE / 2D;
                         } else {
                             throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE;
                         }
                     } else if (ControlsKeyboard.CAR_GAS.isPressed()) {
-                        throttlePressedLastCheck = true;
                         if (!ConfigSystem.client.controlSettings.halfThrottle.value) {
                             throttleRequest = EntityVehicleF_Physics.MAX_THROTTLE;
                         } else {
@@ -533,19 +535,22 @@ public final class ControlSystem {
                         }
                     } else {
                         //Send gas off packet if we don't have cruise on, or if we do and we pressed the throttle last check.
-                        if (!powered.autopilotValueVar.isActive || throttlePressedLastCheck) {
+                        if (!powered.autopilotValueVar.isActive || throttleRequestLastCheck > 0) {
                             throttleRequest = 0;
-                            throttlePressedLastCheck = false;
                         }
                     }
                 }
             }
-            if (throttleRequest != -999 && powered.throttleVar.currentValue != throttleRequest) {
+            if (throttleRequest != -999 && throttleRequestLastCheck != throttleRequest) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.throttleVar, throttleRequest));
             }
-            if (brakeRequest != -999 && powered.brakeVar.currentValue != brakeRequest) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.brakeVar, brakeRequest));
+            //Check if we have throttle request with brake on.  Brakes can be left on from simple throttle and such of other players.
+            //Take the brake off here if so, since otherwise it will stay on unless we press the brake key.
+            if (throttleRequest > 0 && powered.brakeVar.currentValue > 0) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.brakeVar, 0));
             }
+            throttleRequestLastCheck = throttleRequest;
+
         }
 
         //Check steering.  Don't check while on a road, since we auto-drive on those.
@@ -901,7 +906,7 @@ public final class ControlSystem {
 
         private double getAxisState(boolean ignoreDeadzone) {
             double pollValue = getMultistateValue();
-            if (ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.client.controlSettings.joystickDeadZone.value) {
+            if ((config.axisMaxTravel != config.axisMinTravel) && (ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.client.controlSettings.joystickDeadZone.value)) {
                 //Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
                 pollValue = Math.max(config.axisMinTravel, pollValue);
                 pollValue = Math.min(config.axisMaxTravel, pollValue);
@@ -917,7 +922,7 @@ public final class ControlSystem {
                 //Now return the value.
                 return pollValue;
             } else {
-                return Double.NaN;
+                return 0;
             }
         }
 

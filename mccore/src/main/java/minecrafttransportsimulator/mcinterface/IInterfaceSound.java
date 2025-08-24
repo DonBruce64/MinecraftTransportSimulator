@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.sound.IStreamDecoder;
@@ -36,7 +35,7 @@ public interface IInterfaceSound {
      * method must be called from the main update loop somewhere at the parent call in the
      * stack to avoid a CME.
      */
-    void addRadioSound(SoundInstance sound, List<Integer> buffers);
+    void addRadioSound(SoundInstance sound, Collection<Integer> buffers);
 
     /**
      * Buffers a ByteBuffer's worth of data from a streaming decoder.
@@ -61,5 +60,5 @@ public interface IInterfaceSound {
      * from all the sounds for all the radios.  If the radios are invalid
      * or not synced, then they are turned off for safety.
      */
-    int getFreeStationBuffer(Set<EntityRadio> playingRadios);
+    int getFreeStationBuffer(Collection<EntityRadio> playingRadios);
 }

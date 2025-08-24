@@ -12,8 +12,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
+import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
@@ -52,6 +54,16 @@ public final class PartInteractable extends APart {
                 this.inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 this.tank = null;
                 world.addEntity(inventory);
+                if (data == null && definition.interactable.defaultInventory != null) {
+                    for (String itemText : definition.interactable.defaultInventory) {
+                        PackMaterialComponent component = new PackMaterialComponent(itemText);
+                        if (!component.possibleItems.isEmpty()) {
+                            inventory.addStack(component.possibleItems.get(0));
+                        } else {
+                            InterfaceManager.coreInterface.logError("Tried to get a default item named " + itemText + " on " + this + " but couldn't as the item doesn't exist!  Report this to the pack author!");
+                        }
+                    }
+                }
                 break;
             }
             case BARREL: {
@@ -101,6 +113,8 @@ public final class PartInteractable extends APart {
                 }
                 case CRAFTING_TABLE: {
                     player.openCraftingGUI();
+                    playersInteracting.add(player);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
                     break;
                 }
                 case JERRYCAN:
@@ -177,7 +191,7 @@ public final class PartInteractable extends APart {
                     addCrafterFuel();
                 }
                 if (vehicleOn != null) {
-                    vehicleOn.electricUsage += crafter.powerToDrawPerTick;
+                    vehicleOn.electricUsageVar.adjustBy(crafter.powerToDrawPerTick, false);
                 }
             }
         }
@@ -326,7 +340,12 @@ public final class PartInteractable extends APart {
             case ("interactable_remaining"):
                 return new ComputedVariable(this, variable, partialTicks -> crafter != null ? crafter.ticksLeftToCraft : 0, false);
             default:
-                return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                if (variable.startsWith("interactable_fluid_")) {
+                    final String fluidName = variable.substring(variable.lastIndexOf("_") + 1);
+                    return new ComputedVariable(this, variable, partialTicks -> tank.getFluid().equals(fluidName) ? 1 : 0, false);
+                } else {
+                    return super.createComputedVariable(variable, createDefaultIfNotPresent);
+                }
         }
     }
 

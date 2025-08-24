@@ -354,10 +354,6 @@ public class RenderableModelObject {
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
-        //Treads only render on solid passes.
-        if (treadPoints != null && blendingEnabled) {
-            return false;
-        }
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
             return false;
@@ -393,7 +389,7 @@ public class RenderableModelObject {
         //Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
         //We need to undo the offset of the tread part for this routine.
         if (!(tread.entityOn instanceof APart)) {
-            renderable.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
+            renderable.transform.applyTranslation(0, -tread.localOffset.y / tread.entityOn.scale.y, -tread.localOffset.z / tread.entityOn.scale.z);
         }
 
         //Add initial translation for the first point
@@ -513,7 +509,7 @@ public class RenderableModelObject {
         //We need to ensure the endpoints are all angle-aligned.
         //It's possible to have a start angle of -181 and end angle of
         //181, which is really just 2 degress of angle (179-181).
-        //To do this, we set the star angle of roller 1 to be 180, 
+        //To do this, we set the start angle of roller 1 to be 180, 
         //or downward-facing.  From there, we add angles to align things.
         //At the end, we should have a total angle of 540, or 180 + 360.
         rollers.get(0).setEndAngle(180);
@@ -644,8 +640,6 @@ public class RenderableModelObject {
             TreadRoller nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
             double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
             double extraPathLength = rollerPathLength + leftoverPathLength;
-            double normalizedY = (nextRoller.startY - roller.endY) / straightPathLength;
-            double normalizedZ = (nextRoller.startZ - roller.endZ) / straightPathLength;
             if (tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle % 360 < 10 || roller.endAngle % 360 > 350) && (nextRoller.startAngle % 360 < 10 || nextRoller.startAngle % 360 > 350)) {
                 //Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
                 double catenaryPathLength = 2D * tread.placementDefinition.treadDroopConstant * Math.sinh((straightPathLength / 2D) / tread.placementDefinition.treadDroopConstant);
@@ -658,6 +652,7 @@ public class RenderableModelObject {
                 double catenaryPointZ;
                 double catenaryPointY;
                 double startingCatenaryPathLength = catenaryPathLength;
+                double yDelta = nextRoller.startY - roller.endY;
                 while (catenaryPathLength + extraPathLength > deltaDist) {
                     //Go to and add the next point on the catenary path.
                     if (extraPathLength > 0) {
@@ -673,12 +668,14 @@ public class RenderableModelObject {
                     double catenaryFunctionPercent = (catenaryFunctionCurrent + startingCatenaryPathLength / 2) / startingCatenaryPathLength;
                     catenaryPointZ = tread.placementDefinition.treadDroopConstant * arcSin;
                     catenaryPointY = tread.placementDefinition.treadDroopConstant * Math.cosh(catenaryPointZ / tread.placementDefinition.treadDroopConstant);
-                    yPoint = roller.endY + normalizedY * catenaryFunctionPercent + catenaryPointY - catenaryPathEdgeY;
+                    yPoint = roller.endY + yDelta * catenaryFunctionPercent + catenaryPointY - catenaryPathEdgeY;
                     zPoint = roller.endZ + catenaryPointZ + straightPathLength / 2D;
                     points.add(new Double[]{yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent / tread.placementDefinition.treadDroopConstant))});
                 }
                 leftoverPathLength = catenaryPathLength;
             } else {
+                double normalizedY = (nextRoller.startY - roller.endY) / straightPathLength;
+                double normalizedZ = (nextRoller.startZ - roller.endZ) / straightPathLength;
                 while (straightPathLength + extraPathLength > deltaDist) {
                     //Go to and add the next point on the straight path.
                     if (extraPathLength > 0) {

@@ -56,7 +56,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
                 new GUIInstruments((EntityVehicleF_Physics) entity);
                 break;
             case INVENTORY_CHEST:
-                new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false);
+                new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).subDefinition.inventoryTexture, false);
                 break;
             case FUEL_PUMP:
                 new GUIFuelPump((ATileEntityFuelPump) entity, false);
