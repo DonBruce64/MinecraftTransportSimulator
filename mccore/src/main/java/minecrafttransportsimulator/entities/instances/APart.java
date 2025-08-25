@@ -531,11 +531,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public boolean shouldRenderBeams() {
-        return entityOn.shouldRenderBeams();
-    }
-
-    @Override
     public String getTexture() {
         if (subDefinition.useVehicleTexture) {
             if (vehicleOn != null) {

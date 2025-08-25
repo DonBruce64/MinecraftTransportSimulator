@@ -21,7 +21,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Entity class responsible for storing and syncing information about the current gun
@@ -300,11 +299,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                 playerServerGuns.remove(player.getID());
             }
         }
-    }
-
-    @Override
-    public boolean shouldRenderBeams() {
-        return ConfigSystem.client.renderingSettings.vehicleBeams.value;
     }
 
     @Override

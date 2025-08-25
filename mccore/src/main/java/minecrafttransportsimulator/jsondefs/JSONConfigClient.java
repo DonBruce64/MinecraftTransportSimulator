@@ -29,8 +29,8 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<>(true, "Should the glass on windows be rendered on vehicles?");
         public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
 
-        public JSONConfigEntry<Boolean> vehicleBeams = new JSONConfigEntry<>(true, "If false, beams on vehicles will not render.");
-        public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<>(true, "If false, beams on blocks will not render.");
+        public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
+        public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
         public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");

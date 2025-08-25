@@ -67,6 +67,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class JSONParser {
+    private static byte exportRetryCounter;
 
     private static final TypeAdapter<Boolean> booleanAdapter = new TypeAdapter<Boolean>() {
         @Override
@@ -459,7 +460,15 @@ public class JSONParser {
 
         File lastModifiedFile = new File(jsonDir, "lastexported.txt");
         if (lastModifiedFile.exists()) {
-            return "ERROR: Existing export detected!  Exporting will not continue.  Either delete the mts_dev folder, or the lastexported.txt file and try again.";
+            if (exportRetryCounter == 0) {
+                ++exportRetryCounter;
+                return "ERROR: Existing export detected!  Exporting will not continue.  If you truly want to overwrite your export folder, press this button twice more.";
+            } else if (exportRetryCounter == 1) {
+                ++exportRetryCounter;
+                return "ERROR: Existing export detected!  Are you super sure you want to overwrite your exports?  Last chance to save your work!";
+            } else if (exportRetryCounter == 2) {
+                exportRetryCounter = 0;
+            }
         }
 
         long lastTimeModified = 0;

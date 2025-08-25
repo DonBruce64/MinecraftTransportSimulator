@@ -8,7 +8,6 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
@@ -66,11 +65,6 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     @Override
     public boolean shouldLinkBoundsToPosition() {
         return false;
-    }
-
-    @Override
-    public boolean shouldRenderBeams() {
-        return ConfigSystem.client.renderingSettings.blockBeams.value;
     }
 
     @Override

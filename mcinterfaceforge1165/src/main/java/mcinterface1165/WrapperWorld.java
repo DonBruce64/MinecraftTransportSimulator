@@ -22,7 +22,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -57,7 +56,6 @@ import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IChargeableMob;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.IMob;
@@ -1140,9 +1138,7 @@ public class WrapperWorld extends AWrapperWorld {
     public void onIVWorldUnload(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.
         if (event.getWorld() == world) {
-            for (AEntityA_Base entity : allEntities) {
-                entity.remove();
-            }
+            onUnload();
             worldWrappers.remove(world);
         }
     }
