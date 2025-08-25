@@ -305,7 +305,7 @@ public class RenderableModelObject {
                     //First render all flares, then render all beams.
                     float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
                     if (blendableBrightness > 0) {
-                        if (flareRenderable != null) {
+                        if (flareRenderable != null && ConfigSystem.client.renderingSettings.renderFlares.value) {
                             flareRenderable.setLightValue(renderable.worldLightValue);
                             flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                             flareRenderable.setColor(color);
@@ -313,7 +313,7 @@ public class RenderableModelObject {
                             flareRenderable.transform.set(renderable.transform);
                             flareRenderable.render();
                         }
-                        if (beamRenderable != null && entity.shouldRenderBeams()) {
+                        if (beamRenderable != null && ConfigSystem.client.renderingSettings.renderBeams.value) {
                             beamRenderable.setLightValue(renderable.worldLightValue);
                             beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                             beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);

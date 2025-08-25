@@ -257,6 +257,10 @@ public class PartGroundDevice extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? vehicleOn.speedFactor * (partialTicks != 0 ? prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks : angularPosition) * 360D : 0, true);
             case ("ground_rotation_normalized"):
                 return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null ? Math.floorMod(Math.round(vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 3600), 3600) / 10D : 0, true);
+            case ("ground_angular_velocity"):
+                return new ComputedVariable(this, variable, partialTicks -> angularVelocity * vehicleOn.speedFactor, false);
+            case ("ground_angular_velocity_scaled"):
+                return new ComputedVariable(this, variable, partialTicks -> angularVelocity, false);
             case ("ground_onground"):
                 return new ComputedVariable(this, variable, partialTicks -> vehicleOn != null && animateAsOnGround ? 1 : 0, false);
             case ("ground_isflat"):

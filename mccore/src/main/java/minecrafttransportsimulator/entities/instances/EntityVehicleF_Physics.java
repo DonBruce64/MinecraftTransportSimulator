@@ -691,11 +691,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
-    public boolean shouldRenderBeams() {
-        return ConfigSystem.client.renderingSettings.vehicleBeams.value;
-    }
-
-    @Override
     public ComputedVariable getOrCreateVariable(String variable) {
         //If we are a forwarded variable and are a connected trailer, do that now.
         if (definition.motorized.isTrailer && definition.motorized.hookupVariables.contains(variable)) {
