@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -112,16 +113,29 @@ public class InterfaceLoader {
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
-        List<File> packDirectories = new ArrayList<>();
-        File modDirectory = new File(gameDirectory, "mods");
-        if (modDirectory.exists()) {
-            packDirectories.add(modDirectory);
+        List<File> packDirectories = new ArrayList<>(2);
 
+        try {
+            File modDirectory = new File(gameDirectory, "mods").getCanonicalFile();
+            if (modDirectory.exists()) {
+                packDirectories.add(modDirectory);
+            } else {
+                InterfaceManager.coreInterface.logError("Could not find mods directory! Game directory is confirmed to: " + gameDirectory);
+            }
+
+            //Add this mod jar parent directory, other mods/packs may be loaded from there as well. #1943
+            File modFileParent = ModList.get().getModFileById(MODID).getFile().getFilePath().getParent().toFile().getCanonicalFile();
+            if (!packDirectories.contains(modFileParent)) {
+                packDirectories.add(modFileParent);
+            }
+        } catch (Exception e) {
+            InterfaceManager.coreInterface.logError("Something went wrong while evaluating mods directories! " + e.getMessage());
+        }
+
+        if (!packDirectories.isEmpty()) {
             //Parse the packs.
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
-        } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
 
         //Set pack IDs.
