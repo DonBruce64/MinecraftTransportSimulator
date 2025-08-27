@@ -650,7 +650,7 @@ public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D
                     double distance = entity.getPosition().distanceTo(explosionPosition);
                     if (distance <= blastRadius) {
                         double damageAmount = gun.lastLoadedBullet.definition.bullet.damage;
-                        entity.attack(new Damage(gun, null, damageAmount).setExplosive());
+                        entity.attack(new Damage(gun, entity.getBounds(), damageAmount).setExplosive());
                     }
                 }
             }
