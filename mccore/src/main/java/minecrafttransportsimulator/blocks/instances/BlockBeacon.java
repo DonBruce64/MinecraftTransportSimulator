@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class BlockBeacon extends ABlockBaseTileEntity {
 
     public BlockBeacon() {
-        super(10.0F, 5.0F);
+        super(DEFAULT_HARDNESS, DEFAULT_BLAST_RESISTANCE);
     }
 
     @Override

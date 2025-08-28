@@ -22,7 +22,7 @@ public class BlockCollision extends ABlockBase {
     public final BoundingBox blockBounds;
 
     public BlockCollision(int collisionHeightInPixels) {
-        super(10.0F, 5.0F);
+        super(DEFAULT_HARDNESS, DEFAULT_BLAST_RESISTANCE);
         if (collisionHeightInPixels == 0) {
             collisionHeightInPixels = 1;
         }

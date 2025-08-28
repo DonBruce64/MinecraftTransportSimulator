@@ -15,6 +15,8 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
  * @author don_bruce
  */
 public abstract class ABlockBase {
+    public static final float DEFAULT_HARDNESS = 1.5F;
+    public static final float DEFAULT_BLAST_RESISTANCE = 6.0F;
     public final float hardness;
     public final float blastResistance;
 
