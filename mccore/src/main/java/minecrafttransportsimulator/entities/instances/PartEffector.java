@@ -83,6 +83,9 @@ public class PartEffector extends APart {
         } else {
             operationDelay = 0;
         }
+        if (operatedThisTickVar.isActive) {
+            operatedThisTickVar.toggle(false);
+        }
         if (!world.isClient() && isActive && !outOfHealth && operationDelay == definition.effector.operationDelay) {
             drops.clear();
             entityItems.clear();
@@ -108,9 +111,7 @@ public class PartEffector extends APart {
                         }
                         case HARVESTER: {
                             //Harvest drops, and add to inventories.
-                            List<IWrapperItemStack> blockDrops = world.harvestBlock(box.globalCenter);
-                            if (!blockDrops.isEmpty()) {
-                                drops.addAll(blockDrops);
+                            if (world.harvestBlock(box.globalCenter, drops)) {
                                 operatedThisTick = true;
                             }
                             break;
@@ -135,7 +136,8 @@ public class PartEffector extends APart {
                             if (world.plowBlock(box.globalCenter)) {
                                 operatedThisTick = true;
                                 //Harvest blocks on top of this block in case they need to be dropped.
-                                List<IWrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
+                                List<IWrapperItemStack> harvestedDrops = new ArrayList<>();
+                                world.harvestBlock(box.globalCenter, harvestedDrops);
                                 if (!harvestedDrops.isEmpty()) {
                                     for (IWrapperItemStack stack : harvestedDrops) {
                                         if (stack.getSize() > 0) {
@@ -205,7 +207,10 @@ public class PartEffector extends APart {
                         case COLLECTOR: {
                             //Populate item list for later.
                             world.populateItemStackEntities(entityItems, box);
-                            drops.addAll(entityItems.values());
+                            if (!entityItems.isEmpty()) {
+                                drops.addAll(entityItems.values());
+                                operatedThisTick = true;
+                            }
                             break;
                         }
                         case DROPPER: {
@@ -235,7 +240,9 @@ public class PartEffector extends APart {
                         case SPRAYER: {
                             //Just spray block below.
                             --box.globalCenter.y;
-                            world.hydrateBlock(box.globalCenter);
+                            if (world.hydrateBlock(box.globalCenter)) {
+                                operatedThisTick = true;
+                            }
                             ++box.globalCenter.y;
                             break;
                         }
@@ -245,6 +252,7 @@ public class PartEffector extends APart {
                                     if (crate.isActive && crate.inventory.hasMaterials(inputMaterials)) {
                                         crate.inventory.removeMaterials(inputMaterials);
                                         outputMaterials.forEach(material -> drops.add(material.possibleItems.get(0).copy()));
+                                        operatedThisTick = true;
                                         break;
                                     }
                                 }
@@ -294,11 +302,7 @@ public class PartEffector extends APart {
             }
             if (operatedThisTick) {
                 attack(OPERATION_DAMAGE);
-                if (!operatedThisTickVar.isActive) {
-                    operatedThisTickVar.setActive(true, true);
-                }
-            }else if(operatedThisTickVar.isActive) {
-                operatedThisTickVar.setActive(false, true);
+                operatedThisTickVar.setActive(true, true);
             }
         }
     }

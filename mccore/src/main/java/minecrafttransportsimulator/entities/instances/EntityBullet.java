@@ -610,7 +610,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!gun.world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(gun, bulletNumber, blockPosition, blockSide));
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.WATER)) {
-                gun.world.extinguish(blockPosition, blockSide);
+                gun.world.extinguish(blockPosition);
             } else if (ConfigSystem.settings.damage.bulletBlockBreaking.value) {
                 float hardnessHit = gun.world.getBlockHardness(blockPosition);
                 if (hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * gun.lastLoadedBullet.definition.bullet.diameter / 20F)) {
@@ -633,6 +633,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (!gun.world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, hitSide, hitType));
         }
+        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
 
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
@@ -642,9 +643,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
             }
             gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
+            if (bullet != null) {
+                bullet.displayDebugMessage("SPAWNING EXPLOSION AT " + explosionPosition);
+            }
         }
 
-        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
         if (bullet != null) {
             bullet.position.set(position);
             bullet.lastHit = hitType;

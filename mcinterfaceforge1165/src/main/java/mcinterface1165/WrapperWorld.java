@@ -807,10 +807,12 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void extinguish(Point3D position, Axis side) {
-        BlockPos blockpos = new BlockPos(position.x, position.y, position.z).relative(Direction.valueOf(side.name()));
-        if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
-            world.removeBlock(blockpos, false);
+    public void extinguish(Point3D position) {
+        for (Direction side : Direction.values()) {
+            BlockPos blockpos = new BlockPos(position.x, position.y, position.z).relative(side);
+            if (world.getBlockState(blockpos).is(BlockTags.FIRE)) {
+                world.removeBlock(blockpos, false);
+            }
         }
     }
 
@@ -852,10 +854,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public List<IWrapperItemStack> harvestBlock(Point3D position) {
+    public boolean harvestBlock(Point3D position, List<IWrapperItemStack> cropDrops) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         BlockState state = world.getBlockState(pos);
-        List<IWrapperItemStack> cropDrops = new ArrayList<>();
         if ((state.getBlock() instanceof CropsBlock && ((CropsBlock) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BushBlock) {
             Block harvestedBlock = state.getBlock();
             world.playSound(null, pos, harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -876,8 +877,9 @@ public class WrapperWorld extends AWrapperWorld {
                     }
                 }
             }
+            return true;
         }
-        return cropDrops;
+        return false;
     }
 
     @Override
