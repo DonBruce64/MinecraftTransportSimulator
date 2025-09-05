@@ -68,7 +68,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final List<APart> linkedParts = new ArrayList<>();
 
     public boolean isInvisible = false;
-    public boolean isActive = true;
     public boolean isPermanent = false;
     public final boolean isMoveable;
     public final boolean turnsWithSteer;
@@ -77,6 +76,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     private boolean requestedForcedCamera;
     private final ComputedVariable newlyAddedVar;
     public final ComputedVariable isExteriorVar;
+    public final ComputedVariable isActiveVar;
 
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
@@ -159,6 +159,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         addVariable(this.newlyAddedVar = new ComputedVariable(this, "newlyAdded", data));
         addVariable(this.isExteriorVar = new ComputedVariable(this, "part_isExterior", data));
+        addVariable(this.isActiveVar = new ComputedVariable(this, "part_active", data));
         if (placingPlayer != null) {
             newlyAddedVar.setActive(true, false);
         }
@@ -185,14 +186,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Update active state.
         world.beginProfiling("ActiveStateCheck", false);
-        isActive = partOn != null ? partOn.isActive : true;
+        boolean isActive = partOn != null ? partOn.isActiveVar.isActive : true;
         if (isActive && placementActiveSwitchbox != null) {
             isActive = placementActiveSwitchbox.runSwitchbox(0, false);
         }
         if (isActive && internalActiveSwitchbox != null) {
             isActive = internalActiveSwitchbox.runSwitchbox(0, false);
         }
-        if (!isActive && rider != null) {
+
+        isActiveVar.setActive(isActive, false);
+        if (!isActiveVar.isActive && rider != null) {
             //Kick out rider from inactive seat.
             removeRider();
         }
@@ -584,8 +587,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 switch (variable) {
                     case ("part_present"):
                         return new ComputedVariable(true);
-                    case ("part_active"):
-                        return new ComputedVariable(isActive);
                     case ("part_ismirrored"):
                         return new ComputedVariable(isMirrored);
                     case ("part_isonfront"):

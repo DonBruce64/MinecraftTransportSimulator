@@ -379,7 +379,7 @@ public class PartEngine extends APart {
             //Update driven wheels.  These are a subset of linked depending on the wheel state.
             drivenWheels.clear();
             for (PartGroundDevice wheel : linkedWheels) {
-                if (!wheel.isSpare && wheel.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
+                if (!wheel.isSpare && wheel.isActiveVar.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
                     drivenWheels.add(wheel);
                     wheel.drivenLastTick = true;
                 }
@@ -395,7 +395,7 @@ public class PartEngine extends APart {
 
                 //Stall engine for conditions.
                 if (!world.isClient()) {
-                    if (!isActive) {
+                    if (!isActiveVar.isActive) {
                         stallEngine(Signal.INACTIVE);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                     } else if (outOfHealth || vehicleOn.outOfHealth) {
@@ -487,7 +487,7 @@ public class PartEngine extends APart {
                             } else if (rpm < stallRPMVar.currentValue) {
                                 stallEngine(Signal.TOO_SLOW);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
-                            } else if (!isActive) {
+                            } else if (!isActiveVar.isActive) {
                                 stallEngine(Signal.INACTIVE);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INACTIVE));
                             }
@@ -506,7 +506,7 @@ public class PartEngine extends APart {
                         //have the ability to engage a starter.
                         if (rpm >= startRPMVar.currentValue && !world.isClient() && !outOfHealth && !vehicleOn.outOfHealth && !isInvalidDimension()) {
                             if (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0) {
-                                if (isActive && !isInLiquid() && magnetoVar.isActive) {
+                                if (isActiveVar.isActive && !isInLiquid() && magnetoVar.isActive) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
                                 }
@@ -520,12 +520,12 @@ public class PartEngine extends APart {
                     if (running) {
                         //Remove fuel, and if we don't have any, turn ourselves off.
                         rocketFuelUsed += getTotalFuelConsumption();
-                        if (!isActive || rocketFuelUsed >= definition.engine.rocketFuel) {
+                        if (!isActiveVar.isActive || rocketFuelUsed >= definition.engine.rocketFuel) {
                             running = false;
                         }
                     } else {
                         //If the magneto comes on, and we have fuel, ignite.
-                        if (isActive && !outOfHealth && magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
+                        if (isActiveVar.isActive && !outOfHealth && magnetoVar.isActive && rocketFuelUsed < definition.engine.rocketFuel) {
                             running = true;
                         }
                     }
@@ -552,7 +552,7 @@ public class PartEngine extends APart {
                     } else {
                         //Turn on engine if the magneto is on and we have fuel.
                         if (!world.isClient() && !outOfHealth && !vehicleOn.outOfHealth) {
-                            if (isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+                            if (isActiveVar.isActive && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
                                 if (magnetoVar.isActive) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
@@ -570,7 +570,7 @@ public class PartEngine extends APart {
                     } else {
                         //Turn on engine if the magneto is onl.
                         if (!world.isClient() && !outOfHealth && !vehicleOn.outOfHealth) {
-                            if (isActive) {
+                            if (isActiveVar.isActive) {
                                 if (magnetoVar.isActive){
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));

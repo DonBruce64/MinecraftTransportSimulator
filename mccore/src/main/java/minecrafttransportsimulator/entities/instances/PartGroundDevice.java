@@ -47,7 +47,6 @@ public class PartGroundDevice extends APart {
     public final ComputedVariable motiveFrictionVar;
     public final ComputedVariable lateralFrictionVar;
     private final ComputedVariable heightVar;
-    private double lastHeight;
     private final Point3D groundPosition = new Point3D();
     private BlockMaterial blockMaterialBelow;
     private String blockNameBelow;
@@ -58,7 +57,6 @@ public class PartGroundDevice extends APart {
     public boolean animateAsOnGround;
     private int ticksCalcsSkipped = 0;
     private double prevAngularVelocity;
-    private boolean prevActive = true;
     private final Point3D zeroReferencePosition;
     private final Point3D prevLocalOffset;
     public PartGroundDeviceFake fakePart;
@@ -114,16 +112,15 @@ public class PartGroundDevice extends APart {
     public void update() {
         if (vehicleOn != null && !isSpare) {
             //Change ground device collective if we changed active state or offset or height.
-            if (prevActive != isActive) {
+            if (isActiveVar.hasChanged()) {
                 vehicleOn.groundDeviceCollective.updateMembers();
                 vehicleOn.groundDeviceCollective.updateBounds();
-                prevActive = isActive;
             }
             if (!localOffset.equals(prevLocalOffset)) {
                 vehicleOn.groundDeviceCollective.updateBounds();
                 prevLocalOffset.set(localOffset);
             }
-            if (lastHeight != heightVar.currentValue) {
+            if (heightVar.hasChanged()) {
                 vehicleOn.groundDeviceCollective.updateBounds();
                 boundingBox.heightRadius = heightVar.currentValue;
             }
@@ -246,7 +243,6 @@ public class PartGroundDevice extends APart {
 
         motiveFrictionVar.setTo(currentMotiveFriction, false);
         lateralFrictionVar.setTo(currentLateralFriction, false);
-        lastHeight = heightVar.currentValue;
         heightVar.setTo(flatVar.isActive ? definition.ground.flatHeight : definition.ground.height, false);
     }
 
