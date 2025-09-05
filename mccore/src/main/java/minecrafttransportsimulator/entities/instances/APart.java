@@ -273,9 +273,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Update bounding box, as scale changes width/height.
-        boundingBox.widthRadius = getWidth() / 2D * scale.x;
-        boundingBox.heightRadius = getHeight() / 2D * scale.y;
-        boundingBox.depthRadius = getWidth() / 2D * scale.z;
+        boundingBox.widthRadius = getWidth() / 2D;
+        boundingBox.heightRadius = getHeight() / 2D;
+        boundingBox.depthRadius = getWidth() / 2D;
         world.endProfiling();
         world.endProfiling();
     }
@@ -517,11 +517,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     public double getWidth() {
-        return definition.generic.width != 0 ? definition.generic.width : 0.75F;
+        return (definition.generic.width != 0 ? definition.generic.width : 0.75F) * scale.x;
     }
 
     public double getHeight() {
-        return definition.generic.height != 0 ? definition.generic.height : 0.75F;
+        return (definition.generic.height != 0 ? definition.generic.height : 0.75F) * scale.y;
     }
 
     //--------------------START OF SOUND AND ANIMATION CODE--------------------

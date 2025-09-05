@@ -247,7 +247,7 @@ public class PartGroundDevice extends APart {
         motiveFrictionVar.setTo(currentMotiveFriction, false);
         lateralFrictionVar.setTo(currentLateralFriction, false);
         lastHeight = heightVar.currentValue;
-        heightVar.setTo((flatVar.isActive ? definition.ground.flatHeight : definition.ground.height) * scale.y, false);
+        heightVar.setTo(flatVar.isActive ? definition.ground.flatHeight : definition.ground.height, false);
     }
 
     @Override
@@ -294,7 +294,7 @@ public class PartGroundDevice extends APart {
 
     @Override
     public double getHeight() {
-        return heightVar.currentValue;
+        return heightVar.currentValue * scale.y;
     }
 
     /**
