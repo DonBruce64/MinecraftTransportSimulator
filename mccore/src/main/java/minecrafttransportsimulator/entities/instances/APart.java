@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -607,19 +608,33 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                         ComputedVariable computedVariable = super.createComputedVariable(variable, false);
                         if (computedVariable == null) {
                             //Not a basic part variable or something that the core classes make.
-                            //Check any entities we are on, up to the top-most parent.
-                            AEntityF_Multipart<?> testEntity = entityOn;
-                            while (testEntity != null) {
-                                if (testEntity.containsVariable(variable)) {
-                                    //Variable exists, get as-is.
-                                    return testEntity.getOrCreateVariable(variable);
-                                } else {
-                                    //Try to create the variable, it might be a dynamic variable property.
-                                    computedVariable = testEntity.createComputedVariable(variable, false);
-                                    if (computedVariable == null && testEntity instanceof APart) {
-                                        testEntity = ((APart) testEntity).entityOn;
+                            //Check that this isn't a variable modifier variable that hasn't run yet.
+                            //This can happen if we are getting this variable for self-modifying variable modifier.
+                            boolean skipParentChecks = false;
+                            if (definition.variableModifiers != null) {
+                                for (JSONVariableModifier modifer : definition.variableModifiers) {
+                                    if (modifer.variable.equals(variable)) {
+                                        skipParentChecks = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!skipParentChecks) {
+                                //Not a variable modifier, check any entities we are on, up to the top-most parent.
+                                AEntityF_Multipart<?> testEntity = entityOn;
+                                while (testEntity != null) {
+                                    if (testEntity.containsVariable(variable)) {
+                                        //Variable exists, get as-is.
+                                        return testEntity.getOrCreateVariable(variable);
                                     } else {
-                                        testEntity = null;
+                                        //Try to create the variable, it might be a dynamic variable property.
+                                        computedVariable = testEntity.createComputedVariable(variable, false);
+                                        if (computedVariable == null && testEntity instanceof APart) {
+                                            testEntity = ((APart) testEntity).entityOn;
+                                        } else {
+                                            testEntity = null;
+                                        }
                                     }
                                 }
                             }
