@@ -546,19 +546,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private double getTurningForce() {
         skidSteerActive = false;
         double steeringAngle = getSteeringAngle() * 45;
-
-        //Check for permanent skid-steer if we have it.
-        if (definition.motorized.hasPermanentSkidSteer) {
-            return steeringAngle / 20D;
-        }
         if (steeringAngle != 0) {
-            double turningDistance = groundDeviceCollective.getTurningWheelbase();
+            double turningDistance = definition.motorized.hasPermanentSkidSteer ? 1 : groundDeviceCollective.getTurningWheelbase();
             if (turningDistance > 0) {
                 //If we are vehicle that can do skid-steer, and that's active, do so now.
-                if (hasSkidSteerVar.isActive && !definition.motorized.hasPermanentSkidSteer && !parkingBrakeVar.isActive && groundDeviceCollective.isReady() && groundVelocity < 0.05) {
+                if (!parkingBrakeVar.isActive && (definition.motorized.hasPermanentSkidSteer || (hasSkidSteerVar.isActive && groundDeviceCollective.isReady() && groundVelocity < 0.05))) {
                     boolean foundNeutralEngine = false;
-                    boolean leftWheelGrounded = false;
-                    boolean rightWheelGrounded = false;
+                    boolean leftWheelGrounded = definition.motorized.hasPermanentSkidSteer;
+                    boolean rightWheelGrounded = definition.motorized.hasPermanentSkidSteer;
                     for (APart part : parts) {
                         if (part instanceof PartGroundDevice) {
                             if (groundDeviceCollective.groundedGroundDevices.contains(part)) {
