@@ -295,6 +295,10 @@ public class VehicleGroundDeviceBox {
                 //Always check for entities here since we don't in the above loop.
                 contactedEntity = checkEntityCollisions(vehicleMotionOffset);
                 isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
+                if (contactedEntity) {
+                    //Need to check only if we contacted an entity, as if we didn't we want to use our current depth as found in the above loop.
+                    collisionDepth = -solidBox.currentCollisionDepth.y;
+                }
             } else {
                 //Just use current best offset.  For wheels, this will just be 0 and won't matter.
                 solidBox.localCenter.set(solidBoxNormalPos);
