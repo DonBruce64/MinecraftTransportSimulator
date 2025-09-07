@@ -111,15 +111,15 @@ public final class PartSeat extends APart {
 
         //Update gun list, this is grouped by the specific gun.
         List<PartGun> gunList = new ArrayList<>();
-        addLinkedPartsToList(gunList, PartGun.class);
+        if (entityOn instanceof PartGun) {
+            gunList.add((PartGun) entityOn);
+        }
         for (APart part : parts) {
             if (part instanceof PartGun) {
                 gunList.add((PartGun) part);
             }
         }
-        if (entityOn instanceof PartGun) {
-            gunList.add((PartGun) entityOn);
-        }
+        addLinkedPartsToList(gunList, PartGun.class);
 
         gunGroups.clear();
         for (PartGun gun : gunList) {
