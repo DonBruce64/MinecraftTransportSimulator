@@ -419,7 +419,7 @@ public class LanguageSystem {
     public static final LanguageEntry ITEMINFO_JUMPERPACK = new LanguageEntry("iteminfo.jumperpack", "Use on a vehicle to charge battery to max level.");
     public static final LanguageEntry ITEMINFO_REPAIRPACK = new LanguageEntry("iteminfo.repairpack", "Use on a vehicle to repair it.  This pack heals the vehicle: ");
     public static final LanguageEntry ITEMINFO_REPAIRPACK_UNTOTAL = new LanguageEntry("iteminfo.repairpack.untotal", "This repair pack is able to repair totaled vehicles as well.");
-    public static final LanguageEntry ITEMINFO_Y2KBUTTON = new LanguageEntry("iteminfo.y2kbutton", "Use in a world to turn off all vehicle engines, engage their parking brakes, and turn off their lights.\nOnly usable by admins.");
+    public static final LanguageEntry ITEMINFO_Y2KBUTTON = new LanguageEntry("iteminfo.y2kbutton", "Use in a world to turn off all vehicle engines, engage their parking brakes, and turn off their lights.  Sneak-use to dump all vehicle positions in the chat.  \nOnly usable by admins.");
 
     public static final LanguageEntry ITEMINFO_ENGINE_AUTOMATIC = new LanguageEntry("iteminfo.engine.automatic", "Transmission: Automatic");
     public static final LanguageEntry ITEMINFO_ENGINE_MANUAL = new LanguageEntry("iteminfo.engine.manual", "Transmission: Manual");

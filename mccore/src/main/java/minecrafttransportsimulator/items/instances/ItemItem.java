@@ -11,6 +11,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.AEntityVehicleE_Powered;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -367,7 +368,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 if (rightClick) {
                     if (entity instanceof EntityVehicleF_Physics) {
                         //Use jumper on vehicle.
-                        ((EntityVehicleF_Physics) entity).electricPower = (((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * ((EntityVehicleF_Physics) entity).BATTERY_DEFAULT_CHARGE);
+                        ((EntityVehicleF_Physics) entity).electricPower = (((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * AEntityVehicleE_Powered.BATTERY_DEFAULT_CHARGE);
                         if (!entity.world.isClient()) {
                             InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_JUMPERPACK), player);
                             if (!player.isCreative()) {
@@ -452,16 +453,23 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {
-                for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                    vehicle.runningLightVar.setTo(0, true);
-                    vehicle.headLightVar.setTo(0, true);
-                    vehicle.navigationLightVar.setTo(0, true);
-                    vehicle.strobeLightVar.setTo(0, true);
-                    vehicle.taxiLightVar.setTo(0, true);
-                    vehicle.landingLightVar.setTo(0, true);
-                    vehicle.throttleVar.setTo(0, true);
-                    vehicle.parkingBrakeVar.setTo(0, true);
-                    vehicle.engines.forEach(engine -> engine.magnetoVar.setTo(0, true));
+                if (player.isSneaking()) {
+                    for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                        player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Vehicle:" + vehicle + " present at " + vehicle.position);
+                    }
+                } else {
+                    for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+                        vehicle.runningLightVar.setTo(0, true);
+                        vehicle.headLightVar.setTo(0, true);
+                        vehicle.navigationLightVar.setTo(0, true);
+                        vehicle.strobeLightVar.setTo(0, true);
+                        vehicle.taxiLightVar.setTo(0, true);
+                        vehicle.landingLightVar.setTo(0, true);
+                        vehicle.throttleVar.setTo(0, true);
+                        vehicle.parkingBrakeVar.setTo(0, true);
+                        vehicle.engines.forEach(engine -> engine.magnetoVar.setTo(0, true));
+                    }
+                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Stopped all vehicles.");
                 }
             }
         }
