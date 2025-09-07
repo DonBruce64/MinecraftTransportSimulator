@@ -25,7 +25,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -567,14 +566,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * will create the part on clients, which you will always want to do unless you are transferring a part.
      */
     public void addPart(APart part, boolean sendPacket) {
-        //If the part is a seat, add it at the end of the list, since other parts might affect its movement.
-        //If the part isn't a seat, add to the start so we assure its before any seats.
-        //If we don't, update order with seated riders might get fouled.
-        if (part instanceof PartSeat) {
+        //Add the part in the list so that it matches the JSON order.
+        int partListPosition = 0;
+        int index = definition.parts.indexOf(part.placementDefinition);
+        for (int i = 0; i < parts.size(); ++i) {
+            if (definition.parts.indexOf(parts.get(i).placementDefinition) > index) {
+                break;
+            }
+            partListPosition = i;
+        }
+        if (partListPosition > parts.size()) {
+            //End of the list for you!
             parts.add(part);
         } else {
-            parts.add(0, part);
+            parts.add(partListPosition, part);
         }
+
         if (!part.isFake()) {
             partsInSlots.set(part.placementSlot, part);
 
