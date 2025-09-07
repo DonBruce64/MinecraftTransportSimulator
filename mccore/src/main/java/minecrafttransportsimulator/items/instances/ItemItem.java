@@ -293,39 +293,34 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                             if (interactable.tank != null && !interactable.equals(firstPartClicked)) {
                                 if (interactable.linkedPart == null && interactable.linkedVehicle == null) {
                                     if (interactable.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
-                                        if (interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())) {
+                                        if (interactable.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                             firstPartClicked.linkedPart = interactable;
                                             InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
                                             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_SECONDLINK));
-                                            firstPartClicked = null;
                                         } else {
-                                            firstPartClicked = null;
                                             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
                                         }
                                     } else {
-                                        firstPartClicked = null;
                                         player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_TOOFAR));
                                     }
                                 } else {
-                                    firstPartClicked = null;
                                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_ALREADYLINKED));
                                 }
+                                firstPartClicked = null;
                             }
                         } else if (vehicle != null) {
                             if (vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)) {
-                                if (vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())) {
+                                if (vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())) {
                                     firstPartClicked.linkedVehicle = vehicle;
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
                                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_SECONDLINK));
-                                    firstPartClicked = null;
                                 } else {
-                                    firstPartClicked = null;
                                     player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
                                 }
                             } else {
-                                firstPartClicked = null;
                                 player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_FUELHOSE_TOOFAR));
                             }
+                            firstPartClicked = null;
                         }
                     }
                 }
