@@ -26,6 +26,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
         public double seekerMaxAngle;
 
+        @JSONDescription("Set this to true to make this bullet not spawn, but consume ammo.")
+        public boolean isBlank;
+
         @JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
         public boolean isHeat;
 
