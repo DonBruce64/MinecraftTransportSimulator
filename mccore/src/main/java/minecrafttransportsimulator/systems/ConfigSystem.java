@@ -44,8 +44,8 @@ public final class ConfigSystem {
      * Called to load the config objects from the files in the passed-in folder.
      * If a required file is not present, one will be created at the end of the loading phase.
      */
-    public static void loadFromDisk(File configDirectory, boolean onClient) {
-        ConfigSystem.configDirectory = configDirectory;
+    public static void loadFromDisk(boolean onClient) {
+        ConfigSystem.configDirectory = new File(InterfaceManager.gameDirectory, "config");
 
         //If we have a settings file already, parse it into Java.
         //Otherwise, make a new one.
