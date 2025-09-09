@@ -385,9 +385,19 @@ public class EntityParticle extends AEntityC_Renderable {
             
             if (definition.movementDuration != 0) {
                 if (ticksExisted <= definition.movementDuration) {
-                    Point3D velocityLastTick = initialVelocity.copy().scale((definition.movementDuration - (ticksExisted - 1)) / (float) definition.movementDuration);
-                    Point3D velocityThisTick = initialVelocity.copy().scale((definition.movementDuration - ticksExisted) / (float) definition.movementDuration);
-                    motion.add(velocityThisTick).subtract(velocityLastTick);
+                    float durationFactor = (definition.movementDuration - ticksExisted) / (float) definition.movementDuration;
+                    double absX = Math.abs(initialVelocity.x * durationFactor);
+                    double absY = Math.abs(initialVelocity.y * durationFactor);
+                    double absZ = Math.abs(initialVelocity.z * durationFactor);
+                    if (Math.abs(motion.x) > absX) {
+                        motion.x = Math.signum(motion.x) * absX;
+                    }
+                    if (Math.abs(motion.y) > absY) {
+                        motion.y = Math.signum(motion.y) * absY;
+                    }
+                    if (Math.abs(motion.z) > absZ) {
+                        motion.z = Math.signum(motion.z) * absZ;
+                    }
                 }
             }
 
