@@ -74,6 +74,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public JSONSubDefinition subDefinition;
 
     /**
+     * The current texture index for this entity.
+     */
+    private ComputedVariable textureIndexVar;
+
+    /**
      * Map containing text lines for saved text provided by this entity.
      **/
     public final Map<JSONText, String> text = new HashMap<>();
@@ -202,6 +207,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 });
             }
         }
+
+        //Add texture index and do common functions.
+        addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", data));
         performCommonConstructionWork();
     }
 
@@ -212,6 +220,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         super(world, position, motion, angles);
         this.definition = item.definition;
         updateSubDefinition(item.subDefinition.subName);
+        addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", null));
         performCommonConstructionWork();
     }
 
@@ -462,7 +471,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
     public String getTexture() {
-        return definition.getTextureLocation(subDefinition);
+        return definition.getTextureLocation(subDefinition, (int) textureIndexVar.currentValue);
     }
 
     /**

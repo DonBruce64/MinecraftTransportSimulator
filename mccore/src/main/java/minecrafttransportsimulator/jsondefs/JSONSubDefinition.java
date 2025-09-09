@@ -29,9 +29,6 @@ public class JSONSubDefinition {
     @JSONDescription("This parameter is optional.  If set, then the model with this name will be used for this definition rather than the default one.  This model must be in the same folder as all other models for this component, but it may be in sub-folders if desired.")
     public String modelName;
 
-    @JSONDescription("Like modelName, but used to override the texture.  Useful if you have multiple models with the same texture (say different orientations of the same thing).")
-    public String textureName;
-
     @JSONDescription("The texture for the GUI for this interactable thing.  Only used if this thing has a GUI.  If not set, the default is used.")
     public String inventoryTexture;
 
@@ -40,6 +37,9 @@ public class JSONSubDefinition {
 
     @JSONDescription("An optional description.  This will be appended to the main description if it is present.  This allows for dynamic descriptions for different variants.")
     public String description;
+
+    @JSONDescription("Like modelName, but instead a list of textures used to override the texture.  Useful if you have multiple models with the same texture (say different orientations of the same thing), or if you have one particular definition that could have multiple dynamic variants of texture.  textureIndex is used to select which texture is applied.")
+    public List<String> textureNames;
 
     @JSONRequired
     @JSONDescription("Like the materials in the general section, except these are added to the base materials to allow crafting of the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Note that the number of lists here must match the number of lists in the materialLists, as each materialList entry is paired with an entry in this variable.  Also note that these are not used for repair recipes.")
@@ -53,4 +53,6 @@ public class JSONSubDefinition {
 
     @Deprecated
     public List<String> extraMaterials;
+    @Deprecated
+    public String textureName;
 }

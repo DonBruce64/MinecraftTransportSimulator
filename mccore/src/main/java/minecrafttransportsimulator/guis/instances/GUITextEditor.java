@@ -58,7 +58,7 @@ public class GUITextEditor extends AGUIBase {
             modelRender = new GUIComponent3DModel(guiLeft + 3 * getWidth() / 4, guiTop + 110, signScale, false, false, true);
             addComponent(modelRender);
             modelRender.modelLocation = entity.definition.getModelLocation(entity.subDefinition);
-            modelRender.textureLocation = entity.definition.getTextureLocation(entity.subDefinition);
+            modelRender.textureLocation = entity.definition.getTextureLocation(entity.subDefinition, 0);
             boxWidth = 100;
         } else {
             boxWidth = 200;
