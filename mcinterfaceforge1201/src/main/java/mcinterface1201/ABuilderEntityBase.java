@@ -113,7 +113,7 @@ public abstract class ABuilderEntityBase extends Entity {
     }
 
     @Override
-    public void absMoveTo(double pX, double pY, double pZ, float pYRot, float pXRot) {
+    public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pLerpSteps, boolean pTeleport) {
         //Overridden due to stupid tracker behavior.
     }
 
