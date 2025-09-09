@@ -33,6 +33,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -96,18 +97,28 @@ public class InterfaceLoader {
 
         InterfaceManager.coreInterface.logError("Welcome to MTS VERSION: " + MODVER);
 
-        //Parse packs
-        ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
+        //Init config
+        ConfigSystem.loadFromDisk(isClient);
+
+        //Parse packs.  Look though default game directory and file runtime
+        //Some systems don't use the "proper" game directory for mods so we need to look in the file directory too
         List<File> packDirectories = new ArrayList<>();
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
-
-            //Parse the packs.
+        }
+        try {
+            modDirectory = ModList.get().getModFileById(MODID).getFile().getFilePath().getParent().toFile().getCanonicalFile();
+        } catch (Exception e) {
+        } //Do nothing, this won't happen.
+        if (modDirectory.exists()) {
+            packDirectories.add(modDirectory);
+        }
+        if (!packDirectories.isEmpty()) {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories);
         } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceManager.coreInterface.logError("Could not find mods directory!  Checked game directory: " + gameDirectory + " and runtime file directory:" + modDirectory);
         }
 
         //Set pack IDs.

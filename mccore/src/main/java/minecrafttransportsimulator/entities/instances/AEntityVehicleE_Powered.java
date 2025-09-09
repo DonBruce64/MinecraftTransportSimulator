@@ -115,7 +115,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         //If we have space for fuel, and we have tanks with it, transfer it.
         if (!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100) {
             for (APart part : allParts) {
-                if (part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles) {
+                if (part instanceof PartInteractable && part.isActiveVar.isActive && part.definition.interactable.feedsVehicles) {
                     EntityFluidTank tank = ((PartInteractable) part).tank;
                     if (tank != null) {
                         double amountFilled = tank.drain(fuelTank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, 1, true);

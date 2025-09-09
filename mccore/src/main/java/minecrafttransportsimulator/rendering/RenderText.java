@@ -214,6 +214,9 @@ public class RenderText {
                 BufferedImage bufferedImage;
                 try {
                     bufferedImage = ImageIO.read(InterfaceManager.renderingInterface.getTextureStream(fontLocations[i]));
+                    if (bufferedImage == null) {
+                        continue;
+                    }
                 } catch (Exception e) {
                     //Just continue, as we don't care about this file.  Not all files may be present for any given font.
                     continue;

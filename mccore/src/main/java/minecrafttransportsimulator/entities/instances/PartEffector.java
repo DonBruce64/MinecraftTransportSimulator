@@ -83,7 +83,10 @@ public class PartEffector extends APart {
         } else {
             operationDelay = 0;
         }
-        if (!world.isClient() && isActive && !outOfHealth && operationDelay == definition.effector.operationDelay) {
+        if (operatedThisTickVar.isActive) {
+            operatedThisTickVar.toggle(false);
+        }
+        if (!world.isClient() && isActiveVar.isActive && !outOfHealth && operationDelay == definition.effector.operationDelay) {
             drops.clear();
             entityItems.clear();
             blockFlooredPositionsBrokeThisTick.clear();
@@ -93,7 +96,7 @@ public class PartEffector extends APart {
                         case FERTILIZER: {
                             //Search all inventories for fertilizer and try to use it.
                             for (PartInteractable crate : linkedPullableCrates) {
-                                if (crate.isActive) {
+                                if (crate.isActiveVar.isActive) {
                                     for (int i = 0; i < crate.inventory.getSize(); ++i) {
                                         IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.fertilizeBlock(box.globalCenter, stack)) {
@@ -108,9 +111,7 @@ public class PartEffector extends APart {
                         }
                         case HARVESTER: {
                             //Harvest drops, and add to inventories.
-                            List<IWrapperItemStack> blockDrops = world.harvestBlock(box.globalCenter);
-                            if (!blockDrops.isEmpty()) {
-                                drops.addAll(blockDrops);
+                            if (world.harvestBlock(box.globalCenter, drops)) {
                                 operatedThisTick = true;
                             }
                             break;
@@ -118,7 +119,7 @@ public class PartEffector extends APart {
                         case PLANTER: {
                             //Search all inventories for seeds and try to plant them.
                             for (PartInteractable crate : linkedPullableCrates) {
-                                if (crate.isActive) {
+                                if (crate.isActiveVar.isActive) {
                                     for (int i = 0; i < crate.inventory.getSize(); ++i) {
                                         IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (world.plantBlock(box.globalCenter, stack)) {
@@ -135,7 +136,8 @@ public class PartEffector extends APart {
                             if (world.plowBlock(box.globalCenter)) {
                                 operatedThisTick = true;
                                 //Harvest blocks on top of this block in case they need to be dropped.
-                                List<IWrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
+                                List<IWrapperItemStack> harvestedDrops = new ArrayList<>();
+                                world.harvestBlock(box.globalCenter, harvestedDrops);
                                 if (!harvestedDrops.isEmpty()) {
                                     for (IWrapperItemStack stack : harvestedDrops) {
                                         if (stack.getSize() > 0) {
@@ -185,7 +187,7 @@ public class PartEffector extends APart {
                             if (world.isAir(box.globalCenter)) {
                                 //Search all inventories for blocks  and try to place them.
                                 for (PartInteractable crate : linkedPullableCrates) {
-                                    if (crate.isActive) {
+                                    if (crate.isActiveVar.isActive) {
                                         for (int i = 0; i < crate.inventory.getSize(); ++i) {
                                             IWrapperItemStack stack = crate.inventory.getStack(i);
                                             if (world.placeBlock(box.globalCenter, stack)) {
@@ -205,14 +207,17 @@ public class PartEffector extends APart {
                         case COLLECTOR: {
                             //Populate item list for later.
                             world.populateItemStackEntities(entityItems, box);
-                            drops.addAll(entityItems.values());
+                            if (!entityItems.isEmpty()) {
+                                drops.addAll(entityItems.values());
+                                operatedThisTick = true;
+                            }
                             break;
                         }
                         case DROPPER: {
                             //Place the first item found.
                             boolean placedItem = false;
                             for (PartInteractable crate : linkedPullableCrates) {
-                                if (crate.isActive) {
+                                if (crate.isActiveVar.isActive) {
                                     for (int i = 0; i < crate.inventory.getSize(); ++i) {
                                         IWrapperItemStack stack = crate.inventory.getStack(i);
                                         if (!stack.isEmpty()) {
@@ -235,16 +240,19 @@ public class PartEffector extends APart {
                         case SPRAYER: {
                             //Just spray block below.
                             --box.globalCenter.y;
-                            world.hydrateBlock(box.globalCenter);
+                            if (world.hydrateBlock(box.globalCenter)) {
+                                operatedThisTick = true;
+                            }
                             ++box.globalCenter.y;
                             break;
                         }
                         case CRAFTER: {
                             if (!outputMaterials.isEmpty()) {
                                 for (PartInteractable crate : linkedPullableCrates) {
-                                    if (crate.isActive && crate.inventory.hasMaterials(inputMaterials)) {
+                                    if (crate.isActiveVar.isActive && crate.inventory.hasMaterials(inputMaterials)) {
                                         crate.inventory.removeMaterials(inputMaterials);
                                         outputMaterials.forEach(material -> drops.add(material.possibleItems.get(0).copy()));
+                                        operatedThisTick = true;
                                         break;
                                     }
                                 }
@@ -259,7 +267,7 @@ public class PartEffector extends APart {
                         while (iterator.hasNext()) {
                             IWrapperItemStack dropStack = iterator.next();
                             for (PartInteractable crate : linkedPushableCrates) {
-                                if (crate.isActive) {
+                                if (crate.isActiveVar.isActive) {
                                     //For collectors, we can only add the whole stack, not a partial stack.
                                     //Therefore, we need to simulate the addition first to make sure things fit.
                                     if (definition.effector.type == EffectorComponentType.COLLECTOR) {
@@ -294,11 +302,7 @@ public class PartEffector extends APart {
             }
             if (operatedThisTick) {
                 attack(OPERATION_DAMAGE);
-                if (!operatedThisTickVar.isActive) {
-                    operatedThisTickVar.setActive(true, true);
-                }
-            }else if(operatedThisTickVar.isActive) {
-                operatedThisTickVar.setActive(false, true);
+                operatedThisTickVar.setActive(true, true);
             }
         }
     }

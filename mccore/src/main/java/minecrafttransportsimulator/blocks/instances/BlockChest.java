@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class BlockChest extends ABlockBaseTileEntity {
 
     public BlockChest() {
-        super(10.0F, 5.0F);
+        super(DEFAULT_HARDNESS, DEFAULT_BLAST_RESISTANCE);
     }
 
     @Override

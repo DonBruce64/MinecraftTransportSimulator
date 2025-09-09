@@ -31,6 +31,7 @@ public class ComputedVariable {
     private boolean randomVariable;
     private boolean isConstant;
     private boolean shouldSaveToNBT;
+    private boolean changed;
     public boolean shouldReset = true;
     private long lastTickChecked;
     /**The current value of this variable.  Only change by calling one of the functions in this class.**/
@@ -59,9 +60,9 @@ public class ComputedVariable {
             this.invertedVariable = null;
         }
         if(isConstant) {
-        	setInternal(Double.valueOf(variable.substring(CONSTANT_PREFIX.length())));
+            setInternal(Double.valueOf(variable.substring(CONSTANT_PREFIX.length())), true);
         }else {
-        	setInternal(0);
+            setInternal(0, true);
         }
     }
 
@@ -69,7 +70,7 @@ public class ComputedVariable {
     public ComputedVariable(AEntityD_Definable<?> entity, String variable, IWrapperNBT data) {
         this(entity, variable, null, false);
         if(data != null) {
-            setInternal(data.getDouble(variableKey));
+            setInternal(data.getDouble(variableKey), true);
         }
         this.shouldSaveToNBT = true;
         this.shouldReset = false;
@@ -107,13 +108,21 @@ public class ComputedVariable {
     }
 
     /**Helper to set the value, does other functions as well to maintain state.**/
-    private final void setInternal(double value) {
-        currentValue = value;
-        isActive = currentValue > 0;
-        if (invertedVariable != null) {
-            invertedVariable.currentValue = currentValue > 0 ? 0 : 1;
-            invertedVariable.isActive = !this.isActive;
+    private final boolean setInternal(double value, boolean bypassChangeChecks) {
+        if (currentValue != value || bypassChangeChecks) {
+            currentValue = value;
+            isActive = currentValue > 0;
+            changed = true;
+            if (invertedVariable != null) {
+                invertedVariable.currentValue = currentValue > 0 ? 0 : 1;
+                invertedVariable.isActive = !this.isActive;
+            }
+            if (!bypassChangeChecks) {
+                changed = true;
+            }
+            return true;
         }
+        return false;
     }
 
     public final void setFunctionTo(ComputedVariable other) {
@@ -122,7 +131,7 @@ public class ComputedVariable {
         this.isConstant = other.isConstant;
         this.changesOnPartialTicks = other.changesOnPartialTicks;
         this.randomVariable = other.randomVariable;
-        setInternal(other.currentValue);
+        setInternal(other.currentValue, true);
     }
 
     public final double getValue() {
@@ -135,9 +144,9 @@ public class ComputedVariable {
     public final double computeValue(float partialTicks) {
         if (function != null) {
             if (randomVariable || (changesOnPartialTicks && partialTicks != 0)) {
-                setInternal(function.apply(partialTicks));
+                setInternal(function.apply(partialTicks), false);
             } else if (lastTickChecked != entity.ticksExisted) {
-                setInternal(function.apply(partialTicks));
+                setInternal(function.apply(partialTicks), false);
                 lastTickChecked = entity.ticksExisted;
             }
         }
@@ -150,11 +159,8 @@ public class ComputedVariable {
     }
 
     public final void setTo(double value, boolean sendPacket) {
-        if (!isConstant) {
-            setInternal(value);
-            if (sendPacket) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
-            }
+        if (!isConstant && setInternal(value, false) && sendPacket) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, currentValue));
         }
     }
     
@@ -163,20 +169,14 @@ public class ComputedVariable {
     }
 
     public final void adjustBy(double value, boolean sendPacket) {
-        if (!isConstant) {
-            setInternal(currentValue + value);
-            if (sendPacket) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
-            }
+        if (!isConstant && setInternal(currentValue + value, false) && sendPacket) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, value));
         }
     }
 
     public final void toggle(boolean sendPacket) {
-        if (!isConstant) {
-            setInternal(currentValue > 0 ? 0 : 1);
-            if (sendPacket) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
-            }
+        if (!isConstant && setInternal(currentValue + currentValue > 0 ? 0 : 1, false) && sendPacket) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this));
         }
     }
 
@@ -197,12 +197,19 @@ public class ComputedVariable {
             newValue = Math.round(newValue * 1000) / 1000D;
             if (newValue != currentValue) {
                 incrementValue = newValue - currentValue;
-                setInternal(newValue);
-                if (sendPacket) {
+                if (setInternal(newValue, false) && sendPacket) {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, incrementValue, minValue, maxValue));
                 }
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean hasChanged() {
+        if (changed) {
+            changed = false;
+            return true;
         }
         return false;
     }

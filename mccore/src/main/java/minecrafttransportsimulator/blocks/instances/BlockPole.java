@@ -18,7 +18,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public class BlockPole extends ABlockBaseTileEntity {
 
     public BlockPole() {
-        super(10.0F, 5.0F);
+        super(DEFAULT_HARDNESS, DEFAULT_BLAST_RESISTANCE);
     }
 
     @Override

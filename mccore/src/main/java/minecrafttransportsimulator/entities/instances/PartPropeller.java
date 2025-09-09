@@ -86,7 +86,7 @@ public class PartPropeller extends APart {
         //Get the running engine with the fastest RPM, and have us follow it.
         //This needs to account for the gearbox ratio as well.
         currentRPM = 0;
-        if (isActive) {
+        if (isActiveVar.isActive) {
             boolean increasePitch = false;
             boolean decreasePitch = false;
 

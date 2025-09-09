@@ -304,7 +304,7 @@ public class PartGun extends APart {
         if (currentBullet != null && !currentBullet.isValid) {
             currentBullet = null;
         }
-        if (isActive && !isSpare) {
+        if (isActiveVar.isActive && !isSpare) {
             //Check if we have a controller.
             //We aren't making sentry turrets here.... yet.
             IWrapperEntity controller = getGunController();
@@ -406,7 +406,7 @@ public class PartGun extends APart {
                         if (autoReloadVar.isActive) {
                             //Iterate through all the inventory slots in crates to try to find matching ammo.
                             for (PartInteractable crate : connectedCrates) {
-                                if (crate.isActive) {
+                                if (crate.isActiveVar.isActive) {
                                     EntityInventoryContainer inventory = crate.inventory;
                                     for (int i = 0; i < inventory.getSize(); ++i) {
                                         if (tryToReload(inventory.getStack(i), false)) {
@@ -469,7 +469,7 @@ public class PartGun extends APart {
                                     //Need to increment the bullet count, even if we're not actually firing the bullet, so we sync state.
                                     //Note that this takes into account pellets too since they are each their own entity.
                                     ++bulletsFired;
-                                    if (world.isClient() || serverIsPrimaryController) {
+                                    if (!lastLoadedBullet.definition.bullet.isBlank && (world.isClient() || serverIsPrimaryController)) {
                                         //Get the bullet's state.
                                         setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle, true);
 

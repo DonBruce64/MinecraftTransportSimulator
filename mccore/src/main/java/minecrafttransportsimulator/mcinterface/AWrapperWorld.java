@@ -345,7 +345,7 @@ public abstract class AWrapperWorld extends EntityManager {
      * Note that the position assumes the block hit is the one that is on fire,
      * not that the fire itself was hit.  This is because fire blocks do not have collision.
      */
-    public abstract void extinguish(Point3D position, Axis side);
+    public abstract void extinguish(Point3D position);
 
     /**
      * Tries to place the item as a block at the passed-in position.
@@ -361,13 +361,11 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract boolean fertilizeBlock(Point3D position, IWrapperItemStack stack);
 
     /**
-     * Tries to harvest the block at the passed-in position.  If the harvest was
-     * successful, and the block harvested was crops, the result returned is a list
-     * of the drops from the crops.  If the crops couldn't be harvested, an empty list is returned.
-     * If the block was harvested, but not crops, then the resulting drops
-     * are dropped on the ground and an empty list is returned.
+     * Tries to harvest the block at the passed-in position.  If something was harvested
+     * or broken, returns true.  If crops were harvested, their drops are added to the
+     * passed-in list; non-crops are simply dropped at their position.
      */
-    public abstract List<IWrapperItemStack> harvestBlock(Point3D position);
+    public abstract boolean harvestBlock(Point3D position, List<IWrapperItemStack> cropDrops);
 
     /**
      * Tries to plant the item as a block at the passed-in position.  Only works if the land conditions are correct

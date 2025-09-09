@@ -54,7 +54,7 @@ public final class PartSeat extends APart {
     public boolean interact(IWrapperPlayer player) {
         //See if we can interact with the seats of this vehicle.
         //This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
-        if (isActive) {
+        if (isActiveVar.isActive) {
             if (vehicleOn == null || !vehicleOn.lockedVar.isActive || masterEntity.allParts.contains(player.getEntityRiding())) {
                 if (rider != null) {
                     //We already have a rider for this seat.  If it's not us, mark the seat as taken.
@@ -111,15 +111,15 @@ public final class PartSeat extends APart {
 
         //Update gun list, this is grouped by the specific gun.
         List<PartGun> gunList = new ArrayList<>();
-        addLinkedPartsToList(gunList, PartGun.class);
+        if (entityOn instanceof PartGun) {
+            gunList.add((PartGun) entityOn);
+        }
         for (APart part : parts) {
             if (part instanceof PartGun) {
                 gunList.add((PartGun) part);
             }
         }
-        if (entityOn instanceof PartGun) {
-            gunList.add((PartGun) entityOn);
-        }
+        addLinkedPartsToList(gunList, PartGun.class);
 
         gunGroups.clear();
         for (PartGun gun : gunList) {

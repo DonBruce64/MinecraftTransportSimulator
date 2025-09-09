@@ -780,8 +780,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void extinguish(Point3D position, Axis side) {
-        world.extinguishFire(null, new BlockPos(position.x, position.y, position.z), EnumFacing.valueOf(side.name()));
+    public void extinguish(Point3D position) {
+        BlockPos blockpos = new BlockPos(position.x, position.y, position.z);
+        for (EnumFacing side : EnumFacing.VALUES) {
+            world.extinguishFire(null, blockpos, side);
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -822,10 +825,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public List<IWrapperItemStack> harvestBlock(Point3D position) {
+    public boolean harvestBlock(Point3D position, List<IWrapperItemStack> cropDrops) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState state = world.getBlockState(pos);
-        List<IWrapperItemStack> cropDrops = new ArrayList<>();
         if ((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush) {
             Block harvestedBlock = state.getBlock();
             NonNullList<ItemStack> drops = NonNullList.create();
@@ -847,8 +849,9 @@ public class WrapperWorld extends AWrapperWorld {
                     }
                 }
             }
+            return true;
         }
-        return cropDrops;
+        return false;
     }
 
     @Override
