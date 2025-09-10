@@ -405,7 +405,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     public IWrapperItemStack getStack() {
         //Add data to the stack we return.  We need to remember the parts we have on us, even in item form.
-        //Just don't add default data or our UUID, that needs to be fresh.
+        //Just don't add default data or our UUID, since we don't need to save that to the stack.
+        //If we did, then things couldn't stack together after being picked up with no other data.
         IWrapperItemStack stack = super.getStack();
         IWrapperNBT stackData = save(InterfaceManager.coreInterface.getNewNBTWrapper());
         stackData.deleteAllUUIDTags();

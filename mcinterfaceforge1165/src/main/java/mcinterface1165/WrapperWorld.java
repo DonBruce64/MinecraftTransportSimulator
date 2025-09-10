@@ -731,11 +731,7 @@ public class WrapperWorld extends AWrapperWorld {
                         //Block is set.  See if we need to set TE data.
                         if (block instanceof ABlockBaseTileEntity) {
                             BuilderTileEntity builderTile = (BuilderTileEntity) world.getBlockEntity(pos);
-                            IWrapperNBT data = stack.getData();
-                            if (data != null) {
-                                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
-                            }
-                            builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, (AItemSubTyped<?>) item, data));
+                            builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, (AItemSubTyped<?>) item, stack.getData()));
                             addEntity(builderTile.tileEntity);
                         }
                         //Shrink stack as we placed this block.

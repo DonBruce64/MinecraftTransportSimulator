@@ -29,9 +29,6 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
             //as if it has been saved in the world rather than into an item.  If there's no data,
             //then we just make a blank, new instance.
             IWrapperNBT data = player.getHeldStack().getData();
-            if (data != null) {
-                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
-            }
             EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, player, this, data);
 
             //Set position to the spot that was clicked by the player.
