@@ -64,7 +64,7 @@ public class RenderText {
      * Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
      * Essentially, this is JSON-defined rendering rather than manual entry of points.
      */
-    public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords) {
+    public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords, boolean renderLit) {
         if (!text.isEmpty()) {
             //Get the actual color we will need to render with based on JSON.
             ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
@@ -72,7 +72,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit(), entity.worldLightValue, false);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false);
         }
     }
 

@@ -91,6 +91,7 @@ public class RenderableModelObject {
         if (lightDef != null) {
             if (lightDef.emissive) {
                 this.colorRenderable = new RenderableData(vertexObject.createOverlay(COLOR_OFFSET), "mts:textures/rendering/light.png");
+                colorRenderable.setTransucentOverride();
             } else {
                 this.colorRenderable = null;
             }
@@ -260,7 +261,8 @@ public class RenderableModelObject {
                 doTreadRendering((PartGroundDevice) entity, partialTicks);
             } else {
                 //Set object states and render.
-                if (renderable.isTranslucent == blendingEnabled) {
+                boolean isLitTexture = lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+                if ((renderable.isTranslucent || isLitTexture) == blendingEnabled) {
                     if (lightDef != null && lightDef.isBeam) {
                         //Model that's actually a beam, render it with beam lighting/blending. 
                         renderable.setLightValue(entity.worldLightValue);
@@ -271,7 +273,7 @@ public class RenderableModelObject {
                     } else {
                         //Do normal rendering.
                         renderable.setLightValue(entity.worldLightValue);
-                        renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+                        renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && isLitTexture ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                         renderable.render();
 
                         //Render interior window if we have one.
@@ -334,12 +336,10 @@ public class RenderableModelObject {
             }
 
             //Render text on this object.  Only do this on the solid pass.
-            if (!blendingEnabled) {
-                for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
-                    JSONText textDef = textEntry.getKey();
-                    if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
-                        RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false);
-                    }
+            for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
+                JSONText textDef = textEntry.getKey();
+                if (renderable.vertexObject.name.equals(textDef.attachedTo) && ((textDef.lightsUp && entity.renderTextLit()) == blendingEnabled)) {
+                    RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false, blendingEnabled);
                 }
             }
         }

@@ -313,6 +313,7 @@ public class EntityParticle extends AEntityC_Renderable {
         //Set lighting mode.
         if (definition.type.equals(ParticleType.FLAME) || definition.isBright) {
             renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+            renderable.setTransucentOverride();
         } else if (model == null) {
             renderable.setLightMode(LightingMode.IGNORE_ORIENTATION_LIGHTING);
         }

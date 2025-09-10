@@ -1265,12 +1265,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Render any static text.
         world.beginProfiling("MainText", false);
-        if (!blendingEnabled) {
-            for (Entry<JSONText, String> textEntry : text.entrySet()) {
-                JSONText textDef = textEntry.getKey();
-                if (textDef.attachedTo == null) {
-                    RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false);
-                }
+        for (Entry<JSONText, String> textEntry : text.entrySet()) {
+            JSONText textDef = textEntry.getKey();
+            if (textDef.attachedTo == null && ((textDef.lightsUp && renderTextLit()) == blendingEnabled)) {
+                RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false, blendingEnabled);
             }
         }
         //Handle particles.  Need to only do this once per frame-render.  Shaders may have us render multiple times.
