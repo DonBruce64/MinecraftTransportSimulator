@@ -343,6 +343,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
     }
 
+    public boolean ignoreExplosiveDamage() {
+        return entityOn.ignoreExplosiveDamage();
+    }
+
     @Override
     public void destroy(BoundingBox box) {
         //Don't remove normally, remove as a part.
