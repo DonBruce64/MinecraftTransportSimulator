@@ -77,6 +77,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * The current texture index for this entity.
      */
     private ComputedVariable textureIndexVar;
+    public ComputedVariable repaintedVar;
 
     /**
      * Map containing text lines for saved text provided by this entity.
@@ -210,6 +211,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Add texture index and do common functions.
         addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", data));
+        addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
         performCommonConstructionWork();
     }
 
@@ -221,6 +223,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         this.definition = item.definition;
         updateSubDefinition(item.subDefinition.subName);
         addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", null));
+        addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
         performCommonConstructionWork();
     }
 
@@ -319,6 +322,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         world.beginProfiling("EntityD_Level", true);
         if (world.isClient()) {
             spawnParticles(0);
+        }
+        if (repaintedVar.isActive) {
+            repaintedVar.setActive(false, false);
         }
 
         //Verify interacting players are still interacting.

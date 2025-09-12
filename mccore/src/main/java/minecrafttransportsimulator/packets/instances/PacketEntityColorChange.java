@@ -55,6 +55,7 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
             }
         }
         entity.updateSubDefinition(newItem.subDefinition.subName);
+        entity.repaintedVar.setActive(true, false);
 
         //If we have parts, and have a second tone, change parts to match if possible.
         if (entity instanceof AEntityF_Multipart) {

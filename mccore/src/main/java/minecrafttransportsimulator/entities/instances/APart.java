@@ -380,7 +380,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      * If the part can't match the tone of this vehicle, then it is not modified.
      * Code checks first one level up, then the top-level, if the level up doesn't have a tone.
      */
-    public void updateTone(boolean recursive) {
+    public void updateTone(boolean repainting) {
         if (placementDefinition.toneIndex != 0) {
             String partTone = null;
             if (entityOn.subDefinition.partTones != null && entityOn.subDefinition.partTones.size() >= placementDefinition.toneIndex) {
@@ -394,6 +394,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (partTone != null) {
                 for (JSONSubDefinition subDefinition : definition.definitions) {
                     if (subDefinition.subName.equals(partTone)) {
+                        if (repainting) {
+                            repaintedVar.setActive(true, false);
+                        }
                         updateSubDefinition(partTone);
                         break;
                     }
@@ -401,7 +404,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             }
         }
 
-        if (recursive && !parts.isEmpty()) {
+        if (repainting && !parts.isEmpty()) {
             for (APart part : parts) {
                 part.updateTone(true);
             }
@@ -645,7 +648,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                             if (computedVariable != null) {
                                 return computedVariable;
                             } else {
-                                //System.out.println("DID NOT FIND VARIABLE ANYWHERE ON " + this + "  " + variable);
                                 if (createDefaultIfNotPresent) {
                                     ComputedVariable newVariable = new ComputedVariable(this, variable, null);
                                     addVariable(newVariable);
