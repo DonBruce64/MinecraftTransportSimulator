@@ -358,16 +358,25 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
 
-            //Don't apply damage if we already damaged a health box.
-            if (!hitOperationalHitbox) {
+            //Don't apply damage if we already damaged a health box, but do apply it if we hit one that forwards damage.
+            boolean hitForwardingHitbox = hitEntry.box.groupDef != null && hitEntry.box.groupDef.forwardsDamageMultiplier > 0;
+            if (!hitOperationalHitbox || hitForwardingHitbox) {
                 if (bullet != null) {
                     //Didn't hit health or armor, must have hit something we can damage.
                     //Need to re-create damage object to reference this hitbox.
                     //Remove bullet if we are applying damage to a core group, or a part that forwards damage.
-                    double actualDamage = (hitEntry.box.groupDef != null && hitEntry.box.groupDef.damageMultiplier != 0) ? damage.amount * hitEntry.box.groupDef.damageMultiplier : damage.amount;
+                    boolean removeAfterDamage = hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0 || hitForwardingHitbox;
+                    double actualDamage = damage.amount;
+                    if (hitEntry.box.groupDef != null && hitEntry.box.groupDef.damageMultiplier != 0) {
+                        actualDamage *= hitEntry.box.groupDef.damageMultiplier;
+                    }
+                    if (hitPart != null && hitPart.definition.generic.forwardsDamageMultiplier > 0) {
+                        actualDamage *= hitPart.definition.generic.forwardsDamageMultiplier;
+                    }
+                    if (hitForwardingHitbox) {
+                        actualDamage *= hitEntry.box.groupDef.forwardsDamageMultiplier;
+                    }
                     damage = new Damage(bullet.gun, hitEntry.box, actualDamage);
-                    boolean applyDamage = ((hitEntry.box.groupDef != null && (hitEntry.box.groupDef.health == 0 || damage.isWater)) || hitPart != null);
-                    boolean removeAfterDamage = applyDamage && (hitPart == null || hitPart.definition.generic.forwardsDamageMultiplier > 0);
 
                     bullet.displayDebugMessage("HIT ENTITY BOX FOR DAMAGE: " + (int) damage.amount + " DAMAGE WAS AT " + (int) hitEntity.damageVar.currentValue);
                     if (world.isClient()) {

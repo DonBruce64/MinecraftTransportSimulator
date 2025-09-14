@@ -17,6 +17,9 @@ public class JSONCollisionGroup {
     @JSONDescription("How much to multiply the damage for bullets that hit this group by.  Is 1.0 if not specified.")
     public float damageMultiplier;
 
+    @JSONDescription("The multiplier for forwarded damage.  If set, this collision group will forward damage onto the thing they are a part of when hit.  This will also cause any bullets to stop when they hit this collision box.")
+    public float forwardsDamageMultiplier;
+
     @JSONDescription("How much health this collision group has.  When the health reaches 0, this collision group will be disabled.  Useful for armor that can only take so many hits, or parts of models that you want to break off when hit.  If this value is 0, then the collision group will always be present, and damage inflicted will be charged to the entity rather than this collision group.")
     public int health;
 
