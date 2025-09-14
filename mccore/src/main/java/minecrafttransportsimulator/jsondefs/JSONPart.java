@@ -93,9 +93,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
         public boolean mustBeRemovedByScrewdriver;
 
-        @JSONDescription("The multiplier for forwarded damage.  If set, this part will forward damage onto the vehicle it is on when hit.  This will also cause any bullets to stop when they hit this part.  Defaults to 1.0 for engines, 0.0 for other parts.")
-        public double forwardsDamageMultiplier;
-
         @JSONDescription("If true, this part can be placed on the ground.  It will be placed axis-aligned when placed.")
         public boolean canBePlacedOnGround;
 
@@ -113,6 +110,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("The height of the part.")
         public float height;
+
+        @JSONDescription("The multiplier for forwarded damage.  If set, this part will forward damage onto the vehicle it is on when hit.  This will also cause any bullets to stop when they hit this part.  Defaults to 1.0 for engines, 0.0 for other parts.")
+        public float forwardsDamageMultiplier;
 
         @JSONDescription("The offset, in the Y direction, as to where this part will exist when placed in the world.  Has no effect if canBePlacedOnGround is false.")
         public float placedOffset;
