@@ -76,8 +76,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * The current texture index for this entity.
      */
-    private ComputedVariable textureIndexVar;
-    public ComputedVariable repaintedVar;
+    private final ComputedVariable textureIndexVar;
+    public final ComputedVariable repaintedVar;
+    public final ComputedVariable repairedVar;
 
     /**
      * Map containing text lines for saved text provided by this entity.
@@ -161,6 +162,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     };
 
+    public static final String REPAIRED_NAME = "repaired";
+
     /**
      * Constructor for synced entities
      **/
@@ -212,6 +215,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Add texture index and do common functions.
         addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", data));
         addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
+        addVariable(this.repairedVar = new ComputedVariable(this, REPAIRED_NAME, data));
         performCommonConstructionWork();
     }
 
@@ -224,6 +228,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         updateSubDefinition(item.subDefinition.subName);
         addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", null));
         addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
+        addVariable(this.repairedVar = new ComputedVariable(this, REPAIRED_NAME));
         performCommonConstructionWork();
     }
 
@@ -325,6 +330,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
         if (repaintedVar.isActive) {
             repaintedVar.setActive(false, false);
+        }
+        if (repairedVar.isActive) {
+            repairedVar.setActive(false, false);
         }
 
         //Verify interacting players are still interacting.

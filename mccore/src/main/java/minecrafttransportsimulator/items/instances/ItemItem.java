@@ -377,13 +377,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case REPAIR_PACK: {
                 if (rightClick && !entity.world.isClient()) {
-                    if (entity instanceof APart) {
-                        entity = ((APart) entity).vehicleOn;
-                    }
                     if (vehicle != null) {
                         if (vehicle.repairCooldownTicks == 0) {
                             if (!vehicle.outOfHealth || definition.repair.canRepairTotaled) {
-                                if (entity.damageVar.currentValue == 0) {
+                                if (vehicle.damageVar.currentValue == 0) {
                                     InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_NONEED), player);
                                     return CallbackType.NONE;
                                 } else {
@@ -394,7 +391,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                     double newDamage = vehicle.damageVar.currentValue - amountRepaired;
                                     vehicle.damageVar.setTo(newDamage, true);
                                     vehicle.repairCooldownTicks = 200;
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, vehicle.definition.general.health - newDamage, vehicle.definition.general.health }), player);
+                                    vehicle.repairedVar.setActive(true, true);
                                     if (!player.isCreative()) {
                                         player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                                     }
