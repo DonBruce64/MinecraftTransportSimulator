@@ -65,9 +65,6 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
      */
     public void placeOnGround(AWrapperWorld world, IWrapperPlayer player, Point3D position, double yRotation, IWrapperNBT data) {
         //Construct the class, add ourselves as a part, and spawn.
-        if (data != null) {
-            data.deleteAllUUIDTags(); //Do this just in case this is an older item.
-        }
         EntityPlacedPart entity = new EntityPlacedPart(world, player, null);
         entity.addPartFromStack(getNewStack(data), player, 0, true, false);
         entity.position.set(position);

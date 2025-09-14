@@ -69,6 +69,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         world.endProfiling();
     }
 
+    public boolean ignoreExplosiveDamage() {
+        return definition.motorized.ignoreExplosiveDamage;
+    }
+
     @Override
     public void destroy(BoundingBox box) {
         //Get drops from parts.  Vehicle just blows up.

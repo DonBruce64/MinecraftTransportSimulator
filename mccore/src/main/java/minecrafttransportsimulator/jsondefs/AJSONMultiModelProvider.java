@@ -49,12 +49,15 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
 
     /**
      * Returns the OBJ model texture location in the classpath for this definition.
-     * Sub-name is passed-in as different sub-names have different textures.
+     * Index is passed in to allow texture selection for multiple textures possible.
      */
-    public String getTextureLocation(JSONSubDefinition subDefinition) {
+    public String getTextureLocation(JSONSubDefinition subDefinition, int textureIndex) {
         switch (rendering.modelType) {
             case OBJ:
-                return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + subDefinition.subName);
+                if (textureIndex > 0 && textureIndex > subDefinition.textureNames.size()) {
+                    throw new IllegalArgumentException(packID + ":" + systemName + subDefinition.subName + " tried to get texture number " + (textureIndex + 1) + " for a dynamic texture, but there are only " + subDefinition.textureNames.size() + " entries in the list.  Report this to the pack author!");
+                }
+                return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureNames != null ? subDefinition.textureNames.get(textureIndex) : systemName + subDefinition.subName);
             case LITTLETILES:
                 return RenderableData.GLOBAL_TEXTURE_NAME;
             case NONE:

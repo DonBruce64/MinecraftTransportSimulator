@@ -16,7 +16,6 @@ import minecrafttransportsimulator.items.components.IItemEntityInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -77,11 +76,6 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                     if (vehicle == null || !vehicle.lockedVar.isActive) {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
                         if (heldItem instanceof AItemPart && !player.isSneaking()) {
-                            IWrapperNBT data = heldStack.getData();
-                            if (data != null) {
-                                data.deleteAllUUIDTags(); //Do this just in case this is an older item.
-                                heldStack.setData(data);
-                            }
                             if (multipart.addPartFromStack(heldStack, player, multipart.definition.parts.indexOf(slotEntry.getValue()), false, false) != null && !player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }

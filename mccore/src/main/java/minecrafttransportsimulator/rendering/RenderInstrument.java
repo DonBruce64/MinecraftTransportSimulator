@@ -60,7 +60,8 @@ public final class RenderInstrument {
         //This is more efficient than rendering each one individually.
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
-            if (component.overlayTexture == blendingEnabled) {
+            boolean renderLit = ((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value;
+            if ((component.overlayTexture || renderLit) == blendingEnabled) {
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
@@ -78,7 +79,7 @@ public final class RenderInstrument {
                         } else {
                             value = String.format(component.textObject.variableFormat, getInstrumentVariableValue(entity, null, component.textObject.variableName, component.textObject.variableFactor, partialTicks) + component.textObject.variableOffset);
                         }
-                        RenderText.draw3DText(value, entity, textTransform, component.textObject, true);
+                        RenderText.draw3DText(value, entity, textTransform, component.textObject, true, renderLit);
                     }
                 } else {
                     //Init variables.
@@ -112,7 +113,12 @@ public final class RenderInstrument {
                         //Set points to the variables here and render them.
                         //If the shape is lit, disable lighting for blending.
                         renderable.setLightValue(entity.worldLightValue);
-                        if (((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value) {
+                        if (component.overlayTexture || renderLit) {
+                            renderable.setTransucentOverride();
+                        } else {
+                            renderable.clearTranslucentOverride();
+                        }
+                        if (renderLit) {
                             renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
                         } else {
                             renderable.setLightMode(onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL);
@@ -120,9 +126,6 @@ public final class RenderInstrument {
                         
                         //Need to invert Y here since we're using pixel-based coords.
                         renderable.vertexObject.setSpritePropertiesAdvancedTexture(0, -component.textureWidth / 2, component.textureHeight / 2, component.textureWidth, component.textureHeight, (float) textureCoord1.x, (float) textureCoord1.y, (float) textureCoord2.x, (float) textureCoord2.y, (float) textureCoord3.x, (float) textureCoord3.y, (float) textureCoord4.x, (float) textureCoord4.y);
-                        if (component.overlayTexture) {
-                            renderable.setTransucentOverride();
-                        }
                         renderable.render();
                     }
                 }

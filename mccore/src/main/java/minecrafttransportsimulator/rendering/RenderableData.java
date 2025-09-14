@@ -82,6 +82,14 @@ public class RenderableData {
         }
     }
 
+    public void clearTranslucentOverride() {
+        if (this.isTranslucentForced) {
+            this.isTranslucentForced = false;
+            this.isTranslucent = isTranslucentForced || vertexObject.isTranslucent || isTextureTranslucent || alpha < 1.0;
+            this.changedSinceLastRender = true;
+        }
+    }
+
     public void setColor(ColorRGB color) {
         if (!this.color.equals(color)) {
             this.color.setTo(color);

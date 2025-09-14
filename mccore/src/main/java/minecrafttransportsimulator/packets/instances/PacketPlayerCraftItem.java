@@ -64,6 +64,7 @@ public class PacketPlayerCraftItem extends APacketEntityInteract<AEntityD_Defina
                         AItemPack<?> item = (AItemPack<?>) stack.getItem();
                         IWrapperNBT stackData = stack.getData();
                         item.repair(stackData);
+                        stackData.setBoolean(AEntityD_Definable.REPAIRED_NAME, true);
                         stack.setData(stackData);
 
                         if (!player.isCreative()) {

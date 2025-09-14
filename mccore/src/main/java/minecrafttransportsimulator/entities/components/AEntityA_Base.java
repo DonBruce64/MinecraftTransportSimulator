@@ -44,6 +44,11 @@ public abstract class AEntityA_Base {
     public AEntityA_Base(AWrapperWorld world, IWrapperNBT data) {
         this.world = world;
         if (shouldSync() && data != null && data.hasKey(UNIQUE_UUID_TAG_NAME)) {
+            //Check to make sure this UUID doesn't already exist in the manager.  If it does, we create a new one and save it to the data block.
+            //This lets us copy entities by using the same data blocks for each, but creating a new UUID each time for syncing.
+            if (world.getEntity(data.getUUID(UNIQUE_UUID_TAG_NAME)) != null) {
+                data.setUUID(UNIQUE_UUID_TAG_NAME, UUID.randomUUID());
+            }
             this.uniqueUUID = data.getUUID(UNIQUE_UUID_TAG_NAME);
         } else {
             this.uniqueUUID = UUID.randomUUID();

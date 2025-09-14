@@ -154,7 +154,7 @@ public final class LegacyCompatSystem {
                 provider.general.modelName = null;
             }
 
-            //Check if the model needs a model type or has extraMaterials to convert..
+            //Check if the model needs a model type or has extraMaterials to convert.
             for (JSONSubDefinition subDef : provider.definitions) {
                 if (subDef.extraMaterials != null) {
                     subDef.extraMaterialLists = new ArrayList<List<String>>();
@@ -167,6 +167,15 @@ public final class LegacyCompatSystem {
             }
             if (provider.rendering.modelType == null) {
                 provider.rendering.modelType = ModelType.OBJ;
+            }
+
+            //Change texture to a list if we have it.
+            for (JSONSubDefinition subDef : provider.definitions) {
+                if (subDef.textureName != null) {
+                    subDef.textureNames = new ArrayList<>();
+                    subDef.textureNames.add(subDef.textureName);
+                    subDef.textureName = null;
+                }
             }
 
             //Move constants and initial variables to the main file and out of rendering.

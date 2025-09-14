@@ -222,6 +222,6 @@ public class GUIPaintGun extends AGUIBase {
 
         //Set model render properties.
         modelRender.modelLocation = currentItem.definition.getModelLocation(currentItem.subDefinition);
-        modelRender.textureLocation = currentItem.definition.getTextureLocation(currentItem.subDefinition);
+        modelRender.textureLocation = currentItem.definition.getTextureLocation(currentItem.subDefinition, 0);
     }
 }

@@ -74,6 +74,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public JSONSubDefinition subDefinition;
 
     /**
+     * The current texture index for this entity.
+     */
+    private final ComputedVariable textureIndexVar;
+    public final ComputedVariable repaintedVar;
+    public final ComputedVariable repairedVar;
+
+    /**
      * Map containing text lines for saved text provided by this entity.
      **/
     public final Map<JSONText, String> text = new HashMap<>();
@@ -155,6 +162,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     };
 
+    public static final String REPAIRED_NAME = "repaired";
+
     /**
      * Constructor for synced entities
      **/
@@ -202,6 +211,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 });
             }
         }
+
+        //Add texture index and do common functions.
+        addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", data));
+        addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
+        addVariable(this.repairedVar = new ComputedVariable(this, REPAIRED_NAME, data));
         performCommonConstructionWork();
     }
 
@@ -212,6 +226,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         super(world, position, motion, angles);
         this.definition = item.definition;
         updateSubDefinition(item.subDefinition.subName);
+        addVariable(this.textureIndexVar = new ComputedVariable(this, "textureIndex", null));
+        addVariable(this.repaintedVar = new ComputedVariable(this, "repainted"));
+        addVariable(this.repairedVar = new ComputedVariable(this, REPAIRED_NAME));
         performCommonConstructionWork();
     }
 
@@ -310,6 +327,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         world.beginProfiling("EntityD_Level", true);
         if (world.isClient()) {
             spawnParticles(0);
+        }
+        if (repaintedVar.isActive) {
+            repaintedVar.setActive(false, false);
+        }
+        if (repairedVar.isActive) {
+            repairedVar.setActive(false, false);
         }
 
         //Verify interacting players are still interacting.
@@ -462,7 +485,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
     public String getTexture() {
-        return definition.getTextureLocation(subDefinition);
+        return definition.getTextureLocation(subDefinition, (int) textureIndexVar.currentValue);
     }
 
     /**
@@ -1256,12 +1279,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Render any static text.
         world.beginProfiling("MainText", false);
-        if (!blendingEnabled) {
-            for (Entry<JSONText, String> textEntry : text.entrySet()) {
-                JSONText textDef = textEntry.getKey();
-                if (textDef.attachedTo == null) {
-                    RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false);
-                }
+        for (Entry<JSONText, String> textEntry : text.entrySet()) {
+            JSONText textDef = textEntry.getKey();
+            if (textDef.attachedTo == null && ((textDef.lightsUp && renderTextLit()) == blendingEnabled)) {
+                RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false, blendingEnabled);
             }
         }
         //Handle particles.  Need to only do this once per frame-render.  Shaders may have us render multiple times.

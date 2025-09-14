@@ -18,7 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponen
  * @author don_bruce
  */
 public class RenderableVertices {
-    public static final float Z_BUFFER_OFFSET = 0.0002F;
+    public static final float Z_BUFFER_OFFSET = 0.001F;
 
     public final String name;
     /**Actual vertex data, stored as a series of tris.**/

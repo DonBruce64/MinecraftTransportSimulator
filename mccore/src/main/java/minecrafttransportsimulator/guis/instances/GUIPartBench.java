@@ -487,7 +487,7 @@ public class GUIPartBench extends AGUIBase {
         boolean isPartWithBuiltinTexture = currentItem instanceof AItemPart && ((AItemPart) currentItem).definition.generic.benchTexture != null;
         if (currentItem instanceof AItemSubTyped && (!isPartWithVehicleTexture || isPartWithBuiltinTexture)) {
             modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subDefinition);
-            modelRender.textureLocation = isPartWithBuiltinTexture ? PackResourceLoader.getPackResource(currentItem.definition, ResourceType.PNG, ((AItemPart) currentItem).definition.generic.benchTexture) : ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subDefinition);
+            modelRender.textureLocation = isPartWithBuiltinTexture ? PackResourceLoader.getPackResource(currentItem.definition, ResourceType.PNG, ((AItemPart) currentItem).definition.generic.benchTexture) : ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subDefinition, 0);
             itemRender.stack = null;
             //Don't spin signs.  That gets annoying.
             modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).pole.type.equals(PoleComponentType.SIGN));
