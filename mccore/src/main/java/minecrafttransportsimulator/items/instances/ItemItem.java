@@ -377,32 +377,55 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
             case REPAIR_PACK: {
                 if (rightClick && !entity.world.isClient()) {
-                    if (vehicle != null) {
-                        if (vehicle.repairCooldownTicks == 0) {
-                            if (!vehicle.outOfHealth || definition.repair.canRepairTotaled) {
-                                if (vehicle.damageVar.currentValue == 0) {
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_NONEED), player);
-                                    return CallbackType.NONE;
-                                } else {
-                                    double amountRepaired = definition.repair.amount;
-                                    if (vehicle.damageVar.currentValue < amountRepaired) {
-                                        amountRepaired = vehicle.damageVar.currentValue;
-                                    }
-                                    double newDamage = vehicle.damageVar.currentValue - amountRepaired;
-                                    vehicle.damageVar.setTo(newDamage, true);
-                                    vehicle.repairCooldownTicks = 200;
-                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, vehicle.definition.general.health - newDamage, vehicle.definition.general.health }), player);
-                                    vehicle.repairedVar.setActive(true, true);
-                                    if (!player.isCreative()) {
-                                        player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
-                                    }
+                    if (definition.repair.repairableParts != null) {
+                        if (!(entity instanceof APart)) {
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_WRONGTYPE), player);
+                            return CallbackType.NONE;
+                        } else {
+                            boolean partMatches = false;
+                            for (String typePrefix : definition.repair.repairableParts) {
+                                if (((APart) entity).definition.generic.type.startsWith(typePrefix)) {
+                                    partMatches = true;
+                                    break;
                                 }
+                                if (!partMatches) {
+                                    InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_WRONGTYPE), player);
+                                    return CallbackType.NONE;
+                                }
+                            }
+                        }
+                    } else {
+                        if (vehicle == null) {
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_WRONGTYPE), player);
+                            return CallbackType.NONE;
+                        }
+                        entity = vehicle;
+                    }
+
+                    if (entity.repairCooldownTicks == 0) {
+                        if (!entity.outOfHealth || definition.repair.canRepairTotaled) {
+                            if (entity.damageVar.currentValue == 0) {
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_NONEED), player);
+                                return CallbackType.NONE;
                             } else {
-                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOTALED), player);
+                                double amountRepaired = definition.repair.amount;
+                                if (vehicle.damageVar.currentValue < amountRepaired) {
+                                    amountRepaired = entity.damageVar.currentValue;
+                                }
+                                double newDamage = entity.damageVar.currentValue - amountRepaired;
+                                entity.damageVar.setTo(newDamage, true);
+                                entity.repairCooldownTicks = 200;
+                                InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
+                                entity.repairedVar.setActive(true, true);
+                                if (!player.isCreative()) {
+                                    player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                                }
                             }
                         } else {
-                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOOSOON), player);
+                            InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOTALED), player);
                         }
+                    } else {
+                        InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_TOOSOON), player);
                     }
                 }
                 return CallbackType.NONE;

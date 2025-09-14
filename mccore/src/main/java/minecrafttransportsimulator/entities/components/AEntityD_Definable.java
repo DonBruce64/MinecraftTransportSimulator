@@ -79,6 +79,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final ComputedVariable textureIndexVar;
     public final ComputedVariable repaintedVar;
     public final ComputedVariable repairedVar;
+    public int repairCooldownTicks;
 
     /**
      * Map containing text lines for saved text provided by this entity.
@@ -325,6 +326,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void update() {
         super.update();
         world.beginProfiling("EntityD_Level", true);
+        if (repairCooldownTicks > 0) {
+            --repairCooldownTicks;
+        }
         if (world.isClient()) {
             spawnParticles(0);
         }

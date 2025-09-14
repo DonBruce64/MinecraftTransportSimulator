@@ -89,11 +89,14 @@ public class JSONItem extends AJSONItem {
     }
 
     public static class JSONRepair {
-        @JSONDescription("Normally, repair pack cannot repair totaled vehicles.  This allows them to do so.")
+        @JSONDescription("Normally, repair pack cannot repair totaled things.  This allows them to do so.")
         public boolean canRepairTotaled;
 
         @JSONDescription("How much health repair pack restores.")
         public int amount;
+
+        @JSONDescription("A list of part names this pack can repair.  This will make this repair item not repair vehicles, and instead any part types that start with these names will be repairable.")
+        public List<String> repairableParts;
     }
 
     public enum ItemComponentType {
