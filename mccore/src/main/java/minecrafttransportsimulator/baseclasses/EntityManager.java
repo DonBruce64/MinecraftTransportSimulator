@@ -128,6 +128,25 @@ public abstract class EntityManager {
     }
 
     /**
+     * Populates the passed-in list with all top-level multiparts whose encompassing box intersects with the passed-in bounds.
+     * Actual collision boxes of the multipart may not intersect with the bounds, but since the
+     * operation calling this function is the one that cares about specific collisions, handling
+     * of checks for collision with specific boxes is left up to that operation.
+     */
+    public void populateWithEntitiesInBounds(List<AEntityF_Multipart<?>> list, BoundingBox bounds) {
+        for (EntityVehicleF_Physics entity : getEntitiesOfType(EntityVehicleF_Physics.class)) {
+            if (entity.encompassingBox.intersects(bounds)) {
+                list.add(entity);
+            }
+        }
+        for (EntityPlacedPart entity : getEntitiesOfType(EntityPlacedPart.class)) {
+            if (entity.encompassingBox.intersects(bounds)) {
+                list.add(entity);
+            }
+        }
+    }
+
+    /**
      * Gets the list of all entities of the specified class.
      */
     @SuppressWarnings("unchecked")

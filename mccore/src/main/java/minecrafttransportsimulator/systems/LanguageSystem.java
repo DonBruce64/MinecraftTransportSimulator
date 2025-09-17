@@ -232,6 +232,9 @@ public class LanguageSystem {
     public static final LanguageEntry DEATH_CRASH_NULL = new LanguageEntry("death.crash.null", "%s died in a crash");
     public static final LanguageEntry DEATH_CRASH_PLAYER = new LanguageEntry("death.crash.player", "%s crashed their vehicle and killed %s");
 
+    public static final LanguageEntry DEATH_HITBOX_NULL = new LanguageEntry("death.hitbox.null", "%s died from encountering a lethal object");
+    public static final LanguageEntry DEATH_HITBOX_PLAYER = new LanguageEntry("death.hitbox.player", "%s hit %s with a lethal object");
+
     public static final LanguageEntry GUI_CONFIRM = new LanguageEntry("gui.confirm", "CONFIRM");
     public static final LanguageEntry GUI_MASTERCONFIG = new LanguageEntry("gui.masterconfig", "Open configuration screen");
     public static final LanguageEntry GUI_IMPORT = new LanguageEntry("gui.import", "Import Packs (Developers Only)");

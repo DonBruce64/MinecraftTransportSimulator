@@ -349,14 +349,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 }
 
                 //Populate multiparts for following functions.
-                multiparts.clear();
-                multiparts.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
-                multiparts.addAll(world.getEntitiesOfType(EntityPlacedPart.class));
-
                 //Check for collided internal entities.
                 //This is a bit more involved, as we need to check all possible types and check hitbox distance.
                 Point3D endPoint = position.copy().add(motion);
                 BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
+                multiparts.clear();
+                world.populateWithEntitiesInBounds(multiparts, bulletMovementBounds);
                 for (AEntityF_Multipart<?> multipart : multiparts) {
                     //Don't attack the entity that has the gun that fired us.
                     if (!multipart.allParts.contains(gun)) {

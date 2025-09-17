@@ -21,10 +21,12 @@ import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -37,6 +39,7 @@ import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbo
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Base entity class containing riders and their positions on this entity.  Used for
@@ -111,6 +114,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public final ComputedVariable towingConnectionVar;
     public final ComputedVariable playerCursorHoveredVar;
     public boolean outOfHealth;
+    private final List<AEntityF_Multipart<?>> collidingMultiparts = new ArrayList<>();
 
     protected final List<Integer> snapConnectionIndexes = new ArrayList<>();
     protected final Set<Integer> connectionGroupsIndexesInUse = new HashSet<>();
@@ -259,6 +263,39 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                         }
                     }
                     collisionBoxes.addAll(boxes);
+
+                    //Apply damage.
+                    if (!world.isClient()) {
+                        if (groupDef.externalEntityDamage != 0) {
+                            for (BoundingBox box : boxes) {
+                                IWrapperEntity controller = this instanceof AEntityF_Multipart ? ((AEntityF_Multipart<?>) this).getController() : null;
+                                LanguageEntry language = controller != null ? LanguageSystem.DEATH_HITBOX_PLAYER : LanguageSystem.DEATH_HITBOX_NULL;
+                                Damage damage = new Damage(groupDef.externalEntityDamage, box, this, controller, language);
+                                world.attackEntities(damage, null, false);
+                            }
+                        }
+                        if (groupDef.internalEntityDamage != 0) {
+                            //Send to sub-routine to allow return statement to ensure we only attack once per group.
+                            performHitboxAttack(boxes, groupDef.internalEntityDamage);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void performHitboxAttack(List<BoundingBox> boxes, float damage) {
+        for (BoundingBox box : boxes) {
+            collidingMultiparts.clear();
+            world.populateWithEntitiesInBounds(collidingMultiparts, box);
+            for (AEntityF_Multipart<?> multipart : collidingMultiparts) {
+                if (multipart != this && !multipart.allParts.contains(this)) {
+                    for (BoundingBox otherBox : multipart.allCollisionBoxes) {
+                        if (otherBox.collisionTypes.contains(CollisionType.ATTACK) && otherBox.intersects(box)) {
+                            multipart.attack(new Damage(damage, otherBox, this, null, null));
+                            return;
+                        }
+                    }
                 }
             }
         }
