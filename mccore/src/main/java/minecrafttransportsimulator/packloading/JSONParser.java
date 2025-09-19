@@ -654,6 +654,7 @@ public class JSONParser {
                     itemDefinition.booklet = loadedItemDefinition.booklet;
                     itemDefinition.food = loadedItemDefinition.food;
                     itemDefinition.weapon = loadedItemDefinition.weapon;
+                    itemDefinition.repair = loadedItemDefinition.repair;
                     loadedDefinition = loadedItemDefinition;
                     break;
                 }

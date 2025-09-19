@@ -74,7 +74,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public boolean turningLeft;
     public boolean turningRight;
     public byte turningCooldown;
-    public int repairCooldownTicks;
     public double airDensity;
     public double seaLevel = ConfigSystem.settings.general.seaLevel.value;
     public int controllerCount;
@@ -168,9 +167,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public void update() {
         super.update();
         world.beginProfiling("VehicleF_Level", true);
-        if (repairCooldownTicks > 0) {
-            --repairCooldownTicks;
-        }
         indicatedSpeed = axialVelocity * speedFactor * 20;
 
         //Set vectors.

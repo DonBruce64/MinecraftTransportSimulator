@@ -20,6 +20,12 @@ public class JSONCollisionGroup {
     @JSONDescription("The multiplier for forwarded damage.  If set, this collision group will forward damage onto the thing they are a part of when hit.  This will also cause any bullets to stop when they hit this collision box.")
     public float forwardsDamageMultiplier;
 
+    @JSONDescription("How much damage to apply to MC entities that fall into this hitboxes area.  Damage will be applied constantly to the entity, though the internal damage cooldown will ensure the entity is not damaged every tick.")
+    public float externalEntityDamage;
+
+    @JSONDescription("How much damage to apply to MTS entities that fall into this hitboxes area.  Damage will be applied constantly to the entity, so ensure that this hitbox does not remain active once damaging conditions have been satisfied or health will rapidly deplete.")
+    public float internalEntityDamage;
+
     @JSONDescription("How much health this collision group has.  When the health reaches 0, this collision group will be disabled.  Useful for armor that can only take so many hits, or parts of models that you want to break off when hit.  If this value is 0, then the collision group will always be present, and damage inflicted will be charged to the entity rather than this collision group.")
     public int health;
 

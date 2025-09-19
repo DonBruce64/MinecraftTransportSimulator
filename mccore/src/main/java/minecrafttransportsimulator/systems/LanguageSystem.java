@@ -232,6 +232,9 @@ public class LanguageSystem {
     public static final LanguageEntry DEATH_CRASH_NULL = new LanguageEntry("death.crash.null", "%s died in a crash");
     public static final LanguageEntry DEATH_CRASH_PLAYER = new LanguageEntry("death.crash.player", "%s crashed their vehicle and killed %s");
 
+    public static final LanguageEntry DEATH_HITBOX_NULL = new LanguageEntry("death.hitbox.null", "%s died from encountering a lethal object");
+    public static final LanguageEntry DEATH_HITBOX_PLAYER = new LanguageEntry("death.hitbox.player", "%s hit %s with a lethal object");
+
     public static final LanguageEntry GUI_CONFIRM = new LanguageEntry("gui.confirm", "CONFIRM");
     public static final LanguageEntry GUI_MASTERCONFIG = new LanguageEntry("gui.masterconfig", "Open configuration screen");
     public static final LanguageEntry GUI_IMPORT = new LanguageEntry("gui.import", "Import Packs (Developers Only)");
@@ -394,10 +397,11 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_FUELHOSE_TOOFAR = new LanguageEntry("interact.fuelhose.toofar", "The two tanks are too far away.  They should be no further than 16 blocks apart.");
     public static final LanguageEntry INTERACT_FUELHOSE_DIFFERENTFLUIDS = new LanguageEntry("interact.fuelhose.differentfluids", "The source and destination tanks do not contain the same fluid and cannot be linked.");
 
-    public static final LanguageEntry INTERACT_REPAIR_PASS = new LanguageEntry("interact.repair.pass", "Repaired vehicle HP by %s.  HP is now at %s of %s.");
-    public static final LanguageEntry INTERACT_REPAIR_NONEED = new LanguageEntry("interact.repair.noneed", "This vehicle is already at full health and doesn't need to be repaired.");
-    public static final LanguageEntry INTERACT_REPAIR_TOTALED = new LanguageEntry("interact.repair.fail", "This vehicle is totaled and cannot be repaired with this repair pack.  Only special repair packs can repair totaled vehicles.");
-    public static final LanguageEntry INTERACT_REPAIR_TOOSOON = new LanguageEntry("interact.repair.toosoon", "You cannot repair this vehicle now.  Wait 10 seconds between repairs.");
+    public static final LanguageEntry INTERACT_REPAIR_PASS = new LanguageEntry("interact.repair.pass", "Repaired HP by %s.  HP is now at %s of %s.");
+    public static final LanguageEntry INTERACT_REPAIR_NONEED = new LanguageEntry("interact.repair.noneed", "This thing is already at full health and doesn't need to be repaired.");
+    public static final LanguageEntry INTERACT_REPAIR_TOTALED = new LanguageEntry("interact.repair.fail", "This thing is totaled and cannot be repaired with this repair pack.  Only special repair packs can repair totaled things.");
+    public static final LanguageEntry INTERACT_REPAIR_TOOSOON = new LanguageEntry("interact.repair.toosoon", "You cannot repair this now.  Wait 10 seconds between repairs.");
+    public static final LanguageEntry INTERACT_REPAIR_WRONGTYPE = new LanguageEntry("interact.repair.wrongtype", "This repair item does not work on this thing.");
 
     public static final LanguageEntry INTERACT_TRAILER_CONNECTED = new LanguageEntry("interact.trailer.connected", "Trailer connected.");
     public static final LanguageEntry INTERACT_TRAILER_DISCONNECTED = new LanguageEntry("interact.trailer.disconnected", "Trailer disconnected.");
