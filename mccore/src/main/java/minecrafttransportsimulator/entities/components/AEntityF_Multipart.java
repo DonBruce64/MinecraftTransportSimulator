@@ -395,7 +395,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                 } else {
                     //Not a bullet, just attack directly.
-                    damage = new Damage(damage.amount, damage.box, damage.damgeSource, damage.entityResponsible, damage.language);
+                    damage = new Damage(damage.amount, hitEntry.box, damage.damgeSource, damage.entityResponsible, damage.language);
                     hitEntity.attack(damage);
                     return EntityBullet.HitType.VEHICLE;
                 }
