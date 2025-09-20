@@ -63,7 +63,7 @@ public abstract class LevelRendererMixin {
      * Better than trying to do block placement which has a host of issues.
      */
     @Redirect(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getHeight(Lnet/minecraft/world/level/levelgen/Heightmap$Types;II)I"))
-    public int inject_renderSnowAndRain(Level world, Heightmap.Types pHeightmapType, int pX, int pZ) {
+    public int redirect_renderSnowAndRain(Level world, Heightmap.Types pHeightmapType, int pX, int pZ) {
         Point3D position = new Point3D(pX + 0.5, world.getHeight(Heightmap.Types.MOTION_BLOCKING, pX, pZ), pZ + 0.5);
         WrapperWorld.getWrapperFor(world).adjustHeightForRain(position);
         return (int) Math.ceil(position.y);
