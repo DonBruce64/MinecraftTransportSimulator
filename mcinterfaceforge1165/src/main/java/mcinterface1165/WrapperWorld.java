@@ -315,7 +315,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (motion != null) {
             mcBox = mcBox.inflate(motion.x, motion.y, motion.z);
         }
-        collidedEntities = world.getEntitiesOfClass(Entity.class, mcBox);
+        collidedEntities = world.getEntitiesOfClass(LivingEntity.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
         Point3D startPoint;

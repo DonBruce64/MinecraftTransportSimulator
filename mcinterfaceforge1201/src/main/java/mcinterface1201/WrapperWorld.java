@@ -297,13 +297,13 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList) {
         AABB mcBox = WrapperWorld.convert(damage.box);
-        List<Entity> collidedEntities;
+        List<LivingEntity> collidedEntities;
 
         //Get collided entities.
         if (motion != null) {
             mcBox = mcBox.inflate(motion.x, motion.y, motion.z);
         }
-        collidedEntities = world.getEntitiesOfClass(Entity.class, mcBox);
+        collidedEntities = world.getEntitiesOfClass(LivingEntity.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
         Point3D startPoint;
