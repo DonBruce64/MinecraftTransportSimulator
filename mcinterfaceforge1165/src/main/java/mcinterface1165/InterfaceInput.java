@@ -104,7 +104,7 @@ public class InterfaceInput implements IInterfaceInput {
                         joystickComponentCounts.clear();
                         for (int i = GLFW.GLFW_JOYSTICK_1; i < GLFW.GLFW_JOYSTICK_16; ++i) {
                             joystickEnabled = true;
-                            if (GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
+                            if (GLFW.glfwJoystickPresent(i) && GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
                                 String joystickName = GLFW.glfwGetJoystickName(i);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
