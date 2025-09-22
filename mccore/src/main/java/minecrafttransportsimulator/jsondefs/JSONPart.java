@@ -487,6 +487,18 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much knocback this gun provides to the shooter.")
         public float knockback;
 
+        @JSONDescription("How much pitch recoil this gun provides to the shooter.  This will apply this value every shot.  Only for hand-held mode.")
+        public float pitchRecoil;
+
+        @JSONDescription("How much pitch recoil should be recovered, over pitchRecoveryTime period.  Only for hand-held mode.")
+        public float pitchRecovery;
+
+        @JSONDescription("How long to recover the pitch in pitchRecovery.  Only for hand-held mode.")
+        public int pitchRecoveryTime;
+
+        @JSONDescription("How much yaw movement this gun provides to the shooter.  This will apply this value, multiplied by a random value from -1 to 1, every shot.  Only for hand-held mode.")
+        public float yawRecoil;
+
         @JSONDescription("How far away the gun will be able to lock targets.")
         public int lockRange;
 

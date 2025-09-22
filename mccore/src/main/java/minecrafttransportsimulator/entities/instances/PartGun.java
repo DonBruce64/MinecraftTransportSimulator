@@ -71,6 +71,10 @@ public class PartGun extends APart {
     private final ComputedVariable fireDelayVar;
     private final ComputedVariable bulletSpreadFactorVar;
     private final ComputedVariable knockbackVar;
+    private final ComputedVariable pitchRecoilVar;
+    private final ComputedVariable pitchRecoveryVar;
+    private final ComputedVariable pitchRecoveryTimeVar;
+    private final ComputedVariable yawRecoilVar;
     private final ComputedVariable autoReloadVar;
     private final ComputedVariable blockReloadingVar;
     private final ComputedVariable isSemiAutoVar;
@@ -114,6 +118,7 @@ public class PartGun extends APart {
     private int reloadStartTimeRemaining;
     private int reloadMainTimeRemaining;
     private int reloadEndTimeRemaining;
+    private int pitchRecoveryTimeRemaining;
     private int windupTimeCurrent;
     private int windupRotation;
     private long lastMillisecondFired;
@@ -146,6 +151,7 @@ public class PartGun extends APart {
     //Global data.
     private static final int RAYTRACE_DISTANCE = 750;
     private static final double DEFAULT_CONE_ANGLE = 2.0;
+    private static final int PITCH_RECOIL_CLAMPING = 80;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -273,6 +279,10 @@ public class PartGun extends APart {
         addVariable(this.fireDelayVar = new ComputedVariable(this, "fireDelay"));
         addVariable(this.bulletSpreadFactorVar = new ComputedVariable(this, "bulletSpreadFactor"));
         addVariable(this.knockbackVar = new ComputedVariable(this, "knockback"));
+        addVariable(this.pitchRecoilVar = new ComputedVariable(this, "pitchRecoil"));
+        addVariable(this.pitchRecoveryVar = new ComputedVariable(this, "pitchRecovery"));
+        addVariable(this.pitchRecoveryTimeVar = new ComputedVariable(this, "pitchRecoveryTime"));
+        addVariable(this.yawRecoilVar = new ComputedVariable(this, "yawRecoil"));
         addVariable(this.autoReloadVar = new ComputedVariable(this, "autoReload"));
         addVariable(this.blockReloadingVar = new ComputedVariable(this, "blockReloading"));
         addVariable(this.isSemiAutoVar = new ComputedVariable(this, "isSemiAuto"));
@@ -389,7 +399,6 @@ public class PartGun extends APart {
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
                 if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
-
                     if (isHandHeld) {
                         if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || autoReloadVar.isActive) {
                             //Check the player's inventory for bullets.
@@ -397,7 +406,9 @@ public class PartGun extends APart {
                             for (int i = 0; i < inventory.getSize(); ++i) {
                                 if (tryToReload(inventory.getStack(i), isHandHeldGunReloadRequested && !definition.gun.isClipless)) {
                                     //Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-                                    inventory.removeFromSlot(i, 1);
+                                    if (!ConfigSystem.settings.general.devMode.value) {
+                                        inventory.removeFromSlot(i, 1);
+                                    }
                                     break;
                                 }
                             }
@@ -495,13 +506,13 @@ public class PartGun extends APart {
                                     }
                                 }
 
-                                //Now do knockback, if it exists.
+                                //Now do knockback and recoil, if it exists.
                                 if (isHandHeld) {
                                     if (!world.isClient()) {
-                                        performGunKnockback();
-                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                        performGunHandheldMovements();
+                                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.HANDHELD_MOVEMENTS));
                                     } else if (InterfaceManager.clientInterface.getClientPlayer().equals(lastController)) {
-                                        InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.KNOCKBACK));
+                                        InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, PacketPartGun.Request.HANDHELD_MOVEMENTS));
                                     }
                                 }
 
@@ -562,11 +573,24 @@ public class PartGun extends APart {
                 firedSinceRequested = false;
             }
 
-            //Set or decrement reloadDelay.
-            if (state.isAtLeast(GunState.FIRING_CURRENTLY)) {
+            //Handle reload delay and recoil.
+            if (state.isAtLeast(GunState.FIRING_CURRENTLY) || cooldownTimeRemaining != 0) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
-            } else if (reloadDelayRemaining > 0) {
-                --reloadDelayRemaining;
+            } else {
+                if (reloadDelayRemaining > 0) {
+                    --reloadDelayRemaining;
+                }
+                if (pitchRecoveryTimeRemaining != 0) {
+                    RotationMatrix playerOrientation = holdingPlayer.getOrientation();
+                    double correction = pitchRecoveryVar.currentValue / pitchRecoveryTimeVar.currentValue;
+                    if (playerOrientation.angles.x + correction > PITCH_RECOIL_CLAMPING) {
+                        correction = PITCH_RECOIL_CLAMPING - playerOrientation.angles.x;
+                    }
+                    playerOrientation.rotateX(correction);
+                    playerOrientation.convertToAngles();
+                    holdingPlayer.setOrientation(playerOrientation);
+                    --pitchRecoveryTimeRemaining;
+                }
             }
         } else {
             //Inactive gun, set as such and set to default position if we have one.
@@ -681,6 +705,10 @@ public class PartGun extends APart {
         fireDelayVar.setTo(definition.gun.fireDelay, false);
         bulletSpreadFactorVar.setTo(definition.gun.bulletSpreadFactor, false);
         knockbackVar.setTo(definition.gun.knockback, false);
+        pitchRecoilVar.setTo(definition.gun.pitchRecoil, false);
+        pitchRecoveryVar.setTo(definition.gun.pitchRecovery, false);
+        pitchRecoveryTimeVar.setTo(definition.gun.pitchRecoveryTime, false);
+        yawRecoilVar.setTo(definition.gun.yawRecoil, false);
         autoReloadVar.setTo(definition.gun.autoReload ? 1 : 0, false);
         blockReloadingVar.setTo(definition.gun.blockReloading ? 1 : 0, false);
         isSemiAutoVar.setTo(definition.gun.isSemiAuto ? 1 : 0, false);
@@ -1168,9 +1196,21 @@ public class PartGun extends APart {
     /**
      * Common method to do knocback for guns.  Is either called directly on the server when the gun is fired, or via packet sent by the master-client.
      */
-    public void performGunKnockback() {
+    public void performGunHandheldMovements() {
         if (knockbackVar.currentValue != 0) {
             holdingPlayer.applyMotion(new Point3D(0, 0, 1).rotate(orientation).scale(-knockbackVar.currentValue));
+        }
+        RotationMatrix playerOrientation = holdingPlayer.getOrientation();
+        double addition = pitchRecoilVar.currentValue;
+        if (playerOrientation.angles.x - addition < -PITCH_RECOIL_CLAMPING) {
+            addition = PITCH_RECOIL_CLAMPING + playerOrientation.angles.x;
+        }
+        if (addition > 0 && playerOrientation.angles.x < PITCH_RECOIL_CLAMPING) {
+            playerOrientation.rotateY((float) ((yawRecoilVar.currentValue * 2 * randomGenerator.nextDouble()) - yawRecoilVar.currentValue));
+            playerOrientation.rotateX(-addition);
+            playerOrientation.convertToAngles();
+            holdingPlayer.setOrientation(playerOrientation);
+            pitchRecoveryTimeRemaining = (int) pitchRecoveryTimeVar.currentValue;
         }
     }
 

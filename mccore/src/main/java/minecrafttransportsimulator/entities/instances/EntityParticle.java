@@ -642,7 +642,11 @@ public class EntityParticle extends AEntityC_Renderable {
      */
     private int generateMaxAge() {
         if (definition.duration != 0) {
-            return definition.duration;
+            if (definition.durationRandomness != 0) {
+                return definition.duration + (int) (definition.durationRandomness * 2 * particleRandom.nextFloat() - definition.durationRandomness);
+            } else {
+                return definition.duration;
+            }
         } else {
             switch (definition.type) {
                 case SMOKE:

@@ -96,8 +96,8 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 gun.bulletsPresentOnServer = true;
                 break;
             }
-            case KNOCKBACK: {
-                gun.performGunKnockback();
+            case HANDHELD_MOVEMENTS: {
+                gun.performGunHandheldMovements();
                 break;
             }
         }
@@ -114,7 +114,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         AIM_OFF(true),
         BULLETS_OUT(false),
         BULLETS_PRESENT(false),
-        KNOCKBACK(true);
+        HANDHELD_MOVEMENTS(true);
 
         private final boolean sendToClients;
 
