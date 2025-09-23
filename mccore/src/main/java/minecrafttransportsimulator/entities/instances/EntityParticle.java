@@ -87,12 +87,13 @@ public class EntityParticle extends AEntityC_Renderable {
             case ENTITY:
             case ATTACHED: {
                 orientation.set(entitySpawning.orientation);
-                helperTransform.set(orientation);
+                helperTransform.set(entitySpawning.orientation);
                 break;
             }
-            case STREAK: {
-                //Orientation will be set via constructor angles.
-                helperTransform.set(orientation);
+            case STREAK:
+            case WORLD_ATTACHED: {
+                //Orientation isn't changed from spawn, but we do need to know spawning entity orientation for the transform of position.
+                helperTransform.set(entitySpawning.orientation);
                 break;
             }
             case FACING: {
@@ -396,6 +397,10 @@ public class EntityParticle extends AEntityC_Renderable {
                 helperTransform.set(orientation);
                 setPointToSpawn(entitySpawning.position, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
                 setOrientationToSpawn();
+            } else if (definition.spawningOrientation == ParticleSpawningOrientation.WORLD_ATTACHED) {
+                helperTransform.resetTransforms();
+                helperTransform.set(entitySpawning.orientation);
+                setPointToSpawn(entitySpawning.position, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
             }
             
             if (definition.movementDuration != 0) {

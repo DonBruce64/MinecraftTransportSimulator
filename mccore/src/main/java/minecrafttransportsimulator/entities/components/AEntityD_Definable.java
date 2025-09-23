@@ -547,9 +547,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             //Make the particle spawn if able.
             if (shouldParticleSpawn) {
+                AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
                 if (particleDef.distance > 0) {
                     //First get spawning position as defined by JSON and animations.
-                    AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
                     EntityParticle.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
                     //Now check if we need to spawn.
@@ -576,10 +576,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     Long particleSpawnTime = lastTickParticleSpawned.get(particleDef);
                     if (particleSpawnTime == null || (particleDef.spawnEveryTick && ticksExisted > particleSpawnTime)) {
                         for (int i = 0; i < particleDef.quantity; ++i) {
-                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                            if (spawningSwitchbox != null) {
-                                spawningSwitchbox.runSwitchbox(partialTicks, false);
-                            }
                             world.addEntity(new EntityParticle(this, particleDef, position, null, spawningSwitchbox));
                         }
                         lastTickParticleSpawned.put(particleDef, ticksExisted);
