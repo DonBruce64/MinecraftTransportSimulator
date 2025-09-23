@@ -180,6 +180,10 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
         public float gravityFactor;
 
+        @ModifiableValue
+        @JSONDescription("The rate at which this vehicle can climb blocks. If defined, will override the main mtsconfig file value.")
+        public float climbSpeed;
+
         @JSONDescription("The speed at which 0% damage will be applied during crashes.  Crash damage values are optional and a default will be used if these are missing.")
         public float crashSpeedMin;
 

@@ -9,7 +9,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * This class is a collection for a set of four vehicle ground device points.  This allows for less
@@ -488,15 +487,15 @@ public class VehicleGroundDeviceCollection {
 
         //Get the angle to rotate by based on the farthest points and collision depth.
         double furthestDelta = Math.max(box1Delta, box2Delta);
-        if (furthestDelta < ConfigSystem.settings.general.climbSpeed.value) {
+        if (furthestDelta < vehicle.climbSpeedVar.currentValue) {
             //This is too short of a wheelbase to do this function.
             return;
         }
 
         //Run though this loop until we have no collisions, or until we get a small enough delta.
-        double heightDeltaAttempted = ConfigSystem.settings.general.climbSpeed.value;
+        double heightDeltaAttempted = vehicle.climbSpeedVar.currentValue;
         double angleApplied = 0;
-        for (; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= ConfigSystem.settings.general.climbSpeed.value / 4) {
+        for (; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= vehicle.climbSpeedVar.currentValue / 4) {
             angleApplied = Math.toDegrees(Math.asin(heightDeltaAttempted / furthestDelta));
             if (!clockwiseRotation) {
                 angleApplied = -angleApplied;
