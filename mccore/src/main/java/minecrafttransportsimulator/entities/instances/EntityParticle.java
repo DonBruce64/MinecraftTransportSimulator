@@ -71,8 +71,8 @@ public class EntityParticle extends AEntityC_Renderable {
     private int colorIndex;
     private int colorDelayIndex;
 
-    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, AnimationSwitchbox spawningSwitchbox) {
-        super(entitySpawning.world, spawningPosition, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, Point3D spawningAngles, AnimationSwitchbox spawningSwitchbox) {
+        super(entitySpawning.world, spawningPosition, ZERO_FOR_CONSTRUCTOR, spawningAngles != null ? spawningAngles : ZERO_FOR_CONSTRUCTOR);
         this.entitySpawning = entitySpawning;
         this.definition = definition;
         this.spawningSwitchbox = spawningSwitchbox;
@@ -87,6 +87,11 @@ public class EntityParticle extends AEntityC_Renderable {
             case ENTITY:
             case ATTACHED: {
                 orientation.set(entitySpawning.orientation);
+                helperTransform.set(orientation);
+                break;
+            }
+            case STREAK: {
+                //Orientation will be set via constructor angles.
                 helperTransform.set(orientation);
                 break;
             }
@@ -115,8 +120,13 @@ public class EntityParticle extends AEntityC_Renderable {
             }
         }
 
-        //Set position.
-        setPositionToSpawn(spawningPosition);
+        //Set position, but only if we aren't a distance particle.
+        //Distance particles are set prior to spawning with their actual position since it handles rotation.
+        if (definition.distance == 0) {
+            setPointToSpawn(spawningPosition, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+        } else {
+            position.set(spawningPosition);
+        }
         prevPosition.set(position);
 
         //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
@@ -325,19 +335,23 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**Make sure helperTransform is set to the orientation before calling this.**/
-    private void setPositionToSpawn(Point3D origin) {
+    public static void setPointToSpawn(Point3D origin, RotationMatrix orientation, Point3D definitionOffset, Point3D scale, AnimationSwitchbox spawningSwitchbox, Point3D pointToSet) {
         //Apply transforms to get position.
-        if (definition.pos != null) {
-            helperPoint.set(definition.pos).multiply(entitySpawning.scale);
+        if (definitionOffset != null) {
+            helperPoint.set(definitionOffset).multiply(scale);
         } else {
             helperPoint.set(0, 0, 0);
+        }
+        if (orientation != null) {
+            helperTransform.resetTransforms();
+            helperTransform.set(orientation);
         }
         if (spawningSwitchbox != null) {
             spawningSwitchbox.runSwitchbox(0, false);
             helperTransform.multiply(spawningSwitchbox.netMatrix);
         }
         helperPoint.transform(helperTransform);
-        position.set(origin).add(helperPoint);
+        pointToSet.set(origin).add(helperPoint);
     }
 
     private void setOrientationToSpawn() {
@@ -380,7 +394,7 @@ public class EntityParticle extends AEntityC_Renderable {
                 orientation.set(entitySpawning.orientation);
                 helperTransform.resetTransforms();
                 helperTransform.set(orientation);
-                setPositionToSpawn(entitySpawning.position);
+                setPointToSpawn(entitySpawning.position, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
                 setOrientationToSpawn();
             }
             
@@ -533,7 +547,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.subParticles != null) {
             for (JSONSubParticle subDef : definition.subParticles) {
                 if (subDef.particle.spawnEveryTick ? subDef.time >= ticksExisted : subDef.time == ticksExisted) {
-                    world.addEntity(new EntityParticle(this, subDef.particle, position, null));
+                    world.addEntity(new EntityParticle(this, subDef.particle, position, null, null));
                 }
             }
         }

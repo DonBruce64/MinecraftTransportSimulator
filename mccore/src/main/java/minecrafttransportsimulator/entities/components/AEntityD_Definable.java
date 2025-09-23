@@ -104,6 +104,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
     private long lastTickParticlesSpawned;
     private float lastPartialTickParticlesSpawned;
+    private static final Point3D particleSpawningPosition = new Point3D();
 
     /**
      * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
@@ -547,21 +548,26 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Make the particle spawn if able.
             if (shouldParticleSpawn) {
                 if (particleDef.distance > 0) {
+                    //First get spawning position as defined by JSON and animations.
+                    AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
+                    EntityParticle.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
+
+                    //Now check if we need to spawn.
                     Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
                     if (lastParticlePosition == null) {
-                        lastParticlePosition = position.copy();
-                        lastPositionParticleSpawned.put(particleDef, lastParticlePosition);
+                        lastPositionParticleSpawned.put(particleDef, particleSpawningPosition.copy());
                         continue;//First tick we are active, checks are assured to fail.
                     }
-                    while (!lastParticlePosition.isDistanceToCloserThan(position, particleDef.distance)) {
-                        double distanceFactor = particleDef.distance / position.distanceTo(lastParticlePosition);
-                        Point3D spawningPosition = lastParticlePosition.copy().interpolate(position, distanceFactor);
+                    while (!lastParticlePosition.isDistanceToCloserThan(particleSpawningPosition, particleDef.distance)) {
+                        double distanceFactor = particleDef.distance / particleSpawningPosition.distanceTo(lastParticlePosition);
+                        Point3D spawningPosition = lastParticlePosition.copy().interpolate(particleSpawningPosition, distanceFactor);
                         for (int i = 0; i < particleDef.quantity; ++i) {
-                            AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                            if (spawningSwitchbox != null) {
-                                spawningSwitchbox.runSwitchbox(partialTicks, false);
+                            //No need to run switchbox here since it will have been done in the setPointToSpawn method above.
+                            Point3D angles = null;
+                            if (particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.STREAK) {
+                                angles = spawningPosition.copy().subtract(lastParticlePosition).getAngles(true);
                             }
-                            world.addEntity(new EntityParticle(this, particleDef, spawningPosition, spawningSwitchbox));
+                            world.addEntity(new EntityParticle(this, particleDef, spawningPosition, angles, spawningSwitchbox));
                         }
                         lastParticlePosition.set(spawningPosition);
                     }
@@ -574,7 +580,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                             if (spawningSwitchbox != null) {
                                 spawningSwitchbox.runSwitchbox(partialTicks, false);
                             }
-                            world.addEntity(new EntityParticle(this, particleDef, position, spawningSwitchbox));
+                            world.addEntity(new EntityParticle(this, particleDef, position, null, spawningSwitchbox));
                         }
                         lastTickParticleSpawned.put(particleDef, ticksExisted);
                     }
