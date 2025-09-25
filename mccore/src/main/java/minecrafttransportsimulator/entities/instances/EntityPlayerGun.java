@@ -274,11 +274,13 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         super.updatePartList();
 
         //Populate camera list.
+        cameras.clear();
+        cameraEntities.clear();
         for (APart part : allParts) {
             if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
                 for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
                     cameras.add(camera);
-                    cameraEntities.put(camera, part);
+                    cameraEntities.add(part);
                 }
             }
         }

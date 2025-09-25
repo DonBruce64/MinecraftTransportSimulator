@@ -3,9 +3,7 @@ package minecrafttransportsimulator.entities.components;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
@@ -61,7 +59,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      * List of all cameras available on this entity for the rider.  These get populated by other systems as applicable.
      **/
     public final List<JSONCameraObject> cameras = new ArrayList<>();
-    public final Map<JSONCameraObject, AEntityD_Definable<?>> cameraEntities = new LinkedHashMap<>();
+    public final List<AEntityD_Definable<?>> cameraEntities = new ArrayList<>();
     public JSONCameraObject activeCamera;
     public AEntityD_Definable<?> activeCameraEntity;
     public AnimationSwitchbox activeCameraSwitchbox;
@@ -176,9 +174,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             //Check for valid camera, and perform operations if so.
             activeCamera = null;
             while (cameraIndex != 0 && activeCamera == null) {
-                if ((cameraIndex - 1) < cameras.size()) {
-                    activeCamera = cameras.get(cameraIndex - 1);
-                    activeCameraEntity = cameraEntities.get(activeCamera);
+                int actualCameraIndex = cameraIndex - 1;
+                if (actualCameraIndex < cameras.size()) {
+                    activeCamera = cameras.get(actualCameraIndex);
+                    activeCameraEntity = cameraEntities.get(actualCameraIndex);
                     activeCameraSwitchbox = activeCameraEntity.cameraSwitchboxes.get(activeCamera);
                     if (activeCameraSwitchbox != null && !activeCameraSwitchbox.runSwitchbox(0, false)) {
                         //Camera is inactive, go to next.
@@ -189,22 +188,22 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     //No active cameras found, set index to 0 to disable and go back to normal rendering.
                     cameraIndex = 0;
                     activeCamera = null;
-                    if(lastCameraMode != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
-                    	InterfaceManager.clientInterface.setCameraMode(lastCameraMode);
-                    	lastCameraMode = null;
+                    if (lastCameraMode != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+                        InterfaceManager.clientInterface.setCameraMode(lastCameraMode);
+                        lastCameraMode = null;
                     }
                 }
             }
-            
+
             //If we just got to an active camera, store last camera mode and change to first-person if required.
             //If we have an active camera, force first-person if we don't have it.
-            if(activeCamera != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
-            	if(lastCameraMode == null) {
-            		lastCameraMode = InterfaceManager.clientInterface.getCameraMode();
-            	}
-            	if(InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
-            		InterfaceManager.clientInterface.setCameraMode(CameraMode.FIRST_PERSON);
-            	}
+            if (activeCamera != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
+                if (lastCameraMode == null) {
+                    lastCameraMode = InterfaceManager.clientInterface.getCameraMode();
+                }
+                if (InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
+                    InterfaceManager.clientInterface.setCameraMode(CameraMode.FIRST_PERSON);
+                }
             }
         }
 

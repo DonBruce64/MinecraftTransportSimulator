@@ -72,6 +72,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public final ComputedVariable steeringForceIgnoresSpeedVar;
     public final ComputedVariable steeringForceFactorVar;
     public final ComputedVariable brakingFactorVar;
+    public final ComputedVariable climbSpeedVar;
     public final ComputedVariable overSteerVar;
     public final ComputedVariable underSteerVar;
     public final ComputedVariable maxTiltAngleVar;
@@ -146,6 +147,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.steeringForceIgnoresSpeedVar = new ComputedVariable(this, "steeringForceIgnoresSpeed"));
         addVariable(this.steeringForceFactorVar = new ComputedVariable(this, "steeringForceFactor"));
         addVariable(this.brakingFactorVar = new ComputedVariable(this, "brakingFactor"));
+        addVariable(this.climbSpeedVar = new ComputedVariable(this, "climbSpeed"));
         addVariable(this.overSteerVar = new ComputedVariable(this, "overSteer"));
         addVariable(this.underSteerVar = new ComputedVariable(this, "underSteer"));
         addVariable(this.maxTiltAngleVar = new ComputedVariable(this, "maxTiltAngle"));
@@ -286,6 +288,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         steeringForceIgnoresSpeedVar.setTo(definition.motorized.steeringForceIgnoresSpeed ? 1 : 0, false);
         steeringForceFactorVar.setTo(definition.motorized.steeringForceFactor, false);
         brakingFactorVar.setTo(definition.motorized.brakingFactor, false);
+        climbSpeedVar.setTo(ConfigSystem.settings.general.climbSpeed.value, false);
+        if (definition.motorized.climbSpeed != 0) {
+            climbSpeedVar.setTo(definition.motorized.gravityFactor, false);
+        } else {
+            climbSpeedVar.setTo(ConfigSystem.settings.general.climbSpeed.value, false);
+        }
         overSteerVar.setTo(definition.motorized.overSteer, false);
         underSteerVar.setTo(definition.motorized.underSteer, false);
         maxTiltAngleVar.setTo(definition.motorized.maxTiltAngle, false);
@@ -784,7 +792,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (groundMotion.y > 0) {
                     world.beginProfiling("GroundBoostApply", false);
                     //Make sure boost doesn't exceed the config value.
-                    groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value / speedFactor);
+                    groundMotion.y = Math.min(groundMotion.y, climbSpeedVar.currentValue / speedFactor);
 
                     //If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
                     //This is done as it's clear motion.y is just moving the vehicle into the ground.

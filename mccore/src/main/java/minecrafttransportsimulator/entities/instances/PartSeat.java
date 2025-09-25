@@ -140,18 +140,19 @@ public final class PartSeat extends APart {
         gunGroupIndex = 0;
 
         //Populate camera list.
+        cameras.clear();
+        cameraEntities.clear();
         if (masterEntity.definition.rendering != null && masterEntity.definition.rendering.cameraObjects != null) {
             for (JSONCameraObject camera : masterEntity.definition.rendering.cameraObjects) {
                 cameras.add(camera);
-                cameraEntities.put(camera, masterEntity);
+                cameraEntities.add(masterEntity);
             }
-        } else {
-            for (APart part : masterEntity.allParts) {
-                if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
-                    for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
-                        cameras.add(camera);
-                        cameraEntities.put(camera, part);
-                    }
+        }
+        for (APart part : masterEntity.allParts) {
+            if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
+                for (JSONCameraObject camera : part.definition.rendering.cameraObjects) {
+                    cameras.add(camera);
+                    cameraEntities.add(part);
                 }
             }
         }
