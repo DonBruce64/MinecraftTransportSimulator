@@ -91,7 +91,9 @@ public class RenderableModelObject {
         if (lightDef != null) {
             if (lightDef.emissive) {
                 this.colorRenderable = new RenderableData(vertexObject.createOverlay(COLOR_OFFSET), "mts:textures/rendering/light.png");
-                colorRenderable.setTransucentOverride();
+                if (ConfigSystem.client.renderingSettings.lightsTransp.value) {
+                    colorRenderable.setTransucentOverride();
+                }
             } else {
                 this.colorRenderable = null;
             }
@@ -262,7 +264,7 @@ public class RenderableModelObject {
             } else {
                 //Set object states and render.
                 boolean isLitTexture = lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
-                if ((renderable.isTranslucent || isLitTexture) == blendingEnabled) {
+                if (renderable.isTranslucent == blendingEnabled || isLitTexture == (ConfigSystem.client.renderingSettings.lightsTransp.value ? blendingEnabled : !blendingEnabled)) {
                     if (lightDef != null && lightDef.isBeam) {
                         //Model that's actually a beam, render it with beam lighting/blending. 
                         renderable.setLightValue(entity.worldLightValue);
@@ -338,7 +340,7 @@ public class RenderableModelObject {
             //Render text on this object.  Only do this on the solid pass.
             for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
                 JSONText textDef = textEntry.getKey();
-                if (renderable.vertexObject.name.equals(textDef.attachedTo) && ((textDef.lightsUp && entity.renderTextLit()) == blendingEnabled)) {
+                if (renderable.vertexObject.name.equals(textDef.attachedTo) && ((textDef.lightsUp && entity.renderTextLit()) == (ConfigSystem.client.renderingSettings.lightsTransp.value ? blendingEnabled : !blendingEnabled))) {
                     RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false, blendingEnabled);
                 }
             }

@@ -1287,7 +1287,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         world.beginProfiling("MainText", false);
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
             JSONText textDef = textEntry.getKey();
-            if (textDef.attachedTo == null && ((textDef.lightsUp && renderTextLit()) == blendingEnabled)) {
+            if (textDef.attachedTo == null && ((textDef.lightsUp && renderTextLit()) == (ConfigSystem.client.renderingSettings.lightsTransp.value ? blendingEnabled : !blendingEnabled))) {
                 RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false, blendingEnabled);
             }
         }

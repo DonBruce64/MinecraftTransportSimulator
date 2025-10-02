@@ -61,7 +61,7 @@ public final class RenderInstrument {
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
             boolean renderLit = ((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value;
-            if ((component.overlayTexture || renderLit) == blendingEnabled) {
+            if (component.overlayTexture == blendingEnabled || (renderLit == (ConfigSystem.client.renderingSettings.lightsTransp.value ? blendingEnabled : !blendingEnabled))) {
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
@@ -113,7 +113,7 @@ public final class RenderInstrument {
                         //Set points to the variables here and render them.
                         //If the shape is lit, disable lighting for blending.
                         renderable.setLightValue(entity.worldLightValue);
-                        if (component.overlayTexture || renderLit) {
+                        if (component.overlayTexture || (renderLit && ConfigSystem.client.renderingSettings.lightsTransp.value)) {
                             renderable.setTransucentOverride();
                         } else {
                             renderable.clearTranslucentOverride();
