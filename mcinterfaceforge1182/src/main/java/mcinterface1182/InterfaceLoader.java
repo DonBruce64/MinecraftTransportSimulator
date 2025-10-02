@@ -162,10 +162,11 @@ public class InterfaceLoader {
                 //Not only does this prevent us from having to manually set the blocks
                 //we also pre-generate the block classes here and note which tile entities they go to.
                 if (item instanceof IItemBlock) {
-                    ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
+                    IItemBlock itemBlock = (IItemBlock) item;
+                    ABlockBase itemBlockBlock = itemBlock.getBlock();
                     if (!blocksRegistred.contains(itemBlockBlock)) {
                         //New block class detected.  Register it and its instance.
-                        String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length()).toLowerCase(Locale.ROOT);
+                        String name = itemBlock.getBlockClass() != null ? itemBlock.getBlockClass().getSimpleName().substring("Block".length()).toLowerCase(Locale.ROOT) : (item.getRegistrationName() + "_Block").toLowerCase(Locale.ROOT);
                         blocksRegistred.add(itemBlockBlock);
                         BuilderBlock.BLOCKS.register(name, () -> {
                             BuilderBlock wrapper;

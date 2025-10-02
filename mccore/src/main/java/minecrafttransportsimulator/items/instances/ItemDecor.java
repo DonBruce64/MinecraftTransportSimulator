@@ -58,4 +58,34 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock {
         //We won't ever get here, but this makes the compiler happy.
         return null;
     }
+
+    @Override
+    public ABlockBase createBlock() {
+        switch (definition.decor.type) {
+            case CHEST:
+                return new BlockChest();
+            case BEACON:
+                return new BlockBeacon();
+            case SIGNAL_CONTROLLER:
+                return new BlockSignalController();
+            case FUEL_PUMP:
+                return new BlockFuelPump();
+            case CHARGER:
+                return new BlockCharger();
+            case ITEM_LOADER:
+            case ITEM_UNLOADER:
+                return new BlockItemLoader();
+            case FLUID_LOADER:
+            case FLUID_UNLOADER:
+                return new BlockFluidLoader();
+            case RADIO:
+                return new BlockRadio();
+            case SEAT:
+            case GENERIC:
+                return new BlockDecor();
+        }
+
+        //We won't ever get here, but this makes the compiler happy.
+        return null;
+    }
 }

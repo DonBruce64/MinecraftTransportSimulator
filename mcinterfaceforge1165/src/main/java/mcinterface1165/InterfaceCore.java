@@ -62,6 +62,21 @@ class InterfaceCore implements IInterfaceCore {
             if (stream != null) {
                 return stream;
             }
+
+            //Check to make sure this isn't a pack file that's registered for the main mod.  Some MC files need this naming.
+            //For this, we need to use the pack's handler, not the main mod's.
+            try {
+                String packID = InterfaceEventsModelLoader.getPackID(resource);
+                optional = ModList.get().getModContainerById(packID);
+                if (optional.isPresent()) {
+                    stream = optional.get().getMod().getClass().getResourceAsStream(resource);
+                    if (stream != null) {
+                        return stream;
+                    }
+                }
+            } catch (Exception e) {
+                //Don't do anything, this isn't a pack file so no need to worry. 
+            }
         }
         //Try to get a Minecraft texture, we use the classloader of the block class, since it's common to servers and clients.
         return Blocks.AIR.getClass().getResourceAsStream(resource);

@@ -6,6 +6,7 @@ import java.util.Locale;
 
 import minecrafttransportsimulator.jsondefs.AJSONBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBlock;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -76,6 +77,7 @@ public class PackResourceLoader {
         DECOR(JSONDecor.class),
         BULLET(JSONBullet.class),
         ITEM(JSONItem.class),
+        BLOCK(JSONBlock.class),
         SKIN(JSONSkin.class),
         PANEL(JSONPanel.class);
 

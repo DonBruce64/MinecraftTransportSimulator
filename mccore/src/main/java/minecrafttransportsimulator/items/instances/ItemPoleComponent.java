@@ -39,6 +39,11 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
         return BlockPole.class;
     }
 
+    @Override
+    public ABlockBase createBlock() {
+        return new BlockPole();
+    }
+
     public enum PoleComponentType {
         @JSONDescription("The base of any pole system is the core type. This is the central structure that connects to other pole bits and allows placement of components on it.  You cannot place other components without placing one of these first.\nThe pole model you'll make will look like nothing you'll see in-game.  This is because it contains all possible model components that could be rendered.  Each of these components has a specific object name, and should only be rendered in specific conditions based on what the pole is connected to (other poles, solids, slabs, etc.).")
         CORE,
