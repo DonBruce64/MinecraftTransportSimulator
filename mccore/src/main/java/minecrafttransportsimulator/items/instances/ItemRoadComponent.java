@@ -233,4 +233,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
     public Class<? extends ABlockBase> getBlockClass() {
         return BlockRoad.class;
     }
+
+    @Override
+    public ABlockBase createBlock() {
+        return new BlockRoad();
+    }
 }

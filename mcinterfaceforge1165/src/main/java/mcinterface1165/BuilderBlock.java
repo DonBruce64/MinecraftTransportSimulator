@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
+import minecrafttransportsimulator.blocks.instances.BlockBlock;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
@@ -145,6 +146,8 @@ public class BuilderBlock extends Block {
                     }
                 }
             }
+        } else if (block instanceof BlockBlock) {
+            return new ItemStack(BuilderItem.itemMap.get(((BlockBlock) block).itemReference));
         }
         return super.getCloneItemStack(world, pos, state);
     }
@@ -187,19 +190,21 @@ public class BuilderBlock extends Block {
                     return VoxelShapes.create(WrapperWorld.convertWithOffset(tile.boundingBox, -pos.getX(), -pos.getY(), -pos.getZ()));
                 }
             }
+            //Return empty here, since we don't every want to be considered a full block as it does bad lighting.
+            //When we get our TE data, then we can use that for the actual collision.
+            return VoxelShapes.empty();
         } else if (block instanceof BlockCollision) {
             return VoxelShapes.create(WrapperWorld.convert(((BlockCollision) block).blockBounds));
+        } else {
+            return VoxelShapes.block();
         }
-        //Return empty here, since we don't every want to be considered a full block as it does bad lighting.
-        //When we get our TE data, then we can use that for the actual collision.
-        return VoxelShapes.empty();
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public BlockRenderType getRenderShape(BlockState state) {
-        //Don't render this block.  We manually render via the TE.
-        return BlockRenderType.INVISIBLE;
+        //Render block if basic type, otherwise don't render as it's either a TE or a collision block.
+        return block instanceof BlockBlock ? BlockRenderType.MODEL : BlockRenderType.INVISIBLE;
     }
 
     @Override

@@ -5,8 +5,10 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockBlock;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -56,6 +58,16 @@ public class BuilderBlock extends Block {
         //Forward the breaking call to the block to allow for breaking logic.
         block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
         super.onRemove(state, world, pos, newState, isMoving);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public ItemStack getCloneItemStack(BlockGetter world, BlockPos pos, BlockState state) {
+        if (block instanceof BlockBlock) {
+            return new ItemStack(BuilderItem.itemMap.get(((BlockBlock) block).itemReference));
+        } else {
+            return super.getCloneItemStack(world, pos, state);
+        }
     }
 
     @Override

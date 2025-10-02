@@ -3,6 +3,7 @@ package mcinterface1122;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -10,6 +11,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
+import minecrafttransportsimulator.blocks.instances.BlockBlock;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
@@ -186,6 +188,8 @@ public class BuilderBlock extends Block {
                     }
                 }
             }
+        } else if (block instanceof BlockBlock) {
+            return new ItemStack(BuilderItem.itemMap.get(((BlockBlock) block).itemReference));
         }
         return super.getPickBlock(state, target, world, pos, player);
     }
@@ -293,8 +297,8 @@ public class BuilderBlock extends Block {
     @Override
     @SuppressWarnings("deprecation")
     public EnumBlockRenderType getRenderType(IBlockState state) {
-        //Don't render this block.  We manually render via the TE.
-        return EnumBlockRenderType.INVISIBLE;
+        //Render block if basic type, otherwise don't render as it's either a TE or a collision block.
+        return block instanceof BlockBlock ? EnumBlockRenderType.MODEL : EnumBlockRenderType.INVISIBLE;
     }
 
     @Override
@@ -340,12 +344,12 @@ public class BuilderBlock extends Block {
         List<ABlockBase> blocksRegistred = new ArrayList<>();
         for (AItemBase item : BuilderItem.itemMap.keySet()) {
             if (item instanceof IItemBlock) {
-                ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
+                IItemBlock itemBlock = (IItemBlock) item;
+                ABlockBase itemBlockBlock = itemBlock.getBlock();
                 if (!blocksRegistred.contains(itemBlockBlock)) {
                     //New block class detected.  Register it and its instance.
                     BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
-                    String name = itemBlockBlock.getClass().getSimpleName();
-                    name = InterfaceManager.coreModID + ":" + name.substring("Block".length());
+                    String name = InterfaceManager.coreModID + ":" + (itemBlock.getBlockClass() != null ? itemBlockBlock.getClass().getSimpleName().substring("Block".length()) : (item.getRegistrationName() + "_Block").toLowerCase(Locale.ROOT));
                     event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
                     blockMap.put(itemBlockBlock, wrapper);
                     blocksRegistred.add(itemBlockBlock);

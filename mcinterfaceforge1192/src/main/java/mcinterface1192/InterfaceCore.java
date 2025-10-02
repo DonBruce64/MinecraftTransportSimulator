@@ -64,6 +64,21 @@ class InterfaceCore implements IInterfaceCore {
             if (stream != null) {
                 return stream;
             } else if (modID.equals(InterfaceManager.coreModID)) {
+                //Check to make sure this isn't a pack file that's registered for the main mod.  Some MC files need this naming.
+                //For this, we need to use the pack's handler, not the main mod's.
+                try {
+                    String packID = InterfaceEventsModelLoader.getPackID(resource);
+                    optional = ModList.get().getModContainerById(packID);
+                    if (optional.isPresent()) {
+                        stream = optional.get().getMod().getClass().getResourceAsStream(resource);
+                        if (stream != null) {
+                            return stream;
+                        }
+                    }
+                } catch (Exception e) {
+                    //Don't do anything, this isn't a pack file so no need to worry. 
+                }
+
                 //For dev builds, the core files aren't in the main jar yet and are in their own compiled one.
                 //This requires us to check a class of that jar vs the mod jar for the resource.
                 return InterfaceManager.class.getResourceAsStream(resource);

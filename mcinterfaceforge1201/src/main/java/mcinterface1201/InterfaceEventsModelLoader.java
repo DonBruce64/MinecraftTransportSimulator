@@ -53,19 +53,18 @@ public class InterfaceEventsModelLoader {
             //First check if we should even process this resource.
             if ((domains.contains(location.getNamespace()) || domains.contains(getPackID(location.getPath()))) && location.getPath().endsWith(".png")) {
                 //Create stream return variable and get raw data.
-                InputStream stream;
                 String domain = !location.getNamespace().equals(InterfaceLoader.MODID) ? location.getNamespace() : getPackID(location.getPath());
                 String rawPackInfo = location.getPath();
                 String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
-                stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
-                if (stream == null && !streamLocation.contains("/assets/mts/textures/mcfont")) {
-                    if (ConfigSystem.settings.general.devMode.value) {
+                final InputStream stream = InterfaceManager.coreInterface.getPackResource(streamLocation);
+                if (stream == null) {
+                    if (!streamLocation.contains("/assets/mts/textures/mcfont") && ConfigSystem.settings.general.devMode.value) {
                         InterfaceManager.coreInterface.logError("Couldn't find requested PNG: " + streamLocation);
                     }
+                    return null;
                 }
                 //Return whichever stream we found.
-                final InputStream streamForSupplier = stream;
-                return () -> streamForSupplier;
+                return () -> stream;
             } else {
                 return null;
             }

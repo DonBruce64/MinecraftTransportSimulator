@@ -22,9 +22,17 @@ public interface IItemBlock {
      * Returns the block class that goes to this IItemBlock.
      * Used to create an instance of the block, but functions
      * as a key to prevent creating gobs of block instances
-     * that we just throw away after registration.
+     * that we just throw away after registration.  If this
+     * IItemBlock should make a new dynamic class for itself
+     * then this method should return null.
      */
     Class<? extends ABlockBase> getBlockClass();
+
+    /**
+     * Makes the instance of the block that goes to this IItemBlock.
+     * Only one instance should be present per item!
+     */
+    ABlockBase createBlock();
 
     /**
      * Gets the block for this IItemBlock.
@@ -34,10 +42,12 @@ public interface IItemBlock {
             //First check to see if we already created the block class.
             Class<? extends ABlockBase> blockClass = getBlockClass();
             ABlockBase existingBlock = null;
-            for (ABlockBase block : itemToBlockMap.values()) {
-                if (blockClass.equals(block.getClass())) {
-                    existingBlock = block;
-                    break;
+            if (blockClass != null) {
+                for (ABlockBase block : itemToBlockMap.values()) {
+                    if (blockClass.equals(block.getClass())) {
+                        existingBlock = block;
+                        break;
+                    }
                 }
             }
 
@@ -47,7 +57,7 @@ public interface IItemBlock {
                 itemToBlockMap.put(this, existingBlock);
             } else {
                 try {
-                    itemToBlockMap.put(this, getBlockClass().newInstance());
+                    itemToBlockMap.put(this, createBlock());
                 } catch (Exception e) {
                     //Uh oh....
                     e.printStackTrace();
