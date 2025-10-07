@@ -2,6 +2,7 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -125,7 +126,7 @@ public class GUITextEditor extends AGUIBase {
             int maxLowerLimit = getHeight() - boxSpacing;
             if (textInputBoxes.isEmpty() || populatingPageHeight + boxSpacing + boxOffsetFromLabel + textBoxHeight > maxLowerLimit) {
                 //Need to add a page.
-                textInputBoxes.add(new HashMap<>());
+                textInputBoxes.add(new LinkedHashMap<>());
                 populatingPageHeight = 0;
             }
 
