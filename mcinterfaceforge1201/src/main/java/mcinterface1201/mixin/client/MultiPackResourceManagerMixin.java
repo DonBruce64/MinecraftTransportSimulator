@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.FallbackResourceManager;
@@ -47,7 +48,7 @@ public abstract class MultiPackResourceManagerMixin {
 
         //Need to do this here since languages happen on pack loading vs on boot.
         //Keep checking until we get more than one: MC starts with only en_us on boot.
-        if (!populatedLanguages && InterfaceManager.clientInterface != null) {
+        if (!populatedLanguages && InterfaceManager.clientInterface != null && Minecraft.getInstance().getLanguageManager() != null) {
             if (InterfaceManager.clientInterface.getAllLanguages().size() > 1) {
                 LanguageSystem.populateNames();
                 populatedLanguages = true;
