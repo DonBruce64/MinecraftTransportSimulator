@@ -37,45 +37,51 @@ public class BuilderTileEntityInventoryContainer extends BuilderTileEntity imple
 
     @Override
     public int getSlots() {
-        return inventory.getSize();
+        return inventory != null ? inventory.getSize() : 0;
     }
 
     @Override
     public ItemStack getStackInSlot(int index) {
-        return ((WrapperItemStack) inventory.getStack(index)).stack;
+        return inventory != null ? ((WrapperItemStack) inventory.getStack(index)).stack : ItemStack.EMPTY;
     }
 
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack stack = getStackInSlot(slot);
-        if (stack.getCount() < amount) {
-            amount = stack.getCount();
+        if (inventory != null) {
+            ItemStack stack = getStackInSlot(slot);
+            if (stack.getCount() < amount) {
+                amount = stack.getCount();
+            }
+            ItemStack extracted = stack.copy();
+            extracted.setCount(amount);
+            if (!simulate) {
+                stack.setCount(stack.getCount() - amount);
+                inventory.setStack(new WrapperItemStack(stack), slot);
+            }
+            return extracted;
+        } else {
+            return ItemStack.EMPTY;
         }
-        ItemStack extracted = stack.copy();
-        extracted.setCount(amount);
-        if (!simulate) {
-            stack.setCount(stack.getCount() - amount);
-            inventory.setStack(new WrapperItemStack(stack), slot);
-        }
-        return extracted;
     }
 
     @Override
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        ItemStack existingStack = getStackInSlot(slot);
-        if (ItemHandlerHelper.canItemStacksStack(stack, existingStack)) {
-            int amount = existingStack.getMaxStackSize() - existingStack.getCount();
-            if (amount != 0) {
-                if (amount > stack.getCount()) {
-                    amount = stack.getCount();
+        if (inventory != null) {
+            ItemStack existingStack = getStackInSlot(slot);
+            if (ItemHandlerHelper.canItemStacksStack(stack, existingStack)) {
+                int amount = existingStack.getMaxStackSize() - existingStack.getCount();
+                if (amount != 0) {
+                    if (amount > stack.getCount()) {
+                        amount = stack.getCount();
+                    }
+                    ItemStack remainderStack = stack.copy();
+                    remainderStack.setCount(remainderStack.getCount() - amount);
+                    if (!simulate) {
+                        existingStack.setCount(existingStack.getCount() + amount);
+                        inventory.setStack(new WrapperItemStack(existingStack), slot);
+                    }
+                    return remainderStack;
                 }
-                ItemStack remainderStack = stack.copy();
-                remainderStack.setCount(remainderStack.getCount() - amount);
-                if (!simulate) {
-                    existingStack.setCount(existingStack.getCount() + amount);
-                    inventory.setStack(new WrapperItemStack(existingStack), slot);
-                }
-                return remainderStack;
             }
         }
         return stack;
