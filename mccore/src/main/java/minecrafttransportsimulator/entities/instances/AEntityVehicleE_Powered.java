@@ -7,6 +7,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -344,7 +345,12 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //-----START OF SOUND AND ANIMATION CODE-----
     @Override
     public boolean hasRadio() {
-        return true;
+        return !definition.motorized.hasNoRadio;
+    }
+
+    @Override
+    public Point3D getRadioOffset() {
+        return definition.motorized.radioPosition;
     }
 
     @Override

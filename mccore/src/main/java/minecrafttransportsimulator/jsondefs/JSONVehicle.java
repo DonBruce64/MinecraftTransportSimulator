@@ -43,6 +43,9 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("If set, this vehicle will be able to selecte and connect to beacons for directional wayfinding.")
         public boolean hasRadioNav;
 
+        @JSONDescription("If set, this vehicle will not have a radio.  Defaults to all vehicles having a radio since most vehicles should.")
+        public boolean hasNoRadio;
+
         @JSONDescription("Set this to true if you want the vehicle to have skidSteer functionality.  This allows the vehicle to turn in-place when stopped in neutral.  This will also automatically invert the rotation of the wheels and treads to match the steering orientation, so no need to mess with JSON bits.  Do keep in mind, however, that variables tied to the driveshaft won't work, as these use the engine's current gear, which will be 0!")
         public boolean hasSkidSteer;
 
@@ -192,6 +195,9 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("The speed at which the vehicle will blow up and be destroyed.  Needs to be higher than crashSpeedMax.")
         public float crashSpeedDestroyed;
+
+        @JSONDescription("The position where the radio will play music. Required for most things to get the radio to be in the front of the vehicle.")
+        public Point3D radioPosition;
 
         @JSONRequired
         @JSONDescription("When this variable is 1, the vehicle will be considered to be 'lit'.  This makes text and instruments light up, provided there's enough battery power to do so.")
