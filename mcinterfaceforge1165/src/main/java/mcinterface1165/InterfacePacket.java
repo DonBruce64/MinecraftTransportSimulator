@@ -107,12 +107,15 @@ class InterfacePacket implements IInterfacePacket {
 
         public static WrapperPacket fromBytes(PacketBuffer buf) {
             byte packetIndex = buf.readByte();
+            Class<? extends APacketBase> packetClass = packetMappings.get(packetIndex);
+            if (packetClass == null) {
+                throw new IndexOutOfBoundsException("Was asked to create packet of index " + packetIndex + " but we haven't registered that one yet!");
+            }
             try {
-                Class<? extends APacketBase> packetClass = packetMappings.get(packetIndex);
                 return new WrapperPacket(packetClass.getConstructor(ByteBuf.class).newInstance(buf));
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new IndexOutOfBoundsException("Was asked to create packet of index " + packetIndex + " but we haven't registered that one yet!");
+                throw new IllegalStateException("Was asked to create packet of " + packetClass.getSimpleName() + " but couldn't due to an error.  Something went VERY wrong here.  Check the log for more information.");
             }
         }
 

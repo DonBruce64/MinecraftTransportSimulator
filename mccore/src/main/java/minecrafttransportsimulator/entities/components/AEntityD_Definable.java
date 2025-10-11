@@ -84,7 +84,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Map containing text lines for saved text provided by this entity.
      **/
-    public final Map<JSONText, String> text = new HashMap<>();
+    public final Map<JSONText, String> text = new LinkedHashMap<>();
 
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.

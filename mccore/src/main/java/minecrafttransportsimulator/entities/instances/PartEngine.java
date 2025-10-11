@@ -453,7 +453,11 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm / maxRPMVar.currentValue, !world.isClient());
+                            Double fuelFactor = ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid());
+                            if (fuelFactor == null) {
+                                throw new IllegalStateException("Found vehicle " + vehicleOn + " with fluid " + vehicleOn.fuelTank.getFluid() + " in the fuel tank, but that fluid isn't valid for engine type " + definition.engine.fuelType + "!  This likely means you have mis-matched configs between your client and a server.  mtsconfig.json needs to be copied manually over and should be in your modpack!");
+                            }
+                            fuelFlow += vehicleOn.fuelTank.drain(getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / fuelFactor * rpm / maxRPMVar.currentValue, !world.isClient());
                         }
 
                         //Add temp based on engine speed.

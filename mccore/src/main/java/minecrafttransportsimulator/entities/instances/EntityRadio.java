@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -30,12 +31,14 @@ public class EntityRadio extends AEntityB_Existing {
 
     //Private runtime variables.
     private final AEntityB_Existing provider;
+    private final Point3D radioOffset;
     private RadioSources currentSource;
     private SoundInstance currentSound;
 
-    public EntityRadio(AEntityB_Existing provider, IWrapperNBT data) {
+    public EntityRadio(AEntityB_Existing provider, Point3D radioOffset, IWrapperNBT data) {
         super(provider.world, data);
         this.provider = provider;
+        this.radioOffset = radioOffset;
         if (data != null) {
             if (world.isClient()) {
                 changeSource(RadioSources.values()[data.getInteger("currentSource")]);
@@ -68,7 +71,11 @@ public class EntityRadio extends AEntityB_Existing {
     @Override
     public void update() {
         super.update();
-        position.set(provider.position);
+        if (radioOffset != null) {
+            position.set(radioOffset).rotate(provider.orientation).add(provider.position);
+        } else {
+            position.set(provider.position);
+        }
         if (world.isClient() && currentSound != null) {
             double distance = position.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
             currentSound.volume = (float) (volume / 10F * (distance < SoundInstance.DEFAULT_MAX_DISTANCE ? (1 - distance / SoundInstance.DEFAULT_MAX_DISTANCE) : 0));

@@ -124,6 +124,7 @@ public class RenderText {
         private static final ColorRGB[] COLORS = new ColorRGB[]{new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255)};
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
         private static final int MAX_VERTCIES_PER_RENDER = 1000 * 6;
+        private static final String DEFAULT_FONT_BASE_LOCATION = InterfaceManager.renderingInterface.getDefaultFontTextureFolder() + "/unicode_page_";
         private static final Point3D adjustmentOffset = new Point3D();
 
         /**
@@ -201,7 +202,7 @@ public class RenderText {
             //Get font locations.
             String fontBaseLocation;
             if (fontName == null) {
-                fontBaseLocation = InterfaceManager.renderingInterface.getDefaultFontTextureFolder() + "/unicode_page_";
+                fontBaseLocation = DEFAULT_FONT_BASE_LOCATION;
             } else {
                 fontBaseLocation = "/assets/" + fontName.substring(0, fontName.indexOf(":")) + "/textures/fonts/" + fontName.substring(fontName.indexOf(":") + 1) + "/unicode_page_";
             }
@@ -211,14 +212,24 @@ public class RenderText {
             float charTopOffset = 0;
             for (int i = 0; i < fontLocations.length; ++i) {
                 fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
-                BufferedImage bufferedImage;
+                BufferedImage bufferedImage = null;
                 try {
                     bufferedImage = ImageIO.read(InterfaceManager.renderingInterface.getTextureStream(fontLocations[i]));
-                    if (bufferedImage == null) {
-                        continue;
-                    }
                 } catch (Exception e) {
-                    //Just continue, as we don't care about this file.  Not all files may be present for any given font.
+                }
+                if (bufferedImage == null) {
+                    //Try to get the data from the default sheet, if we aren't using it.
+                    if (!fontBaseLocation.equals(DEFAULT_FONT_BASE_LOCATION)) {
+                        fontBaseLocation = DEFAULT_FONT_BASE_LOCATION;
+                        fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
+                        try {
+                            bufferedImage = ImageIO.read(InterfaceManager.renderingInterface.getTextureStream(fontLocations[i]));
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+                if (bufferedImage == null) {
+                    //Still null.  We don't have this sheet and therefore shouldn't care about it.
                     continue;
                 }
 

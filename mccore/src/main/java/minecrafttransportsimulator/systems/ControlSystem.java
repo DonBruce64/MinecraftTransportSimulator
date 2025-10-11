@@ -270,7 +270,7 @@ public final class ControlSystem {
     }
 
     private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio) {
-        if (radio.isPressed()) {
+        if (radio.isPressed() && vehicle.hasRadio()) {
             if (AGUIBase.activeInputGUI instanceof GUIRadio) {
                 AGUIBase.activeInputGUI.close();
             } else if (!InterfaceManager.clientInterface.isGUIOpen()) {

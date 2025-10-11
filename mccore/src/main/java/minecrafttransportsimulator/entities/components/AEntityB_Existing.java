@@ -101,7 +101,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public final Point3D headTrackingOrientation = new Point3D();
 
     //Internal sound variables.
-    public final EntityRadio radio;
+    public EntityRadio radio;
+    public final IWrapperNBT radioData;
     public List<SoundInstance> sounds = new ArrayList<>();//TODO make this a hashmap.
 
     /**
@@ -115,27 +116,18 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             this.motion = data.getPoint3d("motion");
             this.zoomLevel = data.getInteger("zoomLevel");
             this.cameraIndex = data.getInteger("cameraIndex");
+            this.radioData = data.getData("radio");
         } else {
             this.position = new Point3D();
             this.orientation = new RotationMatrix();
             this.motion = new Point3D();
+            this.radioData = null;
         }
 
         this.prevPosition = position.copy();
         this.prevOrientation = new RotationMatrix().set(orientation);
         this.prevMotion = motion.copy();
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5, boundingBoxCollisionTypes);
-
-        if (hasRadio()) {
-            if (data != null) {
-                this.radio = new EntityRadio(this, data.getData("radio"));
-            } else {
-                this.radio = new EntityRadio(this, null);
-            }
-            world.addEntity(radio);
-        } else {
-            this.radio = null;
-        }
     }
 
     /**
@@ -150,13 +142,23 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         this.motion = motion.copy();
         this.prevMotion = motion.copy();
         this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5, boundingBoxCollisionTypes);
-        this.radio = null;
+        this.radioData = null;
     }
 
     @Override
     public void update() {
         super.update();
         world.beginProfiling("EntityB_Level", true);
+        //Need to do this outside constructor in case sub-classes override the hasRadio method with state-sensitive things.
+        if (ticksExisted == 1 && hasRadio()) {
+            if (radioData != null) {
+                this.radio = new EntityRadio(this, getRadioOffset(), radioData);
+            } else {
+                this.radio = new EntityRadio(this, getRadioOffset(), null);
+            }
+            world.addEntity(radio);
+        }
+
         if (world.isClient()) {
             updateSounds(0);
         }
@@ -462,6 +464,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      */
     public boolean hasRadio() {
         return false;
+    }
+
+    /**
+     * Returns the radio offset.  This is the point the radio is offset from the center of this entity.
+     * Can be null if no offset is needed.
+     */
+    public Point3D getRadioOffset() {
+        return null;
     }
 
     /**

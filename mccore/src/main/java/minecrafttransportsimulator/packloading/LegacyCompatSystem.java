@@ -489,9 +489,30 @@ public final class LegacyCompatSystem {
             definition.motorized.brakingFactor = 1.0F;
         }
 
-        //Check if we didn't specity an axleRatio.
+        //Check if we didn't specify an axleRatio.
         if (definition.motorized.axleRatio == 0) {
             definition.motorized.axleRatio = 3.55F;
+        }
+
+        //Check if we didn't specify a radio position.
+        //We set this to the Z position equal to the first seat.
+        if (definition.motorized.radioPosition == null && !definition.motorized.hasNoRadio) {
+            for (JSONPartDefinition partDef : definition.parts) {
+                for (String partType : partDef.types) {
+                    if (partType.startsWith("seat")) {
+                        definition.motorized.radioPosition = partDef.pos.copy();
+                        definition.motorized.radioPosition.x = 0;
+                        break;
+                    }
+                }
+                if (definition.motorized.radioPosition != null) {
+                    break;
+                }
+            }
+            //Just in case we didn't find a seat, set to 0,0,0.  This can happen if we only have parts.
+            if (definition.motorized.radioPosition == null) {
+                definition.motorized.radioPosition = new Point3D();
+            }
         }
 
         //Move cruiseControl to autopilot.
