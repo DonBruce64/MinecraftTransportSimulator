@@ -625,7 +625,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.CUSTOM)) {
                 List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
                 for (String function : functions) {
-                    CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, blockPosition, blockSide, HitType.BLOCK);
+                    if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, blockPosition, blockSide, HitType.BLOCK, gun.currentBullet);
                 }
             }
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
@@ -660,7 +661,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.CUSTOM)) {
                 List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
                 for (String function : functions) {
-                    CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, position, hitSide, hitType);
+                    if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, position, hitSide, hitType, gun.currentBullet);
                 }
             }
         }
@@ -741,6 +743,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     public interface CustomHitFunction {
-        void execute(AWrapperWorld world, Point3D hitPosition, Axis hitSide, HitType type);
+        void execute(AWrapperWorld world, Point3D hitPosition, Axis hitSide, HitType type, EntityBullet bullet);
     }
 }
