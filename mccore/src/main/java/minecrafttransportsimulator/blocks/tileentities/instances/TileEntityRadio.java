@@ -17,19 +17,11 @@ public class TileEntityRadio extends TileEntityDecor {
 
     public TileEntityRadio(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, ItemDecor item, IWrapperNBT data) {
         super(world, position, placingPlayer, item, data);
-        //Set position here as we don't tick so the radio won't get update() calls.
-        radio.position.set(position);
     }
 
     @Override
     public boolean hasRadio() {
         return true;
-    }
-
-    @Override
-    public void remove() {
-        super.remove();
-        radio.remove();
     }
 
     @Override
