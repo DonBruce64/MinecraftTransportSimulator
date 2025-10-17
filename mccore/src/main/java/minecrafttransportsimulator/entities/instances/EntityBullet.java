@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -626,7 +627,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
                 for (String function : functions) {
                     if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
-                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, blockPosition, blockSide, HitType.BLOCK, gun.currentBullet);
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, blockPosition, blockSide, HitType.BLOCK, gun.lastLoadedBullet);
                 }
             }
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
@@ -662,7 +663,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
                 for (String function : functions) {
                     if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
-                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, position, hitSide, hitType, gun.currentBullet);
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, position, hitSide, hitType, gun.lastLoadedBullet);
                 }
             }
         }
@@ -743,6 +744,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     }
 
     public interface CustomHitFunction {
-        void execute(AWrapperWorld world, Point3D hitPosition, Axis hitSide, HitType type, EntityBullet bullet);
+        void execute(AWrapperWorld world, Point3D hitPosition, Axis hitSide, HitType type, ItemBullet bullet);
     }
 }
