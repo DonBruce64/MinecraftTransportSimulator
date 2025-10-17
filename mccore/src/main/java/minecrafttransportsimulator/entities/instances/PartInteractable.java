@@ -397,6 +397,9 @@ public final class PartInteractable extends APart {
         } else if (definition.interactable.interactionType == InteractableComponentType.BATTERY) {
             data.setBoolean(BATTERY_CHARGED_NAME, batteryCharged);
         }
+
+        if (definition.interactable.interactionType == InteractableComponentType.CUSTOM)
+            CUSTOM_INTERACTION_HANDLERS.get(definition.interactable.customInteractionHandler).save(this, data);
         return data;
     }
 
