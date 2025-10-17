@@ -20,6 +20,9 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public final class PartInteractable extends APart {
     public final AEntityCrafter crafter;
     public final EntityInventoryContainer inventory;
@@ -31,6 +34,7 @@ public final class PartInteractable extends APart {
 
     public static final String JERRYCAN_FLUID_NAME = "jerrycanFluid";
     public static final String BATTERY_CHARGED_NAME = "batteryCharged";
+    public static final Map<String, CustomInteractionHandler> CUSTOM_INTERACTION_HANDLERS = new HashMap<>();
 
     public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -92,6 +96,9 @@ public final class PartInteractable extends APart {
                 }
                 //No break statement here, fall-down to default to null things.
             }
+            case CUSTOM: {
+                CUSTOM_INTERACTION_HANDLERS.get(definition.interactable.customInteractionHandler).onInit(this, entityOn, placingPlayer, placementDefinition, item, data);
+            }
             default: {
                 this.crafter = null;
                 this.inventory = null;
@@ -127,6 +134,10 @@ public final class PartInteractable extends APart {
                     player.getHeldStack().interactWith(tank, player);
                     break;
                 }
+                case CUSTOM: {
+                    CUSTOM_INTERACTION_HANDLERS.get(definition.interactable.customInteractionHandler).onInteract(this, player);
+                    break;
+                }
             }
         } else {
             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
@@ -159,6 +170,10 @@ public final class PartInteractable extends APart {
         }
         if (tank != null) {
             tank.remove();
+        }
+
+        if (definition.interactable.interactionType == InteractableComponentType.CUSTOM) {
+            CUSTOM_INTERACTION_HANDLERS.get(definition.interactable.customInteractionHandler).onRemove(this);
         }
     }
 
@@ -243,6 +258,10 @@ public final class PartInteractable extends APart {
                 for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
                     player.sendPacket(new PacketPlayerChatMessage(player, linkedMessage));
                 }
+            }
+
+            if (definition.interactable.interactionType == InteractableComponentType.CUSTOM) {
+                CUSTOM_INTERACTION_HANDLERS.get(definition.interactable.customInteractionHandler).onUpdate(this);
             }
         }
     }
@@ -379,5 +398,23 @@ public final class PartInteractable extends APart {
             data.setBoolean(BATTERY_CHARGED_NAME, batteryCharged);
         }
         return data;
+    }
+
+    public static void registerCustomInteractionHandler(String name, CustomInteractionHandler handler) {
+        if (CUSTOM_INTERACTION_HANDLERS.containsKey(name))
+            throw new RuntimeException("A custom interaction handler with name " + name + " has already been registered!");
+        CUSTOM_INTERACTION_HANDLERS.put(name, handler);
+    }
+
+    public interface CustomInteractionHandler {
+        void onInit(PartInteractable interactable, AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartInteractable item, IWrapperNBT data);
+
+        void onInteract(PartInteractable interactable, IWrapperPlayer player);
+
+        void onUpdate(PartInteractable interactable);
+
+        void onRemove(PartInteractable interactable);
+
+        void save(PartInteractable interactable, IWrapperNBT data);
     }
 }
