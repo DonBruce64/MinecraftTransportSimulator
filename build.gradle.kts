@@ -92,7 +92,7 @@ fun moveToOut(subProject: Project, versionStr: String) {
     val jarName = "Immersive Vehicles-${subProject.version}.jar"
     val source = Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
     val outDir = Paths.get("${project.projectDir.canonicalPath}/out")
-    java.nio.file.Files.createDirectories(outDir)
+    Files.createDirectories(outDir)
     source.moveTo(outDir.resolve(jarName), true)
 }
 
