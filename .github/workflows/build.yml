@@ -1,0 +1,149 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-legacy:
+    name: Build 1.12.2 + 1.16.5 (JDK 8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build Forge 1.12.2
+        run: ./gradlew --no-daemon buildForge1122
+
+      - name: Build Forge 1.16.5
+        run: ./gradlew --no-daemon buildForge1165
+
+      - name: Upload JAR artifacts (legacy all)
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-legacy-all
+          path: |
+            out/*.jar
+          if-no-files-found: error
+
+      - name: Upload 1.12.2 JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-1122
+          path: |
+            out/*1.12.2*.jar
+          if-no-files-found: warn
+
+      - name: Upload 1.16.5 JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-1165
+          path: |
+            out/*1.16.5*.jar
+          if-no-files-found: warn
+
+  build-modern:
+    name: Build 1.18.2 + 1.19.2 + 1.20.1 (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build Forge 1.18.2
+        run: ./gradlew --no-daemon buildForge1182
+
+      - name: Build Forge 1.19.2
+        run: ./gradlew --no-daemon buildForge1192
+
+      - name: Build Forge 1.20.1
+        run: ./gradlew --no-daemon buildForge1201
+
+      - name: Upload JAR artifacts (modern all)
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-modern-all
+          path: |
+            out/*.jar
+          if-no-files-found: error
+
+      - name: Upload 1.18.2 JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-1182
+          path: |
+            out/*1.18.2*.jar
+          if-no-files-found: warn
+
+      - name: Upload 1.19.2 JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-1192
+          path: |
+            out/*1.19.2*.jar
+          if-no-files-found: warn
+
+      - name: Upload 1.20.1 JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iv-1201
+          path: |
+            out/*1.20.1*.jar
+          if-no-files-found: warn
+
+  release:
+    name: Create GitHub Release (on tag)
+    needs: [build-legacy, build-modern]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Immersive Vehicles ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist/**/*.jar
