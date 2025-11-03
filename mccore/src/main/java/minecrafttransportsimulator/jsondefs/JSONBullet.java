@@ -106,6 +106,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("The texture of the casing to use for the casing particle, or null if no casing is to be rendered.")
         public String casingTexture;
+
+        @JSONDescription("A optional list of code-defined functions to be called if the bullet types include custom.")
+        public List<String> customHitFunctions;
     }
 
     public enum BulletType {
@@ -116,7 +119,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
         WATER,
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
-        ARMOR_PIERCING
+        ARMOR_PIERCING,
+        @JSONDescription("A bullet that has a custom function defined in code. Useful for integration with a variety of mods, regardless of version.")
+        CUSTOM
     }
 
     public enum GuidanceType {

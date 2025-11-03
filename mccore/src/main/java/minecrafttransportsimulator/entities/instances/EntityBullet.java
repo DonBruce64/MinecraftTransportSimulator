@@ -2,6 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
@@ -15,11 +16,13 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
 import minecrafttransportsimulator.jsondefs.JSONPart.TargetType;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -53,6 +56,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final Point3D motionToAddEachTick;
     private final int despawnTime;
     private final BoundingBox proxBounds;
+    private static final HashMap<String, CustomHitFunction> CUSTOM_HIT_FUNCTIONS = new HashMap<>();
 
     //States
     public boolean waitingOnActionPacket;
@@ -618,6 +622,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     gun.world.setToFire(blockPosition, blockSide);
                 }
             }
+
+            if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.CUSTOM)) {
+                List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
+                for (String function : functions) {
+                    if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, blockPosition, blockSide, HitType.BLOCK, gun.lastLoadedBullet);
+                }
+            }
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
         	//Don't do a state-change on the client, just make a breaking sound.
             //Fancy bullets don't make block-breaking sounds.  They do other things instead.
@@ -634,15 +646,25 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
 
         //Spawn an explosion if we are an explosive bullet on the server.
-        if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value && gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-            float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
-            Point3D explosionPosition = position.copy();
-            if (hitType == HitType.BLOCK) {
-                explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
+        if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value) {
+            if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
+                float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
+                Point3D explosionPosition = position.copy();
+                if (hitType == HitType.BLOCK) {
+                    explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
+                }
+                gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
+                if (bullet != null) {
+                    bullet.displayDebugMessage("SPAWNING EXPLOSION AT " + explosionPosition);
+                }
             }
-            gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
-            if (bullet != null) {
-                bullet.displayDebugMessage("SPAWNING EXPLOSION AT " + explosionPosition);
+
+            if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.CUSTOM)) {
+                List<String> functions = gun.lastLoadedBullet.definition.bullet.customHitFunctions;
+                for (String function : functions) {
+                    if (CUSTOM_HIT_FUNCTIONS.containsKey(function))
+                        CUSTOM_HIT_FUNCTIONS.get(function).execute(gun.world, position, hitSide, hitType, gun.lastLoadedBullet);
+                }
             }
         }
 
@@ -662,6 +684,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (gun.currentBullet != null && gun.currentBullet.bulletNumber <= bulletNumber) {
             gun.currentBullet = null;
         }
+    }
+
+    public static void registerCustomHitFunction(String name, CustomHitFunction function) {
+        if (CUSTOM_HIT_FUNCTIONS.containsKey(name))
+            throw new RuntimeException("A custom hit function with name " + name + " has already been registered!");
+        CUSTOM_HIT_FUNCTIONS.put(name, function);
     }
 
     public void displayDebugMessage(String message) {
@@ -713,5 +741,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         VEHICLE,
         ARMOR,
         BURST
+    }
+
+    public interface CustomHitFunction {
+        void execute(AWrapperWorld world, Point3D hitPosition, Axis hitSide, HitType type, ItemBullet bullet);
     }
 }
