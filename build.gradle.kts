@@ -1,6 +1,7 @@
 import java.nio.file.Paths
 import kotlin.io.path.moveTo
 import kotlin.io.path.ExperimentalPathApi
+import java.nio.file.Files
 
 
 plugins {
@@ -89,8 +90,10 @@ tasks.register("buildForgeAll") {
 @OptIn(ExperimentalPathApi::class)
 fun moveToOut(subProject: Project, versionStr: String) {
     val jarName = "Immersive Vehicles-${subProject.version}.jar"
-    Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
-        .moveTo(Paths.get("${project.projectDir.canonicalPath}/out/$jarName"), true)
+    val source = Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
+    val outDir = Paths.get("${project.projectDir.canonicalPath}/out")
+    Files.createDirectories(outDir)
+    source.moveTo(outDir.resolve(jarName), true)
 }
 
 fun preBuild() {
