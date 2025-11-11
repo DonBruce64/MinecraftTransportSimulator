@@ -587,6 +587,10 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
         public JSONCraftingBench crafting;
 
+        @JSONDescription("The name of the code-defined interaction handler to utilize. Requires an interactable type of custom to do anything.")
+        @JSONRequired(dependentField = "interactionType", dependentValues = {"custom"})
+        public String customInteractionHandler;
+
         @Deprecated
         public String inventoryTexture;
         @Deprecated
@@ -613,7 +617,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Works as a battery, allowing a charge to be stored inside and then used to charge electric vehicles without a charger.")
         BATTERY,
         @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
-        CRAFTING_BENCH
+        CRAFTING_BENCH,
+        @JSONDescription("Works based on the code-defined custom interaction handler. Useful for mod integration!")
+        CUSTOM
     }
 
     public enum CrafterComponentType {
