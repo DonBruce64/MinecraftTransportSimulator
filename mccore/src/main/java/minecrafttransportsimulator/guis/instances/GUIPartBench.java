@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -26,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityLastOpenedItemChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
@@ -43,9 +42,6 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 public class GUIPartBench extends AGUIBase {
-    /*Last item this GUI was on when closed.  Keyed by definition instance to keep all benches in-sync.*/
-    private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<>();
-
     //Init variables.
     private final AEntityD_Definable<?> entity;
     private final JSONCraftingBench definition;
@@ -102,8 +98,8 @@ public class GUIPartBench extends AGUIBase {
         this.entity = entity;
         this.definition = definition;
         this.player = InterfaceManager.clientInterface.getClientPlayer();
-        if (lastOpenedItem.containsKey(definition)) {
-            currentItem = lastOpenedItem.get(definition);
+        if (entity.lastOpenedItem != null) {
+            currentItem = entity.lastOpenedItem;
             currentPack = currentItem.definition.packID;
         } else {
             //Find a pack that has the item we are supposed to craft and set it.
@@ -497,7 +493,7 @@ public class GUIPartBench extends AGUIBase {
         }
 
         //Now update the last saved item.
-        lastOpenedItem.put(definition, currentItem);
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityLastOpenedItemChange(entity, currentItem));
     }
 
     private String getVehicleInfoText() {

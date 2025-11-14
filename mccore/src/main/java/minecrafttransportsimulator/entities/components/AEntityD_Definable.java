@@ -27,6 +27,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAction;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
@@ -153,6 +154,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      **/
     public AItemPack<JSONDefinition> cachedItem;
 
+    /**
+     * The last item opened by this entity if it's a crafting bench type.  Used to keep the items constant for each bench.
+     **/
+    public AItemPack<? extends AJSONItem> lastOpenedItem;
+
     //Radar lists.  Only updated once a tick.  Created when first requested via animations.
     public final List<EntityVehicleF_Physics> aircraftOnRadar = new ArrayList<>();
     public final List<EntityVehicleF_Physics> groundersOnRadar = new ArrayList<>();
@@ -195,6 +201,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Just as long as we do the replacement before we set any references.
             for (String variableName : data.getStrings("variables")) {
                 addVariable(new ComputedVariable(this, variableName, data));
+            }
+
+            //Load last opened item.
+            if (data.hasKey("lastOpenedItem")) {
+                this.lastOpenedItem = data.getData("lastOpenedItem").getPackItem();
             }
         } else {
             //Only set initial text/variables on initial placement.
@@ -1336,6 +1347,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         if (!savedNames.isEmpty()) {
             //Don't want to save variables if we don't have any set since it prevents stacking.
             data.setStrings("variables", savedNames);
+        }
+        if (lastOpenedItem != null) {
+            IWrapperNBT itemData = InterfaceManager.coreInterface.getNewNBTWrapper();
+            itemData.setPackItem(lastOpenedItem.definition, lastOpenedItem instanceof AItemSubTyped ? ((AItemSubTyped<?>) lastOpenedItem).subDefinition.subName : "");
+            data.setData("lastOpenedItem", itemData);
         }
         return data;
     }
