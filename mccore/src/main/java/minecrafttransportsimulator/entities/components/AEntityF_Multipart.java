@@ -46,6 +46,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneri
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -449,12 +450,27 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Iterate through our parts to find the index of the pack def for the part we want.
-            String partType = variable.substring(0, variable.indexOf("_"));
+            //First trim off the suffix number.
+            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
+            String partType = partVariable;
+
+            //Remove inversion prefix, if present.
             if (partType.startsWith(ComputedVariable.INVERTED_PREFIX)) {
                 partType = partType.substring(ComputedVariable.INVERTED_PREFIX.length());
             }
+
+            //Check legacy names, in case we're a newer name.  Some newer names don't have part-prefixes.
+            if (LegacyCompatSystem.variableChangesInv.containsKey(partType)) {
+                partType = LegacyCompatSystem.variableChangesInv.get(partType);
+            }
+
+            //Now get prefix, if it exists.
+            if (partType.indexOf("_") != -1) {
+                partType = partType.substring(0, partType.indexOf("_"));
+            }
+
+            //Get part number from raw variable.
             int partNumber = ComputedVariable.getVariableNumber(variable);
-            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
 
             //Get the "general" part variable.  If we find a specific part later, we use that one instead.
             APart generalPart = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;

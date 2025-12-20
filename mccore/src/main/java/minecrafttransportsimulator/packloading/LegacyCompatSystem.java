@@ -40,6 +40,7 @@ import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -85,6 +86,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class LegacyCompatSystem {
 
     public static final Map<String, String> variableChanges = new HashMap<>();
+    public static final Map<String, String> variableChangesInv = new HashMap<>();
 
     static {
         variableChanges.put("engine_rpm_max", "maxRPM");
@@ -112,6 +114,8 @@ public final class LegacyCompatSystem {
         variableChanges.put("effector_active", "part_active");
         variableChanges.put("effector_drill_percentage", "damage_percent");
         variableChanges.put("effector_drill_broken", "damage");
+
+        variableChanges.forEach((k, v) -> variableChangesInv.put(v, k));
     }
 
     public static void performLegacyCompats(AJSONBase definition) {
@@ -1658,6 +1662,19 @@ public final class LegacyCompatSystem {
         //Check if we are missing a texture name.
         if (definition.textureName == null) {
             definition.textureName = "instruments.png";
+        }
+
+        //Convert variables.
+        if (definition.components != null) {
+            for (JSONInstrumentComponent component : definition.components) {
+                if (component.animations != null) {
+                    for (JSONAnimationDefinition animation : component.animations) {
+                        if (variableChanges.containsKey(animation.variable)) {
+                            animation.variable = variableChanges.get(animation.variable);
+                        }
+                    }
+                }
+            }
         }
     }
 
