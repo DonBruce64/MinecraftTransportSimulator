@@ -46,9 +46,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
         
-        this.clickedVar = new ComputedVariable(this, "clicked", data);
-        this.activatedVar = new ComputedVariable(this, "activated", data);
-        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
+        addVariable(this.clickedVar = new ComputedVariable(this, "clicked", data));
+        addVariable(this.activatedVar = new ComputedVariable(this, "activated", data));
+        addVariable(this.lightLevelVar = new ComputedVariable(this, "lightLevel"));
     }
 
     @Override
