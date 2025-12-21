@@ -960,7 +960,12 @@ public class PartEngine extends APart {
 
     public void autoStartEngine() {
         //Only engage auto-starter if we aren't running, have health, and we have the right fuel.
-        if (!running && !outOfHealth && !vehicleOn.outOfHealth && (vehicleOn.isCreative || ConfigSystem.settings.general.fuelUsageFactor.value == 0 || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+        if (!vehicleOn.isCreative && ConfigSystem.settings.general.fuelUsageFactor.value != 0 && vehicleOn.fuelTank.getFluidLevel() == 0) {
+            //No fuel in tank and not creative or no fuel needed, stop processing and warn player if required.
+            if (world.isClient()) {
+                InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.INTERACT_VEHICLE_NOFUEL);
+            }
+        } else if (!running && !outOfHealth && !vehicleOn.outOfHealth) {
         	magnetoVar.setTo(1, false);
             if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                 autoStarterEngaged = true;
