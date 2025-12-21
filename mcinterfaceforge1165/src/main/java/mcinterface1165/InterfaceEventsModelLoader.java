@@ -203,7 +203,7 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public boolean hasResource(ResourcePackType type, ResourceLocation location) {
-            return domains.contains(location.getNamespace()) && !location.getPath().contains("blockstates") && !location.getPath().contains("armatures") && !location.getPath().contains("mcmeta") && !location.getPath().contains("lang/") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
+            return domains.contains(location.getNamespace()) && (location.getPath().startsWith("models/item/") && (location.getPath().endsWith(".json")) || location.getPath().endsWith(".png"));
         }
 
         @Override
