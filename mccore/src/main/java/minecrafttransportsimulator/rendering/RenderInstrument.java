@@ -61,7 +61,10 @@ public final class RenderInstrument {
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
             boolean renderLit = ((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value;
-            if (component.overlayTexture && blendingEnabled || (renderLit ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (component.overlayTexture == blendingEnabled))) {
+            if (component.overlayTexture && blendingEnabled || ((renderLit && !component.overlayTexture) ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (component.overlayTexture == blendingEnabled))) {
+                if (component.overlayTexture) {
+                    System.out.println(blendingEnabled);
+                }
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
@@ -82,20 +85,20 @@ public final class RenderInstrument {
                         RenderText.draw3DText(value, entity, textTransform, component.textObject, true, renderLit);
                     }
                 } else {
-                    //Init variables.
-                    renderable = entity.instrumentRenderables.get(slot).get(i);
-                    renderable.setTexture("/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName);
-                    renderable.transform.set(transform);
-                    renderable.transform.applyTranslation(0.0, 0.0, i * RenderableVertices.Z_BUFFER_OFFSET);
-                    renderable.transform.applyScaling(slotScale, slotScale, slotScale);
-                    textureCoord1.set(-component.textureWidth / 2D, -component.textureHeight / 2D, 0);
-                    textureCoord2.set(-component.textureWidth / 2D, component.textureHeight / 2D, 0);
-                    textureCoord3.set(component.textureWidth / 2D, component.textureHeight / 2D, 0);
-                    textureCoord4.set(component.textureWidth / 2D, -component.textureHeight / 2D, 0);
-
                     //Render if we don't have transforms, or of those transforms said we were good.
                     InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
                     if (switchbox == null || switchbox.runSwitchbox(partialTicks, true)) {
+                        //Init variables.
+                        renderable = entity.instrumentRenderables.get(slot).get(i);
+                        renderable.setTexture("/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName);
+                        renderable.transform.set(transform);
+                        renderable.transform.applyTranslation(0.0, 0.0, i * RenderableVertices.Z_BUFFER_OFFSET);
+                        renderable.transform.applyScaling(slotScale, slotScale, slotScale);
+                        textureCoord1.set(-component.textureWidth / 2D, -component.textureHeight / 2D, 0);
+                        textureCoord2.set(-component.textureWidth / 2D, component.textureHeight / 2D, 0);
+                        textureCoord3.set(component.textureWidth / 2D, component.textureHeight / 2D, 0);
+                        textureCoord4.set(component.textureWidth / 2D, -component.textureHeight / 2D, 0);
+
                         //Add the instrument UV-map offsets.
                         //These don't get added to the initial points to allow for rotation.
                         //Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
