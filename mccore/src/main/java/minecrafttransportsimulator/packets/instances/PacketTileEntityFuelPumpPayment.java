@@ -51,6 +51,7 @@ public class PacketTileEntityFuelPumpPayment extends APacketEntityInteract<ATile
     protected boolean handle(AWrapperWorld world, ATileEntityFuelPump pump, IWrapperPlayer player) {
         if (amountChangedTo != -1) {
             pump.fuelAmounts.set(slotClicked, amountChangedTo);
+            pump.hasChanged = true;
             return true;
         } else {
             IWrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
@@ -66,6 +67,7 @@ public class PacketTileEntityFuelPumpPayment extends APacketEntityInteract<ATile
                 pump.paymentItems.addStack(stack);
                 pump.fuelPurchased = pump.fuelAmounts.get(slotClicked);
                 pump.fuelDispensedThisPurchase = 0;
+                pump.hasChanged = true;
                 return true;
             }
             return false;

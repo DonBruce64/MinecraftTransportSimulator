@@ -182,6 +182,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
         } else if (components.containsKey(newAxis)) {
             components.remove(newAxis).remove();
         }
+        hasChanged = true;
     }
 
     @Override

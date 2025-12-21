@@ -24,6 +24,6 @@ public class PacketTileEntityChargerBattery extends APacketEntity<TileEntityChar
     @Override
     protected boolean handle(AWrapperWorld world, TileEntityCharger charger) {
         charger.internalBuffer = 0;
-        return true;
+        return false;
     }
 }

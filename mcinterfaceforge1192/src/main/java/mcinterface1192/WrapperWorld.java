@@ -739,11 +739,6 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void markTileEntityChanged(Point3D position) {
-        world.getBlockEntity(new BlockPos(position.x, position.y, position.z)).setChanged();
-    }
-
-    @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         //Sunlight never goes below 11 in this version, so we factor the darkening.

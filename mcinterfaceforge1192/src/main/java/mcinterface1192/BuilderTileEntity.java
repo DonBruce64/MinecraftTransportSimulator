@@ -89,6 +89,11 @@ public class BuilderTileEntity extends BlockEntity {
                     lastLightValue = lightValue;
                     level.setBlock(worldPosition, level.getBlockState(worldPosition).setValue(BuilderBlockTileEntity.LIGHT, lightValue), 3);
                 }
+                //Update changed state if needed.
+                if (tileEntity.hasChanged) {
+                    setChanged();
+                    tileEntity.hasChanged = false;
+                }
             } else if (!loadedFromSavedNBT) {
                 //If we are on the server, set the NBT flag.
                 if (lastLoadedNBT != null && !level.isClientSide) {
@@ -106,6 +111,7 @@ public class BuilderTileEntity extends BlockEntity {
                         IWrapperNBT data = new WrapperNBT(lastLoadedNBT);
                         setTileEntity(block.createTileEntity(worldWrapper, position, null, data.getPackItem(), data));
                         tileEntity.world.addEntity(tileEntity);
+                        level.blockEntityChanged(worldPosition);
                         loadedFromSavedNBT = true;
                         lastLoadedNBT = null;
                     } catch (Exception e) {

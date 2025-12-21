@@ -728,11 +728,6 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void markTileEntityChanged(Point3D position) {
-        world.getTileEntity(new BlockPos(position.x, position.y, position.z)).markDirty();
-    }
-
-    @Override
     public float getLightBrightness(Point3D position, boolean calculateBlock) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         float sunLight = world.getSunBrightnessFactor(0) * (world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted()) / 15F;

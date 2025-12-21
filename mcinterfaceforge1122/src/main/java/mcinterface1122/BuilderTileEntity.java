@@ -115,6 +115,11 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
                     }
                     playersRequestingData.clear();
                 }
+                //Update changed state if needed.
+                if (tileEntity != null && tileEntity.hasChanged) {
+                    markDirty();
+                    tileEntity.hasChanged = false;
+                }
             }
         }
     }

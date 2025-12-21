@@ -48,6 +48,13 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
     }
 
     @Override
+    public void updateText(String textKey, String textValue) {
+        super.updateText(textKey, textValue);
+        //Flag the TE as changed since we need to have it do this to save text changes.
+        core.hasChanged = true;
+    }
+
+    @Override
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         //Check connector variables.
         if (variable.startsWith("neighbor_present_")) {
