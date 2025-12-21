@@ -32,7 +32,13 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> implements IItem
     public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
         if (definition.generic.canBePlacedOnGround) {
             if (!world.isClient()) {
+                //Check to make sure there's not a placed part in this spot before placing this one.
                 position.add(0.5, 0, 0.5).add(axis.xOffset, axis.yOffset, axis.zOffset);
+                for (EntityPlacedPart existingEntity : world.getEntitiesOfType(EntityPlacedPart.class)) {
+                    if (existingEntity.position.equals(position)) {
+                        return true;
+                    }
+                }
                 double yRotation = Math.round((player.getYaw() + 180) / 90) * 90 % 360;
                 placeOnGround(world, player, position, yRotation, player.getHeldStack().getData());
 
