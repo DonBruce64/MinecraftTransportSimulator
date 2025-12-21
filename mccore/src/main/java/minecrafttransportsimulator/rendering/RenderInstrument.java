@@ -62,9 +62,6 @@ public final class RenderInstrument {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
             boolean renderLit = ((component.lightUpTexture && lightsOn) || component.alwaysLit) && ConfigSystem.client.renderingSettings.brightLights.value;
             if (component.overlayTexture && blendingEnabled || ((renderLit && !component.overlayTexture) ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (component.overlayTexture == blendingEnabled))) {
-                if (component.overlayTexture) {
-                    System.out.println(blendingEnabled);
-                }
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
