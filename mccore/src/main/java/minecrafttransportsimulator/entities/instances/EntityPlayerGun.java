@@ -16,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONDummyPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -325,6 +326,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
     public boolean disableRendering() {
         //Don't render the player gun entity.  Only render the gun itself.
         return true;
+    }
+
+    @Override
+    public IWrapperEntity getController() {
+        return player;
     }
 
     @Override

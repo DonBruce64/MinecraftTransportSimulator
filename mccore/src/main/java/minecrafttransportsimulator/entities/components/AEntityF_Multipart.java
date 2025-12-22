@@ -939,7 +939,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Is normally the player, but may be a NPC if one is in the seat.
      */
     public IWrapperEntity getController() {
-        for (APart part : parts) {
+        for (APart part : allParts) {
             if (part.rider != null && part.placementDefinition.isController) {
                 return part.rider;
             }

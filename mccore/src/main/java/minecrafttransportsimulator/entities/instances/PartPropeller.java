@@ -178,7 +178,7 @@ public class PartPropeller extends APart {
             boundingBox.widthRadius += 0.2;
             boundingBox.heightRadius += 0.2;
             boundingBox.depthRadius += 0.2;
-            IWrapperEntity controller = vehicleOn.getController();
+            IWrapperEntity controller = getController();
             LanguageEntry language = controller != null ? LanguageSystem.DEATH_PROPELLER_PLAYER : LanguageSystem.DEATH_PROPELLER_NULL;
             Damage propellerDamage = new Damage(ConfigSystem.settings.damage.propellerDamageFactor.value * currentRPM / 500F, damageBounds, this, controller, language);
             world.attackEntities(propellerDamage, null, false);
