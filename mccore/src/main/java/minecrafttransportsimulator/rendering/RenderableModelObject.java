@@ -214,7 +214,7 @@ public class RenderableModelObject {
 
             //Now set dynamic alpha if we have it, since this dictates translucent state.
             if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-                if (switchbox.lastVisibilityValue < switchbox.lastVisibilityClock.animation.clampMin) {
+                if (switchbox.lastVisibilityValue <= switchbox.lastVisibilityClock.animation.clampMin) {
                     renderable.setAlpha(0);
                 } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
                     //Need >= here instead of above for things where min/max clamps are equal.
