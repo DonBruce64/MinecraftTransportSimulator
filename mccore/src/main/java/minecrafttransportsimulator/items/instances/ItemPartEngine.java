@@ -58,7 +58,7 @@ public class ItemPartEngine extends AItemPart {
             }
             tooltipLines.add(line.substring(0, line.length() - 2));
         }
-        tooltipLines.add(LanguageSystem.ITEMINFO_ENGINE_HOURS.getCurrentValue() + Math.round(data.getDouble("hours") * 100D) / 100D);
+        tooltipLines.add(LanguageSystem.ITEMINFO_ENGINE_HOURS.getCurrentValue() + Math.round(data.getDouble(PartEngine.HOURS_VARIABLE) * 100D) / 100D);
 
         if (definition.engine.gearRatios.size() > 3) {
             tooltipLines.add(definition.engine.isAutomatic ? LanguageSystem.ITEMINFO_ENGINE_AUTOMATIC.getCurrentValue() : LanguageSystem.ITEMINFO_ENGINE_MANUAL.getCurrentValue());

@@ -112,7 +112,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
                 engine.stallEngine(packetType);
                 break;
             case DAMAGE: {
-                engine.hours += hours;
+                engine.hoursVar.adjustBy(hours, false);
                 break;
             }
             case LINK: {

@@ -34,7 +34,6 @@ public class PartEngine extends APart {
     public int upshiftCountdown;
     public int downshiftCountdown;
     public int internalFuel;
-    public double hours;
     public double rpm;
     public double temp;
     public double pressure;
@@ -68,7 +67,7 @@ public class PartEngine extends APart {
     private double engineForceValue;
 
     //Constants and variables.
-    public static final String HOURS_VARIABLE = "hours";
+    public static final String HOURS_VARIABLE = "engine_hours";
     public final ComputedVariable magnetoVar;
     public final ComputedVariable electricStarterVar;
     public final ComputedVariable handStarterVar;
@@ -116,7 +115,6 @@ public class PartEngine extends APart {
             this.temp = data.getDouble("temp");
             this.pressure = data.getDouble("pressure");
             this.rocketFuelUsed = data.getDouble("rocketFuelUsed");
-            this.hours = data.getDouble("hours");
         }
         for (float gear : definition.engine.gearRatios) {
             if (gear < 0) {
@@ -215,7 +213,7 @@ public class PartEngine extends APart {
                 if (damage.isExplosion) {
                     hoursApplied *= 10;
                 }
-                hours += hoursApplied;
+                hoursVar.adjustBy(hoursApplied, false);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, hoursApplied));
             }
         } else if (definition.engine.type == JSONPart.EngineType.NORMAL) {
@@ -333,7 +331,7 @@ public class PartEngine extends APart {
 
             //Add extra hours if we are running the engine too fast.
             if (!vehicleOn.isCreative && rpm > maxSafeRPMVar.currentValue) {
-                hours += (rpm - maxSafeRPMVar.currentValue) / maxSafeRPMVar.currentValue * getTotalWearFactor();
+                hoursVar.adjustBy((rpm - maxSafeRPMVar.currentValue) / maxSafeRPMVar.currentValue * getTotalWearFactor(), false);
             }
 
             //Check for any shifting requests.
@@ -353,7 +351,7 @@ public class PartEngine extends APart {
                     shiftDown();
                 }
             } else if (shiftSelectionVar.isActive) {
-                if (!world.isClient()) {
+                if (!world.isClient() && shiftSelectionVar.currentValue != currentGearVar.currentValue) {
                     if (shiftSelectionVar.currentValue < 10) {
                         while (currentGearVar.currentValue < shiftSelectionVar.currentValue && shiftUp())
                             ;
@@ -390,7 +388,7 @@ public class PartEngine extends APart {
 
                 //If we aren't creative, add hours.
                 if (!vehicleOn.isCreative) {
-                    hours += 0.001 * getTotalWearFactor();
+                    hoursVar.adjustBy(0.001 * getTotalWearFactor(), false);
                 }
 
                 //Stall engine for conditions.
@@ -437,7 +435,7 @@ public class PartEngine extends APart {
 
                 //Add extra hours, and possibly explode the engine, if it's too hot.
                 if (temp > OVERHEAT_TEMP_1 && !vehicleOn.isCreative) {
-                    hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
+                    hoursVar.adjustBy(0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor(), false);
                     if (temp > FAILURE_TEMP && !world.isClient()) {
                         explodeEngine();
                     }
@@ -469,12 +467,12 @@ public class PartEngine extends APart {
                         //Add extra hours and temp if we have low oil.
                         if (pressure < LOW_OIL_PRESSURE && !vehicleOn.isCreative) {
                             temp += Math.max(0, (20 * rpm / maxRPMVar.currentValue) / 20);
-                            hours += 0.01 * getTotalWearFactor();
+                            hoursVar.adjustBy(0.01 * getTotalWearFactor(), false);
                         }
 
                         //If the engine has high hours, give a chance for a backfire.
-                        if (hours >= 500 && !world.isClient()) {
-                            if (Math.random() < (hours / 3) / (500 + (10000 - hours)) * (maxSafeRPMVar.currentValue / (rpm + maxSafeRPMVar.currentValue / 1.5))) {
+                        if (hoursVar.currentValue >= 500 && !world.isClient()) {
+                            if (Math.random() < (hoursVar.currentValue / 3) / (500 + (10000 - hoursVar.currentValue)) * (maxSafeRPMVar.currentValue / (rpm + maxSafeRPMVar.currentValue / 1.5))) {
                                 backfireEngine();
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
                             }
@@ -594,7 +592,7 @@ public class PartEngine extends APart {
             if (definition.engine.jetPowerFactor == 0 && !drivenWheels.isEmpty()) {
                 lowestWheelVelocity = 999F;
                 desiredWheelVelocity = -999F;
-                engineTargetRPM = !electricStarterVar.isActive ? vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue : startRPMVar.currentValue;
+                engineTargetRPM = !electricStarterVar.isActive ? vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hoursVar.currentValue / 1500) + idleRPMVar.currentValue : startRPMVar.currentValue;
 
                 //Update wheel friction and velocity.
                 for (PartGroundDevice wheel : drivenWheels) {
@@ -638,7 +636,7 @@ public class PartEngine extends APart {
                     double propellerFeedback = -Math.abs(attachedPropeller.airstreamLinearVelocity - attachedPropeller.desiredLinearVelocity) * (isPropellerInLiquid ? 6.5 : 2);
                     if (running) {
                         propellerFeedback -= propellerForcePenalty * 50;
-                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue;
+                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hoursVar.currentValue / 1500) + idleRPMVar.currentValue;
                         double engineRPMDifference = engineTargetRPM - rpm;
 
                         //propellerFeedback can't make an engine stall, but hours can.
@@ -665,7 +663,7 @@ public class PartEngine extends APart {
                     if (rocketFuelUsed < definition.engine.rocketFuel) {
                         engineTargetRPM = maxRPMVar.currentValue;
                     } else {
-                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hours / 1500) + idleRPMVar.currentValue;
+                        engineTargetRPM = vehicleOn.throttleVar.currentValue * (maxRPMVar.currentValue - idleRPMVar.currentValue) / (1 + hoursVar.currentValue / 1500) + idleRPMVar.currentValue;
                     }
                     rpm += (engineTargetRPM - rpm) / (revResistanceVar.currentValue * 3);
                     if (revLimitRPMVar.currentValue == -1) {
@@ -872,8 +870,6 @@ public class PartEngine extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> backfired ? 1 : 0, false);
             case ("engine_jumper_cable"):
                 return new ComputedVariable(this, variable, partialTicks -> linkedEngine != null ? 1 : 0, false);
-            case ("engine_hours"):
-                return new ComputedVariable(this, variable, partialTicks -> hours, false);
             default: {
                 if (variable.startsWith("engine_sin_")) {
                     final int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
@@ -989,7 +985,7 @@ public class PartEngine extends APart {
     public void backfireEngine() {
         //Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
         backfired = true;
-        rpm -= maxRPMVar.currentValue < 15000 ? Math.round((0.05 * rpm) + ((hours * 0.05) - 25)) : Math.round((0.1 * rpm) + ((hours * 0.1) - 50));
+        rpm -= maxRPMVar.currentValue < 15000 ? Math.round((0.05 * rpm) + ((hoursVar.currentValue * 0.05) - 25)) : Math.round((0.1 * rpm) + ((hoursVar.currentValue * 0.1) - 50));
     }
 
     public void badShiftEngine() {
@@ -1232,7 +1228,6 @@ public class PartEngine extends APart {
         data.setDouble("temp", temp);
         data.setDouble("pressure", pressure);
         data.setDouble("rocketFuelUsed", rocketFuelUsed);
-        data.setDouble("hours", hours);
         return data;
     }
 }

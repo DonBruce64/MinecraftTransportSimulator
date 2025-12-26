@@ -102,7 +102,16 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 break;
             }
             case REPAIR_PACK: {
-                tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK.getCurrentValue() + definition.repair.amount + " HP");
+                if (definition.repair.repairableParts != null) {
+                    tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK_PART.getCurrentValue() + definition.repair.amount + " HP");
+                    for (String partPrefix : definition.repair.repairableParts) {
+                        if (partPrefix.startsWith("engine")) {
+                            tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK_ENGINE.getCurrentValue());
+                        }
+                    }
+                } else {
+                    tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK_VEHICLE.getCurrentValue() + definition.repair.amount + " HP");
+                }
                 if (definition.repair.canRepairTotaled) {
                     tooltipLines.add(LanguageSystem.ITEMINFO_REPAIRPACK_UNTOTAL.getCurrentValue());
                 }
@@ -404,7 +413,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
 
                     if (entity.repairCooldownTicks == 0) {
                         if (!entity.outOfHealth || definition.repair.canRepairTotaled) {
-                            if (entity.damageVar.currentValue == 0) {
+                            if (entity.damageVar.currentValue == 0 && (!(entity instanceof PartEngine) || ((PartEngine) entity).hoursVar.currentValue == 0)) {
                                 InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_NONEED), player);
                                 return CallbackType.NONE;
                             } else {
@@ -414,6 +423,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 }
                                 double newDamage = entity.damageVar.currentValue - amountRepaired;
                                 entity.damageVar.setTo(newDamage, true);
+                                if (entity instanceof PartEngine) {
+                                    ((PartEngine) entity).hoursVar.setTo(0, true);
+                                }
                                 entity.repairCooldownTicks = 200;
                                 InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_REPAIR_PASS, new Object[] { amountRepaired, entity.definition.general.health - newDamage, entity.definition.general.health }), player);
                                 entity.repairedVar.setActive(true, true);
