@@ -122,6 +122,7 @@ public class PartGun extends APart {
     private int windupTimeCurrent;
     private int windupRotation;
     private long lastMillisecondFired;
+    private IWrapperEntity currentController;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
     private Point3D controllerRelativeLookVector = new Point3D();
@@ -317,9 +318,9 @@ public class PartGun extends APart {
         if (isActiveVar.isActive && !isSpare) {
             //Check if we have a controller.
             //We aren't making sentry turrets here.... yet.
-            IWrapperEntity controller = getGunController();
-            if (controller != null) {
-                lastController = controller;
+            currentController = getGunController();
+            if (currentController != null) {
+                lastController = currentController;
                 if (isHandHeld) {
                     state = state.promote(GunState.CONTROLLED);
                 } else {
@@ -329,23 +330,23 @@ public class PartGun extends APart {
                         state = state.promote(GunState.CONTROLLED);
                     } else {
                         state = state.demote(GunState.ACTIVE);
-                        controller = null;
+                        currentController = null;
                         entityTarget = null;
                         engineTarget = null;
                     }
                 }
             }
-            if (controller == null) {
+            if (currentController == null) {
                 //If we aren't being controlled, check if we have any coaxial guns.
                 //If we do, and they have a controller, then we use that as our controller.
                 //This allows them to control this gun without being the actual controller for firing.
                 if (!parts.isEmpty()) {
                     for (APart part : parts) {
                         if (part instanceof PartGun && part.placementDefinition.isCoAxial) {
-                            controller = ((PartGun) part).getGunController();
-                            if (controller != null) {
+                            currentController = ((PartGun) part).getGunController();
+                            if (currentController != null) {
                                 //Check if the coaxial is controlled or not.
-                                lastController = controller;
+                                lastController = currentController;
                                 lastControllerSeat = (PartSeat) lastController.getEntityRiding();
                                 if (part.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.cachedItem).get(lastControllerSeat.gunIndex) == part)) {
                                     state = state.promote(GunState.CONTROLLED);
@@ -359,10 +360,10 @@ public class PartGun extends APart {
 
                 //Conversely, if we are a coaxial gun, and our parent is being controlled, we need to be controlled by it. 
                 if (placementDefinition.isCoAxial && entityOn instanceof PartGun) {
-                    controller = ((PartGun) entityOn).getGunController();
-                    if (controller != null) {
+                    currentController = ((PartGun) entityOn).getGunController();
+                    if (currentController != null) {
                         //Check if the coaxial is controlled or not.
-                        lastController = controller;
+                        lastController = currentController;
                         lastControllerSeat = (PartSeat) lastController.getEntityRiding();
                         if (entityOn.cachedItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(entityOn.cachedItem).get(lastControllerSeat.gunIndex) == entityOn)) {
                             state = state.promote(GunState.CONTROLLED);
@@ -371,7 +372,7 @@ public class PartGun extends APart {
                     }
                 }
 
-                if (controller == null) {
+                if (currentController == null) {
                     state = state.demote(GunState.ACTIVE);
                     //If we are hand-held, we need to die since we aren't a valid gun.
                     if (isHandHeld) {
@@ -383,10 +384,10 @@ public class PartGun extends APart {
 
             //Adjust yaw and pitch to the direction of the controller.
             if (state.isAtLeast(GunState.CONTROLLED)) {
-                handleControl(controller);
+                handleControl(currentController);
                 if (isRunningInCoaxialMode) {
                     state = state.demote(GunState.ACTIVE);
-                    controller = null;
+                    currentController = null;
                     entityTarget = null;
                     engineTarget = null;
                 }
@@ -1353,7 +1354,7 @@ public class PartGun extends APart {
             case ("gun_inhand_equipped"):
                 return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped && isValid ? 1 : 0, false);
             case ("gun_controller_firstperson"):
-                return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().equals(lastController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().equals(currentController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
             case ("gun_active"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):
