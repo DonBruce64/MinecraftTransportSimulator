@@ -160,7 +160,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             }
             partAnchor.add(position);
             for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                if (!partToTransfer.isPermanent && partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.canBeClicked() && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
                     IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                     IWrapperEntity partRider = partToTransfer.rider;
                     partToTransfer.entityOn.removePart(partToTransfer, true, true);
@@ -174,7 +174,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         } else {
             //True-False change, place part in nearby slot or drop.
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
-            if (currentPart.definition.generic.canBePlacedOnGround) {
+            if (!currentPart.isPermanent && currentPart.definition.generic.canBePlacedOnGround && currentPart.canBeClicked()) {
                 Point3D partAnchor = new Point3D();
                 AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
@@ -185,7 +185,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
                                 partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
-                                if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
+                                if (entity.isVariableListTrue(otherPartDef.interactableVariables) && partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
                                     IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                                     IWrapperEntity partRider = currentPart.rider;
                                     currentPart.entityOn.removePart(currentPart, true, true);
