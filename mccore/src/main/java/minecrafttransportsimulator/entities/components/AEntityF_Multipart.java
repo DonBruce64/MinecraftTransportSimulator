@@ -159,23 +159,33 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
             partAnchor.add(position);
-            for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (!partToTransfer.isPermanent && partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.canBeClicked() && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
-                    IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                    IWrapperEntity partRider = partToTransfer.rider;
-                    partToTransfer.entityOn.removePart(partToTransfer, true, true);
-                    APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
-                    if (partRider != null) {
-                        newPart.setRider(partRider, false);
+            APart partToTransfer = null;
+            for (APart testPart : world.getEntitiesExtendingType(APart.class)) {
+                if (!testPart.isPermanent && testPart.definition.generic.canBePlacedOnGround && testPart.canBeClicked() && testPart.masterEntity != masterEntity && testPart.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) testPart.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                    if (partToTransfer == null || partAnchor.isFirstCloserThanSecond(testPart.position, partToTransfer.position)) {
+                        partToTransfer = testPart;
                     }
-                    return;
                 }
+            }
+            if (partToTransfer != null) {
+                IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                IWrapperEntity partRider = partToTransfer.rider;
+                partToTransfer.entityOn.removePart(partToTransfer, true, true);
+                APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                if (partRider != null) {
+                    newPart.setRider(partRider, false);
+                }
+                return;
             }
         } else {
             //True-False change, place part in nearby slot or drop.
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
             if (!currentPart.isPermanent && currentPart.definition.generic.canBePlacedOnGround && currentPart.canBeClicked()) {
-                Point3D partAnchor = new Point3D();
+                AEntityF_Multipart<?> entityToTransferTo = null;
+                Point3D transferAnchor = null;
+                int transferSlot = 0;
+
+                Point3D testAnchor = new Point3D();
                 AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
                     //This keeps us from checking things really far away for no reason.
@@ -183,23 +193,33 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         AEntityF_Multipart<?> otherMasterEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
                         if(otherMasterEntity != masterEntity && entity.definition.parts != null) {
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
-                                partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
+                                testAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
-                                if (entity.isVariableListTrue(otherPartDef.interactableVariables) && partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
-                                    IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                                    IWrapperEntity partRider = currentPart.rider;
-                                    currentPart.entityOn.removePart(currentPart, true, true);
-                                    APart newPart = entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
-                                    if (partRider != null) {
-                                        newPart.setRider(partRider, false);
+                                if (entity.isVariableListTrue(otherPartDef.interactableVariables) && testAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
+                                    if (transferAnchor == null || currentPart.position.isFirstCloserThanSecond(testAnchor, transferAnchor)) {
+                                        entityToTransferTo = entity;
+                                        transferAnchor = testAnchor.copy();
+                                        transferSlot = otherSlotIndex;
                                     }
-                                    return;
                                 }
                             }
                         }
                     }
                 }
 
+                //Check to see if we found an entity to transfer to.  If so, do so now.
+                if (entityToTransferTo != null) {
+                    IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                    IWrapperEntity partRider = currentPart.rider;
+                    currentPart.entityOn.removePart(currentPart, true, true);
+                    APart newPart = entityToTransferTo.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, transferSlot, true, false);
+                    if (partRider != null) {
+                        newPart.setRider(partRider, false);
+                    }
+                    return;
+                }
+
+                //No entity found to transfer, just drop on ground.
                 //Remove the part from ourselves.
                 IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 IWrapperEntity partRider = currentPart.rider;
