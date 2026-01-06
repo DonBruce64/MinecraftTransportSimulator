@@ -62,7 +62,7 @@ import net.minecraftforge.registries.DeferredRegister;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.18.0";
+    public static final String MODVER = "23.0.0";
 
     private final FMLJavaModLoadingContext context;
     public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
