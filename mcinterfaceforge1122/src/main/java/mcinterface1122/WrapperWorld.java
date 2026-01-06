@@ -54,7 +54,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
@@ -280,7 +279,7 @@ public class WrapperWorld extends AWrapperWorld {
         if (motion != null) {
             mcBox = mcBox.expand(motion.x, motion.y, motion.z);
         }
-        collidedEntities = world.getEntitiesWithinAABB(EntityLiving.class, mcBox);
+        collidedEntities = world.getEntitiesWithinAABB(EntityLivingBase.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
         Point3D startPoint;
