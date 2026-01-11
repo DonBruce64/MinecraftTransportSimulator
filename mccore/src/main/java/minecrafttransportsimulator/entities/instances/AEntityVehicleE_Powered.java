@@ -121,7 +121,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     if (tank != null) {
                         double amountFilled = tank.drain(fuelTank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, 1, true);
                         if (amountFilled > 0) {
-                            fuelTank.fill(fuelTank.getFluid(), fuelTank.getFluidMod(), amountFilled, true);
+                            fuelTank.fill(tank.getFluid(), tank.getFluidMod(), amountFilled, true);
                         }
                     }
                 }
