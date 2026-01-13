@@ -46,18 +46,13 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
             boundingBox.depthRadius = definition.decor.width / 2D;
         }
         
-        this.clickedVar = new ComputedVariable(this, "clicked", data);
-        this.activatedVar = new ComputedVariable(this, "activated", data);
-        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
+        addVariable(this.clickedVar = new ComputedVariable(this, "clicked", data));
+        addVariable(this.activatedVar = new ComputedVariable(this, "activated", data));
+        addVariable(this.lightLevelVar = new ComputedVariable(this, "lightLevel"));
     }
 
     @Override
     public void update() {
-        //Need to do this before updating as these require knowledge of prior states.
-        //If we call super, then it will overwrite the prior state.
-        //We update both our variables and our part variables here.
-        updateVariableModifiers();
-
         super.update();
         //Reset clicked state.
         if (clickedVar.isActive) {

@@ -740,6 +740,7 @@ public class WrapperWorld extends AWrapperWorld {
                             BuilderTileEntity builderTile = (BuilderTileEntity) world.getBlockEntity(pos);
                             builderTile.setTileEntity(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, (AItemSubTyped<?>) item, stack.getData()));
                             addEntity(builderTile.tileEntity);
+                            world.blockEntityChanged(pos);
                         }
                         //Shrink stack as we placed this block.
                         stack.add(-1);
@@ -759,11 +760,6 @@ public class WrapperWorld extends AWrapperWorld {
     public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3D position) {
         BlockEntity tile = world.getBlockEntity(BlockPos.containing(position.x, position.y, position.z));
         return tile instanceof BuilderTileEntity ? (TileEntityType) ((BuilderTileEntity) tile).tileEntity : null;
-    }
-
-    @Override
-    public void markTileEntityChanged(Point3D position) {
-        world.getBlockEntity(BlockPos.containing(position.x, position.y, position.z)).setChanged();
     }
 
     @Override

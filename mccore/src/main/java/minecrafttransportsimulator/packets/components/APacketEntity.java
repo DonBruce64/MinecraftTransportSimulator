@@ -40,7 +40,7 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
             InterfaceManager.packetInterface.sendToAllClients(this);
             if (entity instanceof ATileEntityBase) {
                 //Need to set TEs as updated, as they don't normally do this.
-                world.markTileEntityChanged(((ATileEntityBase<?>) entity).position);
+                ((ATileEntityBase<?>) entity).hasChanged = true;
             }
         }
     }

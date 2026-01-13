@@ -231,7 +231,9 @@ public final class ConfigSystem {
     public static void saveToDisk() {
         try {
             JSONParser.exportStream(settings, Files.newOutputStream(settingsFile.toPath()));
-            JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
+            if (clientFile != null) {
+                JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
+            }
         } catch (Exception e) {
             InterfaceManager.coreInterface.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");
             InterfaceManager.coreInterface.logError(e.getMessage());

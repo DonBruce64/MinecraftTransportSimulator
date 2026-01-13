@@ -17,7 +17,7 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component {
 
     public TileEntityPole_StreetLight(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, ItemPoleComponent item, IWrapperNBT data) {
         super(core, placingPlayer, axis, item, data);
-        this.lightLevelVar = new ComputedVariable(this, "lightLevel");
+        addVariable(this.lightLevelVar = new ComputedVariable(this, "lightLevel"));
     }
 
     @Override

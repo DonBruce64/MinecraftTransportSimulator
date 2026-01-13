@@ -26,15 +26,18 @@ public abstract class SimpleReloadableResourceManagerMixin {
         SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager) ((Object) this);
         InterfaceEventsModelLoader.packPacks.forEach(pack -> manager.add(pack));
 
-        //Stop all sounds, since sound slots will have changed.
-        InterfaceSound.stopAllSounds();
+        ///Make sure client is inited before we do any client things.  Loading could come early due to mods reloading.
+        if (InterfaceManager.clientInterface != null) {
+            //Stop all sounds, since sound slots will have changed.
+            InterfaceSound.stopAllSounds();
 
-        //Clear all model caches, since OpenGL indexes will have changed.
-        AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
-        if (world != null) {
-        	for(AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
-        		entity.resetModelsAndAnimations();
-        	}
+            //Clear all model caches, since OpenGL indexes will have changed.
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+            if (world != null) {
+                for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+                    entity.resetModelsAndAnimations();
+                }
+            }
         }
     }
 }

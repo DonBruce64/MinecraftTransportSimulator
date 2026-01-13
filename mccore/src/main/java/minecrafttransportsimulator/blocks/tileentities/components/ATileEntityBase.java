@@ -26,6 +26,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 
     private float lastLightLevel;
     private final Point3D blockPosition;
+    /**Flags the tile entity for saving; MC doesn't save TEs that haven't changed so this lets us reference changes of state in the MC systems.*/
+    public boolean hasChanged;
 
     public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, AItemSubTyped<JSONDefinition> item, IWrapperNBT data) {
         super(world, item, data);

@@ -328,7 +328,7 @@ public class InterfaceEventsModelLoader {
         @Override
         public boolean resourceExists(ResourceLocation location) {
             try {
-                if (!location.getPath().contains("blockstates/") && !location.getPath().contains("armatures/") && !location.getPath().contains(".mcmeta") && !location.getPath().contains("advancements/") && !location.getPath().contains("recipes/") && !location.getPath().contains("lang/") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json") && !location.getPath().equals("themes.json")) || location.getPath().endsWith(".png"))) {
+                if ((location.getPath().startsWith("models/item/") && (location.getPath().endsWith(".json")) || location.getPath().endsWith(".png"))) {
                     enableDebug = false;
                     boolean returnValue = getInputStream(location) != null;
                     enableDebug = true;

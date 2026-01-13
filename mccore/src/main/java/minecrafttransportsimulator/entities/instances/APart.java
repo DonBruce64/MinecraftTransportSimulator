@@ -18,6 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -363,6 +364,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public double getMass() {
         return super.getMass() + definition.generic.mass;
+    }
+
+    @Override
+    public IWrapperEntity getController() {
+        return entityOn.getController();
     }
 
     @Override

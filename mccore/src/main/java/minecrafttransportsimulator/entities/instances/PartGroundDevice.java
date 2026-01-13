@@ -174,7 +174,7 @@ public class PartGroundDevice extends APart {
                     } else {
                         wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value * vehicleOn.currentMass / 1000F;
                     }
-                    IWrapperEntity controller = vehicleOn.getController();
+                    IWrapperEntity controller = getController();
                     LanguageEntry language = controller != null ? LanguageSystem.DEATH_WHEEL_PLAYER : LanguageSystem.DEATH_WHEEL_NULL;
                     Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
                     vehicleOn.world.attackEntities(wheelDamage, null, false);

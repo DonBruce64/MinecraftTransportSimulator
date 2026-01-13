@@ -39,6 +39,22 @@ public abstract class LevelRendererMixin {
     }
 
     /**
+     * Need this to render solid entities if we aren't rendering the overriding one.
+     */
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
+    public void inject_renderLevelSolid(PoseStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
+        if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
+            MultiBufferSource.BufferSource irendertypebuffer$impl = renderBuffers.bufferSource();
+            //Set camera offset point for later.
+            Vec3 position = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+            InterfaceRender.renderCameraOffset.set(position.x, position.y, position.z);
+            InterfaceRender.matrixStack = pMatrixStack;
+            InterfaceRender.renderBuffer = irendertypebuffer$impl;
+            InterfaceRender.doRenderCall(false, pPartialTicks);
+        }
+    }
+
+    /**
      * Need this to render translucent things at the right time.  MC doesn't properly support this natively.
      * Instead, it tries to render translucent things with the regular things and fouls the depth buffer.
      */

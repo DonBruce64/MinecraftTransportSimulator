@@ -288,9 +288,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         steeringForceIgnoresSpeedVar.setTo(definition.motorized.steeringForceIgnoresSpeed ? 1 : 0, false);
         steeringForceFactorVar.setTo(definition.motorized.steeringForceFactor, false);
         brakingFactorVar.setTo(definition.motorized.brakingFactor, false);
-        climbSpeedVar.setTo(ConfigSystem.settings.general.climbSpeed.value, false);
         if (definition.motorized.climbSpeed != 0) {
-            climbSpeedVar.setTo(definition.motorized.gravityFactor, false);
+            climbSpeedVar.setTo(definition.motorized.climbSpeed, false);
         } else {
             climbSpeedVar.setTo(ConfigSystem.settings.general.climbSpeed.value, false);
         }

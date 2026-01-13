@@ -82,6 +82,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     }
 
     @Override
+    public void setVariableDefaults() {
+        //Forward update call to components.
+        components.values().forEach(component -> component.setVariableDefaults());
+    }
+
+    @Override
     public void remove() {
         super.remove();
         //Remove components as these all come with the main pole.
@@ -176,6 +182,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
         } else if (components.containsKey(newAxis)) {
             components.remove(newAxis).remove();
         }
+        hasChanged = true;
     }
 
     @Override

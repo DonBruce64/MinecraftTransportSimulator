@@ -585,9 +585,16 @@ public final class ControlSystem {
                 gearNumber = 11;
             }
             powered.engines.forEach(engine -> {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftSelectionVar, gearNumber));
+                if (engine.shiftSelectionVar.currentValue != gearNumber) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftSelectionVar, gearNumber));
+                }
             });
         } else {
+            powered.engines.forEach(engine -> {
+                if (engine.shiftSelectionVar.isActive) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(engine.shiftSelectionVar, 0));
+                }
+            });
             if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
                 powered.engines.forEach(engine -> {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));

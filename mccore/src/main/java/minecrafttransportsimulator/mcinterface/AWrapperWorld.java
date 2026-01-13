@@ -296,12 +296,6 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3D position);
 
     /**
-     * Flags the tile entity at the passed-in position for saving.  This means the TE's
-     * NBT data will be saved to disk when the chunk unloads so it will maintain its state.
-     */
-    public abstract void markTileEntityChanged(Point3D position);
-
-    /**
      * Gets the brightness at this position, as a value between 0.0-1.0. Calculated from the
      * sun brightness, and possibly the block brightness if calculateBlock is true.
      */

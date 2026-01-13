@@ -25,6 +25,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChang
 import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityLastOpenedItemChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
@@ -230,6 +231,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCustomKeypress.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityKeyChange.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityLastOpenedItemChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTextChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTowingChange.class);

@@ -109,7 +109,8 @@ jar {
                 "TweakClass"    : project.mixin_tweaker,
                 "TweakOrder"    : "0",
                 "MixinConfigs"  : project.mixin_config,
-                "MixinConnector": project.mixin_connector
+                "MixinConnector": project.mixin_connector,
+								"Implementation-Version": project.mod_version
         ])
     }
 }

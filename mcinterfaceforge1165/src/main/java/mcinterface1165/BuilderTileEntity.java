@@ -82,7 +82,11 @@ public class BuilderTileEntity extends TileEntity implements ITickableTileEntity
         //World and pos might be null on first few scans.
         if (level != null && worldPosition != null) {
             if (tileEntity != null) {
-                //Do nothing.  We handle updates on the main loop.
+                //Update changed state if needed.
+                if (tileEntity.hasChanged) {
+                    setChanged();
+                    tileEntity.hasChanged = false;
+                }
             } else if (!loadedFromSavedNBT) {
                 //If we are on the server, set the NBT flag.
                 if (lastLoadedNBT != null && !level.isClientSide) {

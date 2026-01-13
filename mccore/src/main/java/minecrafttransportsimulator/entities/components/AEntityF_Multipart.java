@@ -46,6 +46,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneri
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
@@ -158,23 +159,33 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
             partAnchor.add(position);
-            for (APart partToTransfer : world.getEntitiesExtendingType(APart.class)) {
-                if (partToTransfer.definition.generic.canBePlacedOnGround && partToTransfer.masterEntity != masterEntity && partToTransfer.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) partToTransfer.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
-                    IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                    IWrapperEntity partRider = partToTransfer.rider;
-                    partToTransfer.entityOn.removePart(partToTransfer, true, true);
-                    APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
-                    if (partRider != null) {
-                        newPart.setRider(partRider, false);
+            APart partToTransfer = null;
+            for (APart testPart : world.getEntitiesExtendingType(APart.class)) {
+                if (!testPart.isPermanent && testPart.definition.generic.canBePlacedOnGround && testPart.canBeClicked() && testPart.masterEntity != masterEntity && testPart.position.isDistanceToCloserThan(partAnchor, 2) && ((AItemPart) testPart.cachedItem).isPartValidForPackDef(partDef, this.subDefinition, true)) {
+                    if (partToTransfer == null || partAnchor.isFirstCloserThanSecond(testPart.position, partToTransfer.position)) {
+                        partToTransfer = testPart;
                     }
-                    return;
                 }
+            }
+            if (partToTransfer != null) {
+                IWrapperNBT data = partToTransfer.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                IWrapperEntity partRider = partToTransfer.rider;
+                partToTransfer.entityOn.removePart(partToTransfer, true, true);
+                APart newPart = addPartFromStack(partToTransfer.cachedItem.getNewStack(data), null, ourSlotIndex, true, false);
+                if (partRider != null) {
+                    newPart.setRider(partRider, false);
+                }
+                return;
             }
         } else {
             //True-False change, place part in nearby slot or drop.
             //Double-check the part can be dropped, in case someone manually put a part in the slot.
-            if (currentPart.definition.generic.canBePlacedOnGround) {
-                Point3D partAnchor = new Point3D();
+            if (!currentPart.isPermanent && currentPart.definition.generic.canBePlacedOnGround && currentPart.canBeClicked()) {
+                AEntityF_Multipart<?> entityToTransferTo = null;
+                Point3D transferAnchor = null;
+                int transferSlot = 0;
+
+                Point3D testAnchor = new Point3D();
                 AItemPart currentPartItem = (AItemPart) currentPart.cachedItem;
                 for (AEntityF_Multipart<?> entity : world.getEntitiesExtendingType(AEntityF_Multipart.class)) {
                     //This keeps us from checking things really far away for no reason.
@@ -182,23 +193,33 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         AEntityF_Multipart<?> otherMasterEntity = entity instanceof APart ? ((APart) entity).masterEntity : entity;
                         if(otherMasterEntity != masterEntity && entity.definition.parts != null) {
                             for (JSONPartDefinition otherPartDef : entity.definition.parts) {
-                                partAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
+                                testAnchor.set(otherPartDef.pos).rotate(entity.orientation).add(entity.position);
                                 int otherSlotIndex = entity.definition.parts.indexOf(otherPartDef);
-                                if (partAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
-                                    IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-                                    IWrapperEntity partRider = currentPart.rider;
-                                    currentPart.entityOn.removePart(currentPart, true, true);
-                                    APart newPart = entity.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, otherSlotIndex, true, false);
-                                    if (partRider != null) {
-                                        newPart.setRider(partRider, false);
+                                if (entity.isVariableListTrue(otherPartDef.interactableVariables) && testAnchor.isDistanceToCloserThan(currentPart.position, 2) && currentPartItem.isPartValidForPackDef(otherPartDef, entity.subDefinition, true) && entity.partsInSlots.get(otherSlotIndex) == null) {
+                                    if (transferAnchor == null || currentPart.position.isFirstCloserThanSecond(testAnchor, transferAnchor)) {
+                                        entityToTransferTo = entity;
+                                        transferAnchor = testAnchor.copy();
+                                        transferSlot = otherSlotIndex;
                                     }
-                                    return;
                                 }
                             }
                         }
                     }
                 }
 
+                //Check to see if we found an entity to transfer to.  If so, do so now.
+                if (entityToTransferTo != null) {
+                    IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+                    IWrapperEntity partRider = currentPart.rider;
+                    currentPart.entityOn.removePart(currentPart, true, true);
+                    APart newPart = entityToTransferTo.addPartFromStack(currentPart.cachedItem.getNewStack(data), null, transferSlot, true, false);
+                    if (partRider != null) {
+                        newPart.setRider(partRider, false);
+                    }
+                    return;
+                }
+
+                //No entity found to transfer, just drop on ground.
                 //Remove the part from ourselves.
                 IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 IWrapperEntity partRider = currentPart.rider;
@@ -449,12 +470,27 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     public ComputedVariable createComputedVariable(String variable, boolean createDefaultIfNotPresent) {
         if (ComputedVariable.isNumberedVariable(variable)) {
             //Iterate through our parts to find the index of the pack def for the part we want.
-            String partType = variable.substring(0, variable.indexOf("_"));
+            //First trim off the suffix number.
+            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
+            String partType = partVariable;
+
+            //Remove inversion prefix, if present.
             if (partType.startsWith(ComputedVariable.INVERTED_PREFIX)) {
                 partType = partType.substring(ComputedVariable.INVERTED_PREFIX.length());
             }
+
+            //Check legacy names, in case we're a newer name.  Some newer names don't have part-prefixes.
+            if (LegacyCompatSystem.variableChangesInv.containsKey(partType)) {
+                partType = LegacyCompatSystem.variableChangesInv.get(partType);
+            }
+
+            //Now get prefix, if it exists.
+            if (partType.indexOf("_") != -1) {
+                partType = partType.substring(0, partType.indexOf("_"));
+            }
+
+            //Get part number from raw variable.
             int partNumber = ComputedVariable.getVariableNumber(variable);
-            String partVariable = variable.substring(0, variable.lastIndexOf("_"));
 
             //Get the "general" part variable.  If we find a specific part later, we use that one instead.
             APart generalPart = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
@@ -923,7 +959,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * Is normally the player, but may be a NPC if one is in the seat.
      */
     public IWrapperEntity getController() {
-        for (APart part : parts) {
+        for (APart part : allParts) {
             if (part.rider != null && part.placementDefinition.isController) {
                 return part.rider;
             }

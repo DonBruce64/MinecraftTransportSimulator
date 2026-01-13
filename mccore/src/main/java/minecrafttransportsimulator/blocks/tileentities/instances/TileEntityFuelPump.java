@@ -34,7 +34,11 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                         maxAmount = amountPurchasedRemaining;
                     }
                 }
-                return super.fill(fluid, fluidMod, maxAmount, doFill);
+                double amountFilled = super.fill(fluid, fluidMod, maxAmount, doFill);
+                if (amountFilled > 0) {
+                    hasChanged = true;
+                }
+                return amountFilled;
             }
         };
         world.addEntity(tank);
@@ -62,6 +66,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                         data.setString("jerrycanFluid", tank.getFluid());
                         stack.setData(data);
                         tank.drain(1000, true);
+                        hasChanged = true;
                     }
                 }
                 return true;
@@ -108,6 +113,7 @@ public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEnti
                 String fluid = tank.getFluid();
                 double amountToDrain = tank.drain(amountToFill, true);
                 connectedVehicle.fuelTank.fill(fluid, EntityFluidTank.WILDCARD_FLUID_MOD, amountToDrain, true);
+                hasChanged = true;
                 return amountToDrain;
             }
         } else {

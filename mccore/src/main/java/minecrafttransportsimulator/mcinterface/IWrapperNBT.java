@@ -8,7 +8,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packloading.PackParser;
 
 /**
@@ -77,7 +77,7 @@ public interface IWrapperNBT {
         return (ItemPackActual) PackParser.getItem(getString("packID"), getString("systemName"), getString("subName"));
     }
 
-    default void setPackItem(AJSONMultiModelProvider definition, String subName) {
+    default void setPackItem(AJSONItem definition, String subName) {
         setString("packID", definition.packID);
         setString("systemName", definition.systemName);
         setString("subName", subName);
