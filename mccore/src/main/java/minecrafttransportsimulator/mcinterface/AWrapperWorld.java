@@ -274,7 +274,13 @@ public abstract class AWrapperWorld extends EntityManager {
      * being possible "in" that block.
      */
     public abstract float getRainStrength(Point3D position);
-
+    
+    /**
+     * Returns the snowfall strength at the passed-in position.
+     * Is 1 when snow is falling at the entity's current position, otherwise 0.
+     */
+    public abstract float getSnowfallStrength(Point3D position);
+    
     /**
      * Returns the current temperature at the passed-in position.
      * Dependent on biome, and likely modified by mods that add new boimes.
@@ -414,4 +420,5 @@ public abstract class AWrapperWorld extends EntityManager {
      * Spawns an explosion of the specified strength at the passed-in point.
      */
     public abstract void spawnExplosion(Point3D location, double strength, boolean flames, boolean damageBlocks);
+
 }
