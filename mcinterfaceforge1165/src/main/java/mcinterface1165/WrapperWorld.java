@@ -705,6 +705,21 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public float getSnowfallStrength(Point3D position){
+    final BlockPos pos = new BlockPos(position.x, position.y + 1, position.z);
+    if (!world.isRaining()) {
+        return 0.0F;
+    }
+    if (!world.canSeeSky(pos)) {
+        return 0.0F;
+    }
+    final Biome biome = world.getBiome(pos);
+    // Snow occurs when precipitation is active and temperature is cold enough at this position.
+    return biome.getTemperature(pos) < 0.15F ? 1.0F : 0.0F;
+    }
+
+
+    @Override
     public float getTemperature(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         return world.getBiome(pos).getTemperature(pos);
@@ -1135,4 +1150,5 @@ public class WrapperWorld extends AWrapperWorld {
             worldWrappers.remove(world);
         }
     }
+
 }
