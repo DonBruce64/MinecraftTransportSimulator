@@ -710,6 +710,23 @@ public class WrapperWorld extends AWrapperWorld {
     public float getRainStrength(Point3D position) {
         return world.isRainingAt(BlockPos.containing(position.x, position.y + 1, position.z)) ? world.getRainLevel(1.0F) + world.getThunderLevel(1.0F) : 0.0F;
     }
+    
+    @Override
+    public float getSnowfallStrength(Point3D position){
+    final BlockPos pos = BlockPos.containing(position.x, position.y + 1, position.z);
+    if (!world.isRaining()) {
+        return 0.0F;
+    }
+    // Match vanilla precipitation exposure checks (similar to isRainingAt), but allow snow.
+    if (!world.canSeeSky(pos)) {
+        return 0.0F;
+    }
+    if (world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() > pos.getY()) {
+        return 0.0F;
+    }
+    final Biome biome = world.getBiome(pos).value();
+    return biome.getPrecipitationAt(pos) == Biome.Precipitation.SNOW ? 1.0F : 0.0F;
+    }
 
     @Override
     public float getTemperature(Point3D position) {
@@ -1140,4 +1157,5 @@ public class WrapperWorld extends AWrapperWorld {
             worldWrappers.remove(world);
         }
     }
+
 }
