@@ -676,6 +676,13 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public float getSnowfallStrength(Point3D position){
+    final BlockPos pos = new BlockPos(position.x, position.y + 1D, position.z);
+    // In 1.12.2, canSnowAt() handles biome temperature/height rules.
+    return world.isRaining() && world.canSnowAt(pos, false) ? 1.0F : 0.0F;
+    }
+
+    @Override
     public float getTemperature(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         return world.getBiome(pos).getTemperature(pos);
@@ -1085,4 +1092,5 @@ public class WrapperWorld extends AWrapperWorld {
             worldWrappers.remove(world);
         }
     }
+
 }
