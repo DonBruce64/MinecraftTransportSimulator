@@ -932,6 +932,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return new ComputedVariable(this, variable, partialTicks -> Math.random() < 0.5 ? 0 : 1, true);
             case ("rain_strength"):
                 return new ComputedVariable(this, variable, partialTicks -> (int) world.getRainStrength(position), false);
+            case ("snowfall_strength"): //snowfallstrengh
+                return new ComputedVariable(this, variable, partialTicks -> (int) world.getSnowfallStrength(position), false);
             case ("rain_sin"): {
                 return new ComputedVariable(this, variable, partialTicks -> {
                     int rainStrength = (int) world.getRainStrength(position);

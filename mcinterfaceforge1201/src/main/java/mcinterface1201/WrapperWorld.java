@@ -712,6 +712,18 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public float getSnowfallStrength(Point3D position) { //snowfallstrengh
+        BlockPos pos = BlockPos.containing(position.x, position.y + 1, position.z);
+        if (world.getRainLevel(1.0F) <= 0.0F) {
+            return 0.0F;
+        }
+        if (!world.canSeeSky(pos)) {
+            return 0.0F;
+        }
+        return ((BiomeMixin) ((Object) world.getBiome(pos).value())).invoke_getTemperature(pos) < 0.15F ? 1.0F : 0.0F;
+    }
+
+    @Override
     public float getTemperature(Point3D position) {
         BlockPos pos = BlockPos.containing(position.x, position.y, position.z);
         return ((BiomeMixin) ((Object) world.getBiome(pos).value())).invoke_getTemperature(pos);
