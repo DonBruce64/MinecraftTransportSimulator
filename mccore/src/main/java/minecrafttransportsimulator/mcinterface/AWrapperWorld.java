@@ -276,6 +276,15 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract float getRainStrength(Point3D position);
 
     /**
+     * Returns the snowfall strength at the passed-in position.
+     * 0 is no snowfall, 1 is snowfall.
+     * Note that this method offsets the point by 1, as it allows
+     * for blocks to query snowfall strength and not get 0 due to no snow
+     * being possible "in" that block.
+     */
+    public abstract float getSnowfallStrength(Point3D position); //snowfallstrengh
+
+    /**
      * Returns the current temperature at the passed-in position.
      * Dependent on biome, and likely modified by mods that add new boimes.
      */
