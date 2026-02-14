@@ -38,7 +38,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> doLegacyLightCompats = new JSONConfigEntry<>(true, "If true, legacy compatibility code will be performed on all models to make their lights work with newer versions.  This code will significantly slow down boot times due to needing to parse all models on boot, however, packs may not have functional lights without it.  Choose wisely if you want speed or features.");
         public JSONConfigEntry<Boolean> useHSV = new JSONConfigEntry<>(false, "If enabled, the MTS dev mode will export color values as HSV instead of hex.");
         public JSONConfigEntry<Boolean> allPlanesWithNav = new JSONConfigEntry<>(false, "If true, all planes will have the ability to use beacons for navigation.  This is false to allow pack authors to define new/old planes that have this capability, but can be turned on if you don't care about realism.");
-        public JSONConfigEntry<Boolean> giveManualsOnJoin = new JSONConfigEntry<>(true, "If true, then whenever a new player joins a world, they will be given a copy of the mod manuals.");
+        public JSONConfigEntry<Boolean> giveManualsOnJoin = new JSONConfigEntry<>(true, "If true, then whenever a new player joins a world, they will be given a copy of the mod manuals, including a part scanner.");
         public JSONConfigEntry<Boolean> performModCompatFunctions = new JSONConfigEntry<>(true, "If true, mod compatibility functions will be executed.  Should be true unless you're configuring a modpack and know and have addressed the various incompatibilities.");
         public JSONConfigEntry<Boolean> forceRenderLastSolid = new JSONConfigEntry<>(false, "If enabled, MTS will do rendering on the world-last Forge event.  This is not normally something you want, but can be used if some mods make things invisible.  Replaymod being one such example.");
         public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
@@ -191,3 +191,4 @@ public class JSONConfigSettings {
         NOTHING;
     }
 }
+
