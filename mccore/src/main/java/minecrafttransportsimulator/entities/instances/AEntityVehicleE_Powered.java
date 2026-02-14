@@ -119,7 +119,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 if (part instanceof PartInteractable && part.isActiveVar.isActive && part.definition.interactable.feedsVehicles) {
                     EntityFluidTank tank = ((PartInteractable) part).tank;
                     if (tank != null) {
-                        double amountFilled = tank.drain(fuelTank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, 1, true);
+                        double amountFilled = tank.drain(fuelTank.getFluid(), EntityFluidTank.WILDCARD_FLUID_MOD, 10, true);
                         if (amountFilled > 0) {
                             fuelTank.fill(tank.getFluid(), tank.getFluidMod(), amountFilled, true);
                         }
