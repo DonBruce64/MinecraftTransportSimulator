@@ -87,6 +87,11 @@ public class NavBeacon {
         return delta;
     }
 
+    public double getGlideSlopeDelta(AEntityB_Existing entity) {
+        double delta = glideSlope - Math.toDegrees(Math.asin((entity.position.y - position.y) / entity.position.distanceTo(position)));
+        return delta;
+    }
+
     public IWrapperNBT save(IWrapperNBT data) {
         data.setString("name", name);
         data.setDouble("glideSlope", glideSlope);

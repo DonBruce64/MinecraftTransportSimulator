@@ -4,12 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -66,6 +61,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     //Autopilot.
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
+    public final ComputedVariable autopilotNavEnabledVar;
+    public final ComputedVariable autopilotHeadingEnabledVar;
+    public final ComputedVariable autopilotAltitudeEnabledVar;
+    public final ComputedVariable autopilotSpeedEnabledVar;
+    public final ComputedVariable autopilotVerticalSpeedEnabledVar;
+    public final ComputedVariable autopilotPositionX;
+    public final ComputedVariable autopilotPositionY;
+    public final ComputedVariable autopilotPositionZ;
+    public final ComputedVariable autopilotHeading;
+    public final ComputedVariable autopilotAltitude;
+    public final ComputedVariable autopilotSpeed;
+    public final ComputedVariable autopilotVerticalSpeed;
+//    private PIDController verticalSpeedController = new PIDController(0.001, 0.000005, 0.01);
+    private final PIDController verticalSpeedController = new PIDController(0.003, 10, 0.01);
+    private final PIDController speedController = new PIDController(0.15, 0.000375, 0.00003);
+//    private PIDController cdiDeflectionController = new PIDController(4.5, 0.4, 0.0);
+    private final PIDController cdiDeflectionController = new PIDController(10.0, 0.2, 0.2);
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -154,6 +166,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
         addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
+        addVariable(this.autopilotNavEnabledVar = new ComputedVariable(this, "autopilot_nav_enable"));
+        addVariable(this.autopilotHeadingEnabledVar = new ComputedVariable(this, "autopilot_heading_enable"));
+        addVariable(this.autopilotAltitudeEnabledVar = new ComputedVariable(this, "autopilot_altitude_enable"));
+        addVariable(this.autopilotSpeedEnabledVar = new ComputedVariable(this, "autopilot_speed_enable"));
+        addVariable(this.autopilotVerticalSpeedEnabledVar = new ComputedVariable(this, "autopilot_vertical_speed_enable"));
+        addVariable(this.autopilotHeading = new ComputedVariable(this, "autopilot_heading", data));
+        addVariable(this.autopilotAltitude = new ComputedVariable(this, "autopilot_altitude", data));
+        addVariable(this.autopilotVerticalSpeed = new ComputedVariable(this, "autopilot_vertical_speed", data));
+        addVariable(this.autopilotSpeed = new ComputedVariable(this, "autopilot_speed", data));
+        addVariable(this.autopilotPositionX = new ComputedVariable(this, "autopilot_position_x", data));
+        addVariable(this.autopilotPositionY = new ComputedVariable(this, "autopilot_position_y", data));
+        addVariable(this.autopilotPositionZ = new ComputedVariable(this, "autopilot_position_z", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
         addVariable(this.ballastControlVar = new ComputedVariable(this, "ballastControl", data));
@@ -611,19 +635,65 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
         } else if (definition.motorized.isAircraft && autopilotValueVar.isActive) {
-            //Normal aircraft.  Do autopilot operations if required.
-            //If we are not flying at a steady elevation, angle the elevator to compensate
-            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
-            	elevatorTrimVar.adjustBy(0.1, true);
-            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
-            	elevatorTrimVar.adjustBy(-0.1, true);
+//            if (autopilotNavEnabledVar.isActive) {
+                if (selectedBeacon != null) {
+                    autopilotPositionX.setTo(selectedBeacon.position.x, true);
+                    autopilotPositionY.setTo(selectedBeacon.position.y, true);
+                    autopilotPositionZ.setTo(selectedBeacon.position.z, true);
+                    System.out.println("Naving beacon");
+                    navILS();
+                    setHeading();
+                    setVerticalSpeed();
+                } else if (!selectedWaypointIndex.equals("-1")) {
+                    NavWaypoint waypoint = selectedWaypointList.get(Integer.parseInt(selectedWaypointIndex));
+                    autopilotPositionX.setTo(waypoint.position.x, true);
+                    autopilotPositionY.setTo(waypoint.position.y, true);
+                    autopilotPositionZ.setTo(waypoint.position.z, true);
+                    System.out.println("Going waypoint guided");
+                    navGPS();
+                    setHeading();
+                    setAltitude();
+                    setVerticalSpeed();
+                } else {
+//                    autopilotNavEnabledVar.setActive(false, true);
+                    //TODO: this is potential bug where player use beacon nav first, change to waypoint then back to beacon, all without turning off nav mode
+                    cdiDeflectionController.clear();
+                    System.out.println("Leveling out");
+                    autopilotAltitude.setTo(position.y - seaLevel, true);
+                    autopilotHeading.setTo(-orientation.angles.y, true);
+                    setHeading();
+                    setAltitude();
+                    setVerticalSpeed();
+                }
+//            }
+            if (autopilotHeadingEnabledVar.isActive) {
+                System.out.println("Heading to " + autopilotHeading.currentValue);
+                setHeading();
             }
-            //Keep the roll angle at 0.
-            if (-orientation.angles.z > aileronTrimVar.currentValue + 0.1 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
-            	aileronTrimVar.adjustBy(0.1, true);
-            } else if (-orientation.angles.z < aileronTrimVar.currentValue - 0.1 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
-            	aileronTrimVar.adjustBy(-0.1, true);
+            if (autopilotAltitudeEnabledVar.isActive) {
+                setAltitude();
             }
+            if (autopilotSpeedEnabledVar.isActive) {
+                setSpeed();
+            } else {
+                speedController.clear();
+            }
+            if (autopilotVerticalSpeedEnabledVar.isActive) {
+                setVerticalSpeed();
+            } else {
+                verticalSpeedController.clear();
+            }
+//            if (selectedBeacon == null) {
+//                autopilotPositionX.setTo(0, true);
+//                autopilotPositionZ.setTo(0, true);
+//            }
+//            autopilotPositionY.setTo(100, true);
+//            navGPS();
+//            autopilotHeading.setTo(360, true);
+//            setHeading();
+//            autopilotVerticalSpeed.setTo(1, true);
+//            setVerticalSpeed();
+//            navILS();
         }
 
         //If we don't have controllers, reset control states to 0.
@@ -653,6 +723,159 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             	rudderInputVar.setTo(0, true);
             }
 
+        }
+    }
+
+    public void autolevel() {
+        //If we are not flying at a steady elevation, angle the elevator to compensate
+        if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+            elevatorTrimVar.adjustBy(0.1, true);
+        } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+            elevatorTrimVar.adjustBy(-0.1, true);
+        }
+
+        if (-orientation.angles.z > aileronTrimVar.currentValue + 0.1 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
+            aileronTrimVar.adjustBy(0.1, true);
+        } else if (-orientation.angles.z < aileronTrimVar.currentValue - 0.1 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
+            aileronTrimVar.adjustBy(-0.1, true);
+        }
+    }
+
+    public void navGPS() {
+//        double heading = Math.toDegrees(Math.atan2(autopilotPositionZ.currentValue - position.z , autopilotPositionX.currentValue - position.x));
+        double heading;
+        heading = Math.toDegrees(Math.atan2(autopilotPositionX.currentValue - position.x, autopilotPositionZ.currentValue - position.z));
+        if (ConfigSystem.client.controlSettings.north360.value)
+            heading += 180;
+        heading = (heading + 360) % 360;
+        autopilotHeading.setTo(heading, true);
+        autopilotAltitude.setTo(autopilotPositionY.currentValue, true);
+    }
+
+    public void navILS() {
+        // Horizontal navigation
+        double delta = selectedBeacon.getBearingDelta(this);
+        double output = cdiDeflectionController.loop(delta, 0.05);
+        if (output < -45) {
+            output = -45;
+            cdiDeflectionController.clear();
+        } else if (output > 45) {
+            output = 45;
+            cdiDeflectionController.clear();
+        }
+        double heading = output + selectedBeacon.bearing + 180;
+        autopilotHeading.setTo(heading, true);
+
+        // Vertical navigation
+        delta = selectedBeacon.getGlideSlopeDelta(this);
+        output = delta * 45;
+        if (output > 20) {
+            output = 20;
+        } else if (output < -45) {
+            output = -45;
+        }
+        // Output = Math.toDegrees(Math.asin(motion.y / velocity))
+        autopilotVerticalSpeed.setTo(Math.sin(Math.toRadians(output))*velocity*speedFactor*20, true);
+    }
+
+    public void setSpeed() {
+        double delta = autopilotSpeed.currentValue - indicatedSpeed;
+        double output = speedController.loop(delta, 1);
+        if (output < 0) {
+            output = 0;
+        } else if (output > MAX_THROTTLE) {
+            output = 1;
+        }
+        double signalDelta = output - throttleVar.currentValue;
+        if (signalDelta > 0) {
+            if (signalDelta > 0.0125) {
+                signalDelta = 0.0125;
+            }
+            throttleVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0) {
+            if (signalDelta < -0.0125) {
+                signalDelta = -0.0125;
+            }
+            throttleVar.adjustBy(signalDelta, true);
+        }
+    }
+
+    public void setHeading() {
+        double currentHeading = -orientation.angles.y;
+        if (ConfigSystem.client.controlSettings.north360.value)
+            currentHeading += 180;
+        currentHeading = (currentHeading + 360) %360;
+        double delta = (autopilotHeading.currentValue + currentHeading) % 360;
+        if (delta > 180) {
+            delta = -(360 - delta);
+        }
+//        double delta = orientation.angles.getClampedYDelta(autopilotHeading.currentValue);
+        double output = delta;
+        // Clamp banking angle to 45 deg
+        if (output > 45) {
+            output = 45;
+        } else if (output < -45) {
+            output = -45;
+        }
+//        System.out.println("Heading " + delta + " " + output);
+//        This was the control before tranforming
+//        -orientation.angles.z - output > aileronTrimVar.currentValue + 0.1
+        double signalDelta = -orientation.angles.z - output - aileronTrimVar.currentValue - 0.1;
+        if (signalDelta > 0 && aileronTrimVar.currentValue < MAX_AILERON_TRIM) {
+            if (signalDelta > 0.75) {
+                signalDelta = 0.75;
+            }
+            aileronTrimVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0 && aileronTrimVar.currentValue > -MAX_AILERON_TRIM) {
+            if (signalDelta < -0.75) {
+                signalDelta = -0.75;
+            }
+            aileronTrimVar.adjustBy(signalDelta, true);
+        }
+    }
+
+    public void setAltitude() {
+//        if (autopilotSpeed.isActive) {
+
+//        }
+        double deltaAltitude = autopilotAltitude.currentValue - (position.y - seaLevel);
+        double output = deltaAltitude * 0.50;
+//        if (!autopilotVerticalSpeed.isActive) {
+//            if (-motion.y * 10 > elevatorTrimVar.currentValue + 1 && elevatorTrimVar.currentValue < MAX_ELEVATOR_TRIM) {
+//                elevatorTrimVar.adjustBy(0.1, true);
+//            } else if (-motion.y * 10 < elevatorTrimVar.currentValue - 1 && elevatorTrimVar.currentValue > -MAX_ELEVATOR_TRIM) {
+//                elevatorTrimVar.adjustBy(-0.1, true);
+//            }
+//            return;
+            autopilotVerticalSpeed.setTo(output, true);
+//        }
+        // Slow down the ascending
+        if ((deltaAltitude > 0 && output < autopilotVerticalSpeed.currentValue) || (deltaAltitude < 0 && output > autopilotVerticalSpeed.currentValue)) {
+            autopilotVerticalSpeed.setTo(output, true);
+        }
+        System.out.println("Altitude " + deltaAltitude + " " + output);
+    }
+
+    public void setVerticalSpeed() {
+        double delta = autopilotVerticalSpeed.currentValue - motion.y * speedFactor * 20;
+        double output = verticalSpeedController.loop(delta, 0.05);
+        if (output < -MAX_ELEVATOR_TRIM) {
+            output = -MAX_ELEVATOR_TRIM;
+        } else if (output > MAX_ELEVATOR_TRIM) {
+            output = MAX_ELEVATOR_TRIM;
+        }
+//        System.out.println("Vertical speed " + delta + " " + output);
+        double signalDelta = output - elevatorTrimVar.currentValue;
+        if (signalDelta > 0) {
+            if (signalDelta > 0.75) {
+                signalDelta = 0.75;
+            }
+            elevatorTrimVar.adjustBy(signalDelta, true);
+        } else if (signalDelta < 0) {
+            if (signalDelta < -0.75) {
+                signalDelta = -0.75;
+            }
+            elevatorTrimVar.adjustBy(signalDelta, true);
         }
     }
 
@@ -828,9 +1051,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("beacon_glideslope_setpoint"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope : 0, false);
             case ("beacon_glideslope_actual"):
-                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? -selectedBeacon.getGlideSlopeDelta(this) + selectedBeacon.glideSlope : 0, false);
             case ("beacon_glideslope_delta"):
-                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y) / position.distanceTo(selectedBeacon.position))) : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.getGlideSlopeDelta(this) : 0, false);
             case ("beacon_distance"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0, false);
             case ("radar_detected"):
