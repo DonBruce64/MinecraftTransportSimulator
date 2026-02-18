@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -284,16 +285,17 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 CameraMode cameraMode = InterfaceManager.clientInterface.getCameraMode();
                 if (CameraSystem.activeCamera == null && cameraMode != CameraMode.FIRST_PERSON) {
                     riderCameraPosition.set(riderEyePosition);
+                    RotationMatrix cameraRotation = ConfigSystem.client.renderingSettings.freecam_3P.value ? riderRelativeOrientation : rider.getOrientation();
 
                     //Adjust eye position to account for zoom settings.
                     int zoomRequired = 4 + zoomLevel;
-                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
+                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(cameraRotation);
                     riderEyePosition.add(riderTempPoint);
 
                     //Check if camera should be where eyes are, or somewhere different.
                     int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
                     if (zoomRequired != cameraZoomRequired) {
-                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(rider.getOrientation());
+                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraRotation);
                         riderCameraPosition.add(riderTempPoint);
                     } else {
                         riderCameraPosition.add(riderTempPoint);
