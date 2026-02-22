@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -39,6 +40,8 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentItem scannerItem;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
+    private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
+    private int lastCollisionGroupHoverIndex;
 
     @Override
     public void setupComponents() {
@@ -110,7 +113,19 @@ public class GUIOverlay extends AGUIBase {
             interactResult.entity.playerCursorHoveredVar.setActive(true, false);
             lastInteractResult = interactResult;
         }
-
+        
+        int hoveredCollisionGroupIndex = getCollisionGroupIndex(interactResult);
+        if (lastCollisionGroupHoverEntity != null && (interactResult == null || interactResult.entity != lastCollisionGroupHoverEntity || hoveredCollisionGroupIndex != lastCollisionGroupHoverIndex)) {
+            lastCollisionGroupHoverEntity.getOrCreateVariable("collision_" + lastCollisionGroupHoverIndex + "_player_cursor_hovered").setActive(false, false);
+            lastCollisionGroupHoverEntity = null;
+            lastCollisionGroupHoverIndex = 0;
+        }
+        if (lastCollisionGroupHoverEntity == null && interactResult != null && hoveredCollisionGroupIndex > 0) {
+            interactResult.entity.getOrCreateVariable("collision_" + hoveredCollisionGroupIndex + "_player_cursor_hovered").setActive(true, false);
+            lastCollisionGroupHoverEntity = interactResult.entity;
+            lastCollisionGroupHoverIndex = hoveredCollisionGroupIndex;
+        }
+        
         mouseoverLabel.text = "";
         if (interactResult != null && interactResult.entity instanceof PartInteractable) {
             PartInteractable interactable = (PartInteractable) interactResult.entity;
@@ -223,5 +238,13 @@ public class GUIOverlay extends AGUIBase {
     @Override
     protected String getTexture() {
         return CameraSystem.customCameraOverlay;
+    }
+
+   
+    private static int getCollisionGroupIndex(EntityInteractResult interactResult) {
+        if (interactResult != null && interactResult.box.groupDef != null && interactResult.entity.definition.collisionGroups != null) {
+            return interactResult.entity.definition.collisionGroups.indexOf(interactResult.box.groupDef) + 1;
+        }
+        return 0;
     }
 }
