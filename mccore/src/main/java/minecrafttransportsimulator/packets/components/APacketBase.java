@@ -47,6 +47,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
+import minecrafttransportsimulator.packets.instances.PacketRadarSync;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityChargerBattery;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
@@ -297,6 +298,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleControlNotification.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketRadarSync.class);
 
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
