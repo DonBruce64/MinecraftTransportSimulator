@@ -130,9 +130,13 @@ public class CameraSystem {
         //No custom cameras, check if we are sitting in a seat to adjust orientation.
         if (sittingSeat != null) {
             cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
-            sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
-            sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
-            cameraRotation.multiply(riderOrientation);
+            if (ConfigSystem.client.renderingSettings.freecam_3P.value && InterfaceManager.clientInterface.getCameraMode().thirdPerson) {
+                sittingSeat.getRiderInterpolatedOrientation(cameraRotation, partialTicks);
+            } else {
+                sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
+                sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
+                cameraRotation.multiply(riderOrientation);
+            }
             return true;
         } else {
             //Not doing any camera changes.
@@ -163,3 +167,4 @@ public class CameraSystem {
     	}
     }
 }
+
