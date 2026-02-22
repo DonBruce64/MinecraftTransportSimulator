@@ -71,6 +71,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     //Map containing incoming missiles and radar info, sorted by distance.
     public final List<EntityBullet> missilesIncoming = new ArrayList<>();
     public final List<AEntityD_Definable<?>> radarsTracking = new ArrayList<>();
+    public final List<PartGun> gunsLockedOn = new ArrayList<>();
 
     public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, ItemVehicle item, IWrapperNBT data) {
         super(world, placingPlayer, item, data);
@@ -197,6 +198,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Check to make sure we are still being tracked.
         radarsTracking.removeIf(tracker -> !tracker.isValid || (!tracker.aircraftOnRadar.contains(this) && !tracker.groundersOnRadar.contains(this)));
+        gunsLockedOn.removeIf(gun -> !gun.isValid || (gun.engineTarget != null && gun.engineTarget.vehicleOn != this));
 
         //If we are supposed to de-spawn, do so.
         if (outOfHealth && ConfigSystem.settings.general.vehicleDeathDespawnTime.value > 0) {
@@ -205,6 +207,13 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             }
         }
         world.endProfiling();
+    }
+
+    // Helper method to check if an entity target is this vehicle or one of its parts
+    private boolean isEntityTargetingThisVehicle(IWrapperEntity entity) {
+        // For now, return false as entity targets are players/mobs, not vehicle parts
+        // This could be extended if needed
+        return false;
     }
 
     @Override
