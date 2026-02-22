@@ -9,7 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable; //cursor_hover_hitbox_group
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -40,8 +40,8 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentItem scannerItem;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
-    private AEntityE_Interactable<?> lastCollisionGroupHoverEntity; //cursor_hover_hitbox_group
-    private int lastCollisionGroupHoverIndex; //cursor_hover_hitbox_group
+    private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
+    private int lastCollisionGroupHoverIndex;
 
     @Override
     public void setupComponents() {
@@ -113,7 +113,7 @@ public class GUIOverlay extends AGUIBase {
             interactResult.entity.playerCursorHoveredVar.setActive(true, false);
             lastInteractResult = interactResult;
         }
-        //cursor_hover_hitbox_group
+        
         int hoveredCollisionGroupIndex = getCollisionGroupIndex(interactResult);
         if (lastCollisionGroupHoverEntity != null && (interactResult == null || interactResult.entity != lastCollisionGroupHoverEntity || hoveredCollisionGroupIndex != lastCollisionGroupHoverIndex)) {
             lastCollisionGroupHoverEntity.getOrCreateVariable("collision_" + lastCollisionGroupHoverIndex + "_player_cursor_hovered").setActive(false, false);
@@ -240,7 +240,7 @@ public class GUIOverlay extends AGUIBase {
         return CameraSystem.customCameraOverlay;
     }
 
-    //cursor_hover_hitbox_group
+   
     private static int getCollisionGroupIndex(EntityInteractResult interactResult) {
         if (interactResult != null && interactResult.box.groupDef != null && interactResult.entity.definition.collisionGroups != null) {
             return interactResult.entity.definition.collisionGroups.indexOf(interactResult.box.groupDef) + 1;
