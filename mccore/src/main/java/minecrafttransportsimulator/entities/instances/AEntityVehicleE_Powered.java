@@ -209,13 +209,6 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         world.endProfiling();
     }
 
-    // Helper method to check if an entity target is this vehicle or one of its parts
-    private boolean isEntityTargetingThisVehicle(IWrapperEntity entity) {
-        // For now, return false as entity targets are players/mobs, not vehicle parts
-        // This could be extended if needed
-        return false;
-    }
-
     @Override
     public void destroy(BoundingBox box) {
         //Spawn instruments in the world.
