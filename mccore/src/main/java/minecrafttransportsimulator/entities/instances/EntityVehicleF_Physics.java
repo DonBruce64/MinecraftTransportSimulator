@@ -834,7 +834,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("beacon_distance"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? Math.hypot(-selectedBeacon.position.z + position.z,-selectedBeacon.position.x + position.x) : 0, false);
             case ("radar_detected"):
-                return new ComputedVariable(this, variable, partialTicks -> isBeingTrackedByRadar() ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> radarsTracking.isEmpty() ? 0 : 1, false);
             case ("missile_incoming"):
                 return new ComputedVariable(this, variable, partialTicks -> missilesIncoming.isEmpty() ? 0 : 1, false);
             case ("missile_lockedonto"):
@@ -884,7 +884,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         }
                     }else if(parsedVariable.length == 4) {
                         //Outbound radar found, do logic.
-                        final List<AEntityB_Existing> radarList;
+                        final List<EntityVehicleF_Physics> radarList;
                         switch (parsedVariable[1]) {
                             case ("aircraft"): {
                                 radarList = aircraftOnRadar;

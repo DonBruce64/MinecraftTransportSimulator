@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -47,8 +46,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
-import minecrafttransportsimulator.packets.instances.PacketRadarSync;
-import minecrafttransportsimulator.packets.instances.PacketRadarSync.RadarContactData;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
@@ -163,12 +160,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public AItemPack<? extends AJSONItem> lastOpenedItem;
 
     //Radar lists.  Only updated once a tick.  Created when first requested via animations.
-    //Uses AEntityB_Existing to allow both real entities (server) and synced data stubs (client).
-    public final List<AEntityB_Existing> aircraftOnRadar = new ArrayList<>();
-    public final List<AEntityB_Existing> groundersOnRadar = new ArrayList<>();
-    //Client-side set of radar UUIDs that are tracking this entity.
-    //Used for radar_detected variable when entity is outside client render distance.
-    private final Set<UUID> radarsTrackingUUIDs = new HashSet<>();
+    public final List<EntityVehicleF_Physics> aircraftOnRadar = new ArrayList<>();
+    public final List<EntityVehicleF_Physics> groundersOnRadar = new ArrayList<>();
     private final Comparator<AEntityB_Existing> entityComparator = new Comparator<AEntityB_Existing>() {
         @Override
         public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
@@ -380,57 +373,31 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
         playerCraftedItem = false;
 
-        //Only update radar once a second on the server, and only if we requested it via variables.
-        //Server does the detection to support vehicles outside client render distance.
-        //Results are synced to clients via packets.
+        //Only update radar once a second, and only if we requested it via variables.
         if (definition.general.radarRange > 0 && ticksExisted % 20 == 0) {
-            if (!world.isClient()) {
-                //Server-side: detect vehicles and sync to clients
-                Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
-                aircraftOnRadar.clear();
-                groundersOnRadar.clear();
-                Point3D searchVector = new Point3D();
-                Point3D LOSVector = new Point3D();
-                for (EntityVehicleF_Physics vehicle : allVehicles) {
-                    searchVector.set(0, 0, definition.general.radarRange).rotate(orientation);
-                    LOSVector.set(vehicle.position).subtract(position).normalize();
-                    double coneAngle = definition.general.radarWidth;
-                    double angle = Math.abs(Math.toDegrees(Math.acos(searchVector.normalize().dotProduct(LOSVector, false))));
-                    if (!vehicle.outOfHealth && vehicle != this && (angle < coneAngle && vehicle.position.isDistanceToCloserThan(position, definition.general.radarRange))) {
-                        if (vehicle.definition.motorized.isAircraft) {
-                            aircraftOnRadar.add(vehicle);
-                        } else {
-                            groundersOnRadar.add(vehicle);
-                        }
-                        if (!vehicle.radarsTracking.contains(this)) {
-                            vehicle.radarsTracking.add(this);
-                        }
+            Collection<EntityVehicleF_Physics> allVehicles = world.getEntitiesOfType(EntityVehicleF_Physics.class);
+            aircraftOnRadar.clear();
+            groundersOnRadar.clear();
+            Point3D searchVector = new Point3D();
+            Point3D LOSVector = new Point3D();
+            for (EntityVehicleF_Physics vehicle : allVehicles) {
+                searchVector.set(0, 0, definition.general.radarRange).rotate(orientation);
+                LOSVector.set(vehicle.position).subtract(position).normalize();
+                double coneAngle = definition.general.radarWidth;
+                double angle = Math.abs(Math.toDegrees(Math.acos(searchVector.normalize().dotProduct(LOSVector, false))));
+                if (!vehicle.outOfHealth && vehicle != this && (angle < coneAngle && vehicle.position.isDistanceToCloserThan(position, definition.general.radarRange))) {
+                    if (vehicle.definition.motorized.isAircraft) {
+                        aircraftOnRadar.add(vehicle);
+                    } else {
+                        groundersOnRadar.add(vehicle);
+                    }
+                    if (!vehicle.radarsTracking.contains(this)) {
+                        vehicle.radarsTracking.add(this);
                     }
                 }
-                aircraftOnRadar.sort(entityComparator);
-                groundersOnRadar.sort(entityComparator);
-
-                //Sync radar data to all clients
-                List<RadarContactData> aircraftData = new ArrayList<>();
-                List<RadarContactData> grounderData = new ArrayList<>();
-                List<UUID> trackedVehicleUUIDs = new ArrayList<>();
-                for (AEntityB_Existing contact : aircraftOnRadar) {
-                    if (contact instanceof EntityVehicleF_Physics) {
-                        EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) contact;
-                        aircraftData.add(new RadarContactData(vehicle.uniqueUUID, vehicle.position.copy(), vehicle.motion.length()));
-                        trackedVehicleUUIDs.add(vehicle.uniqueUUID);
-                    }
-                }
-                for (AEntityB_Existing contact : groundersOnRadar) {
-                    if (contact instanceof EntityVehicleF_Physics) {
-                        EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) contact;
-                        grounderData.add(new RadarContactData(vehicle.uniqueUUID, vehicle.position.copy(), vehicle.motion.length()));
-                        trackedVehicleUUIDs.add(vehicle.uniqueUUID);
-                    }
-                }
-                InterfaceManager.packetInterface.sendToAllClients(new PacketRadarSync(uniqueUUID, aircraftData, grounderData, trackedVehicleUUIDs));
             }
-            //On client, radar lists are populated by PacketRadarSync from server
+            aircraftOnRadar.sort(entityComparator);
+            groundersOnRadar.sort(entityComparator);
         }
         world.endProfiling();
     }
@@ -509,85 +476,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     objectList.forEach(object -> object.destroy());
                 }
             }
-        }
-    }
-
-    /**
-     * Called by PacketRadarSync to update radar contacts on the client.
-     * This allows radar to work for vehicles outside client render distance
-     * by receiving position/velocity data from the server.
-     */
-    public void setRadarContacts(List<RadarContactData> aircraftContacts, List<RadarContactData> grounderContacts) {
-        aircraftOnRadar.clear();
-        groundersOnRadar.clear();
-
-        //Create stub entities for each contact using synced data
-        for (RadarContactData contact : aircraftContacts) {
-            aircraftOnRadar.add(new RadarContactStub(contact.position, contact.velocity));
-        }
-        for (RadarContactData contact : grounderContacts) {
-            groundersOnRadar.add(new RadarContactStub(contact.position, contact.velocity));
-        }
-
-        //Sort by distance (required for radar logic)
-        aircraftOnRadar.sort(entityComparator);
-        groundersOnRadar.sort(entityComparator);
-    }
-
-    /**
-     * Called by PacketRadarSync to inform this entity that it's being tracked by a radar.
-     * Used for radar_detected variable on client side.
-     */
-    public void addRadarTrackingThis(UUID radarUUID) {
-        radarsTrackingUUIDs.add(radarUUID);
-    }
-
-    /**
-     * Clears old radar tracking data and adds new tracking info.
-     * Used by PacketRadarSync to sync radar detection status to client.
-     */
-    public void clearAndAddRadarTracking(UUID radarUUID) {
-        radarsTrackingUUIDs.clear();
-        radarsTrackingUUIDs.add(radarUUID);
-    }
-
-    /**
-     * Returns true if this entity is being tracked by any radar.
-     * Used for radar_detected variable.
-     */
-    public boolean isBeingTrackedByRadar() {
-        return !radarsTrackingUUIDs.isEmpty();
-    }
-
-    /**
-     * Stub class to hold radar contact data from server on client.
-     * This allows animations to work without requiring full entity references.
-     */
-    private static class RadarContactStub extends AEntityB_Existing {
-        private final double stubVelocity;
-
-        RadarContactStub(Point3D position, double velocity) {
-            super(null, position, new Point3D(), new Point3D());
-            this.velocity = velocity;
-            this.stubVelocity = velocity;
-        }
-
-        //Note: getSpeed() is not overridden as it's not defined in AEntityB_Existing
-        //The velocity field is used instead for animations
-
-        @Override
-        public void update() {
-            //No-op: stub doesn't update
-        }
-
-        @Override
-        public IWrapperNBT save(IWrapperNBT data) {
-            return data;
-        }
-
-        @Override
-        public void remove() {
-            //No-op: stub doesn't have resources to remove
         }
     }
 
