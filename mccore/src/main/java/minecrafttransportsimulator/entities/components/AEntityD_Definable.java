@@ -166,9 +166,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	//Uses AEntityB_Existing to allow both real entities (server) and synced data stubs (client).
     public final List<AEntityB_Existing> aircraftOnRadar = new ArrayList<>();
     public final List<AEntityB_Existing> groundersOnRadar = new ArrayList<>();
-    //Client-side set of radar UUIDs that are tracking this entity.
-    //Used for radar_detected variable when entity is outside client render distance.
-    private final Set<UUID> radarsTrackingUUIDs = new HashSet<>();
+    //Client-side list of radar stubs that are tracking this entity.
+    //Used for radar_X_detected/distance/direction variables when entity is outside client render distance.
+    public final List<RadarContactStub> radarsTrackingStubs = new ArrayList<>();
     private final Comparator<AEntityB_Existing> entityComparator = new Comparator<AEntityB_Existing>() {
         @Override
         public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
@@ -428,7 +428,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         trackedVehicleUUIDs.add(vehicle.uniqueUUID);
                     }
                 }
-                InterfaceManager.packetInterface.sendToAllClients(new PacketRadarSync(uniqueUUID, aircraftData, grounderData, trackedVehicleUUIDs));
+                InterfaceManager.packetInterface.sendToAllClients(new PacketRadarSync(uniqueUUID, position.copy(), aircraftData, grounderData, trackedVehicleUUIDs));
             }
             //On client, radar lists are populated by PacketRadarSync from server
 
@@ -524,10 +524,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Create stub entities for each contact using synced data
         for (RadarContactData contact : aircraftContacts) {
-            aircraftOnRadar.add(new RadarContactStub(contact.position, contact.velocity));
+            aircraftOnRadar.add(new RadarContactStub(contact.uuid, contact.position, contact.velocity));
         }
         for (RadarContactData contact : grounderContacts) {
-            groundersOnRadar.add(new RadarContactStub(contact.position, contact.velocity));
+            groundersOnRadar.add(new RadarContactStub(contact.uuid, contact.position, contact.velocity));
         }
 
         //Sort by distance (required for radar logic)
@@ -537,19 +537,27 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     /**
      * Called by PacketRadarSync to inform this entity that it's being tracked by a radar.
-     * Used for radar_detected variable on client side.
+     * Used for radar_X_detected/distance/direction variables on client side.
      */
-    public void addRadarTrackingThis(UUID radarUUID) {
-        radarsTrackingUUIDs.add(radarUUID);
+    public void addRadarTrackingThis(UUID radarUUID, Point3D radarPosition) {
+        //Check if we already have this radar in the list
+        for (RadarContactStub stub : radarsTrackingStubs) {
+            if (stub.stubUUID.equals(radarUUID)) {
+                //Update position for existing stub
+                stub.position.set(radarPosition);
+                return;
+            }
+        }
+        //Add new stub
+        radarsTrackingStubs.add(new RadarContactStub(radarUUID, radarPosition, 0));
     }
 
     /**
-     * Clears old radar tracking data and adds new tracking info.
-     * Used by PacketRadarSync to sync radar detection status to client.
+     * Clears radar tracking stubs that weren't updated this tick.
+     * Called at the start of radar sync to remove stale entries.
      */
-    public void clearAndAddRadarTracking(UUID radarUUID) {
-        radarsTrackingUUIDs.clear();
-        radarsTrackingUUIDs.add(radarUUID);
+    public void clearRadarTrackingStubs() {
+        radarsTrackingStubs.clear();
     }
 
     /**
@@ -557,19 +565,21 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Used for radar_detected variable.
      */
     public boolean isBeingTrackedByRadar() {
-        return !radarsTrackingUUIDs.isEmpty();
+        return !radarsTrackingStubs.isEmpty();
     }
 
     /**
      * Stub class to hold radar contact data from server on client.
      * This allows animations to work without requiring full entity references.
+     * Also used by guns for targeting vehicles outside render distance.
      */
-    private static class RadarContactStub extends AEntityB_Existing {
-        private final double stubVelocity;
+    public static class RadarContactStub extends AEntityB_Existing {
+        public final UUID stubUUID;
+        public final double stubVelocity;
 
-        RadarContactStub(Point3D position, double velocity) {
+        public RadarContactStub(UUID uuid, Point3D position, double velocity) {
             super(null, position, new Point3D(), new Point3D());
-            this.velocity = velocity;
+            this.stubUUID = uuid;
             this.stubVelocity = velocity;
         }
 

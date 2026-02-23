@@ -7,6 +7,7 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable.RadarContactStub;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
@@ -20,13 +21,15 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  */
 public class PacketRadarSync extends APacketBase {
     private final UUID radarEntityUUID;
+    private final Point3D radarPosition;
     private final List<RadarContactData> aircraftContacts;
     private final List<RadarContactData> grounderContacts;
     private final List<UUID> trackedVehicleUUIDs;
 
-    public PacketRadarSync(UUID radarEntityUUID, List<RadarContactData> aircraftContacts, List<RadarContactData> grounderContacts, List<UUID> trackedVehicleUUIDs) {
+    public PacketRadarSync(UUID radarEntityUUID, Point3D radarPosition, List<RadarContactData> aircraftContacts, List<RadarContactData> grounderContacts, List<UUID> trackedVehicleUUIDs) {
         super(null);
         this.radarEntityUUID = radarEntityUUID;
+        this.radarPosition = radarPosition;
         this.aircraftContacts = aircraftContacts;
         this.grounderContacts = grounderContacts;
         this.trackedVehicleUUIDs = trackedVehicleUUIDs;
@@ -35,7 +38,8 @@ public class PacketRadarSync extends APacketBase {
     public PacketRadarSync(ByteBuf buf) {
         super(buf);
         this.radarEntityUUID = readUUIDFromBuffer(buf);
-        
+        this.radarPosition = readPoint3dFromBuffer(buf);
+
         int aircraftCount = buf.readInt();
         this.aircraftContacts = new ArrayList<>(aircraftCount);
         for (int i = 0; i < aircraftCount; i++) {
@@ -59,7 +63,8 @@ public class PacketRadarSync extends APacketBase {
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writeUUIDToBuffer(radarEntityUUID, buf);
-        
+        writePoint3dToBuffer(radarPosition, buf);
+
         buf.writeInt(aircraftContacts.size());
         for (RadarContactData contact : aircraftContacts) {
             writeUUIDToBuffer(contact.uuid, buf);
@@ -88,11 +93,11 @@ public class PacketRadarSync extends APacketBase {
             entity.setRadarContacts(aircraftContacts, grounderContacts);
         }
 
-        //Clear old tracking data and update with new tracking info
+        //Update tracking info for each tracked vehicle
         for (UUID trackedUUID : trackedVehicleUUIDs) {
             AEntityD_Definable<?> trackedVehicle = world.getEntity(trackedUUID);
             if (trackedVehicle != null) {
-                trackedVehicle.clearAndAddRadarTracking(radarEntityUUID);
+                trackedVehicle.addRadarTrackingThis(radarEntityUUID, radarPosition);
             }
         }
     }
