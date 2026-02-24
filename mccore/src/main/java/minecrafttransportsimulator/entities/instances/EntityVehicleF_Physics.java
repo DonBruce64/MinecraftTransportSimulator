@@ -836,9 +836,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             case ("radar_detected"):
                 return new ComputedVariable(this, variable, partialTicks -> isBeingTrackedByRadar() ? 1 : 0, false);
             case ("missile_incoming"):
-                return new ComputedVariable(this, variable, partialTicks -> missilesIncoming.isEmpty() ? 0 : 1, false);
+                return new ComputedVariable(this, variable, partialTicks -> world.isClient() ? (missilesIncomingStubs.isEmpty() ? 0 : 1) : (missilesIncoming.isEmpty() ? 0 : 1), false);
             case ("missile_lockedonto"):
-                return new ComputedVariable(this, variable, partialTicks -> gunsLockedOn.isEmpty() ? 0 : 1, false);
+                return new ComputedVariable(this, variable, partialTicks -> world.isClient() ? (gunsLockedOnCount > 0 ? 1 : 0) : (gunsLockedOn.isEmpty() ? 0 : 1), false);
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.
@@ -846,13 +846,27 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     final String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
                     final int missileNumber = ComputedVariable.getVariableNumber(variable.replaceAll("\\D", ""));
                     return new ComputedVariable(this, variable, partialTicks -> {
-                        if (missilesIncoming.size() > missileNumber) {
-                            switch (missileVariable) {
-                                case ("distance"):
-                                    return missilesIncoming.get(missileNumber).targetDistance;
-                                case ("direction"): {
-                                    Point3D missilePos = missilesIncoming.get(missileNumber).position;
-                                    return Math.toDegrees(Math.atan2(-missilePos.z + position.z, -missilePos.x + position.x)) + 90 + orientation.angles.y;
+                        //Use stub list on client, real list on server
+                        if (world.isClient()) {
+                            if (missilesIncomingStubs.size() > missileNumber) {
+                                switch (missileVariable) {
+                                    case ("distance"):
+                                        return missilesIncomingStubs.get(missileNumber).targetDistance;
+                                    case ("direction"): {
+                                        Point3D missilePos = missilesIncomingStubs.get(missileNumber).position;
+                                        return Math.toDegrees(Math.atan2(-missilePos.z + position.z, -missilePos.x + position.x)) + 90 + orientation.angles.y;
+                                    }
+                                }
+                            }
+                        } else {
+                            if (missilesIncoming.size() > missileNumber) {
+                                switch (missileVariable) {
+                                    case ("distance"):
+                                        return missilesIncoming.get(missileNumber).targetDistance;
+                                    case ("direction"): {
+                                        Point3D missilePos = missilesIncoming.get(missileNumber).position;
+                                        return Math.toDegrees(Math.atan2(-missilePos.z + position.z, -missilePos.x + position.x)) + 90 + orientation.angles.y;
+                                    }
                                 }
                             }
                         }

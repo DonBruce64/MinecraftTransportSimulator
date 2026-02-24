@@ -23,6 +23,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -48,6 +49,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketRadarSync;
+import minecrafttransportsimulator.packets.instances.PacketRadarSync.MissileLockData;
 import minecrafttransportsimulator.packets.instances.PacketRadarSync.RadarContactData;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
@@ -169,6 +171,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     //Client-side list of radar stubs that are tracking this entity.
     //Used for radar_X_detected/distance/direction variables when entity is outside client render distance.
     public final List<RadarContactStub> radarsTrackingStubs = new ArrayList<>();
+
+    //Missile/gun lock-on stub lists for client-side variable access.
+    //Synced from server to client for missile_* and gun lock-on variables.
+    public final List<MissileLockStub> missilesIncomingStubs = new ArrayList<>();
+    public int gunsLockedOnCount = 0;
+
     private final Comparator<AEntityB_Existing> entityComparator = new Comparator<AEntityB_Existing>() {
         @Override
         public int compare(AEntityB_Existing o1, AEntityB_Existing o2) {
@@ -428,7 +436,19 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         trackedVehicleUUIDs.add(vehicle.uniqueUUID);
                     }
                 }
-                InterfaceManager.packetInterface.sendToAllClients(new PacketRadarSync(uniqueUUID, position.copy(), aircraftData, grounderData, trackedVehicleUUIDs));
+
+                //Get missile data if this is a vehicle
+                List<MissileLockData> missileData = new ArrayList<>();
+                int lockedOnCount = 0;
+                if (this instanceof EntityVehicleF_Physics) {
+                    EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) this;
+                    for (EntityBullet missile : vehicle.missilesIncoming) {
+                        missileData.add(new MissileLockData(missile.uniqueUUID, missile.position.copy(), missile.targetDistance));
+                    }
+                    lockedOnCount = vehicle.gunsLockedOn.size();
+                }
+
+                InterfaceManager.packetInterface.sendToAllClients(new PacketRadarSync(uniqueUUID, position.copy(), aircraftData, grounderData, trackedVehicleUUIDs, missileData, lockedOnCount));
             }
             //On client, radar lists are populated by PacketRadarSync from server
 
@@ -536,6 +556,23 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Called by PacketRadarSync to update missile/gun lock-on contacts on the client.
+     * This allows missile_* and gun lock-on variables to work for entities outside client render distance.
+     */
+    public void setMissileContacts(List<MissileLockData> missileContacts, int lockedOnCount) {
+        missilesIncomingStubs.clear();
+        gunsLockedOnCount = lockedOnCount;
+
+        //Create stub entities for each incoming missile
+        for (MissileLockData contact : missileContacts) {
+            missilesIncomingStubs.add(new MissileLockStub(contact.uuid, contact.position, contact.targetDistance));
+        }
+
+        //Sort by distance (required for missile logic)
+        missilesIncomingStubs.sort((m1, m2) -> position.isFirstCloserThanSecond(m1.position, m2.position) ? -1 : 1);
+    }
+
+    /**
      * Called by PacketRadarSync to inform this entity that it's being tracked by a radar.
      * Used for radar_X_detected/distance/direction variables on client side.
      */
@@ -597,6 +634,36 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Note: getSpeed() is not overridden as it's not defined in AEntityB_Existing
         //The velocity field is used instead for animations
+
+        @Override
+        public void update() {
+            //No-op: stub doesn't update
+        }
+
+        @Override
+        public IWrapperNBT save(IWrapperNBT data) {
+            return data;
+        }
+
+        @Override
+        public void remove() {
+            //No-op: stub doesn't have resources to remove
+        }
+    }
+
+    /**
+     * Stub class to hold missile lock-on data from server on client.
+     * This allows missile_* variables to work without requiring full entity references.
+     */
+    public static class MissileLockStub extends AEntityB_Existing {
+        public final UUID stubUUID;
+        public final double targetDistance;
+
+        public MissileLockStub(UUID uuid, Point3D position, double targetDistance) {
+            super(null, position, new Point3D(), new Point3D());
+            this.stubUUID = uuid;
+            this.targetDistance = targetDistance;
+        }
 
         @Override
         public void update() {

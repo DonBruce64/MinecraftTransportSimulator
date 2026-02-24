@@ -25,14 +25,19 @@ public class PacketRadarSync extends APacketBase {
     private final List<RadarContactData> aircraftContacts;
     private final List<RadarContactData> grounderContacts;
     private final List<UUID> trackedVehicleUUIDs;
+    //Missile/gun lock-on data - synced from server to client for missile_* variables
+    private final List<MissileLockData> missilesIncomingData;
+    private final int gunsLockedOnCount;
 
-    public PacketRadarSync(UUID radarEntityUUID, Point3D radarPosition, List<RadarContactData> aircraftContacts, List<RadarContactData> grounderContacts, List<UUID> trackedVehicleUUIDs) {
+    public PacketRadarSync(UUID radarEntityUUID, Point3D radarPosition, List<RadarContactData> aircraftContacts, List<RadarContactData> grounderContacts, List<UUID> trackedVehicleUUIDs, List<MissileLockData> missilesIncomingData, int gunsLockedOnCount) {
         super(null);
         this.radarEntityUUID = radarEntityUUID;
         this.radarPosition = radarPosition;
         this.aircraftContacts = aircraftContacts;
         this.grounderContacts = grounderContacts;
         this.trackedVehicleUUIDs = trackedVehicleUUIDs;
+        this.missilesIncomingData = missilesIncomingData;
+        this.gunsLockedOnCount = gunsLockedOnCount;
     }
 
     public PacketRadarSync(ByteBuf buf) {
@@ -57,6 +62,16 @@ public class PacketRadarSync extends APacketBase {
         for (int i = 0; i < trackedCount; i++) {
             trackedVehicleUUIDs.add(readUUIDFromBuffer(buf));
         }
+
+        //Read missile lock-on data
+        int missileCount = buf.readInt();
+        this.missilesIncomingData = new ArrayList<>(missileCount);
+        for (int i = 0; i < missileCount; i++) {
+            missilesIncomingData.add(new MissileLockData(readUUIDFromBuffer(buf), readPoint3dFromBuffer(buf), buf.readDouble()));
+        }
+
+        //Read guns locked on count
+        this.gunsLockedOnCount = buf.readInt();
     }
 
     @Override
@@ -83,6 +98,17 @@ public class PacketRadarSync extends APacketBase {
         for (UUID trackedUUID : trackedVehicleUUIDs) {
             writeUUIDToBuffer(trackedUUID, buf);
         }
+
+        //Write missile lock-on data
+        buf.writeInt(missilesIncomingData.size());
+        for (MissileLockData missile : missilesIncomingData) {
+            writeUUIDToBuffer(missile.uuid, buf);
+            writePoint3dToBuffer(missile.position, buf);
+            buf.writeDouble(missile.targetDistance);
+        }
+
+        //Write guns locked on count
+        buf.writeInt(gunsLockedOnCount);
     }
 
     @Override
@@ -91,6 +117,7 @@ public class PacketRadarSync extends APacketBase {
         AEntityD_Definable<?> entity = world.getEntity(radarEntityUUID);
         if (entity != null) {
             entity.setRadarContacts(aircraftContacts, grounderContacts);
+            entity.setMissileContacts(missilesIncomingData, gunsLockedOnCount);
         }
 
         //Update tracking info for each tracked vehicle
@@ -115,6 +142,22 @@ public class PacketRadarSync extends APacketBase {
             this.uuid = uuid;
             this.position = position;
             this.velocity = velocity;
+        }
+    }
+
+    /**
+     * Simple data class to hold missile lock-on information.
+     * Used to sync missile data from server to client for missile_* variables.
+     */
+    public static class MissileLockData {
+        public final UUID uuid;
+        public final Point3D position;
+        public final double targetDistance;
+
+        public MissileLockData(UUID uuid, Point3D position, double targetDistance) {
+            this.uuid = uuid;
+            this.position = position;
+            this.targetDistance = targetDistance;
         }
     }
 }
