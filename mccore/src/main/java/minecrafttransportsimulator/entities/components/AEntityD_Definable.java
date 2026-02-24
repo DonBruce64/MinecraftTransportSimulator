@@ -543,13 +543,16 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check if we already have this radar in the list
         for (RadarContactStub stub : radarsTrackingStubs) {
             if (stub.stubUUID.equals(radarUUID)) {
-                //Update position for existing stub
+                //Update position for existing stub and update timestamp
                 stub.position.set(radarPosition);
+                stub.lastUpdateTick = ticksExisted;
                 return;
             }
         }
-        //Add new stub
-        radarsTrackingStubs.add(new RadarContactStub(radarUUID, radarPosition, 0));
+        //Add new stub with current timestamp
+        RadarContactStub newStub = new RadarContactStub(radarUUID, radarPosition, 0);
+        newStub.lastUpdateTick = ticksExisted;
+        radarsTrackingStubs.add(newStub);
     }
 
     /**
@@ -563,8 +566,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Returns true if this entity is being tracked by any radar.
      * Used for radar_detected variable.
+     * Only considers radar stubs that were updated within the last 60 ticks (~3 seconds).
+     * Stubs not updated within this time are considered stale and are not counted.
      */
     public boolean isBeingTrackedByRadar() {
+        //Remove stale stubs that haven't been updated in 60 ticks (3 seconds)
+        //This handles cases where a radar stops tracking this entity
+        radarsTrackingStubs.removeIf(stub -> stub.lastUpdateTick < ticksExisted - 60);
         return !radarsTrackingStubs.isEmpty();
     }
 
@@ -576,11 +584,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public static class RadarContactStub extends AEntityB_Existing {
         public final UUID stubUUID;
         public final double stubVelocity;
+        //Timestamp of when this stub was last updated.
+        //Used to detect stale radar contacts that are no longer being tracked.
+        public long lastUpdateTick;
 
         public RadarContactStub(UUID uuid, Point3D position, double velocity) {
             super(null, position, new Point3D(), new Point3D());
             this.stubUUID = uuid;
             this.stubVelocity = velocity;
+            this.lastUpdateTick = 0;
         }
 
         //Note: getSpeed() is not overridden as it's not defined in AEntityB_Existing
