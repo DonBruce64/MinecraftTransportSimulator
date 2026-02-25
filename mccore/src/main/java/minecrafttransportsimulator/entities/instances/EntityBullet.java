@@ -788,7 +788,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
     @Override
     public boolean shouldSync() {
-        return definition != null && definition.bullet != null && definition.bullet.isLongRange;
+        return false;
     }
 
     @Override
