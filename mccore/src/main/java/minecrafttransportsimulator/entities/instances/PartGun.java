@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -13,6 +14,8 @@ import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -128,6 +131,7 @@ public class PartGun extends APart {
     private Point3D controllerRelativeLookVector = new Point3D();
     public IWrapperEntity entityTarget;
     public PartEngine engineTarget;
+    public UUID targetUUID;  //UUID of target vehicle, used for tracking beyond render distance
     public Point3D targetPosition;
     public EntityBullet currentBullet;
     public final Set<EntityBullet> activeManualBullets = new HashSet<>();
@@ -148,6 +152,11 @@ public class PartGun extends APart {
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
     private final Point3D normalizedConeVector = new Point3D();
     private final Point3D normalizedEntityVector = new Point3D();
+
+    //Track previous targets to detect changes for registration
+    private PartEngine prevEngineTarget = null;
+    private IWrapperEntity prevEntityTarget = null;
+    private UUID prevTargetUUID = null;
 
     //Global data.
     private static final int RAYTRACE_DISTANCE = 750;
@@ -333,6 +342,8 @@ public class PartGun extends APart {
                         currentController = null;
                         entityTarget = null;
                         engineTarget = null;
+                        targetUUID = null;
+                        updateTargetRegistration();
                     }
                 }
             }
@@ -390,6 +401,8 @@ public class PartGun extends APart {
                     currentController = null;
                     entityTarget = null;
                     engineTarget = null;
+                    targetUUID = null;
+                    updateTargetRegistration();
                 }
             }
 
@@ -493,6 +506,9 @@ public class PartGun extends APart {
                                                 newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, bulletsFired, entityTarget);
                                             } else if (engineTarget != null) {
                                                 newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, bulletsFired, engineTarget);
+                                            } else if (targetUUID != null) {
+                                                // Target tracked by UUID (beyond render distance)
+                                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, bulletsFired, targetUUID);
                                             } else if (definition.gun.lockOnType == LockOnType.MANUAL) {
                                                 newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, bulletsFired, targetPosition);
                                                 activeManualBullets.add(newBullet);
@@ -598,6 +614,8 @@ public class PartGun extends APart {
             state = GunState.INACTIVE;
             entityTarget = null;
             engineTarget = null;
+            targetUUID = null;
+            updateTargetRegistration();
             if (resetPosition) {
                 handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
             }
@@ -788,6 +806,7 @@ public class PartGun extends APart {
                     }
                 } else {
                     entityTarget = null;
+                    updateTargetRegistration();
                     state = state.demote(GunState.CONTROLLED);
                 }
             } else {
@@ -839,35 +858,19 @@ public class PartGun extends APart {
                 //First set targets to null to clear any existing targets.
                 engineTarget = null;
                 entityTarget = null;
+                targetUUID = null;
+                updateTargetRegistration();
 
                 //If we have a start point, it means we're a cone-based target system and need to find a target.
                 if (startPoint != null) {
                     //First check for hard targets, since those are more dangerous.
                     if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.HARD || definition.gun.targetType == TargetType.AIRCRAFT || definition.gun.targetType == TargetType.GROUND) {
-                        normalizedConeVector.set(searchVector).normalize();
-                        EntityVehicleF_Physics vehicleTarget = null;
-                        double smallestDistance = searchVector.length();
-                        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                            //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
-                            if (vehicle != vehicleOn && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
-                                targetVector.set(vehicle.position).subtract(startPoint);
-                                if (world.getBlockHit(startPoint, targetVector) == null) {
-                                    double entityDistance = vehicle.position.distanceTo(startPoint);
-                                    if (entityDistance < smallestDistance) {
-                                        //Potential match by distance, check if the entity is inside the cone.
-                                        normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
-                                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                        if (targetAngle < coneAngle) {
-                                            smallestDistance = entityDistance;
-                                            vehicleTarget = vehicle;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        // Use new method that also checks radar stubs on client
+                        EntityVehicleF_Physics vehicleTarget = findAndSetTargetUUID(startPoint, searchVector, coneAngle);
 
-                        //If we found a vehicle, get the engine to target.
-                        if (vehicleTarget != null && !vehicleTarget.outOfHealth) {
+                        //If we found a loaded vehicle, get the engine to target.
+                        //Only non-long-range guns and bullets should target engines
+                        if (vehicleTarget != null && !vehicleTarget.outOfHealth && !definition.gun.isLongRange) {
                             for (APart part : vehicleTarget.parts) {
                                 if (part instanceof PartEngine) {
                                     engineTarget = (PartEngine) part;
@@ -900,6 +903,7 @@ public class PartGun extends APart {
                             }
                         }
                     }
+                    updateTargetRegistration();
                 }
             }
 
@@ -1283,6 +1287,11 @@ public class PartGun extends APart {
             direction = Math.toDegrees(Math.atan2(-engineTarget.vehicleOn.position.z + referencePos.z, -engineTarget.vehicleOn.position.x + referencePos.x)) + 90 + orientation.angles.y;
         } else if (entityTarget != null) {
             direction = Math.toDegrees(Math.atan2(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x)) + 90 + orientation.angles.y;
+        } else if (targetUUID != null) {
+            Point3D targetPos = getTargetPositionByUUID(targetUUID);
+            if (targetPos != null) {
+                direction = Math.toDegrees(Math.atan2(-targetPos.z + referencePos.z, -targetPos.x + referencePos.x)) + 90 + orientation.angles.y;
+            }
         }
         while (direction < -180)
             direction += 360;
@@ -1298,12 +1307,31 @@ public class PartGun extends APart {
             angle = -Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y,Math.hypot(-engineTarget.position.z + referencePos.z,-engineTarget.position.x + referencePos.x))) + orientation.angles.x;
         } else if (entityTarget != null) {
             angle = -Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y,Math.hypot(-entityTarget.getPosition().z + referencePos.z,-entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x;
+        } else if (targetUUID != null) {
+            Point3D targetPos = getTargetPositionByUUID(targetUUID);
+            if (targetPos != null) {
+                angle = -Math.toDegrees(Math.atan2(-targetPos.y + referencePos.y,Math.hypot(-targetPos.z + referencePos.z,-targetPos.x + referencePos.x))) + orientation.angles.x;
+            }
         }
         while (angle < -180)
             angle += 360;
         while (angle > 180)
             angle -= 360;
         return angle;
+    }
+
+    public double getLockedOnDistance() {
+        if (engineTarget != null) {
+            return engineTarget.position.distanceTo(position);
+        } else if (entityTarget != null) {
+            return entityTarget.getPosition().distanceTo(position);
+        } else if (targetUUID != null) {
+            Point3D targetPos = getTargetPositionByUUID(targetUUID);
+            if (targetPos != null) {
+                return targetPos.distanceTo(position);
+            }
+        }
+        return 0;
     }
 
     public Point3D getLockedOnLeadPoint(){
@@ -1313,33 +1341,281 @@ public class PartGun extends APart {
             ticksToTarget = engineTarget.vehicleOn.position.distanceTo(position) / (muzzleVelocityVar.currentValue / 20D);
             leadPoint.set(engineTarget.vehicleOn.position).addScaled(engineTarget.vehicleOn.motion, (engineTarget.vehicleOn.speedFactor) * ticksToTarget);
         } else if (entityTarget != null) {
-            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (knockbackVar.currentValue / 20D);
+            ticksToTarget = entityTarget.getPosition().distanceTo(position) / (muzzleVelocityVar.currentValue / 20D);
             leadPoint.set(entityTarget.getPosition()).addScaled(entityTarget.getVelocity(), ticksToTarget);
+        } else if (targetUUID != null) {
+            Point3D targetPos = getTargetPositionByUUID(targetUUID);
+            if (targetPos != null) {
+                ticksToTarget = targetPos.distanceTo(position) / (muzzleVelocityVar.currentValue / 20D);
+                leadPoint.set(targetPos);
+                // Note: we don't have velocity for UUID targets, so no lead prediction
+            } else {
+                return null;
+            }
+        } else {
+            return null;
         }
         return leadPoint;
     }
 
     public double getLeadPointDirection(){
-        double direction = 0;
-        if (engineTarget != null || entityTarget != null) {
-            direction = Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x)) + 90 + orientation.angles.y;
+        Point3D leadPoint = getLockedOnLeadPoint();
+        if (leadPoint != null) {
+            double direction = Math.toDegrees(Math.atan2(-leadPoint.z + position.z, -leadPoint.x + position.x)) + 90 + orientation.angles.y;
+            while (direction < -180)
+                direction += 360;
+            while (direction > 180)
+                direction -= 360;
+            return direction;
         }
-        while (direction < -180)
-            direction += 360;
-        while (direction > 180)
-            direction -= 360;
-        return direction;
+        return 0;
     }
 
     public double getLeadAngleY() {
         double angle = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
+        Point3D leadPoint = getLockedOnLeadPoint();
+        if (leadPoint == null) return 0;
+
         if(engineTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x);
+            angle = (-Math.toDegrees(Math.atan2(-leadPoint.y + position.y, Math.hypot(-leadPoint.z + position.z, -leadPoint.x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-engineTarget.position.y + referencePos.y, Math.hypot(-engineTarget.position.z + referencePos.z, -engineTarget.position.x + referencePos.x))) + orientation.angles.x);
         } else if (entityTarget != null) {
-            angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
+            angle = (-Math.toDegrees(Math.atan2(-leadPoint.y + position.y, Math.hypot(-leadPoint.z + position.z, -leadPoint.x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
+        } else if (targetUUID != null) {
+            Point3D targetPos = getTargetPositionByUUID(targetUUID);
+            if (targetPos != null) {
+                angle = (-Math.toDegrees(Math.atan2(-leadPoint.y + position.y, Math.hypot(-leadPoint.z + position.z, -leadPoint.x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-targetPos.y + referencePos.y, Math.hypot(-targetPos.z + referencePos.z, -targetPos.x + referencePos.x))) + orientation.angles.x);
+            }
         }
         return angle;
+    }
+
+    /**
+     * Registers this gun with the target vehicle's gunsLockedOn list.
+     */
+    private void registerWithTargetVehicle() {
+        // Register via engineTarget if available
+        if (engineTarget != null && engineTarget.vehicleOn != null && engineTarget.vehicleOn != vehicleOn) {
+            AEntityVehicleE_Powered targetVehicle = engineTarget.vehicleOn;
+            if (!targetVehicle.gunsLockedOn.contains(this)) {
+                targetVehicle.gunsLockedOn.add(this);
+            }
+        }
+        // Register via targetUUID if available (for targets beyond render distance)
+        if (targetUUID != null && vehicleOn != null && !targetUUID.equals(vehicleOn.uniqueUUID)) {
+            EntityVehicleF_Physics targetVehicle = world.getEntity(targetUUID);
+            if (targetVehicle != null && !targetVehicle.gunsLockedOn.contains(this)) {
+                targetVehicle.gunsLockedOn.add(this);
+            }
+        }
+    }
+
+    /**
+     * Unregisters this gun from the previous target vehicle's gunsLockedOn list.
+     */
+    private void unregisterFromPreviousTargetVehicle() {
+        // Unregister from previous engine target vehicle
+        if (prevEngineTarget != null && prevEngineTarget.vehicleOn != null && prevEngineTarget.vehicleOn != vehicleOn) {
+            prevEngineTarget.vehicleOn.gunsLockedOn.remove(this);
+        }
+        // Unregister from previous targetUUID vehicle
+        if (prevTargetUUID != null && vehicleOn != null && !prevTargetUUID.equals(vehicleOn.uniqueUUID)) {
+            EntityVehicleF_Physics prevTargetVehicle = world.getEntity(prevTargetUUID);
+            if (prevTargetVehicle != null) {
+                prevTargetVehicle.gunsLockedOn.remove(this);
+            }
+        }
+    }
+
+    /**
+     * Updates target registration. Call this whenever entityTarget, engineTarget, or targetUUID changes.
+     */
+    private void updateTargetRegistration() {
+        // Check if engine target changed
+        if (engineTarget != prevEngineTarget || (targetUUID != null && !targetUUID.equals(prevTargetUUID))) {
+            unregisterFromPreviousTargetVehicle();
+            prevEngineTarget = engineTarget;
+            prevTargetUUID = targetUUID;
+            registerWithTargetVehicle();
+        }
+        // Note: entityTarget targets are players/mobs, not vehicles, so we don't register for those
+        prevEntityTarget = entityTarget;
+    }
+
+    /**
+     * Gets the target position by UUID. On server, looks up the actual entity.
+     * On client, first tries actual entity, then falls back to radar stubs.
+     * Returns null if target not found.
+     */
+    public Point3D getTargetPositionByUUID(UUID targetUUID) {
+        if (targetUUID == null) {
+            return null;
+        }
+
+        // Try to find the actual entity first
+        EntityVehicleF_Physics vehicle = world.getEntity(targetUUID);
+        if (vehicle != null) {
+            return vehicle.position.copy();
+        }
+
+        // On client, check radar stubs if entity not loaded
+        if (world.isClient() && vehicleOn != null) {
+            // Check aircraft stubs
+            for (AEntityB_Existing contact : vehicleOn.aircraftOnRadar) {
+                if (contact instanceof AEntityD_Definable.RadarContactStub) {
+                    AEntityD_Definable.RadarContactStub stub = (AEntityD_Definable.RadarContactStub) contact;
+                    if (stub.stubUUID.equals(targetUUID)) {
+                        return stub.position.copy();
+                    }
+                }
+            }
+            // Check grounder stubs
+            for (AEntityB_Existing contact : vehicleOn.groundersOnRadar) {
+                if (contact instanceof AEntityD_Definable.RadarContactStub) {
+                    AEntityD_Definable.RadarContactStub stub = (AEntityD_Definable.RadarContactStub) contact;
+                    if (stub.stubUUID.equals(targetUUID)) {
+                        return stub.position.copy();
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the target velocity by UUID. On server, looks up the actual entity.
+     * On client, first tries actual entity, then falls back to radar stubs.
+     * Returns null if target not found.
+     */
+    public Double getTargetVelocityByUUID(UUID targetUUID) {
+        if (targetUUID == null) {
+            return null;
+        }
+
+        // Try to find the actual entity first
+        EntityVehicleF_Physics vehicle = world.getEntity(targetUUID);
+        if (vehicle != null) {
+            return vehicle.motion.length();
+        }
+
+        // On client, check radar stubs if entity not loaded
+        if (world.isClient() && vehicleOn != null) {
+            // Check aircraft stubs
+            for (AEntityB_Existing contact : vehicleOn.aircraftOnRadar) {
+                if (contact instanceof AEntityD_Definable.RadarContactStub) {
+                    AEntityD_Definable.RadarContactStub stub = (AEntityD_Definable.RadarContactStub) contact;
+                    if (stub.stubUUID.equals(targetUUID)) {
+                        return stub.stubVelocity;
+                    }
+                }
+            }
+            // Check grounder stubs
+            for (AEntityB_Existing contact : vehicleOn.groundersOnRadar) {
+                if (contact instanceof AEntityD_Definable.RadarContactStub) {
+                    AEntityD_Definable.RadarContactStub stub = (AEntityD_Definable.RadarContactStub) contact;
+                    if (stub.stubUUID.equals(targetUUID)) {
+                        return stub.stubVelocity;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Finds a vehicle target and sets targetUUID. Used for DEFAULT and BORESIGHT lock-on types.
+     * This method first checks loaded entities, then falls back to radar stubs on client.
+     * Returns the vehicle if found in loaded entities, null otherwise (but targetUUID may still be set from stubs).
+     */
+    private EntityVehicleF_Physics findAndSetTargetUUID(Point3D startPoint, Point3D searchVector, double coneAngle) {
+        normalizedConeVector.set(searchVector).normalize();
+        EntityVehicleF_Physics vehicleTarget = null;
+        double smallestDistance = searchVector.length();
+
+        // First, check loaded entities (works on both server and client)
+        for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
+            // Make sure we don't lock-on to our own vehicle
+            if (vehicle != vehicleOn && !vehicle.outOfHealth) {
+                // Check target type
+                if ((definition.gun.targetType == TargetType.AIRCRAFT && !vehicle.definition.motorized.isAircraft) ||
+                    (definition.gun.targetType == TargetType.GROUND && vehicle.definition.motorized.isAircraft)) {
+                    continue;
+                }
+
+                targetVector.set(vehicle.position).subtract(startPoint);
+                if (world.getBlockHit(startPoint, targetVector) == null) {
+                    double entityDistance = vehicle.position.distanceTo(startPoint);
+                    if (entityDistance < smallestDistance) {
+                        // Potential match by distance, check if the entity is inside the cone
+                        normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
+                        double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                        if (targetAngle < coneAngle) {
+                            smallestDistance = entityDistance;
+                            vehicleTarget = vehicle;
+                        }
+                    }
+                }
+            }
+        }
+
+        // If we found a loaded vehicle, set UUID and return it
+        if (vehicleTarget != null) {
+            targetUUID = vehicleTarget.uniqueUUID;
+            return vehicleTarget;
+        }
+
+        // On client, also check radar stubs for targets beyond render distance
+        if (world.isClient() && vehicleOn != null) {
+            UUID stubUUID = findTargetInRadarStubs(startPoint, normalizedConeVector, coneAngle, smallestDistance);
+            if (stubUUID != null) {
+                targetUUID = stubUUID;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Helper method to find a target in radar stubs. Client-side only.
+     */
+    private UUID findTargetInRadarStubs(Point3D startPoint, Point3D normalizedConeVector, double coneAngle, double maxDistance) {
+        UUID closestUUID = null;
+        double smallestDistance = maxDistance;
+
+        // Check appropriate list based on target type
+        List<AEntityB_Existing> contactsToCheck = new ArrayList<>();
+        if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.HARD || definition.gun.targetType == TargetType.AIRCRAFT) {
+            contactsToCheck.addAll(vehicleOn.aircraftOnRadar);
+        }
+        if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.HARD || definition.gun.targetType == TargetType.GROUND) {
+            contactsToCheck.addAll(vehicleOn.groundersOnRadar);
+        }
+
+        for (AEntityB_Existing contact : contactsToCheck) {
+            if (contact instanceof AEntityD_Definable.RadarContactStub) {
+                AEntityD_Definable.RadarContactStub stub = (AEntityD_Definable.RadarContactStub) contact;
+
+                // Don't target ourselves
+                if (vehicleOn != null && stub.stubUUID.equals(vehicleOn.uniqueUUID)) {
+                    continue;
+                }
+
+                double entityDistance = stub.position.distanceTo(startPoint);
+                if (entityDistance < smallestDistance) {
+                    // Potential match by distance, check if the entity is inside the cone
+                    normalizedEntityVector.set(stub.position).subtract(startPoint).normalize();
+                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
+                    if (targetAngle < coneAngle) {
+                        smallestDistance = entityDistance;
+                        closestUUID = stub.stubUUID;
+                    }
+                }
+            }
+        }
+
+        return closestUUID;
     }
 
     @Override
@@ -1364,27 +1640,57 @@ public class PartGun extends APart {
             case ("gun_muzzleflash"):
                 return new ComputedVariable(this, variable, partialTicks -> firedThisTick && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0, true);
             case ("gun_lockedon"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null || engineTarget != null ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null || engineTarget != null || targetUUID != null ? 1 : 0, false);
             case ("gun_lockedon_x"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().x : (engineTarget != null ? engineTarget.position.x : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    if (entityTarget != null) return entityTarget.getPosition().x;
+                    if (engineTarget != null) return engineTarget.position.x;
+                    if (targetUUID != null) {
+                        Point3D pos = getTargetPositionByUUID(targetUUID);
+                        if (pos != null) return pos.x;
+                    }
+                    return 0;
+                }, false);
             case ("gun_lockedon_y"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    if (entityTarget != null) return entityTarget.getPosition().y;
+                    if (engineTarget != null) return engineTarget.position.y;
+                    if (targetUUID != null) {
+                        Point3D pos = getTargetPositionByUUID(targetUUID);
+                        if (pos != null) return pos.y;
+                    }
+                    return 0;
+                }, false);
             case ("gun_lockedon_z"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    if (entityTarget != null) return entityTarget.getPosition().z;
+                    if (engineTarget != null) return engineTarget.position.z;
+                    if (targetUUID != null) {
+                        Point3D pos = getTargetPositionByUUID(targetUUID);
+                        if (pos != null) return pos.z;
+                    }
+                    return 0;
+                }, false);
             case ("gun_lockedon_direction"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLockedOnDirection() : (engineTarget != null ? getLockedOnDirection() : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLockedOnDirection(), false);
             case ("gun_lockedon_angle"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLockedOnAngle() : (engineTarget != null ? getLockedOnAngle() : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLockedOnAngle(), false);
             case ("gun_lockedon_leadpoint_direction"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLeadPointDirection() : (engineTarget != null ? getLeadPointDirection() : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLeadPointDirection(), false);
             case ("gun_lockedon_leadpoint_angle"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : (engineTarget != null ? (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    Point3D leadPoint = getLockedOnLeadPoint();
+                    if (leadPoint != null) {
+                        return -Math.toDegrees(Math.atan2(-leadPoint.y + position.y, Math.hypot(-leadPoint.z + position.z, -leadPoint.x + position.x))) + orientation.angles.x;
+                    }
+                    return 0;
+                }, false);
             case ("gun_lockedon_distance"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? entityTarget.getPosition().distanceTo(position) : (engineTarget != null ? engineTarget.position.distanceTo(position) : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLockedOnDistance(), false);
             case ("gun_lockedon_leadangle_x"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : (engineTarget != null ? (getLeadPointDirection() - getLockedOnDirection()) : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLeadPointDirection() - getLockedOnDirection(), false);
             case ("gun_lockedon_leadangle_y"):
-                return new ComputedVariable(this, variable, partialTicks -> entityTarget != null ? getLeadAngleY() : (engineTarget != null ? getLeadAngleY() : 0), false);
+                return new ComputedVariable(this, variable, partialTicks -> getLeadAngleY(), false);
             case ("gun_pitch"):
                 return new ComputedVariable(this, variable, partialTicks -> partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x, true);
             case ("gun_yaw"):

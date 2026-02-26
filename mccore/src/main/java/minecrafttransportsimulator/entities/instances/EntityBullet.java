@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -72,6 +73,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private Point3D normalizedEntityVector = new Point3D();
     private PartEngine engineTargeted;
     private IWrapperEntity externalEntityTargeted;
+    private UUID targetUUID;  //UUID of target vehicle, used for tracking beyond render distance
     public HitType lastHit;
     public Axis sideHit;
     private BlockHitResult hitBlock;
@@ -130,6 +132,26 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         this(position, motion, orientation, gun, bulletNumber, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
         displayDebugMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
+    }
+
+    /**
+     * UUID target for vehicles beyond render distance.
+     * Used when gun has targetUUID but no loaded entity.
+     **/
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, int bulletNumber, UUID targetUUID) {
+        this(position, motion, orientation, gun, bulletNumber);
+        this.targetUUID = targetUUID;
+        // Try to get initial position from radar stubs or loaded entity
+        Point3D initialTargetPos = gun.getTargetPositionByUUID(targetUUID);
+        if (initialTargetPos != null) {
+            this.targetPosition = initialTargetPos;
+            // Register missile in target's missilesIncoming list
+            EntityVehicleF_Physics targetVehicle = gun.world.getEntity(targetUUID);
+            if (targetVehicle != null) {
+                targetVehicle.missilesIncoming.add(this);
+            }
+            displayDebugMessage("LOCKON UUID " + targetUUID + " @ " + targetPosition);
+        }
     }
 
     @Override
@@ -229,6 +251,21 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 engineTargeted = null;
                                 targetPosition = null;
                             }
+                        } else if (targetUUID != null) {
+                            // Tracking by UUID - check if gun still has this target
+                            if (gun.targetUUID == null || !gun.targetUUID.equals(targetUUID)) {
+                                targetUUID = null;
+                                targetPosition = null;
+                            } else {
+                                // Update position from gun's tracking
+                                Point3D newPos = gun.getTargetPositionByUUID(targetUUID);
+                                if (newPos != null) {
+                                    targetPosition.set(newPos);
+                                } else {
+                                    targetUUID = null;
+                                    targetPosition = null;
+                                }
+                            }
                         }
                         break;
                     }
@@ -259,6 +296,24 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 engineTargeted.vehicleOn.missilesIncoming.remove(this);
                                 engineTargeted = null;
                                 targetPosition = null;
+                            }
+                        } else if (targetUUID != null) {
+                            // Tracking by UUID - can track beyond render distance
+                            // First try to find loaded entity
+                            EntityVehicleF_Physics loadedVehicle = world.getEntity(targetUUID);
+                            if (loadedVehicle != null && !loadedVehicle.outOfHealth) {
+                                // Found loaded entity, use its position
+                                targetPosition.set(loadedVehicle.position);
+                            } else {
+                                // Use gun's tracking (radar stubs on client)
+                                Point3D newPos = gun.getTargetPositionByUUID(targetUUID);
+                                if (newPos != null) {
+                                    targetPosition.set(newPos);
+                                } else {
+                                    // Lost target
+                                    targetUUID = null;
+                                    targetPosition = null;
+                                }
                             }
                         }
                         break;
@@ -570,6 +625,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         }
         if (engineTargeted != null) {
             engineTargeted.vehicleOn.missilesIncoming.remove(this);
+        }
+        if (targetUUID != null) {
+            EntityVehicleF_Physics targetVehicle = world.getEntity(targetUUID);
+            if (targetVehicle != null) {
+                targetVehicle.missilesIncoming.remove(this);
+            }
         }
     }
 
