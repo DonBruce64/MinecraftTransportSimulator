@@ -505,6 +505,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Angle in degrees around gun's orientation that it wil see targets.")
         public double lockMaxAngle;
 
+        @JSONDescription("If true, this gun will use UUID-based targeting exclusively and will not target engines. Useful for long-range weapons that need to track targets beyond render distance. Only non-long-range guns and bullets should target engines.")
+        public boolean isLongRange;
+
         @JSONDescription("The bullet that should be loaded into this gun on spawning.  Useful for single-use weapons, especially hand-helds.  Format is packID:bulletName.")
         public String preloadedBullet;
 

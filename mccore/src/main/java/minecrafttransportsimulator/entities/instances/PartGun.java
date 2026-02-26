@@ -869,7 +869,8 @@ public class PartGun extends APart {
                         EntityVehicleF_Physics vehicleTarget = findAndSetTargetUUID(startPoint, searchVector, coneAngle);
 
                         //If we found a loaded vehicle, get the engine to target.
-                        if (vehicleTarget != null && !vehicleTarget.outOfHealth) {
+                        //Only non-long-range guns and bullets should target engines
+                        if (vehicleTarget != null && !vehicleTarget.outOfHealth && !definition.gun.isLongRange) {
                             for (APart part : vehicleTarget.parts) {
                                 if (part instanceof PartEngine) {
                                     engineTarget = (PartEngine) part;
