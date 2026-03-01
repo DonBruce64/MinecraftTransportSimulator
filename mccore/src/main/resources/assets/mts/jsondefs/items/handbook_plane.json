@@ -92,7 +92,7 @@
                         "rot": [0.0, 0.0, 0.0],
                         "scale": 0.65,
                         "fieldName": "",
-                        "defaultText": "Propeller pitch is also important, perhaps more so than diameter, as it determines the optimal speed at any RPM. Anything below this speed will speed the aircraft up, anything below will slow it down. Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REV button in the plane panel. Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
+                        "defaultText": "Propeller pitch is also important, perhaps more so than diameter, as it determines the optimal speed at any RPM. Anything below this speed will speed the aircraft up, anything above will slow it down. Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REV button in the plane panel. Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
                         "color": "000000",
                         "wrapWidth": 110,
                         "renderPosition": 1
