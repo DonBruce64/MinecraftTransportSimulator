@@ -154,6 +154,10 @@ public class JSONConfigSettings {
                                     fluids.put("destabilized_redstone", 1.0);
                                     break;
                                 }
+                                case WATER: {
+                                    fluids.put("water", 1.0);
+                                    break;
+                                }
                                 case NOTHING: {
                                     break;
                                 }
@@ -191,4 +195,5 @@ public class JSONConfigSettings {
         NOTHING;
     }
 }
+
 
