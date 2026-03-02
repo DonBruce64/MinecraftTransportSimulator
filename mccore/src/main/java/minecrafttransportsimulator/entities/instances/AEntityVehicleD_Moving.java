@@ -614,6 +614,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      * Failure to do this will result in things going badly!
      */
     private void moveVehicle() {
+        modifySpeedFactor();
         if (towedByConnection == null || !towedByConnection.hitchConnection.mounted) {
             //First, update the vehicle ground device boxes.
             world.beginProfiling("GDBInit", true);
@@ -919,7 +920,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 motionApplied.add(vehicleCollisionMotion);
                 rotationApplied.angles.add(vehicleCollisionRotation.angles);
             }
-            modifySpeedFactor();
+
             //All contributions done, add calculated motions.
             position.add(motionApplied);
             if (!rotationApplied.angles.isZero()) {
@@ -983,10 +984,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         } else {
             //Mounted vehicles don't do most motions, only a sub-set of them.
-            modifySpeedFactor();
             world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(modifiedSpeedFactor);
-            modifySpeedFactor();
             position.add(motionApplied);
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
@@ -1013,7 +1012,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         }
 
         //get a sample of block blocks in front of vehicle
-        chunkGuardDirection.set(position.x + (motionApplied.x * 42), 1D, position.z + (motionApplied.z * 42));
+        chunkGuardDirection.set(position.x + (motionApplied.x * 52), 1D, position.z + (motionApplied.z * 52));
 
         //check for stat 1 is cached unloaded chunk present , 0 is no cached chunks.
         if(!chunkCacheStat){
