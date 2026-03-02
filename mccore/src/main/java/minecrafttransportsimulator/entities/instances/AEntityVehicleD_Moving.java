@@ -228,7 +228,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             } else {
                 slipping = false;
             }
-            modifySpeedFactor();
+
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
             if (!world.isClient()) {
@@ -919,7 +919,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 motionApplied.add(vehicleCollisionMotion);
                 rotationApplied.angles.add(vehicleCollisionRotation.angles);
             }
-
+            modifySpeedFactor();
             //All contributions done, add calculated motions.
             position.add(motionApplied);
             if (!rotationApplied.angles.isZero()) {
@@ -986,8 +986,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             modifySpeedFactor();
             world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(modifiedSpeedFactor);
+            modifySpeedFactor();
             position.add(motionApplied);
-
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
 
