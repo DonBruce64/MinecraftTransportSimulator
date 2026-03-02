@@ -44,11 +44,11 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
-	//Variables
-	public final ComputedVariable leftTurnLightVar;
-	public final ComputedVariable rightTurnLightVar;
-	public final ComputedVariable brakeVar;
-	public final ComputedVariable parkingBrakeVar;
+    //Variables
+    public final ComputedVariable leftTurnLightVar;
+    public final ComputedVariable rightTurnLightVar;
+    public final ComputedVariable brakeVar;
+    public final ComputedVariable parkingBrakeVar;
     public final ComputedVariable lockedVar;
     public static final double MAX_BRAKE = 1D;
     public UUID keyUUID;
@@ -58,6 +58,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean slipping;
     public boolean skidSteerActive;
     public boolean lockedOnRoad;
+    public double modifiedSpeedFactor = speedFactor;
+    public boolean chunkCacheStat;
+    public int cachedChunkTimeout = 0;
     private boolean updateGroundDevicesRequest;
     private int lastBlockCollisionBoxesCount;
     private int crashDebounce;
@@ -113,6 +116,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D tempBoxPosition = new Point3D();
     private final Point3D normalizedGroundVelocityVector = new Point3D();
     private final Point3D normalizedGroundHeadingVector = new Point3D();
+    private final Point3D chunkGuardDirection = new Point3D();
+    private final Point3D cachedChunkGuardDirection = new Point3D();
     public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
@@ -137,7 +142,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
         this.blockBreakDelay = 500;
-        
+
         addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
         addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
         addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
@@ -223,6 +228,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             } else {
                 slipping = false;
             }
+            modifySpeedFactor();
             world.beginProfiling("TotalMovement", false);
             moveVehicle();
             if (!world.isClient()) {
@@ -236,7 +242,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     @Override
     public void doPostUpdateLogic() {
         super.doPostUpdateLogic();
-
         //Move all entities that are touching this entity.
         if (velocity != 0) {
             world.beginProfiling("MoveAlongEntities", true);
@@ -598,7 +603,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
                 //We need to take speed-factor into account here, as that will make us move different lengths per tick.
                 //Finally, we need to reduce this by a constant to get "proper" force..
-                return turningForce * groundVelocity * (speedFactor / 0.35D) / 2D;
+                return turningForce * groundVelocity * (modifiedSpeedFactor / 0.35D) / 2D;
             }
         }
         return 0;
@@ -787,11 +792,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
                 //Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
                 world.beginProfiling("GroundBoostCheck", false);
-                groundMotion.y = groundDeviceCollective.getMaxCollisionDepth() / speedFactor;
+                groundMotion.y = groundDeviceCollective.getMaxCollisionDepth() / modifiedSpeedFactor;
                 if (groundMotion.y > 0) {
                     world.beginProfiling("GroundBoostApply", false);
                     //Make sure boost doesn't exceed the config value.
-                    groundMotion.y = Math.min(groundMotion.y, climbSpeedVar.currentValue / speedFactor);
+                    groundMotion.y = Math.min(groundMotion.y, climbSpeedVar.currentValue / modifiedSpeedFactor);
 
                     //If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
                     //This is done as it's clear motion.y is just moving the vehicle into the ground.
@@ -890,7 +895,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //Now that that the movement has been checked, move the vehicle.
             world.beginProfiling("ApplyMotions", false);
-            motionApplied.set(motion).scale(speedFactor).add(groundMotion);
+            motionApplied.set(motion).scale(modifiedSpeedFactor).add(groundMotion);
             rotationApplied.angles.set(rotation.angles);
 
             //Add road contributions.
@@ -903,7 +908,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         pathingApplied = -pathingApplied;
                     }
                 } else {
-                    pathingApplied = goingInReverse ? -velocity * speedFactor : velocity * speedFactor;
+                    pathingApplied = goingInReverse ? -velocity * modifiedSpeedFactor : velocity * modifiedSpeedFactor;
                 }
             } else {
                 pathingApplied = 0;
@@ -943,7 +948,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Note that orientation wasn't a direct angle-addition, as the rotation is applied relative to the current
                 //orientation.  This means that if we yaw 5 degrees, but are rolling 10 degrees, then we need to not do the
                 //yaw rotation in the XZ plane, but instead in that relative-rotated plane.
-                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta. 
+                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta.
                 //Though before we do this we check if those angles were non-zero, as no need to do math if they are.
                 if (!rotationApplied.angles.isZero()) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
@@ -978,8 +983,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         } else {
             //Mounted vehicles don't do most motions, only a sub-set of them.
+            modifySpeedFactor();
             world.beginProfiling("ApplyMotions", true);
-            motionApplied.set(motion).scale(speedFactor);
+            motionApplied.set(motion).scale(modifiedSpeedFactor);
             position.add(motionApplied);
 
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
@@ -1000,6 +1006,45 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         world.endProfiling();
     }
 
+
+    private void modifySpeedFactor() {//Function used for modify speed factor for use in moving vehicle no Clanker used so ask me for more info
+        if (world.isClient()) {//do not do this in client level
+            return;
+        }
+
+        //get a sample of block blocks in front of vehicle
+        chunkGuardDirection.set(position.x + (motionApplied.x * 42), 1D, position.z + (motionApplied.z * 42));
+
+        //check for stat 1 is cached unloaded chunk present , 0 is no cached chunks.
+        if(!chunkCacheStat){
+            //check the chunk sample is it not loaded if it is not loaded set vehicle speed factor to 0.008
+            // if it is loaded make it follow its respective speed factor.
+            if(!world.chunkLoaded(chunkGuardDirection)){
+                chunkCacheStat = true;//tell them that there unloaded chunk cached so it will not do this again
+                cachedChunkGuardDirection.set(chunkGuardDirection); //throw sample into quarantine zone to monitor it.
+                modifiedSpeedFactor = 0.009; // set speed factor
+                cachedChunkTimeout = 0; //set timer in case player turn around.
+            }
+            else {
+                modifiedSpeedFactor = speedFactor; // in case it stuck in this if.
+            }
+        }
+        else{
+            if(world.chunkLoaded(cachedChunkGuardDirection)){//check the quarantine zone does this chunk sample finally loaded
+                modifiedSpeedFactor = speedFactor; // set speed factor back to default if it is loaded
+                chunkCacheStat = false;// tell them that there no more chunk in quarantine
+            }
+            else if(cachedChunkTimeout == 1000){//check if cycle already run for 1000 tick
+                chunkCacheStat = false;
+                cachedChunkTimeout = 0;// if yes tell chunk cache to stop and do cycle above again to get new sample which used incase player turn around to loaded chunks
+            }
+            else {
+                cachedChunkTimeout++; // +1 to timer each cycle
+                modifiedSpeedFactor = 0.009; // in case it fell off the chair.
+            }
+        }
+    }
+
     /**
      * Checks if we have a collided collision box.  If so, true is returned.
      */
@@ -1007,7 +1052,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         if (!ConfigSystem.settings.general.noclipVehicles.value && motion.length() > 0.001) {
             boolean clearedCache = false;
             for (BoundingBox box : allBlockCollisionBoxes) {
-                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
+                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, modifiedSpeedFactor);
                 if (!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache, !world.isClient() && ConfigSystem.settings.damage.vehicleBlockBreaking.value)) {
                     return true;
                 }
@@ -1029,7 +1074,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
      */
     private boolean correctCollidingMovement() {
         double hardnessHitThisTick = 0;
-        Point3D collisionMotion = motion.copy().scale(speedFactor);
+        Point3D collisionMotion = motion.copy().scale(modifiedSpeedFactor);
         for (BoundingBox box : allBlockCollisionBoxes) {
             //If we collided, so check to see if we can break some blocks or if we need to explode.
             //Don't bother with this logic if it's impossible for us to break anything.
@@ -1106,8 +1151,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
                 //If we didn't break all our blocks, we need to inhibit our movement to prevent us from going inside them.
                 if (inhibitMovement) {
-                    motion.subtract(box.currentCollisionDepth.scale(1 / speedFactor));
-                    collisionMotion.set(motion.copy().scale(speedFactor));
+                    motion.subtract(box.currentCollisionDepth.scale(1 / modifiedSpeedFactor));
+                    collisionMotion.set(motion.copy().scale(modifiedSpeedFactor));
                 }
             }
         }
@@ -1115,7 +1160,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         //Check the rotation.
         if (!rotation.angles.isZero()) {
             for (BoundingBox box : allBlockCollisionBoxes) {
-                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, speedFactor);
+                tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, modifiedSpeedFactor);
                 if (box.updateCollisions(world, tempBoxPosition.subtract(box.globalCenter), false)) {
                     rotation.setToZero();
                     rotation.angles.set(0, 0, 0);
