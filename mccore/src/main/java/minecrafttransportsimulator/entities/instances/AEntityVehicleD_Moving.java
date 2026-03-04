@@ -1007,9 +1007,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
 
     private void modifySpeedFactor() {//Function used for modify speed factor for use in moving vehicle no Clanker used so ask me for more info
-        if (world.isClient()) {//do not do this in client level
+        /*if (world.isClient()) {//do not do this in client level //commented this section as i wanted this to be only done on serverside but this backfire so hard as it not work in SP at all as i used to understnad that even in SP game still host local server for it
             return;
-        }
+        }*/
 
         //get a sample of block blocks in front of vehicle
         chunkGuardDirection.set(position.x + (motionApplied.x * 52), 1D, position.z + (motionApplied.z * 52));
