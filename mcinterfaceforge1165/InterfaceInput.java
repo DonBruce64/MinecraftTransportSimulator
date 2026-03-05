@@ -1,4 +1,4 @@
-package mcinterface1122;
+package mcinterface1165;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,9 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.lwjgl.input.Controllers;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
@@ -27,23 +25,20 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.client.event.MouseEvent;
+import net.minecraft.client.util.InputMappings;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Dist.CLIENT)
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
     private static KeyBinding importKey;
-
-    //Mouse variables.
-    private static boolean betterCombatDetected;
-    private static boolean leftMouseButtonDown;
-    private static boolean rightMouseButtonDown;
+    private static int lastScrollValue;
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
@@ -54,24 +49,26 @@ public class InterfaceInput implements IInterfaceInput {
     private static final Map<String, Integer> joystickNameCounters = new HashMap<>();
 
     //Normal mode joystick variables.
-    private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<>();
-    private static final Map<String, Integer> joystickAxisCountMap = new LinkedHashMap<>();
+    private static final Map<String, Integer> joystickMap = new LinkedHashMap<>();
+    private static final Map<String, Integer> joystickAxisCounts = new LinkedHashMap<>();
+    private static final Map<String, Integer> joystickHatCounts = new LinkedHashMap<>();
+    private static final Map<String, Integer> joystickButtonCounts = new LinkedHashMap<>();
+    private static final Map<String, Integer> joystickComponentCounts = new LinkedHashMap<>();
 
     //Classic mode joystick variables.
     private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<>();
 
     @Override
     public int getKeysetID() {
-        return 12;
+        return 16;
     }
 
     @Override
     public void initConfigKey() {
-        configKey = new KeyBinding(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), Keyboard.KEY_P, InterfaceLoader.MODNAME);
+        configKey = new KeyBinding(LanguageSystem.GUI_MASTERCONFIG.getCurrentValue(), GLFW.GLFW_KEY_P, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(configKey);
-        importKey = new KeyBinding(LanguageSystem.GUI_IMPORT.getCurrentValue(), Keyboard.KEY_NONE, InterfaceLoader.MODNAME);
+        importKey = new KeyBinding(LanguageSystem.GUI_IMPORT.getCurrentValue(), GLFW.GLFW_KEY_UNKNOWN, InterfaceLoader.MODNAME);
         ClientRegistry.registerKeyBinding(importKey);
-        betterCombatDetected = InterfaceManager.coreInterface.isModPresent("bettercombatmod");
     }
 
     @Override
@@ -101,24 +98,27 @@ public class InterfaceInput implements IInterfaceInput {
                             }
                         }
                     } else {
-                        if (!Controllers.isCreated()) {
-                            Controllers.create();
-                        }
                         joystickMap.clear();
-                        joystickAxisCountMap.clear();
-                        for (int i = 0; i < Controllers.getControllerCount(); ++i) {
+                        joystickAxisCounts.clear();
+                        joystickHatCounts.clear();
+                        joystickButtonCounts.clear();
+                        joystickComponentCounts.clear();
+                        for (int i = GLFW.GLFW_JOYSTICK_1; i < GLFW.GLFW_JOYSTICK_16; ++i) {
                             joystickEnabled = true;
-                            org.lwjgl.input.Controller joystick = Controllers.getController(i);
-                            if (joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null) {
-                                String joystickName = joystick.getName();
+                            if (GLFW.glfwJoystickPresent(i) && GLFW.glfwGetJoystickName(i) != null && GLFW.glfwGetJoystickAxes(i).limit() > 0 && GLFW.glfwGetJoystickButtons(i).limit() > 0) {
+                                String joystickName = GLFW.glfwGetJoystickName(i);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
                                 if (!joystickNameCounters.containsKey(joystickName)) {
                                     joystickNameCounters.put(joystickName, 0);
                                 }
-                                joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-                                joystickAxisCountMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick.getAxisCount());
+                                String joystickID = joystickName + "_" + joystickNameCounters.get(joystickName);
+                                joystickMap.put(joystickID, i);
                                 joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+                                joystickAxisCounts.put(joystickID, GLFW.glfwGetJoystickAxes(i).limit());
+                                joystickHatCounts.put(joystickID, GLFW.glfwGetJoystickHats(i).limit());
+                                joystickButtonCounts.put(joystickID, GLFW.glfwGetJoystickButtons(i).limit());
+                                joystickComponentCounts.put(joystickID, joystickAxisCounts.get(joystickID) + joystickHatCounts.get(joystickID) + joystickButtonCounts.get(joystickID));
                             }
                         }
                     }
@@ -140,14 +140,14 @@ public class InterfaceInput implements IInterfaceInput {
                             } else {
                                 if (joystickMap.containsKey(config.joystickName)) {
                                     if (control.isAxis) {
-                                        if (joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex) {
+                                        if (joystickAxisCounts.get(config.joystickName) <= config.buttonIndex) {
                                             iterator.remove();
-                                            InterfaceManager.coreInterface.logError("Removed joystick with too low axis count.  Had " + joystickMap.get(config.joystickName).getAxisCount() + " requested " + config.buttonIndex);
+                                            InterfaceManager.coreInterface.logError("Removed joystick with too low axis count.  Had " + joystickAxisCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                         }
                                     } else {
-                                        if (joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - joystickAxisCountMap.get(config.joystickName)) {
+                                        if (joystickComponentCounts.get(config.joystickName) <= config.buttonIndex) {
                                             iterator.remove();
-                                            InterfaceManager.coreInterface.logError("Removed joystick with too low button count.  Had " + joystickMap.get(config.joystickName).getButtonCount() + " requested " + (config.buttonIndex - joystickAxisCountMap.get(config.joystickName)));
+                                            InterfaceManager.coreInterface.logError("Removed joystick with too low button count.  Had " + joystickComponentCounts.get(config.joystickName) + " requested " + config.buttonIndex);
                                         }
                                     }
                                 }
@@ -174,26 +174,40 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public String getNameForKeyCode(int keyCode) {
-        return Keyboard.getKeyName(keyCode);
+        return InputMappings.getKey(keyCode, 0).getDisplayName().getString();
     }
 
     @Override
     public int getKeyCodeForName(String name) {
-        return Keyboard.getKeyIndex(name);
+        //Convert input to new control system prior to checking.
+        //We only need to convert defaults.
+        switch (name) {
+            case "RSHIFT":
+                return InputMappings.getKey("key.keyboard.right.shift").getValue();
+            case "PRIOR":
+                return InputMappings.getKey("key.keyboard.page.up").getValue();
+            case "NEXT":
+                return InputMappings.getKey("key.keyboard.page.down").getValue();
+            case "SCROLL":
+                return InputMappings.getKey("key.keyboard.scroll.lock").getValue();
+            default: {
+                if (name.contains("NUMPAD")) {
+                    return InputMappings.getKey("key.keyboard.keypad." + name.substring(name.length() - 1)).getValue();
+                } else {
+                    return InputMappings.getKey("key.keyboard." + name.toLowerCase(Locale.ROOT)).getValue();
+                }
+            }
+        }
     }
 
     @Override
     public boolean isKeyPressed(int keyCode) {
-        return Keyboard.isKeyDown(keyCode);
+        return GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), keyCode) == GLFW.GLFW_PRESS;
     }
 
     @Override
     public void setGUIControls(boolean enabled) {
-        Keyboard.enableRepeatEvents(enabled);
-        if (enabled) {
-            leftMouseButtonDown = false;
-            rightMouseButtonDown = false;
-        }
+        //Nothing to do as these are always enabled it would seem.
     }
 
     @Override
@@ -218,17 +232,29 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public int getJoystickComponentCount(String joystickName) {
-        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents().length : joystickMap.get(joystickName).getAxisCount() + joystickMap.get(joystickName).getButtonCount();
+        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents().length : joystickComponentCounts.get(joystickName);
     }
 
     @Override
     public String getJoystickComponentName(String joystickName, int index) {
-        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].getName() : (isJoystickComponentAxis(joystickName, index) ? joystickMap.get(joystickName).getAxisName(index) : joystickMap.get(joystickName).getButtonName(index - joystickAxisCountMap.get(joystickName)));
+        if (runningClassicMode) {
+            return classicJoystickMap.get(joystickName).getComponents()[index].getName();
+        } else {
+            if (isJoystickComponentAxis(joystickName, index)) {
+                return "Axis: " + String.valueOf(index);
+            } else {
+                if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
+                    return "Hat: " + String.valueOf(index - joystickAxisCounts.get(joystickName));
+                } else {
+                    return "Button: " + String.valueOf(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName));
+                }
+            }
+        }
     }
 
     @Override
     public boolean isJoystickComponentAxis(String joystickName, int index) {
-        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].isAnalog() : joystickMap.get(joystickName).getAxisCount() > index;
+        return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].isAnalog() : GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).limit() > index;
     }
 
     @Override
@@ -243,14 +269,25 @@ public class InterfaceInput implements IInterfaceInput {
             }
         } else {
             //Make sure we're not calling this on non-axis.
+            //This could be a hat switch hiding.
             if (joystickMap.containsKey(joystickName)) {
                 if (isJoystickComponentAxis(joystickName, index)) {
-                    //lwjgl might add a default DeadZone for input so just disable it before using
-                    joystickMap.get(joystickName).setDeadZone(index,0);
-                    joystickMap.get(joystickName).poll();
-                    return joystickMap.get(joystickName).getAxisValue(index);
+                    return GLFW.glfwGetJoystickAxes(joystickMap.get(joystickName)).get(index);
+                } else if (index < joystickAxisCounts.get(joystickName) + joystickHatCounts.get(joystickName)) {
+                    switch (GLFW.glfwGetJoystickHats(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName))) {
+                        case (GLFW.GLFW_HAT_UP):
+                            return 0.25F;
+                        case (GLFW.GLFW_HAT_LEFT):
+                            return 0.5F;
+                        case (GLFW.GLFW_HAT_DOWN):
+                            return 0.75F;
+                        case (GLFW.GLFW_HAT_RIGHT):
+                            return 1.0F;
+                        default:
+                            return 1.0F;
+                    }
                 } else {
-                    return getJoystickButtonValue(joystickName, index) ? 1 : 0;
+                    return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS ? 1 : 0;
                 }
             } else {
                 return 0;
@@ -270,8 +307,7 @@ public class InterfaceInput implements IInterfaceInput {
             }
         } else {
             if (joystickMap.containsKey(joystickName)) {
-                joystickMap.get(joystickName).poll();
-                return joystickMap.get(joystickName).isButtonPressed(index - joystickAxisCountMap.get(joystickName));
+                return GLFW.glfwGetJoystickButtons(joystickMap.get(joystickName)).get(index - joystickAxisCounts.get(joystickName) - joystickHatCounts.get(joystickName)) == GLFW.GLFW_PRESS;
             } else {
                 return false;
             }
@@ -280,33 +316,19 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public int getTrackedMouseWheel() {
-        return Mouse.hasWheel() ? Mouse.getDWheel() : 0;
+        int returnValue = lastScrollValue;
+        lastScrollValue = 0;
+        return returnValue;
     }
 
     @Override
     public boolean isLeftMouseButtonDown() {
-        return betterCombatDetected ? leftMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
+        return Minecraft.getInstance().options.keyAttack.isDown();
     }
 
     @Override
     public boolean isRightMouseButtonDown() {
-        return betterCombatDetected ? rightMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
-    }
-
-    /**
-     * Stores mouse presses, since stupid mods take them from us.
-     * BetterCombat is one such mod.
-     */
-    @SubscribeEvent
-    public static void onIVMouseInput(MouseEvent event) {
-        if (betterCombatDetected) {
-            int button = event.getButton();
-            if (button == 0) {
-                leftMouseButtonDown = event.isButtonstate();
-            } else if (button == 1) {
-                rightMouseButtonDown = event.isButtonstate();
-            }
-        }
+        return Minecraft.getInstance().options.keyUse.isDown();
     }
 
     /**
@@ -314,8 +336,8 @@ public class InterfaceInput implements IInterfaceInput {
      * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
-    public static void onIVKeyInput(InputEvent.KeyInputEvent event) {
-        if (Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+    public static void onIVKeyInput(KeyInputEvent event) {
+        if (event.getAction() == GLFW.GLFW_PRESS && event.getKey() == GLFW.GLFW_KEY_ESCAPE) {
             ControlSystem.resetMouseYoke();
         }
 
@@ -332,10 +354,21 @@ public class InterfaceInput implements IInterfaceInput {
         }
 
         //Check if we pressed the config or import key.
-        if (configKey.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
+        if (configKey.isDown() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
-        } else if (ConfigSystem.settings.general.devMode.value && importKey.isPressed()) {
-            EntityManager.doImports(() -> InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true)));
+        } else if (ConfigSystem.settings.general.devMode.value && importKey.isDown()) {
+        	EntityManager.doImports(() -> InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(LanguageSystem.SYSTEM_DEBUG, JSONParser.importAllJSONs(true)));
+        }
+    }
+
+    /**
+     * Gets mouse scroll data, since we have to register a listner, and MC already does this for us.
+     */
+    @SubscribeEvent
+    public static void onIVMouseScroll(GuiScreenEvent.MouseScrollEvent.Post event) {
+        if (InterfaceManager.clientInterface.isGUIOpen()) {
+            lastScrollValue = (int) event.getScrollDelta();
+            event.setCanceled(true);
         }
     }
 }

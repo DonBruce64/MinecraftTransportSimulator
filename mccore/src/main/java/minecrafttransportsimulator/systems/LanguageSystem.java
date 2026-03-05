@@ -374,6 +374,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_VEHICLE_NOSPACE = new LanguageEntry("interact.vehicle.nospace", "There is not enough space to place down this vehicle here.");
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");
     public static final LanguageEntry INTERACT_VEHICLE_NOFUEL = new LanguageEntry("interact.vehicle.nofuel", "There is no fuel in this vehicle.  The engine cannot start!");
+    public static final LanguageEntry INTERACT_MOUSEYOKE_ENABLED = new LanguageEntry("interact.mouseyoke.enabled", "Mouse Yoke enabled");
+    public static final LanguageEntry INTERACT_MOUSEYOKE_DISABLED = new LanguageEntry("interact.mouseyoke.disabled", "Mouse Yoke disabled");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
@@ -511,6 +513,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
+    public static final LanguageEntry INPUT_MOUSE_YOKE = new LanguageEntry("input.mouse_yoke", "MouseYokeToggle");
     public static final LanguageEntry INPUT_BRAKE = new LanguageEntry("input.brake", "Brake");
     public static final LanguageEntry INPUT_GEAR = new LanguageEntry("input.gear", "Gear");
     public static final LanguageEntry INPUT_PANEL = new LanguageEntry("input.panel", "Panel");

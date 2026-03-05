@@ -1,4 +1,4 @@
-package mcinterface1201;
+package mcinterface1165;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,21 +21,23 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.CameraType;
+import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.settings.PointOfView;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -58,7 +60,7 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public String getLanguageName() {
         if (Minecraft.getInstance().getLanguageManager() != null) {
-            return Minecraft.getInstance().getLanguageManager().getSelected();
+            return Minecraft.getInstance().getLanguageManager().getSelected().getCode();
         } else {
             return "en_us";
         }
@@ -67,16 +69,16 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public List<String> getAllLanguages() {
         List<String> list = new ArrayList<>();
-        Minecraft.getInstance().getLanguageManager().getLanguages().forEach((languageCode, languageInfo) -> list.add(languageCode));
+        Minecraft.getInstance().getLanguageManager().getLanguages().forEach(language -> list.add(language.getCode()));
         return list;
     }
 
     @Override
     public String getFluidName(String fluidID, String fluidMod) {
-        for (Entry<ResourceKey<Fluid>, Fluid> fluidEntry : ForgeRegistries.FLUIDS.getEntries()) {
+        for (Entry<RegistryKey<Fluid>, Fluid> fluidEntry : ForgeRegistries.FLUIDS.getEntries()) {
             ResourceLocation fluidLocation = fluidEntry.getKey().location();
             if ((fluidMod.equals(EntityFluidTank.WILDCARD_FLUID_MOD) || fluidLocation.getNamespace().equals(fluidMod)) && fluidLocation.getPath().equals(fluidID)) {
-                return fluidEntry.getValue().getFluidType().getDescription().getString();
+                return new TranslationTextComponent(fluidEntry.getValue().getAttributes().getTranslationKey()).getString();
             }
         }
         return "INVALID";
@@ -86,7 +88,7 @@ public class InterfaceClient implements IInterfaceClient {
     public Map<String, String> getAllFluidNames() {
         Map<String, String> fluidIDsToNames = new HashMap<>();
         for (Fluid fluid : ForgeRegistries.FLUIDS.getValues()) {
-            fluidIDsToNames.put(ForgeRegistries.FLUIDS.getKey(fluid).getPath(), new FluidStack(fluid, 1).getDisplayName().getString());
+            fluidIDsToNames.put(fluid.getRegistryName().getPath(), new FluidStack(fluid, 1).getDisplayName().getString());
         }
         return fluidIDsToNames;
     }
@@ -103,7 +105,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public void displayOverlayMessage(String message) {
-        Minecraft.getInstance().gui.setOverlayMessage(Component.literal(message), false);
+        Minecraft.getInstance().gui.setOverlayMessage(new StringTextComponent(message), false);
     }
 
     @Override
@@ -128,27 +130,22 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public float getFOV() {
-        return Minecraft.getInstance().options.fov().get();
+        return (float) Minecraft.getInstance().options.fov;
     }
 
     @Override
     public void setFOV(float setting) {
-        ((Ifov) ((Object) Minecraft.getInstance().options.fov())).setManual((int) setting);
+        Minecraft.getInstance().options.fov = setting;
     }
-
-    //Linked to the OptionInstanceMixin so we can implement a common interface.
-    public static interface Ifov {
-        public void setManual(Integer value);
-    };
 
     @Override
     public float getMouseSensitivity() {
-        return Minecraft.getInstance().options.sensitivity().get().floatValue();
+        return (float) Minecraft.getInstance().options.sensitivity;
     }
 
     @Override
     public void setMouseSensitivity(float setting) {
-        Minecraft.getInstance().options.sensitivity().set((double) setting);
+        Minecraft.getInstance().options.sensitivity = setting;
     }
 
     @Override
@@ -173,7 +170,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public Point3D getCameraPosition() {
-        Vec3 cameraOffset = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        Vector3d cameraOffset = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         mutablePosition.set(cameraOffset.x, cameraOffset.y, cameraOffset.z);
         return mutablePosition;
     }
@@ -182,20 +179,20 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public void playBlockBreakSound(Point3D position) {
-        BlockPos pos = BlockPos.containing(position.x, position.y, position.z);
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (!Minecraft.getInstance().level.isEmptyBlock(pos)) {
-            SoundType soundType = Minecraft.getInstance().level.getBlockState(pos).getBlock().getSoundType(Minecraft.getInstance().level.getBlockState(pos), Minecraft.getInstance().player.level(), pos, null);
-            Minecraft.getInstance().level.playSound(Minecraft.getInstance().player, pos, soundType.getBreakSound(), SoundSource.BLOCKS, soundType.getVolume(), soundType.getPitch());
+            SoundType soundType = Minecraft.getInstance().level.getBlockState(pos).getBlock().getSoundType(Minecraft.getInstance().level.getBlockState(pos), Minecraft.getInstance().player.level, pos, null);
+            Minecraft.getInstance().level.playSound(Minecraft.getInstance().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
         }
     }
 
     @Override
     public List<String> getTooltipLines(IWrapperItemStack stack) {
         List<String> tooltipText = new ArrayList<>();
-        List<Component> tooltipLines = ((WrapperItemStack) stack).stack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
+        List<ITextComponent> tooltipLines = ((WrapperItemStack) stack).stack.getTooltipLines(Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         //Add grey formatting text to non-first line tooltips.
         for (int i = 0; i < tooltipLines.size(); ++i) {
-            Component component = tooltipLines.get(i);
+            ITextComponent component = tooltipLines.get(i);
             Style style = component.getStyle();
             String stringToAdd = "";
             if (style.isBold()) {
@@ -214,10 +211,10 @@ public class InterfaceClient implements IInterfaceClient {
                 stringToAdd += RenderText.FORMATTING_CHAR + RenderText.RANDOM_FORMATTING_CHAR;
             }
             if (style.getColor() != null) {
-                ChatFormatting legacyColor = null;
-                for (ChatFormatting format : ChatFormatting.values()) {
+                TextFormatting legacyColor = null;
+                for (TextFormatting format : TextFormatting.values()) {
                     if (format.isColor()) {
-                        if (style.getColor().equals(TextColor.fromLegacyFormat(format))) {
+                        if (style.getColor().equals(Color.fromLegacyFormat(format))) {
                             legacyColor = format;
                             break;
                         }
@@ -253,17 +250,22 @@ public class InterfaceClient implements IInterfaceClient {
                             }
                         }
                     }
-
+                    
                     //Need to update world brightness since sky darken isn't calculated normally on clients.
                     ((WrapperWorld) world).world.updateSkyBrightness();
 
                     world.tickAll(true);
-                    
-                    //Complain about Entity Culling mod at 10 second mark.
-                    if(ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+
+                    //Complain about compats at 10 second mark.
+                    if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                     	if(ticksToCullingWarning > 0) {
                     		if(--ticksToCullingWarning == 0) {
-                    			player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                                if (InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                                }
+                                if (InterfaceManager.coreInterface.isModPresent("modernfix")) {
+                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT MODERNFIX MOD IS PRESENT.  IF DYNAMIC RESOURCES IS SET TO TRUE IV ITEMS WILL NOT RENDER PROPERLY.");
+                                }
                     		}
                     	}
                     }
@@ -274,15 +276,15 @@ public class InterfaceClient implements IInterfaceClient {
                     if(cameraModeRequest != null) {
                     	switch(cameraModeRequest) {
 	                    	case FIRST_PERSON:{
-                                Minecraft.getInstance().options.setCameraType(CameraType.FIRST_PERSON);
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
 	                    		break;
 	                    	}
 	                    	case THIRD_PERSON:{
-                                Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
 	                    		break;
 	                    	}
 	                    	case THIRD_PERSON_INVERTED:{
-                                Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
 	                    		break;
 	                    	}
                     	}
@@ -290,7 +292,7 @@ public class InterfaceClient implements IInterfaceClient {
                     }
 
                     //Update camera state, since this can change depending on tick if we check during renders.
-                    CameraType cameraModeEnum = Minecraft.getInstance().options.getCameraType();
+                    PointOfView cameraModeEnum  = Minecraft.getInstance().options.getCameraType();
                     switch(cameraModeEnum) {
                     	case FIRST_PERSON:{
                     		actualCameraMode = CameraMode.FIRST_PERSON;
