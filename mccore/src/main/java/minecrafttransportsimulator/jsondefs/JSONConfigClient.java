@@ -28,7 +28,8 @@ public class JSONConfigClient {
 
         public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<>(true, "Should the glass on windows be rendered on vehicles?");
         public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
-
+        public JSONConfigEntry<Boolean> freecam_3P = new JSONConfigEntry<>(false, "If true, third-person camera rotation in vehicles is disconnected from vehicle rotation and uses only rider look rotation.");
+        
         public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
         public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
@@ -85,4 +86,5 @@ public class JSONConfigClient {
         public double axisMaxTravel;
     }
 }
+
 
