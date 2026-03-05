@@ -88,7 +88,7 @@ dependencies {
     //Core to use.
 		//Need to compile core first.  Can't figure out how to do this, manually execute for now.
 		//project(':mccore').tasks.build.execute()
-    embed project(":mccore")
+    embed(project(path: ":mccore", configuration: "relocated"))
 		
 		//Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")

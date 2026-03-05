@@ -199,10 +199,32 @@ public class InterfaceRender implements IInterfaceRender {
             stackEntry.normal().mul(matrix3f);
             VertexConsumer buffer = renderBuffer.getBuffer(RenderType.lines());
             while (data.vertexObject.vertices.hasRemaining()) {
-                buffer.vertex(stackEntry.pose(), data.vertexObject.vertices.get(), data.vertexObject.vertices.get(), data.vertexObject.vertices.get());
+                //Read both endpoints of the line segment to compute the direction normal.
+                //RenderType.lines() uses the normal to determine screen-space line expansion,
+                //so it must be the normalized direction of each line segment, not a fixed value.
+                float x1 = data.vertexObject.vertices.get();
+                float y1 = data.vertexObject.vertices.get();
+                float z1 = data.vertexObject.vertices.get();
+                float x2 = data.vertexObject.vertices.get();
+                float y2 = data.vertexObject.vertices.get();
+                float z2 = data.vertexObject.vertices.get();
+                float dx = x2 - x1;
+                float dy = y2 - y1;
+                float dz = z2 - z1;
+                float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (len > 0.0F) {
+                    dx /= len;
+                    dy /= len;
+                    dz /= len;
+                }
+                buffer.vertex(stackEntry.pose(), x1, y1, z1);
+                buffer.color(data.color.red, data.color.green, data.color.blue, data.alpha);
+                buffer.normal(stackEntry.normal(), dx, dy, dz);
+                buffer.endVertex();
+                buffer.vertex(stackEntry.pose(), x2, y2, z2);
                 buffer.color(data.color.red, data.color.green, data.color.blue, data.alpha);
                 //Although we don't use them, normals are required for proper rendering.  Stupid shaders...
-                buffer.normal(stackEntry.normal(), 0.0F, 0.0F, 1.0F);
+                buffer.normal(stackEntry.normal(), dx, dy, dz);
                 buffer.endVertex();
             }
             //Rewind buffer for next read.

@@ -1,3 +1,15 @@
+//This section is required to relocate the javazoom layer to a shadow folder. This prevents 
+//crashes with other mods using any javazoom layers.
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+    }
+}
+
 //Apply plugins
 apply plugin: "java"
 apply plugin: "eclipse"

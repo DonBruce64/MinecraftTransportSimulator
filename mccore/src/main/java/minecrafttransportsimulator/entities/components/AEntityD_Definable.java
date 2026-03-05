@@ -561,7 +561,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
                 if (particleDef.distance > 0) {
                     //First get spawning position as defined by JSON and animations.
-                    EntityParticle.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
+                    EntityParticle.setPointToSpawn(position, particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.WORLD ? null : orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
                     //Now check if we need to spawn.
                     Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);

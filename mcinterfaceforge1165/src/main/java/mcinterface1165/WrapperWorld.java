@@ -1109,6 +1109,7 @@ public class WrapperWorld extends AWrapperWorld {
                             if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
                                 playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
                                 playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
+                                playerWrapper.getInventory().addStack(PackParser.getItem("mts", "partscanner").getNewStack(null));
                                 ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
                                 ConfigSystem.saveToDisk();
                             }
@@ -1135,4 +1136,5 @@ public class WrapperWorld extends AWrapperWorld {
             worldWrappers.remove(world);
         }
     }
+
 }
