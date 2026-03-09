@@ -34,6 +34,8 @@ neoForge {
 repositories {
     // location of the maven that hosts JEI files since January 2023
     maven { url = "https://maven.blamejared.com/" }
+    // Cursemaven hosts the Jade API artifact for optional compile-time integration.
+    maven { url = "https://www.cursemaven.com" }
 }
 
 configurations {
@@ -56,6 +58,7 @@ dependencies {
     }
     compileOnly "mezz.jei:jei-${project.mc_version}-neoforge-api:${project.jei_version}"
     runtimeOnly "mezz.jei:jei-${project.mc_version}-neoforge:${project.jei_version}"
+    compileOnly "curse.maven:jade-324717:${project.jade_file_id}"
 }
 
 jar {
@@ -80,3 +83,4 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
+
