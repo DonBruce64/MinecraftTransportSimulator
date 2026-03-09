@@ -160,7 +160,6 @@ public class InterfaceClient implements IInterfaceClient {
         return Minecraft.getInstance().screen != null;
     }
 
-    @Override
     public void displayOverlayMessage(String message) {
         Minecraft.getInstance().gui.setOverlayMessage(Component.literal(message), false);
     }
@@ -379,3 +378,4 @@ public class InterfaceClient implements IInterfaceClient {
         }
     }
 }
+
