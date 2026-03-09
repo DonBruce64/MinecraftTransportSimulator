@@ -69,6 +69,8 @@ minecraft {
 repositories {
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
+	//Jade
+    maven { url = "https://www.cursemaven.com" }
 }
 
 //Configuration that holds jars to include in the jar
@@ -91,6 +93,9 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
     //At runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+	
+    //Compile against the Jade API but do not include it at runtime
+    compileOnly fg.deobf("curse.maven:jade-324717:${project.jade_file_id}")
 }
 
 mixin {
