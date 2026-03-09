@@ -192,8 +192,10 @@ public class JSONConfigSettings {
         DIESEL,
         AVGAS,
         REDSTONE,
+        WATER,
         NOTHING;
     }
 }
+
 
 
