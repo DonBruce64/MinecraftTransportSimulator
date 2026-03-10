@@ -1366,22 +1366,11 @@ public class PartGun extends APart {
     }
 
     /**
-     * Unregisters this gun from the previous target vehicle's gunsLockedOn list.
-     */
-    private void unregisterFromPreviousTargetVehicle() {
-        // Unregister from previous engine target vehicle
-        if (prevEngineTarget != null && prevEngineTarget.vehicleOn != null && prevEngineTarget.vehicleOn != vehicleOn) {
-            prevEngineTarget.vehicleOn.gunsLockedOn.remove(this);
-        }
-    }
-
-    /**
      * Updates target registration. Call this whenever entityTarget or engineTarget changes.
      */
     private void updateTargetRegistration() {
         // Check if engine target changed
         if (engineTarget != prevEngineTarget) {
-            unregisterFromPreviousTargetVehicle();
             prevEngineTarget = engineTarget;
             registerWithTargetVehicle();
         }
