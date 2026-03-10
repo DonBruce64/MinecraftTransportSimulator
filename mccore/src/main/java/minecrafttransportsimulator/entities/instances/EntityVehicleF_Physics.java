@@ -837,6 +837,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> radarsTracking.isEmpty() ? 0 : 1, false);
             case ("missile_incoming"):
                 return new ComputedVariable(this, variable, partialTicks -> missilesIncoming.isEmpty() ? 0 : 1, false);
+            case ("missile_lockedonto"):
+                return new ComputedVariable(this, variable, partialTicks -> gunsLockedOn.isEmpty() ? 0 : 1, false);
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.
