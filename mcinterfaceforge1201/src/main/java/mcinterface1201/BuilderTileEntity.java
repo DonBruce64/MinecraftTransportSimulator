@@ -190,7 +190,7 @@ public class BuilderTileEntity extends BlockEntity {
             //Need to have this here as some mods will load us from NBT and then save us back
             //without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
             //If we did tick, then the last loaded will be null and this doesn't apply.
-            tag = lastLoadedNBT;
+            tag.merge(lastLoadedNBT);
         }
     }
 }
