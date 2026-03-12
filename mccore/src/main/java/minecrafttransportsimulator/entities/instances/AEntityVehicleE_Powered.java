@@ -2,12 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ComputedVariable;
-import minecrafttransportsimulator.baseclasses.NavBeacon;
-import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -61,7 +59,14 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double electricPower;
     public double electricFlow;
     public String selectedBeaconName;
+    public String selectedWaypointIndex;
     public NavBeacon selectedBeacon;
+    public final String SELECTED_WAYPOINT_LIST_KEY = "selectedWaypoints";
+    public final String WAYPOINT_ORDER_KEY = "WaypointOrder";
+
+
+
+
     public final EntityFluidTank fuelTank;
     public static final double BATTERY_DEFAULT_CHARGE = 0.85715D;
 
@@ -81,6 +86,28 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             this.selectedBeaconName = data.getString("selectedBeaconName");
             this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
             this.fuelTank = new EntityFluidTank(world, data.getData("fuelTank"), definition.motorized.fuelCapacity);
+
+            //init selectedWaypoints
+            try{
+                this.waypointData = data.getData(SELECTED_WAYPOINT_LIST_KEY);
+                this.selectedWaypointIndex = "-1";
+                if(this.waypointData != null){
+                    IWrapperNBT waypointOrderData = data.getData(WAYPOINT_ORDER_KEY);
+                    int ListIndex = 0;
+                    for(String line:waypointOrderData.getAllNames()){
+                        String Index = waypointOrderData.getString("ListIndex"+Integer.toString(ListIndex));
+                        selectedWaypointList.add(NavWaypoint.getByIndexFromVehicle(this,Index,waypointData));
+                        ListIndex++;
+                    }
+
+                }else{
+                    this.waypointData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                }
+            }catch (Exception e){
+
+            }
+
+
         } else {
             this.electricPower = (definition.motorized.batteryCapacity * BATTERY_DEFAULT_CHARGE);
             this.selectedBeaconName = "";
@@ -301,6 +328,81 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         }
     }
 
+
+
+    //For Flight plan, selectedWaypoint should always be the last one of selectedWaypointList.
+    public List<NavWaypoint> selectedWaypointList = new ArrayList<>();
+    IWrapperNBT waypointData = InterfaceManager.coreInterface.getNewNBTWrapper();
+
+    //Update selected waypoint state
+    public void UpdateWaypointList(String operation,String opIndex,String index,String name,String targetSpeed,String bearing,String StrX,String StrY,String StrZ) {
+        int Index = -1;
+        int OpIndex = -1;
+        try{
+            Index = Integer.parseInt(index);
+            OpIndex = Integer.parseInt(opIndex);
+        }catch (Exception e){
+        }
+        //waypointData: not empty
+        switch (operation){
+            case "INSERT":{
+                try{
+                    if(NavWaypoint.getByIndexFromVehicle(this,index,waypointData)==null){
+                        Point3D position = new Point3D(Double.parseDouble(StrX),Double.parseDouble(StrY),Double.parseDouble(StrZ));
+                        NavWaypoint waypoint = new NavWaypoint(this,index,name,Double.parseDouble(targetSpeed),Double.parseDouble(bearing),position,waypointData);
+                        if (waypoint != null && OpIndex >= 0 && OpIndex <= selectedWaypointList.size()) {
+                            selectedWaypointList.add(OpIndex, waypoint);
+                        }
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                break;
+            }
+            case "REMOVE":{
+                if(selectedWaypointList.size()>0){
+                    try {
+                        if(NavWaypoint.getByIndexFromVehicle(this,index,waypointData)!=null) {
+
+                            if (OpIndex >= 0 && OpIndex < selectedWaypointList.size()) {
+                                NavWaypoint waypoint = selectedWaypointList.get(OpIndex);
+                                if (waypoint != null) {
+                                    NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(waypoint);
+                                    selectedWaypointList.remove(OpIndex);
+                                    waypointUpdater.updateStateFromVehicle(this, waypointData, index, name, targetSpeed, bearing, StrX, StrY, StrZ, "true");
+                                }
+                            }
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            case "EDIT":{
+                if(selectedWaypointList.size()>0){
+                    try {
+                        if(NavWaypoint.getByIndexFromVehicle(this,index,waypointData)!=null){
+                            NavWaypoint waypoint = selectedWaypointList.get(OpIndex);
+                            if (waypoint != null){
+                                NavWaypointUpdater waypointUpdater = new NavWaypointUpdater(waypoint);
+                                waypointUpdater.updateStateFromVehicle(this, waypointData, index, name, targetSpeed, bearing, StrX, StrY, StrZ, "false");
+                                if(waypoint!=null)selectedWaypointList.set(OpIndex, waypointUpdater.currentWaypoint);
+                            }
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+    }
+
+
     public FuelTankResult checkFuelTankCompatibility(String fluid) {
         //Check tank first to make sure there's not a mis-match.
         if (!fuelTank.getFluid().isEmpty()) {
@@ -368,6 +470,23 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
         data.setDouble("electricPower", electricPower);
         data.setString("selectedBeaconName", selectedBeaconName);
         data.setData("fuelTank", fuelTank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+
+        if(waypointData!= null)data.setData(SELECTED_WAYPOINT_LIST_KEY, waypointData);
+        //save point order
+        try{
+            int ListIndex = 0;
+            IWrapperNBT waypointOrderData = InterfaceManager.coreInterface.getNewNBTWrapper();
+            for(NavWaypoint waypoint:selectedWaypointList){
+                waypointOrderData.setString("ListIndex"+Integer.toString(ListIndex),waypoint.index);
+                ListIndex++;
+            }
+            data.setData(WAYPOINT_ORDER_KEY, waypointOrderData);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+
         return data;
     }
 
