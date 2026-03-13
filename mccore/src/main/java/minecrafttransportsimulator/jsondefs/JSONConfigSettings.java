@@ -92,7 +92,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> creativePlayerDamage = new JSONConfigEntry<>(false, "If true, damage from vehicles and guns will be applied to creative players.  Not sure why you'd want this, but it's here.");
         public JSONConfigEntry<Boolean> wheelBreakage = new JSONConfigEntry<>(true, "Whether or not wheels can be broken (go flat).");
         public JSONConfigEntry<Boolean> wheelDamageIgnoreVelocity = new JSONConfigEntry<>(false, "Whether or not velocity is ignored when calculating wheel damage.");
-        public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(false, "Whether or not non-IV things can damage vehicles.  This is normally false, as external damage is a hassle for most people, but can be true if you want other mod's guns to be able to attack vehicles in addition to IV's.");
+        public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(true, "Whether or not non-IV things can damage vehicles.  This is normally false, as external damage is a hassle for most people, but can be true if you want other mod's guns to be able to attack vehicles in addition to IV's.");
         public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a propeller.");
         public JSONConfigEntry<Double> jetDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a jet engine.");
         public JSONConfigEntry<Double> wheelDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by wheels on vehicles.");
@@ -196,6 +196,7 @@ public class JSONConfigSettings {
         NOTHING;
     }
 }
+
 
 
 
