@@ -1,0 +1,86 @@
+plugins {
+    id "net.neoforged.moddev" version "2.0.+"
+}
+
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+base.archivesName = project.archive_name
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neoforge_version
+    parchment {
+        mappingsVersion = project.mappings_version
+        minecraftVersion = project.mc_version
+    }
+    runs {
+        client {
+            client()
+            gameDirectory = project.file("run")
+        }
+        server {
+            server()
+            gameDirectory = project.file("runServer")
+        }
+    }
+    mods {
+        mts {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    // location of the maven that hosts JEI files since January 2023
+    maven { url = "https://maven.blamejared.com/" }
+    // Cursemaven hosts the Jade API artifact for optional compile-time integration.
+    maven { url = "https://www.cursemaven.com" }
+}
+
+configurations {
+    embed
+    // Use compileOnly so mccore classes are available at compile time but do NOT
+    // appear on the runtime module path. The jar task below unpacks embed into the
+    // fat JAR, so the classes are present at runtime inside the mod JAR itself.
+    // Using implementation here would place mccore (and its jorbis/jlayer classes)
+    // on the module path as a separate module, causing JPMS split-package errors.
+    compileOnly.extendsFrom(embed)
+}
+
+dependencies {
+    // Embed mccore as fat-jar. Exclude its transitive deps (jorbis, jlayer) from
+    // the runtime module path — they are already embedded as classes inside mccore's JAR.
+    // Without this, JPMS sees duplicate packages (com.jcraft.jorbis etc.) in both the
+    // mts module and the standalone jorbis module, causing a ResolutionException.
+    embed(project(path: ":mccore", configuration: "relocated")) {
+        transitive = false
+    }
+    compileOnly "mezz.jei:jei-${project.mc_version}-neoforge-api:${project.jei_version}"
+    runtimeOnly "mezz.jei:jei-${project.mc_version}-neoforge:${project.jei_version}"
+    compileOnly "curse.maven:jade-324717:${project.jade_file_id}"
+}
+
+jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    // Exclude JOrbis/JOgg classes from the fat JAR.
+    // NeoForge 1.21.1 uses JPMS and the game already includes jorbis as a separate
+    // module on the module path. Having com.jcraft.* packages in both our mod JAR
+    // and the standalone jorbis module causes a split-package ResolutionException.
+    // The classes remain available at runtime via the jorbis module.
+    // NOTE: javazoom (JLayer/MP3) is NOT excluded — it is not provided by NeoForge.
+    exclude "com/jcraft/**"
+    exclude "META-INF/maven/org.jcraft/**"
+    manifest {
+        attributes(["MixinConfigs": "mts.mixins.json",
+                     "Implementation-Version": project.mod_version])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
