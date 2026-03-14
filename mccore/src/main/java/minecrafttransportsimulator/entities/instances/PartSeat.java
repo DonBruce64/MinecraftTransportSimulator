@@ -7,6 +7,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -245,6 +246,9 @@ public final class PartSeat extends APart {
                 AGUIBase.closeIfOpen(GUIPanel.class);
                 AGUIBase.closeIfOpen(GUIHUD.class);
                 AGUIBase.closeIfOpen(GUIRadio.class);
+                if (!riderChangingSeats) {
+                    ControlSystem.resetMouseYoke();
+                }
 
                 //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats, or this vehicle has the override.
                 if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value && !vehicleOn.definition.motorized.overrideAutoStart) {
@@ -318,6 +322,15 @@ public final class PartSeat extends APart {
 
     @Override
     public boolean updateRider() {
+        boolean usingMouseYoke = world.isClient() && riderIsClient && placementDefinition.isController && vehicleOn != null && vehicleOn.definition.motorized.isAircraft && ConfigSystem.client.controlSettings.mouseYoke.value;
+        double riderYawDelta = 0;
+        double riderPitchDelta = 0;
+        if (usingMouseYoke) {
+            //Consume mouse deltas before rider camera/orientation logic to keep view anchored while using yoke input.
+            riderYawDelta = rider.getYawDelta();
+            riderPitchDelta = rider.getPitchDelta();
+        }
+
         if (super.updateRider()) {
             //Update scale, need to not include main vehicle scaling since that doesn't affect player scale.
             if (vehicleOn != null) {
@@ -338,7 +351,22 @@ public final class PartSeat extends APart {
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
             if (world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && riderIsClient) {
-                ControlSystem.controlMultipart(masterEntity, placementDefinition.isController);
+                                if (!usingMouseYoke) {
+                    riderYawDelta = riderRelativeOrientation.angles.y - prevRiderRelativeOrientation.angles.y;
+                    if (riderYawDelta > 180) {
+                        riderYawDelta -= 360;
+                    } else if (riderYawDelta < -180) {
+                        riderYawDelta += 360;
+                    }
+                    riderPitchDelta = riderRelativeOrientation.angles.x - prevRiderRelativeOrientation.angles.x;
+                } else {
+                    riderRelativeOrientation.angles.set(prevRiderRelativeOrientation.angles);
+                    riderRelativeOrientation.updateToAngles();
+                    RotationMatrix riderOrientation = new RotationMatrix().set(orientation).multiply(riderRelativeOrientation);
+                    riderOrientation.convertToAngles();
+                    rider.setOrientation(riderOrientation);
+                }
+                ControlSystem.controlMultipart(masterEntity, placementDefinition.isController, riderYawDelta, riderPitchDelta);
             }
             return true;
         } else {

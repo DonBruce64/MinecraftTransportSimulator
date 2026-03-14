@@ -50,6 +50,10 @@ public final class ControlSystem {
     private static double throttleRequestLastCheck;
     private static double brakeRequestLastCheck;
 
+    private static boolean mouseYokeEnabledLastCall;
+    private static double mouseYokePosX = Double.NaN;
+    private static double mouseYokePosY = Double.NaN;
+
     private static EntityInteractResult interactResult = null;
 
     /**
@@ -102,6 +106,25 @@ public final class ControlSystem {
         }
     }
 
+    public static void resetMouseYoke() {
+        mouseYokePosX = Double.NaN;
+        mouseYokePosY = Double.NaN;
+    }
+
+    public static void setMouseYokeEnabled(boolean enabled, boolean displayMessage) {
+        ConfigSystem.client.controlSettings.mouseYoke.value = enabled;
+        ConfigSystem.saveToDisk();
+        resetMouseYoke();
+        mouseYokeEnabledLastCall = enabled;
+        if (displayMessage && InterfaceManager.clientInterface != null) {
+            InterfaceManager.clientInterface.displayOverlayMessage((enabled ? LanguageSystem.INTERACT_MOUSEYOKE_ENABLED : LanguageSystem.INTERACT_MOUSEYOKE_DISABLED).getCurrentValue());
+        }
+    }
+
+    public static void toggleMouseYoke() {
+        setMouseYokeEnabled(!ConfigSystem.client.controlSettings.mouseYoke.value, true);
+    }
+
     private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun, boolean leftClickDown, boolean leftClickUp, boolean rightClickDown, boolean rightClickUp) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
@@ -131,12 +154,12 @@ public final class ControlSystem {
         }
     }
 
-    public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController) {
+    public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
         clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
         if (multipart instanceof EntityVehicleF_Physics) {
             EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) multipart;
             if (vehicle.definition.motorized.isAircraft) {
-                controlAircraft(vehicle, isPlayerController);
+                controlAircraft(vehicle, isPlayerController, mouseXDelta, mouseYDelta);
             } else {
                 controlGroundVehicle(vehicle, isPlayerController);
             }
@@ -321,7 +344,54 @@ public final class ControlSystem {
         }
     }
 
-    private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController) {
+    private static boolean controlMouseYoke(EntityVehicleF_Physics aircraft, double mouseXDelta, double mouseYDelta) {
+        if (ConfigSystem.client.controlSettings.mouseYoke.value != mouseYokeEnabledLastCall) {
+            resetMouseYoke();
+            mouseYokeEnabledLastCall = ConfigSystem.client.controlSettings.mouseYoke.value;
+        }
+        if (!ConfigSystem.client.controlSettings.mouseYoke.value) {
+            return false;
+        }
+
+        long packedDisplaySize = InterfaceManager.clientInterface.getPackedDisplaySize();
+        int screenWidth = (int) (packedDisplaySize >> Integer.SIZE);
+        int screenHeight = (int) packedDisplaySize;
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            return false;
+        }
+
+        double halfWidth = screenWidth / 2D;
+        double halfHeight = screenHeight / 2D;
+        if (Double.isNaN(mouseYokePosX) || Double.isNaN(mouseYokePosY)) {
+            mouseYokePosX = halfWidth;
+            mouseYokePosY = halfHeight;
+        }
+
+        double pitchBounds = EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE;
+        double rollBounds = aircraft.definition.motorized.isBlimp ? EntityVehicleF_Physics.MAX_RUDDER_ANGLE : EntityVehicleF_Physics.MAX_AILERON_ANGLE;
+        double mouseRate = ConfigSystem.client.controlSettings.mouseYokeRate.value;
+        if (mouseRate > 0) {
+            mouseYokePosX += mouseXDelta * mouseRate * halfWidth / rollBounds;
+            mouseYokePosY += mouseYDelta * mouseRate * halfHeight / pitchBounds;
+        }
+
+        mouseYokePosX = Math.max(0, Math.min(screenWidth, mouseYokePosX));
+        mouseYokePosY = Math.max(0, Math.min(screenHeight, mouseYokePosY));
+
+        double rollInput = rollBounds * (halfWidth - mouseYokePosX) / halfWidth;
+        double pitchInput = pitchBounds * (mouseYokePosY - halfHeight) / halfHeight;
+
+        ComputedVariable rollVariable = aircraft.definition.motorized.isBlimp ? aircraft.rudderInputVar : aircraft.aileronInputVar;
+        if (Math.abs(rollInput - rollVariable.currentValue) > 0.001) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(rollVariable, rollInput));
+        }
+        if (Math.abs(pitchInput - aircraft.elevatorInputVar.currentValue) > 0.001) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.elevatorInputVar, pitchInput));
+        }
+        return true;
+    }
+
+    private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
         controlCamera(ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsKeyboard.AIRCRAFT_CHANGEVIEW, ControlsJoystick.AIRCRAFT_LOOK_UD, ControlsJoystick.AIRCRAFT_LOOK_LR);
         rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
         controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN_FIRE, ControlsKeyboard.AIRCRAFT_GUN_SWITCH);
@@ -329,8 +399,15 @@ public final class ControlSystem {
         controlJoystick(aircraft, ControlsKeyboard.AIRCRAFT_JS_INHIBIT);
 
         if (!isPlayerController) {
+            resetMouseYoke();
             return;
         }
+
+        boolean mouseYokeTogglePressed = ControlsKeyboard.AIRCRAFT_MOUSEYOKE.isPressed();
+        if (mouseYokeTogglePressed) {
+            toggleMouseYoke();
+        }
+
         //Open or close the panel.
         controlPanel(aircraft, ControlsKeyboard.AIRCRAFT_PANEL);
 
@@ -361,7 +438,17 @@ public final class ControlSystem {
 
         //Check flaps.
         if (aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()) {
-            if (ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()) {
+            boolean flapsDownPressed = ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed();
+            boolean flapsUpPressed = ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed();
+            if (mouseYokeTogglePressed) {
+                if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.config.keyCode == ControlsKeyboard.AIRCRAFT_FLAPS_D.config.keyCode) {
+                    flapsDownPressed = false;
+                }
+                if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.config.keyCode == ControlsKeyboard.AIRCRAFT_FLAPS_U.config.keyCode) {
+                    flapsUpPressed = false;
+                }
+            }
+            if (flapsDownPressed) {
                 int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngleVar.currentValue);
                 if (currentFlapSetting == -1) {
                     //Get next-highest notch since we're going down.
@@ -376,7 +463,7 @@ public final class ControlSystem {
                 if (currentFlapSetting != -1 && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.flapDesiredAngleVar, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
                 }
-            } else if (ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()) {
+            } else if (flapsUpPressed) {
                 int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngleVar.currentValue);
                 if (currentFlapSetting == -1) {
                     //Get next-lowest notch since we're going up.
@@ -400,15 +487,21 @@ public final class ControlSystem {
             controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, aircraft.rudderTrimVar);
         }
 
+        boolean usingMouseYoke = controlMouseYoke(aircraft, mouseXDelta, mouseYDelta);
+
         //Check pitch.
-        controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
+        if (!usingMouseYoke) {
+            controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
+        }
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, aircraft.elevatorTrimVar);
 
         //Check roll.  Blimps use roll for rudder for steering.
-        if (aircraft.definition.motorized.isBlimp) {
-            controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
-        } else {
-            controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
+        if (!usingMouseYoke) {
+            if (aircraft.definition.motorized.isBlimp) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+            } else {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
+            }
         }
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, aircraft.aileronTrimVar);
 
@@ -699,6 +792,7 @@ public final class ControlSystem {
         AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", LanguageSystem.INPUT_THROTTLE_D),
         AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", LanguageSystem.INPUT_FLAPS_D),
+        AIRCRAFT_MOUSEYOKE(ControlsJoystick.AIRCRAFT_MOUSEYOKE, true, "Y", LanguageSystem.INPUT_MOUSE_YOKE),
         AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", LanguageSystem.INPUT_BRAKE),
         AIRCRAFT_PARK(ControlsJoystick.AIRCRAFT_PARK, true, "N", LanguageSystem.INPUT_PARK),
         AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
@@ -802,6 +896,7 @@ public final class ControlSystem {
         AIRCRAFT_GEAR(false, true, LanguageSystem.INPUT_GEAR),
         AIRCRAFT_FLAPS_U(false, true, LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(false, true, LanguageSystem.INPUT_FLAPS_D),
+        AIRCRAFT_MOUSEYOKE(false, true, LanguageSystem.INPUT_MOUSE_YOKE),
         AIRCRAFT_PANEL(false, true, LanguageSystem.INPUT_PANEL),
         AIRCRAFT_PARK(false, true, LanguageSystem.INPUT_PARK),
         AIRCRAFT_RADIO(false, true, LanguageSystem.INPUT_RADIO),

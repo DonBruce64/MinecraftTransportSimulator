@@ -20,6 +20,7 @@ import minecrafttransportsimulator.mcinterface.IInterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.java.games.input.Controller;
@@ -314,6 +315,10 @@ public class InterfaceInput implements IInterfaceInput {
      */
     @SubscribeEvent
     public static void onIVKeyInput(InputEvent.KeyInputEvent event) {
+        if (Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+            ControlSystem.resetMouseYoke();
+        }
+
         //Check if we switched joystick modes.
         if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
             runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;
