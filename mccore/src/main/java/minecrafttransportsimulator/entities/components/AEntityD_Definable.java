@@ -975,7 +975,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             case ("config_innerwindows"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0, false);
             default: {
-                if (variable.endsWith("_cycle")) {
+                if (variable.startsWith("tick_sin_")) {
+                    final double frequencyMultiplier = Double.parseDouble(variable.substring("tick_sin_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians((ticksExisted + partialTicks) * frequencyMultiplier)), true);
+                } else if (variable.startsWith("tick_cos_")) {
+                    final double frequencyMultiplier = Double.parseDouble(variable.substring("tick_cos_".length()));
+                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians((ticksExisted + partialTicks) * frequencyMultiplier)), true);
+                } else if (variable.endsWith("_cycle")) {
                     String[] parsedVariable = variable.split("_");
                     final int offTime = Integer.parseInt(parsedVariable[0]);
                     final int onTime = Integer.parseInt(parsedVariable[1]);
