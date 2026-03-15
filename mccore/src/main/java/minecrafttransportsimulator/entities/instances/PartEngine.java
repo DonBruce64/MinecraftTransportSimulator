@@ -106,6 +106,16 @@ public class PartEngine extends APart {
     public static final float FAILURE_TEMP = 132.222F;
     public static final float LOW_OIL_PRESSURE = 40F;
     public static final float MAX_SHIFT_SPEED = 0.35F;
+    
+    private static double[] parseOffsetAndFrequencyMultiplier(String variable, String prefix) {
+        String suffix = variable.substring(prefix.length());
+        int splitIndex = suffix.indexOf('_');
+        if (splitIndex == -1) {
+            return new double[]{Double.parseDouble(suffix), 1.0D};
+        } else {
+            return new double[]{Double.parseDouble(suffix.substring(0, splitIndex)), Double.parseDouble(suffix.substring(splitIndex + 1))};
+        }
+    }
 
     public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartEngine item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -872,11 +882,15 @@ public class PartEngine extends APart {
                 return new ComputedVariable(this, variable, partialTicks -> linkedEngine != null ? 1 : 0, false);
             default: {
                 if (variable.startsWith("engine_sin_")) {
-                    final int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
-                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset)), true);
+                    final double[] parsedValues = parseOffsetAndFrequencyMultiplier(variable, "engine_sin_");
+                    final double offset = parsedValues[0];
+                    final double frequencyMultiplier = parsedValues[1];
+                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getEngineRotation(partialTicks) * frequencyMultiplier + offset)), true);
                 } else if (variable.startsWith("engine_cos_")) {
-                    final int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
-                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset)), true);
+                    final double[] parsedValues = parseOffsetAndFrequencyMultiplier(variable, "engine_cos_");
+                    final double offset = parsedValues[0];
+                    final double frequencyMultiplier = parsedValues[1];
+                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getEngineRotation(partialTicks) * frequencyMultiplier + offset)), true);
                 } else if (variable.startsWith("engine_driveshaft_sin_")) {
                     final int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
                     return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset)), true);
