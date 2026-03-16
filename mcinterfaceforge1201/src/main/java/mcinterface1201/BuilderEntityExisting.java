@@ -183,7 +183,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
                 for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.intersects(explosiveBounds)) {
-                        multipart.attack(new Damage(amount, null, null, playerSource, null).setExplosive());
+                        multipart.attack(new Damage(amount * ConfigSystem.settings.damage.externalExplosionDamageFactor.value, null, null, playerSource, null).setExplosive());
                         break;
                     }
                 }
