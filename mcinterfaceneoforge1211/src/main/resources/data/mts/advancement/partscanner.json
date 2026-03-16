@@ -1,0 +1,38 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.partscanner"
+        	},
+        "title": {
+        	"translate": "advancements.mts.partscanner.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.partscanner.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "partscanner": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.partscanner"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "partscanner"
+        ]
+    ]
+}

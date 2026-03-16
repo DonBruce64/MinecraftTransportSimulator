@@ -1,0 +1,45 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.enginebench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.enginebench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.enginebench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "enginebench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.enginebench"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "enginebench"
+        ]
+    ],
+    "rewards": {
+        "recipes": [
+            "mts:fuelpump",
+            "mts:jumpercable",
+            "mts:jumperpack"
+        ]
+    }
+}
