@@ -403,8 +403,7 @@ public final class ControlSystem {
             return;
         }
 
-        boolean mouseYokeTogglePressed = ControlsKeyboard.AIRCRAFT_MOUSEYOKE.isPressed();
-        if (mouseYokeTogglePressed) {
+        if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.isPressed()) {
             toggleMouseYoke();
         }
 
@@ -438,17 +437,7 @@ public final class ControlSystem {
 
         //Check flaps.
         if (aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()) {
-            boolean flapsDownPressed = ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed();
-            boolean flapsUpPressed = ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed();
-            if (mouseYokeTogglePressed) {
-                if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.config.keyCode == ControlsKeyboard.AIRCRAFT_FLAPS_D.config.keyCode) {
-                    flapsDownPressed = false;
-                }
-                if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.config.keyCode == ControlsKeyboard.AIRCRAFT_FLAPS_U.config.keyCode) {
-                    flapsUpPressed = false;
-                }
-            }
-            if (flapsDownPressed) {
+            if (ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()) {
                 int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngleVar.currentValue);
                 if (currentFlapSetting == -1) {
                     //Get next-highest notch since we're going down.
@@ -463,7 +452,7 @@ public final class ControlSystem {
                 if (currentFlapSetting != -1 && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.flapDesiredAngleVar, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
                 }
-            } else if (flapsUpPressed) {
+            } else if (ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()) {
                 int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float) aircraft.flapDesiredAngleVar.currentValue);
                 if (currentFlapSetting == -1) {
                     //Get next-lowest notch since we're going up.
@@ -792,7 +781,7 @@ public final class ControlSystem {
         AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", LanguageSystem.INPUT_THROTTLE_D),
         AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", LanguageSystem.INPUT_FLAPS_D),
-        AIRCRAFT_MOUSEYOKE(ControlsJoystick.AIRCRAFT_MOUSEYOKE, true, "Y", LanguageSystem.INPUT_MOUSE_YOKE),
+        AIRCRAFT_MOUSEYOKE(ControlsJoystick.AIRCRAFT_MOUSEYOKE, true, "C", LanguageSystem.INPUT_MOUSE_YOKE),
         AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", LanguageSystem.INPUT_BRAKE),
         AIRCRAFT_PARK(ControlsJoystick.AIRCRAFT_PARK, true, "N", LanguageSystem.INPUT_PARK),
         AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
