@@ -892,11 +892,15 @@ public class PartEngine extends APart {
                     final double frequencyMultiplier = parsedValues[1];
                     return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getEngineRotation(partialTicks) * frequencyMultiplier + offset)), true);
                 } else if (variable.startsWith("engine_driveshaft_sin_")) {
-                    final int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
-                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset)), true);
+                     final double[] parsedValues = parseOffsetAndFrequencyMultiplier(variable, "engine_driveshaft_sin_");
+                    final double offset = parsedValues[0];
+                    final double frequencyMultiplier = parsedValues[1];
+                    return new ComputedVariable(this, variable, partialTicks -> Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) * frequencyMultiplier + offset)), true);
                 } else if (variable.startsWith("engine_driveshaft_cos_")) {
-                    final int offset = Integer.parseInt(variable.substring("engine_driveshaft_cos_".length()));
-                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset)), true);
+                    final double[] parsedValues = parseOffsetAndFrequencyMultiplier(variable, "engine_driveshaft_cos_");
+                    final double offset = parsedValues[0];
+                    final double frequencyMultiplier = parsedValues[1];
+                    return new ComputedVariable(this, variable, partialTicks -> Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) * frequencyMultiplier + offset)), true);
                 } else if (variable.startsWith("engine_piston_")) {
                     //Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
                     //i.e. engine_piston_2_6_0_crank will return 1 when the crank is in the second of 6 sectors.
