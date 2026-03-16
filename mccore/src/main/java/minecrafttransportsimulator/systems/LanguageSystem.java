@@ -513,7 +513,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
-    public static final LanguageEntry INPUT_MOUSE_YOKE = new LanguageEntry("input.mouse_yoke", "MouseYokeToggle");
+    public static final LanguageEntry INPUT_MOUSE_YOKE = new LanguageEntry("input.mouse_yoke", "Mouse Yoke");
     public static final LanguageEntry INPUT_BRAKE = new LanguageEntry("input.brake", "Brake");
     public static final LanguageEntry INPUT_GEAR = new LanguageEntry("input.gear", "Gear");
     public static final LanguageEntry INPUT_PANEL = new LanguageEntry("input.panel", "Panel");
