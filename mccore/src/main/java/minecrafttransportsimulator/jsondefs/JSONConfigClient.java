@@ -53,6 +53,7 @@ public class JSONConfigClient {
 
         public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a physical shifter controller for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(false, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.");
+        public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 

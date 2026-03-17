@@ -58,6 +58,11 @@ public interface IInterfaceClient {
     boolean isGUIOpen();
 
     /**
+     * Displays a short-lived overlay message above the hotbar.
+     */
+    void displayOverlayMessage(String message);
+
+    /**
      * Returns the camera mode.
      */
     CameraMode getCameraMode();

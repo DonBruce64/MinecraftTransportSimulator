@@ -87,6 +87,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public void displayOverlayMessage(String message) {
+        Minecraft.getMinecraft().ingameGUI.setOverlayMessage(message, false);
+    }
+
+    @Override
     public CameraMode getCameraMode() {
         return actualCameraMode;
     }
