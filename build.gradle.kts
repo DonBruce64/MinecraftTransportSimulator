@@ -79,18 +79,45 @@ tasks.register("buildForge1201") {
     dependsOn(mcInterfaceForge1201.tasks.build)
 }
 
+tasks.register<Exec>("buildForge1211") {
+    doFirst { preBuild() }
+    commandLine(
+        "${System.getProperty("java.home")}/bin/java",
+        "-classpath",
+        "${project.projectDir.canonicalPath}/gradle/neoforge-wrapper/gradle-wrapper.jar",
+        "org.gradle.wrapper.GradleWrapperMain",
+        "--no-daemon",
+        "-p",
+        "${project.projectDir.canonicalPath}/mcinterfaceneoforge1211",
+        "build"
+    )
+    doLast {
+        moveToOut("mcinterfaceneoforge1211", "1.21.1-$modVersion")
+    }
+}
+
 tasks.register("buildForgeAll") {
     dependsOn(tasks.getByName("buildForge1122"))
     dependsOn(tasks.getByName("buildForge1165"))
 		dependsOn(tasks.getByName("buildForge1182"))
 		dependsOn(tasks.getByName("buildForge1192"))
 		dependsOn(tasks.getByName("buildForge1201"))
+    dependsOn(tasks.getByName("buildForge1211"))
 }
 
 @OptIn(ExperimentalPathApi::class)
 fun moveToOut(subProject: Project, versionStr: String) {
     val jarName = "Immersive Vehicles-${subProject.version}.jar"
     val source = Paths.get("${subProject.projectDir.canonicalPath}/build/libs/$jarName")
+    val outDir = Paths.get("${project.projectDir.canonicalPath}/out")
+    Files.createDirectories(outDir)
+    source.moveTo(outDir.resolve(jarName), true)
+}
+
+@OptIn(ExperimentalPathApi::class)
+fun moveToOut(moduleDirectory: String, artifactVersion: String) {
+    val jarName = "Immersive Vehicles-$artifactVersion.jar"
+    val source = Paths.get("${project.projectDir.canonicalPath}/$moduleDirectory/build/libs/$jarName")
     val outDir = Paths.get("${project.projectDir.canonicalPath}/out")
     Files.createDirectories(outDir)
     source.moveTo(outDir.resolve(jarName), true)

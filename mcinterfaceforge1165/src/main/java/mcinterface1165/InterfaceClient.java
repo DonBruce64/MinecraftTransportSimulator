@@ -35,6 +35,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -100,6 +101,11 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public boolean isGUIOpen() {
         return Minecraft.getInstance().screen != null;
+    }
+
+    @Override
+    public void displayOverlayMessage(String message) {
+        Minecraft.getInstance().gui.setOverlayMessage(new StringTextComponent(message), false);
     }
 
     @Override

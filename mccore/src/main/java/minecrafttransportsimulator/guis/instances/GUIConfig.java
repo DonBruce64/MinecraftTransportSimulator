@@ -266,7 +266,7 @@ public class GUIConfig extends AGUIBase {
                     addComponent(new GUIComponentLabel(box.constructedX - 70, box.constructedY + 2, ColorRGB.BLACK, keyboardControl.language.getCurrentValue() + ":").setComponent(box));
 
                     verticalOffset += 11;
-                    if (verticalOffset > 20 + 11 * 9) {
+                    if (verticalOffset > 20 + 11 * 10) {
                         verticalOffset = 20;
                         horizontalOffset += 120;
                     }
@@ -686,11 +686,16 @@ public class GUIConfig extends AGUIBase {
                 try {
                     JSONConfigEntry<?> configEntry = (JSONConfigEntry<?>) field.get(configObject);
                     if (configEntry.value.getClass().equals(Boolean.class)) {
+                        String fieldName = field.getName();
                         GUIComponentButton button = new GUIComponentButton(this, guiLeft + 85 + 120 * (configButtons.size() % 2), guiTop + 20 + 16 * (configButtons.size() / 2), 40, 16, String.valueOf(configEntry.value)) {
                             @Override
                             public void onClicked(boolean leftSide) {
-                                configButtons.get(this).value = !Boolean.parseBoolean(text);
-                                ConfigSystem.saveToDisk();
+                                if ("mouseYoke".equals(fieldName)) {
+                                    ControlSystem.toggleMouseYoke();
+                                } else {
+                                    configButtons.get(this).value = !Boolean.parseBoolean(text);
+                                    ConfigSystem.saveToDisk();
+                                }
                                 text = String.valueOf(configButtons.get(this).value);
                             }
 
