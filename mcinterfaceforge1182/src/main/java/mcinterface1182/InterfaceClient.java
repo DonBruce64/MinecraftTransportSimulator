@@ -28,6 +28,7 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
@@ -100,6 +101,11 @@ public class InterfaceClient implements IInterfaceClient {
     @Override
     public boolean isGUIOpen() {
         return Minecraft.getInstance().screen != null;
+    }
+
+    @Override
+    public void displayOverlayMessage(String message) {
+        Minecraft.getInstance().gui.setOverlayMessage(new TextComponent(message), false);
     }
 
     @Override

@@ -120,7 +120,7 @@
                         "rot": [0.0, 0.0, 0.0],
                         "scale": 0.85,
                         "fieldName": "",
-                        "defaultText": "Assembling vehicles is a simple as clicking them with the required parts. When holding a valid part a green hologram will appear in locations where you can place it. Simply right-click with that part and it will attach to the vehicle. Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.",
+                        "defaultText": "Assembling vehicles is as simple as clicking them with the required parts. When holding a valid part a green hologram will appear in locations where you can place it. Simply right-click with that part and it will attach to the vehicle. Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.",
                         "color": "000000",
                         "wrapWidth": 180,
                         "renderPosition": 1
@@ -358,7 +358,7 @@
                         "rot": [0.0, 0.0, 0.0],
                         "scale": 0.85,
                         "fieldName": "",
-                        "defaultText": "No matter what they are in, engines form the heart of your vehicle. Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application. Fuel-less versions of engines are available in the creative tab, should you not wish to mess with fuel.",
+                        "defaultText": "No matter what they are in, engines form the heart of your vehicle. Engines come in a variety of fuel consumptions and max RPMs, so choose carefully based on your application. Fuel-less versions of engines are available in the creative tab, should you not wish to mess with fuel.",
                         "color": "000000",
                         "wrapWidth": 180,
                         "renderPosition": 1
@@ -528,7 +528,7 @@
                         "rot": [0.0, 0.0, 0.0],
                         "scale": 0.85,
                         "fieldName": "",
-                        "defaultText": "The second control scheme is a Joystick-Keyboard hybrid. This controller MUST be connected at the time you start Minecraft. Configuration is done though the JOYSTICK section of the P-key menu. When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard. This is the case even if you un-plug the joystick, so un-bind it before you do.",
+                        "defaultText": "The second control scheme is a Joystick-Keyboard hybrid. This controller MUST be connected at the time you start Minecraft. Configuration is done through the JOYSTICK section of the P-key menu. When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard. This is the case even if you un-plug the joystick, so un-bind it before you do.",
                         "color": "000000",
                         "wrapWidth": 180,
                         "renderPosition": 1

@@ -483,7 +483,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             if (!world.isClient() && player.isOP()) {
                 if (player.isSneaking()) {
                     for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                        player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Vehicle:" + vehicle + " present at " + vehicle.position);
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.SYSTEM_DEBUG, "Vehicle:" + vehicle + " present at " + vehicle.position));
                     }
                 } else {
                     for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
@@ -497,7 +497,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                         vehicle.parkingBrakeVar.setTo(0, true);
                         vehicle.engines.forEach(engine -> engine.magnetoVar.setTo(0, true));
                     }
-                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "Stopped all vehicles.");
+                    player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.SYSTEM_DEBUG, "Stopped all vehicles."));
                 }
             }
         }

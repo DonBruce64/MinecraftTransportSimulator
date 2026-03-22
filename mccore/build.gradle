@@ -1,6 +1,19 @@
+//This section is required to relocate the javazoom layer to a shadow folder. This prevents 
+//crashes with other mods using any javazoom layers.
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+    }
+}
+
 //Apply plugins
 apply plugin: "java"
 apply plugin: "eclipse"
+apply plugin: "com.github.johnrengelman.shadow"
 
 //Set file name.
 version = "Core"
@@ -23,6 +36,7 @@ repositories {
 configurations {
     embed
     compileOnly.extendsFrom(embed)
+    relocated
 }
 
 //Specify dependencies.
@@ -47,6 +61,19 @@ jar {
     from {
         configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
     }
+}
+
+//Shadow jar that relocates javazoom to avoid class conflicts with mods like Ad Astra.
+shadowJar {
+    configurations = [project.configurations.embed]
+    relocate 'javazoom', 'minecrafttransportsimulator.shadow.javazoom'
+    archiveClassifier = 'relocated'
+}
+
+artifacts {
+    // Newer interface modules (1.18.2+) consume mccore from this named configuration.
+    // The shadowJar relocates javazoom to prevent conflicts with other mods.
+    relocated shadowJar
 }
 
 tasks.withType(JavaCompile).configureEach {

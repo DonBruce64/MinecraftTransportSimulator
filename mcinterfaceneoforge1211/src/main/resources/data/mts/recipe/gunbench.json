@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "abc",
+        "ddd"
+    ],
+    "key": {
+        "a": {
+            "tag": "c:storage_blocks/iron"
+        },
+        "b": {
+            "item": "minecraft:diamond"
+        },
+        "c": {
+            "tag": "c:ingots/iron"
+        },
+        "d": {
+            "item": "minecraft:smooth_stone"
+        }
+    },
+    "result": {
+        "id": "mts:mts.gunbench"
+    }
+}

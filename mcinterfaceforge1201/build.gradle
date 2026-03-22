@@ -70,6 +70,8 @@ repositories {
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
 		// location of the maven that hosts JEI files since January 2023
 		maven { url = "https://maven.blamejared.com/" }
+		// location of the maven that hosts Jade files
+		maven { url = "https://www.cursemaven.com" }
 }
 
 //Configuration that holds jars to include in the jar
@@ -88,12 +90,14 @@ dependencies {
     //Core to use.
 		//Need to compile core first.  Can't figure out how to do this, manually execute for now.
 		//project(':mccore').tasks.build.execute()
-    embed project(":mccore")
+    embed(project(path: ":mccore", configuration: "relocated"))
 		
 		//Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:${project.jei_api_version}")
     //At runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:${project.jei_run_version}")
+    //Compile against the Jade API but do not include it at runtime
+    compileOnly fg.deobf("curse.maven:jade-324717:${project.jade_file_id}")
 }
 
 mixin {
