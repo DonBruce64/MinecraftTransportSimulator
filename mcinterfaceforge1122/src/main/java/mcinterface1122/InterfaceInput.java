@@ -293,6 +293,46 @@ public class InterfaceInput implements IInterfaceInput {
         return betterCombatDetected ? rightMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
     }
 
+    @Override
+    public boolean isMouseButtonPressed(int mouseButton) {
+        return Mouse.isButtonDown(mouseButton);
+    }
+
+    @Override
+    public String getNameForMouseButton(int mouseButton) {
+        switch (mouseButton) {
+            case 0:
+                return "MOUSE_LEFT";
+            case 1:
+                return "MOUSE_RIGHT";
+            case 2:
+                return "MOUSE_MIDDLE";
+            default:
+                return "MOUSE_" + (mouseButton + 1);
+        }
+    }
+
+    @Override
+    public int getMouseButtonForName(String name) {
+        switch (name) {
+            case "MOUSE_LEFT":
+                return 0;
+            case "MOUSE_RIGHT":
+                return 1;
+            case "MOUSE_MIDDLE":
+                return 2;
+            default:
+                if (name.startsWith("MOUSE_")) {
+                    try {
+                        return Integer.parseInt(name.substring(6)) - 1;
+                    } catch (NumberFormatException e) {
+                        return -1;
+                    }
+                }
+                return -1;
+        }
+    }
+
     /**
      * Stores mouse presses, since stupid mods take them from us.
      * BetterCombat is one such mod.

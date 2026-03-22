@@ -842,6 +842,7 @@ public final class ControlSystem {
          * joystick is pressed, return true.  If the joystick is not, but it
          * is bound, and we are using keyboard overrides, return false.
          * Otherwise return the actual key state.
+         * Mouse button bindings are blocked when any mod GUI menu is open.
          */
         public boolean isPressed() {
             wasPressedLastCall = wasPressedThisCall;
@@ -852,7 +853,16 @@ public final class ControlSystem {
                 //Joystick found, but not pressed, and is overriding keyboard inputs, so return false.
                 wasPressedThisCall = false;
             } else {
-                wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                if (config.isMouseButton) {
+                    //Mouse button binding: block when any mod GUI is open.
+                    if (AGUIBase.activeInputGUI != null) {
+                        wasPressedThisCall = false;
+                    } else {
+                        wasPressedThisCall = InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
+                    }
+                } else {
+                    wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                }
                 if (isMomentary && wasPressedLastCall) {
                     return false;
                 }
