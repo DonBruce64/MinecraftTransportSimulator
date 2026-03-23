@@ -184,6 +184,8 @@ public class InterfaceInput implements IInterfaceInput {
         switch (name) {
             case "RSHIFT":
                 return InputMappings.getKey("key.keyboard.right.shift").getValue();
+            case "LMENU":
+                return InputMappings.getKey("key.keyboard.left.alt").getValue();
             case "PRIOR":
                 return InputMappings.getKey("key.keyboard.page.up").getValue();
             case "NEXT":
