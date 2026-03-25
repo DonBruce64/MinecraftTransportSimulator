@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
@@ -58,6 +59,12 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public boolean shouldRenderAtSqrDistance(double pDistance) {
         //Need to render in pass 1 to render transparent things in the world like light beams.
         return true;
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction() {
+        //This entity only exists as a render anchor and should not be treated as a physical obstacle.
+        return PushReaction.IGNORE;
     }
 
     @Override
