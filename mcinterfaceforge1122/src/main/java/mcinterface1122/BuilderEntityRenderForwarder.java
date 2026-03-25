@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -73,6 +74,12 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public boolean shouldRenderInPass(int pass) {
         //Need to render in pass 1 to render transparent things in the world like light beams.
         return true;
+    }
+    
+    @Override
+    public EnumPushReaction getPushReaction() {
+        //This entity only exists as a render anchor and should not be treated as a physical obstacle.
+        return EnumPushReaction.IGNORE;
     }
 
     /**
