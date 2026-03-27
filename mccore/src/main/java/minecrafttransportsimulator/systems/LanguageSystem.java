@@ -496,6 +496,12 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_CUSTOM2 = new LanguageEntry("input.custom2", "Custom2");
     public static final LanguageEntry INPUT_CUSTOM3 = new LanguageEntry("input.custom3", "Custom3");
     public static final LanguageEntry INPUT_CUSTOM4 = new LanguageEntry("input.custom4", "Custom4");
+	public static final LanguageEntry INPUT_CUSTOM5 = new LanguageEntry("input.custom5", "Custom5");
+    public static final LanguageEntry INPUT_CUSTOM6 = new LanguageEntry("input.custom6", "Custom6");
+    public static final LanguageEntry INPUT_CUSTOM7 = new LanguageEntry("input.custom7", "Custom7");
+    public static final LanguageEntry INPUT_CUSTOM8 = new LanguageEntry("input.custom8", "Custom8");
+    public static final LanguageEntry INPUT_CUSTOM9 = new LanguageEntry("input.custom9", "Custom9");
+    public static final LanguageEntry INPUT_CUSTOM10 = new LanguageEntry("input.custom10", "Custom10");
 
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
