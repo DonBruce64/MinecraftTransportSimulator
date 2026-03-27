@@ -920,6 +920,12 @@ public final class ControlSystem {
         GENERAL_CUSTOM2(false, true, LanguageSystem.INPUT_CUSTOM2),
         GENERAL_CUSTOM3(false, true, LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(false, true, LanguageSystem.INPUT_CUSTOM4),
+		GENERAL_CUSTOM5(false, true, LanguageSystem.INPUT_CUSTOM5),
+        GENERAL_CUSTOM6(false, true, LanguageSystem.INPUT_CUSTOM6),
+        GENERAL_CUSTOM7(false, true, LanguageSystem.INPUT_CUSTOM7),
+        GENERAL_CUSTOM8(false, true, LanguageSystem.INPUT_CUSTOM8),
+        GENERAL_CUSTOM9(false, true, LanguageSystem.INPUT_CUSTOM9),
+        GENERAL_CUSTOM10(false, true, LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
 
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
