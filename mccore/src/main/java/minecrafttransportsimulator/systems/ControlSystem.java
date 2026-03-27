@@ -73,7 +73,7 @@ public final class ControlSystem {
             ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
         }
         for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            if (control.config.keyCode <= 0) {
+            if (control.config.keyCode <= 0 && !control.config.isMouseButton) {
                 control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
             }
         }
