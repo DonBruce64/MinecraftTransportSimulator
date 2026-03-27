@@ -189,6 +189,36 @@ public final class ControlSystem {
         } else if (ControlsKeyboard.GENERAL_CUSTOM4.justReleased()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, false));
         }
+		if (ControlsKeyboard.GENERAL_CUSTOM5.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM5.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM6.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM6.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM7.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM7.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM8.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM8.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM9.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM9.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM10.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM10.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, false));
+        }
     }
 
     private static void controlCamera(ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsKeyboard changeView, ControlsJoystick viewUD, ControlsJoystick viewLR) {
@@ -778,6 +808,12 @@ public final class ControlSystem {
         GENERAL_CUSTOM2(ControlsJoystick.GENERAL_CUSTOM2, true, "NUMPAD1", LanguageSystem.INPUT_CUSTOM2),
         GENERAL_CUSTOM3(ControlsJoystick.GENERAL_CUSTOM3, true, "NUMPAD2", LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(ControlsJoystick.GENERAL_CUSTOM4, true, "NUMPAD3", LanguageSystem.INPUT_CUSTOM4),
+		GENERAL_CUSTOM5(ControlsJoystick.GENERAL_CUSTOM5, true, "NUMPAD4", LanguageSystem.INPUT_CUSTOM5),
+        GENERAL_CUSTOM6(ControlsJoystick.GENERAL_CUSTOM6, true, "NUMPAD5", LanguageSystem.INPUT_CUSTOM6),
+        GENERAL_CUSTOM7(ControlsJoystick.GENERAL_CUSTOM7, true, "NUMPAD6", LanguageSystem.INPUT_CUSTOM7),
+        GENERAL_CUSTOM8(ControlsJoystick.GENERAL_CUSTOM8, true, "NUMPAD7", LanguageSystem.INPUT_CUSTOM8),
+        GENERAL_CUSTOM9(ControlsJoystick.GENERAL_CUSTOM9, true, "NUMPAD8", LanguageSystem.INPUT_CUSTOM9),
+        GENERAL_CUSTOM10(ControlsJoystick.GENERAL_CUSTOM10, true, "NUMPAD9", LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, true, "R", LanguageSystem.INPUT_GUN_RELOAD),
 
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
