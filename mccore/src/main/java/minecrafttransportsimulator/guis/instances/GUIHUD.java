@@ -33,7 +33,7 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 public class GUIHUD extends AGUIBase {
     private static final int HUD_WIDTH = 400;
     private static final int HUD_HEIGHT = 140;
-    private static final ControlsKeyboard[] customKeybindControls = new ControlsKeyboard[] { ControlsKeyboard.GENERAL_CUSTOM1, ControlsKeyboard.GENERAL_CUSTOM2, ControlsKeyboard.GENERAL_CUSTOM3, ControlsKeyboard.GENERAL_CUSTOM4 };
+    private static final ControlsKeyboard[] customKeybindControls = new ControlsKeyboard[] { ControlsKeyboard.GENERAL_CUSTOM1, ControlsKeyboard.GENERAL_CUSTOM2, ControlsKeyboard.GENERAL_CUSTOM3, ControlsKeyboard.GENERAL_CUSTOM4, ControlsKeyboard.GENERAL_CUSTOM5, ControlsKeyboard.GENERAL_CUSTOM6, ControlsKeyboard.GENERAL_CUSTOM7, ControlsKeyboard.GENERAL_CUSTOM8, ControlsKeyboard.GENERAL_CUSTOM9, ControlsKeyboard.GENERAL_CUSTOM10 };
 
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
