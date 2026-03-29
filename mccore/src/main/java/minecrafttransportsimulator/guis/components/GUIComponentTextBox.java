@@ -122,6 +122,15 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     /**
+     * Called when a mouse button is clicked while this text box is focused.
+     * Override this in subclasses to handle mouse button binding.
+     * Returns true if the mouse click was consumed and should not be processed further.
+     */
+    public boolean handleMouseClicked(int mouseButton) {
+        return false;
+    }
+
+    /**
      * Returns true if this text is valid for this text box.  This won't prevent invalid text from being entered,
      * but will prevent {@link #handleTextChange()} from being called if the text is invalid.
      */
