@@ -73,7 +73,7 @@ public final class ControlSystem {
             ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
         }
         for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            if (control.config.keyCode <= 0) {
+            if (control.config.keyCode <= 0 && !control.config.isMouseButton) {
                 control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
             }
         }
@@ -864,6 +864,16 @@ public final class ControlSystem {
                 wasPressedThisCall = false;
             } else {
                 wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                if (config.isMouseButton) {
+                    //Mouse button binding: block when any mod GUI is open.
+                    if (AGUIBase.activeInputGUI != null) {
+                        wasPressedThisCall = false;
+                    } else {
+                        wasPressedThisCall = InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
+                    }
+                } else {
+                    wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                }
                 if (isMomentary && wasPressedLastCall) {
                     return false;
                 }

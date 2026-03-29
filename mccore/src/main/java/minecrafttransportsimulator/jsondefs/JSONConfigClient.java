@@ -77,6 +77,7 @@ public class JSONConfigClient {
 
     public static class ConfigKeyboard {
         public int keyCode;
+        public boolean isMouseButton;
     }
 
     public static class ConfigJoystick {

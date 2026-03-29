@@ -254,6 +254,16 @@ public class GUIConfig extends AGUIBase {
                         public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
                             setText(InterfaceManager.inputInterface.getNameForKeyCode(typedCode));
                             keyboardBoxes.get(controlConfiguring).get(this).config.keyCode = typedCode;
+                            keyboardBoxes.get(controlConfiguring).get(this).config.isMouseButton = false;
+                            ConfigSystem.saveToDisk();
+                            focused = false;
+                        }
+
+                        @Override
+                        public boolean handleMouseClicked(int mouseButton) {
+                            setText(InterfaceManager.inputInterface.getNameForMouseButton(mouseButton));
+                            keyboardBoxes.get(controlConfiguring).get(this).config.keyCode = mouseButton;
+                            keyboardBoxes.get(controlConfiguring).get(this).config.isMouseButton = true;
                             ConfigSystem.saveToDisk();
                             focused = false;
                         }
@@ -543,12 +553,21 @@ public class GUIConfig extends AGUIBase {
                     textBox.setText("");
                 } else {
                     textBox.setText(InterfaceManager.inputInterface.getNameForKeyCode(keyboardBoxes.get(controlType).get(textBox).config.keyCode));
+                    ControlsKeyboard control = keyboardBoxes.get(controlType).get(textBox);
+                    if (control.config.isMouseButton) {
+                        textBox.setText(InterfaceManager.inputInterface.getNameForMouseButton(control.config.keyCode));
+                    } else {
+                        textBox.setText(InterfaceManager.inputInterface.getNameForKeyCode(control.config.keyCode));
+                    }
                 }
             }
             for (GUIComponentLabel label : keyboardLabels.get(controlType).keySet()) {
                 label.visible = finishKeyboardBindingsButton.visible && controlType.equals(controlConfiguring);
                 ControlsKeyboardDynamic dynamicControl = keyboardLabels.get(controlType).get(label);
                 label.text = dynamicControl.language.getCurrentValue() + ": " + InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.modControl.config.keyCode) + " + " + InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.mainControl.config.keyCode);
+                String modName = dynamicControl.modControl.config.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(dynamicControl.modControl.config.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.modControl.config.keyCode);
+                String mainName = dynamicControl.mainControl.config.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(dynamicControl.mainControl.config.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.mainControl.config.keyCode);
+                label.text = dynamicControl.language.getCurrentValue() + ": " + modName + " + " + mainName;
             }
         }
 
