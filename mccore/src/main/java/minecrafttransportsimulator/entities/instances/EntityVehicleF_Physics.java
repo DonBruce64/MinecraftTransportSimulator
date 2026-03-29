@@ -490,9 +490,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Add all torques to the main torque matrix and apply them.
             totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).scale(180D / Math.PI);
-            totalTorque.x /= momentPitch;
-            totalTorque.y /= momentYaw;
-            totalTorque.z /= momentRoll;
+
+            if (definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors) {
+                double q = 0.5 * airDensity * axialVelocity * axialVelocity;
+                double tailDist = definition.motorized.tailDistance;
+                double rollArm = wingSpanVar.currentValue * 0.5 * 0.75;
+                totalTorque.x /= momentPitch + q * elevatorAreaVar.currentValue * tailDist * tailDist * 4.0;
+                totalTorque.y /= momentYaw + q * rudderAreaVar.currentValue * tailDist * tailDist * 4.0;
+                totalTorque.z /= momentRoll + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0;
+            } else {
+                totalTorque.x /= momentPitch;
+                totalTorque.y /= momentYaw;
+                totalTorque.z /= momentRoll;
+            }
             rotation.angles.set(totalTorque).add(rotorRotation);
         } else if (!lockedOnRoad) {
             towedByConnection.hookupPriorPosition.set(towedByConnection.hookupCurrentPosition);
