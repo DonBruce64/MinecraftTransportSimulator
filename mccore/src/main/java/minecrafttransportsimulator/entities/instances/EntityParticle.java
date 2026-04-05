@@ -81,6 +81,8 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.heightRadius = boundingBox.widthRadius;
         boundingBox.depthRadius = boundingBox.widthRadius;
 
+        RotationMatrix positionOrientation = null;
+
         //Set transforms based on type.
         helperTransform.resetTransforms();
         switch (definition.spawningOrientation) {
@@ -88,12 +90,14 @@ public class EntityParticle extends AEntityC_Renderable {
             case ATTACHED: {
                 orientation.set(entitySpawning.orientation);
                 helperTransform.set(entitySpawning.orientation);
+                positionOrientation = entitySpawning.orientation;
                 break;
             }
             case STREAK:
             case WORLD_ATTACHED: {
                 //Orientation isn't changed from spawn, but we do need to know spawning entity orientation for the transform of position.
                 helperTransform.set(entitySpawning.orientation);
+                positionOrientation = entitySpawning.orientation;
                 break;
             }
             case FACING: {
@@ -103,6 +107,7 @@ public class EntityParticle extends AEntityC_Renderable {
                         helperRotation.setToZero().rotateX(-90);
                         orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
                         helperTransform.set(orientation);
+                        positionOrientation = orientation;
                     } else {
                         //Nothing for bullet to hit, block spawning.
                         this.initialVelocity = null;
@@ -124,7 +129,7 @@ public class EntityParticle extends AEntityC_Renderable {
         //Set position, but only if we aren't a distance particle.
         //Distance particles are set prior to spawning with their actual position since it handles rotation.
         if (definition.distance == 0) {
-            setPointToSpawn(spawningPosition, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+            setPointToSpawn(spawningPosition, positionOrientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
         } else {
             position.set(spawningPosition);
         }
@@ -337,7 +342,6 @@ public class EntityParticle extends AEntityC_Renderable {
         this.killBadParticle = false;
     }
 
-    /**Make sure helperTransform is set to the orientation before calling this.**/
     public static void setPointToSpawn(Point3D origin, RotationMatrix orientation, Point3D definitionOffset, Point3D scale, AnimationSwitchbox spawningSwitchbox, Point3D pointToSet) {
         //Apply transforms to get position.
         if (definitionOffset != null) {
@@ -345,8 +349,8 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             helperPoint.set(0, 0, 0);
         }
+        helperTransform.resetTransforms();
         if (orientation != null) {
-            helperTransform.resetTransforms();
             helperTransform.set(orientation);
         }
         if (spawningSwitchbox != null) {
@@ -395,14 +399,10 @@ public class EntityParticle extends AEntityC_Renderable {
         if (!definition.stopsOnGround || !touchingBlocks) {
             if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
                 orientation.set(entitySpawning.orientation);
-                helperTransform.resetTransforms();
-                helperTransform.set(orientation);
-                setPointToSpawn(entitySpawning.position, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                setPointToSpawn(entitySpawning.position, orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
                 setOrientationToSpawn();
             } else if (definition.spawningOrientation == ParticleSpawningOrientation.WORLD_ATTACHED) {
-                helperTransform.resetTransforms();
-                helperTransform.set(entitySpawning.orientation);
-                setPointToSpawn(entitySpawning.position, null, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                setPointToSpawn(entitySpawning.position, entitySpawning.orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
             }
             
             if (definition.movementDuration != 0) {
