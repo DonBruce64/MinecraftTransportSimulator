@@ -490,18 +490,21 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //Add all torques to the main torque matrix and apply them.
             totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).scale(180D / Math.PI);
+            totalTorque.x /= momentPitch;
+            totalTorque.y /= momentYaw;
+            totalTorque.z /= momentRoll;
 
+            //For fixed-wing aircraft, apply aerodynamic rotational damping.
+            //Control surfaces create a damping moment proportional to dynamic pressure
+            //and their geometry (area * arm²), which resists rotation at higher airspeeds.
+            //Without this, the torque feedback gain (which scales with v²) can exceed the
+            //restoring capacity of the base moment of inertia, causing oscillation.
             if (definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors) {
                 double q = 0.5 * airDensity * axialVelocity * axialVelocity;
-                double tailDist = definition.motorized.tailDistance;
                 double rollArm = wingSpanVar.currentValue * 0.5 * 0.75;
-                totalTorque.x /= momentPitch + q * elevatorAreaVar.currentValue * tailDist * tailDist * 4.0;
-                totalTorque.y /= momentYaw + q * rudderAreaVar.currentValue * tailDist * tailDist * 4.0;
-                totalTorque.z /= momentRoll + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0;
-            } else {
-                totalTorque.x /= momentPitch;
-                totalTorque.y /= momentYaw;
-                totalTorque.z /= momentRoll;
+                totalTorque.x /= 1.0 + q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentPitch;
+                totalTorque.y /= 1.0 + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentYaw;
+                totalTorque.z /= 1.0 + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0 / momentRoll;
             }
             rotation.angles.set(totalTorque).add(rotorRotation);
         } else if (!lockedOnRoad) {
