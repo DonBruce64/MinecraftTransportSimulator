@@ -282,6 +282,43 @@ public class InterfaceInput implements IInterfaceInput {
         return Minecraft.getInstance().options.keyUse.isDown();
     }
 
+    @Override
+    public boolean isMouseButtonPressed(int mouseButton) {
+        return GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), mouseButton) == GLFW.GLFW_PRESS;
+    }
+
+    @Override
+    public String getNameForMouseButton(int mouseButton) {
+        switch (mouseButton) {
+            case GLFW.GLFW_MOUSE_BUTTON_LEFT:
+                return "MOUSE_LEFT";
+            case GLFW.GLFW_MOUSE_BUTTON_RIGHT:
+                return "MOUSE_RIGHT";
+            case GLFW.GLFW_MOUSE_BUTTON_MIDDLE:
+                return "MOUSE_MIDDLE";
+            default:
+                return "MOUSE_" + (mouseButton + 1);
+        }
+    }
+
+    @Override
+    public int getMouseButtonForName(String name) {
+        switch (name) {
+            case "MOUSE_LEFT":
+                return GLFW.GLFW_MOUSE_BUTTON_LEFT;
+            case "MOUSE_RIGHT":
+                return GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+            case "MOUSE_MIDDLE":
+                return GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
+            default:
+                try {
+                    return Integer.parseInt(name.substring(6)) - 1;
+                } catch (NumberFormatException e) {
+                    throw new IllegalStateException("ERROR: Client config file has a mouse button bound to a control that is not a number! Check your config or delete it and re-start.");
+                }
+        }
+    }
+
     /**
      * Opens the config screen when the config key is pressed.
      * Also init the joystick system if we haven't already.
