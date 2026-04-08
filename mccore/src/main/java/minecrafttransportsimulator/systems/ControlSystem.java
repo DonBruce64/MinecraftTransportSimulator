@@ -863,7 +863,6 @@ public final class ControlSystem {
                 //Joystick found, but not pressed, and is overriding keyboard inputs, so return false.
                 wasPressedThisCall = false;
             } else {
-                wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
                 if (config.isMouseButton) {
                     //Mouse button binding: block when any mod GUI is open.
                     if (AGUIBase.activeInputGUI != null) {

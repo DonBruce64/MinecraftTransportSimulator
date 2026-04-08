@@ -67,8 +67,8 @@ public interface IInterfaceInput {
     String getNameForMouseButton(int mouseButton);
 
     /**
-     * Returns the mouse button index for a given human-readable name,
-     * or -1 if the name does not correspond to a mouse button.
+     * Returns the mouse button index for a given human-readable name.
+     * Throws IllegalStateException if the name is not a valid mouse button name.
      */
     int getMouseButtonForName(String name);
 

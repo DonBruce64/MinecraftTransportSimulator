@@ -311,14 +311,11 @@ public class InterfaceInput implements IInterfaceInput {
             case "MOUSE_MIDDLE":
                 return GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
             default:
-                if (name.startsWith("MOUSE_")) {
-                    try {
-                        return Integer.parseInt(name.substring(6)) - 1;
-                    } catch (NumberFormatException e) {
-                        return -1;
-                    }
+                try {
+                    return Integer.parseInt(name.substring(6)) - 1;
+                } catch (NumberFormatException e) {
+                    throw new IllegalStateException("ERROR: Client config file has a mouse button bound to a control that is not a number! Check your config or delete it and re-start.");
                 }
-                return -1;
         }
     }
 
