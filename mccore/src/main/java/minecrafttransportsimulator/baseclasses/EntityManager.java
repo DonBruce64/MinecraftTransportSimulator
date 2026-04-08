@@ -216,6 +216,11 @@ public abstract class EntityManager {
                 }
             });
 
+            //Tick lingering explosion effects on the server.
+            if (!world.isClient()) {
+                Explosion.tickLingeringExplosions(world);
+            }
+
             //Do hotload operations.
             //This operates on all threads concurrently as long as we're counting down.
             if (hotloadStep > 0) {

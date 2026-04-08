@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Explosion;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -648,12 +649,18 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Spawn an explosion if we are an explosive bullet on the server.
         if (!gun.world.isClient() && ConfigSystem.settings.damage.bulletExplosions.value) {
             if (gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.EXPLOSIVE)) {
-                float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
                 Point3D explosionPosition = position.copy();
                 if (hitType == HitType.BLOCK) {
                     explosionPosition.add(hitSide.xOffset, hitSide.yOffset, hitSide.zOffset);
                 }
-                gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
+                if (gun.lastLoadedBullet.definition.bullet.blastDamage != 0) {
+                    //Use custom explosion system with elliptical radii and per-target-type damage.
+                    new Explosion(gun.world, explosionPosition, gun).doExplosion();
+                } else {
+                    //Backward compat: old bullets without blastDamage use vanilla explosion.
+                    float blastSize = gun.lastLoadedBullet.definition.bullet.blastStrength == 0 ? gun.lastLoadedBullet.definition.bullet.diameter / 10F : gun.lastLoadedBullet.definition.bullet.blastStrength;
+                    gun.world.spawnExplosion(explosionPosition, blastSize, gun.lastLoadedBullet.definition.bullet.types.contains(BulletType.INCENDIARY) && ConfigSystem.settings.damage.bulletBlockBreaking.value, ConfigSystem.settings.damage.bulletBlockBreaking.value);
+                }
                 if (bullet != null) {
                     bullet.displayDebugMessage("SPAWNING EXPLOSION AT " + explosionPosition);
                 }
