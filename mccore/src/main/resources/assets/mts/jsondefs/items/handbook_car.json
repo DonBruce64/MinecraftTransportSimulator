@@ -445,40 +445,6 @@
             },
             {
                 "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Roads",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Roads",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "While roads aren't vehicles, they are something all vehicles will interact with. There are two types of roads in the mod: static and dynamic. Static roads are pre-built sections that you place down like a Lego road plate. Dynamic roads are the opposite: flexible connections you can put anywhere.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "For dynamic roads, you need to define two points to make a road path. The first is done by sneak-clicking a block in the direction for the road to go. The second is done by moving to the other end of where you want the road, and face in the direction towards the first point. You can also click an existing road segment rather than a block, and the road will auto-connect to that segment. This includes static sections, which are how you make road junctions.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
                 "title": "Keyboard Controls",
                 "pageText": [
                     {
