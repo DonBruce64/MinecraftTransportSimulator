@@ -72,6 +72,7 @@ public class JSONConfigSettings {
 
             private static Map<String, Double> populateDefaultWeights() {
                 Map<String, Double> weights = new HashMap<>();
+                weights.put("cardboard_package", 5.0);
                 weights.put("diamond", 4.0);
                 weights.put("iron", 4.0);
                 weights.put("gold", 4.0);
