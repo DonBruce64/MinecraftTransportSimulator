@@ -417,11 +417,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (hitExternalEntity != null) {
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(hitExternalEntity, damage));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitExternalEntity.getPosition(), Axis.getFromVector(motion), HitType.ENTITY));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, Axis.getFromVector(motion), HitType.ENTITY));
                         waitingOnActionPacket = true;
                     } else {
                         performExternalEntityHitLogic(hitExternalEntity, damage);
-                        performGenericHitLogic(gun, bulletNumber, hitExternalEntity.getPosition(), Axis.getFromVector(motion), HitType.ENTITY);
+                        performGenericHitLogic(gun, bulletNumber, position, Axis.getFromVector(motion), HitType.ENTITY);
                     }
                     displayDebugMessage("HIT MC ENTITY " + hitExternalEntity.getName());
                     return;

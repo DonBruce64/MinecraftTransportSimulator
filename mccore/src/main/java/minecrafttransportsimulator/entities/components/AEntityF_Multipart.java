@@ -376,10 +376,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR);
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
@@ -395,9 +395,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
                         //Check all parts on this entity for fragmentation hits within the cone.
                         for (APart part : allParts) {
-                            double distToPart = hitEntry.position.distanceTo(part.position);
+                            double distToPart = bullet.position.distanceTo(part.position);
                             if (distToPart <= coneRange) {
-                                Point3D toPartVector = part.position.copy().subtract(hitEntry.position);
+                                Point3D toPartVector = part.position.copy().subtract(bullet.position);
                                 double toPartLen = toPartVector.length();
                                 if (toPartLen > 0) {
                                     double angleToPart = Math.acos(toPartVector.dotProduct(bullet.motion, false) / (toPartLen * bullet.motion.length()));
@@ -420,9 +420,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         for (APart part : allParts) {
                             if (part.rider != null) {
                                 IWrapperEntity partRider = part.rider;
-                                double distToRider = hitEntry.position.distanceTo(partRider.getPosition());
+                                double distToRider = bullet.position.distanceTo(partRider.getPosition());
                                 if (distToRider <= coneRange) {
-                                    Point3D toRiderVector = partRider.getPosition().copy().subtract(hitEntry.position);
+                                    Point3D toRiderVector = partRider.getPosition().copy().subtract(bullet.position);
                                     double toRiderLen = toRiderVector.length();
                                     if (toRiderLen > 0) {
                                         double angleToRider = Math.acos(toRiderVector.dotProduct(bullet.motion, false) / (toRiderLen * bullet.motion.length()));
@@ -470,10 +470,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         }
 
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR);
                         }
                         return EntityBullet.HitType.ARMOR;
                     }
@@ -507,14 +507,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.VEHICLE));
                             bullet.waitingOnActionPacket = true;
                             return EntityBullet.HitType.VEHICLE;
                         }
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.VEHICLE);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }
