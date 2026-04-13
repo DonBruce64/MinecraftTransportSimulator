@@ -364,14 +364,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     double penetrationPotential = bulletIsHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
 
                     //Armor-piercing and sub-caliber projectiles lose some of their armor penetration when penetrating the armor boxes.
-                    if (!bulletIsHeat && armorThickness > 0 && penetrationPotential > 0) {
-                        double ratio = armorThickness / penetrationPotential;
-                        double penetrationLoss = armorThickness * (1.0 + ratio);
-                        bullet.armorPenetrated += penetrationLoss;
-                    } else {
-                        bullet.armorPenetrated += armorThickness;
-                    }
-                    bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
+                    //Heat projectiles use their base penetration directly without scaling.
+                    bullet.armorPenetrated += armorThickness;
+                    bullet.displayDebugMessage("HIT ARMOR: " + (int) armorThickness + " TOTAL ARMOR HIT: " + (int) bullet.armorPenetrated + " / PENETRATED " + (int) penetrationPotential);
 
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
@@ -381,12 +376,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         } else {
                             EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR);
                         }
-                        bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
+                        if (bulletIsHeat) {
+                            bullet.displayDebugMessage("HEAT FAILED TO PENETRATE ARMOR. MAX PEN: " + (int) penetrationPotential);
+                        } else {
+                            bullet.displayDebugMessage("HIT TOO MUCH ARMOR. MAX PEN: " + (int) penetrationPotential);
+                        }
                         return EntityBullet.HitType.ARMOR;
                     }
 
                     //If the bullet has FRAG type and penetrated armor, deal fragmentation damage to internals.
                     if (bullet.definition.bullet.types.contains(BulletType.FRAG) && bullet.definition.bullet.fragDamage > 0) {
+                        int fragPartsHit = 0;
+                        int fragEntitiesHit = 0;
                         float coneAngle = bullet.definition.bullet.fragConeAngle > 0 ? bullet.definition.bullet.fragConeAngle : 45.0f;
                         float hitProbability = bullet.definition.bullet.fragHitProbability > 0 ? bullet.definition.bullet.fragHitProbability : 0.5f;
                         float fragDmg = bullet.definition.bullet.fragDamage;
@@ -403,6 +404,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                     double angleToPart = Math.acos(toPartVector.dotProduct(bullet.motion, false) / (toPartLen * bullet.motion.length()));
                                     if (angleToPart <= coneAngleRad) {
                                         if (hitProbability >= 1.0f || Math.random() <= hitProbability) {
+                                            fragPartsHit++;
                                             Damage fragDamage = new Damage(fragDmg, part.boundingBox, bullet.gun, bullet.gun.lastController, null);
                                             fragDamage.ignoreCooldown = true;
                                             if (world.isClient()) {
@@ -428,6 +430,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                         double angleToRider = Math.acos(toRiderVector.dotProduct(bullet.motion, false) / (toRiderLen * bullet.motion.length()));
                                         if (angleToRider <= coneAngleRad) {
                                             if (hitProbability >= 1.0f || Math.random() <= hitProbability) {
+                                                fragEntitiesHit++;
                                                 Damage fragDamage = new Damage(fragDmg, part.boundingBox, bullet.gun, bullet.gun.lastController, null);
                                                 fragDamage.ignoreCooldown = true;
                                                 if (world.isClient()) {
@@ -441,34 +444,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                                 }
                             }
                         }
+                        bullet.displayDebugMessage("FRAG HIT " + fragPartsHit + " PARTS AND " + fragEntitiesHit + " ENTITIES");
                     }
 
                     //HEAT shells detonate on armor contact and do not continue flying.
-                    //If penetration was successful, apply post-penetration damage to the vehicle and crew
-                    //proportional to the residual penetration potential.
                     if (bulletIsHeat) {
-                        double residualRatio = (penetrationPotential - bullet.armorPenetrated) / penetrationPotential;
-                        if (residualRatio > 0) {
-                            double postPenDamage = bullet.definition.bullet.damage * residualRatio;
-                            Damage heatDamage = new Damage(bullet.gun, hitEntry.box, postPenDamage);
-                            if (world.isClient()) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, heatDamage));
-                                for (APart part : allParts) {
-                                    if (part.rider != null) {
-                                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(part.rider, heatDamage));
-                                    }
-                                }
-                            } else {
-                                EntityBullet.performEntityHitLogic(hitEntity, heatDamage);
-                                for (APart part : allParts) {
-                                    if (part.rider != null) {
-                                        EntityBullet.performExternalEntityHitLogic(part.rider, heatDamage);
-                                    }
-                                }
-                            }
-                            bullet.displayDebugMessage("HEAT POST-PEN DAMAGE: " + (int) postPenDamage);
-                        }
-
+                        bullet.displayDebugMessage("HEAT DETONATED ON ARMOR.");
                         if (world.isClient()) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
