@@ -575,7 +575,7 @@ public class PartGun extends APart {
             }
 
             //Handle reload delay and recoil.
-            if (state.isAtLeast(GunState.FIRING_CURRENTLY) || cooldownTimeRemaining != 0) {
+            if (state.isAtLeast(GunState.FIRING_CURRENTLY) || (cooldownTimeRemaining != 0 && !isSemiAutoVar.isActive)) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
             } else {
                 if (reloadDelayRemaining > 0) {
