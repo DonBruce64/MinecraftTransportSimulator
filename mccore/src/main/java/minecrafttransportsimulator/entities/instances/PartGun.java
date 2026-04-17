@@ -1353,26 +1353,19 @@ public class PartGun extends APart {
     }
 
     /**
-     * Registers this gun with the target vehicle's gunsLockedOn list.
-     */
-    private void registerWithTargetVehicle() {
-        // Only register if we're locking onto a vehicle (via engineTarget)
-        if (engineTarget != null && engineTarget.vehicleOn != null && engineTarget.vehicleOn != vehicleOn) {
-            AEntityVehicleE_Powered targetVehicle = engineTarget.vehicleOn;
-            if (!targetVehicle.gunsLockedOn.contains(this)) {
-                targetVehicle.gunsLockedOn.add(this);
-            }
-        }
-    }
-
-    /**
      * Updates target registration. Call this whenever entityTarget or engineTarget changes.
      */
     private void updateTargetRegistration() {
         // Check if engine target changed
         if (engineTarget != prevEngineTarget) {
             prevEngineTarget = engineTarget;
-            registerWithTargetVehicle();
+            // Registers this gun with the target vehicle's gunsLockedOn list. I hope.
+            if (engineTarget != null && engineTarget.vehicleOn != null && engineTarget.vehicleOn != vehicleOn) {
+                AEntityVehicleE_Powered targetVehicle = engineTarget.vehicleOn;
+                if (!targetVehicle.gunsLockedOn.contains(this)) {
+                    targetVehicle.gunsLockedOn.add(this);
+                }
+            }
         }
         // Note: entityTarget targets are players/mobs, not vehicles, so we don't register for those
         prevEntityTarget = entityTarget;
