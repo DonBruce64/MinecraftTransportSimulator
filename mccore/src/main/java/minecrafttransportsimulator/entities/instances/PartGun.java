@@ -150,8 +150,6 @@ public class PartGun extends APart {
     private final Point3D normalizedEntityVector = new Point3D();
 
     //Global data.
-    private static final int RAYTRACE_DISTANCE = 750;
-    private static final double DEFAULT_CONE_ANGLE = 2.0;
     private static final int PITCH_RECOIL_CLAMPING = 80;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
