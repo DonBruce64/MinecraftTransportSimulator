@@ -150,8 +150,6 @@ public class PartGun extends APart {
     private final Point3D normalizedEntityVector = new Point3D();
 
     //Global data.
-    private static final int RAYTRACE_DISTANCE = 750;
-    private static final double DEFAULT_CONE_ANGLE = 2.0;
     private static final int PITCH_RECOIL_CLAMPING = 80;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
@@ -808,10 +806,10 @@ public class PartGun extends APart {
                     case DEFAULT: {
                         //Default gets target based on controller eyes and where they are looking.
                         //Need to get their eye position though, not their main position, for accurate targeting.
-                        //Also, don't use gun max distance here, since that's only for boresight.
+                        //Uses lockRange and lockMaxAngle from JSON like boresight.
                         startPoint = controller.getEyePosition();
-                        searchVector = controller.getLineOfSight(RAYTRACE_DISTANCE);
-                        coneAngle = DEFAULT_CONE_ANGLE;
+                        searchVector = controller.getLineOfSight(definition.gun.lockRange);
+                        coneAngle = definition.gun.lockMaxAngle;
                         break;
                     }
                     case BORESIGHT: {
