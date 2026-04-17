@@ -14,6 +14,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.rendering.RenderText;
+import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -647,4 +650,19 @@ public class InterfaceRender implements IInterfaceRender {
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
     });
+
+    @Override
+    public void drawVanillaText(String text, int x, int y, ColorRGB color, RenderText.TextAlignment alignment, float scale) {
+        FontRenderer fontRenderer = Minecraft.getInstance().font;
+        float width = fontRenderer.width(text) * scale;
+        float finalX = x;
+        if (alignment == RenderText.TextAlignment.CENTERED) finalX -= width / 2.0F;
+        else if (alignment == RenderText.TextAlignment.RIGHT_ALIGNED) finalX -= width;
+
+        matrixStack.pushPose();
+        matrixStack.translate(finalX, y, 0);
+        matrixStack.scale(scale, -scale, 1.0F);
+        fontRenderer.drawInBatch(text, 0, 0, color.rgbInt | 0xFF000000, true, matrixStack.last().pose(), renderBuffer, false, 0, 15728880);
+        matrixStack.popPose();
+    }
 }

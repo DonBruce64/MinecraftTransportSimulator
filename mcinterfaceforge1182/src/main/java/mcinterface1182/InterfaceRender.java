@@ -30,6 +30,7 @@ import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
@@ -40,9 +41,11 @@ import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
+import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -735,4 +738,20 @@ public class InterfaceRender implements IInterfaceRender {
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
     });
+
+
+    @Override
+    public void drawVanillaText(String text, int x, int y, ColorRGB color, RenderText.TextAlignment alignment, float scale) {
+        Font fontRenderer = Minecraft.getInstance().font;
+        float width = fontRenderer.width(text) * scale;
+        float finalX = x;
+        if (alignment == RenderText.TextAlignment.CENTERED) finalX -= width / 2.0F;
+        else if (alignment == RenderText.TextAlignment.RIGHT_ALIGNED) finalX -= width;
+
+        matrixStack.pushPose();
+        matrixStack.translate(finalX, y, 0);
+        matrixStack.scale(scale, -scale, 1.0F);
+        fontRenderer.drawInBatch(text, 0, 0, color.rgbInt | 0xFF000000, true, matrixStack.last().pose(), renderBuffer, false, 0, 15728880);
+        matrixStack.popPose();
+    }
 }

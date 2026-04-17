@@ -64,6 +64,9 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    public static boolean adjustedCamera;
+    public static final Point3D projectionCameraPosition = new Point3D();
+    public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
     private static int lastScreenWidth;
     private static int lastScreenHeight;
@@ -82,7 +85,11 @@ public class InterfaceEventsEntityRendering {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
             cameraAdjustedOrientation.setToZero();
+            adjustedCamera = false;
             if (CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedOrientation, (float) event.getRenderPartialTicks())) {
+                projectionCameraPosition.set(cameraAdjustedPosition);
+                projectionCameraOrientation.set(cameraAdjustedOrientation);
+                adjustedCamera = true;
                 //Set helper to the current camera position.
                 EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
                 playerPosition.set(mcPlayer.posX, mcPlayer.posY, mcPlayer.posZ);
