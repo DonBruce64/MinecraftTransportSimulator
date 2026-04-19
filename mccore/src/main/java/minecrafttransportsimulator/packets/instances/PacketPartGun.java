@@ -34,12 +34,29 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         this.bulletQty = bulletQty;
     }
 
+    /**
+     * Constructor for selecting a preferred ammo type. Pass null to clear the preference.
+     */
+    public PacketPartGun(PartGun gun, ItemBullet preferredBullet) {
+        super(gun);
+        this.stateRequest = Request.SELECT_AMMO;
+        this.bulletItem = preferredBullet;
+        this.bulletQty = 0;
+    }
+
     public PacketPartGun(ByteBuf buf) {
         super(buf);
         this.stateRequest = Request.values()[buf.readByte()];
         if (stateRequest == Request.RELOAD_ONCLIENT) {
             this.bulletItem = readItemFromBuffer(buf);
             this.bulletQty = buf.readInt();
+        } else if (stateRequest == Request.SELECT_AMMO) {
+            if (buf.readBoolean()) {
+                this.bulletItem = readItemFromBuffer(buf);
+            } else {
+                this.bulletItem = null;
+            }
+            this.bulletQty = 0;
         } else {
             this.bulletItem = null;
             this.bulletQty = 0;
@@ -53,6 +70,11 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         if (stateRequest == Request.RELOAD_ONCLIENT) {
             writeItemToBuffer(bulletItem, buf);
             buf.writeInt(bulletQty);
+        } else if (stateRequest == Request.SELECT_AMMO) {
+            buf.writeBoolean(bulletItem != null);
+            if (bulletItem != null) {
+                writeItemToBuffer(bulletItem, buf);
+            }
         }
     }
 
@@ -100,6 +122,13 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 gun.performGunHandheldMovements();
                 break;
             }
+            case SELECT_AMMO: {
+                //Only update the preferred bullet.  The filter in tryToReload() already prevents future
+                //reloads from pulling mismatched ammo, and leaving an in-flight reload alone avoids the
+                //client/server timing desync that unloading during reload would otherwise introduce.
+                gun.preferredBullet = bulletItem;
+                break;
+            }
         }
         return stateRequest.sendToClients;
     }
@@ -114,7 +143,8 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         AIM_OFF(true),
         BULLETS_OUT(false),
         BULLETS_PRESENT(false),
-        HANDHELD_MOVEMENTS(true);
+        HANDHELD_MOVEMENTS(true),
+        SELECT_AMMO(true);
 
         private final boolean sendToClients;
 

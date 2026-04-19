@@ -83,10 +83,11 @@ public class PartGun extends APart {
     private final ComputedVariable ableToFireVar;
     public final ComputedVariable twoHandedVar;
 
-    private final List<PartInteractable> connectedCrates = new ArrayList<>();
+    public final List<PartInteractable> connectedCrates = new ArrayList<>();
 
     //Stored variables used to determine bullet firing behavior.
     public ItemBullet lastLoadedBullet;
+    public ItemBullet preferredBullet;
     public final List<ItemBullet> firedBullets = new ArrayList<>();
     private int bulletsFired;
     private int loadedBulletCount;
@@ -1075,6 +1076,10 @@ public class PartGun extends APart {
         AItemBase item = stack.getItem();
         if(item instanceof ItemBullet) {
             ItemBullet bulletItem = (ItemBullet) item;
+            //If a preferred bullet has been selected via the ammo selection GUI, only accept that exact type.
+            if (preferredBullet != null && !preferredBullet.equals(bulletItem)) {
+                return false;
+            }
             //Check to make sure this is a bullet, the gun isn't reloading and can accept reloads.
             if (bulletItem.definition.bullet != null) {
                 //Check bullet parameters match.
@@ -1142,6 +1147,39 @@ public class PartGun extends APart {
         loadedBullets.clear();
         loadedBulletCounts.clear();
         loadedBulletCount = 0;
+    }
+
+    /**
+     * Returns the total number of bullets currently loaded in this gun, summed across all types.
+     */
+    public int getLoadedBulletCount() {
+        return loadedBulletCount;
+    }
+
+    /**
+     * Returns the reload progress as a fraction 0..1 where 0 is "just started" and 1 is "complete".
+     * Returns 0 when no reload is in progress.  Used by HUD indicators.
+     */
+    public float getReloadProgress() {
+        if (!isReloading) {
+            return 0F;
+        }
+        int totalStart = definition.gun.reloadStartTime;
+        int totalMain = definition.gun.reloadTime;
+        int totalEnd = definition.gun.reloadEndTime;
+        int totalCycle = totalStart + totalMain + totalEnd;
+        if (totalCycle <= 0) {
+            return 0F;
+        }
+        int remaining = reloadStartTimeRemaining + reloadMainTimeRemaining + reloadEndTimeRemaining;
+        float progress = 1F - (remaining / (float) totalCycle);
+        if (progress < 0F) {
+            return 0F;
+        }
+        if (progress > 1F) {
+            return 1F;
+        }
+        return progress;
     }
 
     /**

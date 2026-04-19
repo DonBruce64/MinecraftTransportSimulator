@@ -402,6 +402,36 @@ public final class PartSeat extends APart {
     }
 
     /**
+     * Sets the active gun group to the one at the specified index in {@link #gunGroups}.
+     * A groupIndex of -1 clears the active gun (disables firing) when the seat permits it
+     * via {@link JSONPartDefinition#canDisableGun}.  Other out-of-range indices are ignored
+     * silently so stale HUD clicks don't disrupt seat state.
+     */
+    public void setActiveGunByIndex(int groupIndex) {
+        if (groupIndex == -1) {
+            if (placementDefinition.canDisableGun) {
+                activeGunItem = null;
+                gunIndex = 0;
+                gunGroupIndex = 0;
+            }
+            return;
+        }
+        if (groupIndex < 0) {
+            return;
+        }
+        int i = 0;
+        for (ItemPartGun gunItem : gunGroups.keySet()) {
+            if (i == groupIndex) {
+                activeGunItem = gunItem;
+                gunIndex = 0;
+                gunGroupIndex = 0;
+                return;
+            }
+            ++i;
+        }
+    }
+
+    /**
      * Sets the next active gun for this seat.  Active guns are queried by checking guns to
      * see if this rider can control them.  If so, then the active gun is set to that gun type.
      */
