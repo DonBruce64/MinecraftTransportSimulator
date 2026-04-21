@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.rendering.RenderText;
+import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -488,4 +491,20 @@ public class InterfaceRender implements IInterfaceRender {
             GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         }
     }
+
+    @Override
+    public void drawVanillaText(String text, int x, int y, ColorRGB color, RenderText.TextAlignment alignment, float scale) {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+        float width = fontRenderer.getStringWidth(text) * scale;
+        float finalX = x;
+        if (alignment == RenderText.TextAlignment.CENTERED) finalX -= width / 2.0F;
+        else if (alignment == RenderText.TextAlignment.RIGHT_ALIGNED) finalX -= width;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(finalX, y, 0);
+        GlStateManager.scale(scale, -scale, 1.0F);
+        fontRenderer.drawStringWithShadow(text, 0, 0, color.rgbInt | 0xFF000000);
+        GlStateManager.popMatrix();
+    }
+
 }
