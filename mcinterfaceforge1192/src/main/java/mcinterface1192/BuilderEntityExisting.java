@@ -177,11 +177,13 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             if (lastExplosionPosition != null && source.isExplosion()) {
                 //We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
-                //Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
+                //Explosions can hit multiple boxes at once.  Apply damage once to the core entity to prevent
+                //parts from forwarding duplicate explosive damage back into the same vehicle.
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
                 for (BoundingBox box : interactAttackBoxes.getBoxes()) {
                     if (box.intersects(explosiveBounds)) {
-                        multipart.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
+                        multipart.attack(new Damage(amount * ConfigSystem.settings.damage.externalExplosionDamageFactor.value, null, null, playerSource, null).setExplosive());
+                        break;
                     }
                 }
                 lastExplosionPosition = null;
