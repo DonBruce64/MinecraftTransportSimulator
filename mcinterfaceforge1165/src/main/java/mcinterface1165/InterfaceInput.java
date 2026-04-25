@@ -29,6 +29,7 @@ import net.minecraft.client.util.InputMappings;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
+import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -367,6 +368,13 @@ public class InterfaceInput implements IInterfaceInput {
                 } catch (NumberFormatException e) {
                     throw new IllegalStateException("ERROR: Client config file has a mouse button bound to a control that is not a number! Check your config or delete it and re-start.");
                 }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVMovementInput(InputUpdateEvent event) {
+        if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().shiftKeyDown)) {
+            event.getMovementInput().shiftKeyDown = false;
         }
     }
 
