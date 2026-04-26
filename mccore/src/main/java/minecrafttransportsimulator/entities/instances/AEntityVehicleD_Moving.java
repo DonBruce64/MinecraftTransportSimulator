@@ -33,6 +33,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * At the final basic vehicle level we add in the functionality for state-based movement.
@@ -137,7 +138,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
         this.blockBreakDelay = 500;
-        
+
         addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
         addVariable(this.rightTurnLightVar = new ComputedVariable(this, "right_turn_signal", data));
         addVariable(this.brakeVar = new ComputedVariable(this, "brake", data));
@@ -245,7 +246,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             encompassingBox.heightRadius -= 1.0;
             for (IWrapperEntity entity : nearbyEntities) {
                 //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-                if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
+                if (entity.getEntityRiding() == null || !((IWrapperPlayer) entity).isSpectator()) {
                     //Check each box individually.  Need to do this to know which delta to apply.
                     BoundingBox entityBounds = entity.getBounds();
                     entityBounds.heightRadius += 0.25;
@@ -273,6 +274,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                     entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
                                     break;
                                 }
+                            } else if (!world.isClient() && velocity >= ConfigSystem.settings.damage.collisionDamageMinimumVelocity.value) {
+                                APart part = getPartWithBox(box);
+                                if (!(part instanceof PartGroundDevice)) {
+                                    double damageAmount = ConfigSystem.settings.damage.collisionDamageFactor.value * velocity * currentMass / 1000F;
+                                    IWrapperEntity controller = getController();
+                                    LanguageEntry language = controller != null ? LanguageSystem.DEATH_COLLISION_PLAYER : LanguageSystem.DEATH_COLLISION_NULL;
+                                    Damage collisionDamage = new Damage(damageAmount, box, this, controller, language);
+                                    entity.attack(collisionDamage);
+                                }
+                                break;
                             }
                         }
                     }
