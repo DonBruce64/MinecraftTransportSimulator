@@ -133,6 +133,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public boolean isGUIHidden() {
+        return Minecraft.getMinecraft().gameSettings.hideGUI;
+    }
+
+    @Override
     public void closeGUI() {
         Minecraft.getMinecraft().displayGuiScreen(null);
     }
