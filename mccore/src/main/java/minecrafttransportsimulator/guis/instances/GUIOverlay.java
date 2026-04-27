@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -9,8 +11,10 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -21,9 +25,11 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -42,6 +48,8 @@ public class GUIOverlay extends AGUIBase {
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
     private int lastCollisionGroupHoverIndex;
+    private int lastCollisionBoxHoverIndex;
+    private final LinkedHashSet<AEntityD_Definable<?>> trackedGUITextEntities = new LinkedHashSet<>();
 
     @Override
     public void setupComponents() {
@@ -115,15 +123,31 @@ public class GUIOverlay extends AGUIBase {
         }
         
         int hoveredCollisionGroupIndex = getCollisionGroupIndex(interactResult);
-        if (lastCollisionGroupHoverEntity != null && (interactResult == null || interactResult.entity != lastCollisionGroupHoverEntity || hoveredCollisionGroupIndex != lastCollisionGroupHoverIndex)) {
-            lastCollisionGroupHoverEntity.getOrCreateVariable("collision_" + lastCollisionGroupHoverIndex + "_player_cursor_hovered").setActive(false, false);
-            lastCollisionGroupHoverEntity = null;
-            lastCollisionGroupHoverIndex = 0;
+        int hoveredCollisionBoxIndex = getCollisionBoxIndex(interactResult);
+        boolean collisionGroupHoverChanged = interactResult == null || interactResult.entity != lastCollisionGroupHoverEntity || hoveredCollisionGroupIndex != lastCollisionGroupHoverIndex;
+        boolean collisionBoxHoverChanged = collisionGroupHoverChanged || hoveredCollisionBoxIndex != lastCollisionBoxHoverIndex;
+        if (lastCollisionGroupHoverEntity != null) {
+            if (collisionBoxHoverChanged && lastCollisionBoxHoverIndex > 0) {
+                //Box indexes are 1-based and follow the order of the collision entries in the hovered group.
+                lastCollisionGroupHoverEntity.getOrCreateVariable("collision_" + lastCollisionGroupHoverIndex + "_" + lastCollisionBoxHoverIndex + "_player_cursor_hovered").setActive(false, false);
+                lastCollisionBoxHoverIndex = 0;
+            }
+            if (collisionGroupHoverChanged) {
+                lastCollisionGroupHoverEntity.getOrCreateVariable("collision_" + lastCollisionGroupHoverIndex + "_player_cursor_hovered").setActive(false, false);
+                lastCollisionGroupHoverEntity = null;
+                lastCollisionGroupHoverIndex = 0;
+            }
         }
-        if (lastCollisionGroupHoverEntity == null && interactResult != null && hoveredCollisionGroupIndex > 0) {
-            interactResult.entity.getOrCreateVariable("collision_" + hoveredCollisionGroupIndex + "_player_cursor_hovered").setActive(true, false);
-            lastCollisionGroupHoverEntity = interactResult.entity;
-            lastCollisionGroupHoverIndex = hoveredCollisionGroupIndex;
+        if (interactResult != null && hoveredCollisionGroupIndex > 0) {
+            if (lastCollisionGroupHoverEntity == null) {
+                interactResult.entity.getOrCreateVariable("collision_" + hoveredCollisionGroupIndex + "_player_cursor_hovered").setActive(true, false);
+                lastCollisionGroupHoverEntity = interactResult.entity;
+                lastCollisionGroupHoverIndex = hoveredCollisionGroupIndex;
+            }
+            if (collisionBoxHoverChanged && hoveredCollisionBoxIndex > 0) {
+                interactResult.entity.getOrCreateVariable("collision_" + hoveredCollisionGroupIndex + "_" + hoveredCollisionBoxIndex + "_player_cursor_hovered").setActive(true, false);
+            }
+            lastCollisionBoxHoverIndex = hoveredCollisionBoxIndex;
         }
         
         mouseoverLabel.text = "";
@@ -236,14 +260,93 @@ public class GUIOverlay extends AGUIBase {
     }
 
     @Override
+    protected void renderCustomElements(int mouseX, int mouseY, boolean blendingEnabled, float partialTicks) {
+        if (!blendingEnabled || InterfaceManager.clientInterface.isGUIHidden()) {
+            return;
+        }
+
+        LinkedHashSet<AEntityD_Definable<?>> currentGUITextEntities = new LinkedHashSet<>();
+        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+        addGUITextEntityChain(currentGUITextEntities, player.getEntityRiding());
+        if (lastInteractResult != null) {
+            addGUITextEntityChain(currentGUITextEntities, lastInteractResult.entity);
+        }
+
+        trackedGUITextEntities.addAll(currentGUITextEntities);
+        int entityLayer = 0;
+        Iterator<AEntityD_Definable<?>> iterator = trackedGUITextEntities.iterator();
+        while (iterator.hasNext()) {
+            AEntityD_Definable<?> entity = iterator.next();
+            if (!entity.isValid || !entity.hasGUIText()) {
+                iterator.remove();
+                continue;
+            }
+
+            boolean isCurrentEntity = currentGUITextEntities.contains(entity);
+            boolean shouldKeepTracking = isCurrentEntity;
+            for (JSONText textDef : entity.definition.rendering.guiTextObjects) {
+                float alpha = entity.getGUITextAlpha(textDef, isCurrentEntity, partialTicks);
+                if (alpha <= 0.0F) {
+                    continue;
+                }
+
+                String textValue = entity.getGUITextValue(textDef, partialTicks);
+                if (textValue == null || textValue.isEmpty()) {
+                    continue;
+                }
+
+                //Each tracked entity gets a small Z slice so multiple prompts can overlap without fighting.
+                RenderText.drawGUIText(textValue, entity, textDef, screenWidth, screenHeight, 325 + entityLayer * 5D, alpha);
+                shouldKeepTracking = true;
+            }
+
+            if (!shouldKeepTracking) {
+                iterator.remove();
+            } else {
+                ++entityLayer;
+            }
+        }
+    }
+
+    @Override
     protected String getTexture() {
         return CameraSystem.customCameraOverlay;
+    }
+
+    private void addGUITextEntityChain(LinkedHashSet<AEntityD_Definable<?>> entities, AEntityB_Existing startEntity) {
+        AEntityB_Existing entity = startEntity;
+        while (entity instanceof APart) {
+            if (entity instanceof AEntityD_Definable<?>) {
+                AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+                if (definable.hasGUIText()) {
+                    entities.add(definable);
+                }
+            }
+            entity = ((APart) entity).entityOn;
+        }
+
+        if (entity instanceof AEntityD_Definable<?>) {
+            AEntityD_Definable<?> definable = (AEntityD_Definable<?>) entity;
+            if (definable.hasGUIText()) {
+                entities.add(definable);
+            }
+        }
     }
 
    
     private static int getCollisionGroupIndex(EntityInteractResult interactResult) {
         if (interactResult != null && interactResult.box.groupDef != null && interactResult.entity.definition.collisionGroups != null) {
             return interactResult.entity.definition.collisionGroups.indexOf(interactResult.box.groupDef) + 1;
+        }
+        return 0;
+    }
+
+    private static int getCollisionBoxIndex(EntityInteractResult interactResult) {
+        if (interactResult != null && interactResult.box.groupDef != null && interactResult.entity.definition.collisionGroups != null) {
+            int groupIndex = interactResult.entity.definition.collisionGroups.indexOf(interactResult.box.groupDef);
+            if (groupIndex >= 0 && interactResult.entity.definitionCollisionBoxes.size() > groupIndex) {
+                return interactResult.entity.definitionCollisionBoxes.get(groupIndex).indexOf(interactResult.box) + 1;
+            }
         }
         return 0;
     }
