@@ -1,94 +1,172 @@
-package mcinterface1122;
+package mcinterface1211;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
-import net.minecraft.block.SoundType;
+import minecrafttransportsimulator.systems.LanguageSystem;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.core.registries.BuiltInRegistries;
 
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(modid = InterfaceLoader.MODID, value = Dist.CLIENT)
 public class InterfaceClient implements IInterfaceClient {
     private static CameraMode actualCameraMode;
     private static CameraMode cameraModeRequest;
     private static int ticksToCullingWarning = 200;
-    private static BuilderEntityRenderForwarder activeFollower;
-    private static int ticksSincePlayerJoin;
+
+    /**Model preloading state — spreads parsing across ticks to avoid a single big freeze.*/
+    private static List<String> modelsToPreload = null;
+    private static int preloadIndex = 0;
+    private static final int MODELS_PER_TICK = 3;
+
+    /**
+     * Initiates model preloading by collecting all unique model locations from loaded packs.
+     * Actual parsing is spread across subsequent client ticks via tickModelPreload().
+     */
+    private static void initModelPreload() {
+        if (modelsToPreload != null) {
+            return; //Already started or finished.
+        }
+        Set<String> uniqueLocations = new HashSet<>();
+        for (AItemPack<?> item : PackParser.getAllPackItems()) {
+            if (item instanceof AItemSubTyped) {
+                AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) item;
+                if (subTypedItem.definition instanceof AJSONMultiModelProvider) {
+                    try {
+                        String modelLocation = ((AJSONMultiModelProvider) subTypedItem.definition).getModelLocation(subTypedItem.subDefinition);
+                        if (modelLocation != null) {
+                            uniqueLocations.add(modelLocation);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        modelsToPreload = new ArrayList<>(uniqueLocations);
+        preloadIndex = 0;
+        InterfaceManager.coreInterface.logError("MTS model preload: " + modelsToPreload.size() + " unique models queued.");
+    }
+
+    /**
+     * Parses a few models per tick on the main thread.  This avoids thread-safety issues
+     * with AModelParser's HashMap cache while spreading the work to prevent a single big stutter.
+     */
+    private static void tickModelPreload() {
+        if (modelsToPreload == null || preloadIndex >= modelsToPreload.size()) {
+            return;
+        }
+        int end = Math.min(preloadIndex + MODELS_PER_TICK, modelsToPreload.size());
+        for (int i = preloadIndex; i < end; i++) {
+            try {
+                AModelParser.parseModel(modelsToPreload.get(i), true);
+            } catch (Exception ignored) {
+                //Skip models that fail — they'll error at render time.
+            }
+        }
+        preloadIndex = end;
+        if (preloadIndex >= modelsToPreload.size()) {
+            InterfaceManager.coreInterface.logError("MTS model preload complete: " + modelsToPreload.size() + " models cached.");
+        }
+    }
 
     @Override
     public boolean isGamePaused() {
-        return Minecraft.getMinecraft().isGamePaused();
+        return Minecraft.getInstance().isPaused();
     }
 
     @Override
     public String getLanguageName() {
-        return Minecraft.getMinecraft().gameSettings.language;
+        if (Minecraft.getInstance().getLanguageManager() != null) {
+            return Minecraft.getInstance().getLanguageManager().getSelected();
+        } else {
+            return "en_us";
+        }
     }
 
     @Override
     public List<String> getAllLanguages() {
         List<String> list = new ArrayList<>();
-        Minecraft.getMinecraft().getLanguageManager().getLanguages().forEach(language -> list.add(language.getLanguageCode()));
+        Minecraft.getInstance().getLanguageManager().getLanguages().forEach((languageCode, languageInfo) -> list.add(languageCode));
         return list;
     }
 
     @Override
     public String getFluidName(String fluidID, String fluidMod) {
-        Fluid fluid = FluidRegistry.getFluid(fluidID);
-        return fluid != null ? new FluidStack(fluid, 1).getLocalizedName() : "INVALID";
+        for (Entry<ResourceKey<Fluid>, Fluid> fluidEntry : BuiltInRegistries.FLUID.entrySet()) {
+            ResourceLocation fluidLocation = fluidEntry.getKey().location();
+            if ((fluidMod.equals(EntityFluidTank.WILDCARD_FLUID_MOD) || fluidLocation.getNamespace().equals(fluidMod)) && fluidLocation.getPath().equals(fluidID)) {
+                return fluidEntry.getValue().getFluidType().getDescription().getString();
+            }
+        }
+        return "INVALID";
     }
 
     @Override
     public Map<String, String> getAllFluidNames() {
         Map<String, String> fluidIDsToNames = new HashMap<>();
-        for (String fluidID : FluidRegistry.getRegisteredFluids().keySet()) {
-            fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
+        for (Fluid fluid : BuiltInRegistries.FLUID) {
+            fluidIDsToNames.put(BuiltInRegistries.FLUID.getKey(fluid).getPath(), new FluidStack(fluid, 1).getDisplayName().getString());
         }
         return fluidIDsToNames;
     }
 
     @Override
     public boolean isChatOpen() {
-        return Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
+        return Minecraft.getInstance().screen instanceof ChatScreen;
     }
 
     @Override
     public boolean isGUIOpen() {
-        return Minecraft.getMinecraft().currentScreen != null;
+        return Minecraft.getInstance().screen != null;
     }
 
     @Override
+    public boolean isGUIHidden() {
+        return Minecraft.getInstance().options.hideGui;
+    }
+
     public void displayOverlayMessage(String message) {
-        Minecraft.getMinecraft().ingameGUI.setOverlayMessage(message, false);
+        Minecraft.getInstance().gui.setOverlayMessage(Component.literal(message), false);
     }
 
     @Override
@@ -103,61 +181,63 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public int getCameraDefaultZoom() {
-        return 4;
+        return 0;
     }
 
     @Override
     public long getPackedDisplaySize() {
-        ScaledResolution screenResolution = new ScaledResolution(Minecraft.getMinecraft());
-        return (((long) screenResolution.getScaledWidth()) << Integer.SIZE) | (screenResolution.getScaledHeight() & 0xffffffffL);
-    }
-
-    @Override
-    public float getMouseSensitivity() {
-        return Minecraft.getMinecraft().gameSettings.mouseSensitivity;
-    }
-
-    @Override
-    public void setMouseSensitivity(float setting) {
-        Minecraft.getMinecraft().gameSettings.mouseSensitivity = setting;
+        return (((long) Minecraft.getInstance().getWindow().getGuiScaledWidth()) << Integer.SIZE) | (Minecraft.getInstance().getWindow().getGuiScaledHeight() & 0xffffffffL);
     }
 
     @Override
     public float getFOV() {
-        return Minecraft.getMinecraft().gameSettings.fovSetting;
+        return Minecraft.getInstance().options.fov().get();
     }
 
     @Override
     public void setFOV(float setting) {
-        Minecraft.getMinecraft().gameSettings.fovSetting = setting;
+        ((Ifov) ((Object) Minecraft.getInstance().options.fov())).setManual((int) setting);
+    }
+
+    //Linked to the OptionInstanceMixin so we can implement a common interface.
+    public static interface Ifov {
+        public void setManual(Integer value);
+    };
+
+    @Override
+    public float getMouseSensitivity() {
+        return Minecraft.getInstance().options.sensitivity().get().floatValue();
+    }
+
+    @Override
+    public void setMouseSensitivity(float setting) {
+        Minecraft.getInstance().options.sensitivity().set((double) setting);
     }
 
     @Override
     public void closeGUI() {
-        Minecraft.getMinecraft().displayGuiScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     @Override
     public void setActiveGUI(AGUIBase gui) {
-        FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
+        Minecraft.getInstance().setScreen(new BuilderGUI(gui));
     }
 
     @Override
     public WrapperWorld getClientWorld() {
-        return WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+        return WrapperWorld.getWrapperFor(Minecraft.getInstance().level);
     }
 
     @Override
     public WrapperPlayer getClientPlayer() {
-        EntityPlayer player = Minecraft.getMinecraft().player;
-        return WrapperPlayer.getWrapperFor(player);
+        return WrapperPlayer.getWrapperFor(Minecraft.getInstance().player);
     }
 
     @Override
     public Point3D getCameraPosition() {
-        EntityPlayer player = Minecraft.getMinecraft().player;
-        Vec3d cameraOffset = ActiveRenderInfo.getCameraPosition();
-        mutablePosition.set(player.posX + cameraOffset.x, player.posY + cameraOffset.y, player.posZ + cameraOffset.z);
+        Vec3 cameraOffset = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        mutablePosition.set(cameraOffset.x, cameraOffset.y, cameraOffset.z);
         return mutablePosition;
     }
 
@@ -165,19 +245,52 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public void playBlockBreakSound(Point3D position) {
-        BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        if (!Minecraft.getMinecraft().world.isAirBlock(pos)) {
-            SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
-            Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+        BlockPos pos = BlockPos.containing(position.x, position.y, position.z);
+        if (!Minecraft.getInstance().level.isEmptyBlock(pos)) {
+            SoundType soundType = Minecraft.getInstance().level.getBlockState(pos).getBlock().getSoundType(Minecraft.getInstance().level.getBlockState(pos), Minecraft.getInstance().player.level(), pos, null);
+            Minecraft.getInstance().level.playSound(Minecraft.getInstance().player, pos, soundType.getBreakSound(), SoundSource.BLOCKS, soundType.getVolume(), soundType.getPitch());
         }
     }
 
     @Override
     public List<String> getTooltipLines(IWrapperItemStack stack) {
-        List<String> tooltipText = ((WrapperItemStack) stack).stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+        List<String> tooltipText = new ArrayList<>();
+        List<Component> tooltipLines = ((WrapperItemStack) stack).stack.getTooltipLines(Item.TooltipContext.EMPTY, Minecraft.getInstance().player, Minecraft.getInstance().options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL);
         //Add grey formatting text to non-first line tooltips.
-        for (int i = 1; i < tooltipText.size(); ++i) {
-            tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
+        for (int i = 0; i < tooltipLines.size(); ++i) {
+            Component component = tooltipLines.get(i);
+            Style style = component.getStyle();
+            String stringToAdd = "";
+            if (style.isBold()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.BOLD_FORMATTING_CHAR;
+            }
+            if (style.isItalic()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.ITALIC_FORMATTING_CHAR;
+            }
+            if (style.isUnderlined()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.UNDERLINE_FORMATTING_CHAR;
+            }
+            if (style.isStrikethrough()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.STRIKETHROUGH_FORMATTING_CHAR;
+            }
+            if (style.isObfuscated()) {
+                stringToAdd += RenderText.FORMATTING_CHAR + RenderText.RANDOM_FORMATTING_CHAR;
+            }
+            if (style.getColor() != null) {
+                ChatFormatting legacyColor = null;
+                for (ChatFormatting format : ChatFormatting.values()) {
+                    if (format.isColor()) {
+                        if (style.getColor().equals(TextColor.fromLegacyFormat(format))) {
+                            legacyColor = format;
+                            break;
+                        }
+                    }
+                }
+                if (legacyColor != null) {
+                    stringToAdd += RenderText.FORMATTING_CHAR + Integer.toHexString(legacyColor.ordinal());
+                }
+            }
+            tooltipText.add(stringToAdd + tooltipLines.get(i).getString());
         }
         return tooltipText;
     }
@@ -188,95 +301,86 @@ public class InterfaceClient implements IInterfaceClient {
      * not being called on clients.
      */
     @SubscribeEvent
-    public static void onIVClientTick(TickEvent.ClientTickEvent event) {
+    public static void onIVClientTickPre(net.neoforged.neoforge.client.event.ClientTickEvent.Pre event) {
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
-            WrapperWorld world = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
-                if (event.phase.equals(Phase.START)) {
-                    if (!player.isSpectator()) {
-                        //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
-                        ControlSystem.controlGlobal(player);
-                        if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
-                            if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
-                                new GUIPackMissing();
-                            }
+                //Kick off / continue model preloading across ticks.
+                initModelPreload();
+                tickModelPreload();
+                if (!player.isSpectator()) {
+                    //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
+                    ControlSystem.controlGlobal(player);
+                    if (((WrapperPlayer) player).player.tickCount % 100 == 0) {
+                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                            new GUIPackMissing();
                         }
                     }
+                }
 
-                    world.tickAll(true);
+                //Need to update world brightness since sky darken isn't calculated normally on clients.
+                ((WrapperWorld) world).world.updateSkyBrightness();
 
-                    //Complain about compats at 10 second mark.
-                    if (ConfigSystem.settings.general.performModCompatFunctions.value) {
-                        if (ticksToCullingWarning > 0) {
-                            if (--ticksToCullingWarning == 0) {
-                                //Nothing to complain about here!
-                            }
-                        }
-                    }
-
-                    //Check follower.
-                    if (activeFollower != null) {
-                        //Follower exists, check if world is the same and it is actually updating.
-                        //We check basic states, and then the watchdog bit that gets reset every tick.
-                        //This way if we're in the world, but not valid we will know.
-                        EntityPlayer mcPlayer = ((WrapperPlayer) player).player;
-                        if (activeFollower.world != mcPlayer.world || activeFollower.playerFollowing != mcPlayer || mcPlayer.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20) {
-                            //Follower is not linked.  Remove it and re-create in code below.
-                            activeFollower.setDead();
-                            activeFollower = null;
-                            ticksSincePlayerJoin = 0;
-                        } else {
-                            ++activeFollower.idleTickCounter;
-                        }
-                    } else {
-                        //Follower does not exist, check if player has been present for 3 seconds and spawn it.
-                        if (++ticksSincePlayerJoin == 60) {
-                            activeFollower = new BuilderEntityRenderForwarder(((WrapperPlayer) player).player);
-                            activeFollower.loadedFromSavedNBT = true;
-                            world.world.spawnEntity(activeFollower);
-                        }
-                    }
-                } else {
-                    world.tickAll(false);
+                world.tickAll(true);
                     
-                    //Handle camera requests.
-                    if(cameraModeRequest != null) {
-                    	switch(cameraModeRequest) {
-	                    	case FIRST_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON_INVERTED:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
-	                    		break;
-	                    	}
-                    	}
-                    	cameraModeRequest = null;
+                //Complain about Entity Culling mod at 10 second mark.
+                if(ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                    if(ticksToCullingWarning > 0) {
+                        if(--ticksToCullingWarning == 0) {
+                            player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                        }
                     }
+                }
+            }
+        }
+    }
 
-                    //Update camera state, since this can change depending on tick if we check during renders.
-                    int cameraModeInt = Minecraft.getMinecraft().gameSettings.thirdPersonView;
-                    switch(cameraModeInt) {
-                    	case(0):{
-                    		actualCameraMode = CameraMode.FIRST_PERSON;
-                    		break;
-                    	}
-                    	case(1):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON;
-                    		break;
-                    	}
-                    	case(2):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
-                    		break;
-                    	}
+    @SubscribeEvent
+    public static void onIVClientTickPost(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+        if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
+            AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+            if (world != null) {
+                world.tickAll(false);
+                    
+                //Handle camera requests.
+                if(cameraModeRequest != null) {
+                    switch(cameraModeRequest) {
+                        case FIRST_PERSON:{
+                            Minecraft.getInstance().options.setCameraType(CameraType.FIRST_PERSON);
+                            break;
+                        }
+                        case THIRD_PERSON:{
+                            Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                            break;
+                        }
+                        case THIRD_PERSON_INVERTED:{
+                            Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+                            break;
+                        }
+                    }
+                    cameraModeRequest = null;
+                }
+
+                //Update camera state, since this can change depending on tick if we check during renders.
+                CameraType cameraModeEnum = Minecraft.getInstance().options.getCameraType();
+                switch(cameraModeEnum) {
+                    case FIRST_PERSON:{
+                        actualCameraMode = CameraMode.FIRST_PERSON;
+                        break;
+                    }
+                    case THIRD_PERSON_BACK:{
+                        actualCameraMode = CameraMode.THIRD_PERSON;
+                        break;
+                    }
+                    case THIRD_PERSON_FRONT:{
+                        actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+                        break;
                     }
                 }
             }
         }
     }
 }
+
