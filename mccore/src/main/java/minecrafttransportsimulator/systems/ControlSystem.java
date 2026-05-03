@@ -15,6 +15,7 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIAmmoSelector;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
@@ -104,6 +105,47 @@ public final class ControlSystem {
         if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
         }
+
+        handleAmmoSelector(player);
+    }
+
+    private static void handleAmmoSelector(IWrapperPlayer player) {
+        //HUD-style selector: auto-create when player is riding a vehicle seat controlling at least one gun,
+        //auto-close otherwise.  The panel is non-capturing so it overlays gameplay without blocking control.
+        boolean shouldShow = hasAnyControllableGun(player);
+        if (shouldShow) {
+            if (GUIAmmoSelector.current == null) {
+                new GUIAmmoSelector(player);
+            }
+        } else if (GUIAmmoSelector.current != null) {
+            GUIAmmoSelector.current.close();
+        }
+        if (GUIAmmoSelector.current != null) {
+            GUIAmmoSelector.current.pollSelectionKeys();
+            if (ControlsKeyboard.GENERAL_AMMO_SELECT.isPressed()) {
+                GUIAmmoSelector.current.cycleActiveGunAmmo();
+            }
+        }
+    }
+
+    private static boolean hasAnyControllableGun(IWrapperPlayer player) {
+        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+        if (playerGun != null && playerGun.activeGun != null) {
+            return true;
+        }
+        AEntityB_Existing riding = player.getEntityRiding();
+        if (riding instanceof PartSeat) {
+            APart seatPart = (APart) riding;
+            for (APart part : seatPart.masterEntity.allParts) {
+                if (part instanceof PartGun && part.isValid) {
+                    PartGun gun = (PartGun) part;
+                    if (player.equals(gun.getGunController())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static void resetMouseYoke() {
@@ -815,6 +857,7 @@ public final class ControlSystem {
         GENERAL_CUSTOM9(ControlsJoystick.GENERAL_CUSTOM9, true, "NUMPAD8", LanguageSystem.INPUT_CUSTOM9),
         GENERAL_CUSTOM10(ControlsJoystick.GENERAL_CUSTOM10, true, "NUMPAD9", LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, true, "R", LanguageSystem.INPUT_GUN_RELOAD),
+        GENERAL_AMMO_SELECT(ControlsJoystick.GENERAL_AMMO_SELECT, true, "SEMICOLON", LanguageSystem.INPUT_GUN_AMMO_SELECT),
 
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
         AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", LanguageSystem.INPUT_YAW_L),
@@ -936,6 +979,7 @@ public final class ControlSystem {
         GENERAL_CUSTOM9(false, true, LanguageSystem.INPUT_CUSTOM9),
         GENERAL_CUSTOM10(false, true, LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
+        GENERAL_AMMO_SELECT(false, true, LanguageSystem.INPUT_GUN_AMMO_SELECT),
 
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, LanguageSystem.INPUT_YAW),

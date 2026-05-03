@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
+import minecrafttransportsimulator.baseclasses.IInventoryProvider;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -83,10 +84,11 @@ public class PartGun extends APart {
     private final ComputedVariable ableToFireVar;
     public final ComputedVariable twoHandedVar;
 
-    private final List<PartInteractable> connectedCrates = new ArrayList<>();
+    public final List<PartInteractable> connectedCrates = new ArrayList<>();
 
     //Stored variables used to determine bullet firing behavior.
     public ItemBullet lastLoadedBullet;
+    public ItemBullet preferredBullet;
     public final List<ItemBullet> firedBullets = new ArrayList<>();
     private int bulletsFired;
     private int loadedBulletCount;
@@ -118,9 +120,13 @@ public class PartGun extends APart {
     private int reloadStartTimeRemaining;
     private int reloadMainTimeRemaining;
     private int reloadEndTimeRemaining;
+    private int reloadTotalTime;
+    private int reloadStartBulletCount;
+    private int reloadTargetBulletCount;
     private int pitchRecoveryTimeRemaining;
     private int windupTimeCurrent;
     private int windupRotation;
+    private boolean selectedAmmoReloadRequested;
     private long lastMillisecondFired;
     private IWrapperEntity currentController;
     public IWrapperEntity lastController;
@@ -246,6 +252,16 @@ public class PartGun extends APart {
             reloadMainTimeRemaining = data.getInteger("reloadMainTimeRemaining");
             reloadEndTimeRemaining = data.getInteger("reloadEndTimeRemaining");
             isReloading = reloadStartTimeRemaining != 0 || reloadMainTimeRemaining != 0 || reloadEndTimeRemaining != 0;
+            reloadTotalTime = data.getInteger("reloadTotalTime");
+            if (isReloading && reloadTotalTime == 0) {
+                reloadTotalTime = (int) Math.ceil(getReloadTimeRemaining(0F));
+            }
+            reloadStartBulletCount = data.getInteger("reloadStartBulletCount");
+            reloadTargetBulletCount = data.getInteger("reloadTargetBulletCount");
+            if (isReloading && reloadTargetBulletCount <= reloadStartBulletCount) {
+                reloadStartBulletCount = loadedBulletCount;
+                reloadTargetBulletCount = loadedBulletCount + reloadingBulletCount;
+            }
 
             if (!loadedBullets.isEmpty()) {
                 lastLoadedBullet = loadedBullets.get(0);
@@ -401,6 +417,9 @@ public class PartGun extends APart {
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
             if (!world.isClient()) {
+                if (selectedAmmoReloadRequested && !blockReloadingVar.isActive && (isReloading || reloadDelayRemaining == 0) && tryToReloadSelectedAmmo()) {
+                    selectedAmmoReloadRequested = false;
+                }
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
                 if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
@@ -636,6 +655,9 @@ public class PartGun extends APart {
                     if (reloadingBullets.isEmpty() && reloadEndTimeRemaining == 0) {
                         //No winddown, and no bullets left to reload, reloading ends here.
                         isReloading = false;
+                        reloadTotalTime = 0;
+                        reloadStartBulletCount = 0;
+                        reloadTargetBulletCount = 0;
                     }
                 }
             } else if (!reloadingBullets.isEmpty()) {
@@ -643,6 +665,9 @@ public class PartGun extends APart {
                 reloadMainTimeRemaining = definition.gun.reloadTime;
             } else if (--reloadEndTimeRemaining == 0) {
                 isReloading = false;
+                reloadTotalTime = 0;
+                reloadStartBulletCount = 0;
+                reloadTargetBulletCount = 0;
             }
         }
 
@@ -1075,52 +1100,224 @@ public class PartGun extends APart {
     }
 
     /**
+     * Sets the preferred bullet for future reloads.  Server-side selection also requests an immediate
+     * reload pass so HUD ammo cycling behaves like an actual ammo swap instead of just a filter change.
+     */
+    public void setPreferredBullet(ItemBullet bulletItem) {
+        this.preferredBullet = bulletItem;
+        if (!world.isClient()) {
+            selectedAmmoReloadRequested = bulletItem != null;
+        }
+    }
+
+    private boolean tryToReloadSelectedAmmo() {
+        if (preferredBullet == null || !isCompatibleBullet(preferredBullet)) {
+            return true;
+        }
+        if (!hasNonPreferredBullets() && loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
+            return true;
+        }
+
+        List<ReloadSource> reloadSources = getReloadSources();
+        if (reloadSources.isEmpty()) {
+            return false;
+        }
+
+        if (hasNonPreferredBullets()) {
+            if (!hasSelectedAmmoAvailable(reloadSources, preferredBullet) || !unloadBulletsToSources(reloadSources)) {
+                return false;
+            }
+            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_ONCLIENT));
+        }
+
+        if (loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
+            return true;
+        }
+        return tryToReloadFromSources(reloadSources, preferredBullet);
+    }
+
+    private List<ReloadSource> getReloadSources() {
+        List<ReloadSource> reloadSources = new ArrayList<>();
+        IWrapperEntity controller = getGunController();
+        if (controller instanceof IWrapperPlayer) {
+            IWrapperPlayer player = (IWrapperPlayer) controller;
+            reloadSources.add(new ReloadSource(player.getInventory(), !ConfigSystem.settings.general.devMode.value && !player.isCreative()));
+        }
+        for (PartInteractable crate : connectedCrates) {
+            if (crate.isActiveVar.isActive && crate.inventory != null) {
+                reloadSources.add(new ReloadSource(crate.inventory, !ConfigSystem.settings.general.devMode.value));
+            }
+        }
+        return reloadSources;
+    }
+
+    private boolean hasSelectedAmmoAvailable(List<ReloadSource> reloadSources, ItemBullet bulletItem) {
+        for (ReloadSource source : reloadSources) {
+            for (int i = 0; i < source.inventory.getSize(); ++i) {
+                IWrapperItemStack stack = source.inventory.getStack(i);
+                if (stack != null && !stack.isEmpty() && bulletItem.equals(stack.getItem())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean tryToReloadFromSources(List<ReloadSource> reloadSources, ItemBullet bulletItem) {
+        for (ReloadSource source : reloadSources) {
+            for (int i = 0; i < source.inventory.getSize(); ++i) {
+                IWrapperItemStack stack = source.inventory.getStack(i);
+                if (stack != null && !stack.isEmpty() && bulletItem.equals(stack.getItem()) && tryToReload(stack, false)) {
+                    if (source.consumeItems) {
+                        source.inventory.removeFromSlot(i, 1);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean unloadBulletsToSources(List<ReloadSource> reloadSources) {
+        List<IWrapperItemStack> stacksToReturn = new ArrayList<>();
+        for (int i = 0; i < loadedBullets.size(); ++i) {
+            stacksToReturn.add(getBulletStack(loadedBullets.get(i), loadedBulletCounts.get(i)));
+        }
+        for (int i = 0; i < reloadingBullets.size(); ++i) {
+            stacksToReturn.add(getBulletStack(reloadingBullets.get(i), reloadingBulletCounts.get(i)));
+        }
+        ReloadSource returnSource = null;
+        for (ReloadSource source : reloadSources) {
+            if (canStoreAllStacks(stacksToReturn, source.inventory)) {
+                returnSource = source;
+                break;
+            }
+        }
+        if (returnSource == null) {
+            return false;
+        }
+        for (IWrapperItemStack stackToReturn : stacksToReturn) {
+            returnSource.inventory.addStack(stackToReturn.copy());
+        }
+        clearBullets();
+        return true;
+    }
+
+    private boolean canStoreAllStacks(List<IWrapperItemStack> stacksToStore, IInventoryProvider inventory) {
+        IWrapperItemStack[] plannedStacks = new IWrapperItemStack[inventory.getSize()];
+        int[] plannedSpaceRemaining = new int[inventory.getSize()];
+        for (IWrapperItemStack stackToStore : stacksToStore) {
+            boolean stored = false;
+            for (int i = 0; i < inventory.getSize(); ++i) {
+                IWrapperItemStack slotStack = plannedStacks[i] != null ? plannedStacks[i] : inventory.getStack(i);
+                if (!slotStack.isEmpty() && stackToStore.isCompleteMatch(slotStack)) {
+                    int spaceRemaining = plannedStacks[i] != null ? plannedSpaceRemaining[i] : Math.min(inventory.getStackSize(), slotStack.getMaxSize()) - slotStack.getSize();
+                    if (spaceRemaining >= stackToStore.getSize()) {
+                        plannedSpaceRemaining[i] = spaceRemaining - stackToStore.getSize();
+                        stored = true;
+                        break;
+                    }
+                }
+            }
+            if (!stored) {
+                for (int i = 0; i < inventory.getSize(); ++i) {
+                    IWrapperItemStack slotStack = inventory.getStack(i);
+                    if (plannedStacks[i] == null && slotStack.isEmpty() && inventory.isStackValid(stackToStore, i)) {
+                        int spaceRemaining = Math.min(inventory.getStackSize(), stackToStore.getMaxSize()) - stackToStore.getSize();
+                        if (spaceRemaining >= 0) {
+                            plannedStacks[i] = stackToStore.copy();
+                            plannedSpaceRemaining[i] = spaceRemaining;
+                            stored = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!stored) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private IWrapperItemStack getBulletStack(ItemBullet bulletItem, int bulletQty) {
+        IWrapperNBT data = null;
+        if (bulletQty != bulletItem.definition.bullet.quantity) {
+            data = InterfaceManager.coreInterface.getNewNBTWrapper();
+            data.setInteger(ItemBullet.BULLET_QTY_KEY, bulletQty);
+        }
+        return bulletItem.getNewStack(data);
+    }
+
+    private boolean hasNonPreferredBullets() {
+        for (ItemBullet bullet : loadedBullets) {
+            if (!preferredBullet.equals(bullet)) {
+                return true;
+            }
+        }
+        for (ItemBullet bullet : reloadingBullets) {
+            if (!preferredBullet.equals(bullet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isCompatibleBullet(ItemBullet bulletItem) {
+        return bulletItem.definition.bullet != null
+                && bulletItem.definition.bullet.diameter == definition.gun.diameter
+                && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength
+                && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength;
+    }
+
+    /**
      * Attempts to reload the gun with the passed-in item.  Returns true if the item is a bullet
      * and was loaded, false if not.  Provider methods are then called for packet callbacks.
      */
     public boolean tryToReload(IWrapperItemStack stack, boolean swapIfFull) {
         //Check to make sure this is a bullet stack.
         AItemBase item = stack.getItem();
-        if(item instanceof ItemBullet) {
+        if (item instanceof ItemBullet) {
             ItemBullet bulletItem = (ItemBullet) item;
+            //If a preferred bullet has been selected via the ammo selection GUI, only accept that exact type.
+            if (preferredBullet != null && !preferredBullet.equals(bulletItem)) {
+                return false;
+            }
             //Check to make sure this is a bullet, the gun isn't reloading and can accept reloads.
-            if (bulletItem.definition.bullet != null) {
-                //Check bullet parameters match.
-                if (bulletItem.definition.bullet.diameter == definition.gun.diameter && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength) {
-                    //If we are hand held with a partial capacity in us, and use clips, swap the clip out.
-                    if (isHandHeld && loadedBulletCount > 0 && !definition.gun.isClipless) {
-                        //First remove old clip.
-                        IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-                        data.setInteger(ItemBullet.BULLET_QTY_KEY, loadedBulletCount);
-                        IWrapperItemStack bulletStack = loadedBullets.get(0).getNewStack(data);
-                        clearBullets();
-                        if (holdingPlayer.getInventory().addStack(bulletStack)) {
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_ONCLIENT));
-                        } else {
-                            //Can't add the clip to the player's inventory.
-                            return false;
-                        }
+            if (isCompatibleBullet(bulletItem)) {
+                //If we are hand held with a partial capacity in us, and use clips, swap the clip out.
+                if (isHandHeld && loadedBulletCount > 0 && !definition.gun.isClipless) {
+                    //First remove old clip.
+                    IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
+                    data.setInteger(ItemBullet.BULLET_QTY_KEY, loadedBulletCount);
+                    IWrapperItemStack bulletStack = loadedBullets.get(0).getNewStack(data);
+                    clearBullets();
+                    if (holdingPlayer.getInventory().addStack(bulletStack)) {
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_ONCLIENT));
+                    } else {
+                        //Can't add the clip to the player's inventory.
+                        return false;
                     }
+                }
 
-                    //Get quantity, which might be partial if we're using hand-held clips.
-                    final int bulletQty;
-                    if(isHandHeld) {
-                        IWrapperNBT data = stack.getData();
-                        if(data != null) {
-                            bulletQty = data.getInteger(ItemBullet.BULLET_QTY_KEY);
-                        }else {
-                            bulletQty = bulletItem.definition.bullet.quantity;
-                        }
-                    }else {
+                //Get quantity, which might be partial if we're using hand-held clips.
+                final int bulletQty;
+                if (isHandHeld) {
+                    IWrapperNBT data = stack.getData();
+                    if (data != null) {
+                        bulletQty = data.getInteger(ItemBullet.BULLET_QTY_KEY);
+                    } else {
                         bulletQty = bulletItem.definition.bullet.quantity;
                     }
-                    
-                    if (bulletQty + loadedBulletCount + reloadingBulletCount <= definition.gun.capacity) {
-                        //Able to load, do so now (above check shouldn't matter for hand-helds since those always have capacity, but common code is common).
-                        setReloadVars(bulletItem, bulletQty);
-                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, bulletItem, bulletQty));
-                        return true;
-                    }
+                } else {
+                    bulletQty = bulletItem.definition.bullet.quantity;
+                }
+
+                if (bulletQty + loadedBulletCount + reloadingBulletCount <= definition.gun.capacity) {
+                    //Able to load, do so now (above check shouldn't matter for hand-helds since those always have capacity, but common code is common).
+                    setReloadVars(bulletItem, bulletQty);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, bulletItem, bulletQty));
+                    return true;
                 }
             }
         }
@@ -1131,6 +1328,11 @@ public class PartGun extends APart {
      * Sets reloading times and variables for a reload.
      */
     public void setReloadVars(ItemBullet bulletItem, int bulletQty) {
+        int reloadTimeElapsed = isReloading && reloadTotalTime > 0 ? Math.max(0, reloadTotalTime - (int) Math.ceil(getReloadTimeRemaining(0F))) : 0;
+        if (!isReloading) {
+            reloadStartBulletCount = loadedBulletCount;
+            reloadTargetBulletCount = loadedBulletCount;
+        }
         if (reloadingBullets.isEmpty()) {
             //Set reload windup time to reload time since this is first reload of the type.
             reloadStartTimeRemaining = definition.gun.reloadStartTime;
@@ -1138,9 +1340,11 @@ public class PartGun extends APart {
         reloadingBullets.add(bulletItem);
         reloadingBulletCounts.add(bulletQty);
         reloadingBulletCount += bulletQty;
+        reloadTargetBulletCount += bulletQty;
         reloadMainTimeRemaining = definition.gun.reloadTime;
         reloadEndTimeRemaining = definition.gun.reloadEndTime;
         isReloading = true;
+        reloadTotalTime = reloadTimeElapsed + (int) Math.ceil(getReloadTimeRemaining(0F));
     }
 
     /**
@@ -1150,6 +1354,109 @@ public class PartGun extends APart {
         loadedBullets.clear();
         loadedBulletCounts.clear();
         loadedBulletCount = 0;
+        reloadingBullets.clear();
+        reloadingBulletCounts.clear();
+        reloadingBulletCount = 0;
+        reloadStartTimeRemaining = 0;
+        reloadMainTimeRemaining = 0;
+        reloadEndTimeRemaining = 0;
+        reloadTotalTime = 0;
+        reloadStartBulletCount = 0;
+        reloadTargetBulletCount = 0;
+        isReloading = false;
+    }
+
+    /**
+     * Returns the total number of bullets currently loaded in this gun, summed across all types.
+     */
+    public int getLoadedBulletCount() {
+        return loadedBulletCount;
+    }
+
+    public int getReloadingBulletCount() {
+        return reloadingBulletCount;
+    }
+
+    public boolean isHandHeldGun() {
+        return isHandHeld;
+    }
+
+    public boolean isSemiAutoFireMode() {
+        return isSemiAutoVar.isActive;
+    }
+
+    public boolean hasLoadedOrReloadingBullet(ItemBullet bulletItem) {
+        for (ItemBullet bullet : loadedBullets) {
+            if (bullet.equals(bulletItem)) {
+                return true;
+            }
+        }
+        for (ItemBullet bullet : reloadingBullets) {
+            if (bullet.equals(bulletItem)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public float getInterpolatedLoadedBulletCount(float partialTicks) {
+        if (!isReloading) {
+            return loadedBulletCount;
+        }
+        int targetBulletCount = reloadTargetBulletCount > reloadStartBulletCount ? reloadTargetBulletCount : loadedBulletCount + reloadingBulletCount;
+        int startBulletCount = reloadTargetBulletCount > reloadStartBulletCount ? reloadStartBulletCount : loadedBulletCount;
+        float interpolatedCount = startBulletCount + (targetBulletCount - startBulletCount) * getReloadProgress(partialTicks);
+        if (interpolatedCount < loadedBulletCount) {
+            return loadedBulletCount;
+        }
+        if (interpolatedCount > targetBulletCount) {
+            return targetBulletCount;
+        }
+        return interpolatedCount;
+    }
+
+    /**
+     * Returns the reload progress as a fraction 0..1 where 0 is "just started" and 1 is "complete".
+     * Returns 0 when no reload is in progress.  Used by HUD indicators.
+     */
+    public float getReloadProgress() {
+        return getReloadProgress(0F);
+    }
+
+    public float getReloadProgress(float partialTicks) {
+        if (!isReloading) {
+            return 0F;
+        }
+        int totalCycle = getCurrentReloadTotalTime();
+        if (totalCycle <= 0) {
+            return 0F;
+        }
+        float progress = 1F - (getReloadTimeRemaining(partialTicks) / totalCycle);
+        if (progress < 0F) {
+            return 0F;
+        }
+        if (progress > 1F) {
+            return 1F;
+        }
+        return progress;
+    }
+
+    public int getCurrentReloadTotalTime() {
+        return reloadTotalTime > 0 ? reloadTotalTime : (int) Math.ceil(getReloadTimeRemaining(0F));
+    }
+
+    public float getReloadTimeRemaining(float partialTicks) {
+        if (!isReloading) {
+            return 0F;
+        }
+        int remaining = reloadStartTimeRemaining + reloadMainTimeRemaining + reloadEndTimeRemaining;
+        if (!reloadingBullets.isEmpty()) {
+            int queuedReloadsNotInCurrentTimer = reloadStartTimeRemaining > 0 || reloadMainTimeRemaining > 0 ? reloadingBullets.size() - 1 : reloadingBullets.size();
+            remaining += Math.max(0, queuedReloadsNotInCurrentTimer) * definition.gun.reloadTime;
+        }
+        boolean timerTicksThisFrame = reloadStartTimeRemaining > 0 || reloadMainTimeRemaining > 0 || (reloadingBullets.isEmpty() && reloadEndTimeRemaining > 0);
+        float interpolatedRemaining = timerTicksThisFrame ? remaining - partialTicks : remaining;
+        return Math.max(0F, interpolatedRemaining);
     }
 
     /**
@@ -1511,11 +1818,24 @@ public class PartGun extends APart {
         data.setInteger("reloadStartTimeRemaining", reloadStartTimeRemaining);
         data.setInteger("reloadMainTimeRemaining", reloadMainTimeRemaining);
         data.setInteger("reloadEndTimeRemaining", reloadEndTimeRemaining);
+        data.setInteger("reloadTotalTime", reloadTotalTime);
+        data.setInteger("reloadStartBulletCount", reloadStartBulletCount);
+        data.setInteger("reloadTargetBulletCount", reloadTargetBulletCount);
         long randomSeed = randomGenerator.nextLong();
         data.setBoolean("savedSeed", true);
         data.setInteger("randomSeedPart1", (int) (randomSeed >> 32));
         data.setInteger("randomSeedPart2", (int) randomSeed);
         return data;
+    }
+
+    private static class ReloadSource {
+        private final IInventoryProvider inventory;
+        private final boolean consumeItems;
+
+        private ReloadSource(IInventoryProvider inventory, boolean consumeItems) {
+            this.inventory = inventory;
+            this.consumeItems = consumeItems;
+        }
     }
 
     public enum GunState {
