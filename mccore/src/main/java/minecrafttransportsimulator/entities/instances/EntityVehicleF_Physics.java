@@ -502,7 +502,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             if (definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors) {
                 double q = 0.5 * airDensity * axialVelocity * axialVelocity;
                 double rollArm = wingSpanVar.currentValue * 0.5 * 0.75;
-                totalTorque.x /= 1.0 + q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentPitch;
+                totalTorque.x += (q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentPitch);
                 totalTorque.y /= 1.0 + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentYaw;
                 totalTorque.z /= 1.0 + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0 / momentRoll;
             }
