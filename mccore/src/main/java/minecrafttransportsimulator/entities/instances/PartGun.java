@@ -154,6 +154,8 @@ public class PartGun extends APart {
     private IWrapperEntity prevEntityTarget = null;
 
     //Global data.
+    private static final int RAYTRACE_DISTANCE = 750;
+    private static final double DEFAULT_CONE_ANGLE = 2.0;
     private static final int PITCH_RECOIL_CLAMPING = 80;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
@@ -1337,6 +1339,20 @@ public class PartGun extends APart {
         while (direction > 180)
             direction -= 360;
         return direction;
+    }
+
+    /**
+     * Returns the JSONMuzzle definition of the currently active muzzle for this gun.
+     * This is the first muzzle in the currently active muzzle group.
+     * Used externally (e.g. by the aiming crosshair renderer) to get muzzle position and direction
+     * via {@link #setBulletSpawn(Point3D, Point3D, RotationMatrix, JSONMuzzle, boolean)}.
+     * Returns null if the gun has no muzzle groups defined.
+     */
+    public JSONMuzzle getActiveMuzzle() {
+        if (definition.gun.muzzleGroups != null && !definition.gun.muzzleGroups.isEmpty()) {
+            return definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.get(0);
+        }
+        return null;
     }
 
     public double getLeadAngleY() {

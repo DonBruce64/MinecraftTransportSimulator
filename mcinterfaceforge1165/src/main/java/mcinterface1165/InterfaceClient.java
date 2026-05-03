@@ -178,6 +178,64 @@ public class InterfaceClient implements IInterfaceClient {
     private static final Point3D mutablePosition = new Point3D();
 
     @Override
+    public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
+        double camX, camY, camZ;
+        double fwdX, fwdY, fwdZ;
+        double upX, upY, upZ;
+        double rgtX, rgtY, rgtZ;
+
+        if (InterfaceEventsEntityRendering.adjustedCamera) {
+            camX = InterfaceEventsEntityRendering.cameraAdjustedPosition.x;
+            camY = InterfaceEventsEntityRendering.cameraAdjustedPosition.y;
+            camZ = InterfaceEventsEntityRendering.cameraAdjustedPosition.z;
+            minecrafttransportsimulator.baseclasses.RotationMatrix ori = InterfaceEventsEntityRendering.cameraAdjustedOrientation;
+            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
+            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
+            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        } else {
+            net.minecraft.client.renderer.ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+            net.minecraft.util.math.vector.Vector3d camPos = camera.getPosition();
+            camX = camPos.x; camY = camPos.y; camZ = camPos.z;
+            net.minecraft.util.math.vector.Vector3f look = camera.getLookVector();
+            net.minecraft.util.math.vector.Vector3f up = camera.getUpVector();
+            fwdX = look.x(); fwdY = look.y(); fwdZ = look.z();
+            upX  = up.x();   upY  = up.y();   upZ  = up.z();
+            // getLeftVector() does not exist in 1.16.5; compute right = up × look manually.
+            rgtX = upY * fwdZ - upZ * fwdY;
+            rgtY = upZ * fwdX - upX * fwdZ;
+            rgtZ = upX * fwdY - upY * fwdX;
+        }
+
+        double dx = worldPos.x - camX;
+        double dy = worldPos.y - camY;
+        double dz = worldPos.z - camZ;
+
+        double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
+        if (depth <= 0.001) return null;
+
+        double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
+        double yView = dx * upX  + dy * upY  + dz * upZ;
+
+        double fovRad = Math.toRadians(getFOV());
+        double tanHalfFov = Math.tan(fovRad / 2.0);
+        double aspect = (double) screenWidth / screenHeight;
+
+        double ndcX = xView / (depth * tanHalfFov * aspect);
+        double ndcY = yView / (depth * tanHalfFov);
+
+        if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
+
+        screenProjectionResult.set(
+                (ndcX + 1.0) / 2.0 * screenWidth,
+                (1.0 - ndcY) / 2.0 * screenHeight,
+                depth);
+        return screenProjectionResult;
+    }
+
+    private static final Point3D screenProjectionResult = new Point3D();
+
+    @Override
     public void playBlockBreakSound(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         if (!Minecraft.getInstance().level.isEmptyBlock(pos)) {

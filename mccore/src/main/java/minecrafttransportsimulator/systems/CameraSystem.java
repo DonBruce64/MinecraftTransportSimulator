@@ -129,10 +129,36 @@ public class CameraSystem {
 
         //No custom cameras, check if we are sitting in a seat to adjust orientation.
         if (sittingSeat != null) {
-            cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
-            if (ConfigSystem.client.renderingSettings.freecam_3P.value && InterfaceManager.clientInterface.getCameraMode().thirdPerson) {
-                sittingSeat.getRiderInterpolatedOrientation(cameraRotation, partialTicks);
+            if (MouseFlightController.isMouseFlightActive) {
+                MouseFlightController.getInterpolatedCameraOrientation(cameraRotation, partialTicks);
+                CameraMode cameraMode = InterfaceManager.clientInterface.getCameraMode();
+                if (cameraMode == CameraMode.FIRST_PERSON) {
+                    //First person: use the standard rider eye position without any offset.
+                    cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
+                } else {
+                    //Third person: use a stable camera position based on the seat's world position
+                    //plus a fixed vertical offset.  Avoids X/Z drift when riderEyePosition rotates
+                    //with the aircraft orientation.
+                    cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
+                    cameraAdjustedPosition.y += sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset() + 0.5;
+                    int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + sittingSeat.zoomLevel;
+                    cameraOffset.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraRotation);
+                    cameraAdjustedPosition.add(cameraOffset);
+                }
             } else {
+                cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
+
+                //In third-person view on a vehicle, orbit the camera around the vehicle's model
+                //reference point rather than around the player's eye position inside the vehicle body.
+                //The zoom-back vector is preserved: (riderCameraPosition - riderHeadPosition).
+                if (sittingSeat.vehicleOn != null && InterfaceManager.clientInterface.getCameraMode() != CameraMode.FIRST_PERSON) {
+                    cameraOffset.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
+                    cameraAdjustedPosition.set(
+                            cameraOffset.x + sittingSeat.riderCameraPosition.x - sittingSeat.riderHeadPosition.x,
+                            cameraOffset.y + sittingSeat.riderCameraPosition.y - sittingSeat.riderHeadPosition.y,
+                            cameraOffset.z + sittingSeat.riderCameraPosition.z - sittingSeat.riderHeadPosition.z);
+                }
+
                 sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
                 sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
                 cameraRotation.multiply(riderOrientation);

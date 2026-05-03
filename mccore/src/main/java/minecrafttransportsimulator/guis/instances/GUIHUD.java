@@ -13,6 +13,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -33,11 +34,12 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 public class GUIHUD extends AGUIBase {
     private static final int HUD_WIDTH = 400;
     private static final int HUD_HEIGHT = 140;
-    private static final ControlsKeyboard[] customKeybindControls = new ControlsKeyboard[] { ControlsKeyboard.GENERAL_CUSTOM1, ControlsKeyboard.GENERAL_CUSTOM2, ControlsKeyboard.GENERAL_CUSTOM3, ControlsKeyboard.GENERAL_CUSTOM4, ControlsKeyboard.GENERAL_CUSTOM5, ControlsKeyboard.GENERAL_CUSTOM6, ControlsKeyboard.GENERAL_CUSTOM7, ControlsKeyboard.GENERAL_CUSTOM8, ControlsKeyboard.GENERAL_CUSTOM9, ControlsKeyboard.GENERAL_CUSTOM10 };
+    private static final ControlsKeyboard[] customKeybindControls = new ControlsKeyboard[] { ControlsKeyboard.GENERAL_CUSTOM1, ControlsKeyboard.GENERAL_CUSTOM2, ControlsKeyboard.GENERAL_CUSTOM3, ControlsKeyboard.GENERAL_CUSTOM4 };
 
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
     private final List<GUIComponentInstrument> instruments = new ArrayList<>();
+    private GUIComponentAimReticle aimReticle;
     private GUIComponentLabel healthLabel;
     private Map<Byte, GUIComponentLabel> customKeybindLabels = new HashMap<>();
     private Map<Byte, Set<String>> customKeybindNames = new HashMap<>();
@@ -88,6 +90,10 @@ public class GUIHUD extends AGUIBase {
         } else {
             super.setupComponents();
         }
+
+        //Add mouse flight aim reticle.
+        aimReticle = new GUIComponentAimReticle(screenWidth, screenHeight);
+        addComponent(aimReticle);
 
         //Add labels.
         addComponent(healthLabel = new GUIComponentLabel(screenWidth, 8, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
