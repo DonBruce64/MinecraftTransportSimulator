@@ -112,7 +112,7 @@ public final class ControlSystem {
     private static void handleAmmoSelector(IWrapperPlayer player) {
         //HUD-style selector: auto-create when player is riding a vehicle seat controlling at least one gun,
         //auto-close otherwise.  The panel is non-capturing so it overlays gameplay without blocking control.
-        boolean shouldShow = hasAnyVehicleGun(player);
+        boolean shouldShow = hasAnyControllableGun(player);
         if (shouldShow) {
             if (GUIAmmoSelector.current == null) {
                 new GUIAmmoSelector(player);
@@ -128,7 +128,11 @@ public final class ControlSystem {
         }
     }
 
-    private static boolean hasAnyVehicleGun(IWrapperPlayer player) {
+    private static boolean hasAnyControllableGun(IWrapperPlayer player) {
+        EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+        if (playerGun != null && playerGun.activeGun != null) {
+            return true;
+        }
         AEntityB_Existing riding = player.getEntityRiding();
         if (riding instanceof PartSeat) {
             APart seatPart = (APart) riding;

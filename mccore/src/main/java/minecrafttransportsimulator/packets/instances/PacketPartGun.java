@@ -123,10 +123,7 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 break;
             }
             case SELECT_AMMO: {
-                //Only update the preferred bullet.  The filter in tryToReload() already prevents future
-                //reloads from pulling mismatched ammo, and leaving an in-flight reload alone avoids the
-                //client/server timing desync that unloading during reload would otherwise introduce.
-                gun.preferredBullet = bulletItem;
+                gun.setPreferredBullet(bulletItem);
                 break;
             }
         }
