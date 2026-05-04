@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -23,6 +25,11 @@ public class GUIComponentAimReticle extends AGUIComponent {
 
     private static final int CIRCLE_SEGMENTS = 24;
     private static final int CIRCLE_RADIUS = 10;
+    private static final float CIRCLE_THICKNESS = 0.5F;
+    private static final float CIRCLE_INNER_RADIUS = Math.max(0.0F, CIRCLE_RADIUS - CIRCLE_THICKNESS / 2.0F);
+    private static final float CIRCLE_OUTER_RADIUS = CIRCLE_RADIUS + CIRCLE_THICKNESS / 2.0F;
+    private static final int FLOATS_PER_VERTEX = 8;
+    private static final int VERTICES_PER_SEGMENT = 6;
 
     /** Distance along the aim vector to place the virtual world point for projection. */
     private static final double AIM_PROJECTION_DISTANCE = 100.0;
@@ -39,24 +46,35 @@ public class GUIComponentAimReticle extends AGUIComponent {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
 
-        // Build line vertices for a circle.
-        RenderableVertices lineVertices = new RenderableVertices(CIRCLE_SEGMENTS);
-        java.nio.FloatBuffer buf = lineVertices.vertices;
+        // Build a thin ring from triangles so thickness is controlled by geometry, not GL line state.
+        RenderableVertices circleVertices = new RenderableVertices("AIM_RETICLE", FloatBuffer.allocate(CIRCLE_SEGMENTS * VERTICES_PER_SEGMENT * FLOATS_PER_VERTEX), false);
+        FloatBuffer buf = circleVertices.vertices;
         for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
             double angle1 = (2 * Math.PI * i) / CIRCLE_SEGMENTS;
             double angle2 = (2 * Math.PI * (i + 1)) / CIRCLE_SEGMENTS;
-            buf.put((float) (CIRCLE_RADIUS * Math.cos(angle1)));
-            buf.put((float) (CIRCLE_RADIUS * Math.sin(angle1)));
-            buf.put(0);
-            buf.put((float) (CIRCLE_RADIUS * Math.cos(angle2)));
-            buf.put((float) (CIRCLE_RADIUS * Math.sin(angle2)));
-            buf.put(0);
+            addRingVertex(buf, CIRCLE_OUTER_RADIUS, angle1);
+            addRingVertex(buf, CIRCLE_OUTER_RADIUS, angle2);
+            addRingVertex(buf, CIRCLE_INNER_RADIUS, angle1);
+            addRingVertex(buf, CIRCLE_INNER_RADIUS, angle1);
+            addRingVertex(buf, CIRCLE_OUTER_RADIUS, angle2);
+            addRingVertex(buf, CIRCLE_INNER_RADIUS, angle2);
         }
         buf.flip();
 
-        circleRenderable = new RenderableData(lineVertices);
+        circleRenderable = new RenderableData(circleVertices);
         circleRenderable.setColor(ColorRGB.WHITE);
         circleRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+    }
+
+    private static void addRingVertex(FloatBuffer buf, float radius, double angle) {
+        buf.put(0);
+        buf.put(0);
+        buf.put(1);
+        buf.put(0);
+        buf.put(0);
+        buf.put((float) (radius * Math.cos(angle)));
+        buf.put((float) (radius * Math.sin(angle)));
+        buf.put(0);
     }
 
     /**
@@ -94,8 +112,8 @@ public class GUIComponentAimReticle extends AGUIComponent {
         double screenY = screen.y;
 
         // Clamp to screen bounds.
-        screenX = Math.max(CIRCLE_RADIUS, Math.min(screenWidth - CIRCLE_RADIUS, screenX));
-        screenY = Math.max(CIRCLE_RADIUS, Math.min(screenHeight - CIRCLE_RADIUS, screenY));
+        screenX = Math.max(CIRCLE_OUTER_RADIUS, Math.min(screenWidth - CIRCLE_OUTER_RADIUS, screenX));
+        screenY = Math.max(CIRCLE_OUTER_RADIUS, Math.min(screenHeight - CIRCLE_OUTER_RADIUS, screenY));
 
         // Position uses inverted Y (OpenGL convention in the GUI system).
         circleRenderable.transform.resetTransforms();

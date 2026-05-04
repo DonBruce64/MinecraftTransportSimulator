@@ -7,13 +7,7 @@ import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -508,7 +502,7 @@ public final class ControlSystem {
             }
         }
 
-        //Mouse flight mode: enabled via config, uses mouse-based flight controller (War Thunder style).
+        //Arcade mode: enabled via config, uses mouse-based flight controller (War Thunder style).
         //Keyboard overrides still work on top of the mouse autopilot.
         //Excluded for blimps (different control scheme).
         boolean hasRotorPropeller = false;
@@ -518,7 +512,7 @@ public final class ControlSystem {
                 break;
             }
         }
-        boolean useMouseFlight = ConfigSystem.client.controlSettings.mouseFlightMode.value
+        boolean useMouseFlight = ConfigSystem.client.controlSettings.arcadeMode.value
                 && !aircraft.definition.motorized.isBlimp
                 && !ControlsJoystick.AIRCRAFT_PITCH.isJoystickActive()
                 && !ControlsJoystick.AIRCRAFT_ROLL.isJoystickActive()

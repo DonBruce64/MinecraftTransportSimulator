@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.systems;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -66,9 +68,13 @@ public final class ConfigSystem {
         //Now parse the client config file for clients only.
         if (onClient) {
             clientFile = new File(configDirectory, "mtsconfigclient.json");
+            boolean migrateMouseFlightMode = false;
             if (clientFile.exists()) {
                 try {
-                    client = JSONParser.parseStream(Files.newInputStream(clientFile.toPath()), JSONConfigClient.class, null, null);
+                    byte[] clientConfigBytes = Files.readAllBytes(clientFile.toPath());
+                    String clientConfigText = new String(clientConfigBytes, StandardCharsets.UTF_8);
+                    migrateMouseFlightMode = clientConfigText.matches("(?s).*\"mouseFlightMode\"\\s*:\\s*\\{[^}]*\"value\"\\s*:\\s*true.*");
+                    client = JSONParser.parseStream(new ByteArrayInputStream(clientConfigBytes), JSONConfigClient.class, null, null);
                 } catch (Exception e) {
                     InterfaceManager.coreInterface.logError("ConfigSystem failed to parse client file JSON.  Reverting to defaults.");
                     InterfaceManager.coreInterface.logError(e.getMessage());
@@ -76,6 +82,9 @@ public final class ConfigSystem {
             }
             if (client == null) {
                 client = new JSONConfigClient();
+            }
+            if (migrateMouseFlightMode) {
+                client.controlSettings.arcadeMode.value = true;
             }
             //Check to make sure we have the right keyset.  If not, reset the binds.
             if (client.controls.keysetID != InterfaceManager.inputInterface.getKeysetID()) {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -162,6 +163,7 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
+    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
 
     @Override
     public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
@@ -175,7 +177,7 @@ public class InterfaceClient implements IInterfaceClient {
             camX = InterfaceEventsEntityRendering.projectionCameraPosition.x;
             camY = InterfaceEventsEntityRendering.projectionCameraPosition.y;
             camZ = InterfaceEventsEntityRendering.projectionCameraPosition.z;
-            minecrafttransportsimulator.baseclasses.RotationMatrix ori = InterfaceEventsEntityRendering.projectionCameraOrientation;
+            RotationMatrix ori = getCameraProjectionOrientation(InterfaceEventsEntityRendering.projectionCameraOrientation);
             fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
             upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
             // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
@@ -200,6 +202,10 @@ public class InterfaceClient implements IInterfaceClient {
             upX  =  fwdY * rgtZ - fwdZ * rgtY;
             upY  =  fwdZ * rgtX - fwdX * rgtZ;
             upZ  =  fwdX * rgtY - fwdY * rgtX;
+            if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+                fwdX = -fwdX; fwdY = -fwdY; fwdZ = -fwdZ;
+                rgtX = -rgtX; rgtY = -rgtY; rgtZ = -rgtZ;
+            }
         }
 
         double dx = worldPos.x - camX;
@@ -226,6 +232,17 @@ public class InterfaceClient implements IInterfaceClient {
                 (1.0 - ndcY) / 2.0 * screenHeight,
                 depth);
         return screenProjectionResult;
+    }
+
+    private static RotationMatrix getCameraProjectionOrientation(RotationMatrix cameraOrientation) {
+        if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+            cameraOrientation.convertToAngles();
+            cameraProjectionOrientation.angles.set(-cameraOrientation.angles.x, cameraOrientation.angles.y - 180, -cameraOrientation.angles.z);
+            cameraProjectionOrientation.updateToAngles();
+            return cameraProjectionOrientation;
+        } else {
+            return cameraOrientation;
+        }
     }
 
     private static final Point3D screenProjectionResult = new Point3D();

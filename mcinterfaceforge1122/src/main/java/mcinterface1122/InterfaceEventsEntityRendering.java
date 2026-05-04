@@ -64,9 +64,6 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
-    public static boolean adjustedCamera;
-    public static final Point3D projectionCameraPosition = new Point3D();
-    public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
     /**Saved camera world-space position and orientation for use by {@link InterfaceClient#projectToScreen}.
      * These are captured BEFORE the in-place transpose/subtraction that the GL pipeline requires.**/

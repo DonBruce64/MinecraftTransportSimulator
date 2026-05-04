@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -10,7 +12,7 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
 
 /**
  * GUI component that renders a weapon aiming crosshair (+) at a dynamically-computed screen position.
- * The crosshair is drawn as four line segments forming a + shape with a small gap at the centre.
+ * The crosshair is drawn as four rectangular arms forming a + shape with a small gap at the centre.
  *
  * <p>Usage each frame (from {@link AGUIBase#setStates()}):
  * <ol>
@@ -28,16 +30,17 @@ import minecrafttransportsimulator.rendering.RenderableVertices;
  */
 public class GUIComponentCrosshair extends AGUIComponent {
     /** Half-length of each crosshair arm, in screen pixels. */
-    private static final int ARM_LENGTH = 6;
+    private static final int ARM_LENGTH = 5;
     /** Gap between the crosshair centre and the start of each arm, in screen pixels. */
     private static final int CENTER_GAP = 2;
+    /** Thickness of each crosshair arm, in screen pixels. */
+    private static final float CROSSHAIR_THICKNESS = 0.7F;
     /** Z-layer for the crosshair within the GUI stack. */
     private static final int CROSSHAIR_Z = 50;
 
-    // 4 lines: right, left, up, down arm.
-    private static final int NUM_LINES = 4;
-
-    private final RenderableVertices lineVertices;
+    private static final int FLOATS_PER_VERTEX = 8;
+    private static final int VERTICES_PER_ARM = 6;
+    private static final int ARM_COUNT = 4;
 
     /**
      * World-space ballistic impact point, set by
@@ -71,12 +74,12 @@ public class GUIComponentCrosshair extends AGUIComponent {
 
     public GUIComponentCrosshair(int x, int y) {
         super(x, y, ARM_LENGTH * 2, ARM_LENGTH * 2);
-        lineVertices = new RenderableVertices(NUM_LINES);
-        renderable = new RenderableData(lineVertices, null);
+        RenderableVertices crosshairVertices = new RenderableVertices("CROSSHAIR", FloatBuffer.allocate(ARM_COUNT * VERTICES_PER_ARM * FLOATS_PER_VERTEX), false);
+        setCrosshairGeometry(crosshairVertices.vertices);
+        renderable = new RenderableData(crosshairVertices, null);
         renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         renderable.setColor(ColorRGB.WHITE);
         renderable.setTransucentOverride();
-        setLineGeometry();
     }
 
     /**
@@ -89,22 +92,35 @@ public class GUIComponentCrosshair extends AGUIComponent {
         renderable.transform.setTranslation(position);
     }
 
-    /** Writes the four line-segment vertices in component-local coordinates (centred at 0,0,0). */
-    private void setLineGeometry() {
-        lineVertices.vertices.rewind();
-        // Right arm: centre→right
-        lineVertices.vertices.put(CENTER_GAP);  lineVertices.vertices.put(0); lineVertices.vertices.put(0);
-        lineVertices.vertices.put(ARM_LENGTH);  lineVertices.vertices.put(0); lineVertices.vertices.put(0);
-        // Left arm: centre→left
-        lineVertices.vertices.put(-CENTER_GAP); lineVertices.vertices.put(0); lineVertices.vertices.put(0);
-        lineVertices.vertices.put(-ARM_LENGTH); lineVertices.vertices.put(0); lineVertices.vertices.put(0);
-        // Top arm (positive y = up in GL space after matrixStack Y-flip in renderGUI)
-        lineVertices.vertices.put(0); lineVertices.vertices.put(CENTER_GAP);  lineVertices.vertices.put(0);
-        lineVertices.vertices.put(0); lineVertices.vertices.put(ARM_LENGTH);  lineVertices.vertices.put(0);
-        // Bottom arm
-        lineVertices.vertices.put(0); lineVertices.vertices.put(-CENTER_GAP); lineVertices.vertices.put(0);
-        lineVertices.vertices.put(0); lineVertices.vertices.put(-ARM_LENGTH); lineVertices.vertices.put(0);
-        lineVertices.vertices.rewind();
+    /** Writes the four rectangular arms in component-local coordinates (centred at 0,0,0). */
+    private static void setCrosshairGeometry(FloatBuffer vertices) {
+        float halfThickness = CROSSHAIR_THICKNESS / 2.0F;
+
+        addQuad(vertices, CENTER_GAP, -halfThickness, ARM_LENGTH, halfThickness);
+        addQuad(vertices, -ARM_LENGTH, -halfThickness, -CENTER_GAP, halfThickness);
+        addQuad(vertices, -halfThickness, CENTER_GAP, halfThickness, ARM_LENGTH);
+        addQuad(vertices, -halfThickness, -ARM_LENGTH, halfThickness, -CENTER_GAP);
+        vertices.flip();
+    }
+
+    private static void addQuad(FloatBuffer vertices, float minX, float minY, float maxX, float maxY) {
+        addVertex(vertices, minX, minY);
+        addVertex(vertices, maxX, minY);
+        addVertex(vertices, maxX, maxY);
+        addVertex(vertices, minX, minY);
+        addVertex(vertices, maxX, maxY);
+        addVertex(vertices, minX, maxY);
+    }
+
+    private static void addVertex(FloatBuffer vertices, float x, float y) {
+        vertices.put(0);
+        vertices.put(0);
+        vertices.put(1);
+        vertices.put(0);
+        vertices.put(0);
+        vertices.put(x);
+        vertices.put(y);
+        vertices.put(0);
     }
 
     @Override
@@ -114,7 +130,7 @@ public class GUIComponentCrosshair extends AGUIComponent {
 
     @Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
-        // Only render on the blended (translucent) pass so lines are drawn on top of everything.
+        // Only render on the blended (translucent) pass so the crosshair is drawn on top of everything.
         if (!blendingEnabled || pendingImpactPoint == null) {
             // Reset smoothing state so the crosshair snaps to position when it reappears.
             smoothedImpactValid = false;

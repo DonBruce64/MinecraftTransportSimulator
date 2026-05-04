@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -24,6 +25,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -34,6 +36,7 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * A GUI that is used to render overlay components.  These components are independent of
@@ -54,6 +57,7 @@ public class GUIOverlay extends AGUIBase {
     // Re-used scratch objects for ballistic simulation — never allocated on the hot path.
     private final Point3D simPos = new Point3D();
     private final Point3D simVel = new Point3D();
+    private final Point3D simDir = new Point3D();
     private final RotationMatrix simOri = new RotationMatrix();
 
     @Override
@@ -126,7 +130,7 @@ public class GUIOverlay extends AGUIBase {
             }
 
             // Update the aiming crosshair position when a gun is active.
-            if (activeGunGroup != null) {
+            if (activeGunGroup != null && ConfigSystem.client.controlSettings.arcadeMode.value) {
                 updateAimingCrosshair(activeGunGroup, player.getWorld());
             }
         }
@@ -290,6 +294,7 @@ public class GUIOverlay extends AGUIBase {
 
         // Populate muzzle position and velocity from the first gun.
         firstGun.setBulletSpawn(simPos, simVel, simOri, muzzle, false);
+        simDir.set(0, 0, 1).rotate(simOri).normalize();
 
         // If multiple guns share the group, shift simPos to the group's muzzle center.
         if (gunGroup.size() > 1) {
@@ -316,19 +321,22 @@ public class GUIOverlay extends AGUIBase {
         // Determine if this weapon has significant gravity (bomb/mortar).
         boolean isBallistic = firstGun.lastLoadedBullet != null
                 && firstGun.lastLoadedBullet.definition.bullet.gravitationalVelocity > 0.001;
+        boolean acceleratesAfterLaunch = firstGun.lastLoadedBullet != null
+                && firstGun.lastLoadedBullet.definition.bullet.maxVelocity > 0
+                && firstGun.lastLoadedBullet.definition.bullet.accelerationTime > 0;
 
-        if (bulletSpeed < 0.001) {
-            // Zero-velocity projectile — use muzzle position.
+        if (bulletSpeed < 0.001 && !acceleratesAfterLaunch) {
+            // Zero-velocity non-accelerating projectile — use muzzle position.
             impactPoint = simPos.copy();
         } else if (firstGun.vehicleOn != null && firstGun.vehicleOn.definition.motorized.isAircraft && !isBallistic) {
             // Aircraft with flat-trajectory ammo (guns/cannons): barrel direction only.
-            impactPoint = raycastBarrel(world, firstGun.vehicleOn);
+            impactPoint = raycastBarrel(firstGun, world, firstGun.vehicleOn);
         } else {
             // Ground vehicle, hand-held, OR aircraft bomb (gravitationalVelocity > 0): ballistic.
             impactPoint = simulateBallistic(firstGun, world, firstGun.vehicleOn);
             if (impactPoint == null) {
                 // Ballistic simulation left loaded terrain — fall back to barrel direction.
-                impactPoint = raycastBarrel(world, firstGun.vehicleOn);
+                impactPoint = raycastBarrel(firstGun, world, firstGun.vehicleOn);
             }
         }
 
@@ -354,6 +362,9 @@ public class GUIOverlay extends AGUIBase {
         double gravity   = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.gravitationalVelocity : 0;
         double slowdown  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.slowdownSpeed : 0;
         int    burnTime  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.burnTime : 0;
+        int    accelerationTime  = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.accelerationTime : 0;
+        int    accelerationDelay = (gun.lastLoadedBullet != null) ? gun.lastLoadedBullet.definition.bullet.accelerationDelay : 0;
+        double velocityToAddEachTick = accelerationTime > 0 ? (gun.lastLoadedBullet.definition.bullet.maxVelocity / 20D - simVel.length()) / accelerationTime : 0;
         // Cap iterations to avoid freezing on mortars/artillery with large despawnTime values.
         int    maxTicks  = Math.min(
                 (gun.lastLoadedBullet != null && gun.lastLoadedBullet.definition.bullet.despawnTime != 0)
@@ -364,6 +375,12 @@ public class GUIOverlay extends AGUIBase {
         Point3D pos = simPos.copy();
         Point3D vel = simVel.copy();
         Point3D startPos = pos.copy();
+        Point3D accelerationDirection = simDir.copy().normalize();
+        IWrapperEntity gunController = gun.getGunController();
+
+        if (vel.length() < 0.001 && velocityToAddEachTick == 0) {
+            return pos;
+        }
 
         for (int tick = 0; tick < maxTicks; tick++) {
             // Hard distance cap — prevent runaway loops on high-arc trajectories.
@@ -390,17 +407,16 @@ public class GUIOverlay extends AGUIBase {
                 }
                 vel.y -= gravity;
             }
+            boolean notAcceleratingYet = accelerationDelay != 0 && tick < accelerationDelay;
+            if (velocityToAddEachTick != 0 && !notAcceleratingYet && tick - accelerationDelay < accelerationTime) {
+                vel.addScaled(accelerationDirection, velocityToAddEachTick);
+            }
 
             // Next position for this step.
             Point3D nextPos = pos.copy().add(vel);
 
             // Check for entity collision (MTS multiparts: vehicles, placed parts).
-            EntityInteractResult mtsHit = world.getMultipartEntityIntersect(pos, nextPos);
-            // Exclude the vehicle the gun is mounted on (its own hull/parts).
-            if (ownVehicle != null && mtsHit != null &&
-                    (mtsHit.entity == ownVehicle || ownVehicle.allParts.contains(mtsHit.entity))) {
-                mtsHit = null;
-            }
+            EntityInteractResult mtsHit = world.getMultipartEntityIntersect(pos, nextPos, ownVehicle, CollisionType.ATTACK, CollisionType.BULLET);
 
             // Check for vanilla entity collision (players, mobs, etc.).
             List<IWrapperEntity> extEntities = world.getEntitiesWithin(new BoundingBox(pos, nextPos));
@@ -428,11 +444,16 @@ public class GUIOverlay extends AGUIBase {
             }
             if (!extEntities.isEmpty()) {
                 for (IWrapperEntity entity : extEntities) {
-                    Point3D entityPos = entity.getPosition();
-                    double d = pos.distanceTo(entityPos);
-                    if (d < closestDist) {
-                        closestDist = d;
-                        result = entityPos.copy();
+                    if (shouldIgnoreExternalEntity(entity, gunController)) {
+                        continue;
+                    }
+                    BoundingBoxHitResult entityHit = entity.getBounds().getIntersection(pos, nextPos);
+                    if (entityHit != null) {
+                        double d = pos.distanceTo(entityHit.position);
+                        if (d < closestDist) {
+                            closestDist = d;
+                            result = entityHit.position.copy();
+                        }
                     }
                 }
             }
@@ -453,9 +474,13 @@ public class GUIOverlay extends AGUIBase {
      * entity hits.  Uses the scratch fields {@link #simPos} and {@link #simVel} (must be
      * pre-populated).
      */
-    private Point3D raycastBarrel(AWrapperWorld world, AEntityF_Multipart<?> ownVehicle) {
-        Point3D dir = simVel.copy().normalize();
+    private Point3D raycastBarrel(PartGun gun, AWrapperWorld world, AEntityF_Multipart<?> ownVehicle) {
+        Point3D dir = simVel.length() > 0.001 ? simVel.copy().normalize() : simDir.copy().normalize();
         Point3D pos = simPos.copy();
+        IWrapperEntity gunController = gun.getGunController();
+        if (dir.length() < 0.001) {
+            return pos;
+        }
         for (int step = 0; step < 512; step++) {
             if (!world.chunkLoaded(pos)) {
                 return pos;
@@ -464,12 +489,7 @@ public class GUIOverlay extends AGUIBase {
             Point3D nextPos = pos.copy().add(dir);
 
             // Check entities first (same logic as simulateBallistic).
-            EntityInteractResult mtsHit = world.getMultipartEntityIntersect(pos, nextPos);
-            // Exclude own vehicle.
-            if (ownVehicle != null && mtsHit != null &&
-                    (mtsHit.entity == ownVehicle || ownVehicle.allParts.contains(mtsHit.entity))) {
-                mtsHit = null;
-            }
+            EntityInteractResult mtsHit = world.getMultipartEntityIntersect(pos, nextPos, ownVehicle, CollisionType.ATTACK, CollisionType.BULLET);
             List<IWrapperEntity> extEntities = world.getEntitiesWithin(new BoundingBox(pos, nextPos));
             BlockHitResult blockHit = world.getBlockHit(pos, dir);
 
@@ -492,11 +512,16 @@ public class GUIOverlay extends AGUIBase {
             }
             if (!extEntities.isEmpty()) {
                 for (IWrapperEntity entity : extEntities) {
-                    Point3D entityPos = entity.getPosition();
-                    double d = pos.distanceTo(entityPos);
-                    if (d < closestDist) {
-                        closestDist = d;
-                        result = entityPos.copy();
+                    if (shouldIgnoreExternalEntity(entity, gunController)) {
+                        continue;
+                    }
+                    BoundingBoxHitResult entityHit = entity.getBounds().getIntersection(pos, nextPos);
+                    if (entityHit != null) {
+                        double d = pos.distanceTo(entityHit.position);
+                        if (d < closestDist) {
+                            closestDist = d;
+                            result = entityHit.position.copy();
+                        }
                     }
                 }
             }
@@ -507,6 +532,10 @@ public class GUIOverlay extends AGUIBase {
             pos.set(nextPos);
         }
         return pos;
+    }
+
+    private static boolean shouldIgnoreExternalEntity(IWrapperEntity entity, IWrapperEntity entityToIgnore) {
+        return entityToIgnore != null && entity.getID().equals(entityToIgnore.getID());
     }
 
     private static int getCollisionGroupIndex(EntityInteractResult interactResult) {
