@@ -85,6 +85,10 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 gun.clearBullets();
                 break;
             }
+            case CLEAR_RELOADING_ONCLIENT: {
+                gun.clearReloadingBullets();
+                break;
+            }
             case RELOAD_ONCLIENT: {
                 gun.setReloadVars(bulletItem, bulletQty);
                 break;
@@ -141,7 +145,8 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         BULLETS_OUT(false),
         BULLETS_PRESENT(false),
         HANDHELD_MOVEMENTS(true),
-        SELECT_AMMO(true);
+        SELECT_AMMO(true),
+        CLEAR_RELOADING_ONCLIENT(false);
 
         private final boolean sendToClients;
 

@@ -413,12 +413,14 @@ public class PartGun extends APart {
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
             if (!world.isClient()) {
+                boolean handledSelectedAmmoReload = false;
                 if (selectedAmmoReloadRequested && !blockReloadingVar.isActive && (isReloading || reloadDelayRemaining == 0) && tryToReloadSelectedAmmo()) {
                     selectedAmmoReloadRequested = false;
+                    handledSelectedAmmoReload = true;
                 }
                 //Don't process reload stuff when at the end of the reloading phase if we are clipless, wait for the next phase.
                 //Clipped guns we can't reload if we're already reloading.
-                if (!blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
+                if (!handledSelectedAmmoReload && !blockReloadingVar.isActive && reloadDelayRemaining == 0 && (!isReloading || (definition.gun.isClipless && reloadMainTimeRemaining != 0))) {
                     if (isHandHeld) {
                         if ((loadedBulletCount == 0 && playerPressedTrigger) || isHandHeldGunReloadRequested || autoReloadVar.isActive) {
                             //Check the player's inventory for bullets.
@@ -1093,7 +1095,7 @@ public class PartGun extends APart {
 
     /**
      * Sets the preferred bullet for future reloads.  Server-side selection also requests an immediate
-     * reload pass so HUD ammo cycling behaves like an actual ammo swap instead of just a filter change.
+     * handling pass; clipless guns may resolve that pass without changing already-loaded bullets.
      */
     public void setPreferredBullet(ItemBullet bulletItem) {
         this.preferredBullet = bulletItem;
@@ -1106,7 +1108,11 @@ public class PartGun extends APart {
         if (preferredBullet == null || !isCompatibleBullet(preferredBullet)) {
             return true;
         }
-        if (!hasNonPreferredBullets() && loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
+        if (definition.gun.isClipless) {
+            return tryToReloadSelectedCliplessAmmo();
+        }
+        boolean shouldSwapLoadedAmmo = !definition.gun.isClipless && hasNonPreferredBullets();
+        if (!shouldSwapLoadedAmmo && loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
             return true;
         }
 
@@ -1115,11 +1121,38 @@ public class PartGun extends APart {
             return false;
         }
 
-        if (hasNonPreferredBullets()) {
+        if (shouldSwapLoadedAmmo) {
             if (!hasSelectedAmmoAvailable(reloadSources, preferredBullet) || !unloadBulletsToSources(reloadSources)) {
                 return false;
             }
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_ONCLIENT));
+        }
+
+        if (loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
+            return true;
+        }
+        return tryToReloadFromSources(reloadSources, preferredBullet);
+    }
+
+    private boolean tryToReloadSelectedCliplessAmmo() {
+        boolean shouldCancelQueuedAmmo = hasNonPreferredReloadingBullets();
+        if (isHandHeld && !shouldCancelQueuedAmmo && loadedBulletCount > 0) {
+            return true;
+        }
+        if (!shouldCancelQueuedAmmo && loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
+            return true;
+        }
+
+        List<ReloadSource> reloadSources = getReloadSources();
+        if (reloadSources.isEmpty()) {
+            return false;
+        }
+
+        if (shouldCancelQueuedAmmo) {
+            if (!unloadReloadingBulletsToSources(reloadSources)) {
+                return false;
+            }
+            InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, PacketPartGun.Request.CLEAR_RELOADING_ONCLIENT));
         }
 
         if (loadedBulletCount + reloadingBulletCount >= definition.gun.capacity) {
@@ -1135,12 +1168,30 @@ public class PartGun extends APart {
             IWrapperPlayer player = (IWrapperPlayer) controller;
             reloadSources.add(new ReloadSource(player.getInventory(), !ConfigSystem.settings.general.devMode.value && !player.isCreative()));
         }
+        addConnectedCrateReloadSources(reloadSources);
+        return reloadSources;
+    }
+
+    private List<ReloadSource> getAutomaticReloadSources() {
+        List<ReloadSource> reloadSources = new ArrayList<>();
+        if (isHandHeld) {
+            IWrapperEntity controller = getGunController();
+            if (controller instanceof IWrapperPlayer) {
+                IWrapperPlayer player = (IWrapperPlayer) controller;
+                reloadSources.add(new ReloadSource(player.getInventory(), !ConfigSystem.settings.general.devMode.value && !player.isCreative()));
+            }
+        } else {
+            addConnectedCrateReloadSources(reloadSources);
+        }
+        return reloadSources;
+    }
+
+    private void addConnectedCrateReloadSources(List<ReloadSource> reloadSources) {
         for (PartInteractable crate : connectedCrates) {
             if (crate.isActiveVar.isActive && crate.inventory != null) {
                 reloadSources.add(new ReloadSource(crate.inventory, !ConfigSystem.settings.general.devMode.value));
             }
         }
-        return reloadSources;
     }
 
     private boolean hasSelectedAmmoAvailable(List<ReloadSource> reloadSources, ItemBullet bulletItem) {
@@ -1192,6 +1243,31 @@ public class PartGun extends APart {
             returnSource.inventory.addStack(stackToReturn.copy());
         }
         clearBullets();
+        return true;
+    }
+
+    private boolean unloadReloadingBulletsToSources(List<ReloadSource> reloadSources) {
+        List<IWrapperItemStack> stacksToReturn = new ArrayList<>();
+        for (int i = 0; i < reloadingBullets.size(); ++i) {
+            stacksToReturn.add(getBulletStack(reloadingBullets.get(i), reloadingBulletCounts.get(i)));
+        }
+        if (stacksToReturn.isEmpty()) {
+            return true;
+        }
+        ReloadSource returnSource = null;
+        for (ReloadSource source : reloadSources) {
+            if (canStoreAllStacks(stacksToReturn, source.inventory)) {
+                returnSource = source;
+                break;
+            }
+        }
+        if (returnSource == null) {
+            return false;
+        }
+        for (IWrapperItemStack stackToReturn : stacksToReturn) {
+            returnSource.inventory.addStack(stackToReturn.copy());
+        }
+        clearReloadingBullets();
         return true;
     }
 
@@ -1255,11 +1331,30 @@ public class PartGun extends APart {
         return false;
     }
 
+    private boolean hasNonPreferredReloadingBullets() {
+        for (ItemBullet bullet : reloadingBullets) {
+            if (!preferredBullet.equals(bullet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isCompatibleBullet(ItemBullet bulletItem) {
         return bulletItem.definition.bullet != null
                 && bulletItem.definition.bullet.diameter == definition.gun.diameter
                 && bulletItem.definition.bullet.caseLength >= definition.gun.minCaseLength
                 && bulletItem.definition.bullet.caseLength <= definition.gun.maxCaseLength;
+    }
+
+    private boolean shouldRejectNonPreferredReload(ItemBullet bulletItem) {
+        if (preferredBullet == null || preferredBullet.equals(bulletItem)) {
+            return false;
+        }
+        if (definition.gun.isClipless) {
+            return false;
+        }
+        return hasLoadedOrReloadingBullet(preferredBullet) || hasSelectedAmmoAvailable(getAutomaticReloadSources(), preferredBullet);
     }
 
     /**
@@ -1271,8 +1366,9 @@ public class PartGun extends APart {
         AItemBase item = stack.getItem();
         if (item instanceof ItemBullet) {
             ItemBullet bulletItem = (ItemBullet) item;
-            //If a preferred bullet has been selected via the ammo selection GUI, only accept that exact type.
-            if (preferredBullet != null && !preferredBullet.equals(bulletItem)) {
+            //Honor ammo selection when it is actionable, but let empty hand-held guns fall back
+            //once the selected type is fully gone and let clipless guns keep mixed loads.
+            if (shouldRejectNonPreferredReload(bulletItem)) {
                 return false;
             }
             //Check to make sure this is a bullet, the gun isn't reloading and can accept reloads.
@@ -1346,6 +1442,16 @@ public class PartGun extends APart {
         loadedBullets.clear();
         loadedBulletCounts.clear();
         loadedBulletCount = 0;
+        clearReloadingBullets();
+        reloadStartBulletCount = 0;
+        reloadTargetBulletCount = 0;
+    }
+
+    /**
+     * Clears bullets that are queued or actively moving through the reload cycle without touching
+     * bullets already loaded in the gun.
+     */
+    public void clearReloadingBullets() {
         reloadingBullets.clear();
         reloadingBulletCounts.clear();
         reloadingBulletCount = 0;
@@ -1353,8 +1459,8 @@ public class PartGun extends APart {
         reloadMainTimeRemaining = 0;
         reloadEndTimeRemaining = 0;
         reloadTotalTime = 0;
-        reloadStartBulletCount = 0;
-        reloadTargetBulletCount = 0;
+        reloadStartBulletCount = loadedBulletCount;
+        reloadTargetBulletCount = loadedBulletCount;
         isReloading = false;
     }
 
@@ -1375,6 +1481,10 @@ public class PartGun extends APart {
 
     public boolean isSemiAutoFireMode() {
         return isSemiAutoVar.isActive;
+    }
+
+    public boolean blocksReloading() {
+        return blockReloadingVar.isActive;
     }
 
     public boolean hasLoadedOrReloadingBullet(ItemBullet bulletItem) {

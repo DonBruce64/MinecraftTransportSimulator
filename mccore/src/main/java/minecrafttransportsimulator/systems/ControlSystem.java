@@ -112,7 +112,8 @@ public final class ControlSystem {
     private static void handleAmmoSelector(IWrapperPlayer player) {
         //HUD-style selector: auto-create when player is riding a vehicle seat controlling at least one gun,
         //auto-close otherwise.  The panel is non-capturing so it overlays gameplay without blocking control.
-        boolean shouldShow = hasAnyControllableGun(player);
+        boolean guiOpen = InterfaceManager.clientInterface.isGUIOpen() || InterfaceManager.clientInterface.isChatOpen();
+        boolean shouldShow = !guiOpen && hasAnyControllableGun(player);
         if (shouldShow) {
             if (GUIAmmoSelector.current == null) {
                 new GUIAmmoSelector(player);
@@ -120,7 +121,7 @@ public final class ControlSystem {
         } else if (GUIAmmoSelector.current != null) {
             GUIAmmoSelector.current.close();
         }
-        if (GUIAmmoSelector.current != null) {
+        if (GUIAmmoSelector.current != null && !guiOpen) {
             GUIAmmoSelector.current.pollSelectionKeys();
             if (ControlsKeyboard.GENERAL_AMMO_SELECT.isPressed()) {
                 GUIAmmoSelector.current.cycleActiveGunAmmo();

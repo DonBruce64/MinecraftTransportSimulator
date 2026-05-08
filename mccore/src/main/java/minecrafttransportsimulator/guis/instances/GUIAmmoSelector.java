@@ -250,11 +250,11 @@ public class GUIAmmoSelector extends AGUIBase {
                     if (entry.displayBullet != null) {
                         icon.stack = entry.displayIconStack;
                         bulletName.text = entry.displayBullet.getItemName();
-                        count.text = entry.loadedCount + "/" + getAvailableRoundsText(entry);
+                        count.text = entry.blocksReloading ? String.valueOf(entry.loadedCount) : entry.loadedCount + "/" + getAvailableRoundsText(entry);
                     } else {
                         icon.stack = null;
                         bulletName.text = entry.compatibleBullets.isEmpty() ? "No ammo" : "Not loaded";
-                        count.text = "";
+                        count.text = entry.blocksReloading ? String.valueOf(entry.loadedCount) : "";
                     }
                     fireMode.text = entry.fireModeText;
 
@@ -387,7 +387,7 @@ public class GUIAmmoSelector extends AGUIBase {
         if (entry == null || entry.compatibleBullets.size() < 2) {
             return;
         }
-        int currentIndex = entry.displayBullet == null ? -1 : entry.compatibleBullets.indexOf(entry.displayBullet);
+        int currentIndex = entry.selectedBullet == null ? -1 : entry.compatibleBullets.indexOf(entry.selectedBullet);
         ItemBullet next = entry.compatibleBullets.get((currentIndex + 1) % entry.compatibleBullets.size());
         for (PartGun gun : entry.guns) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, next));
@@ -484,10 +484,13 @@ public class GUIAmmoSelector extends AGUIBase {
         entry.gunName = entry.gunItem != null ? entry.gunItem.getItemName() : groupGuns.get(0).definition.general.name;
 
         int totalLoaded = 0;
+        boolean blocksReloading = true;
         for (PartGun gun : groupGuns) {
             totalLoaded += gun.getLoadedBulletCount();
+            blocksReloading &= gun.blocksReloading();
         }
         entry.loadedCount = totalLoaded;
+        entry.blocksReloading = blocksReloading;
 
         Map<ItemBullet, Integer> stackCounts = new LinkedHashMap<>();
         PartGun firstGun = groupGuns.get(0);
@@ -502,16 +505,28 @@ public class GUIAmmoSelector extends AGUIBase {
         entry.availableStacksByBullet = stackCounts;
         entry.compatibleBullets = new ArrayList<>(stackCounts.keySet());
 
-        ItemBullet active = firstGun.preferredBullet != null ? firstGun.preferredBullet : firstGun.lastLoadedBullet;
-        if (isHandHeld && active != null && !entry.compatibleBullets.contains(active) && !firstGun.hasLoadedOrReloadingBullet(active)) {
-            active = firstGun.lastLoadedBullet != null && (entry.compatibleBullets.contains(firstGun.lastLoadedBullet) || firstGun.hasLoadedOrReloadingBullet(firstGun.lastLoadedBullet)) ? firstGun.lastLoadedBullet : null;
+        ItemBullet display = firstGun.getLoadedBulletCount() > 0 ? firstGun.lastLoadedBullet : (firstGun.preferredBullet != null ? firstGun.preferredBullet : firstGun.lastLoadedBullet);
+        if (isHandHeld && display != null && !entry.compatibleBullets.contains(display) && !firstGun.hasLoadedOrReloadingBullet(display)) {
+            display = firstGun.lastLoadedBullet != null && (entry.compatibleBullets.contains(firstGun.lastLoadedBullet) || firstGun.hasLoadedOrReloadingBullet(firstGun.lastLoadedBullet)) ? firstGun.lastLoadedBullet : null;
         }
-        if (active != null && !entry.compatibleBullets.contains(active)) {
-            entry.compatibleBullets.add(active);
+        ItemBullet selected = firstGun.preferredBullet != null ? firstGun.preferredBullet : display;
+        if (display != null && !entry.compatibleBullets.contains(display)) {
+            entry.compatibleBullets.add(display);
+        }
+        if (selected != null && !entry.compatibleBullets.contains(selected) && (entry.availableStacksByBullet.containsKey(selected) || firstGun.hasLoadedOrReloadingBullet(selected))) {
+            entry.compatibleBullets.add(selected);
         }
         entry.compatibleBullets.sort(Comparator.comparing(ItemBullet::getItemName));
 
-        entry.displayBullet = active != null ? active : (entry.compatibleBullets.isEmpty() ? null : entry.compatibleBullets.get(0));
+        ItemBullet fallbackDisplay = null;
+        for (ItemBullet bullet : entry.compatibleBullets) {
+            if (entry.availableStacksByBullet.containsKey(bullet)) {
+                fallbackDisplay = bullet;
+                break;
+            }
+        }
+        entry.displayBullet = display != null ? display : fallbackDisplay;
+        entry.selectedBullet = selected != null ? selected : entry.displayBullet;
         entry.displayIconStack = entry.displayBullet != null ? entry.displayBullet.getNewStack(null) : null;
         entry.fireModeText = firstGun.isSemiAutoFireMode() ? FIRE_MODE_SEMI_AUTO : FIRE_MODE_FULL_AUTO;
 
@@ -554,7 +569,7 @@ public class GUIAmmoSelector extends AGUIBase {
 
     @Override
     protected boolean canStayOpen() {
-        return super.canStayOpen();
+        return super.canStayOpen() && !InterfaceManager.clientInterface.isGUIOpen() && !InterfaceManager.clientInterface.isChatOpen();
     }
 
     @Override
@@ -634,9 +649,11 @@ public class GUIAmmoSelector extends AGUIBase {
         int groupIndex;
         boolean isNoneSlot;
         boolean isHandHeld;
+        boolean blocksReloading;
         List<ItemBullet> compatibleBullets;
         Map<ItemBullet, Integer> availableStacksByBullet;
         ItemBullet displayBullet;
+        ItemBullet selectedBullet;
         IWrapperItemStack displayIconStack;
         String fireModeText;
     }
