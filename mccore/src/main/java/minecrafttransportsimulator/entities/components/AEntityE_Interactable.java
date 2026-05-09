@@ -402,7 +402,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * applications, which means one of those may have made this entity invalid.
      */
     public void attack(Damage damage) {
-        if (!damage.isWater && !(damage.isExplosion && ignoreExplosiveDamage())) {
+        if (!damage.isWater && !(damage.isExplosion && ignoreExplosiveDamage() && !damage.bypassesIgnoredExplosiveDamage)) {
             if (!outOfHealth) {
                 double currentDamage = damageVar.currentValue + damage.amount;
                 if (currentDamage > definition.general.health) {

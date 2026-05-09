@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -31,6 +32,7 @@ public class Explosion {
     private static final List<Explosion> lingeringExplosions = new ArrayList<>();
     private static final double RAY_STEP = 0.3;
     private static final int RAY_GRID = 16;
+    private static final double MIN_PATH_LENGTH = 1.0E-7D;
 
     private final AWrapperWorld world;
     private final Point3D position;
@@ -143,9 +145,14 @@ public class Explosion {
         for (AEntityF_Multipart<?> multipart : multiparts) {
             if (multipart instanceof EntityVehicleF_Physics) {
                 EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) multipart;
-                double dx = vehicle.position.x - position.x;
-                double dy = vehicle.position.y - position.y;
-                double dz = vehicle.position.z - position.z;
+                BlastHit blastHit = getBestVehicleBlastHit(vehicle, blastBounds);
+                if (blastHit == null) {
+                    continue;
+                }
+
+                double dx = blastHit.hitPosition.x - position.x;
+                double dy = blastHit.hitPosition.y - position.y;
+                double dz = blastHit.hitPosition.z - position.z;
 
                 //Select base damage based on vehicle type.
                 float baseDamage;
@@ -155,19 +162,14 @@ public class Explosion {
                     baseDamage = blastDamageVsGround != 0 ? blastDamageVsGround : (blastDamageVsVehicles != 0 ? blastDamageVsVehicles : blastDamage);
                 }
 
-                double damageFalloff = getEllipticalFalloff(dx, dy, dz, blastRadiusXZ, blastRadiusY, maxDamageRadius);
-                if (damageFalloff <= 0) {
-                    continue;
-                }
-
-                double damageAmount = baseDamage * damageFalloff;
-                Damage damage = new Damage(damageAmount, blastBounds, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown();
+                double damageAmount = baseDamage * blastHit.falloff;
+                Damage damage = new Damage(damageAmount, blastHit.box, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown().bypassIgnoredExplosiveDamage();
 
                 //Apply knockback away from explosion center.
                 if (knockback != 0) {
                     double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
                     if (dist > 0) {
-                        damage.knockback = new Point3D(dx / dist * knockback * damageFalloff, dy / dist * knockback * damageFalloff, dz / dist * knockback * damageFalloff);
+                        damage.knockback = new Point3D(dx / dist * knockback * blastHit.falloff, dy / dist * knockback * blastHit.falloff, dz / dist * knockback * blastHit.falloff);
                     }
                 }
 
@@ -196,6 +198,11 @@ public class Explosion {
         List<IWrapperEntity> entities = world.getEntitiesWithin(blastBounds);
         for (IWrapperEntity entity : entities) {
             Point3D entityPos = entity.getPosition();
+            Point3D entityBlastPoint = entityPos.copy().add(0, entity.getEyeHeight(), 0);
+            if (!isBlastPathClear(entityBlastPoint)) {
+                continue;
+            }
+
             double dx = entityPos.x - position.x;
             double dy = entityPos.y - position.y;
             double dz = entityPos.z - position.z;
@@ -247,8 +254,8 @@ public class Explosion {
      * Rays are cast in all directions on a 16x16x16 grid.  Each ray starts with randomized strength
      * (blastStrength * (0.7 + random * 0.6)) and loses energy as it passes through blocks based on
      * their hardness: (hardness + 0.3) * 0.3 per step.  This creates natural-looking craters with
-     * ragged edges.  Blocks within maxStrengthRadius are always destroyed regardless of ray energy
-     * (but rays still lose energy normally for blocks beyond that zone).
+     * ragged edges.  Directly exposed blocks within maxStrengthRadius are always destroyed
+     * regardless of ray energy (but rays still lose energy normally for blocks beyond that zone).
      * blastStrengthRadiusXZ/Y optionally cap maximum ray travel distance.
      * If blastStrengthRadiusXZ is 0, rays run until energy is depleted (like vanilla MC).
      * Block drops use 1/blastStrength probability like vanilla MC.
@@ -259,7 +266,7 @@ public class Explosion {
         Point3D rayPos = new Point3D();
         Point3D blockPos = new Point3D();
 
-        //First pass: mark all blocks within maxStrengthRadius for guaranteed destruction.
+        //First pass: mark exposed blocks within maxStrengthRadius for guaranteed destruction.
         if (maxStrengthRadius > 0) {
             int maxR = (int) Math.ceil(maxStrengthRadius);
             for (int x = -maxR; x <= maxR; x++) {
@@ -271,7 +278,7 @@ public class Explosion {
                             int bz = (int) Math.floor(position.z) + z;
                             blockPos.set(bx, by, bz);
                             float hardness = world.getBlockHardness(blockPos);
-                            if (hardness > 0 && hardness <= blastStrength && hardness < Float.MAX_VALUE) {
+                            if (hardness > 0 && hardness <= blastStrength && hardness < Float.MAX_VALUE && isBlastPathClearToBlock(blockPos, bx, by, bz)) {
                                 blocksToDestroy.add(packBlockPos(bx, by, bz));
                             }
                         }
@@ -409,6 +416,11 @@ public class Explosion {
         List<IWrapperEntity> entities = world.getEntitiesWithin(blastBounds);
         for (IWrapperEntity entity : entities) {
             Point3D entityPos = entity.getPosition();
+            Point3D entityBlastPoint = entityPos.copy().add(0, entity.getEyeHeight(), 0);
+            if (!isBlastPathClear(entityBlastPoint)) {
+                continue;
+            }
+
             double dx = entityPos.x - position.x;
             double dy = entityPos.y - position.y;
             double dz = entityPos.z - position.z;
@@ -454,6 +466,71 @@ public class Explosion {
         }
 
         return 1.0 - normDist;
+    }
+
+    /**
+     * Returns the best exposed attack box on a vehicle for this explosion, or null if the vehicle
+     * is outside the damage ellipsoid or fully blocked by terrain.
+     */
+    private BlastHit getBestVehicleBlastHit(EntityVehicleF_Physics vehicle, BoundingBox blastBounds) {
+        BlastHit bestHit = null;
+        Point3D testPoint = new Point3D();
+        for (BoundingBox box : vehicle.allCollisionBoxes) {
+            if (box.collisionTypes != null && box.collisionTypes.contains(CollisionType.ATTACK) && box.intersects(blastBounds)) {
+                getClosestPointOnBox(box, position, testPoint);
+                double dx = testPoint.x - position.x;
+                double dy = testPoint.y - position.y;
+                double dz = testPoint.z - position.z;
+                double falloff = getEllipticalFalloff(dx, dy, dz, blastRadiusXZ, blastRadiusY, maxDamageRadius);
+                if (falloff > 0 && (bestHit == null || falloff > bestHit.falloff) && isBlastPathClear(testPoint)) {
+                    if (bestHit == null) {
+                        bestHit = new BlastHit();
+                    }
+                    bestHit.box = box;
+                    bestHit.hitPosition.set(testPoint);
+                    bestHit.falloff = falloff;
+                }
+            }
+        }
+        return bestHit;
+    }
+
+    /**
+     * Gets the point on a bounding box closest to the explosion origin.  This makes blast radius
+     * apply to large vehicles by their hull hitboxes rather than only by their entity center.
+     */
+    private static void getClosestPointOnBox(BoundingBox box, Point3D point, Point3D output) {
+        output.x = Math.max(box.globalCenter.x - box.widthRadius, Math.min(point.x, box.globalCenter.x + box.widthRadius));
+        output.y = Math.max(box.globalCenter.y - box.heightRadius, Math.min(point.y, box.globalCenter.y + box.heightRadius));
+        output.z = Math.max(box.globalCenter.z - box.depthRadius, Math.min(point.z, box.globalCenter.z + box.depthRadius));
+    }
+
+    /**
+     * Checks if terrain blocks the blast from reaching the target point.
+     */
+    private boolean isBlastPathClear(Point3D targetPosition) {
+        Point3D delta = targetPosition.copy().subtract(position);
+        return delta.length() < MIN_PATH_LENGTH || world.getBlockHit(position, delta) == null;
+    }
+
+    /**
+     * Checks if terrain blocks the blast from reaching a block.  The target block itself is allowed
+     * to be the first ray hit; any nearer block means this block is shielded.
+     */
+    private boolean isBlastPathClearToBlock(Point3D blockPosition, int blockX, int blockY, int blockZ) {
+        Point3D targetPosition = blockPosition.copy().add(0.5, 0.5, 0.5);
+        Point3D delta = targetPosition.subtract(position);
+        if (delta.length() < MIN_PATH_LENGTH) {
+            return true;
+        }
+        BlockHitResult hit = world.getBlockHit(position, delta);
+        return hit == null || ((int) hit.blockPosition.x == blockX && (int) hit.blockPosition.y == blockY && (int) hit.blockPosition.z == blockZ);
+    }
+
+    private static class BlastHit {
+        private BoundingBox box;
+        private final Point3D hitPosition = new Point3D();
+        private double falloff;
     }
 
     /**
