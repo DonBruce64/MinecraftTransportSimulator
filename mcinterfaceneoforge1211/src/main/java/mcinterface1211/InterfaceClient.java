@@ -29,11 +29,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -49,8 +49,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.minecraft.core.registries.BuiltInRegistries;
-import org.joml.Vector3f;
 
 @EventBusSubscriber(modid = InterfaceLoader.MODID, value = Dist.CLIENT)
 public class InterfaceClient implements IInterfaceClient {
@@ -240,6 +238,7 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
+    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
 
     @Override
     public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
@@ -252,17 +251,18 @@ public class InterfaceClient implements IInterfaceClient {
             camX = InterfaceEventsEntityRendering.cameraAdjustedPosition.x;
             camY = InterfaceEventsEntityRendering.cameraAdjustedPosition.y;
             camZ = InterfaceEventsEntityRendering.cameraAdjustedPosition.z;
-            RotationMatrix ori = InterfaceEventsEntityRendering.cameraAdjustedOrientation;
+            RotationMatrix ori = getCameraProjectionOrientation(InterfaceEventsEntityRendering.cameraAdjustedOrientation);
             fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
             upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
             rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
         } else {
-            Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-            Vec3 camPos = camera.getPosition();
+            net.minecraft.client.Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+            net.minecraft.world.phys.Vec3 camPos = camera.getPosition();
             camX = camPos.x; camY = camPos.y; camZ = camPos.z;
-            Vector3f look = camera.getLookVector();
-            Vector3f up = camera.getUpVector();
-            Vector3f left = camera.getLeftVector();
+            org.joml.Vector3f look = camera.getLookVector();
+            org.joml.Vector3f up = camera.getUpVector();
+            org.joml.Vector3f left = camera.getLeftVector();
             fwdX = look.x(); fwdY = look.y(); fwdZ = look.z();
             upX  = up.x();   upY  = up.y();   upZ  = up.z();
             rgtX = -left.x(); rgtY = -left.y(); rgtZ = -left.z();
@@ -281,9 +281,16 @@ public class InterfaceClient implements IInterfaceClient {
         double fovRad = Math.toRadians(getFOV());
         double tanHalfFov = Math.tan(fovRad / 2.0);
         double aspect = (double) screenWidth / screenHeight;
-
         double ndcX = xView / (depth * tanHalfFov * aspect);
         double ndcY = yView / (depth * tanHalfFov);
+        if (InterfaceRender.projectionMatrix != null) {
+            double projectionScaleX = Math.abs(InterfaceRender.projectionMatrix.m00());
+            double projectionScaleY = Math.abs(InterfaceRender.projectionMatrix.m11());
+            if (projectionScaleX > 0 && projectionScaleY > 0) {
+                ndcX = xView * projectionScaleX / depth;
+                ndcY = yView * projectionScaleY / depth;
+            }
+        }
 
         if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
 
@@ -292,6 +299,16 @@ public class InterfaceClient implements IInterfaceClient {
                 (1.0 - ndcY) / 2.0 * screenHeight,
                 depth);
         return screenProjectionResult;
+    }
+
+    private static RotationMatrix getCameraProjectionOrientation(RotationMatrix cameraOrientation) {
+        if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+            cameraProjectionOrientation.angles.set(-cameraOrientation.angles.x, cameraOrientation.angles.y - 180, -cameraOrientation.angles.z);
+            cameraProjectionOrientation.updateToAngles();
+            return cameraProjectionOrientation;
+        } else {
+            return cameraOrientation;
+        }
     }
 
     private static final Point3D screenProjectionResult = new Point3D();
