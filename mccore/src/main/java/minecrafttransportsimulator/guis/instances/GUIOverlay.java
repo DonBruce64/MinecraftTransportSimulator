@@ -17,7 +17,6 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentVehicleDebug;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -68,7 +67,6 @@ public class GUIOverlay extends AGUIBase {
                 return tooltipText;
             }
         });
-        addComponent(new GUIComponentVehicleDebug());
     }
 
     @Override

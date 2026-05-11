@@ -2,11 +2,9 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.io.InputStream;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
-import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableVertices;
 
@@ -44,11 +42,6 @@ public interface IInterfaceRender {
      * renders the item model: does not render text for counts.
      */
     void renderItemModel(GUIComponentItem component);
-
-    /**
-     * Draws vanilla text.
-     */
-    void drawVanillaText(String text, int x, int y, ColorRGB color, RenderText.TextAlignment alignment, float scale);
 
     /**
      * Renders according to the set data.
