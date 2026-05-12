@@ -58,6 +58,11 @@ public interface IInterfaceClient {
     boolean isGUIOpen();
 
     /**
+     * Returns true if the HUD/GUI is hidden by the client.
+     */
+    boolean isGUIHidden();
+
+    /**
      * Displays a short-lived overlay message above the hotbar.
      */
     void displayOverlayMessage(String message);
