@@ -513,14 +513,6 @@ public abstract class EntityManager {
     	EntityManager.hotloadFunction = hotloadFunction;
     	hotloadStep = 1;
 	}
-    
-    @FunctionalInterface
-    public static abstract interface HotloadFunction{
-    	public void apply();
-    }
-    	EntityManager.hotloadFunction = hotloadFunction;
-    	hotloadStep = 1;
-	}
 
     public static boolean isHotloading() {
         return hotloadStep != 0;
