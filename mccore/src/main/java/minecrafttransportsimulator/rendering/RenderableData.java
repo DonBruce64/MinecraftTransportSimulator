@@ -58,7 +58,10 @@ public class RenderableData {
     }
 
     public void setTexture(String texture) {
-        if (!texture.equals(this.texture)) {
+        if (vertexObject.isErrorPlaceholder) {
+            texture = AModelParser.MISSING_MODEL_TEXTURE;
+        }
+        if (texture == null ? this.texture != null : !texture.equals(this.texture)) {
             this.texture = texture;
             this.isTextureTranslucent = texture != null && (texture.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || texture.endsWith(GUIComponentCutout.LIT_SUFFIX));
             this.changedSinceLastRender = true;
