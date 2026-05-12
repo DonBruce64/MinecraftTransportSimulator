@@ -86,6 +86,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Map containing text lines for saved text provided by this entity.
      **/
     public final Map<JSONText, String> text = new LinkedHashMap<>();
+    //GUI text objects keep their own animation and fade state as they are rendered independently from model text.
+    public final Map<JSONText, AnimationSwitchbox> guiTextSwitchboxes = new LinkedHashMap<>();
+    private final Map<JSONText, Double> guiTextAlphaValues = new HashMap<>();
+    private final Map<JSONText, Double> guiTextLastSampleTimes = new HashMap<>();
 
     /**
      * Map of computed variables.  These are computed using logic and need to be re-created on core entity makeup changes.
@@ -171,6 +175,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     };
 
     public static final String REPAIRED_NAME = "repaired";
+    private static final int DEFAULT_GUI_TEXT_FADE_TICKS = 7;
 
     /**
      * Constructor for synced entities
@@ -326,6 +331,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }
                 }
             }
+
+            if (definition.rendering.guiTextObjects != null) {
+                for (JSONText guiTextDef : definition.rendering.guiTextObjects) {
+                    if (guiTextDef.animations != null) {
+                        //GUI text only uses the switchbox result for visibility, but keeps the normal animation syntax.
+                        guiTextSwitchboxes.put(guiTextDef, new AnimationSwitchbox(this, guiTextDef.animations, null));
+                    }
+                }
+            }
         }
     }
 
@@ -413,13 +427,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             for (Entry<JSONText, String> textEntry : text.entrySet()) {
                 JSONText textDef = textEntry.getKey();
                 if (textDef.variableName != null) {
-                    String value = getRawTextVariableValue(textDef, 0);
-                    if (value != null) {
-                        value = String.format(textDef.variableFormat, value);
-                    } else {
-                        value = String.format(textDef.variableFormat, getOrCreateVariable(textDef.variableName).computeValue(0) * textDef.variableFactor + textDef.variableOffset);
-                    }
-                    textEntry.setValue(value);
+                    textEntry.setValue(formatTextValue(textDef, textEntry.getValue(), 0));
                 }
             }
         }
@@ -540,6 +548,31 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 textEntry.setValue(textValue);
             }
         }
+    }
+
+    //Shared text formatting logic keeps GUI text and world text behaving the same for variables and custom text sources.
+    private String formatTextValue(JSONText textDef, String currentTextValue, float partialTicks) {
+        if (textDef.variableName != null) {
+            String value = getRawTextVariableValue(textDef, partialTicks);
+            if (value != null) {
+                return String.format(textDef.variableFormat, value);
+            } else {
+                return String.format(textDef.variableFormat, getOrCreateVariable(textDef.variableName).computeValue(partialTicks) * textDef.variableFactor + textDef.variableOffset);
+            }
+        } else {
+            return currentTextValue != null ? currentTextValue : textDef.defaultText;
+        }
+    }
+
+    private String getCurrentTextValue(JSONText textDef) {
+        if (textDef.fieldName != null) {
+            for (Entry<JSONText, String> textEntry : text.entrySet()) {
+                if (textDef.fieldName.equals(textEntry.getKey().fieldName)) {
+                    return textEntry.getValue();
+                }
+            }
+        }
+        return textDef.defaultText;
     }
 
     /**
@@ -1064,6 +1097,51 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
         return null;
+    }
+
+    /**
+     * Returns the text value for the passed-in GUI text definition.
+     * This mirrors the standard text object formatting so pack authors can reuse the same text settings.
+     */
+    public String getGUITextValue(JSONText textDef, float partialTicks) {
+        return formatTextValue(textDef, getCurrentTextValue(textDef), partialTicks);
+    }
+
+    /**
+     * Returns the current alpha for the passed-in GUI text object after updating its fade timers.
+     */
+    public float getGUITextAlpha(JSONText textDef, boolean shouldShow, float partialTicks) {
+        AnimationSwitchbox switchbox = guiTextSwitchboxes.get(textDef);
+        if (switchbox != null) {
+            shouldShow = shouldShow && switchbox.runSwitchbox(partialTicks, false);
+        }
+
+        double currentTime = ticksExisted + partialTicks;
+        double lastSampleTime = guiTextLastSampleTimes.containsKey(textDef) ? guiTextLastSampleTimes.get(textDef) : currentTime;
+        double deltaTime = Math.max(0.0, currentTime - lastSampleTime);
+        double alpha = guiTextAlphaValues.getOrDefault(textDef, 0.0);
+        int fadeTime = shouldShow ? textDef.fadeInTime : textDef.fadeOutTime;
+        if (fadeTime <= 0) {
+            fadeTime = DEFAULT_GUI_TEXT_FADE_TICKS;
+        }
+
+        alpha += (shouldShow ? deltaTime : -deltaTime) / fadeTime;
+        if (alpha < 0.0) {
+            alpha = 0.0;
+        } else if (alpha > 1.0) {
+            alpha = 1.0;
+        }
+
+        guiTextAlphaValues.put(textDef, alpha);
+        guiTextLastSampleTimes.put(textDef, currentTime);
+        return (float) alpha;
+    }
+
+    /**
+     * Returns true if this entity actually defines any screen-space GUI text.
+     */
+    public boolean hasGUIText() {
+        return definition.rendering != null && definition.rendering.guiTextObjects != null && !definition.rendering.guiTextObjects.isEmpty();
     }
 
     /**
