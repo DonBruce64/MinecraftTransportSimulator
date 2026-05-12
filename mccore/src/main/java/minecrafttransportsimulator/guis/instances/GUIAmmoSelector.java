@@ -56,6 +56,7 @@ public class GUIAmmoSelector extends AGUIBase {
     private static final String FIRE_MODE_FULL_AUTO = "AUTO";
     private static final float BACKDROP_ALPHA = 0.5F;
     private static final ColorRGB INACTIVE_COLOR = ColorRGB.WHITE;
+    private static final ColorRGB AUXILIARY_COLOR = ColorRGB.LIGHT_GRAY;
 
     public static GUIAmmoSelector current;
 
@@ -68,6 +69,7 @@ public class GUIAmmoSelector extends AGUIBase {
     private final List<GUIComponentCutout> cellBackdrops = new ArrayList<>();
     private final List<GUIComponentItem> cellIcons = new ArrayList<>();
     private final List<GUIComponentLabel> cellTitles = new ArrayList<>();
+    private final List<GUIComponentLabel> cellSoloIndices = new ArrayList<>();
     private final List<GUIComponentLabel> cellBulletNames = new ArrayList<>();
     private final List<GUIComponentLabel> cellCounts = new ArrayList<>();
     private final List<GUIComponentLabel> cellFireModes = new ArrayList<>();
@@ -103,6 +105,7 @@ public class GUIAmmoSelector extends AGUIBase {
         cellBackdrops.clear();
         cellIcons.clear();
         cellTitles.clear();
+        cellSoloIndices.clear();
         cellBulletNames.clear();
         cellCounts.clear();
         cellFireModes.clear();
@@ -137,6 +140,13 @@ public class GUIAmmoSelector extends AGUIBase {
             title.ignoreGUILightingState = true;
             addComponent(title);
             cellTitles.add(title);
+
+            GUIComponentLabel soloIndex = new GUIComponentLabel(guiLeft + CELL_WIDTH - CELL_INNER_PAD, cellY + 3,
+                    AUXILIARY_COLOR, "", TextAlignment.RIGHT_ALIGNED, 0.625F);
+            soloIndex.ignoreGUILightingState = true;
+            soloIndex.visible = false;
+            addComponent(soloIndex);
+            cellSoloIndices.add(soloIndex);
 
             GUIComponentItem icon = new GUIComponentItem(guiLeft + CELL_INNER_PAD, cellY + 10, 1.0F);
             addComponent(icon);
@@ -204,6 +214,7 @@ public class GUIAmmoSelector extends AGUIBase {
         for (int i = 0; i < MAX_GUNS; ++i) {
             GUIComponentCutout backdrop = cellBackdrops.get(i);
             GUIComponentLabel title = cellTitles.get(i);
+            GUIComponentLabel soloIndex = cellSoloIndices.get(i);
             GUIComponentItem icon = cellIcons.get(i);
             GUIComponentLabel bulletName = cellBulletNames.get(i);
             GUIComponentLabel count = cellCounts.get(i);
@@ -223,17 +234,20 @@ public class GUIAmmoSelector extends AGUIBase {
 
                 backdrop.visible = true;
                 title.visible = true;
+                soloIndex.visible = false;
                 bulletName.visible = true;
                 count.visible = true;
                 fireMode.visible = entry.isHandHeld;
                 setBorderVisible(i, active);
 
                 title.color = INACTIVE_COLOR;
+                soloIndex.color = AUXILIARY_COLOR;
                 bulletName.color = INACTIVE_COLOR;
                 count.color = INACTIVE_COLOR;
                 fireMode.color = INACTIVE_COLOR;
 
                 title.text = entry.isHandHeld ? entry.gunName : (i + 1) + ". " + entry.gunName;
+                soloIndex.text = "";
 
                 if (entry.isNoneSlot) {
                     icon.visible = false;
@@ -242,12 +256,15 @@ public class GUIAmmoSelector extends AGUIBase {
                     count.text = "";
                     fireMode.text = "";
                     fireMode.visible = false;
+                    soloIndex.visible = false;
                     reloadBar.visible = false;
                     reloadBar.entry = null;
                     reloadBar.progressState = null;
                     reloadBar.interpolateProgress = false;
                 } else {
                     visibleGunItems.add(entry.gunItem);
+                    soloIndex.visible = active && entry.isFireSolo;
+                    soloIndex.text = entry.soloIndex + "/" + entry.soloCount;
                     icon.visible = true;
                     if (entry.displayBullet != null) {
                         icon.stack = entry.displayIconStack;
@@ -289,6 +306,7 @@ public class GUIAmmoSelector extends AGUIBase {
             } else {
                 backdrop.visible = false;
                 title.visible = false;
+                soloIndex.visible = false;
                 icon.visible = false;
                 bulletName.visible = false;
                 count.visible = false;
@@ -300,6 +318,7 @@ public class GUIAmmoSelector extends AGUIBase {
                 setBorderVisible(i, false);
                 icon.stack = null;
                 title.text = "";
+                soloIndex.text = "";
                 bulletName.text = "";
                 count.text = "";
                 fireMode.text = "";
@@ -485,6 +504,12 @@ public class GUIAmmoSelector extends AGUIBase {
         entry.groupIndex = groupIndex;
         entry.isHandHeld = isHandHeld;
         entry.gunName = entry.gunItem != null ? entry.gunItem.getItemName() : groupGuns.get(0).definition.general.name;
+        entry.isFireSolo = !isHandHeld && entry.gunItem != null && entry.gunItem.definition.gun.fireSolo && groupGuns.size() > 1;
+        entry.soloCount = groupGuns.size();
+        entry.soloIndex = 1;
+        if (entry.isFireSolo && currentSeat != null && entry.gunItem.equals(currentSeat.activeGunItem)) {
+            entry.soloIndex = Math.min(Math.max(currentSeat.gunIndex, 0), entry.soloCount - 1) + 1;
+        }
 
         int totalLoaded = 0;
         boolean blocksReloading = true;
@@ -652,7 +677,10 @@ public class GUIAmmoSelector extends AGUIBase {
         int groupIndex;
         boolean isNoneSlot;
         boolean isHandHeld;
+        boolean isFireSolo;
         boolean blocksReloading;
+        int soloIndex;
+        int soloCount;
         List<ItemBullet> compatibleBullets;
         Map<ItemBullet, Integer> availableStacksByBullet;
         ItemBullet displayBullet;
