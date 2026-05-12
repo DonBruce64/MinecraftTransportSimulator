@@ -160,6 +160,11 @@ public class InterfaceClient implements IInterfaceClient {
         return Minecraft.getInstance().screen != null;
     }
 
+    @Override
+    public boolean isGUIHidden() {
+        return Minecraft.getInstance().options.hideGui;
+    }
+
     public void displayOverlayMessage(String message) {
         Minecraft.getInstance().gui.setOverlayMessage(Component.literal(message), false);
     }

@@ -41,6 +41,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
+    private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
 
@@ -53,6 +54,9 @@ public final class ControlSystem {
     private static boolean mouseYokeEnabledLastCall;
     private static double mouseYokePosX = Double.NaN;
     private static double mouseYokePosY = Double.NaN;
+    private static PartSeat dismountConfirmationSeat;
+    private static long dismountConfirmationExpireTime;
+    private static boolean dismountInputPressedLastCall;
 
     private static EntityInteractResult interactResult = null;
 
@@ -125,6 +129,46 @@ public final class ControlSystem {
         setMouseYokeEnabled(!ConfigSystem.client.controlSettings.mouseYoke.value, true);
     }
 
+    public static boolean shouldSuppressDismount(IWrapperPlayer player, boolean dismountRequested) {
+        PartSeat currentSeat = getClientVehicleSeat(player);
+        if (currentSeat != dismountConfirmationSeat) {
+            clearDismountConfirmation();
+        }
+
+        if (!dismountRequested) {
+            dismountInputPressedLastCall = false;
+            return false;
+        }
+
+        if (currentSeat == null) {
+            clearDismountConfirmation();
+            return false;
+        }
+
+        boolean justPressed = !dismountInputPressedLastCall;
+        dismountInputPressedLastCall = true;
+        boolean confirmationActive = dismountConfirmationSeat == currentSeat;
+        boolean confirmationValid = confirmationActive && System.currentTimeMillis() <= dismountConfirmationExpireTime;
+        if (justPressed) {
+            if (confirmationValid) {
+                clearDismountConfirmation();
+                return false;
+            } else if (requiresDismountConfirmation(currentSeat)) {
+                dismountConfirmationSeat = currentSeat;
+                dismountConfirmationExpireTime = System.currentTimeMillis() + DISMOUNT_CONFIRM_WINDOW_MILLIS;
+                if (InterfaceManager.clientInterface != null) {
+                    InterfaceManager.clientInterface.displayOverlayMessage(LanguageSystem.INTERACT_VEHICLE_DISMOUNTCONFIRM.getCurrentValue());
+                }
+                return true;
+            } else {
+                clearDismountConfirmation();
+                return false;
+            }
+        } else {
+            return confirmationActive;
+        }
+    }
+
     private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun, boolean leftClickDown, boolean leftClickUp, boolean rightClickDown, boolean rightClickUp) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
@@ -152,6 +196,30 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
             interactResult = null;
         }
+    }
+
+    private static PartSeat getClientVehicleSeat(IWrapperPlayer player) {
+        if (player == null) {
+            return null;
+        }
+        AEntityB_Existing ridingEntity = player.getEntityRiding();
+        if (ridingEntity instanceof PartSeat) {
+            PartSeat seat = (PartSeat) ridingEntity;
+            if (seat.vehicleOn != null) {
+                return seat;
+            }
+        }
+        return null;
+    }
+
+    private static boolean requiresDismountConfirmation(PartSeat seat) {
+        double dismountSafetySpeed = ConfigSystem.client.controlSettings.DismountSafteySpeed.value;
+        return dismountSafetySpeed <= 0 || seat.vehicleOn.velocity * 20D > dismountSafetySpeed;
+    }
+
+    private static void clearDismountConfirmation() {
+        dismountConfirmationSeat = null;
+        dismountConfirmationExpireTime = 0;
     }
 
     public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
