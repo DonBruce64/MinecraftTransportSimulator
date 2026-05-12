@@ -96,9 +96,10 @@ public class GUIComponent3DModel extends AGUIComponent {
                 FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalModel.put(parsedObject.vertices);
+                    parsedObject.vertices.rewind();
                 }
                 totalModel.flip();
-                RenderableData renderable = new RenderableData(new RenderableVertices("GUI_3D_MODEL", totalModel, true), textureLocation);
+                RenderableData renderable = new RenderableData(new RenderableVertices("GUI_3D_MODEL", totalModel, true, AModelParser.isMissingModel(parsedObjects)), textureLocation);
                 modelParsedObjects.put(modelLocation, renderable);
             }
             RenderableData renderable = modelParsedObjects.get(modelLocation);

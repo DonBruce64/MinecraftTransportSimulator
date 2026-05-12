@@ -109,6 +109,51 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("A optional list of code-defined functions to be called if the bullet types include custom.")
         public List<String> customHitFunctions;
+
+        @JSONDescription("The base damage dealt at the explosion source. If set, the custom explosion system is used instead of the vanilla Minecraft explosion. Damage falls off linearly from the center to the edge of the blast radius.")
+        public float blastDamage;
+
+        @JSONDescription("The maximum horizontal distance (in blocks) that explosion damage can be received. Used together with blastDamage.")
+        public float blastRadiusXZ;
+
+        @JSONDescription("The maximum vertical distance (in blocks) that explosion damage can be received. If 0, defaults to blastRadiusXZ for a spherical blast.")
+        public float blastRadiusY;
+
+        @JSONDescription("The radius (in blocks) within which maximum damage is dealt regardless of distance. No falloff is applied inside this radius.")
+        public float maxDamageRadius;
+
+        @JSONDescription("Damage dealt to all vehicles (both aircraft and ground). If 0, falls back to blastDamage.")
+        public float blastDamageVsVehicles;
+
+        @JSONDescription("Damage dealt specifically to aircraft. If 0, falls back to blastDamageVsVehicles, then blastDamage.")
+        public float blastDamageVsAircraft;
+
+        @JSONDescription("Damage dealt specifically to ground vehicles. If 0, falls back to blastDamageVsVehicles, then blastDamage.")
+        public float blastDamageVsGround;
+
+        @JSONDescription("Damage dealt to mobs and players. If 0, falls back to blastDamage.")
+        public float blastDamageVsLiving;
+
+        @JSONDescription("The maximum horizontal distance (in blocks) that blastStrength can be applied to blocks for destruction.")
+        public float blastStrengthRadiusXZ;
+
+        @JSONDescription("The maximum vertical distance (in blocks) that blastStrength can be applied to blocks. If 0, defaults to blastStrengthRadiusXZ.")
+        public float blastStrengthY;
+
+        @JSONDescription("The radius (in blocks) within which blastStrength is applied to blocks at full power regardless of distance.")
+        public float maxStrengthRadius;
+
+        @JSONDescription("How long, in ticks, after detonation the area inside the blast radius will continue to apply potion effects to entities entering it. Works like lingering potions. If 0, effects are only applied once at the moment of explosion.")
+        public int effectDuration;
+
+        @JSONDescription("The maximum horizontal distance (in blocks) that armor penetration is applied in the explosion.")
+        public float armorPenRadiusXZ;
+
+        @JSONDescription("The maximum vertical distance (in blocks) that armor penetration is applied in the explosion. If 0, defaults to armorPenRadiusXZ.")
+        public float armorPenRadiusY;
+
+        @JSONDescription("The radius (in blocks) within which full armor penetration is applied regardless of distance.")
+        public float maxPenRadius;
     }
 
     public enum BulletType {
