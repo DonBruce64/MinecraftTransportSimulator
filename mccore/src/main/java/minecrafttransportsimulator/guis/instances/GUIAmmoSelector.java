@@ -63,6 +63,7 @@ public class GUIAmmoSelector extends AGUIBase {
     private final List<GunGroupEntry> entries = new ArrayList<>();
     private final int[] selectionKeyCodes = new int[10];
     private final boolean[] selectionKeyPressedLast = new boolean[10];
+    private final int selectionModifierKeyCode;
 
     private final List<GUIComponentCutout> cellBackdrops = new ArrayList<>();
     private final List<GUIComponentItem> cellIcons = new ArrayList<>();
@@ -82,6 +83,7 @@ public class GUIAmmoSelector extends AGUIBase {
         for (int i = 0; i < 10; ++i) {
             selectionKeyCodes[i] = InterfaceManager.inputInterface.getKeyCodeForName(String.valueOf(i));
         }
+        selectionModifierKeyCode = InterfaceManager.inputInterface.getKeyCodeForName("LMENU");
         current = this;
     }
 
@@ -361,16 +363,17 @@ public class GUIAmmoSelector extends AGUIBase {
 
     /**
      * Polled each tick from ControlSystem while this HUD is visible.
-     * Edge-triggered keys 1-9 select the corresponding gun group.  Separately,
+     * Edge-triggered ALT+1-9 selects the corresponding gun group.  Separately,
      * the caller feeds the ammo-cycle trigger through {@link #cycleActiveGunAmmo()}.
      */
     public void pollSelectionKeys() {
+        boolean modifierPressed = selectionModifierKeyCode > 0 && InterfaceManager.inputInterface.isKeyPressed(selectionModifierKeyCode);
         for (int i = 1; i <= 9; ++i) {
             int code = selectionKeyCodes[i];
             if (code <= 0) {
                 continue;
             }
-            boolean pressed = InterfaceManager.inputInterface.isKeyPressed(code);
+            boolean pressed = modifierPressed && InterfaceManager.inputInterface.isKeyPressed(code);
             if (pressed && !selectionKeyPressedLast[i]) {
                 selectGun(i - 1);
             }
