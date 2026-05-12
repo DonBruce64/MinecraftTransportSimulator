@@ -12,6 +12,9 @@ public class JSONRendering {
     @JSONDescription("Text objects are used to render text on models.  This can be used for license plates on cars, tail numbers on planes, status information on fuel pumps, etc.  Every entry is its own text section, and therefore you can have multiple objects for different things.  For example, you may want to make a bus with light-up route signs with multiple characters, but also with two license plates that are limited to 7 characters.")
     public List<JSONText> textObjects;
 
+    @JSONDescription("GUI text objects render in screen-space for the local player rather than on the model itself.  These use the same text parameters as textObjects, but pos is measured in screen pixels relative to the screen center, positive X moves right, positive Y moves down, scale 1 matches the standard GUI font size, and animations control when the text fades in or out on-screen.")
+    public List<JSONText> guiTextObjects;
+
     @JSONDescription("Animated objects are the most complex part of rendering and will likely result in a few pack reloads before you get them right.  However, they are a powerful system that allows any type of rotation, including multi-axis for things like driveshafts and steering assemblies. The animated objects section is composed of a few fields, and a listing of one or more animations to apply on the object.  Objects require no special naming in the model, though some objects may require special names to work with other systems.  For example, a light would have to be named according to the light convention, but could also be specified in this section to rotate it.")
     public List<JSONAnimatedObject> animatedObjects;
 

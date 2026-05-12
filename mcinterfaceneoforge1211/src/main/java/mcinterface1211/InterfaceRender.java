@@ -636,11 +636,14 @@ public class InterfaceRender implements IInterfaceRender {
                     posestack.translate(0, 0, (float) (component.translation.z - 100));
                     if (component.scale != 1.0) {
                         posestack.scale(component.scale, component.scale, 1.0F);
+						RenderSystem.applyModelViewMatrix();
                         mcGUI.renderItem(((WrapperItemStack) component.stackToRender).stack, (int) (component.translation.x / component.scale), (int) (-component.translation.y / component.scale) + 1);
                     } else {
+						RenderSystem.applyModelViewMatrix();
                         mcGUI.renderItem(((WrapperItemStack) component.stackToRender).stack, (int) component.translation.x, (int) -component.translation.y);
                     }
                     posestack.popMatrix();
+					RenderSystem.applyModelViewMatrix();
                 }
             }
             stacksToRender.clear();
