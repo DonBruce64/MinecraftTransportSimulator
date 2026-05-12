@@ -1003,7 +1003,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Helper method to convert a BoundingBox to an AABB.
      */
     public static AABB convert(BoundingBox box) {
-        return new AABB(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius, box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+        return new AABB(box.getMinX(), box.getMinY(), box.getMinZ(), box.getMaxX(), box.getMaxY(), box.getMaxZ());
     }
 
     /**
@@ -1012,7 +1012,7 @@ public class WrapperWorld extends AWrapperWorld {
      * creating two AABBs (the conversion and the offset box).
      */
     public static AABB convertWithOffset(BoundingBox box, double x, double y, double z) {
-        return new AABB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
+        return new AABB(x + box.getMinX(), y + box.getMinY(), z + box.getMinZ(), x + box.getMaxX(), y + box.getMaxY(), z + box.getMaxZ());
     }
 
     /**

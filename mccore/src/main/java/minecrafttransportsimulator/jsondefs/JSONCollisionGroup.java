@@ -32,6 +32,9 @@ public class JSONCollisionGroup {
     @JSONDescription("If this is set, then this collision group will first use the animations for this object from the rendering section instead of the animations in this one.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
     public String applyAfter;
 
+    @JSONDescription("If true, this collision group will use oriented bounding box logic.  This only applies to BULLET, ATTACK, VEHICLE, and CLICK collision types.")
+    public boolean isOBB;
+
     @JSONRequired
     @JSONDescription("The types of collision for this group.")
     public Set<CollisionType> collisionTypes;
