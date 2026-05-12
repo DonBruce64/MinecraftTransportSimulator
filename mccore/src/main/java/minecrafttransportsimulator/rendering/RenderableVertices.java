@@ -25,6 +25,7 @@ public class RenderableVertices {
     public final FloatBuffer vertices;
     public final boolean cacheVertices;
     public final boolean isTranslucent;
+    public final boolean isErrorPlaceholder;
     public final boolean isLines;
 
     /**Index offset array for quad faces required to build a quad-textured box.
@@ -107,10 +108,16 @@ public class RenderableVertices {
 
     /**General-use constructor with no special behavior except automatically noting vertices as translucent based on the name**/
     public RenderableVertices(String name, FloatBuffer vertexData, boolean cacheVertices) {
+        this(name, vertexData, cacheVertices, false);
+    }
+
+    /**General-use constructor that allows special placeholder models to force the missing texture.**/
+    public RenderableVertices(String name, FloatBuffer vertexData, boolean cacheVertices, boolean isErrorPlaceholder) {
         this.name = name;
         this.vertices = vertexData;
         this.cacheVertices = cacheVertices;
         this.isTranslucent = name.toLowerCase(Locale.ROOT).contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
+        this.isErrorPlaceholder = isErrorPlaceholder;
         this.isLines = false;
     }
 
@@ -120,6 +127,7 @@ public class RenderableVertices {
         this.vertices = FloatBuffer.allocate(numberLines * FLOATS_PER_LINE);
         this.cacheVertices = false;
         this.isTranslucent = false;
+        this.isErrorPlaceholder = false;
         this.isLines = true;
     }
 
@@ -129,6 +137,7 @@ public class RenderableVertices {
         this.vertices = FloatBuffer.allocate(holographic ? FLOATS_PER_HOLGRAPHIC_BOX : FLOATS_PER_WIREFRAME_BOX);
         this.cacheVertices = false;
         this.isTranslucent = holographic;
+        this.isErrorPlaceholder = false;
         this.isLines = !holographic;
     }
 
@@ -268,7 +277,7 @@ public class RenderableVertices {
      * Returns a copy of these vertices, offset in their normal direction by the amount specified.
      */
     public RenderableVertices createOverlay(float offset) {
-        RenderableVertices offsetObject = new RenderableVertices(this.name + "_OVERLAY", FloatBuffer.allocate(vertices.capacity()), false);
+        RenderableVertices offsetObject = new RenderableVertices(this.name + "_OVERLAY", FloatBuffer.allocate(vertices.capacity()), false, isErrorPlaceholder);
         float[] vertexData = new float[FLOATS_PER_VERTEX];
         while (vertices.hasRemaining()) {
             vertices.get(vertexData);
@@ -287,7 +296,7 @@ public class RenderableVertices {
      * Returns a copy of these vertices in inverted order to create a back-face for this model.
      */
     public RenderableVertices createBackface() {
-        RenderableVertices backfaceObject = new RenderableVertices(this.name + "_BACKFACE", FloatBuffer.allocate(vertices.capacity()), cacheVertices);
+        RenderableVertices backfaceObject = new RenderableVertices(this.name + "_BACKFACE", FloatBuffer.allocate(vertices.capacity()), cacheVertices, isErrorPlaceholder);
         float[] vertexData = new float[FLOATS_PER_VERTEX];
         for (int backfaceVertexIndex = vertices.capacity() - FLOATS_PER_VERTEX; backfaceVertexIndex >= 0; backfaceVertexIndex -= FLOATS_PER_VERTEX) {
             vertices.get(vertexData);

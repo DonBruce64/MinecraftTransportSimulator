@@ -314,7 +314,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 for (JSONAnimatedObject animatedDef : definition.rendering.animatedObjects) {
                     animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
                     if (animatedDef.animations != null) {
-                        animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations, animatedDef.applyAfter));
+                        animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations, animatedDef.applyAfter, "rendering animated object '" + animatedDef.objectName + "'"));
                     }
                 }
             }

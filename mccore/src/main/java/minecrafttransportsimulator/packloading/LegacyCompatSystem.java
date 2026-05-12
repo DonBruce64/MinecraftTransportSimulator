@@ -1031,6 +1031,12 @@ public final class LegacyCompatSystem {
             if (definition.gun.targetType == null) {
                 definition.gun.targetType = JSONPart.TargetType.ALL;
             }
+            if (definition.gun.lockRange == 0) {
+                definition.gun.lockRange = 750;
+            }
+            if (definition.gun.lockMaxAngle == 0) {
+                definition.gun.lockMaxAngle = 2.0;
+            }
             definition.gun.length = 0;
         }
 

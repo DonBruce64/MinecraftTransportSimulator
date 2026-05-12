@@ -5,7 +5,12 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
+import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
  * A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
@@ -29,19 +34,26 @@ public class AnimationSwitchbox {
     //Computational variables.
     protected final AEntityD_Definable<?> entity;
     private final String applyAfter;
+    private final String applyAfterSource;
     private final List<DurationDelayClock> clocks = new ArrayList<>();
     private final Point3D helperPoint = new Point3D();
     private final Point3D helperScalingVector = new Point3D();
     private final RotationMatrix helperRotationMatrix = new RotationMatrix();
     private final TransformationMatrix helperOffsetOperationMatrix = new TransformationMatrix();
+    private boolean invalidApplyAfterReported;
     private boolean inhibitAnimations;
     private boolean switchboxEnabled;
     private long lastTickRun;
     private float lastPartialTickRun;
 
     public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter) {
+        this(entity, animations, applyAfter, null);
+    }
+
+    public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter, String applyAfterSource) {
         this.entity = entity;
         this.applyAfter = applyAfter;
+        this.applyAfterSource = applyAfterSource;
         for (JSONAnimationDefinition animation : animations) {
             clocks.add(new DurationDelayClock(animation));
         }
@@ -55,9 +67,10 @@ public class AnimationSwitchbox {
             if (applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
                 if (switchbox == null) {
-                    throw new IllegalArgumentException("Was told to applyAfter the object " + applyAfter + " on " + entity + ", but there aren't any animations to applyAfter!");
-                }
-                if (switchbox.runSwitchbox(partialTicks, forceSameTick)) {
+                    String reason = entity.animatedObjectDefinitions.containsKey(applyAfter) ? "Referenced animated object has no animations to apply after." : "Referenced animated object was not found in rendering.animatedObjects.";
+                    notifyInvalidApplyAfter(reason);
+                    resetTransforms();
+                } else if (switchbox.runSwitchbox(partialTicks, forceSameTick)) {
                     translation.set(switchbox.translation);
                     rotation.set(switchbox.rotation);
                     scale.set(switchbox.scale);
@@ -67,10 +80,7 @@ public class AnimationSwitchbox {
                     return false;
                 }
             } else {
-                translation.set(0, 0, 0);
-                rotation.setToZero();
-                scale.set(1, 1, 1);
-                netMatrix.resetTransforms();
+                resetTransforms();
             }
 
             inhibitAnimations = false;
@@ -203,6 +213,34 @@ public class AnimationSwitchbox {
             scale.multiply(helperScalingVector);
         } else {
             netMatrix.applyScaling(helperScalingVector);
+        }
+    }
+
+    private void resetTransforms() {
+        translation.set(0, 0, 0);
+        rotation.setToZero();
+        scale.set(1, 1, 1);
+        netMatrix.resetTransforms();
+    }
+
+    private void notifyInvalidApplyAfter(String reason) {
+        if (!invalidApplyAfterReported) {
+            invalidApplyAfterReported = true;
+            String context = applyAfterSource != null ? applyAfterSource : "an animation switchbox";
+            String message = "Invalid applyAfter '" + applyAfter + "' for " + context + " on " + entity.definition.packID + ":" + entity.definition.systemName + entity.subDefinition.subName + ". " + reason + " Ignoring applyAfter.";
+            InterfaceManager.coreInterface.logError(message);
+            if (ConfigSystem.settings.general.devMode.value && EntityManager.isHotloading()) {
+                if (entity.world.isClient()) {
+                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                    if (player != null) {
+                        player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, message);
+                    }
+                } else {
+                    for (IWrapperPlayer player : entity.world.getPlayersWithin(new BoundingBox(entity.position, 16, 16, 16))) {
+                        player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.SYSTEM_DEBUG, message));
+                    }
+                }
+            }
         }
     }
 }

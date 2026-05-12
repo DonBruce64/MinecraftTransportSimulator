@@ -149,9 +149,11 @@ public class PartGun extends APart {
     private final Point3D normalizedConeVector = new Point3D();
     private final Point3D normalizedEntityVector = new Point3D();
 
+    //Track previous targets to detect changes for registration
+    private PartEngine prevEngineTarget = null;
+    private IWrapperEntity prevEntityTarget = null;
+
     //Global data.
-    private static final int RAYTRACE_DISTANCE = 750;
-    private static final double DEFAULT_CONE_ANGLE = 2.0;
     private static final int PITCH_RECOIL_CLAMPING = 80;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
@@ -333,6 +335,7 @@ public class PartGun extends APart {
                         currentController = null;
                         entityTarget = null;
                         engineTarget = null;
+                        updateTargetRegistration();
                     }
                 }
             }
@@ -390,6 +393,7 @@ public class PartGun extends APart {
                     currentController = null;
                     entityTarget = null;
                     engineTarget = null;
+                    updateTargetRegistration();
                 }
             }
 
@@ -575,7 +579,7 @@ public class PartGun extends APart {
             }
 
             //Handle reload delay and recoil.
-            if (state.isAtLeast(GunState.FIRING_CURRENTLY) || cooldownTimeRemaining != 0) {
+            if (state.isAtLeast(GunState.FIRING_CURRENTLY) || (cooldownTimeRemaining != 0 && !isSemiAutoVar.isActive)) {
                 reloadDelayRemaining = definition.gun.reloadDelay;
             } else {
                 if (reloadDelayRemaining > 0) {
@@ -598,6 +602,7 @@ public class PartGun extends APart {
             state = GunState.INACTIVE;
             entityTarget = null;
             engineTarget = null;
+            updateTargetRegistration();
             if (resetPosition) {
                 handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
             }
@@ -788,6 +793,7 @@ public class PartGun extends APart {
                     }
                 } else {
                     entityTarget = null;
+                    updateTargetRegistration();
                     state = state.demote(GunState.CONTROLLED);
                 }
             } else {
@@ -808,10 +814,10 @@ public class PartGun extends APart {
                     case DEFAULT: {
                         //Default gets target based on controller eyes and where they are looking.
                         //Need to get their eye position though, not their main position, for accurate targeting.
-                        //Also, don't use gun max distance here, since that's only for boresight.
+                        //Uses lockRange and lockMaxAngle from JSON like boresight.
                         startPoint = controller.getEyePosition();
-                        searchVector = controller.getLineOfSight(RAYTRACE_DISTANCE);
-                        coneAngle = DEFAULT_CONE_ANGLE;
+                        searchVector = controller.getLineOfSight(definition.gun.lockRange);
+                        coneAngle = definition.gun.lockMaxAngle;
                         break;
                     }
                     case BORESIGHT: {
@@ -839,6 +845,7 @@ public class PartGun extends APart {
                 //First set targets to null to clear any existing targets.
                 engineTarget = null;
                 entityTarget = null;
+                updateTargetRegistration();
 
                 //If we have a start point, it means we're a cone-based target system and need to find a target.
                 if (startPoint != null) {
@@ -900,6 +907,7 @@ public class PartGun extends APart {
                             }
                         }
                     }
+                    updateTargetRegistration();
                 }
             }
 
@@ -1340,6 +1348,25 @@ public class PartGun extends APart {
             angle = (-Math.toDegrees(Math.atan2(-getLockedOnLeadPoint().y + position.y, Math.hypot(-getLockedOnLeadPoint().z + position.z, -getLockedOnLeadPoint().x + position.x))) + orientation.angles.x) - (-Math.toDegrees(Math.atan2(-entityTarget.getPosition().y + referencePos.y, Math.hypot(-entityTarget.getPosition().z + referencePos.z, -entityTarget.getPosition().x + referencePos.x))) + orientation.angles.x);
         }
         return angle;
+    }
+
+    /**
+     * Updates target registration. Call this whenever entityTarget or engineTarget changes.
+     */
+    private void updateTargetRegistration() {
+        // Check if engine target changed
+        if (engineTarget != prevEngineTarget) {
+            prevEngineTarget = engineTarget;
+            // Registers this gun with the target vehicle's gunsLockedOn list. I hope.
+            if (engineTarget != null && engineTarget.vehicleOn != null && engineTarget.vehicleOn != vehicleOn) {
+                AEntityVehicleE_Powered targetVehicle = engineTarget.vehicleOn;
+                if (!targetVehicle.gunsLockedOn.contains(this)) {
+                    targetVehicle.gunsLockedOn.add(this);
+                }
+            }
+        }
+        // Note: entityTarget targets are players/mobs, not vehicles, so we don't register for those
+        prevEntityTarget = entityTarget;
     }
 
     @Override
