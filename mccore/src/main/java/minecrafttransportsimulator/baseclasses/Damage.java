@@ -39,6 +39,7 @@ public class Damage {
     public boolean isExplosion;
     public boolean ignoreArmor;
     public boolean ignoreCooldown;
+    public boolean bypassesIgnoredExplosiveDamage;
     public Point3D knockback;
     public List<JSONPotionEffect> effects;
 
@@ -63,6 +64,7 @@ public class Damage {
         this.effects = otherDamage.effects;
         this.ignoreArmor = otherDamage.ignoreArmor;
         this.ignoreCooldown = otherDamage.ignoreCooldown;
+        this.bypassesIgnoredExplosiveDamage = otherDamage.bypassesIgnoredExplosiveDamage;
     }
 
     public Damage(PartGun gun, BoundingBox box, double amount) {
@@ -148,6 +150,15 @@ public class Damage {
      */
     public Damage ignoreCooldown() {
         this.ignoreCooldown = true;
+        return this;
+    }
+
+    /**
+     * Sets this damage to bypass entity flags that ignore normal explosive damage.
+     * Returns object for construction simplicity.
+     */
+    public Damage bypassIgnoredExplosiveDamage() {
+        this.bypassesIgnoredExplosiveDamage = true;
         return this;
     }
 }

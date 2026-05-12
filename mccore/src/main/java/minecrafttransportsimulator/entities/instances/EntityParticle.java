@@ -266,9 +266,10 @@ public class EntityParticle extends AEntityC_Renderable {
                 FloatBuffer totalBuffer = FloatBuffer.allocate(totalVertices);
                 for (RenderableVertices parsedObject : parsedObjects) {
                     totalBuffer.put(parsedObject.vertices);
+                    parsedObject.vertices.rewind();
                 }
                 totalBuffer.flip();
-                return new RenderableVertices("PARTICLE_3D", totalBuffer, false);
+                return new RenderableVertices("PARTICLE_3D", totalBuffer, false, AModelParser.isMissingModel(parsedObjects));
             });
             this.renderable = new RenderableData(parsedModel, texture);
         } else if (definition.type == ParticleType.BREAK) {

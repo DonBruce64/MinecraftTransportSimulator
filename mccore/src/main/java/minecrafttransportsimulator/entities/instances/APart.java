@@ -134,7 +134,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             if (placementDefinition.animations != null) {
                 animations.addAll(placementDefinition.animations);
             }
-            this.placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
+            this.placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter, "part placement slot " + entityOn.definition.parts.indexOf(placementDefinition) + " " + placementDefinition.types);
         } else {
             this.placementMovementSwitchbox = null;
         }

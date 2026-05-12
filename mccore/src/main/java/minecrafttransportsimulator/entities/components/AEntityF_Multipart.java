@@ -108,13 +108,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partsInSlots.add(null);
             }
 
-            for (JSONPartDefinition partDef : definition.parts) {
+            for (int i = 0; i < definition.parts.size(); ++i) {
+                JSONPartDefinition partDef = definition.parts.get(i);
                 if (partDef.animations != null || partDef.applyAfter != null) {
                     List<JSONAnimationDefinition> animations = new ArrayList<>();
                     if (partDef.animations != null) {
                         animations.addAll(partDef.animations);
                     }
-                    partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
+                    partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter, "part slot " + i + " " + partDef.types));
                 }
             }
         }

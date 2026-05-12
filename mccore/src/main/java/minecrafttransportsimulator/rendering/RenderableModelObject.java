@@ -497,7 +497,8 @@ public class RenderableModelObject {
                 }
             }
             if (!foundRoller) {
-                throw new IllegalArgumentException("Could not create tread path for " + tread.entityOn + " Due to missing roller " + rollerName + " in the model!");
+                InterfaceManager.coreInterface.logError("Could not create tread path for " + tread.entityOn + " due to missing roller " + rollerName + " in the model.  Skipping tread animation for this object.");
+                return null;
             }
         }
 

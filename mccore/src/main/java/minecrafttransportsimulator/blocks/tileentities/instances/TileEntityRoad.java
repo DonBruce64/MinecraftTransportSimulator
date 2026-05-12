@@ -470,7 +470,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 convertedVertices.put(segmentVertex);
                             }
                             convertedVertices.flip();
-                            RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true), componentItem.definition.getTextureLocation(componentItem.subDefinition, 0));
+                            RenderableData renderable = new RenderableData(new RenderableVertices(component.name(), convertedVertices, true, AModelParser.isMissingModel(parsedModel)), componentItem.definition.getTextureLocation(componentItem.subDefinition, 0));
                             componentRenderables.put(component, renderable);
                             break;
                         }

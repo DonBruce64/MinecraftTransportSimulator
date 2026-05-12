@@ -216,6 +216,11 @@ public abstract class EntityManager {
                 }
             });
 
+            //Tick lingering explosion effects on the server.
+            if (!world.isClient()) {
+                Explosion.tickLingeringExplosions(world);
+            }
+
             //Do hotload operations.
             //This operates on all threads concurrently as long as we're counting down.
             if (hotloadStep > 0) {
@@ -482,6 +487,10 @@ public abstract class EntityManager {
     	EntityManager.hotloadFunction = hotloadFunction;
     	hotloadStep = 1;
 	}
+
+    public static boolean isHotloading() {
+        return hotloadStep != 0;
+    }
     
     @FunctionalInterface
     public static abstract interface HotloadFunction{
