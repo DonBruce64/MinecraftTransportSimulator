@@ -29,9 +29,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Set this to true to make this bullet not spawn, but consume ammo.")
         public boolean isBlank;
 
-        @Deprecated
-        public boolean isHeat;
-
         @JSONDescription("The cone angle, in degrees, for fragmentation spread when a FRAG-type bullet penetrates armor.  Fragments are scattered within this cone behind the point of penetration.")
         public float fragConeAngle;
 
@@ -166,6 +163,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("The radius (in blocks) within which full armor penetration is applied regardless of distance.")
         public float maxPenRadius;
+
+        @Deprecated
+        public boolean isHeat;
     }
 
     public enum BulletType {

@@ -30,6 +30,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -2006,6 +2007,15 @@ public final class LegacyCompatSystem {
         //Add damage value.
         if (definition.bullet.damage == 0) {
             definition.bullet.damage = definition.bullet.diameter / 5F;
+        }
+        if (definition.bullet.isHeat) {
+            if (definition.bullet.types == null) {
+                definition.bullet.types = new ArrayList<>();
+            }
+            if (!definition.bullet.types.contains(BulletType.HEAT)) {
+                definition.bullet.types.add(BulletType.HEAT);
+            }
+            definition.bullet.isHeat = false;
         }
         //Make guided bullets default to active guidance
         if (definition.bullet.guidanceType == null && definition.bullet.turnRate > 0) {

@@ -360,7 +360,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             if (hitEntry.box.groupDef != null && (hitEntry.box.groupDef.armorThickness != 0 || hitEntry.box.groupDef.heatArmorThickness != 0)) {
                 hitOperationalHitbox = true;
                 if (bullet != null) {
-                    boolean bulletIsHeat = bullet.definition.bullet.types.contains(BulletType.HEAT) || bullet.definition.bullet.isHeat;
+                    boolean bulletIsHeat = bullet.definition.bullet.types.contains(BulletType.HEAT);
                     double armorThickness = hitEntry.box.definition != null ? (bulletIsHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
                     double penetrationPotential = bulletIsHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
 
