@@ -1339,6 +1339,20 @@ public class PartGun extends APart {
         return direction;
     }
 
+    /**
+     * Returns the JSONMuzzle definition of the currently active muzzle for this gun.
+     * This is the first muzzle in the currently active muzzle group.
+     * Used externally (e.g. by the aiming crosshair renderer) to get muzzle position and direction
+     * via {@link #setBulletSpawn(Point3D, Point3D, RotationMatrix, JSONMuzzle, boolean)}.
+     * Returns null if the gun has no muzzle groups defined.
+     */
+    public JSONMuzzle getActiveMuzzle() {
+        if (definition.gun.muzzleGroups != null && !definition.gun.muzzleGroups.isEmpty()) {
+            return definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.get(0);
+        }
+        return null;
+    }
+
     public double getLeadAngleY() {
         double angle = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;

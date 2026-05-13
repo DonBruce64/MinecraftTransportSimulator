@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.mcinterface.IInterfaceClient;
@@ -167,6 +168,89 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
+    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
+
+    @Override
+    public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
+        double camX, camY, camZ;
+        double fwdX, fwdY, fwdZ;
+        double upX, upY, upZ;
+        double rgtX, rgtY, rgtZ;
+
+        if (InterfaceEventsEntityRendering.adjustedCamera) {
+            // Use MTS camera data — includes roll and correct vehicle-relative position.
+            camX = InterfaceEventsEntityRendering.projectionCameraPosition.x;
+            camY = InterfaceEventsEntityRendering.projectionCameraPosition.y;
+            camZ = InterfaceEventsEntityRendering.projectionCameraPosition.z;
+            RotationMatrix ori = getCameraProjectionOrientation(InterfaceEventsEntityRendering.projectionCameraOrientation);
+            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
+            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
+            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        } else {
+            // 1.12.2 has no Camera class — compute direction from player view angles.
+            net.minecraft.entity.player.EntityPlayer player = Minecraft.getMinecraft().player;
+            net.minecraft.util.math.Vec3d camOffset = net.minecraft.client.renderer.ActiveRenderInfo.getCameraPosition();
+            camX = player.posX + camOffset.x;
+            camY = player.posY + camOffset.y;
+            camZ = player.posZ + camOffset.z;
+
+            float yaw   = (float) Math.toRadians(player.rotationYaw);
+            float pitch = (float) Math.toRadians(player.rotationPitch);
+
+            fwdX = -Math.sin(yaw) * Math.cos(pitch);
+            fwdY = -Math.sin(pitch);
+            fwdZ =  Math.cos(yaw) * Math.cos(pitch);
+            rgtX =  Math.cos(yaw);
+            rgtY =  0;
+            rgtZ =  Math.sin(yaw);
+            upX  =  fwdY * rgtZ - fwdZ * rgtY;
+            upY  =  fwdZ * rgtX - fwdX * rgtZ;
+            upZ  =  fwdX * rgtY - fwdY * rgtX;
+            if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+                fwdX = -fwdX; fwdY = -fwdY; fwdZ = -fwdZ;
+                rgtX = -rgtX; rgtY = -rgtY; rgtZ = -rgtZ;
+            }
+        }
+
+        double dx = worldPos.x - camX;
+        double dy = worldPos.y - camY;
+        double dz = worldPos.z - camZ;
+
+        double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
+        if (depth <= 0.001) return null;
+
+        double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
+        double yView = dx * upX  + dy * upY  + dz * upZ;
+
+        double fovRad = Math.toRadians(getFOV());
+        double tanHalfFov = Math.tan(fovRad / 2.0);
+        double aspect = (double) screenWidth / screenHeight;
+
+        double ndcX = xView / (depth * tanHalfFov * aspect);
+        double ndcY = yView / (depth * tanHalfFov);
+
+        if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
+
+        screenProjectionResult.set(
+                (ndcX + 1.0) / 2.0 * screenWidth,
+                (1.0 - ndcY) / 2.0 * screenHeight,
+                depth);
+        return screenProjectionResult;
+    }
+
+    private static RotationMatrix getCameraProjectionOrientation(RotationMatrix cameraOrientation) {
+        if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+            cameraOrientation.convertToAngles();
+            cameraProjectionOrientation.angles.set(-cameraOrientation.angles.x, cameraOrientation.angles.y - 180, -cameraOrientation.angles.z);
+            cameraProjectionOrientation.updateToAngles();
+            return cameraProjectionOrientation;
+        } else {
+            return cameraOrientation;
+        }
+    }
+
+    private static final Point3D screenProjectionResult = new Point3D();
 
     @Override
     public void playBlockBreakSound(Point3D position) {

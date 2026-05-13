@@ -143,6 +143,15 @@ public interface IInterfaceClient {
     Point3D getCameraPosition();
 
     /**
+     * Projects a 3D world position into 2D screen GUI coordinates for overlay rendering.
+     * Returns null if the point is behind the camera or outside a reasonable screen margin.
+     * The returned Point3D is a shared mutable instance — copy it if you need to keep the value.
+     * Coordinates: x = pixel from left, y = pixel from top, z = depth (positive = in front of camera).
+     * Uses the MTS-adjusted camera when available (vehicle cameras, mouse flight, etc.).
+     */
+    Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight);
+
+    /**
      * Plays the block breaking sound for the block at the passed-in position.
      */
     void playBlockBreakSound(Point3D position);

@@ -7,13 +7,7 @@ import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -576,28 +570,81 @@ public final class ControlSystem {
             }
         }
 
-        //Check yaw.  Blimps don't use rudder keys.
-        if (!aircraft.definition.motorized.isBlimp) {
-            controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
-            controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, aircraft.rudderTrimVar);
-        }
-
-        boolean usingMouseYoke = controlMouseYoke(aircraft, mouseXDelta, mouseYDelta);
-
-        //Check pitch.
-        if (!usingMouseYoke) {
-            controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
-        }
-        controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, aircraft.elevatorTrimVar);
-
-        //Check roll.  Blimps use roll for rudder for steering.
-        if (!usingMouseYoke) {
-            if (aircraft.definition.motorized.isBlimp) {
-                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
-            } else {
-                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
+        //Arcade mode: enabled via config, uses mouse-based flight controller (War Thunder style).
+        //Keyboard overrides still work on top of the mouse autopilot.
+        //Excluded for blimps (different control scheme).
+        boolean hasRotorPropeller = false;
+        for (APart part : aircraft.allParts) {
+            if (part instanceof PartPropeller && ((PartPropeller) part).definition.propeller.isRotor) {
+                hasRotorPropeller = true;
+                break;
             }
         }
+        boolean useMouseFlight = ConfigSystem.client.controlSettings.arcadeMode.value
+                && !aircraft.definition.motorized.isBlimp
+                && !ControlsJoystick.AIRCRAFT_PITCH.isJoystickActive()
+                && !ControlsJoystick.AIRCRAFT_ROLL.isJoystickActive()
+                && !ControlsJoystick.AIRCRAFT_YAW.isJoystickActive();
+
+        if (useMouseFlight) {
+            //Activate mouse flight if not already active.
+            if (!MouseFlightController.isMouseFlightActive) {
+                MouseFlightController.activate(aircraft, hasRotorPropeller);
+            }
+
+            //Check which axes are being overridden by keyboard.
+            boolean keyboardYaw = ControlsKeyboard.AIRCRAFT_YAW_R.isPressed() || ControlsKeyboard.AIRCRAFT_YAW_L.isPressed();
+            boolean keyboardPitch = ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed() || ControlsKeyboard.AIRCRAFT_PITCH_D.isPressed();
+            boolean keyboardRoll = ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed() || ControlsKeyboard.AIRCRAFT_ROLL_L.isPressed();
+
+            //Feed stored mouse deltas to the mouse flight controller.
+            //Keyboard override flags tell the autopilot to skip those axes.
+            MouseFlightController.update(aircraft, MouseFlightController.storedYawDelta, MouseFlightController.storedPitchDelta,
+                    keyboardYaw, keyboardPitch, keyboardRoll);
+            MouseFlightController.storedYawDelta = 0;
+            MouseFlightController.storedPitchDelta = 0;
+
+            //For axes overridden by keyboard, use the standard keyboard control.
+            if (keyboardYaw) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+            }
+            if (keyboardPitch) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
+            }
+            if (keyboardRoll) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
+            }
+        } else {
+            //Deactivate mouse flight if it was active.
+            if (MouseFlightController.isMouseFlightActive) {
+                MouseFlightController.deactivate();
+            }
+
+            //Check yaw.  Blimps don't use rudder keys.
+            if (!aircraft.definition.motorized.isBlimp) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+            }
+
+            boolean usingMouseYoke = controlMouseYoke(aircraft, mouseXDelta, mouseYDelta);
+
+            //Check pitch.
+            if (!usingMouseYoke) {
+                controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
+            }
+
+            //Check roll.  Blimps use roll for rudder for steering.
+            if (!usingMouseYoke) {
+                if (aircraft.definition.motorized.isBlimp) {
+                    controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
+                } else {
+                    controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
+                }
+            }
+        }
+
+        //Trim controls always available regardless of mouse flight mode.
+        controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, aircraft.rudderTrimVar);
+        controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, aircraft.elevatorTrimVar);
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, aircraft.aileronTrimVar);
 
         //Check to see if we request a different auto-level state.
