@@ -132,10 +132,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             }
 
             //Create instrument animation clocks.
-            for (JSONInstrumentDefinition packInstrument : definition.instruments) {
+            for (int i = 0; i < definition.instruments.size(); ++i) {
+                JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
                 if (packInstrument.animations != null) {
                     List<JSONAnimationDefinition> animations = new ArrayList<>(packInstrument.animations);
-                    instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations, packInstrument.applyAfter));
+                    instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations, packInstrument.applyAfter, "instrument slot " + i));
                 }
             }
 
@@ -176,7 +177,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         
         //Create collision boxes.
         if (definition.collisionGroups != null) {
-            for (JSONCollisionGroup groupDef : definition.collisionGroups) {
+            for (int i = 0; i < definition.collisionGroups.size(); ++i) {
+                JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
                 List<BoundingBox> boxes = new ArrayList<>();
                 for (JSONCollisionBox boxDef : groupDef.collisions) {
                     boxes.add(new BoundingBox(boxDef, groupDef));
@@ -187,7 +189,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     if (groupDef.animations != null) {
                         animations.addAll(groupDef.animations);
                     }
-                    collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, animations, groupDef.applyAfter));
+                    collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, animations, groupDef.applyAfter, "collision group " + i));
                 }
             }
         }

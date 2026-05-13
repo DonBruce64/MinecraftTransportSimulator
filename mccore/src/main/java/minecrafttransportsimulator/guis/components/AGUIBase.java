@@ -196,6 +196,9 @@ public abstract class AGUIBase {
             }
         }
 
+        //Allow GUIs to render dynamic overlay content that doesn't map cleanly to static components.
+        renderCustomElements(mouseX, mouseY, blendingEnabled, partialTicks);
+
         //Render any tooltips.  These only render on non-blended passes.
         if (!blendingEnabled) {
             for (AGUIComponent component : components) {
@@ -204,6 +207,9 @@ public abstract class AGUIBase {
                 }
             }
         }
+    }
+
+    protected void renderCustomElements(int mouseX, int mouseY, boolean blendingEnabled, float partialTicks) {
     }
 
     /**

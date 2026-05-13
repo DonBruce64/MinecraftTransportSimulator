@@ -56,6 +56,23 @@ public interface IInterfaceInput {
     boolean isKeyPressed(int keyCode);
 
     /**
+     * Returns true if the given mouse button is currently pressed.
+     * Button indices: 0=left, 1=right, 2=middle, 3=button4, 4=button5.
+     */
+    boolean isMouseButtonPressed(int mouseButton);
+
+    /**
+     * Returns the human-readable name for a mouse button index.
+     */
+    String getNameForMouseButton(int mouseButton);
+
+    /**
+     * Returns the mouse button index for a given human-readable name.
+     * Throws IllegalStateException if the name is not a valid mouse button name.
+     */
+    int getMouseButtonForName(String name);
+
+    /**
      * Tells the input interface to act as if a player-capturing GUI is open.
      * This should always be set when opening a GUI that handles keypresses, 
      * and un-set when that GUI closes.

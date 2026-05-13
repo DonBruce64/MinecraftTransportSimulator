@@ -40,6 +40,15 @@ public class BuilderGUI extends Screen {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        //Check if any text box is focused and wants to capture this mouse click for binding.
+        for (AGUIComponent component : gui.components) {
+            if (component instanceof GUIComponentTextBox) {
+                GUIComponentTextBox textBox = (GUIComponentTextBox) component;
+                if (textBox.focused && textBox.handleMouseClicked(mouseButton)) {
+                    return true;
+                }
+            }
+        }
         if (gui.onClick((int) mouseX, (int) mouseY)) {
             minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             return true;

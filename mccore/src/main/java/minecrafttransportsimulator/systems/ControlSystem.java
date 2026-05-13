@@ -41,6 +41,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
+    private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
 
@@ -53,6 +54,9 @@ public final class ControlSystem {
     private static boolean mouseYokeEnabledLastCall;
     private static double mouseYokePosX = Double.NaN;
     private static double mouseYokePosY = Double.NaN;
+    private static PartSeat dismountConfirmationSeat;
+    private static long dismountConfirmationExpireTime;
+    private static boolean dismountInputPressedLastCall;
 
     private static EntityInteractResult interactResult = null;
 
@@ -73,7 +77,7 @@ public final class ControlSystem {
             ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
         }
         for (ControlsKeyboard control : ControlsKeyboard.values()) {
-            if (control.config.keyCode <= 0) {
+            if (control.config.keyCode <= 0 && !control.config.isMouseButton) {
                 control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
             }
         }
@@ -125,6 +129,46 @@ public final class ControlSystem {
         setMouseYokeEnabled(!ConfigSystem.client.controlSettings.mouseYoke.value, true);
     }
 
+    public static boolean shouldSuppressDismount(IWrapperPlayer player, boolean dismountRequested) {
+        PartSeat currentSeat = getClientVehicleSeat(player);
+        if (currentSeat != dismountConfirmationSeat) {
+            clearDismountConfirmation();
+        }
+
+        if (!dismountRequested) {
+            dismountInputPressedLastCall = false;
+            return false;
+        }
+
+        if (currentSeat == null) {
+            clearDismountConfirmation();
+            return false;
+        }
+
+        boolean justPressed = !dismountInputPressedLastCall;
+        dismountInputPressedLastCall = true;
+        boolean confirmationActive = dismountConfirmationSeat == currentSeat;
+        boolean confirmationValid = confirmationActive && System.currentTimeMillis() <= dismountConfirmationExpireTime;
+        if (justPressed) {
+            if (confirmationValid) {
+                clearDismountConfirmation();
+                return false;
+            } else if (requiresDismountConfirmation(currentSeat)) {
+                dismountConfirmationSeat = currentSeat;
+                dismountConfirmationExpireTime = System.currentTimeMillis() + DISMOUNT_CONFIRM_WINDOW_MILLIS;
+                if (InterfaceManager.clientInterface != null) {
+                    InterfaceManager.clientInterface.displayOverlayMessage(LanguageSystem.INTERACT_VEHICLE_DISMOUNTCONFIRM.getCurrentValue());
+                }
+                return true;
+            } else {
+                clearDismountConfirmation();
+                return false;
+            }
+        } else {
+            return confirmationActive;
+        }
+    }
+
     private static void handleClick(IWrapperPlayer player, EntityPlayerGun playerGun, boolean leftClickDown, boolean leftClickUp, boolean rightClickDown, boolean rightClickUp) {
         //Either change the gun trigger state (if we are holding a gun),
         //or try to interact with entities if we are not.
@@ -152,6 +196,30 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
             interactResult = null;
         }
+    }
+
+    private static PartSeat getClientVehicleSeat(IWrapperPlayer player) {
+        if (player == null) {
+            return null;
+        }
+        AEntityB_Existing ridingEntity = player.getEntityRiding();
+        if (ridingEntity instanceof PartSeat) {
+            PartSeat seat = (PartSeat) ridingEntity;
+            if (seat.vehicleOn != null) {
+                return seat;
+            }
+        }
+        return null;
+    }
+
+    private static boolean requiresDismountConfirmation(PartSeat seat) {
+        double dismountSafetySpeed = ConfigSystem.client.controlSettings.DismountSafteySpeed.value;
+        return dismountSafetySpeed <= 0 || seat.vehicleOn.velocity * 20D > dismountSafetySpeed;
+    }
+
+    private static void clearDismountConfirmation() {
+        dismountConfirmationSeat = null;
+        dismountConfirmationExpireTime = 0;
     }
 
     public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
@@ -188,6 +256,36 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, true));
         } else if (ControlsKeyboard.GENERAL_CUSTOM4.justReleased()) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 4, false));
+        }
+		if (ControlsKeyboard.GENERAL_CUSTOM5.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM5.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 5, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM6.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM6.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 6, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM7.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM7.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 7, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM8.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM8.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 8, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM9.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM9.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 9, false));
+        }
+        if (ControlsKeyboard.GENERAL_CUSTOM10.isPressed()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, true));
+        } else if (ControlsKeyboard.GENERAL_CUSTOM10.justReleased()) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityCustomKeypress(multipart, 10, false));
         }
     }
 
@@ -778,6 +876,12 @@ public final class ControlSystem {
         GENERAL_CUSTOM2(ControlsJoystick.GENERAL_CUSTOM2, true, "NUMPAD1", LanguageSystem.INPUT_CUSTOM2),
         GENERAL_CUSTOM3(ControlsJoystick.GENERAL_CUSTOM3, true, "NUMPAD2", LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(ControlsJoystick.GENERAL_CUSTOM4, true, "NUMPAD3", LanguageSystem.INPUT_CUSTOM4),
+		GENERAL_CUSTOM5(ControlsJoystick.GENERAL_CUSTOM5, true, "NUMPAD4", LanguageSystem.INPUT_CUSTOM5),
+        GENERAL_CUSTOM6(ControlsJoystick.GENERAL_CUSTOM6, true, "NUMPAD5", LanguageSystem.INPUT_CUSTOM6),
+        GENERAL_CUSTOM7(ControlsJoystick.GENERAL_CUSTOM7, true, "NUMPAD6", LanguageSystem.INPUT_CUSTOM7),
+        GENERAL_CUSTOM8(ControlsJoystick.GENERAL_CUSTOM8, true, "NUMPAD7", LanguageSystem.INPUT_CUSTOM8),
+        GENERAL_CUSTOM9(ControlsJoystick.GENERAL_CUSTOM9, true, "NUMPAD8", LanguageSystem.INPUT_CUSTOM9),
+        GENERAL_CUSTOM10(ControlsJoystick.GENERAL_CUSTOM10, true, "NUMPAD9", LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(ControlsJoystick.GENERAL_RELOAD, true, "R", LanguageSystem.INPUT_GUN_RELOAD),
 
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", LanguageSystem.INPUT_YAW_R),
@@ -819,10 +923,10 @@ public final class ControlSystem {
         CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR", LanguageSystem.INPUT_ZOOM_I),
         CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT", LanguageSystem.INPUT_ZOOM_O),
         CAR_CHANGEVIEW(ControlsJoystick.CAR_CHANGEVIEW, true, "X", LanguageSystem.INPUT_CHANGEVIEW),
-        CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5", LanguageSystem.INPUT_LIGHTS),
+        CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "G", LanguageSystem.INPUT_LIGHTS),
         CAR_CAMLOCK(ControlsJoystick.CAR_CAMLOCK, true, "LMENU", LanguageSystem.INPUT_CAMLOCK),
-        CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "NUMPAD4", LanguageSystem.INPUT_TURNSIGNAL_L),
-        CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", LanguageSystem.INPUT_TURNSIGNAL_R),
+        CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "COMMA", LanguageSystem.INPUT_TURNSIGNAL_L),
+        CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "PERIOD", LanguageSystem.INPUT_TURNSIGNAL_R),
         CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", LanguageSystem.INPUT_JS_INHIBIT);
 
         public final boolean isMomentary;
@@ -863,7 +967,16 @@ public final class ControlSystem {
                 //Joystick found, but not pressed, and is overriding keyboard inputs, so return false.
                 wasPressedThisCall = false;
             } else {
-                wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                if (config.isMouseButton) {
+                    //Mouse button binding: block when any mod GUI is open.
+                    if (AGUIBase.activeInputGUI != null) {
+                        wasPressedThisCall = false;
+                    } else {
+                        wasPressedThisCall = InterfaceManager.inputInterface.isMouseButtonPressed(config.keyCode);
+                    }
+                } else {
+                    wasPressedThisCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
+                }
                 if (isMomentary && wasPressedLastCall) {
                     return false;
                 }
@@ -884,6 +997,12 @@ public final class ControlSystem {
         GENERAL_CUSTOM2(false, true, LanguageSystem.INPUT_CUSTOM2),
         GENERAL_CUSTOM3(false, true, LanguageSystem.INPUT_CUSTOM3),
         GENERAL_CUSTOM4(false, true, LanguageSystem.INPUT_CUSTOM4),
+		GENERAL_CUSTOM5(false, true, LanguageSystem.INPUT_CUSTOM5),
+        GENERAL_CUSTOM6(false, true, LanguageSystem.INPUT_CUSTOM6),
+        GENERAL_CUSTOM7(false, true, LanguageSystem.INPUT_CUSTOM7),
+        GENERAL_CUSTOM8(false, true, LanguageSystem.INPUT_CUSTOM8),
+        GENERAL_CUSTOM9(false, true, LanguageSystem.INPUT_CUSTOM9),
+        GENERAL_CUSTOM10(false, true, LanguageSystem.INPUT_CUSTOM10),
         GENERAL_RELOAD(false, true, LanguageSystem.INPUT_GUN_RELOAD),
 
         AIRCRAFT_CAMLOCK(false, true, LanguageSystem.INPUT_CAMLOCK),
