@@ -360,9 +360,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 if (bullet != null) {
                     double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
                     double effectiveArmorThickness = getEffectiveArmorThickness(hitEntry, bullet, armorThickness);
-                    double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
+                    double penetrationPotential = bullet.definition.bullet.armorPenetration;
+                    if (!bullet.definition.bullet.isHeat && bullet.initialVelocity > 0) {
+                        penetrationPotential *= Math.min(bullet.velocity / bullet.initialVelocity, 1D);
+                    }
                     bullet.armorPenetrated += effectiveArmorThickness;
-                    bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness + " EFFECTIVE: " + (int) effectiveArmorThickness);
+                    bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness + " EFFECTIVE: " + (int) effectiveArmorThickness + " PEN: " + (int) penetrationPotential);
 
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
