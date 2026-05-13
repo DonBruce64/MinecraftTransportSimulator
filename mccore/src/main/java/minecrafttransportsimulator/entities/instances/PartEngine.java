@@ -83,7 +83,7 @@ public class PartEngine extends APart {
     private final ComputedVariable revLimitRPMVar;
     private final ComputedVariable revLimitBounceVar;
     private final ComputedVariable revResistanceVar;
-    public final ComputedVariable idleRPMVar;
+    private final ComputedVariable idleRPMVar;
     private final ComputedVariable startRPMVar;
     private final ComputedVariable stallRPMVar;
     private final ComputedVariable starterPowerVar;
