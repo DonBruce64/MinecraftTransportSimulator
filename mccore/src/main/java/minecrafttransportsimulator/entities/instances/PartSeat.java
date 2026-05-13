@@ -31,6 +31,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.MouseFlightController;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
@@ -217,6 +218,10 @@ public final class PartSeat extends APart {
 
     @Override
     public void removeRider() {
+        //Deactivate mouse flight when dismounting from an aircraft.
+        if (riderIsClient && MouseFlightController.isMouseFlightActive) {
+            MouseFlightController.deactivate();
+        }
         if (vehicleOn != null) {
             //Check if we have another controller, and if they are creative.
             boolean otherController = false;

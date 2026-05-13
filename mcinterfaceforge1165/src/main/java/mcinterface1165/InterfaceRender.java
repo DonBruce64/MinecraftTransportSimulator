@@ -83,6 +83,7 @@ public class InterfaceRender implements IInterfaceRender {
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
     private static MatrixStack matrixStack;
+    public static Matrix4f projectionMatrix;
     private static IRenderTypeBuffer renderBuffer;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
@@ -553,7 +554,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Create the state builder.  Changed states are active, default states are commented to save processing but still show the state.
             RenderType.State.Builder stateBuilder = RenderType.State.builder();
 
-            stateBuilder.setTextureState(getTexture(data.texture));
+            stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
             //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
             stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? PROPER_TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
             //Diffuse lighting is the ambient lighting that auto-shades models.

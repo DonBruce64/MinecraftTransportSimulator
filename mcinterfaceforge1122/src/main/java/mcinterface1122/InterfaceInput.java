@@ -27,6 +27,7 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -343,6 +344,13 @@ public class InterfaceInput implements IInterfaceInput {
             } else if (button == 1) {
                 rightMouseButtonDown = event.isButtonstate();
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVMovementInput(InputUpdateEvent event) {
+        if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().sneak)) {
+            event.getMovementInput().sneak = false;
         }
     }
 

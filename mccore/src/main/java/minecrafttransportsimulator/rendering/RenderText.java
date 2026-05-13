@@ -53,10 +53,17 @@ public class RenderText {
      * This allows for proper normal calculations to prevent needing to re-normalize the text.
      */
     public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit, int worldLightValue) {
+        drawText(text, fontName, position, color, alignment, scale, autoScale, wrapWidth, renderLit, worldLightValue, 1.0F);
+    }
+
+    /**
+     * Alpha-aware variant of {@link #drawText(String, String, Point3D, ColorRGB, TextAlignment, float, boolean, int, boolean, int)}.
+     */
+    public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit, int worldLightValue, float alpha) {
         if (!text.isEmpty()) {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(position);
-            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue, true);
+            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue, true, alpha);
         }
     }
 
@@ -65,6 +72,13 @@ public class RenderText {
      * Essentially, this is JSON-defined rendering rather than manual entry of points.
      */
     public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords, boolean renderLit) {
+        draw3DText(text, entity, transform, definition, pixelCoords, renderLit, 1.0F);
+    }
+
+    /**
+     * Alpha-aware variant of {@link #draw3DText(String, AEntityD_Definable, TransformationMatrix, JSONText, boolean, boolean)}.
+     */
+    public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords, boolean renderLit, float alpha) {
         if (!text.isEmpty()) {
             //Get the actual color we will need to render with based on JSON.
             ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
@@ -72,7 +86,21 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, alpha);
+        }
+    }
+
+    /**
+     * Renders a JSON text definition directly on the player's screen.
+     * GUI text uses screen-center-relative pixel coordinates, so Y is inverted before rendering.
+     */
+    public static void drawGUIText(String text, AEntityD_Definable<?> entity, JSONText definition, int screenWidth, int screenHeight, double zOffset, float alpha) {
+        if (!text.isEmpty()) {
+            ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
+            transformHelper.resetTransforms();
+            transformHelper.applyTranslation(screenWidth / 2D, -screenHeight / 2D, zOffset);
+            transformHelper.applyTranslation(definition.pos.x, -definition.pos.y, definition.pos.z);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, entity.worldLightValue, true, alpha);
         }
     }
 
@@ -337,7 +365,7 @@ public class RenderText {
             this.charTopOffset = charTopOffset;
         }
 
-        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue, boolean onGUI) {
+        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue, boolean onGUI, float alpha) {
             //Clear out the active object list as it was set last pass.
             for (RenderableData object : activeRenderObjects) {
                 object.vertexObject.vertices.clear();
@@ -672,6 +700,7 @@ public class RenderText {
             for (RenderableData object : activeRenderObjects) {
                 object.setLightValue(worldLightValue);
                 object.setLightMode(renderLit ? LightingMode.IGNORE_ALL_LIGHTING : (onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL));
+                object.setAlpha(alpha);
                 object.transform.set(transform);
                 if (rotation != null) {
                     object.transform.applyRotation(rotation);

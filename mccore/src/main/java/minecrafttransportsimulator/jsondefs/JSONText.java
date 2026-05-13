@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -43,8 +45,7 @@ public class JSONText {
     @JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required, but may be blank.")
     public String defaultText;
 
-    @JSONRequired
-    @JSONDescription("The max number of characters this entry can have.")
+    @JSONDescription("The max number of characters this entry can have.  Required for editable world text, but optional for guiTextObjects and variable-driven text.")
     public int maxLength;
 
     @JSONRequired
@@ -68,4 +69,13 @@ public class JSONText {
 
     @JSONDescription("If true, this text will be auto-scaled to fit inside the wrapWidth rather than actually wrapping to another line.  Has no affect unless you specify a wrapWidth!")
     public boolean autoScale;
+
+    @JSONDescription("Optional animation list for guiTextObjects.  These are normally visibility checks that decide when the text should be shown on-screen.")
+    public List<JSONAnimationDefinition> animations;
+
+    @JSONDescription("Fade-in time for guiTextObjects, in ticks.  If not set, a default of 7 ticks is used.")
+    public int fadeInTime;
+
+    @JSONDescription("Fade-out time for guiTextObjects, in ticks.  If not set, a default of 7 ticks is used.")
+    public int fadeOutTime;
 }
