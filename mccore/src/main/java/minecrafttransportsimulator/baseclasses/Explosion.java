@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -162,7 +163,8 @@ public class Explosion {
                     baseDamage = blastDamageVsGround != 0 ? blastDamageVsGround : (blastDamageVsVehicles != 0 ? blastDamageVsVehicles : blastDamage);
                 }
 
-                double damageAmount = baseDamage * blastHit.falloff;
+                double explosionResistance = getExplosionResistance(blastHit.hitPosition, multiparts);
+                double damageAmount = getBlastDamageAfterResistance(baseDamage, blastHit.falloff, explosionResistance);
                 Damage damage = new Damage(damageAmount, blastHit.box, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown().bypassIgnoredExplosiveDamage();
 
                 //Apply knockback away from explosion center.
@@ -213,7 +215,8 @@ public class Explosion {
             }
 
             float baseDamage = blastDamageVsLiving != 0 ? blastDamageVsLiving : blastDamage;
-            double damageAmount = baseDamage * damageFalloff;
+            double explosionResistance = getExplosionResistance(entityBlastPoint, multiparts);
+            double damageAmount = getBlastDamageAfterResistance(baseDamage, damageFalloff, explosionResistance);
             Damage damage = new Damage(damageAmount, blastBounds, gun, entityResponsible, deathLanguage).setExplosive().ignoreCooldown();
 
             //Apply MC-style knockback: use entity eye height for the Y delta, creating natural upward arcs.
@@ -468,6 +471,36 @@ public class Explosion {
         return 1.0 - normDist;
     }
 
+    private static double getBlastDamageAfterResistance(double baseDamage, double falloff, double explosionResistance) {
+        return Math.max(baseDamage - explosionResistance, 0) * falloff;
+    }
+
+    /**
+     * Gets the combined explosion resistance from collision groups between the blast source and target.
+     * Each group is counted once even if the ray intersects multiple boxes in that group.
+     */
+    private double getExplosionResistance(Point3D targetPosition, List<AEntityF_Multipart<?>> multiparts) {
+        Point3D delta = targetPosition.copy().subtract(position);
+        double pathLength = delta.length();
+        if (pathLength < MIN_PATH_LENGTH) {
+            return 0;
+        }
+
+        double explosionResistance = 0;
+        Set<JSONCollisionGroup> resistedGroups = new HashSet<>();
+        Point3D rayEnd = targetPosition.copy().addScaled(delta, 0.01D / pathLength);
+        for (AEntityF_Multipart<?> multipart : multiparts) {
+            for (BoundingBox box : multipart.allCollisionBoxes) {
+                JSONCollisionGroup groupDef = box.groupDef;
+                if (groupDef != null && groupDef.explosionResistance > 0 && !resistedGroups.contains(groupDef) && box.getIntersection(position, rayEnd) != null) {
+                    explosionResistance += groupDef.explosionResistance;
+                    resistedGroups.add(groupDef);
+                }
+            }
+        }
+        return explosionResistance;
+    }
+
     /**
      * Returns the best exposed attack box on a vehicle for this explosion, or null if the vehicle
      * is outside the damage ellipsoid or fully blocked by terrain.
@@ -500,9 +533,17 @@ public class Explosion {
      * apply to large vehicles by their hull hitboxes rather than only by their entity center.
      */
     private static void getClosestPointOnBox(BoundingBox box, Point3D point, Point3D output) {
-        output.x = Math.max(box.globalCenter.x - box.widthRadius, Math.min(point.x, box.globalCenter.x + box.widthRadius));
-        output.y = Math.max(box.globalCenter.y - box.heightRadius, Math.min(point.y, box.globalCenter.y + box.heightRadius));
-        output.z = Math.max(box.globalCenter.z - box.depthRadius, Math.min(point.z, box.globalCenter.z + box.depthRadius));
+        if (box.isOBB()) {
+            output.set(point).subtract(box.globalCenter).reOrigin(box.orientation);
+            output.x = Math.max(-box.widthRadius, Math.min(output.x, box.widthRadius));
+            output.y = Math.max(-box.heightRadius, Math.min(output.y, box.heightRadius));
+            output.z = Math.max(-box.depthRadius, Math.min(output.z, box.depthRadius));
+            output.rotate(box.orientation).add(box.globalCenter);
+        } else {
+            output.x = Math.max(box.globalCenter.x - box.widthRadius, Math.min(point.x, box.globalCenter.x + box.widthRadius));
+            output.y = Math.max(box.globalCenter.y - box.heightRadius, Math.min(point.y, box.globalCenter.y + box.heightRadius));
+            output.z = Math.max(box.globalCenter.z - box.depthRadius, Math.min(point.z, box.globalCenter.z + box.depthRadius));
+        }
     }
 
     /**

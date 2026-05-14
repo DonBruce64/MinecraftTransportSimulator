@@ -20,7 +20,7 @@ public class JSONCollisionBox {
     @JSONDescription("Same as width, just for the Y direction.")
     public float height;
 
-    @JSONDescription("The rotation of this collision box.  Only used if the owning collision group has isOBB set to true.")
+    @JSONDescription("The rotation of this collision box. Only used if the owning collision group has isOBB set to true.")
     public RotationMatrix rot;
 
     @JSONDescription("If true, the collision box will behave like a ground device set to float.  Note that if you make a boat that uses only these boxes, you'll need one for every corner like you would wheels on a car.  Failing to do so will result in your boat doing a Titanic, just without an iceberg.")
