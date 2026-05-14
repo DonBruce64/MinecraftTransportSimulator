@@ -45,6 +45,7 @@ public class GUIComponentAimReticle extends AGUIComponent {
         super(0, 0, screenWidth, screenHeight);
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        this.ignoreGUILightingState = true;
 
         // Build a thin ring from triangles so thickness is controlled by geometry, not GL line state.
         RenderableVertices circleVertices = new RenderableVertices("AIM_RETICLE", FloatBuffer.allocate(CIRCLE_SEGMENTS * VERTICES_PER_SEGMENT * FLOATS_PER_VERTEX), false);
