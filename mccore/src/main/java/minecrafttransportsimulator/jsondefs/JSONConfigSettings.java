@@ -94,7 +94,8 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> wheelBreakage = new JSONConfigEntry<>(true, "Whether or not wheels can be broken (go flat).");
         public JSONConfigEntry<Boolean> wheelDamageIgnoreVelocity = new JSONConfigEntry<>(false, "Whether or not velocity is ignored when calculating wheel damage.");
         public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(true, "Whether or not non-IV things can damage vehicles.  This is normally false, as external damage is a hassle for most people, but can be true if you want other mod's guns to be able to attack vehicles in addition to IV's.");
-        public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a propeller.");
+         public JSONConfigEntry<Double> externalExplosionDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage from external explosions when allowExternalDamage is enabled.");
+        public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<>(3.0D, "Factor for damage caused by a propeller.");
         public JSONConfigEntry<Double> jetDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a jet engine.");
         public JSONConfigEntry<Double> wheelDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by wheels on vehicles.");
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by crashes.");
