@@ -97,6 +97,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a propeller.");
         public JSONConfigEntry<Double> jetDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a jet engine.");
         public JSONConfigEntry<Double> wheelDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by wheels on vehicles.");
+        public JSONConfigEntry<Double> blockCrashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by vehicles when they crash into blocks and use crash speed thresholds.");
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by players when their vehicle explodes in a crash.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
