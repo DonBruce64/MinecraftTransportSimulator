@@ -762,6 +762,25 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public void destroyBlockQuietly(Point3D position, boolean spawnDrops) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        if (world.isEmptyBlock(pos)) {
+            return;
+        }
+
+        BlockState state = world.getBlockState(pos);
+        if (spawnDrops && !world.isClientSide && world instanceof ServerLevel) {
+            BlockEntity tile = world.getBlockEntity(pos);
+            for (ItemStack stack : Block.getDrops(state, (ServerLevel) world, pos, tile)) {
+                if (stack.getCount() > 0) {
+                    world.addFreshEntity(new ItemEntity(world, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, stack));
+                }
+            }
+        }
+        world.setBlock(pos, state.getFluidState().createLegacyBlock(), 3);
+    }
+
+    @Override
     public boolean isAir(Point3D position) {
         return world.isEmptyBlock(new BlockPos(position.x, position.y, position.z));
     }

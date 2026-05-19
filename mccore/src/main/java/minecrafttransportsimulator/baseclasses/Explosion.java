@@ -22,7 +22,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 
 /**
  * Custom explosion class for bullets.  Provides elliptical blast radii, per-target-type damage,
- * block destruction with ray-casting (like vanilla MC), AoE armor penetration, knockback,
+ * irregular block destruction, AoE armor penetration, knockback,
  * and lingering potion effects.
  * Replaces vanilla Minecraft explosions when blastDamage is set on a bullet definition.
  *
@@ -30,9 +30,13 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public class Explosion {
     private static final List<Explosion> lingeringExplosions = new ArrayList<>();
-    private static final double RAY_STEP = 0.3;
-    private static final int RAY_GRID = 16;
+    private static final double DEFAULT_BLOCK_RADIUS_FACTOR = 2.0D;
+    private static final double BLOCK_RADIUS_NOISE = 0.10D;
+    private static final double BLOCK_STRENGTH_NOISE = 0.12D;
+    private static final double BLOCK_NOISE_START = 0.70D;
+    private static final double LIQUID_HIT_FACE_EPSILON = 0.05D;
     private static final double MIN_PATH_LENGTH = 1.0E-7D;
+    private static final double MIN_DROP_STRENGTH = 4.0D;
 
     private final AWrapperWorld world;
     private final Point3D position;
@@ -77,7 +81,7 @@ public class Explosion {
         this.gun = gun;
         this.bulletDef = gun.lastLoadedBullet.definition.bullet;
         this.entityResponsible = gun.lastController;
-        this.deathLanguage = entityResponsible != null ? LanguageSystem.DEATH_BULLET_PLAYER : LanguageSystem.DEATH_BULLET_NULL;
+        this.deathLanguage = entityResponsible != null ? LanguageSystem.DEATH_EXPLOSION_PLAYER : LanguageSystem.DEATH_EXPLOSION_NULL;
         this.isIncendiary = bulletDef.types.contains(BulletType.INCENDIARY);
 
         //Entity damage - resolve defaults.
@@ -93,13 +97,13 @@ public class Explosion {
         this.blastDamageVsLiving = bulletDef.blastDamageVsLiving;
 
         //Block damage - resolve defaults.
-        //maxStrengthRadius and blastStrengthRadiusXZ/Y are interchangeable.
-        //Either one can stand alone; if both are set, each retains its own role.
+        //maxStrengthRadius can stand alone as the block damage radius, but blastStrengthRadiusXZ/Y
+        //remain the outer falloff radius when they are explicitly set.
         this.blastStrength = bulletDef.blastStrength;
         float resolvedStrengthRadiusXZ = bulletDef.blastStrengthRadiusXZ != 0 ? bulletDef.blastStrengthRadiusXZ : bulletDef.maxStrengthRadius;
         this.blastStrengthRadiusXZ = resolvedStrengthRadiusXZ;
         this.blastStrengthY = bulletDef.blastStrengthY != 0 ? bulletDef.blastStrengthY : resolvedStrengthRadiusXZ;
-        this.maxStrengthRadius = bulletDef.maxStrengthRadius != 0 ? bulletDef.maxStrengthRadius : resolvedStrengthRadiusXZ;
+        this.maxStrengthRadius = bulletDef.maxStrengthRadius;
 
         //Knockback.
         this.knockback = bulletDef.knockback;
@@ -124,7 +128,7 @@ public class Explosion {
         if (blastRadiusXZ > 0) {
             doEntityDamage();
         }
-        if (blastStrength > 0 && ConfigSystem.settings.damage.bulletBlockBreaking.value) {
+        if (blastStrength > 0 && ConfigSystem.settings.damage.bulletBlockBreaking.value && !isExplosionSubmerged()) {
             doBlockDamage();
         }
         if (effects != null && !effects.isEmpty() && remainingEffectTicks > 0) {
@@ -250,133 +254,201 @@ public class Explosion {
     }
 
     /**
-     * Destroys blocks using ray-casting from the explosion center, matching vanilla MC's algorithm.
-     * Rays are cast in all directions on a 16x16x16 grid.  Each ray starts with randomized strength
-     * (blastStrength * (0.7 + random * 0.6)) and loses energy as it passes through blocks based on
-     * their hardness: (hardness + 0.3) * 0.3 per step.  This creates natural-looking craters with
-     * ragged edges.  Directly exposed blocks within maxStrengthRadius are always destroyed
-     * regardless of ray energy (but rays still lose energy normally for blocks beyond that zone).
-     * blastStrengthRadiusXZ/Y optionally cap maximum ray travel distance.
-     * If blastStrengthRadiusXZ is 0, rays run until energy is depleted (like vanilla MC).
-     * Block drops use 1/blastStrength probability like vanilla MC.
+     * Destroys blocks using an irregular ellipsoid.  Entity occlusion still uses raycasts,
+     * but block damage is volume-based so high-power blasts do not leave ray-shaped scars.
      */
     private void doBlockDamage() {
         Set<Long> blocksToDestroy = new HashSet<>();
-        Set<Long> blocksToIgnite = new HashSet<>();
-        Point3D rayPos = new Point3D();
         Point3D blockPos = new Point3D();
 
-        //First pass: mark exposed blocks within maxStrengthRadius for guaranteed destruction.
-        if (maxStrengthRadius > 0) {
-            int maxR = (int) Math.ceil(maxStrengthRadius);
-            for (int x = -maxR; x <= maxR; x++) {
-                for (int y = -maxR; y <= maxR; y++) {
-                    for (int z = -maxR; z <= maxR; z++) {
-                        if (Math.sqrt(x * x + y * y + z * z) <= maxStrengthRadius) {
-                            int bx = (int) Math.floor(position.x) + x;
-                            int by = (int) Math.floor(position.y) + y;
-                            int bz = (int) Math.floor(position.z) + z;
-                            blockPos.set(bx, by, bz);
-                            float hardness = world.getBlockHardness(blockPos);
-                            if (hardness > 0 && hardness <= blastStrength && hardness < Float.MAX_VALUE && isBlastPathClearToBlock(blockPos, bx, by, bz)) {
-                                blocksToDestroy.add(packBlockPos(bx, by, bz));
-                            }
+        double radiusXZ = blastStrengthRadiusXZ > 0 ? blastStrengthRadiusXZ : blastStrength * DEFAULT_BLOCK_RADIUS_FACTOR;
+        double radiusY = blastStrengthY > 0 ? blastStrengthY : radiusXZ;
+        double innerRadiusSquared = maxStrengthRadius * maxStrengthRadius;
+        double loopRadiusXZ = Math.max(radiusXZ, maxStrengthRadius);
+        double loopRadiusY = Math.max(radiusY, maxStrengthRadius);
+        int minX = (int) Math.floor(position.x - loopRadiusXZ);
+        int maxX = (int) Math.ceil(position.x + loopRadiusXZ);
+        int minY = (int) Math.floor(position.y - loopRadiusY);
+        int maxY = (int) Math.ceil(position.y + loopRadiusY);
+        int minZ = (int) Math.floor(position.z - loopRadiusXZ);
+        int maxZ = (int) Math.ceil(position.z + loopRadiusXZ);
+
+        for (int blockX = minX; blockX <= maxX; ++blockX) {
+            for (int blockY = minY; blockY <= maxY; ++blockY) {
+                for (int blockZ = minZ; blockZ <= maxZ; ++blockZ) {
+                    double dx = blockX + 0.5D - position.x;
+                    double dy = blockY + 0.5D - position.y;
+                    double dz = blockZ + 0.5D - position.z;
+                    double distanceSquared = dx * dx + dy * dy + dz * dz;
+                    boolean isInnerBlock = maxStrengthRadius > 0 && distanceSquared <= innerRadiusSquared;
+                    double normalizedDistance = 0.0D;
+
+                    double edgeNoiseBlend = 0.0D;
+                    if (!isInnerBlock) {
+                        normalizedDistance = Math.sqrt((dx * dx + dz * dz) / (radiusXZ * radiusXZ) + (dy * dy) / (radiusY * radiusY));
+                        edgeNoiseBlend = getEdgeNoiseBlend(normalizedDistance);
+                        normalizedDistance += (getBlockNoise(blockX, blockY, blockZ) - 0.5D) * BLOCK_RADIUS_NOISE * edgeNoiseBlend;
+                        if (normalizedDistance > 1.0D) {
+                            continue;
                         }
+                    }
+
+                    blockPos.set(blockX, blockY, blockZ);
+                    if (world.isAir(blockPos)) {
+                        continue;
+                    }
+
+                    float hardness = world.getBlockHardness(blockPos);
+                    if (hardness <= 0 || hardness >= Float.MAX_VALUE) {
+                        continue;
+                    }
+
+                    double localStrength = blastStrength;
+                    if (!isInnerBlock) {
+                        double falloff = 1.0D - Math.max(normalizedDistance, 0.0D);
+                        double strengthNoise = 1.0D + (getBlockNoise(blockX + 37, blockY - 19, blockZ + 53) - 0.5D) * BLOCK_STRENGTH_NOISE * edgeNoiseBlend;
+                        localStrength *= falloff * strengthNoise;
+                    }
+
+                    if (hardness <= localStrength) {
+                        blocksToDestroy.add(packBlockPos(blockX, blockY, blockZ));
                     }
                 }
             }
         }
+        smoothDestroyedBlocks(blocksToDestroy);
 
-        //Second pass: ray-cast for natural MC-style crater edges.
-        for (int xi = 0; xi < RAY_GRID; xi++) {
-            for (int yi = 0; yi < RAY_GRID; yi++) {
-                for (int zi = 0; zi < RAY_GRID; zi++) {
-                    //Only cast rays from the surface of the grid cube (like vanilla MC).
-                    if (xi != 0 && xi != RAY_GRID - 1 && yi != 0 && yi != RAY_GRID - 1 && zi != 0 && zi != RAY_GRID - 1) {
-                        continue;
-                    }
-
-                    //Calculate ray direction, normalized.
-                    double dirX = (double) xi / (RAY_GRID - 1) * 2.0 - 1.0;
-                    double dirY = (double) yi / (RAY_GRID - 1) * 2.0 - 1.0;
-                    double dirZ = (double) zi / (RAY_GRID - 1) * 2.0 - 1.0;
-                    double dirLen = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-                    if (dirLen == 0) {
-                        continue;
-                    }
-                    dirX /= dirLen;
-                    dirY /= dirLen;
-                    dirZ /= dirLen;
-
-                    //Scale direction by step size.
-                    double stepX = dirX * RAY_STEP;
-                    double stepY = dirY * RAY_STEP;
-                    double stepZ = dirZ * RAY_STEP;
-
-                    //Initialize ray strength with randomization like vanilla MC.
-                    double rayStrength = blastStrength * (0.7 + Math.random() * 0.6);
-
-                    //Step the ray through blocks until energy is depleted.
-                    rayPos.set(position.x, position.y, position.z);
-                    while (rayStrength > 0) {
-                        int bx = (int) Math.floor(rayPos.x);
-                        int by = (int) Math.floor(rayPos.y);
-                        int bz = (int) Math.floor(rayPos.z);
-
-                        //Check if ray has exceeded the optional elliptical radius cap.
-                        if (blastStrengthRadiusXZ > 0) {
-                            double dx = rayPos.x - position.x;
-                            double dy = rayPos.y - position.y;
-                            double dz = rayPos.z - position.z;
-                            double effectiveRadiusY = blastStrengthY > 0 ? blastStrengthY : blastStrengthRadiusXZ;
-                            double normDist = Math.sqrt((dx * dx + dz * dz) / (blastStrengthRadiusXZ * blastStrengthRadiusXZ) + (dy * dy) / (effectiveRadiusY * effectiveRadiusY));
-                            if (normDist > 1.0) {
-                                break;
-                            }
-                        }
-
-                        blockPos.set(bx, by, bz);
-                        if (!world.isAir(blockPos)) {
-                            float hardness = world.getBlockHardness(blockPos);
-
-                            //Reduce ray strength by block resistance like vanilla MC.
-                            //Rays always lose energy from blocks, even in maxStrengthRadius.
-                            rayStrength -= (hardness + 0.3) * RAY_STEP;
-
-                            if (rayStrength > 0 && hardness < Float.MAX_VALUE) {
-                                blocksToDestroy.add(packBlockPos(bx, by, bz));
-                            }
-                        }
-
-                        //Mark air blocks for fire if incendiary.
-                        if (isIncendiary && world.isAir(blockPos)) {
-                            blocksToIgnite.add(packBlockPos(bx, by, bz));
-                        }
-
-                        rayPos.x += stepX;
-                        rayPos.y += stepY;
-                        rayPos.z += stepZ;
-                    }
-                }
-            }
-        }
-
-        //Destroy collected blocks with chance-based drops like vanilla MC (1/blastStrength probability).
+        //Destroy collected blocks with chance-based drops like vanilla MC.
+        double dropChance = 1.0D / Math.max(blastStrength, MIN_DROP_STRENGTH);
         for (long packed : blocksToDestroy) {
             blockPos.set(unpackX(packed), unpackY(packed), unpackZ(packed));
-            boolean spawnDrops = Math.random() < 1.0 / blastStrength;
-            world.destroyBlock(blockPos, spawnDrops);
+            boolean spawnDrops = Math.random() < dropChance;
+            world.destroyBlockQuietly(blockPos, spawnDrops);
         }
 
-        //Set fire to air blocks adjacent to destroyed blocks if incendiary.
+        //Set fire above destroyed blocks if incendiary.
         if (isIncendiary) {
-            for (long packed : blocksToIgnite) {
-                if (!blocksToDestroy.contains(packed)) {
-                    blockPos.set(unpackX(packed), unpackY(packed), unpackZ(packed));
-                    world.setToFire(blockPos, Axis.UP);
-                }
+            for (long packed : blocksToDestroy) {
+                blockPos.set(unpackX(packed), unpackY(packed), unpackZ(packed));
+                world.setToFire(blockPos, Axis.UP);
             }
         }
+    }
+
+    private void smoothDestroyedBlocks(Set<Long> blocksToDestroy) {
+        Set<Long> candidateBlocks = new HashSet<>();
+        for (long packedPos : blocksToDestroy) {
+            int blockX = unpackX(packedPos);
+            int blockY = unpackY(packedPos);
+            int blockZ = unpackZ(packedPos);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX - 1, blockY, blockZ);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX + 1, blockY, blockZ);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX, blockY - 1, blockZ);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX, blockY + 1, blockZ);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX, blockY, blockZ - 1);
+            addSmoothingCandidate(candidateBlocks, blocksToDestroy, blockX, blockY, blockZ + 1);
+        }
+
+        Set<Long> extraBlocksToDestroy = new HashSet<>();
+        Point3D blockPos = new Point3D();
+        Point3D neighborPos = new Point3D();
+        for (long packedPos : candidateBlocks) {
+            int blockX = unpackX(packedPos);
+            int blockY = unpackY(packedPos);
+            int blockZ = unpackZ(packedPos);
+
+            blockPos.set(blockX, blockY, blockZ);
+            if (world.isAir(blockPos)) {
+                continue;
+            }
+
+            float hardness = world.getBlockHardness(blockPos);
+            if (hardness <= 0 || hardness >= Float.MAX_VALUE || hardness > blastStrength) {
+                continue;
+            }
+
+            int openSides = 0;
+            int openHorizontalSides = 0;
+            boolean openBelow = isBlockOpen(blockX, blockY - 1, blockZ, blocksToDestroy, neighborPos);
+            if (openBelow) {
+                ++openSides;
+            }
+            if (isBlockOpen(blockX, blockY + 1, blockZ, blocksToDestroy, neighborPos)) {
+                ++openSides;
+            }
+            if (isBlockOpen(blockX - 1, blockY, blockZ, blocksToDestroy, neighborPos)) {
+                ++openSides;
+                ++openHorizontalSides;
+            }
+            if (isBlockOpen(blockX + 1, blockY, blockZ, blocksToDestroy, neighborPos)) {
+                ++openSides;
+                ++openHorizontalSides;
+            }
+            if (isBlockOpen(blockX, blockY, blockZ - 1, blocksToDestroy, neighborPos)) {
+                ++openSides;
+                ++openHorizontalSides;
+            }
+            if (isBlockOpen(blockX, blockY, blockZ + 1, blocksToDestroy, neighborPos)) {
+                ++openSides;
+                ++openHorizontalSides;
+            }
+
+            if (openSides >= 5 || (openBelow && openHorizontalSides >= 3)) {
+                extraBlocksToDestroy.add(packedPos);
+            }
+        }
+        blocksToDestroy.addAll(extraBlocksToDestroy);
+    }
+
+    private static void addSmoothingCandidate(Set<Long> candidateBlocks, Set<Long> blocksToDestroy, int blockX, int blockY, int blockZ) {
+        long packedPos = packBlockPos(blockX, blockY, blockZ);
+        if (!blocksToDestroy.contains(packedPos)) {
+            candidateBlocks.add(packedPos);
+        }
+    }
+
+    private boolean isBlockOpen(int blockX, int blockY, int blockZ, Set<Long> blocksToDestroy, Point3D blockPos) {
+        if (blocksToDestroy.contains(packBlockPos(blockX, blockY, blockZ))) {
+            return true;
+        }
+        blockPos.set(blockX, blockY, blockZ);
+        return world.isAir(blockPos);
+    }
+
+    private boolean isExplosionSubmerged() {
+        int blockX = (int) Math.floor(position.x);
+        int blockY = (int) Math.floor(position.y);
+        int blockZ = (int) Math.floor(position.z);
+        Point3D checkPosition = new Point3D();
+        if (isLiquidAt(checkPosition, blockX, blockY, blockZ) || isLiquidAt(checkPosition, blockX, blockY + 1, blockZ)) {
+            return true;
+        }
+
+        double localX = position.x - blockX;
+        double localY = position.y - blockY;
+        double localZ = position.z - blockZ;
+        if (localY <= LIQUID_HIT_FACE_EPSILON && isLiquidAt(checkPosition, blockX, blockY - 1, blockZ)) {
+            return true;
+        }
+        if (localX <= LIQUID_HIT_FACE_EPSILON && isLiquidAtOrAbove(checkPosition, blockX - 1, blockY, blockZ)) {
+            return true;
+        }
+        if (localX >= 1.0D - LIQUID_HIT_FACE_EPSILON && isLiquidAtOrAbove(checkPosition, blockX + 1, blockY, blockZ)) {
+            return true;
+        }
+        if (localZ <= LIQUID_HIT_FACE_EPSILON && isLiquidAtOrAbove(checkPosition, blockX, blockY, blockZ - 1)) {
+            return true;
+        }
+        return localZ >= 1.0D - LIQUID_HIT_FACE_EPSILON && isLiquidAtOrAbove(checkPosition, blockX, blockY, blockZ + 1);
+    }
+
+    private boolean isLiquidAtOrAbove(Point3D checkPosition, int blockX, int blockY, int blockZ) {
+        return isLiquidAt(checkPosition, blockX, blockY, blockZ) || isLiquidAt(checkPosition, blockX, blockY + 1, blockZ);
+    }
+
+    private boolean isLiquidAt(Point3D checkPosition, int blockX, int blockY, int blockZ) {
+        checkPosition.set(blockX, blockY, blockZ);
+        return world.isBlockLiquid(checkPosition);
     }
 
     /**
@@ -384,6 +456,27 @@ public class Explosion {
      */
     private static long packBlockPos(int x, int y, int z) {
         return ((long) (x & 0x3FFFFFF) << 38) | ((long) (y & 0xFFF) << 26) | (long) (z & 0x3FFFFFF);
+    }
+
+    private static double getBlockNoise(int x, int y, int z) {
+        long hash = x * 3129871L ^ y * 116129781L ^ z * 42317861L;
+        hash ^= hash >>> 33;
+        hash *= 0xff51afd7ed558ccdL;
+        hash ^= hash >>> 33;
+        hash *= 0xc4ceb9fe1a85ec53L;
+        hash ^= hash >>> 33;
+        return (hash & 0xFFFFFFL) / (double) 0xFFFFFFL;
+    }
+
+    private static double getEdgeNoiseBlend(double normalizedDistance) {
+        if (normalizedDistance <= BLOCK_NOISE_START) {
+            return 0.0D;
+        }
+        double blend = (normalizedDistance - BLOCK_NOISE_START) / (1.0D - BLOCK_NOISE_START);
+        if (blend >= 1.0D) {
+            return 1.0D;
+        }
+        return blend * blend * (3.0D - 2.0D * blend);
     }
 
     private static int unpackX(long packed) {
@@ -511,20 +604,6 @@ public class Explosion {
     private boolean isBlastPathClear(Point3D targetPosition) {
         Point3D delta = targetPosition.copy().subtract(position);
         return delta.length() < MIN_PATH_LENGTH || world.getBlockHit(position, delta) == null;
-    }
-
-    /**
-     * Checks if terrain blocks the blast from reaching a block.  The target block itself is allowed
-     * to be the first ray hit; any nearer block means this block is shielded.
-     */
-    private boolean isBlastPathClearToBlock(Point3D blockPosition, int blockX, int blockY, int blockZ) {
-        Point3D targetPosition = blockPosition.copy().add(0.5, 0.5, 0.5);
-        Point3D delta = targetPosition.subtract(position);
-        if (delta.length() < MIN_PATH_LENGTH) {
-            return true;
-        }
-        BlockHitResult hit = world.getBlockHit(position, delta);
-        return hit == null || ((int) hit.blockPosition.x == blockX && (int) hit.blockPosition.y == blockY && (int) hit.blockPosition.z == blockZ);
     }
 
     private static class BlastHit {
