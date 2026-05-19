@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -253,18 +254,45 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            PartSeat riderSeat = this instanceof PartSeat ? (PartSeat) this : null;
+            boolean isFirstPersonAircraftCamera = riderIsClient
+                    && MouseFlightController.isMouseFlightActive
+                    && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON
+                    && riderSeat != null
+                    && riderSeat.vehicleOn != null
+                    && riderSeat.vehicleOn.definition.motorized != null
+                    && riderSeat.vehicleOn.definition.motorized.isAircraft;
 
             //When mouse flight is active for this client rider, capture mouse deltas
-            //for the MouseFlightController instead of applying them to rider orientation.
-            //The rider's relative orientation stays locked forward so the camera can be
-            //independently controlled by the MouseFlightController.
+            //for the MouseFlightController.  The rider's relative orientation stays locked
+            //forward for mouse-flight cameras, but first-person aircraft cameras still use
+            //normal look controls.
             if (riderIsClient && MouseFlightController.isMouseFlightActive) {
                 //Capture deltas for the mouse flight controller.
-                MouseFlightController.storedYawDelta = rider.getYawDelta();
-                MouseFlightController.storedPitchDelta = rider.getPitchDelta();
-                //Keep rider orientation locked forward (zero relative orientation).
-                riderRelativeOrientation.setToZero();
-                riderRelativeOrientation.angles.set(0, 0, 0);
+                float yawDelta = rider.getYawDelta();
+                float pitchDelta = rider.getPitchDelta();
+                MouseFlightController.storedYawDelta = yawDelta;
+                MouseFlightController.storedPitchDelta = pitchDelta;
+                if (isFirstPersonAircraftCamera && !hasHeadTracking) {
+                    riderRelativeOrientation.angles.y += yawDelta;
+                    //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
+                    if (riderRelativeOrientation.angles.y > 180) {
+                        riderRelativeOrientation.angles.y -= 360;
+                        prevRiderRelativeOrientation.angles.y -= 360;
+                    } else if (riderRelativeOrientation.angles.y < -180) {
+                        riderRelativeOrientation.angles.y += 360;
+                        prevRiderRelativeOrientation.angles.y += 360;
+                    }
+
+                    //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
+                    if (Math.abs(riderRelativeOrientation.angles.x + pitchDelta) < 85) {
+                        riderRelativeOrientation.angles.x += pitchDelta;
+                    }
+                } else {
+                    //Keep rider orientation locked forward (zero relative orientation).
+                    riderRelativeOrientation.setToZero();
+                    riderRelativeOrientation.angles.set(0, 0, 0);
+                }
             } else if (!hasHeadTracking) {
                 // If we don't have head tracking then calculate orientation normally
                 riderRelativeOrientation.angles.y += rider.getYawDelta();

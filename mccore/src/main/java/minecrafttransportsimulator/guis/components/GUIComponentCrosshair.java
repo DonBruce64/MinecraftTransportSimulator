@@ -74,6 +74,7 @@ public class GUIComponentCrosshair extends AGUIComponent {
 
     public GUIComponentCrosshair(int x, int y) {
         super(x, y, ARM_LENGTH * 2, ARM_LENGTH * 2);
+        this.ignoreGUILightingState = true;
         RenderableVertices crosshairVertices = new RenderableVertices("CROSSHAIR", FloatBuffer.allocate(ARM_COUNT * VERTICES_PER_ARM * FLOATS_PER_VERTEX), false);
         setCrosshairGeometry(crosshairVertices.vertices);
         renderable = new RenderableData(crosshairVertices, null);

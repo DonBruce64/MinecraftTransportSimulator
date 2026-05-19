@@ -599,8 +599,9 @@ public final class ControlSystem {
 
             //Feed stored mouse deltas to the mouse flight controller.
             //Keyboard override flags tell the autopilot to skip those axes.
+            Point3D firstPersonAimForward = InterfaceManager.clientInterface.getCameraMode() == CameraSystem.CameraMode.FIRST_PERSON ? clientPlayer.getLineOfSight(1) : null;
             MouseFlightController.update(aircraft, MouseFlightController.storedYawDelta, MouseFlightController.storedPitchDelta,
-                    keyboardYaw, keyboardPitch, keyboardRoll);
+                    keyboardYaw, keyboardPitch, keyboardRoll, firstPersonAimForward);
             MouseFlightController.storedYawDelta = 0;
             MouseFlightController.storedPitchDelta = 0;
 
