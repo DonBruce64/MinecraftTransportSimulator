@@ -318,11 +318,9 @@ public abstract class AWrapperWorld extends EntityManager {
      * Destroys the block at the position without running the normal block-break effects,
      * including per-block sounds and break particles.  Used for bulk block changes such
      * as explosions where per-block effects can overflow or stall clients.
-     * Wrappers should override this when their MC version exposes a quiet remove path.
+     * Wrappers must provide a quiet remove path rather than falling back to normal block breaking.
      */
-    public void destroyBlockQuietly(Point3D position, boolean spawnDrops) {
-        destroyBlock(position, spawnDrops);
-    }
+    public abstract void destroyBlockQuietly(Point3D position, boolean spawnDrops);
 
     /**
      * Returns true if the block at this position is air.
