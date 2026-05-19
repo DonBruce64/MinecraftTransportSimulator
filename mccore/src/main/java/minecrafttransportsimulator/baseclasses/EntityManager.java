@@ -367,23 +367,40 @@ public abstract class EntityManager {
      * If nothing is intersected, null is returned.
      */
     public EntityInteractResult getMultipartEntityIntersect(Point3D startPoint, Point3D endPoint) {
+        return getMultipartEntityIntersect(startPoint, endPoint, null);
+    }
+
+    /**
+     * Gets the closest multipart intersected with, while ignoring the supplied multipart and all its parts.
+     * If nothing is intersected, null is returned.
+     */
+    public EntityInteractResult getMultipartEntityIntersect(Point3D startPoint, Point3D endPoint, AEntityF_Multipart<?> entityToIgnore) {
+        return getMultipartEntityIntersect(startPoint, endPoint, entityToIgnore, CollisionType.CLICK);
+    }
+
+    /**
+     * Gets the closest multipart intersected with for the supplied collision types, while ignoring the supplied multipart and all its parts.
+     * If nothing is intersected, null is returned.
+     */
+    public EntityInteractResult getMultipartEntityIntersect(Point3D startPoint, Point3D endPoint, AEntityF_Multipart<?> entityToIgnore, CollisionType... collisionTypes) {
         EntityInteractResult closestResult = null;
+        boolean clickOnly = collisionTypes.length == 1 && collisionTypes[0] == CollisionType.CLICK;
         BoundingBox vectorBounds = new BoundingBox(startPoint, endPoint);
         List<AEntityF_Multipart<?>> multiparts = new ArrayList<>();
         multiparts.addAll(getEntitiesOfType(EntityVehicleF_Physics.class));
         multiparts.addAll(getEntitiesOfType(EntityPlacedPart.class));
 
         for (AEntityF_Multipart<?> multipart : multiparts) {
-            if (multipart.encompassingBox.intersects(vectorBounds) && multipart.canBeClicked()) {
+            if (multipart != entityToIgnore && multipart.encompassingBox.intersects(vectorBounds) && (!clickOnly || multipart.canBeClicked())) {
                 //Could have hit this multipart, check if and what we did via raytracing.
                 for (BoundingBox box : multipart.allCollisionBoxes) {
-                    if (box.collisionTypes.contains(CollisionType.CLICK) && box.intersects(vectorBounds)) {
+                    if (hasCollisionType(box, collisionTypes) && box.intersects(vectorBounds)) {
                         BoundingBoxHitResult intersectionPoint = box.getIntersection(startPoint, endPoint);
                         if (intersectionPoint != null) {
                             if (closestResult == null || startPoint.isFirstCloserThanSecond(intersectionPoint.position, closestResult.position)) {
                                 APart part = multipart.getPartWithBox(box);
                                 if (part != null) {
-                                    if (part.canBeClicked()) {
+                                    if ((entityToIgnore == null || !entityToIgnore.allParts.contains(part)) && (!clickOnly || part.canBeClicked())) {
                                         closestResult = new EntityInteractResult(part, box, intersectionPoint.position);
                                     }
                                 } else {
@@ -396,6 +413,15 @@ public abstract class EntityManager {
             }
         }
         return closestResult;
+    }
+
+    private static boolean hasCollisionType(BoundingBox box, CollisionType... collisionTypes) {
+        for (CollisionType collisionType : collisionTypes) {
+            if (box.collisionTypes.contains(collisionType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
