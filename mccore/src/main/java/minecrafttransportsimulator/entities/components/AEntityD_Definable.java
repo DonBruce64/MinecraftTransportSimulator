@@ -96,7 +96,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      **/
     protected final Map<String, ComputedVariable> computedVariables = new HashMap<>();
 
-    private final List<JSONSound> allSoundDefs = new ArrayList<>();
+    private final List<JSONSound> tickSoundDefs = new ArrayList<>();
+    private final List<JSONSound> partialTickSoundDefs = new ArrayList<>();
     private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
     private final Set<JSONSound> soundDefFalseLastCheck = new HashSet<>();
     private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
@@ -107,6 +108,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
     private final Map<JSONParticle, Point3D> lastPositionParticleSpawned = new HashMap<>();
     private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<>();
+    private long lastTickPartialSoundsUpdated;
+    private float lastPartialTickSoundsUpdated;
     private long lastTickParticlesSpawned;
     private float lastPartialTickParticlesSpawned;
     private static final Point3D particleSpawningPosition = new Point3D();
@@ -281,7 +284,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
             if (definition.rendering.sounds != null) {
                 for (JSONSound soundDef : definition.rendering.sounds) {
-                    allSoundDefs.add(soundDef);
+                    if (soundDef.canPlayOnPartialTicks) {
+                        partialTickSoundDefs.add(soundDef);
+                    } else {
+                        tickSoundDefs.add(soundDef);
+                    }
                     soundActiveSwitchboxes.put(soundDef, new AnimationSwitchbox(this, soundDef.activeAnimations, null));
 
                     if (soundDef.volumeAnimations != null) {
@@ -737,7 +744,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     public void updateSounds(float partialTicks) {
         super.updateSounds(partialTicks);
         //Check all sound defs and update the existing sounds accordingly.
-        if (!allSoundDefs.isEmpty()) {
+        List<JSONSound> soundDefsToUpdate;
+        if (partialTicks == 0) {
+            soundDefsToUpdate = tickSoundDefs;
+        } else {
+            if (ticksExisted == lastTickPartialSoundsUpdated && partialTicks == lastPartialTickSoundsUpdated) {
+                return;
+            }
+            lastTickPartialSoundsUpdated = ticksExisted;
+            lastPartialTickSoundsUpdated = partialTicks;
+            soundDefsToUpdate = partialTickSoundDefs;
+        }
+        if (!soundDefsToUpdate.isEmpty()) {
             AEntityF_Multipart<?> soundMasterEntity = this instanceof APart ? ((APart) this).masterEntity : (this instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) this : null);
             AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
             AEntityF_Multipart<?> playerRidingMasterEntity = entityRiding instanceof APart ? ((APart) entityRiding).masterEntity : (entityRiding instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) entityRiding : null);
@@ -747,156 +765,154 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             boolean weAreOpenTop = soundMasterEntity instanceof EntityVehicleF_Physics && ((EntityVehicleF_Physics) soundMasterEntity).openTopVar.isActive;
             boolean playerRidingClosedTop = playerRidingMasterEntity instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) playerRidingMasterEntity).openTopVar.isActive && cameraIsInterior && !playerRidingExteriorSeat;
 
-            for (JSONSound soundDef : allSoundDefs) {
-                if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
-                    //Check if the sound should be playing before we try to update state.
-                    //First check the animated conditionals, since those drive on/off state.
-                    //Need to check if we are valid, since we tick when invalid for one tick at death and don't want to re-start any stopped looping sounds.
-                    AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-                    boolean shouldSoundStartPlaying = (!soundDef.looping || isValid) && activeSwitchbox.runSwitchbox(partialTicks, true);
+            for (JSONSound soundDef : soundDefsToUpdate) {
+                //Check if the sound should be playing before we try to update state.
+                //First check the animated conditionals, since those drive on/off state.
+                //Need to check if we are valid, since we tick when invalid for one tick at death and don't want to re-start any stopped looping sounds.
+                AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
+                boolean shouldSoundStartPlaying = (!soundDef.looping || isValid) && activeSwitchbox.runSwitchbox(partialTicks, true);
 
-                    //If we aren't a looping or repeating sound, check if we were true last check.
-                    //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.
-                    if (!soundDef.looping && !soundDef.forceSound) {
-                        if (shouldSoundStartPlaying) {
-                            if (!soundDefFalseLastCheck.remove(soundDef)) {
-                                shouldSoundStartPlaying = false;
-                            }
-                        } else {
-                            soundDefFalseLastCheck.add(soundDef);
-                        }
-                    }
-                    
-                    //Now that we know if we are enabled, check if the player has the right viewpoint.
+                //If we aren't a looping or repeating sound, check if we were true last check.
+                //If we were, then we shouldn't play, even if all states are true, as we'd start another sound.
+                if (!soundDef.looping && !soundDef.forceSound) {
                     if (shouldSoundStartPlaying) {
-                        if (!weAreOpenTop) {
-                            if (soundDef.isInterior && (!playerRidingThisEntity || !cameraIsInterior || playerRidingExteriorSeat)) {
-                                shouldSoundStartPlaying = false;
-                            } else if (soundDef.isExterior && playerRidingThisEntity && cameraIsInterior && !playerRidingExteriorSeat) {
-                                shouldSoundStartPlaying = false;
-                            }
-                        }
-                    }
-
-                    //Next, check the distance.
-                    double distance = 0;
-                    double conicalFactor = 1.0;
-                    if (shouldSoundStartPlaying) {
-                        Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
-                        if (shouldSoundStartPlaying) {
-                            distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
-                            if (soundDef.maxDistance != soundDef.minDistance) {
-                                shouldSoundStartPlaying = distance < soundDef.maxDistance && distance >= soundDef.minDistance;
-                            } else {
-                                shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
-                            }
-                        }
-
-                        //Next, check if we have a conical restriction.
-                        if (shouldSoundStartPlaying && soundDef.conicalVector != null) {
-                            double conicalAngle = Math.toDegrees(Math.acos(soundDef.conicalVector.copy().rotate(orientation).dotProduct(InterfaceManager.clientInterface.getClientPlayer().getEyePosition().subtract(soundPos).normalize(), true)));
-                            if (conicalAngle >= soundDef.conicalAngle || conicalAngle < 0) {
-                                shouldSoundStartPlaying = false;
-                            } else {
-                                conicalFactor = (soundDef.conicalAngle - conicalAngle) / soundDef.conicalAngle;
-                            }
-                        }
-                    }
-
-                    //Finally, play the sound if all checks were true.
-                    SoundInstance playingSound = null;
-                    for (SoundInstance sound : sounds) {
-                        if (sound.soundDef == soundDef) {
-                            playingSound = sound;
-                            break;
-                        }
-                    }
-                    if (shouldSoundStartPlaying) {
-                        //Sound should play.
-                        //If we aren't playing, or are playing but aren't a looping sound, update.
-                        if (playingSound == null || !soundDef.looping) {
-                            InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
+                        if (!soundDefFalseLastCheck.remove(soundDef)) {
+                            shouldSoundStartPlaying = false;
                         }
                     } else {
-                        if (soundDef.looping && playingSound != null) {
-                            //If sound is playing, stop it.
-                            //Non-looping sounds are trigger-based and will stop on their own.
-                            playingSound.stopSound = true;
-                        }
+                        soundDefFalseLastCheck.add(soundDef);
+                    }
+                }
 
-                        //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
-                        continue;
+                //Now that we know if we are enabled, check if the player has the right viewpoint.
+                if (shouldSoundStartPlaying) {
+                    if (!weAreOpenTop) {
+                        if (soundDef.isInterior && (!playerRidingThisEntity || !cameraIsInterior || playerRidingExteriorSeat)) {
+                            shouldSoundStartPlaying = false;
+                        } else if (soundDef.isExterior && playerRidingThisEntity && cameraIsInterior && !playerRidingExteriorSeat) {
+                            shouldSoundStartPlaying = false;
+                        }
+                    }
+                }
+
+                //Next, check the distance.
+                double distance = 0;
+                double conicalFactor = 1.0;
+                if (shouldSoundStartPlaying) {
+                    Point3D soundPos = soundDef.pos != null ? soundDef.pos.copy().rotate(orientation).add(position) : position;
+                    if (shouldSoundStartPlaying) {
+                        distance = soundPos.distanceTo(InterfaceManager.clientInterface.getClientPlayer().getPosition());
+                        if (soundDef.maxDistance != soundDef.minDistance) {
+                            shouldSoundStartPlaying = distance < soundDef.maxDistance && distance >= soundDef.minDistance;
+                        } else {
+                            shouldSoundStartPlaying = distance < SoundInstance.DEFAULT_MAX_DISTANCE;
+                        }
                     }
 
-                    //Sound should be playing.  If it's part of the sound list, update properties.
-                    //Sounds may not be in the list if they have just been queued and haven't started yet.
-                    //Try to get the sound provided by this def, and update it. 
-                    //Note that multiple sounds might be for the same def if they played close enough together.
-                    for (SoundInstance sound : sounds) {
-                        if (sound.soundDef == soundDef) {
-                            //Adjust volume.
-                            SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
-                            boolean definedVolume = false;
-                            if (volumeSwitchbox != null) {
-                                volumeSwitchbox.runSound(partialTicks);
-                                sound.volume = volumeSwitchbox.value;
-                                definedVolume = volumeSwitchbox.definedValue;
-                            }
-                            if (!definedVolume) {
-                                sound.volume = 1;
-                            } else if (sound.volume < 0) {
+                    //Next, check if we have a conical restriction.
+                    if (shouldSoundStartPlaying && soundDef.conicalVector != null) {
+                        double conicalAngle = Math.toDegrees(Math.acos(soundDef.conicalVector.copy().rotate(orientation).dotProduct(InterfaceManager.clientInterface.getClientPlayer().getEyePosition().subtract(soundPos).normalize(), true)));
+                        if (conicalAngle >= soundDef.conicalAngle || conicalAngle < 0) {
+                            shouldSoundStartPlaying = false;
+                        } else {
+                            conicalFactor = (soundDef.conicalAngle - conicalAngle) / soundDef.conicalAngle;
+                        }
+                    }
+                }
+
+                //Finally, play the sound if all checks were true.
+                SoundInstance playingSound = null;
+                for (SoundInstance sound : sounds) {
+                    if (sound.soundDef == soundDef) {
+                        playingSound = sound;
+                        break;
+                    }
+                }
+                if (shouldSoundStartPlaying) {
+                    //Sound should play.
+                    //If we aren't playing, or are playing but aren't a looping sound, update.
+                    if (playingSound == null || !soundDef.looping) {
+                        InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
+                    }
+                } else {
+                    if (soundDef.looping && playingSound != null) {
+                        //If sound is playing, stop it.
+                        //Non-looping sounds are trigger-based and will stop on their own.
+                        playingSound.stopSound = true;
+                    }
+
+                    //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
+                    continue;
+                }
+
+                //Sound should be playing.  If it's part of the sound list, update properties.
+                //Sounds may not be in the list if they have just been queued and haven't started yet.
+                //Try to get the sound provided by this def, and update it.
+                //Note that multiple sounds might be for the same def if they played close enough together.
+                for (SoundInstance sound : sounds) {
+                    if (sound.soundDef == soundDef) {
+                        //Adjust volume.
+                        SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
+                        boolean definedVolume = false;
+                        if (volumeSwitchbox != null) {
+                            volumeSwitchbox.runSound(partialTicks);
+                            sound.volume = volumeSwitchbox.value;
+                            definedVolume = volumeSwitchbox.definedValue;
+                        }
+                        if (!definedVolume) {
+                            sound.volume = 1;
+                        } else if (sound.volume < 0) {
+                            sound.volume = 0;
+                        }
+
+                        //Adjust volume based on distance.
+                        if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
+                            //Default sound distance.
+                            double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
+                            if (distance > maxDistance) {
+                                //Edge-case if we floating-point errors give us badmaths with the distance calcs.
                                 sound.volume = 0;
-                            }
-
-                            //Adjust volume based on distance.
-                            if (soundDef.minDistanceVolume == 0 && soundDef.middleDistanceVolume == 0 && soundDef.maxDistanceVolume == 0) {
-                                //Default sound distance.
-                                double maxDistance = soundDef.maxDistance != 0 ? soundDef.maxDistance : SoundInstance.DEFAULT_MAX_DISTANCE;
-                                if (distance > maxDistance) {
-                                    //Edge-case if we floating-point errors give us badmaths with the distance calcs.
-                                    sound.volume = 0;
-                                } else {
-                                    sound.volume *= (maxDistance - distance) / (maxDistance);
-                                }
-                            } else if (soundDef.middleDistance != 0) {
-                                //Middle interpolation.
-                                if (distance < soundDef.middleDistance) {
-                                    sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.middleDistance - soundDef.minDistance) * (soundDef.middleDistanceVolume - soundDef.minDistanceVolume));
-                                } else {
-                                    sound.volume *= (float) (soundDef.middleDistanceVolume + (distance - soundDef.middleDistance) / (soundDef.maxDistance - soundDef.middleDistance) * (soundDef.maxDistanceVolume - soundDef.middleDistanceVolume));
-                                }
                             } else {
-                                //Min/max.
-                                if (distance > soundDef.maxDistance) {
-                                    //Edge-case if we floating-point errors give us badmaths with the distance calcs.
-                                    sound.volume = 0;
-                                } else {
-                                    sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
-                                }
+                                sound.volume *= (maxDistance - distance) / (maxDistance);
                             }
+                        } else if (soundDef.middleDistance != 0) {
+                            //Middle interpolation.
+                            if (distance < soundDef.middleDistance) {
+                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.middleDistance - soundDef.minDistance) * (soundDef.middleDistanceVolume - soundDef.minDistanceVolume));
+                            } else {
+                                sound.volume *= (float) (soundDef.middleDistanceVolume + (distance - soundDef.middleDistance) / (soundDef.maxDistance - soundDef.middleDistance) * (soundDef.maxDistanceVolume - soundDef.middleDistanceVolume));
+                            }
+                        } else {
+                            //Min/max.
+                            if (distance > soundDef.maxDistance) {
+                                //Edge-case if we floating-point errors give us badmaths with the distance calcs.
+                                sound.volume = 0;
+                            } else {
+                                sound.volume *= (float) (soundDef.minDistanceVolume + (distance - soundDef.minDistance) / (soundDef.maxDistance - soundDef.minDistance) * (soundDef.maxDistanceVolume - soundDef.minDistanceVolume));
+                            }
+                        }
 
-                            //Apply conical factor.
-                            sound.volume *= conicalFactor;
+                        //Apply conical factor.
+                        sound.volume *= conicalFactor;
 
-                            //If the player is in an interior seat that isn't on this entity, dampen the sound
-                            //Unless it's a radio, in which case don't do so.
-                            if (entityRiding != null && sound.radio == null && !playerRidingThisEntity && playerRidingClosedTop) {
-                                sound.volume *= 0.5F;
-                            }
+                        //If the player is in an interior seat that isn't on this entity, dampen the sound
+                        //Unless it's a radio, in which case don't do so.
+                        if (entityRiding != null && sound.radio == null && !playerRidingThisEntity && playerRidingClosedTop) {
+                            sound.volume *= 0.5F;
+                        }
 
-                            //Adjust pitch.
-                            SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
-                            boolean definedPitch = false;
-                            if (pitchSwitchbox != null) {
-                                pitchSwitchbox.runSound(partialTicks);
-                                sound.pitch = pitchSwitchbox.value;
-                                definedPitch = pitchSwitchbox.definedValue;
-                            }
-                            if (!definedPitch) {
-                                sound.pitch = 1;
-                            } else if (sound.volume < 0) {
-                                sound.pitch = 0;
-                            }
+                        //Adjust pitch.
+                        SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
+                        boolean definedPitch = false;
+                        if (pitchSwitchbox != null) {
+                            pitchSwitchbox.runSound(partialTicks);
+                            sound.pitch = pitchSwitchbox.value;
+                            definedPitch = pitchSwitchbox.definedValue;
+                        }
+                        if (!definedPitch) {
+                            sound.pitch = 1;
+                        } else if (sound.volume < 0) {
+                            sound.pitch = 0;
                         }
                     }
                 }
