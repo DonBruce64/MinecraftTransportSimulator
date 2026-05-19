@@ -19,10 +19,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -100,8 +97,6 @@ public class GUIOverlay extends AGUIBase {
         super.setStates();
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 
-        //Set gun label text, if we are controlling a gun.
-        gunLabel.visible = false;
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
         aimingCrosshair.vehicleRef = null;
@@ -109,27 +104,17 @@ public class GUIOverlay extends AGUIBase {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
             if (playerGun != null && playerGun.activeGun != null) {
-                gunLabel.visible = true;
-                gunLabel.text = "Gun:" + playerGun.activeGun.cachedItem.getItemName() + " Loaded:" + playerGun.activeGun.getBulletText();
                 activeGunGroup = java.util.Collections.singletonList(playerGun.activeGun);
             } else {
                 AEntityB_Existing entityRiding = player.getEntityRiding();
                 if (entityRiding instanceof PartSeat) {
                     PartSeat seat = (PartSeat) entityRiding;
                     if (seat.canControlGuns) {
-                        gunLabel.visible = true;
-                        gunLabel.text = "Active Gun:";
                         if (seat.activeGunItem != null) {
-                            gunLabel.text += seat.activeGunItem.getItemName();
-                            if (seat.activeGunItem.definition.gun.fireSolo) {
-                                gunLabel.text += " [" + (seat.gunIndex + 1) + "]";
-                            }
                             List<PartGun> gunGroup = seat.gunGroups.get(seat.activeGunItem);
                             if (gunGroup != null && !gunGroup.isEmpty()) {
                                 activeGunGroup = gunGroup;
                             }
-                        } else {
-                            gunLabel.text += "None";
                         }
                     }
                 }
