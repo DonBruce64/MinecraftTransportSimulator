@@ -13,6 +13,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -38,6 +39,7 @@ public class GUIHUD extends AGUIBase {
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
     private final List<GUIComponentInstrument> instruments = new ArrayList<>();
+    private GUIComponentAimReticle aimReticle;
     private GUIComponentLabel healthLabel;
     private Map<Byte, GUIComponentLabel> customKeybindLabels = new HashMap<>();
     private Map<Byte, Set<String>> customKeybindNames = new HashMap<>();
@@ -88,6 +90,10 @@ public class GUIHUD extends AGUIBase {
         } else {
             super.setupComponents();
         }
+
+        //Add mouse flight aim reticle.
+        aimReticle = new GUIComponentAimReticle(screenWidth, screenHeight);
+        addComponent(aimReticle);
 
         //Add labels.
         addComponent(healthLabel = new GUIComponentLabel(screenWidth, 8, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
