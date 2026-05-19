@@ -171,6 +171,8 @@ public class JSONBullet extends AJSONMultiModelProvider {
     public enum BulletType {
         @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
         EXPLOSIVE,
+        @JSONDescription("Identifies the bullet type as a tracer. Used for categorization.")
+        TRACER,
         @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
         INCENDIARY,
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
