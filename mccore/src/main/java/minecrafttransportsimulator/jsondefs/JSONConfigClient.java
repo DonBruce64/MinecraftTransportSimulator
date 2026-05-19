@@ -23,8 +23,8 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> fullHUD_1P = new JSONConfigEntry<>(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
         public JSONConfigEntry<Boolean> fullHUD_3P = new JSONConfigEntry<>(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
 
-        public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
-        public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+        public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<>(true, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+        public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<>(true, "If true, the background textures for the HUD will not be rendered in 3rd-person.");
 
         public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<>(true, "Should the glass on windows be rendered on vehicles?");
         public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
@@ -56,6 +56,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(false, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.");
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems and enables the gun aiming crosshair.");
+        public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 
