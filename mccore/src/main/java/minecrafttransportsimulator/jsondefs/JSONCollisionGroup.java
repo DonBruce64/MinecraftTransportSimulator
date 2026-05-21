@@ -14,6 +14,9 @@ public class JSONCollisionGroup {
     @JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
     public float heatArmorThickness;
 
+    @JSONDescription("If true, armor thickness is calculated from the actual path length through the collision box volume instead of armorThickness.  If false, armorThickness is used and the box length is ignored for armor calculations.")
+    public boolean volumetricArmor;
+
     @JSONDescription("How much blast damage this group absorbs from explosions.  This value reduces blastDamage before distance falloff is applied, and multiple groups between the explosion and target will stack.")
     public float explosionResistance;
 
