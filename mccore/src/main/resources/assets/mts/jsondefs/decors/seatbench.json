@@ -67,18 +67,14 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
-            "offset": 0.0,
             "clampMin": 1.0,
             "clampMax": 1.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "middleDistance": 0.0,
-        "middleDistanceVolume": 0.0,
         "maxDistance": 15.0,
-        "maxDistanceVolume": 0.0,
-        "conicalAngle": 0.0
+        "maxDistanceVolume": 0.0
       },
       {
         "name": "mts:bench/seatbench_loop",
@@ -86,7 +82,6 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
-            "offset": 0.0,
             "clampMin": 1.0,
             "clampMax": 1.0,
             "forwardsDelay": 15,
@@ -96,11 +91,8 @@
         "looping": true,
         "minDistance": 0.0,
         "minDistanceVolume": 0.5,
-        "middleDistance": 0.0,
-        "middleDistanceVolume": 0.0,
         "maxDistance": 20.0,
-        "maxDistanceVolume": 0.0,
-        "conicalAngle": 0.0
+        "maxDistanceVolume": 0.0
       },
       {
         "name": "mts:bench/seatbench_craft0",
@@ -113,18 +105,14 @@
           {
             "animationType": "visibility",
             "variable": "player_crafteditem",
-            "offset": 0.0,
             "clampMin": 1.0,
             "clampMax": 1.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "middleDistance": 0.0,
-        "middleDistanceVolume": 0.0,
         "maxDistance": 20.0,
-        "maxDistanceVolume": 0.0,
-        "conicalAngle": 0.0
+        "maxDistanceVolume": 0.0
       },
       {
         "name": "mts:bench/seatbench_stop",
@@ -132,18 +120,14 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
-            "offset": 0.0,
             "clampMin": 0.0,
             "clampMax": 0.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
-        "middleDistance": 0.0,
-        "middleDistanceVolume": 0.0,
         "maxDistance": 15.0,
-        "maxDistanceVolume": 0.0,
-        "conicalAngle": 0.0
+        "maxDistanceVolume": 0.0
       }
     ],
     "particles":[
@@ -238,8 +222,6 @@
     "name": "Seat & Cargo Bench",
     "materialLists": [
       []
-    ],
-    "radarWidth": 0.0,
-    "radarRange": 0.0
+    ]
   }
 }
