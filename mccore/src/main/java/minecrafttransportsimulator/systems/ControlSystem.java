@@ -503,8 +503,9 @@ public final class ControlSystem {
             return;
         }
 
-        if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.isPressed()) {
-            toggleMouseYoke();
+        if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
+            ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
+            ConfigSystem.saveToDisk();
         }
 
         //Open or close the panel.
