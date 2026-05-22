@@ -26,7 +26,40 @@
     }
   ],
   "rendering": {
-    "lightObjects": [],
+    "lightObjects": [
+    {
+        "objectName": "&light",
+        "isElectric": true,
+        "brightnessAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_interacting",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ],
+        "blendableComponents": []
+      }
+    ],
+     "animatedObjects": [
+     	{
+        "objectName": "saw",
+        "animations": [
+        {
+            "animationType": "inhibitor",
+            "variable": "player_interacting",
+            "clampMin": 0.0,
+            "clampMax": 0.0
+          },
+          {
+            "animationType": "rotation",
+            "variable": "tick",
+            "centerPoint": [0.0625, 0.9375, -0.03125],
+            "axis": [0.0,0.0,50.0]
+          }
+        ]
+      }
+    ],
     "sounds": [
       {
         "name": "mts:bench/seatbench_start",
@@ -34,14 +67,18 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
+            "offset": 0.0,
             "clampMin": 1.0,
             "clampMax": 1.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
+        "middleDistance": 0.0,
+        "middleDistanceVolume": 0.0,
         "maxDistance": 15.0,
-        "maxDistanceVolume": 0.0
+        "maxDistanceVolume": 0.0,
+        "conicalAngle": 0.0
       },
       {
         "name": "mts:bench/seatbench_loop",
@@ -49,17 +86,21 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
-            "forwardsDelay": 15,
-            "reverseDelay": 15,
+            "offset": 0.0,
             "clampMin": 1.0,
-            "clampMax": 1.0
+            "clampMax": 1.0,
+            "forwardsDelay": 15,
+            "reverseDelay": 15
           }
         ],
         "looping": true,
         "minDistance": 0.0,
         "minDistanceVolume": 0.5,
+        "middleDistance": 0.0,
+        "middleDistanceVolume": 0.0,
         "maxDistance": 20.0,
-        "maxDistanceVolume": 0.0
+        "maxDistanceVolume": 0.0,
+        "conicalAngle": 0.0
       },
       {
         "name": "mts:bench/seatbench_craft0",
@@ -72,14 +113,18 @@
           {
             "animationType": "visibility",
             "variable": "player_crafteditem",
+            "offset": 0.0,
             "clampMin": 1.0,
             "clampMax": 1.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
+        "middleDistance": 0.0,
+        "middleDistanceVolume": 0.0,
         "maxDistance": 20.0,
-        "maxDistanceVolume": 0.0
+        "maxDistanceVolume": 0.0,
+        "conicalAngle": 0.0
       },
       {
         "name": "mts:bench/seatbench_stop",
@@ -87,14 +132,104 @@
           {
             "animationType": "visibility",
             "variable": "player_interacting",
+            "offset": 0.0,
             "clampMin": 0.0,
             "clampMax": 0.0
           }
         ],
         "minDistance": 0.0,
         "minDistanceVolume": 1.0,
+        "middleDistance": 0.0,
+        "middleDistanceVolume": 0.0,
         "maxDistance": 15.0,
-        "maxDistanceVolume": 0.0
+        "maxDistanceVolume": 0.0,
+        "conicalAngle": 0.0
+      }
+    ],
+    "particles":[
+      {
+        "type": "generic",
+        "spawningOrientation": "world",
+        "renderingOrientation": "player",
+        "quantity": 3,
+        "duration": 30,
+        "movementDuration": 10,
+        "transparency": 0.5,
+        "toTransparency": 0.001,
+        "fadeInScaleTime": 2,
+        "scale": 1.5,
+        "toScale": 2.5,
+        "ignoreCollision": true,
+        "hitboxSize": 0.1,
+        "textureList": [
+          "mts:textures/particles/big_smoke_0.png",
+          "mts:textures/particles/big_smoke_1.png",
+          "mts:textures/particles/big_smoke_2.png",
+          "mts:textures/particles/big_smoke_3.png",
+          "mts:textures/particles/big_smoke_4.png",
+          "mts:textures/particles/big_smoke_5.png",
+          "mts:textures/particles/big_smoke_6.png",
+          "mts:textures/particles/big_smoke_7.png",
+          "mts:textures/particles/big_smoke_8.png"
+        ],
+        "randomTexture": true,
+        "randomColor": true,
+        "colorList": [
+          "C4C0BB",
+          "B9B4AD",
+          "D2D0CD",
+          "ADA79F",
+          "A39A8D",
+          "99958F",
+          "DDDBD8"
+        ],
+        "pos": [0.0,1.0,0.0],
+        "spreadRandomness": [2.0,1.0,2.0],
+        "initialVelocity": [0.0,0.5,0.0],
+        "movementVelocity": [0.0,0.0001,0.0],
+        "activeAnimations": [
+        {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ]
+      },
+      //wood
+      {
+        "type": "generic",
+        "isBright": true,
+        "spawningOrientation": "facing",
+        "renderingOrientation": "player",
+        "quantity": 10,
+        "duration": 60,
+        "durationRandomness": 10,
+        "transparency": 1.0,
+        "fadeOutScaleTime": 10,
+        "scale": 0.5,
+        "hitboxSize": 0.2,
+        "textureList": [
+          "mts:textures/particles/splinter0.png",
+          "mts:textures/particles/splinter1.png",
+          "mts:textures/particles/splinter2.png",
+          "mts:textures/particles/splinter3.png",
+          "mts:textures/particles/splinter4.png"
+        ],
+        "randomTexture": true,
+        "pos": [0.0,1.0,0.0],
+        "spreadRandomness": [1.0,1.0,1.0],
+        "initialVelocity": [0.0,2.0,0.0],
+        "movementVelocity": [0.0,-0.05,-0.0],
+        "terminalVelocity": [100.0,1.25,100.0],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ]
       }
     ],
     "modelType": "obj"
