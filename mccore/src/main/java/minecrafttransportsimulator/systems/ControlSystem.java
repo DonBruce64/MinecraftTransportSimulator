@@ -53,6 +53,7 @@ public final class ControlSystem {
     private static boolean dismountInputPressedLastCall;
 
     private static EntityInteractResult interactResult = null;
+    private static final Point3D lineOfSightVector = new Point3D();
 
     /**
      * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
@@ -179,7 +180,7 @@ public final class ControlSystem {
         }
         if (leftClickDown || rightClickDown) {
             Point3D startPosition = player.getEyePosition();
-            Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
+            Point3D endPosition = getPlayerLineOfSight(player, 3.5).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
@@ -190,6 +191,10 @@ public final class ControlSystem {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
             interactResult = null;
         }
+    }
+
+    private static Point3D getPlayerLineOfSight(IWrapperPlayer player, double distance) {
+        return MouseFlightController.shouldUseCameraLineOfSight() ? MouseFlightController.getCameraLineOfSight(lineOfSightVector, distance, 1.0D) : player.getLineOfSight(distance);
     }
 
     private static PartSeat getClientVehicleSeat(IWrapperPlayer player) {
