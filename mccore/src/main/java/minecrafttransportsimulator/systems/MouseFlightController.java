@@ -162,6 +162,17 @@ public class MouseFlightController {
     }
 
     /**
+     * Gets the interpolated aim offset relative to the mouse-flight camera, in pitch/yaw degrees.
+     */
+    public static void getInterpolatedAimCameraOffset(Point3D store, double partialTicks) {
+        double interpAimYaw = prevAimYaw + shortestAngleDelta(prevAimYaw, aimYaw) * partialTicks;
+        double interpAimPitch = prevAimPitch + (aimPitch - prevAimPitch) * partialTicks;
+        double interpCamYaw = prevCamYaw + shortestAngleDelta(prevCamYaw, camYaw) * partialTicks;
+        double interpCamPitch = prevCamPitch + (camPitch - prevCamPitch) * partialTicks;
+        store.set(interpAimPitch - interpCamPitch, shortestAngleDelta(interpCamYaw, interpAimYaw), 0);
+    }
+
+    /**
      * Returns the aim yaw angle.
      */
     public static double getAimYaw() {

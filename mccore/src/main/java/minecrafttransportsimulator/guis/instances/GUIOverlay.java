@@ -23,6 +23,7 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -55,6 +56,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentAimReticle aimReticle;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
@@ -75,9 +77,12 @@ public class GUIOverlay extends AGUIBase {
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
         addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
         gunLabel.ignoreGUILightingState = true;
+        addComponent(new GUIComponentAimReticle(screenWidth, screenHeight));
+        aimReticle.ignoreGUILightingState = true;
         // Start crosshair at screen centre; setStates() repositions it every frame.
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
+        aimingCrosshair.ignoreGUILightingState = true;
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
