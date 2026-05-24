@@ -1005,6 +1005,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return new ComputedVariable(this, variable, partialTicks -> InterfaceManager.clientInterface.getClientPlayer().getPosition().subtract(position).getAngles(true).z, false);
             case ("config_simplethrottle"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0, false);
+			case ("config_autostartengines"):
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.autostartEng.value ? 1 : 0, false);
+			case ("config_arcade"):
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.arcadeMode.value ? 1 : 0, false);
+			case ("config_tutorial"):
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.showTutorial.value ? 1 : 0, false);
             case ("config_innerwindows"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0, false);
             default: {

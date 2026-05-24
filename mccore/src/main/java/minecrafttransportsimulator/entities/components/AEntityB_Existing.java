@@ -299,24 +299,24 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     riderCameraPosition.set(riderEyePosition);
 
                     //When mouse flight is active, use the decoupled camera orientation
-                    //for third-person offset so the camera orbits around the aim direction.
-                    RotationMatrix zoomOrientation;
+                    //for third-person camera offset so the camera orbits around the aim direction.
+                    RotationMatrix cameraOffsetOrientation;
                     if (riderIsClient && MouseFlightController.isMouseFlightActive) {
                         MouseFlightController.getInterpolatedCameraOrientation(riderTempMatrix, 0);
-                        zoomOrientation = riderTempMatrix;
+                        cameraOffsetOrientation = riderTempMatrix;
                     } else {
-                        zoomOrientation = rider.getOrientation();
+                        cameraOffsetOrientation = rider.getOrientation();
                     }
 
                     //Adjust eye position to account for zoom settings.
                     int zoomRequired = 4 + zoomLevel;
-                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(zoomOrientation);
+                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(cameraOffsetOrientation);
                     riderEyePosition.add(riderTempPoint);
 
                     //Check if camera should be where eyes are, or somewhere different.
                     int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
                     if (zoomRequired != cameraZoomRequired) {
-                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(zoomOrientation);
+                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraOffsetOrientation);
                         riderCameraPosition.add(riderTempPoint);
                     } else {
                         riderCameraPosition.add(riderTempPoint);
