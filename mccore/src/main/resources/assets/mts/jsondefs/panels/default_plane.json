@@ -227,6 +227,19 @@
 				"height" : 20,
 				"textureStart" : [440, 216, 0],
 				"specialComponent" : "trailer"
+			},
+			{
+				//Helper Text Toggle
+				"pos" : [367, 12, 0],
+				"width" : 20,
+				"height" : 20,
+				"textureStart" : [461, 216, 0],
+				"text": "HELP",
+				"statusVariable" : "hidehelp",
+				"clickAction" : {
+					"variable" : "hidehelp",
+					"action" : "toggle"
+				}
 			}
 		]
 	}
