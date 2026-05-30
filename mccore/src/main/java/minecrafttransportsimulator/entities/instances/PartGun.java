@@ -957,14 +957,10 @@ public class PartGun extends APart {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
                 }
             }
-            if (shouldLockControllerToActiveCamera()) {
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity))) {
                 lockControllerToActiveCamera(controller);
             }
         }
-    }
-
-    private boolean shouldLockControllerToActiveCamera() {
-        return world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity));
     }
 
     private void lockControllerToActiveCamera(IWrapperEntity controller) {
