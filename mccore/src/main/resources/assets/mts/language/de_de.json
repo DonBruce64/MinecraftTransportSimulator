@@ -176,6 +176,8 @@
     "mts.y2kbutton.name": "Y2K-Knopf",
     "death.bullet.null": "%s wurde erschossen",
     "death.bullet.player": "%s wurde von %s erschossen",
+    "death.explosion.null": "%s wurde in die Luft gesprengt",
+    "death.explosion.player": "%s wurde von %s in die Luft gesprengt",
     "death.propeller.null": "%s wurde von einem Propeller zerstückelt",
     "death.propeller.player": "%s wurde von %s's Propeller zu Hackfleisch verarbeitet",
     "death.jet_intake.null": "%s wurde in ein Düsentriebwerk gesaugt",

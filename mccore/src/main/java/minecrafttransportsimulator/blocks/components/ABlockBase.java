@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.components;
 
 import java.util.HashMap;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;

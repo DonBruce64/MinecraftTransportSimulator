@@ -342,10 +342,10 @@ public class InterfaceClient implements IInterfaceClient {
                     world.tickAll(true);
                     
                     //Complain about Entity Culling mod at 10 second mark.
-                    if(ConfigSystem.settings.general.performModCompatFunctions.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                    if(ConfigSystem.settings.general.performModCompatFunctions.value && ConfigSystem.client.controlSettings.cullingWarn.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
                     	if(ticksToCullingWarning > 0) {
                     		if(--ticksToCullingWarning == 0) {
-                    			player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                    			player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
                     		}
                     	}
                     }
