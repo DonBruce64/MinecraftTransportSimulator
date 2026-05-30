@@ -93,11 +93,12 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> creativePlayerDamage = new JSONConfigEntry<>(false, "If true, damage from vehicles and guns will be applied to creative players.  Not sure why you'd want this, but it's here.");
         public JSONConfigEntry<Boolean> wheelBreakage = new JSONConfigEntry<>(true, "Whether or not wheels can be broken (go flat).");
         public JSONConfigEntry<Boolean> wheelDamageIgnoreVelocity = new JSONConfigEntry<>(false, "Whether or not velocity is ignored when calculating wheel damage.");
-        public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(true, "Whether or not non-IV things can damage vehicles.  This is normally false, as external damage is a hassle for most people, but can be true if you want other mod's guns to be able to attack vehicles in addition to IV's.");
+        public JSONConfigEntry<Boolean> allowExternalDamage = new JSONConfigEntry<>(true, "Whether or not non-IV things can damage vehicles, such as other mod's guns / tanks etc. Extends to any damage type, so it can be disabled if other mods weapons kill vehicles too quickly.");
         public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a propeller.");
         public JSONConfigEntry<Double> jetDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by a jet engine.");
         public JSONConfigEntry<Double> wheelDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by wheels on vehicles.");
-        public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by crashes.");
+        public JSONConfigEntry<Double> blockCrashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by vehicles when they crash into blocks and use crash speed thresholds.");
+        public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by players when their vehicle explodes in a crash.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
         public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");

@@ -346,8 +346,8 @@ public class InterfaceClient implements IInterfaceClient {
                     if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                     	if(ticksToCullingWarning > 0) {
                     		if(--ticksToCullingWarning == 0) {
-                                if (InterfaceManager.coreInterface.isModPresent("entityculling")) {
-                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                                if (ConfigSystem.client.controlSettings.showEntityCullingWarning.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
                                 }
                                 if (InterfaceManager.coreInterface.isModPresent("modernfix")) {
                                     player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT MODERNFIX MOD IS PRESENT.  IF DYNAMIC RESOURCES IS SET TO TRUE IV ITEMS WILL NOT RENDER PROPERLY.");
@@ -395,6 +395,3 @@ public class InterfaceClient implements IInterfaceClient {
                     }
                 }
             }
-        }
-    }
-}

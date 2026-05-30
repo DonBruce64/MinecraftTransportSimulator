@@ -1074,7 +1074,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                             if (hitBlock) {
                                 double scaledVelocity = velocity * 20;
                                 if (crashDebounce == 0 && scaledVelocity > definition.motorized.crashSpeedMin) {
-                                    double damage = definition.general.health * (scaledVelocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin);
+                                    double damage = definition.general.health * (scaledVelocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin) * ConfigSystem.settings.damage.blockCrashDamageFactor.value;
                                     if (damage >= definition.general.health) {
                                         if (scaledVelocity > definition.motorized.crashSpeedDestroyed) {
                                             destroyThisHit = true;
@@ -1082,7 +1082,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                                             attack(new Damage(definition.general.health, null, null, null, null));
                                         }
                                     } else {
-                                        attack(new Damage(definition.general.health * (scaledVelocity - definition.motorized.crashSpeedMin) / (definition.motorized.crashSpeedMax - definition.motorized.crashSpeedMin), null, null, null, null));
+                                        attack(new Damage(damage, null, null, null, null));
                                     }
                                     //Need the debounce so we don't continously apply crash damage during a crash.
                                     crashDebounce = 60;
