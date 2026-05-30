@@ -311,7 +311,7 @@ public final class LegacyCompatSystem {
                     performParticleLegacyCompats(particleDef);
                 }
             }
-            
+
             //Convert old hitboxes.
             if(definition instanceof AJSONInteractableEntity) {
                 AJSONInteractableEntity interactable = (AJSONInteractableEntity) provider;
@@ -737,7 +737,7 @@ public final class LegacyCompatSystem {
             definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
             definition.general.useVehicleTexture = false;
         }
-        
+
         //Move vehicle texture to new section.
         if (definition.generic.useVehicleTexture) {
             for (JSONSubDefinition subDef : definition.definitions) {

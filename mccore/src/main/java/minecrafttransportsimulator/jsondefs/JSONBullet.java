@@ -35,8 +35,8 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("The maximum distance, in meters (blocks), that fragments can travel from the point of armor penetration.")
         public float fragRange;
 
-        @JSONDescription("The probability (0.0 to 1.0) that a fragment will hit each individual component or rider within the fragmentation cone.  If 1.0, every target in the cone is guaranteed to be hit.")
-        public float fragHitProbability;
+        @JSONDescription("The number of fragments to cast from the point of armor penetration.  If 0, no fragments will be cast.")
+        public int fragCount;
 
         @JSONDescription("The damage each fragment deals when it hits an internal component or rider.")
         public float fragDamage;
@@ -201,5 +201,5 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Default method. Tracks whatever target the gun was locked on to prior to firing.")
         ACTIVE
     }
-    
+
 }

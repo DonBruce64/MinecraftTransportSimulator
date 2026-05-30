@@ -336,7 +336,7 @@ public class InterfaceClient implements IInterfaceClient {
                             }
                         }
                     }
-                    
+
                     //Need to update world brightness since sky darken isn't calculated normally on clients.
                     ((WrapperWorld) world).world.updateSkyBrightness();
 
@@ -344,54 +344,54 @@ public class InterfaceClient implements IInterfaceClient {
 
                     //Complain about compats at 10 second mark.
                     if (ConfigSystem.settings.general.performModCompatFunctions.value) {
-                    	if(ticksToCullingWarning > 0) {
-                    		if(--ticksToCullingWarning == 0) {
-                                if (ConfigSystem.client.controlSettings.showEntityCullingWarning.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+	                    if(ticksToCullingWarning > 0) {
+		                    if(--ticksToCullingWarning == 0) {
+                                if (ConfigSystem.client.controlSettings.cullingWarn.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
                                     player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
                                 }
                                 if (InterfaceManager.coreInterface.isModPresent("modernfix")) {
                                     player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT MODERNFIX MOD IS PRESENT.  IF DYNAMIC RESOURCES IS SET TO TRUE IV ITEMS WILL NOT RENDER PROPERLY.");
                                 }
-                    		}
-                    	}
+		                    }
+	                    }
                     }
                 } else {
                     world.tickAll(false);
-                    
+
                     //Handle camera requests.
                     if(cameraModeRequest != null) {
-                    	switch(cameraModeRequest) {
-	                    	case FIRST_PERSON:{
-	                    		Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON:{
-	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON_INVERTED:{
-	                    		Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
-	                    		break;
-	                    	}
-                    	}
-                    	cameraModeRequest = null;
+	                    switch(cameraModeRequest) {
+		                    case FIRST_PERSON:{
+			                    Minecraft.getInstance().options.setCameraType(PointOfView.FIRST_PERSON);
+			                    break;
+		                    }
+		                    case THIRD_PERSON:{
+			                    Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_BACK);
+			                    break;
+		                    }
+		                    case THIRD_PERSON_INVERTED:{
+			                    Minecraft.getInstance().options.setCameraType(PointOfView.THIRD_PERSON_FRONT);
+			                    break;
+		                    }
+	                    }
+	                    cameraModeRequest = null;
                     }
 
                     //Update camera state, since this can change depending on tick if we check during renders.
                     PointOfView cameraModeEnum  = Minecraft.getInstance().options.getCameraType();
                     switch(cameraModeEnum) {
-                    	case FIRST_PERSON:{
-                    		actualCameraMode = CameraMode.FIRST_PERSON;
-                    		break;
-                    	}
-                    	case THIRD_PERSON_BACK:{
-                    		actualCameraMode = CameraMode.THIRD_PERSON;
-                    		break;
-                    	}
-                    	case THIRD_PERSON_FRONT:{
-                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
-                    		break;
-                    	}
+	                    case FIRST_PERSON:{
+		                    actualCameraMode = CameraMode.FIRST_PERSON;
+		                    break;
+	                    }
+	                    case THIRD_PERSON_BACK:{
+		                    actualCameraMode = CameraMode.THIRD_PERSON;
+		                    break;
+	                    }
+	                    case THIRD_PERSON_FRONT:{
+		                    actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+		                    break;
+	                    }
                     }
                 }
             }

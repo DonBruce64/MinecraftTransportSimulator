@@ -186,7 +186,7 @@ public class InterfaceRender implements IInterfaceRender {
     public void renderItemModel(GUIComponentItem component) {
         stacksToRender.add(component);
     }
-    
+
     @Override
     public void renderVertices(RenderableData data, boolean changedSinceLastRender) {
         matrixStack.pushPose();
@@ -233,10 +233,10 @@ public class InterfaceRender implements IInterfaceRender {
             String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
-            	//Get the render type and data buffer for this entity.
+	            //Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.TRIANGLES, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 BufferData bufferData = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
-            
+
                 //Reset buffer if it's not ready.
                 if (changedSinceLastRender) {
                     bufferData.builder.clear();
@@ -261,7 +261,7 @@ public class InterfaceRender implements IInterfaceRender {
                     bufferData.buffer.upload(bufferData.builder);
                     data.vertexObject.vertices.rewind();
                 }
-            
+
                 //Add this buffer to the list to render later.
                 List<RenderData> renders = queuedRenders.get(renderType);
                 if (renders == null) {
@@ -284,7 +284,7 @@ public class InterfaceRender implements IInterfaceRender {
                     float posX = data.vertexObject.vertices.get();
                     float posY = data.vertexObject.vertices.get();
                     float posZ = data.vertexObject.vertices.get();
-                
+
                     //Add the vertex.  Yes, we have to multiply this here on the CPU.  Yes, it's retarded because the GPU should be doing the matrix math.
                     //Blaze3d my ass, this is SLOWER than DisplayLists!
                     buffer.vertex(stackEntry.pose(), posX, posY, posZ);
@@ -457,16 +457,16 @@ public class InterfaceRender implements IInterfaceRender {
     @Override
     public void deleteVertices(RenderableData data) {
         if (data.vertexObject.cacheVertices) {
-	    	//Add to removed render list, we should only remove renders AFTER they are rendered.
-	    	//This ensures they are un-bound, if the were bound prior.
+		    //Add to removed render list, we should only remove renders AFTER they are rendered.
+		    //This ensures they are un-bound, if the were bound prior.
             //Make sure we actually bound a buffer; just because the main system asks for a bound buffer,
-    	    //doesn't mean we actually can give it one.  GUI models are one such case, as they don't work right
+	        //doesn't mean we actually can give it one.  GUI models are one such case, as they don't work right
             //with bound buffers due to matrix differences.
             BufferData buffer = buffers.remove(data);
             if (buffer != null) {
                 removedRenders.add(buffer);
             }
-    	}
+	    }
     }
 
     @Override
@@ -576,7 +576,7 @@ public class InterfaceRender implements IInterfaceRender {
         //Render GUIs, re-creating their components if needed.
         //Set Y-axis to inverted to have correct orientation.
         matrixStack.scale(1.0F, -1.0F, 1.0F);
-        
+
         //Render main pass, then blended pass.
         int displayGUIIndex = 0;
         for (AGUIBase gui : AGUIBase.activeGUIs) {
@@ -602,7 +602,7 @@ public class InterfaceRender implements IInterfaceRender {
             guiBuffer.endBatch();
             //renderBuffers();
             RenderSystem.disableBlend();
-        
+
             //Render all stacks.  These have to be in the standard GUI reference frame or they won't render.
             matrixStack.scale(1.0F, -1.0F, 1.0F);
 
@@ -630,7 +630,7 @@ public class InterfaceRender implements IInterfaceRender {
                 }
             }
             stacksToRender.clear();
-        
+
             matrixStack.popPose();
         }
         matrixStack.popPose();
@@ -659,7 +659,7 @@ public class InterfaceRender implements IInterfaceRender {
         matrixConvertArray[15] = (float) transform.m33;
         return new Matrix4f(matrixConvertArray);
     }
-    
+
 
     /** Blank render class used to bypass rendering for all other builders.**/
     private static class BlankRender<T extends ABuilderEntityBase> extends EntityRenderer<T> {

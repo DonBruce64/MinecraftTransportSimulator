@@ -20,6 +20,7 @@ import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
@@ -227,11 +228,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 IWrapperEntity partRider = currentPart.rider;
                 currentPart.entityOn.removePart(currentPart, true, true);
-                
+
                 //Create placed part and align to part location.
                 IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
                 EntityPlacedPart entity = new EntityPlacedPart(world, null, placerData);
-                
+
                 //Align placed part to world grid.
                 entity.position.set(currentPart.position);
                 entity.position.x = Math.floor(entity.position.x) + 0.5;
@@ -239,11 +240,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 entity.position.z = Math.floor(entity.position.z) + 0.5;
                 entity.orientation.set(currentPart.orientation);
                 entity.orientation.setToAngles(new Point3D(0, Math.round((entity.orientation.convertToAngles().y + 360) / 90) * 90 % 360, 0));
-                
+
                 //Set priors to prevent funny movement.
                 entity.prevPosition.set(entity.position);
                 entity.prevOrientation.set(entity.orientation);
-                
+
                 //Spawn into world and add part to placed part entity.
                 entity.world.spawnEntity(entity);
                 entity.addPartsPostAddition(null, placerData);//Do this because some classes might do things in sub-methods.
@@ -372,10 +373,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
                         }
                         if (bulletIsHeat) {
                             bullet.displayDebugMessage("HEAT FAILED TO PENETRATE ARMOR. MAX PEN: " + (int) penetrationPotential);
@@ -386,76 +387,86 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
 
                     //If the bullet has FRAG type and penetrated armor, deal fragmentation damage to internals.
-                    if (bullet.definition.bullet.types.contains(BulletType.FRAG) && bullet.definition.bullet.fragDamage > 0) {
-                        int fragPartsHit = 0;
+                    if (bullet.definition.bullet.types.contains(BulletType.FRAG) && bullet.definition.bullet.fragDamage > 0 && bullet.definition.bullet.fragCount > 0) {
+                        int fragBoxesHit = 0;
                         int fragEntitiesHit = 0;
+                        int fragCount = bullet.definition.bullet.fragCount;
                         float coneAngle = bullet.definition.bullet.fragConeAngle > 0 ? bullet.definition.bullet.fragConeAngle : 45.0f;
-                        float hitProbability = bullet.definition.bullet.fragHitProbability > 0 ? bullet.definition.bullet.fragHitProbability : 0.5f;
                         float fragDmg = bullet.definition.bullet.fragDamage;
-                        double coneAngleRad = Math.toRadians(coneAngle / 2.0);
+                        double coneAngleRad = Math.min(Math.PI, Math.toRadians(coneAngle / 2.0));
                         double coneRange = bullet.definition.bullet.fragRange > 0 ? bullet.definition.bullet.fragRange : bullet.definition.bullet.diameter / 10.0;
+                        Point3D fragStart = hitEntry.position.copy().addScaled(bullet.motion.copy().normalize(), 0.001D);
+                        RotationMatrix fragOrientation = new RotationMatrix().setToVector(bullet.motion, true);
 
-                        //Check all parts on this entity for fragmentation hits within the cone.
-                        for (APart part : allParts) {
-                            double distToPart = bullet.position.distanceTo(part.position);
-                            if (distToPart <= coneRange) {
-                                Point3D toPartVector = part.position.copy().subtract(bullet.position);
-                                double toPartLen = toPartVector.length();
-                                if (toPartLen > 0) {
-                                    double angleToPart = Math.acos(toPartVector.dotProduct(bullet.motion, false) / (toPartLen * bullet.motion.length()));
-                                    if (angleToPart <= coneAngleRad) {
-                                        if (hitProbability >= 1.0f || Math.random() <= hitProbability) {
-                                            fragPartsHit++;
-                                            Damage fragDamage = new Damage(fragDmg, part.boundingBox, bullet.gun, bullet.gun.lastController, null);
-                                            fragDamage.ignoreCooldown = true;
-                                            if (world.isClient()) {
-                                                InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, part, fragDamage));
-                                            } else {
-                                                EntityBullet.performEntityHitLogic(part, fragDamage);
-                                            }
+                        for (int i = 0; i < fragCount; ++i) {
+                            double cosTheta = 1D - Math.random() * (1D - Math.cos(coneAngleRad));
+                            double sinTheta = Math.sqrt(1D - cosTheta * cosTheta);
+                            double phi = Math.random() * 2D * Math.PI;
+                            Point3D fragVector = new Point3D(sinTheta * Math.cos(phi), sinTheta * Math.sin(phi), cosTheta).rotate(fragOrientation).scale(coneRange);
+                            Point3D fragEnd = fragStart.copy().add(fragVector);
+                            BoundingBox fragMovementBounds = new BoundingBox(fragStart, fragEnd);
+                            BoundingBoxHitResult fragBoxHit = null;
+
+                            Collection<BoundingBoxHitResult> fragHitBoxes = getHitBoxes(fragStart, fragEnd, fragMovementBounds, true);
+                            if (fragHitBoxes != null) {
+                                for (BoundingBoxHitResult fragHitEntry : fragHitBoxes) {
+                                    if (fragHitEntry.box != hitEntry.box && fragHitEntry.box.groupDef != hitEntry.box.groupDef) {
+                                        fragBoxHit = fragHitEntry;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            IWrapperEntity fragEntityHit = null;
+                            BoundingBox fragEntityBox = null;
+                            Point3D fragEntityHitPosition = null;
+                            for (APart part : allParts) {
+                                if (part.rider != null) {
+                                    BoundingBox riderBounds = part.rider.getBounds();
+                                    if (riderBounds.intersects(fragMovementBounds)) {
+                                        BoundingBoxHitResult riderHit = riderBounds.getIntersection(fragStart, fragEnd);
+                                        if (riderHit != null && (fragEntityHitPosition == null || fragStart.isFirstCloserThanSecond(riderHit.position, fragEntityHitPosition))) {
+                                            fragEntityHit = part.rider;
+                                            fragEntityBox = riderBounds;
+                                            fragEntityHitPosition = riderHit.position;
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        //Also check riders on all parts for fragmentation damage.
-                        for (APart part : allParts) {
-                            if (part.rider != null) {
-                                IWrapperEntity partRider = part.rider;
-                                double distToRider = bullet.position.distanceTo(partRider.getPosition());
-                                if (distToRider <= coneRange) {
-                                    Point3D toRiderVector = partRider.getPosition().copy().subtract(bullet.position);
-                                    double toRiderLen = toRiderVector.length();
-                                    if (toRiderLen > 0) {
-                                        double angleToRider = Math.acos(toRiderVector.dotProduct(bullet.motion, false) / (toRiderLen * bullet.motion.length()));
-                                        if (angleToRider <= coneAngleRad) {
-                                            if (hitProbability >= 1.0f || Math.random() <= hitProbability) {
-                                                fragEntitiesHit++;
-                                                Damage fragDamage = new Damage(fragDmg, part.boundingBox, bullet.gun, bullet.gun.lastController, null);
-                                                fragDamage.ignoreCooldown = true;
-                                                if (world.isClient()) {
-                                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(partRider, fragDamage));
-                                                } else {
-                                                    EntityBullet.performExternalEntityHitLogic(partRider, fragDamage);
-                                                }
-                                            }
-                                        }
-                                    }
+                            if (fragBoxHit != null && (fragEntityHitPosition == null || fragStart.isFirstCloserThanSecond(fragBoxHit.position, fragEntityHitPosition))) {
+                                APart fragHitPart = getPartWithBox(fragBoxHit.box);
+                                AEntityF_Multipart<?> fragHitEntity = fragHitPart != null ? fragHitPart : this;
+                                Damage fragDamage = new Damage(fragDmg, fragBoxHit.box, bullet.gun, bullet.gun.lastController, null);
+                                fragDamage.ignoreCooldown = true;
+                                if (world.isClient()) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, fragHitEntity, fragDamage));
+                                } else {
+                                    EntityBullet.performEntityHitLogic(fragHitEntity, fragDamage);
                                 }
+                                ++fragBoxesHit;
+                            } else if (fragEntityHit != null) {
+                                Damage fragDamage = new Damage(fragDmg, fragEntityBox, bullet.gun, bullet.gun.lastController, null);
+                                fragDamage.ignoreCooldown = true;
+                                if (world.isClient()) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(fragEntityHit, fragDamage));
+                                } else {
+                                    EntityBullet.performExternalEntityHitLogic(fragEntityHit, fragDamage);
+                                }
+                                ++fragEntitiesHit;
                             }
                         }
-                        bullet.displayDebugMessage("FRAG HIT " + fragPartsHit + " PARTS AND " + fragEntitiesHit + " ENTITIES");
+                        bullet.displayDebugMessage("FRAG HIT " + fragBoxesHit + " BOXES AND " + fragEntitiesHit + " ENTITIES");
                     }
 
                     //HEAT shells detonate on armor contact and do not continue flying.
                     if (bulletIsHeat) {
                         bullet.displayDebugMessage("HEAT DETONATED ON ARMOR.");
                         if (world.isClient()) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
                         }
                         return EntityBullet.HitType.ARMOR;
                     }
@@ -489,14 +500,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, hitEntity, damage));
                         if (removeAfterDamage) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.VEHICLE));
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE));
                             bullet.waitingOnActionPacket = true;
                             return EntityBullet.HitType.VEHICLE;
                         }
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet.position, hitEntry.side, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.VEHICLE);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }
@@ -796,7 +807,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         cameraEntities.clear();
 
         parts.forEach(APart::updatePartList);
-        
+
         //Clear computed variables since we changed parts and functions likely changed.
         resetAllVariables();
     }
@@ -827,20 +838,20 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * passed-in definition is placed on this entity, not when it's being loaded from saved data.
      */
     public void addDefaultPart(String partName, int partSlot, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
-    	//Don't even try if the partName is an empty string
-    	if (!partName.isEmpty()) {
+	    //Don't even try if the partName is an empty string
+	    if (!partName.isEmpty()) {
 	        try {
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
                     addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false, true);
 	            } catch (NullPointerException e) {
-	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+		            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 	            }
 	        } catch (IndexOutOfBoundsException e) {
-	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+		        playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
 	        }
-    	}
+	    }
     }
 
     /**
