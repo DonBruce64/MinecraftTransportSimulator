@@ -96,6 +96,92 @@
         "maxDistanceVolume": 0.0
       }
     ],
+    "particles":[
+      {
+        "type": "generic",
+        "spawningOrientation": "world",
+        "renderingOrientation": "player",
+        "quantity": 3,
+        "duration": 30,
+        "movementDuration": 10,
+        "transparency": 0.5,
+        "toTransparency": 0.001,
+        "fadeInScaleTime": 2,
+        "scale": 1.5,
+        "toScale": 2.5,
+        "ignoreCollision": true,
+        "hitboxSize": 0.1,
+        "textureList": [
+          "mts:textures/particles/big_smoke_0.png",
+          "mts:textures/particles/big_smoke_1.png",
+          "mts:textures/particles/big_smoke_2.png",
+          "mts:textures/particles/big_smoke_3.png",
+          "mts:textures/particles/big_smoke_4.png",
+          "mts:textures/particles/big_smoke_5.png",
+          "mts:textures/particles/big_smoke_6.png",
+          "mts:textures/particles/big_smoke_7.png",
+          "mts:textures/particles/big_smoke_8.png"
+        ],
+        "randomTexture": true,
+        "randomColor": true,
+        "colorList": [
+          "C4C0BB",
+          "B9B4AD",
+          "D2D0CD",
+          "ADA79F",
+          "A39A8D",
+          "99958F",
+          "DDDBD8"
+        ],
+        "pos": [0.0,1.0,0.0],
+        "spreadRandomness": [2.0,1.0,2.0],
+        "initialVelocity": [0.0,0.5,0.0],
+        "movementVelocity": [0.0,0.0001,0.0],
+        "activeAnimations": [
+        {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ]
+      },
+      //spark
+      {
+        "type": "generic",
+        "isBright": true,
+        "spawningOrientation": "facing",
+        "renderingOrientation": "player",
+        "quantity": 10,
+        "duration": 40,
+        "durationRandomness": 10,
+        "transparency": 1.0,
+        "fadeOutScaleTime": 10,
+        "scale": 0.5,
+        "hitboxSize": 0.2,
+        "textureList": [
+          "mts:textures/particles/spark0.png",
+          "mts:textures/particles/spark1.png",
+          "mts:textures/particles/spark2.png",
+          "mts:textures/particles/spark3.png",
+          "mts:textures/particles/spark4.png"
+        ],
+        "randomTexture": true,
+        "pos": [-0.25,0.7,0.0],
+        "spreadRandomness": [1.0,2.0,1.0],
+        "initialVelocity": [0.0,3.0,0.0],
+        "movementVelocity": [0.0,-0.04,-0.0],
+        "terminalVelocity": [100.0,1.25,100.0],
+        "activeAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "player_crafteditem",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ]
+      }
+    ],
     "modelType": "obj"
   },
   "general": {
