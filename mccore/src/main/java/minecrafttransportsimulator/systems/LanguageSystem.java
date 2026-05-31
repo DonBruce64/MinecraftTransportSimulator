@@ -375,8 +375,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");
     public static final LanguageEntry INTERACT_VEHICLE_NOFUEL = new LanguageEntry("interact.vehicle.nofuel", "There is no fuel in this vehicle.  The engine cannot start!");
     public static final LanguageEntry INTERACT_VEHICLE_DISMOUNTCONFIRM = new LanguageEntry("interact.vehicle.dismountconfirm", "Press Shift again to dismount");
-    public static final LanguageEntry INTERACT_MOUSEYOKE_ENABLED = new LanguageEntry("interact.mouseyoke.enabled", "Arcade Mode enabled");
-    public static final LanguageEntry INTERACT_MOUSEYOKE_DISABLED = new LanguageEntry("interact.mouseyoke.disabled", "Arcade Mode disabled");
+    public static final LanguageEntry INTERACT_ARCADEMODE_ENABLED = new LanguageEntry("interact.arcademode.enabled", "Arcade Mode enabled");
+    public static final LanguageEntry INTERACT_ARCADEMODE_DISABLED = new LanguageEntry("interact.arcademode.disabled", "Arcade Mode disabled");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
