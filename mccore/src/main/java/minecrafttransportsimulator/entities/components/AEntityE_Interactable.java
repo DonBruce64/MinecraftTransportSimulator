@@ -414,6 +414,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(damageVar, damage.amount, 0, definition.general.health));
                 }
                 damageVar.setTo(currentDamage, false);
+                outOfHealth = currentDamage == definition.general.health && definition.general.health != 0;
             }
         }
     }

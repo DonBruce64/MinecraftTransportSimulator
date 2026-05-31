@@ -195,6 +195,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         if (isActive && internalActiveSwitchbox != null) {
             isActive = internalActiveSwitchbox.runSwitchbox(0, false);
         }
+        if (outOfHealth) {
+            isActive = false;
+        }
 
         isActiveVar.setActive(isActive, false);
         if (!isActiveVar.isActive && rider != null) {
@@ -337,9 +340,16 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 //Need to re-create damage object to use on entity.  Use null for box since we want to hurt the core entity.
                 masterEntity.attack(new Damage(damage, definition.generic.forwardsDamageMultiplier, null));
             }
-            if (outOfHealth && definition.generic.destroyable) {
-                destroy(damage.box);
-                world.spawnExplosion(position, 0F, false, false);
+            if (outOfHealth) {
+                if (definition.generic.destroyable) {
+                    destroy(damage.box);
+                    world.spawnExplosion(position, 0F, false, false);
+                } else {
+                    isActiveVar.setActive(false, false);
+                    if (rider != null) {
+                        removeRider();
+                    }
+                }
             }
         }
     }
