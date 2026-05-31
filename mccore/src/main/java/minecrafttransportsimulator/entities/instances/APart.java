@@ -89,6 +89,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final RotationMatrix zeroReferenceOrientation;
     public final RotationMatrix prevZeroReferenceOrientation;
     public final Point3D externalAnglesRotated = new Point3D();
+    private final Point3D scaledHitboxOffset = new Point3D();
     private final AnimationSwitchbox placementActiveSwitchbox;
     private final AnimationSwitchbox internalActiveSwitchbox;
     private final AnimationSwitchbox placementMovementSwitchbox;
@@ -96,6 +97,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, AItemPart item, IWrapperNBT data) {
         super(entityOn.world, placingPlayer, item, data);
+        this.placementDefinition = placementDefinition;
+        this.placementSlot = entityOn.definition.parts.indexOf(placementDefinition);
+
         //Init locals.
         this.localOffset = placementDefinition.pos.copy();
         this.localOrientation = new RotationMatrix();
@@ -126,6 +130,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             scale.multiply(placementDefinition.partScale);
         }
         prevScale.set(scale);
+        updatePartBoundingBoxCenter();
 
         //Set switchbox animation properties.
         //Placement movement needs to take into account applyAfter animations.
@@ -151,8 +156,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.masterEntity = parentEntity;
         this.vehicleOn = parentEntity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) parentEntity : null;
         this.partOn = entityOn instanceof APart ? (APart) entityOn : null;
-        this.placementDefinition = placementDefinition;
-        this.placementSlot = entityOn.definition.parts.indexOf(placementDefinition);
 
         this.isMoveable = placementMovementSwitchbox != null || internalMovementSwitchbox != null;
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
@@ -278,9 +281,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //Update bounding box, as scale changes width/height.
-        boundingBox.widthRadius = getWidth() / 2D;
-        boundingBox.heightRadius = getHeight() / 2D;
-        boundingBox.depthRadius = getWidth() / 2D;
+        updatePartBoundingBox();
         world.endProfiling();
         world.endProfiling();
     }
@@ -377,8 +378,27 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
+    public boolean shouldLinkBoundsToPosition() {
+        return false;
+    }
+
+    @Override
     public boolean canBeClicked() {
         return entityOn.isVariableListTrue(placementDefinition.interactableVariables) && entityOn.canBeClicked();
+    }
+
+    private void updatePartBoundingBoxCenter() {
+        boundingBox.globalCenter.set(position);
+        if (placementDefinition.hitboxOffset != null) {
+            boundingBox.globalCenter.add(scaledHitboxOffset.set(placementDefinition.hitboxOffset).multiply(scale).rotate(orientation));
+        }
+    }
+
+    private void updatePartBoundingBox() {
+        updatePartBoundingBoxCenter();
+        boundingBox.widthRadius = getWidth() / 2D;
+        boundingBox.heightRadius = getHeight() / 2D;
+        boundingBox.depthRadius = getWidth() / 2D;
     }
 
     /**

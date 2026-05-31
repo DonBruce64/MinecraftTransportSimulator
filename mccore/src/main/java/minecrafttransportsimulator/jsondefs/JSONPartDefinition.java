@@ -100,6 +100,9 @@ public class JSONPartDefinition {
     @JSONDescription("Like slotWidth, but height.")
     public float slotHeight;
 
+    @JSONDescription("The offset for where the installed part's generic interaction hitbox will exist relative to the part model in this slot.  May be left out if no offset is desired.")
+    public Point3D hitboxOffset;
+
     @JSONDescription("If set, this will cause treads hanging along the top rollers to droop.  The amount they droop is defined by this constant, with higher values equating to less droop.  Note that if you want to use this parameter, it is recommended to keep your idler rollers at about the same spacing from one another, as it is possible to have too much droop on one set and not enough on another.  Adjust to suit your vehicle.")
     public float treadDroopConstant;
 
