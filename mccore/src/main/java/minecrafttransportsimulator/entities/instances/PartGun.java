@@ -14,6 +14,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -67,9 +68,10 @@ public class PartGun extends APart {
     private final IWrapperPlayer holdingPlayer;
 
     //Variables that can be modified
-    private final ComputedVariable muzzleVelocityVar;
+    public final ComputedVariable muzzleVelocityVar;
     private final ComputedVariable fireDelayVar;
     private final ComputedVariable bulletSpreadFactorVar;
+    public final ComputedVariable bulletDamageFactorVar;
     private final ComputedVariable knockbackVar;
     private final ComputedVariable pitchRecoilVar;
     private final ComputedVariable pitchRecoveryVar;
@@ -279,6 +281,7 @@ public class PartGun extends APart {
         addVariable(this.muzzleVelocityVar = new ComputedVariable(this, "muzzleVelocity"));
         addVariable(this.fireDelayVar = new ComputedVariable(this, "fireDelay"));
         addVariable(this.bulletSpreadFactorVar = new ComputedVariable(this, "bulletSpreadFactor"));
+        addVariable(this.bulletDamageFactorVar = new ComputedVariable(this, "bulletDamageFactor"));
         addVariable(this.knockbackVar = new ComputedVariable(this, "knockback"));
         addVariable(this.pitchRecoilVar = new ComputedVariable(this, "pitchRecoil"));
         addVariable(this.pitchRecoveryVar = new ComputedVariable(this, "pitchRecovery"));
@@ -705,6 +708,7 @@ public class PartGun extends APart {
         muzzleVelocityVar.setTo(definition.gun.muzzleVelocity, false);
         fireDelayVar.setTo(definition.gun.fireDelay, false);
         bulletSpreadFactorVar.setTo(definition.gun.bulletSpreadFactor, false);
+        bulletDamageFactorVar.setTo(definition.gun.bulletDamageFactor, false);
         knockbackVar.setTo(definition.gun.knockback, false);
         pitchRecoilVar.setTo(definition.gun.pitchRecoil, false);
         pitchRecoveryVar.setTo(definition.gun.pitchRecovery, false);

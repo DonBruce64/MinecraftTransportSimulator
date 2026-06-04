@@ -451,6 +451,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much spread the bullet will have when fired.  0 is no spread, higher values have higher spread.")
         public float bulletSpreadFactor;
 
+        @JSONDescription("How much to multiply this bullet's damage. 0 is the bullet's defined amount, -1 will disable bullet damage, and 1 will deal double damage.")
+        public float bulletDamageFactor;
+
         @JSONDescription("The minimum yaw this gun can turn counter-clockwise when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
         public float minYaw;
 
