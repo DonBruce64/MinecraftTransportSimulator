@@ -48,12 +48,22 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
         if (data != null) {
             //Saved entity.  Either on the server or client.
             //Get player via saved NBT.  If the player isn't found, we're not valid.
+            //Use the UUID lookup first as the saved entity position can lag behind fast-moving players.
             UUID playerUUID = data.getUUID("playerUUID");
-            IWrapperPlayer foundPlayer = null;
-            for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
-                if (player.getID().equals(playerUUID)) {
-                    foundPlayer = player;
-                    break;
+            IWrapperEntity foundEntity = world.getExternalEntity(playerUUID);
+            IWrapperPlayer foundPlayer = foundEntity instanceof IWrapperPlayer ? (IWrapperPlayer) foundEntity : null;
+            if (foundPlayer == null && world.isClient() && InterfaceManager.clientInterface != null) {
+                IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+                if (clientPlayer != null && clientPlayer.getID().equals(playerUUID)) {
+                    foundPlayer = clientPlayer;
+                }
+            }
+            if (foundPlayer == null) {
+                for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(position, 16, 16, 16))) {
+                    if (player.getID().equals(playerUUID)) {
+                        foundPlayer = player;
+                        break;
+                    }
                 }
             }
             if (foundPlayer != null) {
