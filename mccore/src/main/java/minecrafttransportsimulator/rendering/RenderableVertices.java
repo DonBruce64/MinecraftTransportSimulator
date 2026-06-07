@@ -293,6 +293,21 @@ public class RenderableVertices {
     }
 
     /**
+     * Returns the number of vertices in this object.
+     */
+    public int getVertexCount() {
+        return vertices.capacity() / FLOATS_PER_VERTEX;
+    }
+
+    /**
+     * Gets the position of the requested vertex without changing the buffer state.
+     */
+    public Point3D getVertexPosition(int vertexIndex, Point3D point) {
+        int offset = vertexIndex * FLOATS_PER_VERTEX;
+        return point.set(vertices.get(offset + VERTEX_BUFFER_X_OFFSET), vertices.get(offset + VERTEX_BUFFER_Y_OFFSET), vertices.get(offset + VERTEX_BUFFER_Z_OFFSET));
+    }
+
+    /**
      * Returns a copy of these vertices in inverted order to create a back-face for this model.
      */
     public RenderableVertices createBackface() {

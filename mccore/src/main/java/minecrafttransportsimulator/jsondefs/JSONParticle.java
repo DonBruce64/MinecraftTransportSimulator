@@ -75,8 +75,8 @@ public class JSONParticle {
     @JSONDescription("The time, in ticks, for the particle to fade out at the end of its lifespan.  Particles fade by multiplying their defined alpha times the relative time-value of this value.  So if fade-out time is 40, and the particle is 20 ticks from death, alpha will be half of what is defined (20/40).")
     public int fadeOutTransparencyTime;
 
-    @JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this is not set.")
-    public float scale;
+    @JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  May be a single number, or an [X, Y, Z] array.  This is the default if this is not set.")
+    public Point3D scale;
 
     @JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
     public float toScale;
@@ -192,14 +192,20 @@ public class JSONParticle {
         ENTITY,
         @JSONDescription("Particle spawns attached to the entity that spawned it, and moves with that entity.")
         ATTACHED,
+        @JSONDescription("Particle spawns attached to the entity that spawned it, and renders with trail-style Z-axis geometry.")
+        ATTACHED_Z,
         @JSONDescription("Particle spawns relative to the particle before it, creating a continuous streak of particles.")
         STREAK,
+        @JSONDescription("Particle spawns as a segment between the previous and current spawn positions, with the horizontal texture axis aligned to the local Z-axis.")
+        TRAIL,
         @JSONDescription("Particle spawns relative to the world and ignores entity orientation.")
         WORLD,
         @JSONDescription("Particle spawns relative to the world and ignores entity orientation, but moves with the entity that spawned it.")
         WORLD_ATTACHED,
         @JSONDescription("Particle spawns relative to to the face orientation where the bullet that spawned it hit.  If this is an air burst that didn't hit anything, or isn't on a bullet, it will not be spawned.")
-        FACING;
+        FACING,
+        @JSONDescription("Particle spawns at the bullet hit position and renders as an overlay on the hit face, ignoring pos and distance.  If this is an air burst that didn't hit anything, or isn't on a bullet, it will not be spawned.")
+        DECAL;
     }
 
     public enum ParticleRenderingOrientation {
@@ -209,6 +215,8 @@ public class JSONParticle {
         PLAYER,
         @JSONDescription("Particle rotates to face the player, but only about the Y-axis.")
         YAXIS,
+        @JSONDescription("Particle rotates to face the player, with particle rotation constrained to the Z-axis relative to the player camera.")
+        ZAXIS,
         @JSONDescription("Particle rotates to face its motion.  Think bullets.")
         MOTION;
     }

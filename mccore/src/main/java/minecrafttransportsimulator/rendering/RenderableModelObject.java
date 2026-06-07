@@ -61,6 +61,7 @@ public class RenderableModelObject {
     private static final float COLOR_OFFSET = RenderableVertices.Z_BUFFER_OFFSET;
     private static final float FLARE_OFFSET = COLOR_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
     private static final float COVER_OFFSET = FLARE_OFFSET + RenderableVertices.Z_BUFFER_OFFSET;
+    private static final double RAYCAST_EPSILON = 1.0E-7D;
 
     private static final Set<String> downloadingTextures = new HashSet<>();
     private static final Set<String> downloadedTextures = new HashSet<>();
@@ -358,6 +359,53 @@ public class RenderableModelObject {
         renderable.destroy();
     }
 
+    /**
+     * Checks this renderable's model geometry for a hit along the passed-in world-space path.
+     * If a closer hit than the passed-in distance is found, the hit position and normal are updated.
+     */
+    public double getModelHit(AEntityD_Definable<?> entity, Point3D pathStart, Point3D pathEnd, Point3D hitPosition, Point3D hitNormal, double closestDistance) {
+        if (!shouldRender(entity, false, 0) || treadPoints != null) {
+            return closestDistance;
+        }
+
+        Point3D rayDirection = pathEnd.copy().subtract(pathStart);
+        double rayLength = rayDirection.length();
+        if (rayLength <= RAYCAST_EPSILON) {
+            return closestDistance;
+        }
+        rayDirection.scale(1D / rayLength);
+
+        Point3D vertex1 = new Point3D();
+        Point3D vertex2 = new Point3D();
+        Point3D vertex3 = new Point3D();
+        Point3D edge1 = new Point3D();
+        Point3D edge2 = new Point3D();
+        Point3D normal = new Point3D();
+        int vertexCount = renderable.vertexObject.getVertexCount();
+        for (int vertexIndex = 0; vertexIndex + 2 < vertexCount; vertexIndex += 3) {
+            getWorldVertex(entity, vertexIndex, vertex1);
+            getWorldVertex(entity, vertexIndex + 1, vertex2);
+            getWorldVertex(entity, vertexIndex + 2, vertex3);
+
+            double hitDistance = getRayTriangleIntersection(pathStart, rayDirection, rayLength, vertex1, vertex2, vertex3);
+            if (hitDistance >= 0 && hitDistance < closestDistance) {
+                edge1.set(vertex2).subtract(vertex1);
+                edge2.set(vertex3).subtract(vertex1);
+                normal.set(edge1.crossProduct(edge2));
+                if (!normal.isZero()) {
+                    normal.normalize();
+                    if (normal.dotProduct(rayDirection, false) > 0) {
+                        normal.invert();
+                    }
+                    closestDistance = hitDistance;
+                    hitPosition.set(pathStart).addScaled(rayDirection, hitDistance);
+                    hitNormal.set(normal);
+                }
+            }
+        }
+        return closestDistance;
+    }
+
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
         //Block windows if we have them disabled.
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
@@ -373,6 +421,51 @@ public class RenderableModelObject {
         }
         //No false conditions, return true.
         return true;
+    }
+
+    private void getWorldVertex(AEntityD_Definable<?> entity, int vertexIndex, Point3D vertex) {
+        renderable.vertexObject.getVertexPosition(vertexIndex, vertex);
+        if (switchbox != null) {
+            vertex.transform(switchbox.netMatrix);
+        }
+        vertex.multiply(entity.scale).rotate(entity.orientation).add(entity.position);
+    }
+
+    private static double getRayTriangleIntersection(Point3D rayStart, Point3D rayDirection, double rayLength, Point3D vertex1, Point3D vertex2, Point3D vertex3) {
+        double edge1X = vertex2.x - vertex1.x;
+        double edge1Y = vertex2.y - vertex1.y;
+        double edge1Z = vertex2.z - vertex1.z;
+        double edge2X = vertex3.x - vertex1.x;
+        double edge2Y = vertex3.y - vertex1.y;
+        double edge2Z = vertex3.z - vertex1.z;
+
+        double hX = rayDirection.y * edge2Z - rayDirection.z * edge2Y;
+        double hY = rayDirection.z * edge2X - rayDirection.x * edge2Z;
+        double hZ = rayDirection.x * edge2Y - rayDirection.y * edge2X;
+        double determinant = edge1X * hX + edge1Y * hY + edge1Z * hZ;
+        if (determinant > -RAYCAST_EPSILON && determinant < RAYCAST_EPSILON) {
+            return -1;
+        }
+
+        double inverseDeterminant = 1D / determinant;
+        double startX = rayStart.x - vertex1.x;
+        double startY = rayStart.y - vertex1.y;
+        double startZ = rayStart.z - vertex1.z;
+        double u = inverseDeterminant * (startX * hX + startY * hY + startZ * hZ);
+        if (u < 0 || u > 1) {
+            return -1;
+        }
+
+        double qX = startY * edge1Z - startZ * edge1Y;
+        double qY = startZ * edge1X - startX * edge1Z;
+        double qZ = startX * edge1Y - startY * edge1X;
+        double v = inverseDeterminant * (rayDirection.x * qX + rayDirection.y * qY + rayDirection.z * qZ);
+        if (v < 0 || u + v > 1) {
+            return -1;
+        }
+
+        double distance = inverseDeterminant * (edge2X * qX + edge2Y * qY + edge2Z * qZ);
+        return distance >= -RAYCAST_EPSILON && distance <= rayLength + RAYCAST_EPSILON ? Math.max(0, distance) : -1;
     }
 
     private void doTreadRendering(PartGroundDevice tread, float partialTicks) {

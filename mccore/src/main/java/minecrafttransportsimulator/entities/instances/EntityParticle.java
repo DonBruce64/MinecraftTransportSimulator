@@ -2,6 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -9,15 +10,19 @@ import java.util.Map;
 import java.util.Random;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleRenderingOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleSpawningOrientation;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -37,9 +42,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class EntityParticle extends AEntityC_Renderable {
     private static final RenderableVertices STANDARD_PARTICLE_SPRITE = RenderableVertices.createSprite(1, null, null);
+    private static final RenderableVertices DECAL_PARTICLE_SPRITE = STANDARD_PARTICLE_SPRITE.createOverlay(RenderableVertices.Z_BUFFER_OFFSET);
+    private static final RenderableVertices TRAIL_PARTICLE_SPRITE = createTrailParticleSprite();
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
     private static final RotationMatrix helperRotation = new RotationMatrix();
     private static final Point3D helperPoint = new Point3D();
+    private static final Point3D helperScale = new Point3D();
+    private static final Point3D helperNormal = new Point3D();
+    private static final Point3D helperDecalStart = new Point3D();
+    private static final Point3D helperDecalEnd = new Point3D();
     private static final ColorRGB helperColor = new ColorRGB();
     private static final Map<String, RenderableVertices> parsedParticleModels = new HashMap<>();
     private static final Random particleRandom = new Random();
@@ -82,28 +93,48 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.depthRadius = boundingBox.widthRadius;
 
         RotationMatrix positionOrientation = null;
+        Point3D decalPosition = null;
 
         //Set transforms based on type.
         helperTransform.resetTransforms();
         switch (definition.spawningOrientation) {
             case ENTITY:
-            case ATTACHED: {
+            case ATTACHED:
+            case ATTACHED_Z: {
                 orientation.set(entitySpawning.orientation);
                 helperTransform.set(entitySpawning.orientation);
                 positionOrientation = entitySpawning.orientation;
                 break;
             }
             case STREAK:
+            case TRAIL:
             case WORLD_ATTACHED: {
                 //Orientation isn't changed from spawn, but we do need to know spawning entity orientation for the transform of position.
                 helperTransform.set(entitySpawning.orientation);
                 positionOrientation = entitySpawning.orientation;
                 break;
             }
-            case FACING: {
+            case FACING:
+            case DECAL: {
                 if (entitySpawning instanceof EntityBullet) {
                     EntityBullet bullet = (EntityBullet) entitySpawning;
                     if (bullet.sideHit != Axis.NONE) {
+                        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
+                            decalPosition = new Point3D();
+                            if (setDecalToModelSurface(bullet, decalPosition)) {
+                                helperTransform.set(orientation);
+                                positionOrientation = orientation;
+                                break;
+                            } else if (bullet.lastHit == EntityBullet.HitType.VEHICLE || bullet.lastHit == EntityBullet.HitType.ARMOR) {
+                                //Model decals should not fall back to collision planes.
+                                this.initialVelocity = null;
+                                this.staticColor = null;
+                                this.renderable = null;
+                                this.model = null;
+                                this.killBadParticle = true;
+                                return;
+                            }
+                        }
                         helperRotation.setToZero().rotateX(-90);
                         orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
                         helperTransform.set(orientation);
@@ -117,6 +148,14 @@ public class EntityParticle extends AEntityC_Renderable {
                         this.killBadParticle = true;
                         return;
                     }
+                } else if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
+                    //Decals need bullet hit data to know the surface they should stick to.
+                    this.initialVelocity = null;
+                    this.staticColor = null;
+                    this.renderable = null;
+                    this.model = null;
+                    this.killBadParticle = true;
+                    return;
                 }
                 break;
             }
@@ -128,7 +167,9 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set position, but only if we aren't a distance particle.
         //Distance particles are set prior to spawning with their actual position since it handles rotation.
-        if (definition.distance == 0) {
+        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
+            position.set(decalPosition != null ? decalPosition : spawningPosition);
+        } else if (definition.distance == 0 && definition.spawningOrientation != ParticleSpawningOrientation.TRAIL) {
             setPointToSpawn(spawningPosition, positionOrientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
         } else {
             position.set(spawningPosition);
@@ -278,6 +319,10 @@ public class EntityParticle extends AEntityC_Renderable {
             this.renderable = new RenderableData(vertexObject, texture);
             float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, blockCheckPosition);
             vertexObject.setTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
+        } else if (definition.spawningOrientation == ParticleSpawningOrientation.TRAIL || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
+            this.renderable = new RenderableData(TRAIL_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
+        } else if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
+            this.renderable = new RenderableData(DECAL_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
         } else {
             //Basic particle, use standard buffer.
             this.renderable = new RenderableData(STANDARD_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
@@ -343,6 +388,64 @@ public class EntityParticle extends AEntityC_Renderable {
         this.killBadParticle = false;
     }
 
+    public void setTrailSegmentLength(double trailLength) {
+        scale.z = entitySpawning.scale.z != 0 ? trailLength / entitySpawning.scale.z : trailLength;
+        prevScale.set(scale);
+    }
+
+    private boolean setDecalToModelSurface(EntityBullet bullet, Point3D decalPosition) {
+        if (bullet.lastHit != EntityBullet.HitType.VEHICLE && bullet.lastHit != EntityBullet.HitType.ARMOR) {
+            return false;
+        }
+
+        helperPoint.set(bullet.motion);
+        if (helperPoint.isZero()) {
+            return false;
+        }
+        double motionLength = helperPoint.length();
+        helperPoint.scale(1D / motionLength);
+        double traceLength = Math.max(motionLength, 5D);
+        helperDecalStart.set(bullet.prevPosition);
+        if (helperDecalStart.distanceTo(bullet.position) < RenderableVertices.Z_BUFFER_OFFSET) {
+            helperDecalStart.set(bullet.position).addScaled(helperPoint, -traceLength);
+        }
+        helperDecalEnd.set(bullet.position).addScaled(helperPoint, traceLength);
+
+        List<AEntityF_Multipart<?>> multipartEntities = new ArrayList<>();
+        world.populateWithEntitiesInBounds(multipartEntities, new BoundingBox(helperDecalStart, helperDecalEnd));
+        double closestDistance = Double.MAX_VALUE;
+        for (AEntityF_Multipart<?> multipart : multipartEntities) {
+            if (!multipart.allParts.contains(bullet.gun)) {
+                closestDistance = getClosestModelHit(multipart, decalPosition, closestDistance);
+                for (APart part : multipart.allParts) {
+                    if (part != bullet.gun) {
+                        closestDistance = getClosestModelHit(part, decalPosition, closestDistance);
+                    }
+                }
+            }
+        }
+        if (closestDistance != Double.MAX_VALUE) {
+            helperRotation.setToZero().rotateX(-90);
+            orientation.setToVector(helperNormal, true).multiplyTranspose(helperRotation);
+            return true;
+        }
+        return false;
+    }
+
+    private double getClosestModelHit(AEntityD_Definable<?> entity, Point3D decalPosition, double closestDistance) {
+        Point3D modelHitPosition = new Point3D();
+        Point3D modelHitNormal = new Point3D();
+        if (entity.getModelHit(helperDecalStart, helperDecalEnd, modelHitPosition, modelHitNormal)) {
+            double modelHitDistance = helperDecalStart.distanceTo(modelHitPosition);
+            if (modelHitDistance < closestDistance) {
+                decalPosition.set(modelHitPosition);
+                helperNormal.set(modelHitNormal);
+                return modelHitDistance;
+            }
+        }
+        return closestDistance;
+    }
+
     public static void setPointToSpawn(Point3D origin, RotationMatrix orientation, Point3D definitionOffset, Point3D scale, AnimationSwitchbox spawningSwitchbox, Point3D pointToSet) {
         //Apply transforms to get position.
         if (definitionOffset != null) {
@@ -397,8 +500,8 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Set movement.
-        if (!definition.stopsOnGround || !touchingBlocks) {
-            if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED) {
+        if (definition.spawningOrientation != ParticleSpawningOrientation.DECAL && (!definition.stopsOnGround || !touchingBlocks)) {
+            if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
                 orientation.set(entitySpawning.orientation);
                 setPointToSpawn(entitySpawning.position, orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
                 setOrientationToSpawn();
@@ -512,8 +615,12 @@ public class EntityParticle extends AEntityC_Renderable {
             //Update orientation.
             updateOrientation();
             if (definition.rotationVelocity != null) {
-                helperRotation.setToAngles(definition.rotationVelocity);
-                orientation.multiply(helperRotation);
+                if (definition.renderingOrientation == ParticleRenderingOrientation.ZAXIS) {
+                    orientation.rotateZ(definition.rotationVelocity.z);
+                } else {
+                    helperRotation.setToAngles(definition.rotationVelocity);
+                    orientation.multiply(helperRotation);
+                }
             }
         }
 
@@ -605,23 +712,34 @@ public class EntityParticle extends AEntityC_Renderable {
                 renderable.setColor(helperColor);
             }
             renderable.transform.set(transform);
-            double totalScale;
-            if (definition.type == ParticleType.FLAME && definition.scale == 0 && definition.toScale == 0) {
-                totalScale = 1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F;
+            if (definition.type == ParticleType.FLAME && (definition.scale == null || definition.scale.isZero()) && definition.toScale == 0) {
+                double totalScale = 1.0F - Math.pow((ticksExisted + partialTicks) / maxAge, 2) / 2F;
+                helperScale.set(totalScale, totalScale, totalScale);
             } else if (definition.toScale != 0) {
-                totalScale = interpolate(definition.scale, definition.toScale, (ticksExisted + partialTicks) / maxAge, false, partialTicks);
-            } else if (definition.scale != 0) {
-                totalScale = definition.scale;
+                if (definition.scale != null) {
+                    helperScale.set(definition.scale);
+                } else {
+                    helperScale.set(0, 0, 0);
+                }
+                helperPoint.set(definition.toScale, definition.toScale, definition.toScale);
+                helperScale.interpolate(helperPoint, (ticksExisted + partialTicks) / maxAge);
+            } else if (definition.scale != null && !definition.scale.isZero()) {
+                helperScale.set(definition.scale);
             } else {
-                totalScale = 1.0;
+                helperScale.set(1, 1, 1);
             }
             if (definition.fadeInScaleTime >= ticksExisted) {
-                totalScale *= (1 - ((definition.fadeInScaleTime - ticksExisted) / (float) definition.fadeInScaleTime));
+                helperScale.scale(1 - ((definition.fadeInScaleTime - ticksExisted) / (float) definition.fadeInScaleTime));
             }
             if (definition.fadeOutScaleTime > maxAge - ticksExisted) {
-                totalScale *= (maxAge - ticksExisted) / (float) definition.fadeOutScaleTime;
+                helperScale.scale((maxAge - ticksExisted) / (float) definition.fadeOutScaleTime);
             }
-            renderable.transform.applyScaling(totalScale * entitySpawning.scale.x, totalScale * entitySpawning.scale.y, totalScale * entitySpawning.scale.z);
+            if (definition.spawningOrientation == ParticleSpawningOrientation.TRAIL || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
+                double trailWidth = helperScale.y != 0 ? helperScale.y : helperScale.x;
+                renderable.transform.applyScaling(trailWidth * entitySpawning.scale.x, helperScale.z * entitySpawning.scale.y, entitySpawning.scale.z);
+            } else {
+                renderable.transform.applyScaling(helperScale.x * entitySpawning.scale.x, helperScale.y * entitySpawning.scale.y, helperScale.z * entitySpawning.scale.z);
+            }
             renderable.setLightValue(worldLightValue);
             renderable.render();
         }
@@ -633,6 +751,9 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
+        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
+            return;
+        }
         switch (definition.renderingOrientation) {
             case FIXED: {
                 //No update since we never change.
@@ -647,6 +768,13 @@ public class EntityParticle extends AEntityC_Renderable {
                 helperPoint.set(InterfaceManager.clientInterface.getCameraPosition()).subtract(position);
                 helperPoint.y = 0;
                 orientation.setToVector(helperPoint, true);
+                break;
+            }
+            case ZAXIS: {
+                helperPoint.set(InterfaceManager.clientInterface.getCameraPosition()).subtract(position).reOrigin(orientation);
+                if (helperPoint.x != 0 || helperPoint.y != 0) {
+                    orientation.rotateZ(Math.toDegrees(Math.atan2(-helperPoint.x, helperPoint.y)));
+                }
                 break;
             }
             case MOTION: {
@@ -687,5 +815,19 @@ public class EntityParticle extends AEntityC_Renderable {
     private float interpolate(float start, float end, float factor, boolean clamp, float partialTicks) {
         float value = start + (end - start) * factor;
         return clamp ? value > 1.0F ? 1.0F : (value < 0.0F ? 0.0F : value) : value;
+    }
+
+    private static RenderableVertices createTrailParticleSprite() {
+        TransformationMatrix trailTransform = new TransformationMatrix();
+        trailTransform.m00 = 0;
+        trailTransform.m01 = 1;
+        trailTransform.m02 = 0;
+        trailTransform.m10 = 0;
+        trailTransform.m11 = 0;
+        trailTransform.m12 = 1;
+        trailTransform.m20 = 1;
+        trailTransform.m21 = 0;
+        trailTransform.m22 = 0;
+        return RenderableVertices.createSprite(1, Collections.singletonList(trailTransform), Collections.singletonList(new Point3D(0, 1, 0)));
     }
 }
