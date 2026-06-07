@@ -80,11 +80,17 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("How much velocity, each tick, should be applied in a random X direction.  Used to make bullets curve off their trajectory mid-flight.")
         public float trajectoryCurveX;
 
-        @JSONDescription("How much velocity, each tick, should be applied in a random X direction.  Used to make bullets curve off their trajectory mid-flight.")
+        @JSONDescription("How much velocity, each tick, should be applied in a random Y direction.  Used to make bullets curve off their trajectory mid-flight.")
         public float trajectoryCurveY;
+
+        @JSONDescription("How likely this bullet is NOT to curve on its trajectory, rolled every tick. 0 means the bullet will always curve when it is able to, 1 means it will almost never curve.")
+        public float trajectoryCurveStability;
 
         @JSONDescription("How long, in ticks, the bullet should take before applying trajectory curves. Used to keep bullets straight for a set amount of time.")
         public int trajectoryCurveDelay;
+
+        @JSONDescription("If the bullet has trajectoryCurveY and this parameter is true, it can curve up instead of maintaining its velocity.")
+        public boolean trajectoryCurveAppliesUpward;
 
         @JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
         public int burnTime;

@@ -54,8 +54,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final boolean isBomb;
     public final double initialVelocity;
     private final double velocityToAddEachTick;
-    private final double trajectoryCurvatureVelocityX;
-    private final double trajectoryCurvatureVelocityY;
     private final Point3D motionToAddEachTick;
     private final int despawnTime;
     private final BoundingBox proxBounds;
@@ -72,6 +70,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public double targetDistance;
     private double distanceTraveled;
     public double armorPenetrated;
+    private Point3D trajectoryCurvatureAxis;
+    private boolean trajectoryCurvatureInvertX;
+    private boolean trajectoryCurvatureInvertY;
 
     private Point3D targetVector;
     private Point3D normalizedConeVector = new Point3D();
@@ -105,8 +106,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             velocityToAddEachTick = 0;
             motionToAddEachTick = null;
         }
-        this.trajectoryCurvatureVelocityX = Math.random() >= 0.5 ? definition.bullet.trajectoryCurveX : definition.bullet.trajectoryCurveX * -1;
-        this.trajectoryCurvatureVelocityY = Math.random() >= 0.5 ? definition.bullet.trajectoryCurveY : definition.bullet.trajectoryCurveY * -1;
         this.despawnTime = definition.bullet.despawnTime != 0 ? definition.bullet.despawnTime : 200;
         this.damageFalloffTimer = definition.bullet.damageFalloffTime != 0 ? definition.bullet.damageFalloffTime : this.despawnTime;
         this.proxBounds = definition.bullet.proximityFuze != 0 ? new BoundingBox(position.copy(), definition.bullet.proximityFuze) : null;
@@ -195,23 +194,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 motion.y -= definition.bullet.gravitationalVelocity;
             }
 
-            //Add spread forces, once we've counted down our spread timer.
-            if (ticksExisted > definition.bullet.trajectoryCurveDelay) {
-                motion.x -= trajectoryCurvatureVelocityX;
-                motion.y -= trajectoryCurvatureVelocityY;
-            }
-
             //Calculate our current damage falloff factor.
-            if (definition.bullet.damageFalloff != 0) {
-                if (ticksExisted > definition.bullet.damageFalloffDelay) {
-                    if (ticksExisted < (definition.bullet.damageFalloffDelay + damageFalloffTimer)) {
-                        damageFalloffCountdown = ticksExisted < definition.bullet.damageFalloffDelay ? 0 : Math.max((ticksExisted - definition.bullet.damageFalloffDelay), 1) / (float)damageFalloffTimer;
-                    } else {
-                        damageFalloffCountdown = 1;
-                    }
-                } else {
-                    damageFalloffCountdown = 0;
-                }
+            if (definition.bullet.damageFalloff != 0 && ticksExisted > definition.bullet.damageFalloffDelay) {
+                damageFalloffCountdown = Math.min(1, Math.max((ticksExisted - definition.bullet.damageFalloffDelay), 1) / (float)damageFalloffTimer);
             } else {
                 damageFalloffCountdown = 0;
             }
@@ -221,6 +206,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (velocityToAddEachTick != 0 && !notAcceleratingYet && ticksExisted - definition.bullet.accelerationDelay < definition.bullet.accelerationTime) {
                 motionToAddEachTick.set(0, 0, velocityToAddEachTick).rotate(orientation);
                 motion.add(motionToAddEachTick);
+            }
+
+            //Add turbulent forces, if we're unstable and once we've counted down our curve and accel timers.
+            if ((notAcceleratingYet || ticksExisted > (definition.bullet.accelerationDelay + definition.bullet.accelerationTime)) && ticksExisted > definition.bullet.trajectoryCurveDelay && definition.bullet.trajectoryCurveStability <= Math.random()) {
+                this.trajectoryCurvatureInvertX = Math.random() >= 0.5 ? true : false;
+                this.trajectoryCurvatureInvertY = Math.random() >= 0.5 ? true : false;
+                this.trajectoryCurvatureAxis = new Point3D((definition.bullet.trajectoryCurveX * 0.1D) * (trajectoryCurvatureInvertX ? -1 : 1), (definition.bullet.trajectoryCurveY * 0.1D) * (trajectoryCurvatureInvertY ? -1 : (definition.bullet.trajectoryCurveAppliesUpward ? 1 : 0)),0);
+                this.trajectoryCurvatureAxis.rotate(orientation);
+                motion.add(this.trajectoryCurvatureAxis);
             }
 
             //Guidance code for missiles
@@ -345,7 +339,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 //Now that we have an accurate motion, check for collisions.
                 //First get a damage object to try to attack entities with.
                 damageFalloff = 1 - (definition.bullet.damageFalloff * damageFalloffCountdown);
-                double amount = definition.bullet.isHeat ? definition.bullet.damage * (1 + gun.bulletDamageFactorVar.currentValue) * damageFalloff : (velocity / initialVelocity) * (definition.bullet.damage * (1 + gun.bulletDamageFactorVar.currentValue) * damageFalloff) * ConfigSystem.settings.damage.bulletDamageFactor.value * ConfigSystem.settings.damage.packBulletDamageFactors.value.get(gun.lastLoadedBullet.definition.packID);
+                double amount = (definition.bullet.isHeat ? definition.bullet.damage * (1 + gun.bulletDamageFactorVar.currentValue) * damageFalloff : (velocity / initialVelocity) * (definition.bullet.damage * (1 + gun.bulletDamageFactorVar.currentValue) * damageFalloff)) * ConfigSystem.settings.damage.bulletDamageFactor.value * ConfigSystem.settings.damage.packBulletDamageFactors.value.get(gun.lastLoadedBullet.definition.packID);
                 Damage damage = new Damage(gun, boundingBox, amount);
 
                 //Declare variables that may be used for hit logic.
