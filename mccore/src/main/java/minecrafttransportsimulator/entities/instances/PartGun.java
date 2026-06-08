@@ -146,8 +146,11 @@ public class PartGun extends APart {
     private final RotationMatrix firingSpreadRotation = new RotationMatrix();
     private final RotationMatrix pitchMuzzleRotation = new RotationMatrix();
     private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
+    private final RotationMatrix controllerCameraGunOrientation = new RotationMatrix();
+    private final RotationMatrix controllerCameraOrientation = new RotationMatrix();
     private final Point3D normalizedConeVector = new Point3D();
     private final Point3D normalizedEntityVector = new Point3D();
+    private final Point3D controllerCameraRelativeAngles = new Point3D();
 
     //Track previous targets to detect changes for registration
     private PartEngine prevEngineTarget = null;
@@ -954,7 +957,22 @@ public class PartGun extends APart {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
                 }
             }
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity))) {
+                lockControllerToActiveCamera(controller);
+            }
         }
+    }
+
+    private void lockControllerToActiveCamera(IWrapperEntity controller) {
+        controllerCameraGunOrientation.setToAngles(internalOrientation.angles);
+        controllerCameraOrientation.set(zeroReferenceOrientation).multiply(controllerCameraGunOrientation).convertToAngles();
+        controllerCameraRelativeAngles.computeVectorAngles(controllerCameraOrientation, lastControllerSeat.orientation);
+        lastControllerSeat.riderRelativeOrientation.angles.set(controllerCameraRelativeAngles);
+        lastControllerSeat.riderRelativeOrientation.updateToAngles();
+        controller.setOrientation(controllerCameraOrientation);
+        //Reset deltas after forcing orientation so the next tick doesn't replay the correction.
+        controller.getYawDelta();
+        controller.getPitchDelta();
     }
 
     /**
