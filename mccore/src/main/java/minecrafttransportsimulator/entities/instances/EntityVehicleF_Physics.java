@@ -493,6 +493,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             totalTorque.x /= momentPitch;
             totalTorque.y /= momentYaw;
             totalTorque.z /= momentRoll;
+
+            //For fixed-wing aircraft, apply aerodynamic rotational damping.
+            //Control surfaces create a damping moment proportional to dynamic pressure
+            //and their geometry (area * arm²), which resists rotation at higher airspeeds.
+            //Without this, the torque feedback gain (which scales with v²) can exceed the
+            //restoring capacity of the base moment of inertia, causing oscillation.
+            if (definition.motorized.isAircraft && !definition.motorized.isBlimp && !hasRotors) {
+                double q = 0.5 * airDensity * axialVelocity * axialVelocity;
+                double rollArm = wingSpanVar.currentValue * 0.5 * 0.75;
+                totalTorque.x /= (1.0 + q * elevatorAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentPitch);
+                totalTorque.y /= (1.0 + q * rudderAreaVar.currentValue * definition.motorized.tailDistance * definition.motorized.tailDistance * 4.0 / momentYaw);
+                totalTorque.z /= (1.0 + q * aileronAreaVar.currentValue * rollArm * rollArm * 4.0 / momentRoll);
+            }
             rotation.angles.set(totalTorque).add(rotorRotation);
         } else if (!lockedOnRoad) {
             towedByConnection.hookupPriorPosition.set(towedByConnection.hookupCurrentPosition);
@@ -837,6 +850,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> radarsTracking.isEmpty() ? 0 : 1, false);
             case ("missile_incoming"):
                 return new ComputedVariable(this, variable, partialTicks -> missilesIncoming.isEmpty() ? 0 : 1, false);
+            case ("missile_lockedonto"):
+                return new ComputedVariable(this, variable, partialTicks -> gunsLockedOn.isEmpty() ? 0 : 1, false);
             default: {
                 //Missile incoming variables.
                 //Variable is in the form of missile_X_variablename.

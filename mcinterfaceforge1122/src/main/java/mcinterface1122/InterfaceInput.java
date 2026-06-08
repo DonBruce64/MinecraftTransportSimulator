@@ -20,12 +20,14 @@ import minecrafttransportsimulator.mcinterface.IInterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -292,6 +294,43 @@ public class InterfaceInput implements IInterfaceInput {
         return betterCombatDetected ? rightMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
     }
 
+    @Override
+    public boolean isMouseButtonPressed(int mouseButton) {
+        return Mouse.isButtonDown(mouseButton);
+    }
+
+    @Override
+    public String getNameForMouseButton(int mouseButton) {
+        switch (mouseButton) {
+            case 0:
+                return "MOUSE_LEFT";
+            case 1:
+                return "MOUSE_RIGHT";
+            case 2:
+                return "MOUSE_MIDDLE";
+            default:
+                return "MOUSE_" + (mouseButton + 1);
+        }
+    }
+
+    @Override
+    public int getMouseButtonForName(String name) {
+        switch (name) {
+            case "MOUSE_LEFT":
+                return 0;
+            case "MOUSE_RIGHT":
+                return 1;
+            case "MOUSE_MIDDLE":
+                return 2;
+            default:
+                try {
+                    return Integer.parseInt(name.substring(6)) - 1;
+                } catch (NumberFormatException e) {
+                    throw new IllegalStateException("ERROR: Client config file has a mouse button bound to a control that is not a number! Check your config or delete it and re-start.");
+                }
+        }
+    }
+
     /**
      * Stores mouse presses, since stupid mods take them from us.
      * BetterCombat is one such mod.
@@ -308,12 +347,23 @@ public class InterfaceInput implements IInterfaceInput {
         }
     }
 
+    @SubscribeEvent
+    public static void onIVMovementInput(InputUpdateEvent event) {
+        if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().sneak)) {
+            event.getMovementInput().sneak = false;
+        }
+    }
+
     /**
      * Opens the config screen when the config key is pressed.
      * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
     public static void onIVKeyInput(InputEvent.KeyInputEvent event) {
+        if (Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+            ControlSystem.resetMouseYoke();
+        }
+
         //Check if we switched joystick modes.
         if (runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value) {
             runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;

@@ -13,6 +13,7 @@ buildscript {
 //Apply plugins
 apply plugin: "java"
 apply plugin: "eclipse"
+apply plugin: "com.github.johnrengelman.shadow"
 
 //Set file name.
 version = "Core"
@@ -62,9 +63,17 @@ jar {
     }
 }
 
+//Shadow jar that relocates javazoom to avoid class conflicts with mods like Ad Astra.
+shadowJar {
+    configurations = [project.configurations.embed]
+    relocate 'javazoom', 'minecrafttransportsimulator.shadow.javazoom'
+    archiveClassifier = 'relocated'
+}
+
 artifacts {
-    // Newer interface modules consume mccore from this named configuration.
-    relocated jar
+    // Newer interface modules (1.18.2+) consume mccore from this named configuration.
+    // The shadowJar relocates javazoom to prevent conflicts with other mods.
+    relocated shadowJar
 }
 
 tasks.withType(JavaCompile).configureEach {

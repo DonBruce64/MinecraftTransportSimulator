@@ -1,0 +1,38 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.decorbench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.decorbench.title"
+        },
+        "description": {
+        	"translate": "advancements.mts.decorbench.description"
+        },
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "decorbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.decorbench"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "decorbench"
+        ]
+    ],
+}

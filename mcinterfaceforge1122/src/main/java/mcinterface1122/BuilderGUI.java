@@ -38,6 +38,15 @@ public class BuilderGUI extends GuiScreen {
      */
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        //Check if any text box is focused and wants to capture this mouse click for binding.
+        for (AGUIComponent component : gui.components) {
+            if (component instanceof GUIComponentTextBox) {
+                GUIComponentTextBox textBox = (GUIComponentTextBox) component;
+                if (textBox.focused && textBox.handleMouseClicked(mouseButton)) {
+                    return;
+                }
+            }
+        }
         if (gui.onClick(mouseX, mouseY)) {
             mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }

@@ -1,0 +1,38 @@
+{
+    "parent": "mts:enginebench",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.jumpercable"
+        	},
+        "title": {
+        	"translate": "advancements.mts.jumpercable.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.jumpercable.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "jumpercable": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.jumpercable"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "jumpercable"
+        ]
+    ]
+}

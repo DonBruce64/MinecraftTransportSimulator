@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.block.material.PushReaction;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
@@ -60,6 +61,12 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public boolean shouldRenderAtSqrDistance(double pDistance) {
         //Need to render in pass 1 to render transparent things in the world like light beams.
         return true;
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction() {
+        //This entity only exists as a render anchor and should not be treated as a physical obstacle.
+        return PushReaction.IGNORE;
     }
 
     @Override

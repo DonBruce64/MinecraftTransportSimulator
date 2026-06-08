@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions
@@ -252,8 +253,20 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
-            // If we don't have head tracking then calculate orientation normally
-            if (!hasHeadTracking) {
+
+            //When mouse flight is active for this client rider, capture mouse deltas
+            //for the MouseFlightController instead of applying them to rider orientation.
+            //The rider's relative orientation stays locked forward so the camera can be
+            //independently controlled by the MouseFlightController.
+            if (riderIsClient && MouseFlightController.isMouseFlightActive) {
+                //Capture deltas for the mouse flight controller.
+                MouseFlightController.storedYawDelta = rider.getYawDelta();
+                MouseFlightController.storedPitchDelta = rider.getPitchDelta();
+                //Keep rider orientation locked forward (zero relative orientation).
+                riderRelativeOrientation.setToZero();
+                riderRelativeOrientation.angles.set(0, 0, 0);
+            } else if (!hasHeadTracking) {
+                // If we don't have head tracking then calculate orientation normally
                 riderRelativeOrientation.angles.y += rider.getYawDelta();
                 //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
                 if (riderRelativeOrientation.angles.y > 180) {
@@ -285,15 +298,25 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 if (CameraSystem.activeCamera == null && cameraMode != CameraMode.FIRST_PERSON) {
                     riderCameraPosition.set(riderEyePosition);
 
+                    //When mouse flight is active, use the decoupled camera orientation
+                    //for third-person camera offset so the camera orbits around the aim direction.
+                    RotationMatrix cameraOffsetOrientation;
+                    if (riderIsClient && MouseFlightController.isMouseFlightActive) {
+                        MouseFlightController.getInterpolatedCameraOrientation(riderTempMatrix, 0);
+                        cameraOffsetOrientation = riderTempMatrix;
+                    } else {
+                        cameraOffsetOrientation = rider.getOrientation();
+                    }
+
                     //Adjust eye position to account for zoom settings.
                     int zoomRequired = 4 + zoomLevel;
-                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(rider.getOrientation());
+                    riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -zoomRequired : zoomRequired).rotate(cameraOffsetOrientation);
                     riderEyePosition.add(riderTempPoint);
 
                     //Check if camera should be where eyes are, or somewhere different.
                     int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + zoomLevel;
                     if (zoomRequired != cameraZoomRequired) {
-                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(rider.getOrientation());
+                        riderTempPoint.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraOffsetOrientation);
                         riderCameraPosition.add(riderTempPoint);
                     } else {
                         riderCameraPosition.add(riderTempPoint);
