@@ -1,8 +1,7 @@
 {
-  "item": {
-    "type": "screwdriver"
-  },
-  "general": {
-    "name": "Screwdriver"
-  }
+    "general": {
+        "name": "Screwdriver",
+        "materials": [],
+        "type": "screwdriver"
+    }
 }
