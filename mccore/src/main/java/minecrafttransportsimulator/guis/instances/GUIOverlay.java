@@ -12,16 +12,12 @@ import minecrafttransportsimulator.baseclasses.BoundingBoxHitResult;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -52,7 +48,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel mouseoverLabel;
-    private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
     private final List<String> tooltipText = new ArrayList<>();
@@ -73,8 +68,6 @@ public class GUIOverlay extends AGUIBase {
         super.setupComponents();
 
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
-        addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
-        gunLabel.ignoreGUILightingState = true;
         // Start crosshair at screen centre; setStates() repositions it every frame.
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
@@ -102,8 +95,6 @@ public class GUIOverlay extends AGUIBase {
         super.setStates();
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 
-        //Set gun label text, if we are controlling a gun.
-        gunLabel.visible = false;
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
         aimingCrosshair.vehicleRef = null;
@@ -111,27 +102,17 @@ public class GUIOverlay extends AGUIBase {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
             if (playerGun != null && playerGun.activeGun != null) {
-                gunLabel.visible = true;
-                gunLabel.text = "Gun:" + playerGun.activeGun.cachedItem.getItemName() + " Loaded:" + playerGun.activeGun.getBulletText();
                 activeGunGroup = java.util.Collections.singletonList(playerGun.activeGun);
             } else {
                 AEntityB_Existing entityRiding = player.getEntityRiding();
                 if (entityRiding instanceof PartSeat) {
                     PartSeat seat = (PartSeat) entityRiding;
                     if (seat.canControlGuns) {
-                        gunLabel.visible = true;
-                        gunLabel.text = "Active Gun:";
                         if (seat.activeGunItem != null) {
-                            gunLabel.text += seat.activeGunItem.getItemName();
-                            if (seat.activeGunItem.definition.gun.fireSolo) {
-                                gunLabel.text += " [" + (seat.gunIndex + 1) + "]";
-                            }
                             List<PartGun> gunGroup = seat.gunGroups.get(seat.activeGunItem);
                             if (gunGroup != null && !gunGroup.isEmpty()) {
                                 activeGunGroup = gunGroup;
                             }
-                        } else {
-                            gunLabel.text += "None";
                         }
                     }
                 }
