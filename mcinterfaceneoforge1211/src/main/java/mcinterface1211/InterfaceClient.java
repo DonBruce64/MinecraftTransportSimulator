@@ -381,6 +381,7 @@ public class InterfaceClient implements IInterfaceClient {
         if (!InterfaceManager.clientInterface.isGamePaused() && player != null) {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
+                ConfigSystem.displayPendingConfigWarnings(player);
                 //Kick off / continue model preloading across ticks.
                 initModelPreload();
                 tickModelPreload();
