@@ -44,7 +44,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("How much damage this bullet does.  Is set to 1/5 the diameter if left out.  Note that 'water' type bullets don't damage things, no matter this value.")
         public float damage;
 
-        @JSONDescription("How much damage this bullet loses during its travel. If not defined, this bullet should always deal full damage.")
+        @JSONDescription("How much damage this bullet loses in travel, counted with any lost damage from slowdownSpeed, armorThickness, etc. Negative values will ramp up damage instead of reducing it, allowing for bullets that deal more damage the further they fly.")
         public float damageFalloff;
 
         @JSONDescription("How long until this bullet's damage is reduced to damageFalloff's multiplier. If not defined, this parameter defaults to despawnTime.")

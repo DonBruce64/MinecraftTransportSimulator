@@ -63,7 +63,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public boolean waitingOnActionPacket;
     private int impactDespawnTimer = -1;
     private double damageFalloff;
-    private int damageFalloffTimer;
+    private int damageFalloffTime;
     private float damageFalloffCountdown;
     private Point3D targetPosition;
     private final Point3D helperPoint = new Point3D();
@@ -107,7 +107,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             motionToAddEachTick = null;
         }
         this.despawnTime = definition.bullet.despawnTime != 0 ? definition.bullet.despawnTime : 200;
-        this.damageFalloffTimer = definition.bullet.damageFalloffTime != 0 ? definition.bullet.damageFalloffTime : this.despawnTime;
+        this.damageFalloffTime = definition.bullet.damageFalloffTime != 0 ? definition.bullet.damageFalloffTime : this.despawnTime;
         this.proxBounds = definition.bullet.proximityFuze != 0 ? new BoundingBox(position.copy(), definition.bullet.proximityFuze) : null;
         this.orientation.set(orientation);
         prevOrientation.set(orientation);
@@ -196,7 +196,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
             //Calculate our current damage falloff factor.
             if (definition.bullet.damageFalloff != 0 && ticksExisted > definition.bullet.damageFalloffDelay) {
-                damageFalloffCountdown = Math.min(1, Math.max((ticksExisted - definition.bullet.damageFalloffDelay), 1) / (float)damageFalloffTimer);
+                damageFalloffCountdown = Math.min(1, Math.max((ticksExisted - definition.bullet.damageFalloffDelay), 1) / (float)damageFalloffTime);
             } else {
                 damageFalloffCountdown = 0;
             }
@@ -210,8 +210,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
             //Add turbulent forces, if we're unstable and once we've counted down our curve and accel timers.
             if ((notAcceleratingYet || ticksExisted > (definition.bullet.accelerationDelay + definition.bullet.accelerationTime)) && ticksExisted > definition.bullet.trajectoryCurveDelay && definition.bullet.trajectoryCurveStability <= Math.random()) {
-                this.trajectoryCurvatureInvertX = Math.random() >= 0.5 ? true : false;
-                this.trajectoryCurvatureInvertY = Math.random() >= 0.5 ? true : false;
+                this.trajectoryCurvatureInvertX = Math.random() >= 0.5;
+                this.trajectoryCurvatureInvertY = Math.random() >= 0.5;
                 this.trajectoryCurvatureAxis = new Point3D((definition.bullet.trajectoryCurveX * 0.1D) * (trajectoryCurvatureInvertX ? -1 : 1), (definition.bullet.trajectoryCurveY * 0.1D) * (trajectoryCurvatureInvertY ? -1 : (definition.bullet.trajectoryCurveAppliesUpward ? 1 : 0)),0);
                 this.trajectoryCurvatureAxis.rotate(orientation);
                 motion.add(this.trajectoryCurvatureAxis);
