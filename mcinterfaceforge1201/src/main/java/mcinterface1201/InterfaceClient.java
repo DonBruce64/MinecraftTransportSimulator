@@ -338,52 +338,52 @@ public class InterfaceClient implements IInterfaceClient {
                     ((WrapperWorld) world).world.updateSkyBrightness();
 
                     world.tickAll(true);
-                    
+
                     //Complain about Entity Culling mod at 10 second mark.
                     if(ConfigSystem.settings.general.performModCompatFunctions.value && ConfigSystem.client.controlSettings.cullingWarn.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
-                    	if(ticksToCullingWarning > 0) {
-                    		if(--ticksToCullingWarning == 0) {
-                    			player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
-                    		}
-                    	}
+	                    if(ticksToCullingWarning > 0) {
+		                    if(--ticksToCullingWarning == 0) {
+			                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
+		                    }
+	                    }
                     }
                 } else {
                     world.tickAll(false);
-                    
+
                     //Handle camera requests.
                     if(cameraModeRequest != null) {
-                    	switch(cameraModeRequest) {
-	                    	case FIRST_PERSON:{
+	                    switch(cameraModeRequest) {
+		                    case FIRST_PERSON:{
                                 Minecraft.getInstance().options.setCameraType(CameraType.FIRST_PERSON);
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON:{
+			                    break;
+		                    }
+		                    case THIRD_PERSON:{
                                 Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON_INVERTED:{
+			                    break;
+		                    }
+		                    case THIRD_PERSON_INVERTED:{
                                 Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_FRONT);
-	                    		break;
-	                    	}
-                    	}
-                    	cameraModeRequest = null;
+			                    break;
+		                    }
+	                    }
+	                    cameraModeRequest = null;
                     }
 
                     //Update camera state, since this can change depending on tick if we check during renders.
                     CameraType cameraModeEnum = Minecraft.getInstance().options.getCameraType();
                     switch(cameraModeEnum) {
-                    	case FIRST_PERSON:{
-                    		actualCameraMode = CameraMode.FIRST_PERSON;
-                    		break;
-                    	}
-                    	case THIRD_PERSON_BACK:{
-                    		actualCameraMode = CameraMode.THIRD_PERSON;
-                    		break;
-                    	}
-                    	case THIRD_PERSON_FRONT:{
-                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
-                    		break;
-                    	}
+	                    case FIRST_PERSON:{
+		                    actualCameraMode = CameraMode.FIRST_PERSON;
+		                    break;
+	                    }
+	                    case THIRD_PERSON_BACK:{
+		                    actualCameraMode = CameraMode.THIRD_PERSON;
+		                    break;
+	                    }
+	                    case THIRD_PERSON_FRONT:{
+		                    actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+		                    break;
+	                    }
                     }
                 }
             }

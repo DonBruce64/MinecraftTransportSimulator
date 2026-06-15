@@ -63,7 +63,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public boolean waitingOnActionPacket;
     private int impactDespawnTimer = -1;
     private Point3D targetPosition;
-    private final Point3D helperPoint = new Point3D();
     public double targetDistance;
     private double distanceTraveled;
     public double armorPenetrated;
@@ -315,40 +314,44 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             if (((definition.bullet.isLongRange || !(gun.lastController instanceof IWrapperPlayer)) ^ world.isClient()) && (!world.isClient() || InterfaceManager.clientInterface.getClientPlayer().getID().equals(gun.lastController.getID()))) {
                 //Now that we have an accurate motion, check for collisions.
                 //First get a damage object to try to attack entities with.
-                double amount = definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value * ConfigSystem.settings.damage.packBulletDamageFactors.value.get(gun.lastLoadedBullet.definition.packID);
+                boolean bulletIsHeat = definition.bullet.types.contains(BulletType.HEAT);
+                double amount = bulletIsHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value * ConfigSystem.settings.damage.packBulletDamageFactors.value.get(gun.lastLoadedBullet.definition.packID);
                 Damage damage = new Damage(gun, boundingBox, amount);
 
                 //Declare variables that may be used for hit logic.
                 AEntityF_Multipart<?> hitMultipart = null;
                 Collection<BoundingBoxHitResult> hitMultipartBoxes = null;
                 IWrapperEntity hitExternalEntity = null;
+                Point3D hitExternalEntityPosition = null;
                 hitBlock = world.getBlockHit(position, motion);
-                
+                Point3D endPoint = position.copy().add(motion);
+
                 //Check for collided external entities.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
                 for (IWrapperEntity entity : attackedEntities) {
                     //Check to make sure we don't hit our controller.
                     //This can happen with hand-held guns at speed.
                     if (!entity.equals(gun.lastController)) {
+                        BoundingBox entityBounds = entity.getBounds();
+                        BoundingBoxHitResult entityHit = entityBounds.getIntersection(position, endPoint);
+                        Point3D entityHitPosition = entityHit != null ? entityHit.position : entityBounds.globalCenter.copy();
+
                         //Make sure there's not a block in the way.
-                        if (hitBlock != null && position.isFirstCloserThanSecond(hitBlock.hitPosition, entity.getPosition())) {
+                        if (hitBlock != null && position.isFirstCloserThanSecond(hitBlock.hitPosition, entityHitPosition)) {
                             continue;
                         }
 
                         //Check if already-found entity is closer.
-                        if (hitExternalEntity != null) {
-                            //Need to use helper here since the position object will be re-used on next call to other entity.
-                            helperPoint.set(hitExternalEntity.getPosition());
-                            if (position.isFirstCloserThanSecond(helperPoint, entity.getPosition())) {
-                                continue;
-                            }
+                        if (hitExternalEntityPosition != null && position.isFirstCloserThanSecond(hitExternalEntityPosition, entityHitPosition)) {
+                            continue;
                         }
                         hitExternalEntity = entity;
+                        hitExternalEntityPosition = entityHitPosition;
                     }
                 }
 
-                //If we hit a entity, and we have a block hit, we need to discard the block.
-                //The only way tne entity could be hit is if it was in front of the block, and thus the block shouldn't be hit.
+                //If we hit an entity, and we have a block hit, we need to discard the block.
+                //The only way the entity could be hit is if it was in front of the block, and thus the block shouldn't be hit.
                 if (hitExternalEntity != null) {
                     hitBlock = null;
                 }
@@ -356,7 +359,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 //Populate multiparts for following functions.
                 //Check for collided internal entities.
                 //This is a bit more involved, as we need to check all possible types and check hitbox distance.
-                Point3D endPoint = position.copy().add(motion);
                 BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
                 multiparts.clear();
                 world.populateWithEntitiesInBounds(multiparts, bulletMovementBounds);
@@ -382,14 +384,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                         break;
                                     }
                                 }
-                                
+
                                 //Can't hit hitboxes behind blocks.
                                 if (hitboxCanBeHit && hitBlock != null && position.isFirstCloserThanSecond(hitBlock.hitPosition, hitResult.position)) {
                                     hitboxCanBeHit = false;
                                 }
 
                                 //Can't hit hitboxes behind other entities.
-                                if (hitboxCanBeHit && hitExternalEntity != null && position.isFirstCloserThanSecond(hitExternalEntity.getPosition(), hitResult.position)) {
+                                if (hitboxCanBeHit && hitExternalEntityPosition != null && position.isFirstCloserThanSecond(hitExternalEntityPosition, hitResult.position)) {
                                     hitboxCanBeHit = false;
                                 }
 
@@ -412,16 +414,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (hitMultipart != null && hitMultipart.attackProjectile(damage, this, hitMultipartBoxes) != null) {
                     return;
                 }
-                
+
                 //Now attack the block or external entity, if we have either.
                 if (hitExternalEntity != null) {
                     if (world.isClient()) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(hitExternalEntity, damage));
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitExternalEntity.getPosition(), Axis.getFromVector(motion), HitType.ENTITY));
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitExternalEntityPosition, Axis.getFromVector(motion), HitType.ENTITY));
                         waitingOnActionPacket = true;
                     } else {
                         performExternalEntityHitLogic(hitExternalEntity, damage);
-                        performGenericHitLogic(gun, bulletNumber, hitExternalEntity.getPosition(), Axis.getFromVector(motion), HitType.ENTITY);
+                        performGenericHitLogic(gun, bulletNumber, hitExternalEntityPosition, Axis.getFromVector(motion), HitType.ENTITY);
                     }
                     displayDebugMessage("HIT MC ENTITY " + hitExternalEntity.getName());
                     return;
@@ -632,7 +634,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 }
             }
         } else if (gun.lastLoadedBullet.definition.bullet.types.isEmpty()) {
-        	//Don't do a state-change on the client, just make a breaking sound.
+	        //Don't do a state-change on the client, just make a breaking sound.
             //Fancy bullets don't make block-breaking sounds.  They do other things instead.
             InterfaceManager.clientInterface.playBlockBreakSound(blockPosition);
         }

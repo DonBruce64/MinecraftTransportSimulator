@@ -328,41 +328,41 @@ public class InterfaceClient implements IInterfaceClient {
                     }
                 } else {
                     world.tickAll(false);
-                    
+
                     //Handle camera requests.
                     if(cameraModeRequest != null) {
-                    	switch(cameraModeRequest) {
-	                    	case FIRST_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-	                    		break;
-	                    	}
-	                    	case THIRD_PERSON_INVERTED:{
-	                    		Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
-	                    		break;
-	                    	}
-                    	}
-                    	cameraModeRequest = null;
+	                    switch(cameraModeRequest) {
+		                    case FIRST_PERSON:{
+			                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+			                    break;
+		                    }
+		                    case THIRD_PERSON:{
+			                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+			                    break;
+		                    }
+		                    case THIRD_PERSON_INVERTED:{
+			                    Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
+			                    break;
+		                    }
+	                    }
+	                    cameraModeRequest = null;
                     }
 
                     //Update camera state, since this can change depending on tick if we check during renders.
                     int cameraModeInt = Minecraft.getMinecraft().gameSettings.thirdPersonView;
                     switch(cameraModeInt) {
-                    	case(0):{
-                    		actualCameraMode = CameraMode.FIRST_PERSON;
-                    		break;
-                    	}
-                    	case(1):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON;
-                    		break;
-                    	}
-                    	case(2):{
-                    		actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
-                    		break;
-                    	}
+	                    case(0):{
+		                    actualCameraMode = CameraMode.FIRST_PERSON;
+		                    break;
+	                    }
+	                    case(1):{
+		                    actualCameraMode = CameraMode.THIRD_PERSON;
+		                    break;
+	                    }
+	                    case(2):{
+		                    actualCameraMode = CameraMode.THIRD_PERSON_INVERTED;
+		                    break;
+	                    }
                     }
                 }
             }

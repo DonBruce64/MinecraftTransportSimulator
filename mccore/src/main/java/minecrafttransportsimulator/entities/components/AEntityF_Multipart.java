@@ -20,10 +20,12 @@ import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityBullet.HitType;
+import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.entities.instances.EntityPlacedPart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -42,6 +44,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitCollision;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitExternalEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitGeneric;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Add;
 import minecrafttransportsimulator.packets.instances.PacketPartChange_Remove;
@@ -225,11 +228,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 IWrapperNBT data = currentPart.save(InterfaceManager.coreInterface.getNewNBTWrapper());
                 IWrapperEntity partRider = currentPart.rider;
                 currentPart.entityOn.removePart(currentPart, true, true);
-                
+
                 //Create placed part and align to part location.
                 IWrapperNBT placerData = InterfaceManager.coreInterface.getNewNBTWrapper();
                 EntityPlacedPart entity = new EntityPlacedPart(world, null, placerData);
-                
+
                 //Align placed part to world grid.
                 entity.position.set(currentPart.position);
                 entity.position.x = Math.floor(entity.position.x) + 0.5;
@@ -237,11 +240,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 entity.position.z = Math.floor(entity.position.z) + 0.5;
                 entity.orientation.set(currentPart.orientation);
                 entity.orientation.setToAngles(new Point3D(0, Math.round((entity.orientation.convertToAngles().y + 360) / 90) * 90 % 360, 0));
-                
+
                 //Set priors to prevent funny movement.
                 entity.prevPosition.set(entity.position);
                 entity.prevOrientation.set(entity.orientation);
-                
+
                 //Spawn into world and add part to placed part entity.
                 entity.world.spawnEntity(entity);
                 entity.addPartsPostAddition(null, placerData);//Do this because some classes might do things in sub-methods.
@@ -358,10 +361,14 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             if (hitEntry.box.groupDef != null && (hitEntry.box.groupDef.armorThickness != 0 || hitEntry.box.groupDef.heatArmorThickness != 0)) {
                 hitOperationalHitbox = true;
                 if (bullet != null) {
-                    double armorThickness = hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
-                    double penetrationPotential = bullet.definition.bullet.isHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
+                    boolean bulletIsHeat = bullet.definition.bullet.types.contains(BulletType.HEAT);
+                    double armorThickness = hitEntry.box.definition != null ? (bulletIsHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0;
+                    double penetrationPotential = bulletIsHeat ? bullet.definition.bullet.armorPenetration : (bullet.definition.bullet.armorPenetration * bullet.velocity / bullet.initialVelocity);
+
+                    //Armor-piercing and sub-caliber projectiles lose some of their armor penetration when penetrating the armor boxes.
+                    //Heat projectiles use their base penetration directly without scaling.
                     bullet.armorPenetrated += armorThickness;
-                    bullet.displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
+                    bullet.displayDebugMessage("HIT ARMOR: " + (int) armorThickness + " TOTAL ARMOR HIT: " + (int) bullet.armorPenetrated + " / PENETRATED " + (int) penetrationPotential);
 
                     if (bullet.armorPenetrated > penetrationPotential) {
                         //Bullet hit too much armor.
@@ -371,7 +378,96 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         } else {
                             EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
                         }
-                        bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
+                        if (bulletIsHeat) {
+                            bullet.displayDebugMessage("HEAT FAILED TO PENETRATE ARMOR. MAX PEN: " + (int) penetrationPotential);
+                        } else {
+                            bullet.displayDebugMessage("HIT TOO MUCH ARMOR. MAX PEN: " + (int) penetrationPotential);
+                        }
+                        return EntityBullet.HitType.ARMOR;
+                    }
+
+                    //If the bullet has FRAG type and penetrated armor, deal fragmentation damage to internals.
+                    if (bullet.definition.bullet.types.contains(BulletType.FRAG) && bullet.definition.bullet.fragDamage > 0 && bullet.definition.bullet.fragCount > 0) {
+                        int fragBoxesHit = 0;
+                        int fragEntitiesHit = 0;
+                        int fragCount = bullet.definition.bullet.fragCount;
+                        float coneAngle = bullet.definition.bullet.fragConeAngle > 0 ? bullet.definition.bullet.fragConeAngle : 45.0f;
+                        float fragDmg = bullet.definition.bullet.fragDamage;
+                        double coneAngleRad = Math.min(Math.PI, Math.toRadians(coneAngle / 2.0));
+                        double coneRange = bullet.definition.bullet.fragRange > 0 ? bullet.definition.bullet.fragRange : bullet.definition.bullet.diameter / 10.0;
+                        Point3D fragStart = hitEntry.position.copy().addScaled(bullet.motion.copy().normalize(), 0.001D);
+                        RotationMatrix fragOrientation = new RotationMatrix().setToVector(bullet.motion, true);
+
+                        for (int i = 0; i < fragCount; ++i) {
+                            double cosTheta = 1D - Math.random() * (1D - Math.cos(coneAngleRad));
+                            double sinTheta = Math.sqrt(1D - cosTheta * cosTheta);
+                            double phi = Math.random() * 2D * Math.PI;
+                            Point3D fragVector = new Point3D(sinTheta * Math.cos(phi), sinTheta * Math.sin(phi), cosTheta).rotate(fragOrientation).scale(coneRange);
+                            Point3D fragEnd = fragStart.copy().add(fragVector);
+                            BoundingBox fragMovementBounds = new BoundingBox(fragStart, fragEnd);
+                            BoundingBoxHitResult fragBoxHit = null;
+
+                            Collection<BoundingBoxHitResult> fragHitBoxes = getHitBoxes(fragStart, fragEnd, fragMovementBounds, true);
+                            if (fragHitBoxes != null) {
+                                for (BoundingBoxHitResult fragHitEntry : fragHitBoxes) {
+                                    if (fragHitEntry.box != hitEntry.box && fragHitEntry.box.groupDef != hitEntry.box.groupDef) {
+                                        fragBoxHit = fragHitEntry;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            IWrapperEntity fragEntityHit = null;
+                            BoundingBox fragEntityBox = null;
+                            Point3D fragEntityHitPosition = null;
+                            for (APart part : allParts) {
+                                if (part.rider != null) {
+                                    BoundingBox riderBounds = part.rider.getBounds();
+                                    if (riderBounds.intersects(fragMovementBounds)) {
+                                        BoundingBoxHitResult riderHit = riderBounds.getIntersection(fragStart, fragEnd);
+                                        if (riderHit != null && (fragEntityHitPosition == null || fragStart.isFirstCloserThanSecond(riderHit.position, fragEntityHitPosition))) {
+                                            fragEntityHit = part.rider;
+                                            fragEntityBox = riderBounds;
+                                            fragEntityHitPosition = riderHit.position;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (fragBoxHit != null && (fragEntityHitPosition == null || fragStart.isFirstCloserThanSecond(fragBoxHit.position, fragEntityHitPosition))) {
+                                APart fragHitPart = getPartWithBox(fragBoxHit.box);
+                                AEntityF_Multipart<?> fragHitEntity = fragHitPart != null ? fragHitPart : this;
+                                Damage fragDamage = new Damage(fragDmg, fragBoxHit.box, bullet.gun, bullet.gun.lastController, null);
+                                fragDamage.ignoreCooldown = true;
+                                if (world.isClient()) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(bullet.gun, fragHitEntity, fragDamage));
+                                } else {
+                                    EntityBullet.performEntityHitLogic(fragHitEntity, fragDamage);
+                                }
+                                ++fragBoxesHit;
+                            } else if (fragEntityHit != null) {
+                                Damage fragDamage = new Damage(fragDmg, fragEntityBox, bullet.gun, bullet.gun.lastController, null);
+                                fragDamage.ignoreCooldown = true;
+                                if (world.isClient()) {
+                                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitExternalEntity(fragEntityHit, fragDamage));
+                                } else {
+                                    EntityBullet.performExternalEntityHitLogic(fragEntityHit, fragDamage);
+                                }
+                                ++fragEntitiesHit;
+                            }
+                        }
+                        bullet.displayDebugMessage("FRAG HIT " + fragBoxesHit + " BOXES AND " + fragEntitiesHit + " ENTITIES");
+                    }
+
+                    //HEAT shells detonate on armor contact and do not continue flying.
+                    if (bulletIsHeat) {
+                        bullet.displayDebugMessage("HEAT DETONATED ON ARMOR.");
+                        if (world.isClient()) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR));
+                            bullet.waitingOnActionPacket = true;
+                        } else {
+                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, hitEntry.side, HitType.ARMOR);
+                        }
                         return EntityBullet.HitType.ARMOR;
                     }
                 } else {
@@ -711,7 +807,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         cameraEntities.clear();
 
         parts.forEach(APart::updatePartList);
-        
+
         //Clear computed variables since we changed parts and functions likely changed.
         resetAllVariables();
     }
@@ -742,20 +838,20 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * passed-in definition is placed on this entity, not when it's being loaded from saved data.
      */
     public void addDefaultPart(String partName, int partSlot, IWrapperPlayer playerAdding, AJSONPartProvider providingDef) {
-    	//Don't even try if the partName is an empty string
-    	if (!partName.isEmpty()) {
+	    //Don't even try if the partName is an empty string
+	    if (!partName.isEmpty()) {
 	        try {
 	            String partPackID = partName.substring(0, partName.indexOf(':'));
 	            String partSystemName = partName.substring(partName.indexOf(':') + 1);
 	            try {
                     addPartFromStack(PackParser.getItem(partPackID, partSystemName).getNewStack(null), playerAdding, partSlot, false, true);
 	            } catch (NullPointerException e) {
-	            	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
+		            playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 	            }
 	        } catch (IndexOutOfBoundsException e) {
-	        	playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
+		        playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, LanguageSystem.SYSTEM_DEBUG, "Could not parse defaultPart definition: " + partName + ".  Format should be \"packId:partName\""));
 	        }
-    	}
+	    }
     }
 
     /**

@@ -29,8 +29,17 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Set this to true to make this bullet not spawn, but consume ammo.")
         public boolean isBlank;
 
-        @JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
-        public boolean isHeat;
+        @JSONDescription("The cone angle, in degrees, for fragmentation spread when a FRAG-type bullet penetrates armor.  Fragments are scattered within this cone behind the point of penetration.")
+        public float fragConeAngle;
+
+        @JSONDescription("The maximum distance, in meters (blocks), that fragments can travel from the point of armor penetration.")
+        public float fragRange;
+
+        @JSONDescription("The number of fragments to cast from the point of armor penetration.  If 0, no fragments will be cast.")
+        public int fragCount;
+
+        @JSONDescription("The damage each fragment deals when it hits an internal component or rider.")
+        public float fragDamage;
 
         @JSONDescription("Normally, bullet checks are handled only on the client that spawned them.  This client then sends the info to the server when it sees a hit.  This works best for most bullets, since it prevents the firing player from 'missing' something they hit due to lag.  However, this prevents bullets from hitting things that aren't loaded.  Setting this to true will make the bullet do checks on the server, which will let them hit anything loaded on the server, but will result in de-syncs between hit position seen and actual hit position if the gun is moving at any significant speed when fired.")
         public boolean isLongRange;
@@ -154,17 +163,32 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("The radius (in blocks) within which full armor penetration is applied regardless of distance.")
         public float maxPenRadius;
+
+        @Deprecated
+        public boolean isHeat;
     }
 
     public enum BulletType {
         @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
         EXPLOSIVE,
+        @JSONDescription("Identifies the bullet type as a tracer. Used for categorization.")
+        TRACER,
         @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
         INCENDIARY,
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
         WATER,
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
         ARMOR_PIERCING,
+        @JSONDescription("If defined, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
+        HEAT,
+        @JSONDescription("Like armor-piercing ones, but used for categorization purposes.")
+        SUBCALIBER,
+        @JSONDescription("Used when fragmentation need to be used for bullets.")
+        FRAG,
+        @JSONDescription("Identifies the bullet type as a missile. Used for categorization.")
+        MISSILE,
+        @JSONDescription("Identifies the bullet type as a bomb. Used for categorization.")
+        BOMB,
         @JSONDescription("A bullet that has a custom function defined in code. Useful for integration with a variety of mods, regardless of version.")
         CUSTOM
     }
@@ -177,5 +201,5 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Default method. Tracks whatever target the gun was locked on to prior to firing.")
         ACTIVE
     }
-    
+
 }
