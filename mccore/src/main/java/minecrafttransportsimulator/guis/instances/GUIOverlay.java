@@ -23,6 +23,7 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -43,6 +44,7 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * A GUI that is used to render overlay components.  These components are independent of
@@ -55,6 +57,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentAimReticle aimReticle;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
@@ -66,6 +69,7 @@ public class GUIOverlay extends AGUIBase {
     private final Point3D simPos = new Point3D();
     private final Point3D simVel = new Point3D();
     private final Point3D simDir = new Point3D();
+    private final Point3D playerLineOfSight = new Point3D();
     private final RotationMatrix simOri = new RotationMatrix();
 
     @Override
@@ -75,9 +79,12 @@ public class GUIOverlay extends AGUIBase {
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
         addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
         gunLabel.ignoreGUILightingState = true;
+        addComponent(aimReticle = new GUIComponentAimReticle(screenWidth, screenHeight));
+        aimReticle.ignoreGUILightingState = true;
         // Start crosshair at screen centre; setStates() repositions it every frame.
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
+        aimingCrosshair.ignoreGUILightingState = true;
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -144,7 +151,7 @@ public class GUIOverlay extends AGUIBase {
         }
 
         Point3D startPosition = player.getEyePosition();
-        Point3D endPosition = player.getLineOfSight(10).add(startPosition);
+        Point3D endPosition = getPlayerLineOfSight(player, 10).add(startPosition);
         EntityInteractResult interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
 
         if (lastInteractResult != null && (interactResult == null || interactResult.entity != lastInteractResult.entity)) {
@@ -251,6 +258,10 @@ public class GUIOverlay extends AGUIBase {
                 }
             }
         }
+    }
+
+    private Point3D getPlayerLineOfSight(IWrapperPlayer player, double distance) {
+        return MouseFlightController.shouldUseCameraLineOfSight() ? MouseFlightController.getCameraLineOfSight(playerLineOfSight, distance, 1.0D) : player.getLineOfSight(distance);
     }
 
     @Override

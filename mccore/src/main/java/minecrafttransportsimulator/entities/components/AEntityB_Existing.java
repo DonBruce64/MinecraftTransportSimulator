@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
@@ -258,7 +259,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             //for the MouseFlightController instead of applying them to rider orientation.
             //The rider's relative orientation stays locked forward so the camera can be
             //independently controlled by the MouseFlightController.
-            if (riderIsClient && MouseFlightController.isMouseFlightActive) {
+            boolean freecamThirdPerson = riderIsClient && ConfigSystem.client.renderingSettings.freecam_3P.value && InterfaceManager.clientInterface.getCameraMode().thirdPerson;
+            if (riderIsClient && MouseFlightController.isMouseFlightActive && !freecamThirdPerson) {
                 //Capture deltas for the mouse flight controller.
                 MouseFlightController.storedYawDelta = rider.getYawDelta();
                 MouseFlightController.storedPitchDelta = rider.getPitchDelta();
@@ -301,7 +303,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     //When mouse flight is active, use the decoupled camera orientation
                     //for third-person camera offset so the camera orbits around the aim direction.
                     RotationMatrix cameraOffsetOrientation;
-                    if (riderIsClient && MouseFlightController.isMouseFlightActive) {
+                    if (riderIsClient && MouseFlightController.isMouseFlightActive && !freecamThirdPerson) {
                         MouseFlightController.getInterpolatedCameraOrientation(riderTempMatrix, 0);
                         cameraOffsetOrientation = riderTempMatrix;
                     } else {

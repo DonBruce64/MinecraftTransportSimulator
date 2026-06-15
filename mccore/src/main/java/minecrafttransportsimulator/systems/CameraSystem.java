@@ -38,12 +38,12 @@ public class CameraSystem {
     private static float currentMouseSensitivity;
     public static String customCameraOverlay;
 
-    private static final double GROUND_VEHICLE_CAMERA_Y_OFFSET = 4.5D;
     private static final double CAMERA_COLLISION_PADDING = 0.25D;
     private static final Point3D cameraOffset = new Point3D();
     private static final Point3D cameraCollisionStart = new Point3D();
     private static final Point3D cameraCollisionVector = new Point3D();
     private static final RotationMatrix riderOrientation = new RotationMatrix();
+    private static final RotationMatrix cameraOffsetOrientation = new RotationMatrix();
 
     private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
 
@@ -144,10 +144,11 @@ public class CameraSystem {
         //No custom cameras, check if we are sitting in a seat to adjust orientation.
         if (sittingSeat != null) {
             CameraMode cameraMode = InterfaceManager.clientInterface.getCameraMode();
-            if (MouseFlightController.isMouseFlightActive) {
-                MouseFlightController.getInterpolatedCameraOrientation(cameraRotation, partialTicks);
-            } else if (ConfigSystem.client.renderingSettings.freecam_3P.value && cameraMode.thirdPerson) {
+            boolean freecamThirdPerson = ConfigSystem.client.renderingSettings.freecam_3P.value && cameraMode.thirdPerson;
+            if (freecamThirdPerson) {
                 sittingSeat.getRiderInterpolatedOrientation(cameraRotation, partialTicks);
+            } else if (MouseFlightController.isMouseFlightActive) {
+                MouseFlightController.getInterpolatedCameraOrientation(cameraRotation, partialTicks);
             } else {
                 sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);
                 sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
@@ -158,19 +159,7 @@ public class CameraSystem {
                 //First person: use the standard rider eye position without any offset.
                 cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
             } else {
-                if (MouseFlightController.isMouseFlightActive || sittingSeat.vehicleOn == null) {
-                    //Mouse flight uses a seat-relative stable point so the camera follows the aim controller.
-                    cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
-                    cameraAdjustedPosition.y += sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset() + 2.5;
-                } else {
-                    //Standard 3P view orbits around the vehicle reference point instead of the
-                    //rider eye point, which moves around the aircraft as vehicle orientation changes.
-                    cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
-                    if (sittingSeat.vehicleOn.definition.motorized != null && !sittingSeat.vehicleOn.definition.motorized.isAircraft) {
-                        cameraAdjustedPosition.y += GROUND_VEHICLE_CAMERA_Y_OFFSET;
-                    }
-                }
-
+                setThirdPersonCameraAnchor(sittingSeat, cameraAdjustedPosition, partialTicks);
                 cameraCollisionStart.set(cameraAdjustedPosition);
                 int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + sittingSeat.zoomLevel;
                 cameraOffset.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraRotation);
@@ -181,6 +170,18 @@ public class CameraSystem {
         } else {
             //Not doing any camera changes.
             return false;
+        }
+    }
+
+    private static void setThirdPersonCameraAnchor(PartSeat sittingSeat, Point3D cameraAdjustedPosition, float partialTicks) {
+        if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
+            cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
+            sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+            cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
+        } else {
+            cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
+            sittingSeat.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+            cameraAdjustedPosition.add(cameraOffset.set(0, (sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset()) * sittingSeat.rider.getVerticalScale(), 0).rotate(cameraOffsetOrientation));
         }
     }
 
