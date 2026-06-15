@@ -302,7 +302,7 @@ public class PartGun extends APart {
     public boolean interact(IWrapperPlayer player) {
         //Check to see if we have any bullets in our hands.
         //If so, try to re-load this gun with them.
-        if (reloadDelayRemaining == 0) {
+        if (isActiveVar.isActive && reloadDelayRemaining == 0) {
             IWrapperItemStack heldStack = player.getHeldStack();
             if (tryToReload(heldStack, false) && !player.isCreative()) {
                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
