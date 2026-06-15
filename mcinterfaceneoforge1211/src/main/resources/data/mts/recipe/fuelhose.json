@@ -1,0 +1,22 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " ab",
+        "ccc",
+        "ba "
+    ],
+    "key": {
+        "a": {
+            "item": "minecraft:black_dye"
+        },
+        "b": {
+            "tag": "c:ingots/iron"
+        },
+        "c": {
+            "item": "minecraft:leather"
+        }
+    },
+    "result": {
+        "id": "mts:mts.fuelhose"
+    }
+}

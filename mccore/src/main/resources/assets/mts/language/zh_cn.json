@@ -176,6 +176,8 @@
     "mts.y2kbutton.name": "Y2K 按钮",
     "death.bullet.null": "%s 被枪杀",
     "death.bullet.player": "%s 被 %s 用枪射杀",
+    "death.explosion.null": "%s 被炸死了",
+    "death.explosion.player": "%s 被 %s 炸死了",
     "death.propeller.null": "%s 被螺旋桨切碎",
     "death.propeller.player": "%s 被 %s 的螺旋桨切碎",
     "death.jet_intake.null": "%s 被吸入喷气发动机",

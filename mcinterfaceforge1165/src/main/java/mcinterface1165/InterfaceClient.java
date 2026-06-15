@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
@@ -35,6 +37,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -103,6 +106,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public void displayOverlayMessage(String message) {
+        Minecraft.getInstance().gui.setOverlayMessage(new StringTextComponent(message), false);
+    }
+
+    @Override
     public CameraMode getCameraMode() {
         return actualCameraMode;
     }
@@ -143,6 +151,11 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     @Override
+    public boolean isGUIHidden() {
+        return Minecraft.getInstance().options.hideGui;
+    }
+
+    @Override
     public void closeGUI() {
         Minecraft.getInstance().setScreen(null);
     }
@@ -170,6 +183,85 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
+    private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
+    private static final FloatBuffer projectionMatrixBuffer = FloatBuffer.allocate(16);
+
+    @Override
+    public Point3D projectToScreen(Point3D worldPos, int screenWidth, int screenHeight) {
+        double camX, camY, camZ;
+        double fwdX, fwdY, fwdZ;
+        double upX, upY, upZ;
+        double rgtX, rgtY, rgtZ;
+
+        if (InterfaceEventsEntityRendering.adjustedCamera) {
+            camX = InterfaceEventsEntityRendering.cameraAdjustedPosition.x;
+            camY = InterfaceEventsEntityRendering.cameraAdjustedPosition.y;
+            camZ = InterfaceEventsEntityRendering.cameraAdjustedPosition.z;
+            RotationMatrix ori = getCameraProjectionOrientation(InterfaceEventsEntityRendering.cameraAdjustedOrientation);
+            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
+            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            // MTS (1,0,0) rotated = camera LEFT (not right); negate to get camera right.
+            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        } else {
+            net.minecraft.client.renderer.ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+            net.minecraft.util.math.vector.Vector3d camPos = camera.getPosition();
+            camX = camPos.x; camY = camPos.y; camZ = camPos.z;
+            net.minecraft.util.math.vector.Vector3f look = camera.getLookVector();
+            net.minecraft.util.math.vector.Vector3f up = camera.getUpVector();
+            fwdX = look.x(); fwdY = look.y(); fwdZ = look.z();
+            upX  = up.x();   upY  = up.y();   upZ  = up.z();
+            // getLeftVector() does not exist in 1.16.5; compute right = up × look manually.
+            rgtX = upY * fwdZ - upZ * fwdY;
+            rgtY = upZ * fwdX - upX * fwdZ;
+            rgtZ = upX * fwdY - upY * fwdX;
+        }
+
+        double dx = worldPos.x - camX;
+        double dy = worldPos.y - camY;
+        double dz = worldPos.z - camZ;
+
+        double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
+        if (depth <= 0.001) return null;
+
+        double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
+        double yView = dx * upX  + dy * upY  + dz * upZ;
+
+        double fovRad = Math.toRadians(getFOV());
+        double tanHalfFov = Math.tan(fovRad / 2.0);
+        double aspect = (double) screenWidth / screenHeight;
+        double ndcX = xView / (depth * tanHalfFov * aspect);
+        double ndcY = yView / (depth * tanHalfFov);
+        if (InterfaceRender.projectionMatrix != null) {
+            projectionMatrixBuffer.clear();
+            InterfaceRender.projectionMatrix.store(projectionMatrixBuffer);
+            double projectionScaleX = Math.abs(projectionMatrixBuffer.get(0));
+            double projectionScaleY = Math.abs(projectionMatrixBuffer.get(5));
+            if (projectionScaleX > 0 && projectionScaleY > 0) {
+                ndcX = xView * projectionScaleX / depth;
+                ndcY = yView * projectionScaleY / depth;
+            }
+        }
+
+        if (ndcX < -1.1 || ndcX > 1.1 || ndcY < -1.1 || ndcY > 1.1) return null;
+
+        screenProjectionResult.set(
+                (ndcX + 1.0) / 2.0 * screenWidth,
+                (1.0 - ndcY) / 2.0 * screenHeight,
+                depth);
+        return screenProjectionResult;
+    }
+
+    private static RotationMatrix getCameraProjectionOrientation(RotationMatrix cameraOrientation) {
+        if (actualCameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+            cameraProjectionOrientation.angles.set(-cameraOrientation.angles.x, cameraOrientation.angles.y - 180, -cameraOrientation.angles.z);
+            cameraProjectionOrientation.updateToAngles();
+            return cameraProjectionOrientation;
+        } else {
+            return cameraOrientation;
+        }
+    }
+
+    private static final Point3D screenProjectionResult = new Point3D();
 
     @Override
     public void playBlockBreakSound(Point3D position) {
@@ -254,8 +346,8 @@ public class InterfaceClient implements IInterfaceClient {
                     if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                     	if(ticksToCullingWarning > 0) {
                     		if(--ticksToCullingWarning == 0) {
-                                if (InterfaceManager.coreInterface.isModPresent("entityculling")) {
-                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT ENTITY CULLING MOD IS PRESENT.  THIS MOD CULLS ALL IV VEHICLES UNLESS \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\" ARE ADDED TO THE WHITELIST.");
+                                if (ConfigSystem.client.controlSettings.showEntityCullingWarning.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                                    player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
                                 }
                                 if (InterfaceManager.coreInterface.isModPresent("modernfix")) {
                                     player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "IV HAS DETECTED THAT MODERNFIX MOD IS PRESENT.  IF DYNAMIC RESOURCES IS SET TO TRUE IV ITEMS WILL NOT RENDER PROPERLY.");
@@ -303,6 +395,3 @@ public class InterfaceClient implements IInterfaceClient {
                     }
                 }
             }
-        }
-    }
-}

@@ -23,12 +23,13 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> fullHUD_1P = new JSONConfigEntry<>(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
         public JSONConfigEntry<Boolean> fullHUD_3P = new JSONConfigEntry<>(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
 
-        public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
-        public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+        public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<>(true, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+        public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<>(true, "If true, the background textures for the HUD will not be rendered in 3rd-person.");
 
         public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<>(true, "Should the glass on windows be rendered on vehicles?");
         public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
-
+        public JSONConfigEntry<Boolean> freecam_3P = new JSONConfigEntry<>(false, "If true, third-person camera rotation in vehicles is disconnected from vehicle rotation and uses only rider look rotation.");
+        
         public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
         public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
@@ -53,6 +54,10 @@ public class JSONConfigClient {
 
         public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a physical shifter controller for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(false, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.");
+        public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
+        public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems and enables the gun aiming crosshair.");
+        public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 
@@ -62,6 +67,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Double> steeringReturnRate = new JSONConfigEntry<>(EntityVehicleF_Physics.RUDDER_DAMPEN_RETURN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is NOT held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
         public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
+        public JSONConfigEntry<Double> DismountSafteySpeed = new JSONConfigEntry<>(8.0D, "Speed, in m/s, above which vehicle dismounting requires pressing Shift twice within 3 seconds.  Set to 0 to always prompt, or a very high value to effectively keep classic instant dismounts.");
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
         public JSONConfigEntry<Float> soundVolume = new JSONConfigEntry<>(1.0F, "Volume for all sounds in the mod.  This is used instead of the game's master volume.");
         public JSONConfigEntry<Float> radioVolume = new JSONConfigEntry<>(1.0F, "Volume for radios in the mod.  This is used instead of the game's master volume.");
@@ -75,6 +81,7 @@ public class JSONConfigClient {
 
     public static class ConfigKeyboard {
         public int keyCode;
+        public boolean isMouseButton;
     }
 
     public static class ConfigJoystick {
@@ -85,4 +92,5 @@ public class JSONConfigClient {
         public double axisMaxTravel;
     }
 }
+
 

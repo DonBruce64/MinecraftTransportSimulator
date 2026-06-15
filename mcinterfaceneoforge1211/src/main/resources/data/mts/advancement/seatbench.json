@@ -1,0 +1,41 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.seatbench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.seatbench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.seatbench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "seatbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.seatbench"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "seatbench"
+        ]
+    ],
+    "rewards": {
+        "recipes": ["mts:fuelhose"]
+    }
+}

@@ -217,6 +217,9 @@ public class LanguageSystem {
     public static final LanguageEntry DEATH_BULLET_NULL = new LanguageEntry("death.bullet.null", "%s was shot by a spy");
     public static final LanguageEntry DEATH_BULLET_PLAYER = new LanguageEntry("death.bullet.player", "%s was shot by %s");
 
+    public static final LanguageEntry DEATH_EXPLOSION_NULL = new LanguageEntry("death.explosion.null", "%s was blown up");
+    public static final LanguageEntry DEATH_EXPLOSION_PLAYER = new LanguageEntry("death.explosion.player", "%s was blown up by %s");
+
     public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
     public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 
@@ -374,6 +377,9 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_VEHICLE_NOSPACE = new LanguageEntry("interact.vehicle.nospace", "There is not enough space to place down this vehicle here.");
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");
     public static final LanguageEntry INTERACT_VEHICLE_NOFUEL = new LanguageEntry("interact.vehicle.nofuel", "There is no fuel in this vehicle.  The engine cannot start!");
+    public static final LanguageEntry INTERACT_VEHICLE_DISMOUNTCONFIRM = new LanguageEntry("interact.vehicle.dismountconfirm", "Press Shift again to dismount");
+    public static final LanguageEntry INTERACT_MOUSEYOKE_ENABLED = new LanguageEntry("interact.mouseyoke.enabled", "Mouse Yoke enabled");
+    public static final LanguageEntry INTERACT_MOUSEYOKE_DISABLED = new LanguageEntry("interact.mouseyoke.disabled", "Mouse Yoke disabled");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
@@ -494,6 +500,12 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_CUSTOM2 = new LanguageEntry("input.custom2", "Custom2");
     public static final LanguageEntry INPUT_CUSTOM3 = new LanguageEntry("input.custom3", "Custom3");
     public static final LanguageEntry INPUT_CUSTOM4 = new LanguageEntry("input.custom4", "Custom4");
+	public static final LanguageEntry INPUT_CUSTOM5 = new LanguageEntry("input.custom5", "Custom5");
+    public static final LanguageEntry INPUT_CUSTOM6 = new LanguageEntry("input.custom6", "Custom6");
+    public static final LanguageEntry INPUT_CUSTOM7 = new LanguageEntry("input.custom7", "Custom7");
+    public static final LanguageEntry INPUT_CUSTOM8 = new LanguageEntry("input.custom8", "Custom8");
+    public static final LanguageEntry INPUT_CUSTOM9 = new LanguageEntry("input.custom9", "Custom9");
+    public static final LanguageEntry INPUT_CUSTOM10 = new LanguageEntry("input.custom10", "Custom10");
 
     public static final LanguageEntry INPUT_MOD = new LanguageEntry("input.mod", "Mod");
     public static final LanguageEntry INPUT_CAMLOCK = new LanguageEntry("input.camlock", "CamLock");
@@ -511,6 +523,7 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
+    public static final LanguageEntry INPUT_MOUSE_YOKE = new LanguageEntry("input.mouse_yoke", "Mouse Yoke");
     public static final LanguageEntry INPUT_BRAKE = new LanguageEntry("input.brake", "Brake");
     public static final LanguageEntry INPUT_GEAR = new LanguageEntry("input.gear", "Gear");
     public static final LanguageEntry INPUT_PANEL = new LanguageEntry("input.panel", "Panel");

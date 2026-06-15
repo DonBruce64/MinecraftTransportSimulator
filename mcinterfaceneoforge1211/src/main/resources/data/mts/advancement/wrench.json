@@ -1,0 +1,38 @@
+{
+    "parent": "mts:vehiclebench",
+    "display": {
+        "icon": {
+        	"item": "mts:mts.wrench"
+        	},
+        "title": {
+        	"translate": "advancements.mts.wrench.title"
+        	},
+        "description": {
+        	"translate": "advancements.mts.wrench.description"
+        	},
+        "frame": "task",
+    	"show_toast": true,
+    	"announce_to_chat": false,
+    	"hidden": false
+    },
+    "criteria": {
+        "wrench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+            	"items": [
+            		{
+            			"items": [
+            				"mts:mts.wrench"
+            				]
+            			}
+            		]
+            	}
+        	}
+        }
+    },
+    "requirements": [
+        [
+            "wrench"
+        ]
+    ]
+}
