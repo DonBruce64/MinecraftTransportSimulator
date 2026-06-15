@@ -47,6 +47,9 @@ public final class PartSeat extends APart {
 
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartSeat item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
+        if (vehicleOn != null && (data == null || !data.hasKey("zoomLevel"))) {
+            this.zoomLevel = vehicleOn.definition.motorized.defaultZoom;
+        }
         if (data != null) {
             this.activeGunItem = PackParser.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
         }
