@@ -1,0 +1,20 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "  b",
+        " b ",
+        "a  "
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "item": "minecraft:iron_nugget"
+        }
+    },
+    "result": {
+        "item": "mts:mts.screwdriver"
+    }
+}
