@@ -430,6 +430,11 @@ public class RenderText {
                 wrapWidth = 0;
             }
 
+            //Convert the scaled pixel width into the unscaled font coordinate space used
+            //to lay out glyphs.  Do this before the world-space 1/16 scale conversion:
+            //wrapWidth is defined in pixels for both GUI and world text.
+            wrapWidth /= scale;
+
             //Reduce scale by 16 if we're not using pixel coords.
             //Entity rendering systems calling this function feeding params will scale in block coords.
             //We need to be be in pixel coords for all the rendering operations here.
@@ -448,9 +453,6 @@ public class RenderText {
             } else if (alignment.equals(TextAlignment.RIGHT_ALIGNED)) {
                 alignmentOffset = -stringWidth;
             }
-
-            //Adjust wrapWidth to account for total scale.
-            wrapWidth /= scale;
 
             //The following rendering setup code operates on the assumption of a 1.0 scale.
             //This function sets up the font using the paramters defined above, and sets all UV points.
