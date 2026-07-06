@@ -63,7 +63,7 @@ public class JSONText {
 
     @JSONDescription("If true, then this text will light up when the model is lit up.")
     public boolean lightsUp;
-    
+
     @JSONDescription("If true, this text will ignore directional surface shading while still respecting world light levels.  Useful for flat text on signs and labels.")
     public boolean flatLighting;
 
