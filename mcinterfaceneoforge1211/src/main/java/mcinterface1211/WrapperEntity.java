@@ -17,7 +17,9 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.MouseFlightController;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -345,6 +347,12 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
+        if (MouseFlightController.shouldUseCameraLineOfSight()) {
+            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+            if (clientPlayer != null && equals(clientPlayer)) {
+                return MouseFlightController.getCameraLineOfSight(mutableSight, distance, 1.0D);
+            }
+        }
         mutableSight.set(0, 0, distance).rotate(getOrientation());
         return mutableSight;
     }
