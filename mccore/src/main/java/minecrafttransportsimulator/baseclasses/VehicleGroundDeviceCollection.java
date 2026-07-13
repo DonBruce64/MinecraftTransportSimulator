@@ -138,7 +138,7 @@ public class VehicleGroundDeviceCollection {
         //If there is a propeller, we know we are a boat that can turn.
         if (turningDistance == 0) {
             for (APart part : vehicle.allParts) {
-                if (part instanceof PartPropeller) {
+                if (part instanceof PartPropeller && part.isActiveVar.isActive) {
                     if (part.isInLiquid()) {
                         foundTurningDevice = true;
                         if (part.localOffset.z > furthestFrontPoint) {
@@ -148,7 +148,7 @@ public class VehicleGroundDeviceCollection {
                             furthestRearPoint = part.localOffset.z;
                         }
                     }
-                } else if (part instanceof PartGroundDevice) {
+                } else if (part instanceof PartGroundDevice && part.isActiveVar.isActive) {
                     PartGroundDevice groundDevice = (PartGroundDevice) part;
                     if (groundDevice.wheelbasePoint.z > furthestFrontPoint) {
                         furthestFrontPoint = groundDevice.wheelbasePoint.z;

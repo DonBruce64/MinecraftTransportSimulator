@@ -57,6 +57,7 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems and enables the gun aiming crosshair.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
         public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");

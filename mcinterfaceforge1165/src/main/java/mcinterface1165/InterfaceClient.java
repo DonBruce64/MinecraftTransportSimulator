@@ -327,6 +327,7 @@ public class InterfaceClient implements IInterfaceClient {
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
             if (world != null) {
                 if (event.phase.equals(Phase.START)) {
+                    ConfigSystem.displayPendingConfigWarnings(player);
                     if (!player.isSpectator()) {
                         //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
                         ControlSystem.controlGlobal(player);
