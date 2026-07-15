@@ -523,7 +523,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         }
         data.setInteger("zoomLevel", zoomLevel);
         data.setInteger("cameraIndex", cameraIndex);
-        }
         return data;
     }
 }
