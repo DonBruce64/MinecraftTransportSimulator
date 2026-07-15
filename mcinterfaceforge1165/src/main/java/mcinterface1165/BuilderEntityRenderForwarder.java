@@ -5,6 +5,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.block.material.PushReaction;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
@@ -67,6 +68,31 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public PushReaction getPistonPushReaction() {
         //This entity only exists as a render anchor and should not be treated as a physical obstacle.
         return PushReaction.IGNORE;
+    }
+
+    @Override
+    public void handleInsidePortal(BlockPos pos) {
+        //This entity only exists as a render anchor and should not trigger portal timers or sounds.
+    }
+
+    @Override
+    public boolean canChangeDimensions() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushedByFluid() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean isIgnoringBlockTriggers() {
+        return true;
     }
 
     @Override
