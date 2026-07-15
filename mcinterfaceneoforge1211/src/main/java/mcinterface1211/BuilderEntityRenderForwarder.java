@@ -80,6 +80,12 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     }
 
     @Override
+    public boolean isSpectator() {
+        //This entity only exists as a render anchor and should be ignored by entity scanners like Mekanism's teleporter.
+        return true;
+    }
+
+    @Override
     public boolean isPushedByFluid() {
         return false;
     }
