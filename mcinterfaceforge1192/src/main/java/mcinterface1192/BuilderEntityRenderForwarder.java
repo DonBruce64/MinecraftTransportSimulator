@@ -1,6 +1,7 @@
 package mcinterface1192;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -67,6 +68,31 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public PushReaction getPistonPushReaction() {
         //This entity only exists as a render anchor and should not be treated as a physical obstacle.
         return PushReaction.IGNORE;
+    }
+
+    @Override
+    public void handleInsidePortal(BlockPos pos) {
+        //This entity only exists as a render anchor and should not trigger portal timers or sounds.
+    }
+
+    @Override
+    public boolean canChangeDimensions() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushedByFluid() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean isIgnoringBlockTriggers() {
+        return true;
     }
 
     @Override
