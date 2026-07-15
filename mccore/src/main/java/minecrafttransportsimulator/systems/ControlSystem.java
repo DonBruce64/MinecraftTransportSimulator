@@ -35,6 +35,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
+    private static final double INTERACTION_DISTANCE = 3.5;
     private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
@@ -109,6 +110,21 @@ public final class ControlSystem {
         mouseYokePosY = Double.NaN;
     }
 
+    /**
+     * Returns true when vanilla use-item handling should be suppressed because the player is
+     * targeting an IV click hitbox.  IV handles these clicks separately in {@link #handleClick},
+     * so allowing vanilla to process the same input may place or use an item on a block behind
+     * the IV entity.
+     */
+    public static boolean shouldSuppressVanillaRightClick(IWrapperPlayer player) {
+        if (player != null && player.getWorld() != null) {
+            Point3D startPosition = player.getEyePosition();
+            Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+            return player.getWorld().getMultipartEntityIntersect(startPosition, endPosition) != null;
+        }
+        return false;
+    }
+
     public static void setMouseYokeEnabled(boolean enabled, boolean displayMessage) {
         ConfigSystem.client.controlSettings.mouseYoke.value = enabled;
         ConfigSystem.saveToDisk();
@@ -179,7 +195,7 @@ public final class ControlSystem {
         }
         if (leftClickDown || rightClickDown) {
             Point3D startPosition = player.getEyePosition();
-            Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
+            Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
