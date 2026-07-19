@@ -839,7 +839,7 @@ public final class ControlSystem {
             } else {
                 if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.isAutomaticVar.isActive) {
+                        if (engine.isAutomaticVar.isActive || powered.isSimpleThrottleVar.isActive) {
                             if (engine.currentGearVar.currentValue < 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {
@@ -852,7 +852,7 @@ public final class ControlSystem {
                 }
                 if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.isAutomaticVar.isActive) {
+                        if (engine.isAutomaticVar.isActive || powered.isSimpleThrottleVar.isActive) {
                             if (engine.currentGearVar.currentValue > 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {
@@ -864,6 +864,12 @@ public final class ControlSystem {
                     });
                 }
             }
+            //Check if we are simpleThrottle and if so, kindly ask vehicles to treat their manual transmissions as auto transmissions. Also has us send auto-type shift packets when enabled.
+            if (ConfigSystem.client.controlSettings.simpleThrottle.value && !powered.isSimpleThrottleVar.isActive) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.isSimpleThrottleVar, 1));
+             } else if (!ConfigSystem.client.controlSettings.simpleThrottle.value && powered.isSimpleThrottleVar.isActive) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.isSimpleThrottleVar, 0));
+             }
         }
 
         //Check if horn button is pressed.
