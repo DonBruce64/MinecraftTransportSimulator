@@ -37,6 +37,16 @@ public class RenderText {
 
     private static final Map<String, FontData> fontDatas = new HashMap<>();
     private static final TransformationMatrix transformHelper = new TransformationMatrix();
+    private static final int GUI_TEXTURE_BASE_SIZE = 16;
+    private static final RenderableData guiTextureRenderable;
+
+    static {
+        RenderableVertices guiTextureVertices = RenderableVertices.createSprite(1, null, null);
+        guiTextureVertices.setSpriteProperties(0, -GUI_TEXTURE_BASE_SIZE / 2, GUI_TEXTURE_BASE_SIZE / 2, GUI_TEXTURE_BASE_SIZE, GUI_TEXTURE_BASE_SIZE, 0, 0, 1, 1);
+        guiTextureRenderable = new RenderableData(guiTextureVertices);
+        guiTextureRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+        guiTextureRenderable.setTransucentOverride();
+    }
 
     /**
      * Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
@@ -101,6 +111,27 @@ public class RenderText {
             transformHelper.applyTranslation(screenWidth / 2D, -screenHeight / 2D, zOffset);
             transformHelper.applyTranslation(definition.pos.x, -definition.pos.y, definition.pos.z);
             getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, entity.worldLightValue, true, alpha);
+        }
+    }
+
+    /**
+     * Renders a texture from a JSON text definition directly on the player's screen.
+     * The texture is centered on pos and starts at 16 by 16 screen pixels before scale is applied.
+     */
+    public static void drawGUITexture(String texture, JSONText definition, int screenWidth, int screenHeight, double zOffset, float alpha) {
+        if (texture != null && !texture.isEmpty()) {
+            transformHelper.resetTransforms();
+            transformHelper.applyTranslation(screenWidth / 2D, -screenHeight / 2D, zOffset);
+            transformHelper.applyTranslation(definition.pos.x, -definition.pos.y, definition.pos.z);
+            if (definition.rot != null) {
+                transformHelper.applyRotation(definition.rot);
+            }
+            transformHelper.applyScaling(definition.scale, definition.scale, definition.scale);
+
+            guiTextureRenderable.setTexture(texture);
+            guiTextureRenderable.setAlpha(alpha);
+            guiTextureRenderable.transform.set(transformHelper);
+            guiTextureRenderable.render();
         }
     }
 
