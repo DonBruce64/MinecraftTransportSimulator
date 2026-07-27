@@ -250,6 +250,9 @@ public class PartPropeller extends APart {
             //Depends on propeller orientation, as upward propellers provide upwards thrust.
             propellerForceValue += thrust;
             propellerForce.set(propellerAxisVector).scale(thrust);
+            if (definition.propeller.isRotor) {
+                vehicleOn.applyArcadeRotorDirection(propellerForce);
+            }
             force.add(propellerForce);
             propellerForce.reOrigin(vehicleOn.orientation);
             if (partOn != null && partOn.definition.engine.allowThrustVector) {

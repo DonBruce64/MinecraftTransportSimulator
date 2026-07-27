@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.packets.instances.PacketVehicleRotorControl;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 
 /**
@@ -27,6 +28,7 @@ public class MouseFlightController {
 
     /** Whether the current vehicle is a helicopter (has rotor propellers). */
     public static boolean isHelicopter = false;
+    private static EntityVehicleF_Physics activeAircraft;
 
     /** Stored mouse deltas captured before updateRider consumes them. */
     public static float storedYawDelta = 0;
@@ -45,10 +47,6 @@ public class MouseFlightController {
     private static double prevCamYaw = 0;
     private static double prevCamPitch = 0;
 
-    // Smoothed helicopter cyclic commands to avoid tick-to-tick attitude jitter.
-    private static double heliElevatorCommand = 0;
-    private static double heliAileronCommand = 0;
-
     /** Aim direction as a unit vector in world space. */
     public static final Point3D mouseAimForward = new Point3D(0, 0, 1);
 
@@ -60,30 +58,6 @@ public class MouseFlightController {
 
     /** Rudder gain for helicopter arcade yaw, in control angle per degree of yaw error. */
     private static final double HELI_YAW_GAIN = 0.45;
-
-    /** Maximum nose-down or nose-up pitch angle for helicopter arcade attitude control. */
-    private static final double HELI_MAX_PITCH_ANGLE = 35.0;
-
-    /** Nose-down attitude applied when the aim point is forward of the helicopter. */
-    private static final double HELI_FORWARD_PITCH_ANGLE = 22.0;
-
-    /** Maximum left or right bank angle for helicopter arcade attitude control. */
-    private static final double HELI_MAX_ROLL_ANGLE = 35.0;
-
-    /** Attitude correction gain for helicopter arcade controls when heli auto-level is disabled. */
-    private static final double HELI_ATTITUDE_GAIN = 0.65;
-
-    /** Rotation-rate damping gain for helicopter arcade controls when heli auto-level is disabled. */
-    private static final double HELI_RATE_DAMPING_GAIN = 0.7;
-
-    /** Maximum cyclic input when helicopter auto-level is disabled. */
-    private static final double HELI_MAX_RATE_INPUT = 18.0;
-
-    /** Attitude error ignored to avoid small oscillations around the target. */
-    private static final double HELI_ATTITUDE_DEADBAND = 0.75;
-
-    /** How quickly helicopter cyclic commands move toward their targets each tick. */
-    private static final double HELI_COMMAND_RESPONSE = 0.18;
 
     /** Angle threshold for blending between banking turn and wings-level. */
     private static final double AGGRESSIVE_TURN_ANGLE = 10.0;
@@ -104,6 +78,7 @@ public class MouseFlightController {
     public static void activate(EntityVehicleF_Physics aircraft, boolean hasRotors) {
         isMouseFlightActive = true;
         isHelicopter = hasRotors;
+        activeAircraft = aircraft;
         // Extract aircraft yaw/pitch from its orientation.
         aircraft.orientation.convertToAngles();
         aimYaw = aircraft.orientation.angles.y;
@@ -114,8 +89,6 @@ public class MouseFlightController {
         camPitch = aimPitch;
         prevCamYaw = camYaw;
         prevCamPitch = camPitch;
-        heliElevatorCommand = aircraft.elevatorInputVar.currentValue;
-        heliAileronCommand = aircraft.aileronInputVar.currentValue;
         rebuildOrientations();
     }
 
@@ -123,10 +96,15 @@ public class MouseFlightController {
      * Deactivates mouse flight.
      */
     public static void deactivate() {
+        if (isHelicopter && activeAircraft != null) {
+            activeAircraft.setArcadeRotorDirection(0, 0);
+            if (InterfaceManager.packetInterface != null) {
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleRotorControl(activeAircraft, 0, 0));
+            }
+        }
         isMouseFlightActive = false;
         isHelicopter = false;
-        heliElevatorCommand = 0;
-        heliAileronCommand = 0;
+        activeAircraft = null;
     }
 
     /**
@@ -167,7 +145,7 @@ public class MouseFlightController {
 
         // 5. Run autopilot (skipping axes overridden by keyboard).
         if (isHelicopter) {
-            runHelicopterAutopilot(aircraft, keyboardYaw, keyboardPitch, keyboardRoll);
+            runHelicopterArcadeControl(aircraft, keyboardYaw);
         } else {
             runAutopilot(aircraft, keyboardYaw, keyboardPitch, keyboardRoll);
         }
@@ -316,22 +294,14 @@ public class MouseFlightController {
     }
 
     /**
-     * Runs the helicopter autopilot: converts the aim direction into stable attitude targets.
-     * <p>
-     * Helicopter control model:
-     * - Yaw (rudder): turn the helicopter to face the aim heading
-     * - Pitch (elevator): hold a bounded nose-up/down attitude from forward and vertical aim error
-     * - Roll (aileron): hold a bounded bank attitude toward lateral aim error
+     * Directs helicopter rotor thrust toward the aim heading without changing the
+     * pitch or roll controls.  Those axes remain under normal manual control.
      */
-    private static void runHelicopterAutopilot(EntityVehicleF_Physics aircraft,
-                                               boolean keyboardYaw, boolean keyboardPitch, boolean keyboardRoll) {
+    private static void runHelicopterArcadeControl(EntityVehicleF_Physics aircraft, boolean keyboardYaw) {
         // Transform aim direction into aircraft local space.
         tempLocal.set(mouseAimForward);
         aircraft.orientation.reOrigin(tempLocal);
 
-        // Clamp to control surface limits.
-        double maxAil = EntityVehicleF_Physics.MAX_AILERON_ANGLE;
-        double maxElev = EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE;
         double maxRud = EntityVehicleF_Physics.MAX_RUDDER_ANGLE;
 
         // Yaw: use angular error so aiming behind the helicopter still produces a turn command.
@@ -339,45 +309,10 @@ public class MouseFlightController {
         double yawError = Math.toDegrees(Math.atan2(tempLocal.x, tempLocal.z));
         double rudderValue = clamp(-yawError * HELI_YAW_GAIN, -maxRud, maxRud);
 
-        // Positive vehicle pitch is nose-down, while positive elevator input commands nose-up.
-        // A centered forward aim needs some nose-down cyclic to actually translate forward.
-        double forwardTilt = Math.max(0, tempLocal.z) * HELI_FORWARD_PITCH_ANGLE;
-        double verticalTilt = -tempLocal.y * HELI_MAX_PITCH_ANGLE;
-        double targetPitch = clamp(forwardTilt + verticalTilt, -HELI_MAX_PITCH_ANGLE, HELI_MAX_PITCH_ANGLE);
+        // Keep client prediction immediate and synchronize both horizontal components atomically.
+        aircraft.setArcadeRotorDirection(mouseAimForward.x, mouseAimForward.z);
+        InterfaceManager.packetInterface.sendToServer(new PacketVehicleRotorControl(aircraft, mouseAimForward.x, mouseAimForward.z));
 
-        // Positive roll banks right; local X is negative when the aim is to the right.
-        double targetRoll = clamp(-tempLocal.x * HELI_MAX_ROLL_ANGLE, -HELI_MAX_ROLL_ANGLE, HELI_MAX_ROLL_ANGLE);
-
-        double elevatorValue;
-        double aileronValue;
-        if (aircraft.autolevelEnabledVar.isActive) {
-            // Auto-level mode already interprets cyclic input as target pitch/roll attitudes.
-            elevatorValue = clamp(-targetPitch, -maxElev, maxElev);
-            aileronValue = clamp(targetRoll, -maxAil, maxAil);
-        } else {
-            // Without auto-level, cyclic input is a rotation-rate command.  Close the attitude
-            // loop here and damp the current rotation to avoid continuous spin.
-            double pitchError = applyDeadband(targetPitch - aircraft.orientation.angles.x, HELI_ATTITUDE_DEADBAND);
-            double rollError = applyDeadband(targetRoll - aircraft.orientation.angles.z, HELI_ATTITUDE_DEADBAND);
-            elevatorValue = clamp(-(pitchError * HELI_ATTITUDE_GAIN - aircraft.rotation.angles.x * HELI_RATE_DAMPING_GAIN), -HELI_MAX_RATE_INPUT, HELI_MAX_RATE_INPUT);
-            aileronValue = clamp(rollError * HELI_ATTITUDE_GAIN - aircraft.rotation.angles.z * HELI_RATE_DAMPING_GAIN, -HELI_MAX_RATE_INPUT, HELI_MAX_RATE_INPUT);
-        }
-
-        // Only send autopilot commands for axes NOT overridden by keyboard.
-        if (!keyboardRoll) {
-            aileronValue = smoothCommand(heliAileronCommand, aileronValue);
-            heliAileronCommand = aileronValue;
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.aileronInputVar, aileronValue));
-        } else {
-            heliAileronCommand = aircraft.aileronInputVar.currentValue;
-        }
-        if (!keyboardPitch) {
-            elevatorValue = smoothCommand(heliElevatorCommand, elevatorValue);
-            heliElevatorCommand = elevatorValue;
-            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.elevatorInputVar, elevatorValue));
-        } else {
-            heliElevatorCommand = aircraft.elevatorInputVar.currentValue;
-        }
         if (!keyboardYaw) {
             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft.rudderInputVar, rudderValue));
         }
@@ -413,14 +348,4 @@ public class MouseFlightController {
         return Math.max(min, Math.min(max, value));
     }
 
-    private static double applyDeadband(double value, double deadband) {
-        if (Math.abs(value) <= deadband) {
-            return 0;
-        }
-        return value > 0 ? value - deadband : value + deadband;
-    }
-
-    private static double smoothCommand(double currentValue, double targetValue) {
-        return currentValue + (targetValue - currentValue) * HELI_COMMAND_RESPONSE;
-    }
 }
