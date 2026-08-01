@@ -1,0 +1,21 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "abg",
+        "cde",
+        "gfa"
+    ],
+    "key": {
+        "a": "#c:ingots/iron",
+        "b": "minecraft:glass_pane",
+        "c": "minecraft:gold_nugget",
+        "d": "minecraft:repeater",
+        "e": "minecraft:redstone",
+        "f": "minecraft:stone_button",
+        "g": "#c:ingots/copper"
+    },
+    "result": {
+        "id": "mts:mts.partscanner"
+    }
+}
+

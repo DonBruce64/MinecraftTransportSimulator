@@ -96,6 +96,23 @@ tasks.register<Exec>("buildForge1211") {
     }
 }
 
+tasks.register<Exec>("buildForge261") {
+    doFirst { preBuild() }
+    commandLine(
+        "${System.getProperty("java.home")}/bin/java",
+        "-classpath",
+        "${project.projectDir.canonicalPath}/gradle/neoforge-wrapper/gradle-wrapper.jar",
+        "org.gradle.wrapper.GradleWrapperMain",
+        "--no-daemon",
+        "-p",
+        "${project.projectDir.canonicalPath}/mcinterfaceneoforge261",
+        "build"
+    )
+    doLast {
+        moveToOut("mcinterfaceneoforge261", "26.1-$modVersion")
+    }
+}
+
 tasks.register("buildForgeAll") {
     dependsOn(tasks.getByName("buildForge1122"))
     dependsOn(tasks.getByName("buildForge1165"))
@@ -103,6 +120,7 @@ tasks.register("buildForgeAll") {
 		dependsOn(tasks.getByName("buildForge1192"))
 		dependsOn(tasks.getByName("buildForge1201"))
     dependsOn(tasks.getByName("buildForge1211"))
+    dependsOn(tasks.getByName("buildForge261"))
 }
 
 @OptIn(ExperimentalPathApi::class)

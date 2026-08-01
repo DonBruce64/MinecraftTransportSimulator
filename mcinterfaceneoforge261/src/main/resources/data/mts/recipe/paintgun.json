@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " a ",
+        "bc ",
+        "  d"
+    ],
+    "key": {
+        "a": "minecraft:bucket",
+        "b": "minecraft:dispenser",
+        "c": "#c:ingots/iron",
+        "d": "minecraft:stick"
+    },
+    "result": {
+        "id": "mts:mts.paintgun"
+    }
+}
+
