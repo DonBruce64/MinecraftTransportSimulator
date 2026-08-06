@@ -324,13 +324,21 @@ public class GUIOverlay extends AGUIBase {
                     continue;
                 }
 
-                String textValue = entity.getGUITextValue(textDef, partialTicks);
-                if (textValue == null || textValue.isEmpty()) {
-                    continue;
-                }
-
                 //Each tracked entity gets a small Z slice so multiple prompts can overlap without fighting.
-                RenderText.drawGUIText(textValue, entity, textDef, screenWidth, screenHeight, 325 + entityLayer * 5D, alpha);
+                double zOffset = 325 + entityLayer * 5D;
+                if (textDef.textureNames != null && !textDef.textureNames.isEmpty()) {
+                    String textureName = entity.getGUITextureName(textDef);
+                    if (textureName == null || textureName.isEmpty()) {
+                        continue;
+                    }
+                    RenderText.drawGUITexture(textureName, textDef, screenWidth, screenHeight, zOffset, alpha);
+                } else {
+                    String textValue = entity.getGUITextValue(textDef, partialTicks);
+                    if (textValue == null || textValue.isEmpty()) {
+                        continue;
+                    }
+                    RenderText.drawGUIText(textValue, entity, textDef, screenWidth, screenHeight, zOffset, alpha);
+                }
                 shouldKeepTracking = true;
             }
 

@@ -102,7 +102,7 @@ public final class PartInteractable extends APart {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (vehicleOn == null || !vehicleOn.lockedVar.isActive) {
+        if (isActiveVar.isActive && (vehicleOn == null || !vehicleOn.lockedVar.isActive)) {
             switch (definition.interactable.interactionType) {
                 case CRATE:
                 case CRAFTING_BENCH:
@@ -128,7 +128,7 @@ public final class PartInteractable extends APart {
                     break;
                 }
             }
-        } else {
+        } else if (isActiveVar.isActive) {
             player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
         }
         return true;
@@ -146,7 +146,7 @@ public final class PartInteractable extends APart {
     @Override
     public void attack(Damage damage) {
         super.attack(damage);
-        if (!damage.isWater && damage.amount > 25) {
+        if (!damage.isWater && damage.amount > 25 && (!outOfHealth || definition.generic.destroyable)) {
             destroy(damage.box);
         }
     }
@@ -183,7 +183,7 @@ public final class PartInteractable extends APart {
     @Override
     public void update() {
         super.update();
-        if (crafter != null) {
+        if (isActiveVar.isActive && crafter != null) {
             crafter.update();
             if (crafter.ticksLeftToCraft > 0) {
                 //Only look for fuel when we're processing and don't have any.
@@ -198,7 +198,7 @@ public final class PartInteractable extends APart {
 
         //Check to see if we are linked and need to send fluid to the linked tank.
         //Only do checks on the server.  Clients get packets.
-        if (!world.isClient()) {
+        if (!world.isClient() && isActiveVar.isActive) {
             EntityFluidTank linkedTank = null;
             LanguageEntry linkedMessage = null;
             if (linkedVehicle != null) {

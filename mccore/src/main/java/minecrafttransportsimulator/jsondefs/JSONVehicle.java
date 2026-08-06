@@ -30,6 +30,9 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
+        
+        @JSONDescription("Sets the default third-person zoom level when this vehicle is spawned.  0 is the closest possible camera position, 1 is one step out, 2 is two steps out, and so on.  This only affects the starting zoom level; players can still zoom in or out normally after entering the vehicle.")
+        public int defaultZoom;
 
         @JSONDescription("Set this to true if you want the vehicle to have thrust vectoring.  False means only yaw-vectoring will occur for things like engine out situations.")
         public boolean hasThrustVectoring;

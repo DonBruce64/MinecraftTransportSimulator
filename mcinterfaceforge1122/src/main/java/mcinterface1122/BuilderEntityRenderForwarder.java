@@ -6,6 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.RegistryEvent;
@@ -80,6 +81,26 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public EnumPushReaction getPushReaction() {
         //This entity only exists as a render anchor and should not be treated as a physical obstacle.
         return EnumPushReaction.IGNORE;
+    }
+
+    @Override
+    public void setPortal(BlockPos pos) {
+        //This entity only exists as a render anchor and should not trigger portal timers or sounds.
+    }
+
+    @Override
+    public boolean canBePushed() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushedByWater() {
+        return false;
+    }
+
+    @Override
+    public boolean doesEntityNotTriggerPressurePlate() {
+        return true;
     }
 
     /**
