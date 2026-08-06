@@ -47,6 +47,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 	public final ComputedVariable reverseThrustVar;
 	public final ComputedVariable electricUsageVar;
 	public final ComputedVariable batteryCapacityVar;
+    public final ComputedVariable isSimpleThrottleVar;
     public static final double MAX_THROTTLE = 1.0D;
 
     //Internal states.
@@ -101,6 +102,7 @@ public abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     	addVariable(this.reverseThrustVar = new ComputedVariable(this, "reverser", data));
     	addVariable(this.electricUsageVar = new ComputedVariable(this, "electric_usage", data));
     	addVariable(this.batteryCapacityVar = new ComputedVariable(this, "batteryCapacity", data));
+    	addVariable(this.isSimpleThrottleVar = new ComputedVariable(this, "simplethrottle", data));
     }
 
     @Override

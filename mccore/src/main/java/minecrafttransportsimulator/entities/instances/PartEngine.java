@@ -416,7 +416,7 @@ public class PartEngine extends APart {
                 }
 
                 //Do automatic transmission functions if needed.
-                if (isAutomaticVar.isActive && !world.isClient() && currentGearVar.currentValue != 0) {
+                if ((isAutomaticVar.isActive || vehicleOn.isSimpleThrottleVar.isActive) && !world.isClient() && currentGearVar.currentValue != 0) {
                     if (shiftCooldown == 0) {
                         if (currentGearVar.currentValue > 0 ? currentGearVar.currentValue < forwardsGears : -currentGearVar.currentValue < reverseGears) {
                             //Can shift up, try to do so.
