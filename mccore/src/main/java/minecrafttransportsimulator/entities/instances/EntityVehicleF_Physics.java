@@ -212,7 +212,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
      * Applies cyclic deflection to upward-facing rotors while preserving thrust magnitude.
      * Tail rotors are ignored, and the aircraft body remains under normal pitch/roll control.
      */
-    void applyArcadeRotorDirection(Point3D rotorForce) {
+    public void applyArcadeRotorDirection(Point3D rotorForce) {
         double controlMagnitude = arcadeRotorDirection.length();
         double forceMagnitude = rotorForce.length();
         if (controllerCount == 0 || controlMagnitude < 0.0001D || forceMagnitude < 0.0001D) {
