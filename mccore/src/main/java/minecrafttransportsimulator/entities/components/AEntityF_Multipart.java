@@ -360,7 +360,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 hitOperationalHitbox = true;
                 if (bullet != null) {
                     Point3D bulletDirection = bullet.motion.copy().normalize();
-                    double armorThickness = hitEntry.box.groupDef.volumetricArmor ? getPhysicalArmorThickness(hitEntry, bulletDirection, true) : (hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0);
+                    double armorThickness = hitEntry.box.groupDef.volumetricArmor ? getPhysicalArmorThickness(hitEntry, bulletDirection) : (hitEntry.box.definition != null ? (bullet.definition.bullet.isHeat && hitEntry.box.groupDef.heatArmorThickness != 0 ? hitEntry.box.groupDef.heatArmorThickness : hitEntry.box.groupDef.armorThickness) : 0);
                     double effectiveArmorThickness = hitEntry.box.groupDef.volumetricArmor ? armorThickness : getEffectiveArmorThickness(hitEntry, bulletDirection, armorThickness);
                     double penetrationPotential = bullet.definition.bullet.armorPenetration;
                     if (!bullet.definition.bullet.isHeat && bullet.initialVelocity > 0) {
@@ -436,26 +436,17 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (armorThickness == 0) {
             return 0;
         }
-        Point3D armorNormal = getArmorNormal(hitEntry);
+        Point3D armorNormal = hitEntry.normal.copy().normalize();
         if (bulletDirection.isZero() || armorNormal.isZero()) {
             return armorThickness;
         }
         double armorImpactFactor = Math.max(Math.abs(armorNormal.dotProduct(bulletDirection, true)), 0.001D);
         double effectiveThickness = armorThickness / armorImpactFactor;
-        double physicalThickness = getPhysicalArmorThickness(hitEntry, bulletDirection, false);
+        double physicalThickness = getPhysicalArmorThickness(hitEntry, bulletDirection);
         return Math.min(effectiveThickness, physicalThickness);
     }
 
-    private Point3D getArmorNormal(BoundingBoxHitResult hitEntry) {
-        BoundingBox box = hitEntry.box;
-        Point3D armorNormal = new Point3D(0, 0, 1);
-        if (box.isOBB()) {
-            armorNormal.rotate(box.orientation);
-        }
-        return armorNormal.normalize();
-    }
-
-    private double getPhysicalArmorThickness(BoundingBoxHitResult hitEntry, Point3D bulletDirection, boolean includeLength) {
+    private double getPhysicalArmorThickness(BoundingBoxHitResult hitEntry, Point3D bulletDirection) {
         BoundingBox box = hitEntry.box;
         Point3D localDirection = box.isOBB() ? bulletDirection.copy().reOrigin(box.orientation) : bulletDirection.copy();
         double physicalThickness = Double.MAX_VALUE;
@@ -465,7 +456,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         if (Math.abs(localDirection.y) > 1.0E-7D) {
             physicalThickness = Math.min(physicalThickness, 2D * box.heightRadius / Math.abs(localDirection.y));
         }
-        if (includeLength && Math.abs(localDirection.z) > 1.0E-7D) {
+        if (Math.abs(localDirection.z) > 1.0E-7D) {
             physicalThickness = Math.min(physicalThickness, 2D * box.depthRadius / Math.abs(localDirection.z));
         }
         return physicalThickness * 1000D;
