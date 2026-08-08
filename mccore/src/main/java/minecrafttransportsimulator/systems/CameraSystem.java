@@ -159,7 +159,17 @@ public class CameraSystem {
                 //First person: use the standard rider eye position without any offset.
                 cameraAdjustedPosition.set(sittingSeat.prevRiderCameraPosition).interpolate(sittingSeat.riderCameraPosition, partialTicks);
             } else {
-                setThirdPersonCameraAnchor(sittingSeat, cameraAdjustedPosition, partialTicks);
+                if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
+                    //Use the configured vehicle-relative camera anchor.
+                    cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
+                    sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+                    cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
+                } else {
+                    //Without a configured offset, retain the rider-relative camera anchor.
+                    cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
+                    sittingSeat.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
+                    cameraAdjustedPosition.add(cameraOffset.set(0, (sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset()) * sittingSeat.rider.getVerticalScale(), 0).rotate(cameraOffsetOrientation));
+                }
                 cameraCollisionStart.set(cameraAdjustedPosition);
                 int cameraZoomRequired = 4 - InterfaceManager.clientInterface.getCameraDefaultZoom() + sittingSeat.zoomLevel;
                 cameraOffset.set(0, 0, cameraMode == CameraMode.THIRD_PERSON ? -cameraZoomRequired : cameraZoomRequired).rotate(cameraRotation);
@@ -170,18 +180,6 @@ public class CameraSystem {
         } else {
             //Not doing any camera changes.
             return false;
-        }
-    }
-
-    private static void setThirdPersonCameraAnchor(PartSeat sittingSeat, Point3D cameraAdjustedPosition, float partialTicks) {
-        if (sittingSeat.vehicleOn != null && sittingSeat.vehicleOn.definition.motorized != null && sittingSeat.vehicleOn.definition.motorized.cameraOffset != null) {
-            cameraAdjustedPosition.set(sittingSeat.vehicleOn.prevPosition).interpolate(sittingSeat.vehicleOn.position, partialTicks);
-            sittingSeat.vehicleOn.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
-            cameraAdjustedPosition.add(cameraOffset.set(sittingSeat.vehicleOn.definition.motorized.cameraOffset).rotate(cameraOffsetOrientation));
-        } else {
-            cameraAdjustedPosition.set(sittingSeat.prevPosition).interpolate(sittingSeat.position, partialTicks);
-            sittingSeat.getInterpolatedOrientation(cameraOffsetOrientation, partialTicks);
-            cameraAdjustedPosition.add(cameraOffset.set(0, (sittingSeat.rider.getEyeHeight() + sittingSeat.rider.getSeatOffset()) * sittingSeat.rider.getVerticalScale(), 0).rotate(cameraOffsetOrientation));
         }
     }
 
