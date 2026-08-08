@@ -46,17 +46,19 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> kbOverride = new JSONConfigEntry<>(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
         public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
 
-        public JSONConfigEntry<Boolean> simpleThrottle = new JSONConfigEntry<>(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.");
+        public JSONConfigEntry<Boolean> simpleThrottle = new JSONConfigEntry<>(true, "If true, ground vehicles use simplified driving controls: gas/brake also handle forward and reverse shifting when stopped, the vehicle auto-holds the brake at low speed, and transmissions shift automatically while driving.");
         public JSONConfigEntry<Boolean> halfThrottle = new JSONConfigEntry<>(false, "If true, then the gas key will only be a half-throttle, with the MOD+Throttle key becoming the full-speed control.  Useful if you want a more controlled vehicle experience.  Only valid on car/boat types with on-off throttles, and does not work in conjunction with simpleThrottle as that changes how the MOD key works with gas and brake keys.");
 
         public JSONConfigEntry<Boolean> autostartEng = new JSONConfigEntry<>(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel or electrical system.");
         public JSONConfigEntry<Boolean> autoTrnSignals = new JSONConfigEntry<>(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
 
-        public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a physical shifter controller for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
+        public JSONConfigEntry<Boolean> useShifter = new JSONConfigEntry<>(false, "Set to true if you are using a real life physical shifter controller for shifting gears.  Required since IV doesn't know this automatically since a shifter in neutral won't press any buttons.");
         public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<>(false, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.");
         public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<>(false, "If true, aircraft pitch and roll are controlled by an invisible on-screen mouse yoke.  Cursor center is neutral; window edges are full input.");
         public JSONConfigEntry<Boolean> arcadeMode = new JSONConfigEntry<>(false, "If true, arcade-style flight and aiming will be enabled. This allows the mouse cursor to control aircraft/helicopter steering systems and enables the gun aiming crosshair.");
         public JSONConfigEntry<Boolean> showTutorial = new JSONConfigEntry<>(true, "If true, tutorial and onboarding overlays may be shown.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> showHoverTxt = new JSONConfigEntry<>(true, "If true, hover text helpers may be shown when looking at supported vehicle elements.  Set this to false to hide those prompts.");
+        public JSONConfigEntry<Boolean> cullingWarn = new JSONConfigEntry<>(true, "If true, IV will show a one-time startup warning when Entity Culling is detected.");
 
         public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 
@@ -91,5 +93,3 @@ public class JSONConfigClient {
         public double axisMaxTravel;
     }
 }
-
-

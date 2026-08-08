@@ -521,9 +521,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         if (radio != null) {
             data.setData("radio", radio.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         }
-        if (!cameras.isEmpty()) {
-            data.setInteger("zoomLevel", zoomLevel);
-            data.setInteger("cameraIndex", cameraIndex);
+        data.setInteger("zoomLevel", zoomLevel);
+        data.setInteger("cameraIndex", cameraIndex);
         }
         return data;
     }

@@ -748,6 +748,26 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public void destroyBlockQuietly(Point3D position, boolean spawnDrops) {
+        BlockPos pos = new BlockPos(position.x, position.y, position.z);
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock().isAir(state, world, pos)) {
+            return;
+        }
+
+        if (spawnDrops && !world.isRemote) {
+            NonNullList<ItemStack> drops = NonNullList.create();
+            state.getBlock().getDrops(drops, world, pos, state, 0);
+            for (ItemStack stack : drops) {
+                if (stack.getCount() > 0) {
+                    world.spawnEntity(new EntityItem(world, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, stack));
+                }
+            }
+        }
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+    }
+
+    @Override
     public boolean isAir(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState state = world.getBlockState(pos);

@@ -215,6 +215,7 @@ public final class PackParser {
         defaultItems.put("key", ItemClassification.ITEM);
         defaultItems.put("paintgun", ItemClassification.ITEM);
         defaultItems.put("partscanner", ItemClassification.ITEM);
+        defaultItems.put("screwdriver", ItemClassification.ITEM);
         defaultItems.put("ticket", ItemClassification.ITEM);
         defaultItems.put("wrench", ItemClassification.ITEM);
         defaultItems.put("y2kbutton", ItemClassification.ITEM);

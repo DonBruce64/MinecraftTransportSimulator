@@ -150,6 +150,12 @@ public abstract class AGUIBase {
      * and instead force use of the component-based rendering that provides a state-safe framework.
      */
     public final void render(int mouseX, int mouseY, boolean blendingEnabled, float partialTicks) {
+        //F1 hides non-interactive IV overlays just like it hides Minecraft's HUD.  Interactive
+        //screens still render so players cannot end up controlling an invisible GUI.
+        if (InterfaceManager.clientInterface.isGUIHidden() && !capturesPlayer()) {
+            return;
+        }
+
         //First set the states for things in this GUI.
         //Only do this on the normal render pass.
         if (!blendingEnabled) {

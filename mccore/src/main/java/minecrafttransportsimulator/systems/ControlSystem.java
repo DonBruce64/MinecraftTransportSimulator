@@ -546,8 +546,9 @@ public final class ControlSystem {
             return;
         }
 
-        if (ControlsKeyboard.AIRCRAFT_MOUSEYOKE.isPressed()) {
-            toggleMouseYoke();
+        if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
+            ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
+            ConfigSystem.saveToDisk();
         }
 
         //Open or close the panel.
@@ -881,7 +882,7 @@ public final class ControlSystem {
             } else {
                 if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.isAutomaticVar.isActive) {
+                        if (engine.isAutomaticVar.isActive || powered.isSimpleThrottleVar.isActive) {
                             if (engine.currentGearVar.currentValue < 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {
@@ -894,7 +895,7 @@ public final class ControlSystem {
                 }
                 if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
                     powered.engines.forEach(engine -> {
-                        if (engine.isAutomaticVar.isActive) {
+                        if (engine.isAutomaticVar.isActive || powered.isSimpleThrottleVar.isActive) {
                             if (engine.currentGearVar.currentValue > 0) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.shiftNeutralVar));
                             } else if (engine.currentGearVar.currentValue == 0) {
@@ -906,6 +907,12 @@ public final class ControlSystem {
                     });
                 }
             }
+            //Check if we are simpleThrottle and if so, kindly ask vehicles to treat their manual transmissions as auto transmissions. Also has us send auto-type shift packets when enabled.
+            if (ConfigSystem.client.controlSettings.simpleThrottle.value && !powered.isSimpleThrottleVar.isActive) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.isSimpleThrottleVar, 1));
+             } else if (!ConfigSystem.client.controlSettings.simpleThrottle.value && powered.isSimpleThrottleVar.isActive) {
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered.isSimpleThrottleVar, 0));
+             }
         }
 
         //Check if horn button is pressed.
@@ -985,7 +992,7 @@ public final class ControlSystem {
         AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", LanguageSystem.INPUT_THROTTLE_D),
         AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", LanguageSystem.INPUT_FLAPS_D),
-        AIRCRAFT_MOUSEYOKE(ControlsJoystick.AIRCRAFT_MOUSEYOKE, true, "C", LanguageSystem.INPUT_MOUSE_YOKE),
+        AIRCRAFT_ARCADE(ControlsJoystick.AIRCRAFT_ARCADE, true, "C", LanguageSystem.INPUT_ARCADE),
         AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", LanguageSystem.INPUT_BRAKE),
         AIRCRAFT_PARK(ControlsJoystick.AIRCRAFT_PARK, true, "N", LanguageSystem.INPUT_PARK),
         AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", LanguageSystem.INPUT_PANEL),
@@ -1107,7 +1114,7 @@ public final class ControlSystem {
         AIRCRAFT_GEAR(false, true, LanguageSystem.INPUT_GEAR),
         AIRCRAFT_FLAPS_U(false, true, LanguageSystem.INPUT_FLAPS_U),
         AIRCRAFT_FLAPS_D(false, true, LanguageSystem.INPUT_FLAPS_D),
-        AIRCRAFT_MOUSEYOKE(false, true, LanguageSystem.INPUT_MOUSE_YOKE),
+        AIRCRAFT_ARCADE(false, true, LanguageSystem.INPUT_ARCADE),
         AIRCRAFT_PANEL(false, true, LanguageSystem.INPUT_PANEL),
         AIRCRAFT_PARK(false, true, LanguageSystem.INPUT_PARK),
         AIRCRAFT_RADIO(false, true, LanguageSystem.INPUT_RADIO),

@@ -174,6 +174,8 @@
     "mts.y2kbutton.name": "Botão Y2K",
     "death.bullet.null": "%s levou um tiro de um espião",
     "death.bullet.player": "%s levou um tiro de %s",
+    "death.explosion.null": "%s foi explodido",
+    "death.explosion.player": "%s foi explodido por %s",
     "death.propeller.null": "%s foi despedaçado por uma hélice",
     "death.propeller.player": "%s foi despedaçado pela hélice de %s",
     "death.jet_intake.null": "%s foi sugado por um motor a jato",
