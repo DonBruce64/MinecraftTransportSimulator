@@ -522,6 +522,7 @@ public final class ControlSystem {
         if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
             ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
             ConfigSystem.saveToDisk();
+            InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
         }
 
         //Open or close the panel.
