@@ -327,6 +327,14 @@ public class InterfaceInput implements IInterfaceInput {
         }
     }
 
+    @SubscribeEvent
+    public static void onIVInteractionKeyMapping(InputEvent.InteractionKeyMappingTriggered event) {
+        if (event.isUseItem() && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaRightClick(InterfaceManager.clientInterface.getClientPlayer())) {
+            event.setCanceled(true);
+            event.setSwingHand(false);
+        }
+    }
+
     /**
      * Opens the config screen when the config key is pressed.
      * Also init the joystick system if we haven't already.

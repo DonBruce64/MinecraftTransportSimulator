@@ -27,6 +27,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -321,6 +322,14 @@ public class InterfaceInput implements IInterfaceInput {
     public static void onIVMovementInput(MovementInputUpdateEvent event) {
         if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getInput().shiftKeyDown)) {
             event.getInput().shiftKeyDown = false;
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVClickInput(ClickInputEvent event) {
+        if (event.isUseItem() && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaRightClick(InterfaceManager.clientInterface.getClientPlayer())) {
+            event.setCanceled(true);
+            event.setSwingHand(false);
         }
     }
 
