@@ -347,7 +347,7 @@ public class InterfaceClient implements IInterfaceClient {
                     if (ConfigSystem.settings.general.performModCompatFunctions.value) {
                     	if(ticksToCullingWarning > 0) {
                     		if(--ticksToCullingWarning == 0) {
-                                if (ConfigSystem.client.controlSettings.showEntityCullingWarning.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
+                                if (ConfigSystem.client.controlSettings.cullingWarn.value && InterfaceManager.coreInterface.isModPresent("entityculling")) {
                                     player.displayChatMessage(LanguageSystem.SYSTEM_DEBUG, "ENTITY CULLING MOD IS PRESENT.  WHITELIST \"mts:builder_existing\", \"mts:builder_rendering\", AND \"mts:builder_seat\". IN CONFIG FILE OR VEHICLES MAY BE CULLED. (You can turn off this message in IV's client config menu)");
                                 }
                                 if (InterfaceManager.coreInterface.isModPresent("modernfix")) {
@@ -396,3 +396,6 @@ public class InterfaceClient implements IInterfaceClient {
                     }
                 }
             }
+        }
+    }
+}
