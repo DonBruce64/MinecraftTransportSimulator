@@ -35,6 +35,7 @@ import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
  */
 public final class ControlSystem {
     private static final int NULL_COMPONENT = 999;
+    private static final double INTERACTION_DISTANCE = 3.5;
     private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
@@ -109,6 +110,21 @@ public final class ControlSystem {
         mouseYokePosY = Double.NaN;
     }
 
+    /**
+     * Returns true when vanilla use-item handling should be suppressed because the player is
+     * targeting an IV click hitbox.  IV handles these clicks separately in {@link #handleClick},
+     * so allowing vanilla to process the same input may place or use an item on a block behind
+     * the IV entity.
+     */
+    public static boolean shouldSuppressVanillaRightClick(IWrapperPlayer player) {
+        if (player != null && player.getWorld() != null) {
+            Point3D startPosition = player.getEyePosition();
+            Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+            return player.getWorld().getMultipartEntityIntersect(startPosition, endPosition) != null;
+        }
+        return false;
+    }
+
     public static void setMouseYokeEnabled(boolean enabled, boolean displayMessage) {
         ConfigSystem.client.controlSettings.mouseYoke.value = enabled;
         ConfigSystem.saveToDisk();
@@ -179,7 +195,7 @@ public final class ControlSystem {
         }
         if (leftClickDown || rightClickDown) {
             Point3D startPosition = player.getEyePosition();
-            Point3D endPosition = player.getLineOfSight(3.5).add(startPosition);
+            Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
@@ -506,6 +522,7 @@ public final class ControlSystem {
         if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
             ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
             ConfigSystem.saveToDisk();
+            InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
         }
 
         //Open or close the panel.
@@ -609,10 +626,12 @@ public final class ControlSystem {
             if (keyboardYaw) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
             }
-            if (keyboardPitch) {
+            //Helicopter arcade control vectors rotor thrust directly, so pitch and roll
+            //always remain on the standard manual control path.
+            if (hasRotorPropeller || keyboardPitch) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
             }
-            if (keyboardRoll) {
+            if (hasRotorPropeller || keyboardRoll) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
             }
         } else {
