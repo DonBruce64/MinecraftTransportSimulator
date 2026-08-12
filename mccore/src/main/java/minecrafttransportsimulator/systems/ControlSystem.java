@@ -460,11 +460,12 @@ public final class ControlSystem {
     }
 
     private static boolean controlMouseYoke(EntityVehicleF_Physics aircraft, double mouseXDelta, double mouseYDelta) {
-        if (ConfigSystem.client.controlSettings.mouseYoke.value != mouseYokeEnabledLastCall) {
+        boolean mouseYokeEnabled = ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
+        if (mouseYokeEnabled != mouseYokeEnabledLastCall) {
             resetMouseYoke();
-            mouseYokeEnabledLastCall = ConfigSystem.client.controlSettings.mouseYoke.value;
+            mouseYokeEnabledLastCall = mouseYokeEnabled;
         }
-        if (!ConfigSystem.client.controlSettings.mouseYoke.value) {
+        if (!mouseYokeEnabled) {
             return false;
         }
 

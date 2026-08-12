@@ -12,8 +12,8 @@ import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 /**
  * Mouse-based flight controller inspired by War Thunder style controls.
  * The mouse controls an invisible aim reticle. An autopilot steers the
- * aircraft toward that reticle. The camera smoothly follows the aim
- * direction, decoupled from the aircraft orientation.
+ * aircraft toward that reticle. In third-person, the camera smoothly
+ * follows the aim direction, decoupled from the aircraft orientation.
  * <p>
  * Supports both fixed-wing aircraft and helicopters with different
  * autopilot logic for each type.
@@ -66,7 +66,6 @@ public class MouseFlightController {
     private static final RotationMatrix aimOrientation = new RotationMatrix();
     private static final RotationMatrix camOrientation = new RotationMatrix();
     private static final RotationMatrix prevCamOrientation = new RotationMatrix();
-    private static final RotationMatrix lineOfSightOrientation = new RotationMatrix();
 
     // Temp vectors for autopilot calculations.
     private static final Point3D tempLocal = new Point3D();
@@ -123,12 +122,19 @@ public class MouseFlightController {
             return;
         }
 
-        // 1. Update aim angles from mouse input.
+        // 1. Update aim angles from mouse input.  In first-person, those deltas have already
+        // been applied to the normal rider view, so use that view directly as the flight aim.
         prevAimYaw = aimYaw;
         prevAimPitch = aimPitch;
-        aimYaw += yawDelta;
-        aimPitch += pitchDelta;
-        aimPitch = clamp(aimPitch, -89, 89);
+        if (InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON) {
+            RotationMatrix viewOrientation = InterfaceManager.clientInterface.getClientPlayer().getOrientation();
+            aimYaw = viewOrientation.angles.y;
+            aimPitch = viewOrientation.angles.x;
+        } else {
+            aimYaw += yawDelta;
+            aimPitch += pitchDelta;
+            aimPitch = clamp(aimPitch, -89, 89);
+        }
 
         // 2. Save previous camera for interpolation.
         prevCamYaw = camYaw;
@@ -171,15 +177,6 @@ public class MouseFlightController {
         double interpPitch = prevCamPitch + (camPitch - prevCamPitch) * partialTicks;
         store.angles.set(interpPitch, interpYaw, 0);
         store.updateToAngles();
-    }
-
-    public static boolean shouldUseCameraLineOfSight() {
-        return isMouseFlightActive && InterfaceManager.clientInterface != null && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON;
-    }
-
-    public static Point3D getCameraLineOfSight(Point3D store, double distance, double partialTicks) {
-        getInterpolatedCameraOrientation(lineOfSightOrientation, partialTicks);
-        return store.set(0, 0, distance).rotate(lineOfSightOrientation);
     }
 
     /**
