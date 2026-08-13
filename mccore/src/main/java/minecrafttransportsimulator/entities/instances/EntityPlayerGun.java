@@ -56,6 +56,13 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONDummyPartProvider> {
                     break;
                 }
             }
+            if (foundPlayer == null) {
+                //Fall back to UUID lookup as the saved entity position can lag behind fast-moving players.
+                IWrapperEntity foundEntity = world.getExternalEntity(playerUUID);
+                if (foundEntity instanceof IWrapperPlayer) {
+                    foundPlayer = (IWrapperPlayer) foundEntity;
+                }
+            }
             if (foundPlayer != null) {
                 this.player = foundPlayer;
             } else {
