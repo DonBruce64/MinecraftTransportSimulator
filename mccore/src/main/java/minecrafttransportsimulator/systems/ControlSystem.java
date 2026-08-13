@@ -53,6 +53,7 @@ public final class ControlSystem {
     private static PartSeat dismountConfirmationSeat;
     private static long dismountConfirmationExpireTime;
     private static boolean dismountInputPressedLastCall;
+    private static boolean weaponSelectorConsumedAltPress;
 
     private static EntityInteractResult interactResult = null;
 
@@ -121,11 +122,21 @@ public final class ControlSystem {
             GUIAmmoSelector.current.close();
         }
         if (GUIAmmoSelector.current != null && !guiOpen) {
-            GUIAmmoSelector.current.pollSelectionKeys();
+            weaponSelectorConsumedAltPress = GUIAmmoSelector.current.pollSelectionKeys();
             if (ControlsKeyboard.GENERAL_AMMO_SELECT.isPressed()) {
                 GUIAmmoSelector.current.cycleActiveGunAmmo();
             }
+        } else {
+            weaponSelectorConsumedAltPress = false;
         }
+    }
+
+    /**
+     * Called by platform input adapters before vanilla handles gameplay scrolling.
+     * Returns true when the open weapon drawer consumed the wheel step.
+     */
+    public static boolean onMouseWheel(int direction) {
+        return GUIAmmoSelector.current != null && GUIAmmoSelector.current.onMouseWheel(direction);
     }
 
     private static boolean hasAnyControllableGun(IWrapperPlayer player) {
@@ -368,8 +379,11 @@ public final class ControlSystem {
 
     private static void controlFreecam(ControlsKeyboard camLock) {
         if (camLock.isPressed()) {
-            ConfigSystem.client.renderingSettings.freecam_3P.value = !ConfigSystem.client.renderingSettings.freecam_3P.value;
-            ConfigSystem.saveToDisk();
+            if (!weaponSelectorConsumedAltPress) {
+                ConfigSystem.client.renderingSettings.freecam_3P.value = !ConfigSystem.client.renderingSettings.freecam_3P.value;
+                ConfigSystem.saveToDisk();
+            }
+            weaponSelectorConsumedAltPress = false;
         }
     }
 
