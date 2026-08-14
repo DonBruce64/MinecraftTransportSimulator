@@ -606,7 +606,11 @@ public final class ControlSystem {
                 && !ControlsJoystick.AIRCRAFT_YAW.isJoystickActive();
 
         if (useMouseFlight) {
-            //Activate mouse flight if not already active.
+            //Activate mouse flight if not already active.  Refresh it if the
+            //installed parts changed the aircraft between rotor and fixed-wing.
+            if (MouseFlightController.isMouseFlightActive && MouseFlightController.isHelicopter != hasRotorPropeller) {
+                MouseFlightController.deactivate();
+            }
             if (!MouseFlightController.isMouseFlightActive) {
                 MouseFlightController.activate(aircraft, hasRotorPropeller);
             }
@@ -627,12 +631,10 @@ public final class ControlSystem {
             if (keyboardYaw) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, aircraft.rudderInputVar, EntityVehicleF_Physics.RUDDER_DAMPEN_RATE);
             }
-            //Helicopter arcade control vectors rotor thrust directly, so pitch and roll
-            //always remain on the standard manual control path.
-            if (hasRotorPropeller || keyboardPitch) {
+            if (keyboardPitch) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, aircraft.elevatorInputVar, EntityVehicleF_Physics.ELEVATOR_DAMPEN_RATE);
             }
-            if (hasRotorPropeller || keyboardRoll) {
+            if (keyboardRoll) {
                 controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, aircraft.aileronInputVar, EntityVehicleF_Physics.AILERON_DAMPEN_RATE);
             }
         } else {
