@@ -178,6 +178,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
     public static final String REPAIRED_NAME = "repaired";
     private static final int DEFAULT_GUI_TEXT_FADE_TICKS = 7;
+    private static final int DEFAULT_GUI_TEXTURE_DELAY_TICKS = 20;
 
     /**
      * Constructor for synced entities
@@ -1036,6 +1037,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.arcadeMode.value ? 1 : 0, false);
 			case ("config_tutorial"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.showTutorial.value ? 1 : 0, false);
+            case ("config_helper"):
+                return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.controlSettings.showHoverTxt.value ? 1 : 0, false);
             case ("config_innerwindows"):
                 return new ComputedVariable(this, variable, partialTicks -> ConfigSystem.client.renderingSettings.innerWindows.value ? 1 : 0, false);
             default: {
@@ -1136,6 +1139,43 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public String getGUITextValue(JSONText textDef, float partialTicks) {
         return formatTextValue(textDef, getCurrentTextValue(textDef), partialTicks);
+    }
+
+    /**
+     * Returns the texture currently selected for the passed-in GUI text definition.
+     * Texture timing is based on entity ticks so all render frames within a tick use the same image.
+     */
+    public String getGUITextureName(JSONText textDef) {
+        if (textDef.textureNames == null || textDef.textureNames.isEmpty()) {
+            return null;
+        } else if (textDef.textureNames.size() == 1) {
+            return textDef.textureNames.get(0);
+        }
+
+        long totalCycleTime = 0;
+        for (int textureIndex = 0; textureIndex < textDef.textureNames.size(); ++textureIndex) {
+            totalCycleTime += getGUITextureDelay(textDef, textureIndex);
+        }
+
+        long timeInCycle = ticksExisted % totalCycleTime;
+        for (int textureIndex = 0; textureIndex < textDef.textureNames.size(); ++textureIndex) {
+            int textureDelay = getGUITextureDelay(textDef, textureIndex);
+            if (timeInCycle < textureDelay) {
+                return textDef.textureNames.get(textureIndex);
+            }
+            timeInCycle -= textureDelay;
+        }
+        return textDef.textureNames.get(0);
+    }
+
+    private static int getGUITextureDelay(JSONText textDef, int textureIndex) {
+        if (textDef.textureDelays != null && !textDef.textureDelays.isEmpty()) {
+            int customDelay = textDef.textureDelays.get(textureIndex % textDef.textureDelays.size());
+            if (customDelay > 0) {
+                return customDelay;
+            }
+        }
+        return DEFAULT_GUI_TEXTURE_DELAY_TICKS;
     }
 
     /**

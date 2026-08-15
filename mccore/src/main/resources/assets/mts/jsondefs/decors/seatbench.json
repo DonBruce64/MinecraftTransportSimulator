@@ -183,7 +183,6 @@
       //wood
       {
         "type": "generic",
-        "isBright": true,
         "spawningOrientation": "facing",
         "renderingOrientation": "player",
         "quantity": 10,

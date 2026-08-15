@@ -27,8 +27,10 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.EnumActionResult;
 import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -351,6 +353,14 @@ public class InterfaceInput implements IInterfaceInput {
     public static void onIVMovementInput(InputUpdateEvent event) {
         if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().sneak)) {
             event.getMovementInput().sneak = false;
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getEntityPlayer().world.isRemote && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaRightClick(InterfaceManager.clientInterface.getClientPlayer())) {
+            event.setCancellationResult(EnumActionResult.SUCCESS);
+            event.setCanceled(true);
         }
     }
 

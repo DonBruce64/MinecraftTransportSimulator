@@ -10,14 +10,14 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONText {
     @JSONRequired
-    @JSONDescription("An entry of x, y, and z coordinates that define the center point of where the text should render.  Text may be left or right aligned by specifying the proper parameter.")
+    @JSONDescription("An entry of x, y, and z coordinates that define the center point of where the text or GUI texture should render.  Text may be left or right aligned by specifying the proper parameter.")
     public Point3D pos;
 
-    @JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this text.  By default all text faces +z, on the model.")
+    @JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this text or GUI texture.  By default all text and textures face +z.")
     public RotationMatrix rot;
 
     @JSONRequired
-    @JSONDescription("The scale of the text.  1.0 will render text about 1/2 block high, as 1 text character pixel equates to one block texture pixel, and text is 8-pixels high.")
+    @JSONDescription("The scale of the text or GUI texture.  1.0 will render text about 1/2 block high, as 1 text character pixel equates to one block texture pixel, and text is 8-pixels high.  GUI textures use a 16 by 16 pixel base size before this scale is applied.")
     public float scale;
 
     @JSONDescription("The name for this text field.  If two text fields share a name, then they both will be combined in the text GUI into one entry, and changing the text in the GUI will affect both of them.  Useful for license plates and route signs.\nNote: if this object is part of text-based rendering system, this defines which variable is displayed.")
@@ -41,15 +41,15 @@ public class JSONText {
     @JSONDescription("An optional folder of a font to use for this field.  If included, this text will be rendered with this font rather than the default font.  Format is [packID:fontname].  Fonts are then named: assets/packID/textures/fonts/unicode_page_xx.png, where xx corresponds with the default font you are replacing.")
     public String fontName;
 
-    @JSONRequired
-    @JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required, but may be blank.")
+    @JSONRequired(alternativeField = "textureNames")
+    @JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required for text objects, but may be blank.  May be omitted for guiTextObjects that define textureNames.")
     public String defaultText;
 
     @JSONDescription("The max number of characters this entry can have.  Required for editable world text, but optional for guiTextObjects and variable-driven text.")
     public int maxLength;
 
-    @JSONRequired
-    @JSONDescription("A hexadecimal color code.  This tells MTS what color this text should be.")
+    @JSONRequired(alternativeField = "textureNames")
+    @JSONDescription("A hexadecimal color code.  This tells MTS what color this text should be.  May be omitted for guiTextObjects that define textureNames.")
     public ColorRGB color;
 
     @JSONDescription("If set, then this text will get its color from the definition section's secondColor parameter, if one exists for the specified index.")
@@ -70,12 +70,18 @@ public class JSONText {
     @JSONDescription("If true, this text will be auto-scaled to fit inside the wrapWidth rather than actually wrapping to another line.  Has no affect unless you specify a wrapWidth!")
     public boolean autoScale;
 
-    @JSONDescription("Optional animation list for guiTextObjects.  These are normally visibility checks that decide when the text should be shown on-screen.")
+    @JSONDescription("Optional list of textures that makes a guiTextObject render an image instead of text.  Texture locations use the same [packID:path/to/texture.png] format as particle textures.  One texture remains static.  Multiple textures cycle in list order every 20 ticks unless textureDelays is defined.")
+    public List<String> textureNames;
+
+    @JSONDescription("Optional per-texture display times, in ticks, for animated guiTextObjects.  Values correspond to textureNames by index and repeat if this list is shorter.  Missing or non-positive values use the default of 20 ticks.")
+    public List<Integer> textureDelays;
+
+    @JSONDescription("Optional animation list for guiTextObjects.  These are normally visibility checks that decide when the text or texture should be shown on-screen.")
     public List<JSONAnimationDefinition> animations;
 
-    @JSONDescription("Fade-in time for guiTextObjects, in ticks.  If not set, a default of 7 ticks is used.")
+    @JSONDescription("Fade-in time for guiTextObjects, in ticks.  This applies to both text and textures.  If not set, a default of 7 ticks is used.")
     public int fadeInTime;
 
-    @JSONDescription("Fade-out time for guiTextObjects, in ticks.  If not set, a default of 7 ticks is used.")
+    @JSONDescription("Fade-out time for guiTextObjects, in ticks.  This applies to both text and textures.  If not set, a default of 7 ticks is used.")
     public int fadeOutTime;
 }

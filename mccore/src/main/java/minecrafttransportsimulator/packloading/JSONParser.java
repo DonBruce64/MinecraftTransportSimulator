@@ -729,6 +729,12 @@ public class JSONParser {
          * field with one of the dependentValues in a sub-class.
          */
         String subField() default "";
+
+        /**
+         * Optional alternative field that may be supplied in place of this field.  If the alternative is a collection,
+         * it must contain at least one entry to count as present.
+         */
+        String alternativeField() default "";
     }
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -805,6 +811,21 @@ public class JSONParser {
 
             if (testObj == null) {
                 JSONRequired annotation = field.getAnnotation(JSONRequired.class);
+
+                //If an alternative field is defined and present, this field does not need to be supplied.
+                String alternativeVarName = annotation.alternativeField();
+                if (!alternativeVarName.isEmpty()) {
+                    Object alternativeObj = null;
+                    try {
+                        alternativeObj = objectOn.getClass().getField(alternativeVarName).get(objectOn);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (alternativeObj != null && (!(alternativeObj instanceof Collection) || !((Collection<?>) alternativeObj).isEmpty())) {
+                        return null;
+                    }
+                }
+
                 //If we need another field, get it to check.
                 String dependentVarName = annotation.dependentField();
                 if (!dependentVarName.isEmpty()) {

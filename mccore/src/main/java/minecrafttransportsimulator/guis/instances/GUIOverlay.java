@@ -23,6 +23,7 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -55,6 +56,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentAimReticle aimReticle;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
     private AEntityE_Interactable<?> lastCollisionGroupHoverEntity;
@@ -75,9 +77,12 @@ public class GUIOverlay extends AGUIBase {
         addComponent(mouseoverLabel = new GUIComponentLabel(screenWidth / 2, screenHeight / 2 + 10, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
         addComponent(gunLabel = new GUIComponentLabel(screenWidth, 0, ColorRGB.WHITE, "", TextAlignment.RIGHT_ALIGNED, 1.0F));
         gunLabel.ignoreGUILightingState = true;
+        addComponent(aimReticle = new GUIComponentAimReticle(screenWidth, screenHeight));
+        aimReticle.ignoreGUILightingState = true;
         // Start crosshair at screen centre; setStates() repositions it every frame.
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
+        aimingCrosshair.ignoreGUILightingState = true;
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -324,13 +329,21 @@ public class GUIOverlay extends AGUIBase {
                     continue;
                 }
 
-                String textValue = entity.getGUITextValue(textDef, partialTicks);
-                if (textValue == null || textValue.isEmpty()) {
-                    continue;
-                }
-
                 //Each tracked entity gets a small Z slice so multiple prompts can overlap without fighting.
-                RenderText.drawGUIText(textValue, entity, textDef, screenWidth, screenHeight, 325 + entityLayer * 5D, alpha);
+                double zOffset = 325 + entityLayer * 5D;
+                if (textDef.textureNames != null && !textDef.textureNames.isEmpty()) {
+                    String textureName = entity.getGUITextureName(textDef);
+                    if (textureName == null || textureName.isEmpty()) {
+                        continue;
+                    }
+                    RenderText.drawGUITexture(textureName, textDef, screenWidth, screenHeight, zOffset, alpha);
+                } else {
+                    String textValue = entity.getGUITextValue(textDef, partialTicks);
+                    if (textValue == null || textValue.isEmpty()) {
+                        continue;
+                    }
+                    RenderText.drawGUIText(textValue, entity, textDef, screenWidth, screenHeight, zOffset, alpha);
+                }
                 shouldKeepTracking = true;
             }
 

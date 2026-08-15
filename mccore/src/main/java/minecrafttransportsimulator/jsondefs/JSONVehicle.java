@@ -30,12 +30,18 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
+        
+        @JSONDescription("Sets the default third-person zoom level when this vehicle is spawned.  0 is the closest possible camera position, 1 is one step out, 2 is two steps out, and so on.  This only affects the starting zoom level; players can still zoom in or out normally after entering the vehicle.")
+        public int defaultZoom;
 
         @JSONDescription("Set this to true if you want the vehicle to have thrust vectoring.  False means only yaw-vectoring will occur for things like engine out situations.")
         public boolean hasThrustVectoring;
 
         @JSONDescription("Tells MTS that this vehicle does not have a roof.  This is used only for the SoundSystem and lets MTS know that sounds should be quieter when inside this vehicle.  This does not have an effect when in third-person, however, as the camera is considered outside of the vehicle so having a top or not does not matter.")
         public boolean hasOpenTop;
+
+        @JSONDescription("Optional offset, relative to the vehicle origin and orientation, to use as the third-person camera orbit point.  If omitted, the camera uses the rider position.")
+        public Point3D cameraOffset;
 
         @JSONDescription("Make this true to allow your plane to come equipped with autopilot. Perhaps not the best thing to have on WWII fighters, but right at home on jet airliners. No, this won't work on cars.  This is MTS, not TMS (Tesla Motors Simulator).")
         public boolean hasAutopilot;
