@@ -618,7 +618,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
                         lastParticlePosition.set(particleSpawningPosition);
                     }
-                } else if (particleDef.distance > 0 && particleDef.spawningOrientation != JSONParticle.ParticleSpawningOrientation.DECAL) {
+                } else if (particleDef.distance > 0) {
                     //First get spawning position as defined by JSON and animations.
                     EntityParticle.setPointToSpawn(position, particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.WORLD ? null : orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
@@ -1468,25 +1468,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             lastPartialTickParticlesSpawned = partialTicks;
         }
         world.endProfiling();
-    }
-
-    /**
-     * Checks the rendered model geometry for a hit along the passed-in world-space path.
-     * Used for visual effects that need to align to the model surface rather than collision boxes.
-     */
-    public boolean getModelHit(Point3D pathStart, Point3D pathEnd, Point3D hitPosition, Point3D hitNormal) {
-        if (disableRendering()) {
-            return false;
-        }
-        if (objectList == null) {
-            objectList = AModelParser.generateRenderables(this);
-        }
-
-        double closestDistance = Double.MAX_VALUE;
-        for (RenderableModelObject modelObject : objectList) {
-            closestDistance = modelObject.getModelHit(this, pathStart, pathEnd, hitPosition, hitNormal, closestDistance);
-        }
-        return closestDistance != Double.MAX_VALUE;
     }
 
     @Override

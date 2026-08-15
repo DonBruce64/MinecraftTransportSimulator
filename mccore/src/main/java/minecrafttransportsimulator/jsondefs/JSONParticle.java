@@ -192,7 +192,7 @@ public class JSONParticle {
         ENTITY,
         @JSONDescription("Particle spawns attached to the entity that spawned it, and moves with that entity.")
         ATTACHED,
-        @JSONDescription("Particle spawns attached to the entity that spawned it, and renders with trail-style Z-axis geometry.")
+        @JSONDescription("Particle spawns attached to the entity that spawned it, and moves with that entity, but the texture will be rotated for the Z axis.")
         ATTACHED_Z,
         @JSONDescription("Particle spawns relative to the particle before it, creating a continuous streak of particles.")
         STREAK,
@@ -203,9 +203,7 @@ public class JSONParticle {
         @JSONDescription("Particle spawns relative to the world and ignores entity orientation, but moves with the entity that spawned it.")
         WORLD_ATTACHED,
         @JSONDescription("Particle spawns relative to to the face orientation where the bullet that spawned it hit.  If this is an air burst that didn't hit anything, or isn't on a bullet, it will not be spawned.")
-        FACING,
-        @JSONDescription("Particle spawns at the bullet hit position and renders as an overlay on the hit face, ignoring pos and distance.  If this is an air burst that didn't hit anything, or isn't on a bullet, it will not be spawned.")
-        DECAL;
+        FACING;
     }
 
     public enum ParticleRenderingOrientation {

@@ -10,15 +10,12 @@ import java.util.Map;
 import java.util.Random;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.JSONSubParticle;
@@ -42,15 +39,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class EntityParticle extends AEntityC_Renderable {
     private static final RenderableVertices STANDARD_PARTICLE_SPRITE = RenderableVertices.createSprite(1, null, null);
-    private static final RenderableVertices DECAL_PARTICLE_SPRITE = STANDARD_PARTICLE_SPRITE.createOverlay(RenderableVertices.Z_BUFFER_OFFSET);
     private static final RenderableVertices TRAIL_PARTICLE_SPRITE = createTrailParticleSprite();
     private static final TransformationMatrix helperTransform = new TransformationMatrix();
     private static final RotationMatrix helperRotation = new RotationMatrix();
     private static final Point3D helperPoint = new Point3D();
     private static final Point3D helperScale = new Point3D();
-    private static final Point3D helperNormal = new Point3D();
-    private static final Point3D helperDecalStart = new Point3D();
-    private static final Point3D helperDecalEnd = new Point3D();
     private static final ColorRGB helperColor = new ColorRGB();
     private static final Map<String, RenderableVertices> parsedParticleModels = new HashMap<>();
     private static final Random particleRandom = new Random();
@@ -93,7 +86,6 @@ public class EntityParticle extends AEntityC_Renderable {
         boundingBox.depthRadius = boundingBox.widthRadius;
 
         RotationMatrix positionOrientation = null;
-        Point3D decalPosition = null;
 
         //Set transforms based on type.
         helperTransform.resetTransforms();
@@ -114,27 +106,10 @@ public class EntityParticle extends AEntityC_Renderable {
                 positionOrientation = entitySpawning.orientation;
                 break;
             }
-            case FACING:
-            case DECAL: {
+            case FACING: {
                 if (entitySpawning instanceof EntityBullet) {
                     EntityBullet bullet = (EntityBullet) entitySpawning;
                     if (bullet.sideHit != Axis.NONE) {
-                        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
-                            decalPosition = new Point3D();
-                            if (setDecalToModelSurface(bullet, decalPosition)) {
-                                helperTransform.set(orientation);
-                                positionOrientation = orientation;
-                                break;
-                            } else if (bullet.lastHit == EntityBullet.HitType.VEHICLE || bullet.lastHit == EntityBullet.HitType.ARMOR) {
-                                //Model decals should not fall back to collision planes.
-                                this.initialVelocity = null;
-                                this.staticColor = null;
-                                this.renderable = null;
-                                this.model = null;
-                                this.killBadParticle = true;
-                                return;
-                            }
-                        }
                         helperRotation.setToZero().rotateX(-90);
                         orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
                         helperTransform.set(orientation);
@@ -148,14 +123,6 @@ public class EntityParticle extends AEntityC_Renderable {
                         this.killBadParticle = true;
                         return;
                     }
-                } else if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
-                    //Decals need bullet hit data to know the surface they should stick to.
-                    this.initialVelocity = null;
-                    this.staticColor = null;
-                    this.renderable = null;
-                    this.model = null;
-                    this.killBadParticle = true;
-                    return;
                 }
                 break;
             }
@@ -167,9 +134,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set position, but only if we aren't a distance particle.
         //Distance particles are set prior to spawning with their actual position since it handles rotation.
-        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
-            position.set(decalPosition != null ? decalPosition : spawningPosition);
-        } else if (definition.distance == 0 && definition.spawningOrientation != ParticleSpawningOrientation.TRAIL) {
+        if (definition.distance == 0 && definition.spawningOrientation != ParticleSpawningOrientation.TRAIL) {
             setPointToSpawn(spawningPosition, positionOrientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
         } else {
             position.set(spawningPosition);
@@ -321,8 +286,6 @@ public class EntityParticle extends AEntityC_Renderable {
             vertexObject.setTextureBounds(uvPoints[0], uvPoints[1], uvPoints[2], uvPoints[3]);
         } else if (definition.spawningOrientation == ParticleSpawningOrientation.TRAIL || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
             this.renderable = new RenderableData(TRAIL_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
-        } else if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
-            this.renderable = new RenderableData(DECAL_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
         } else {
             //Basic particle, use standard buffer.
             this.renderable = new RenderableData(STANDARD_PARTICLE_SPRITE, RenderableData.GLOBAL_TEXTURE_NAME);
@@ -393,59 +356,6 @@ public class EntityParticle extends AEntityC_Renderable {
         prevScale.set(scale);
     }
 
-    private boolean setDecalToModelSurface(EntityBullet bullet, Point3D decalPosition) {
-        if (bullet.lastHit != EntityBullet.HitType.VEHICLE && bullet.lastHit != EntityBullet.HitType.ARMOR) {
-            return false;
-        }
-
-        helperPoint.set(bullet.motion);
-        if (helperPoint.isZero()) {
-            return false;
-        }
-        double motionLength = helperPoint.length();
-        helperPoint.scale(1D / motionLength);
-        double traceLength = Math.max(motionLength, 5D);
-        helperDecalStart.set(bullet.prevPosition);
-        if (helperDecalStart.distanceTo(bullet.position) < RenderableVertices.Z_BUFFER_OFFSET) {
-            helperDecalStart.set(bullet.position).addScaled(helperPoint, -traceLength);
-        }
-        helperDecalEnd.set(bullet.position).addScaled(helperPoint, traceLength);
-
-        List<AEntityF_Multipart<?>> multipartEntities = new ArrayList<>();
-        world.populateWithEntitiesInBounds(multipartEntities, new BoundingBox(helperDecalStart, helperDecalEnd));
-        double closestDistance = Double.MAX_VALUE;
-        for (AEntityF_Multipart<?> multipart : multipartEntities) {
-            if (!multipart.allParts.contains(bullet.gun)) {
-                closestDistance = getClosestModelHit(multipart, decalPosition, closestDistance);
-                for (APart part : multipart.allParts) {
-                    if (part != bullet.gun) {
-                        closestDistance = getClosestModelHit(part, decalPosition, closestDistance);
-                    }
-                }
-            }
-        }
-        if (closestDistance != Double.MAX_VALUE) {
-            helperRotation.setToZero().rotateX(-90);
-            orientation.setToVector(helperNormal, true).multiplyTranspose(helperRotation);
-            return true;
-        }
-        return false;
-    }
-
-    private double getClosestModelHit(AEntityD_Definable<?> entity, Point3D decalPosition, double closestDistance) {
-        Point3D modelHitPosition = new Point3D();
-        Point3D modelHitNormal = new Point3D();
-        if (entity.getModelHit(helperDecalStart, helperDecalEnd, modelHitPosition, modelHitNormal)) {
-            double modelHitDistance = helperDecalStart.distanceTo(modelHitPosition);
-            if (modelHitDistance < closestDistance) {
-                decalPosition.set(modelHitPosition);
-                helperNormal.set(modelHitNormal);
-                return modelHitDistance;
-            }
-        }
-        return closestDistance;
-    }
-
     public static void setPointToSpawn(Point3D origin, RotationMatrix orientation, Point3D definitionOffset, Point3D scale, AnimationSwitchbox spawningSwitchbox, Point3D pointToSet) {
         //Apply transforms to get position.
         if (definitionOffset != null) {
@@ -500,7 +410,7 @@ public class EntityParticle extends AEntityC_Renderable {
         }
 
         //Set movement.
-        if (definition.spawningOrientation != ParticleSpawningOrientation.DECAL && (!definition.stopsOnGround || !touchingBlocks)) {
+        if (!definition.stopsOnGround || !touchingBlocks) {
             if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
                 orientation.set(entitySpawning.orientation);
                 setPointToSpawn(entitySpawning.position, orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
@@ -751,9 +661,6 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     private void updateOrientation() {
-        if (definition.spawningOrientation == ParticleSpawningOrientation.DECAL) {
-            return;
-        }
         switch (definition.renderingOrientation) {
             case FIXED: {
                 //No update since we never change.
