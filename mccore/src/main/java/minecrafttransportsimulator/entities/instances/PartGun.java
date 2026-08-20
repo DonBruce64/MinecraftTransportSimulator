@@ -765,7 +765,7 @@ public class PartGun extends APart {
             //Get new target if we don't have one, or if we've gone 1 second and we have a closer target by 5 blocks.
             boolean checkForCloser = entityTarget != null && ticksExisted % 20 == 0;
             if (entityTarget == null || checkForCloser) {
-                for (IWrapperEntity entity : world.getEntitiesHostile(controller, 48)) {
+                for (IWrapperEntity entity : world.getEntitiesHostile(controller, 128)) {
                     if (validateTarget(controller, entity)) {
                         if (entityTarget != null) {
                             double distanceToBeat = position.distanceTo(entityTarget.getPosition());
@@ -995,7 +995,7 @@ public class PartGun extends APart {
             bulletPosition.rotate(internalOrientation).add(position);
 
             targetVector.set(target.getPosition());
-            targetVector.y += target.getEyeHeight() / 2D;
+            targetVector.y += target.getBounds().heightRadius;
             targetVector.subtract(bulletPosition);
 
             //Transform vector to gun's coordinate system.
