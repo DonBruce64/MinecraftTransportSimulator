@@ -73,7 +73,7 @@ public class RenderText {
         if (!text.isEmpty()) {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(position);
-            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, worldLightValue, true, alpha);
+            getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit, false, worldLightValue, true, alpha);
         }
     }
 
@@ -96,7 +96,7 @@ public class RenderText {
             //Render the text.
             transformHelper.set(transform);
             transformHelper.applyTranslation(definition.pos);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, entity.worldLightValue, false, alpha);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, renderLit, definition.flatLighting, entity.worldLightValue, false, alpha);
         }
     }
 
@@ -110,7 +110,7 @@ public class RenderText {
             transformHelper.resetTransforms();
             transformHelper.applyTranslation(screenWidth / 2D, -screenHeight / 2D, zOffset);
             transformHelper.applyTranslation(definition.pos.x, -definition.pos.y, definition.pos.z);
-            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, entity.worldLightValue, true, alpha);
+            getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, true, color, true, definition.flatLighting, entity.worldLightValue, true, alpha);
         }
     }
 
@@ -396,7 +396,7 @@ public class RenderText {
             this.charTopOffset = charTopOffset;
         }
 
-        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, int worldLightValue, boolean onGUI, float alpha) {
+        private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit, boolean flatLighting, int worldLightValue, boolean onGUI, float alpha) {
             //Clear out the active object list as it was set last pass.
             for (RenderableData object : activeRenderObjects) {
                 object.vertexObject.vertices.clear();
@@ -732,7 +732,7 @@ public class RenderText {
             //After this, we apply the known-constant adjustmentOffset, which will itself be scaled.
             for (RenderableData object : activeRenderObjects) {
                 object.setLightValue(worldLightValue);
-                object.setLightMode(renderLit ? LightingMode.IGNORE_ALL_LIGHTING : (onGUI ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL));
+                object.setLightMode(renderLit ? LightingMode.IGNORE_ALL_LIGHTING : (onGUI || flatLighting ? LightingMode.IGNORE_ORIENTATION_LIGHTING : LightingMode.NORMAL));
                 object.setAlpha(alpha);
                 object.transform.set(transform);
                 if (rotation != null) {
