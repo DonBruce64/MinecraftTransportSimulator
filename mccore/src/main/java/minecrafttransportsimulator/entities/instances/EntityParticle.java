@@ -644,9 +644,13 @@ public class EntityParticle extends AEntityC_Renderable {
             if (definition.fadeOutScaleTime > maxAge - ticksExisted) {
                 helperScale.scale((maxAge - ticksExisted) / (float) definition.fadeOutScaleTime);
             }
-            if (definition.spawningOrientation == ParticleSpawningOrientation.TRAIL || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
+            //TRAIL length is set on the particle scale, while ATTACHED_Z length comes from the definition scale.
+            if (definition.spawningOrientation == ParticleSpawningOrientation.TRAIL) {
                 double trailWidth = helperScale.y != 0 ? helperScale.y : helperScale.x;
                 renderable.transform.applyScaling(trailWidth * entitySpawning.scale.x, helperScale.z * entitySpawning.scale.y, entitySpawning.scale.z);
+            } else if (definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
+                double trailWidth = helperScale.y != 0 ? helperScale.y : helperScale.x;
+                renderable.transform.applyScaling(trailWidth * entitySpawning.scale.x, entitySpawning.scale.y, helperScale.z * entitySpawning.scale.z);
             } else {
                 renderable.transform.applyScaling(helperScale.x * entitySpawning.scale.x, helperScale.y * entitySpawning.scale.y, helperScale.z * entitySpawning.scale.z);
             }
