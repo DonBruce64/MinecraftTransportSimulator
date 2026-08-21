@@ -21,7 +21,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
     private final UUID gunID;
     private final int bulletNumber;
     private final Point3D position;
-    private final RotationMatrix orientation;
+    private final Point3D orientationAngles;
     private final Axis hitSide;
     private final HitType hitType;
 
@@ -34,7 +34,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
         this.gunID = gun.uniqueUUID;
         this.bulletNumber = bulletNumber;
         this.position = position.copy();
-        this.orientation = new RotationMatrix().set(orientation);
+        this.orientationAngles = new RotationMatrix().set(orientation).convertToAngles().copy();
         this.hitSide = hitSide;
         this.hitType = hitType;
     }
@@ -46,7 +46,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
         this.position = readPoint3dFromBuffer(buf);
         this.hitType = HitType.values()[buf.readByte()];
         this.hitSide = Axis.values()[buf.readByte()];
-        this.orientation = buf.readableBytes() >= 9 * Double.BYTES ? readRotationMatrixFromBuffer(buf) : null;
+        this.orientationAngles = buf.readableBytes() >= 3 * Double.BYTES ? readPoint3dFromBuffer(buf) : null;
     }
 
     @Override
@@ -57,44 +57,17 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
         writePoint3dToBuffer(position, buf);
         buf.writeByte(hitType.ordinal());
         buf.writeByte(hitSide.ordinal());
-        writeRotationMatrixToBuffer(orientation, buf);
+        writePoint3dToBuffer(orientationAngles, buf);
     }
 
     @Override
     public void handle(AWrapperWorld world) {
+        RotationMatrix orientation = orientationAngles != null ? new RotationMatrix().setToAngles(orientationAngles) : null;
         EntityBullet.performGenericHitLogic(world.getBulletGun(gunID), bulletNumber, position, orientation, hitSide, hitType);
     }
 
     private static RotationMatrix getBulletOrientation(PartGun gun, int bulletNumber) {
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
         return bullet != null ? bullet.orientation : new RotationMatrix();
-    }
-
-    private static void writeRotationMatrixToBuffer(RotationMatrix matrix, ByteBuf buf) {
-        buf.writeDouble(matrix.m00);
-        buf.writeDouble(matrix.m01);
-        buf.writeDouble(matrix.m02);
-        buf.writeDouble(matrix.m10);
-        buf.writeDouble(matrix.m11);
-        buf.writeDouble(matrix.m12);
-        buf.writeDouble(matrix.m20);
-        buf.writeDouble(matrix.m21);
-        buf.writeDouble(matrix.m22);
-    }
-
-    private static RotationMatrix readRotationMatrixFromBuffer(ByteBuf buf) {
-        RotationMatrix matrix = new RotationMatrix();
-        matrix.m00 = buf.readDouble();
-        matrix.m01 = buf.readDouble();
-        matrix.m02 = buf.readDouble();
-        matrix.m10 = buf.readDouble();
-        matrix.m11 = buf.readDouble();
-        matrix.m12 = buf.readDouble();
-        matrix.m20 = buf.readDouble();
-        matrix.m21 = buf.readDouble();
-        matrix.m22 = buf.readDouble();
-        matrix.convertToAngles();
-        matrix.updateToAngles();
-        return matrix;
     }
 }
