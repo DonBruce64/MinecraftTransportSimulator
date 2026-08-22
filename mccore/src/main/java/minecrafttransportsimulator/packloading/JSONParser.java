@@ -141,6 +141,9 @@ public class JSONParser {
             if (reader.peek() == JsonToken.NULL) {
                 reader.nextNull();
                 return null;
+            } else if (reader.peek() == JsonToken.NUMBER) {
+                double value = reader.nextDouble();
+                return new Point3D(value, value, value);
             } else {
                 reader.beginArray();
                 Point3D value = new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
