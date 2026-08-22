@@ -6,9 +6,9 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
- * Synchronizes the world-space horizontal direction used to vector helicopter
- * rotor thrust in arcade mode.  Both components travel in one packet so they
- * cannot be mixed between input ticks.
+ * Reserved compatibility packet for the former direct rotor-vector arcade control.
+ * New clients never send this packet; keeping its payload and registration prevents
+ * all subsequent packet IDs from changing while older peers fail safely with a no-op.
  */
 public class PacketVehicleRotorControl extends APacketEntity<EntityVehicleF_Physics> {
     private final double directionX;
@@ -35,7 +35,6 @@ public class PacketVehicleRotorControl extends APacketEntity<EntityVehicleF_Phys
 
     @Override
     public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
-        vehicle.setArcadeRotorDirection(directionX, directionZ);
-        return true;
+        return false;
     }
 }
