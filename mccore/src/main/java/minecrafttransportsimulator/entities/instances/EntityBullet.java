@@ -641,16 +641,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
     public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
-        performGenericHitLogic(gun, bulletNumber, position, bullet != null ? bullet.orientation : null, hitSide, hitType);
+        performGenericHitLogic(gun, bulletNumber, position, bullet != null ? bullet.orientation : new RotationMatrix(), hitSide, hitType);
     }
 
     public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, RotationMatrix orientation, Axis hitSide, HitType hitType) {
         //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
         //any block-breaking packets arrive.
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
-        RotationMatrix impactOrientation = orientation != null ? orientation : bullet != null ? bullet.orientation : new RotationMatrix();
         if (!gun.world.isClient()) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, impactOrientation, hitSide, hitType));
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, orientation, hitSide, hitType));
         }
 
         //Spawn an explosion if we are an explosive bullet on the server.
@@ -685,8 +684,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (bullet != null) {
             bullet.position.set(position);
             bullet.prevPosition.set(position);
-            bullet.orientation.set(impactOrientation);
-            bullet.prevOrientation.set(impactOrientation);
+            bullet.orientation.set(orientation);
+            bullet.prevOrientation.set(orientation);
             bullet.lastHit = hitType;
             bullet.sideHit = hitSide;
             bullet.impactDespawnTimer = bullet.definition.bullet.impactDespawnTime;

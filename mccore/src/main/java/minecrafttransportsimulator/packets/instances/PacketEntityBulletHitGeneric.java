@@ -34,7 +34,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
         this.gunID = gun.uniqueUUID;
         this.bulletNumber = bulletNumber;
         this.position = position.copy();
-        this.orientationAngles = new RotationMatrix().set(orientation).convertToAngles().copy();
+        this.orientationAngles = orientation.convertToAngles().copy();
         this.hitSide = hitSide;
         this.hitType = hitType;
     }
@@ -46,7 +46,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
         this.position = readPoint3dFromBuffer(buf);
         this.hitType = HitType.values()[buf.readByte()];
         this.hitSide = Axis.values()[buf.readByte()];
-        this.orientationAngles = buf.readableBytes() >= 3 * Double.BYTES ? readPoint3dFromBuffer(buf) : null;
+        this.orientationAngles = readPoint3dFromBuffer(buf);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
 
     @Override
     public void handle(AWrapperWorld world) {
-        RotationMatrix orientation = orientationAngles != null ? new RotationMatrix().setToAngles(orientationAngles) : null;
+        RotationMatrix orientation = new RotationMatrix().setToAngles(orientationAngles);
         EntityBullet.performGenericHitLogic(world.getBulletGun(gunID), bulletNumber, position, orientation, hitSide, hitType);
     }
 
