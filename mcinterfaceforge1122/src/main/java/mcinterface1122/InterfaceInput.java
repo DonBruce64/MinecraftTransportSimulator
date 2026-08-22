@@ -339,6 +339,10 @@ public class InterfaceInput implements IInterfaceInput {
      */
     @SubscribeEvent
     public static void onIVMouseInput(MouseEvent event) {
+        int wheelDirection = Integer.signum(event.getDwheel());
+        if (wheelDirection != 0 && InterfaceManager.clientInterface != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlSystem.onMouseWheel(wheelDirection)) {
+            event.setCanceled(true);
+        }
         if (betterCombatDetected) {
             int button = event.getButton();
             if (button == 0) {

@@ -29,6 +29,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
+import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -358,6 +359,14 @@ public class InterfaceInput implements IInterfaceInput {
     public static void onIVMouseScroll(ScreenEvent.MouseScrollEvent.Post event) {
         if (InterfaceManager.clientInterface.isGUIOpen()) {
             lastScrollValue = (int) event.getScrollDelta();
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVGameplayMouseScroll(MouseScrollEvent event) {
+        int wheelDirection = (int) Math.signum(event.getScrollDelta());
+        if (wheelDirection != 0 && ControlSystem.onMouseWheel(wheelDirection)) {
             event.setCanceled(true);
         }
     }

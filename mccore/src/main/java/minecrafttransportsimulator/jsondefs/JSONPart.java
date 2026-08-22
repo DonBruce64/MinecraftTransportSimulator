@@ -412,6 +412,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
         public boolean fireSolo;
 
+        @JSONDescription("Optional icon category used by the weapon-selection HUD. Valid values are GENERIC, HANDHELD, CANNON, ROCKET, MISSILE, BOMB, UTILITY, and NONE. If omitted, the HUD infers a category from this gun and its ammunition.")
+        public HUDIconType hudIconType;
+
         @JSONDescription("If true, then when this gun has windup it will wind down instantly.  This allows for essentially charged-shot guns.")
         public boolean windsDownInstantly;
 
@@ -525,6 +528,17 @@ public class JSONPart extends AJSONPartProvider {
 
         @Deprecated
         public float length;
+    }
+
+    public enum HUDIconType {
+        GENERIC,
+        HANDHELD,
+        CANNON,
+        ROCKET,
+        MISSILE,
+        BOMB,
+        UTILITY,
+        NONE
     }
     
     public enum LockOnType {
