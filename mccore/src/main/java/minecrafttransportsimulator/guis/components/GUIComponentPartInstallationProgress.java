@@ -21,8 +21,11 @@ public class GUIComponentPartInstallationProgress extends AGUIComponent {
     private static final int BAR_WIDTH = 100;
     private static final int BAR_HEIGHT = 4;
     private static final int BAR_BORDER = 2;
-    private static final int BAR_BOTTOM_OFFSET = 32;
+    private static final int BAR_BOTTOM_OFFSET = 48;
     private static final int PROGRESS_Z = 650;
+    private static final int LABEL_Z_OFFSET = 10;
+    private static final float LABEL_SCALE = 0.75F;
+    private static final String BAR_TEXTURE = "mts:textures/rendering/light.png";
 
     private final RenderableData borderRenderable;
     private final RenderableData trackRenderable;
@@ -35,7 +38,7 @@ public class GUIComponentPartInstallationProgress extends AGUIComponent {
         super(0, 0, screenWidth, screenHeight);
         this.screenWidth = screenWidth;
         this.barCenterY = screenHeight - BAR_BOTTOM_OFFSET;
-        this.labelPosition = new Point3D(screenWidth / 2D, -(barCenterY - 10), PROGRESS_Z + 1);
+        this.labelPosition = new Point3D(screenWidth / 2D, -(barCenterY - 12), PROGRESS_Z + LABEL_Z_OFFSET);
         this.text = LanguageSystem.GUI_PARTINSTALL_INSTALLING.getCurrentValue();
 
         RenderableVertices quadVertices = RenderableVertices.createSprite(1, null, null);
@@ -45,7 +48,7 @@ public class GUIComponentPartInstallationProgress extends AGUIComponent {
     }
 
     private static RenderableData createRenderable(RenderableVertices vertices, ColorRGB color, float alpha) {
-        RenderableData renderable = new RenderableData(vertices);
+        RenderableData renderable = new RenderableData(vertices, BAR_TEXTURE);
         renderable.setColor(color);
         renderable.setAlpha(alpha);
         renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
@@ -80,7 +83,7 @@ public class GUIComponentPartInstallationProgress extends AGUIComponent {
     public void renderText(boolean renderTextLit, int worldLightValue) {
         if (ControlSystem.isPartInstallationInProgress()) {
             text = LanguageSystem.GUI_PARTINSTALL_INSTALLING.getCurrentValue();
-            RenderText.drawText(text, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 1.0F, false, 0, true, worldLightValue);
+            RenderText.drawText(text, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, LABEL_SCALE, false, 0, true, worldLightValue);
         }
     }
 }

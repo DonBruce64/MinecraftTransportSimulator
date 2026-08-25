@@ -38,9 +38,6 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final String UNAVAILABLE_MARKER_TEXTURE = "mts:textures/guis/part_marker_unavailable.png";
     private static final String REMOVE_MARKER_TEXTURE = "mts:textures/guis/part_marker_remove.png";
     private static final double MARKER_BASE_Z = 350.0D;
-    private static final double MARKER_Z_STEP = 0.01D;
-    private static final double ICON_Z_OFFSET = 1.0D;
-    private static final double TEXT_Z_OFFSET = 200.0D;
     private static final double LABEL_GAP = 3.0D;
 
     private static final EnumMap<PartTypeCategory, String> TYPE_MARKER_TEXTURES = new EnumMap<>(PartTypeCategory.class);
@@ -63,7 +60,6 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private final EnumMap<PartTypeCategory, RenderableData> typeMarkerRenderables = new EnumMap<>(PartTypeCategory.class);
     private final Point3D markerCenter = new Point3D();
     private final Point3D labelPosition = new Point3D();
-    private int markerRenderIndex;
 
     public GUIComponentPartSlotMarkers() {
         super(0, 0, 0, 0);
@@ -96,7 +92,6 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         }
 
-        markerRenderIndex = 0;
         Point3D eyePosition = player.getEyePosition();
         for (AEntityF_Multipart<?> multipart : player.getWorld().getEntitiesExtendingType(AEntityF_Multipart.class)) {
             renderMultipartMarkers(gui, multipart, eyePosition, heldPart, holdingScanner, holdingWrench, player, partialTicks);
@@ -179,8 +174,9 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         //projectToScreen returns a shared mutable point, so retain its values locally.
         double screenX = projectedCenter.x;
         double screenY = projectedCenter.y;
+        double screenDepth = projectedCenter.z;
         double markerRadius = MARKER_RADIUS;
-        double markerZ = MARKER_BASE_Z + markerRenderIndex++ * MARKER_Z_STEP;
+        double markerZ = MARKER_BASE_Z - screenDepth;
         PartTypeCategory typeCategory = getPartTypeCategory(rawType);
 
         renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory);
@@ -228,14 +224,14 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
 
         double iconScale = radius * 0.72D;
         iconRenderable.transform.resetTransforms();
-        iconRenderable.transform.setTranslation(screenX, -screenY, z + ICON_Z_OFFSET);
+        iconRenderable.transform.setTranslation(screenX, -screenY, z);
         iconRenderable.transform.applyScaling(iconScale, iconScale, 1.0D);
         iconRenderable.render();
     }
 
     private void renderTypeLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, PartTypeCategory typeCategory, String rawType) {
         int wrapWidth = (int) Math.max(48.0D, radius * 4.0D);
-        labelPosition.set(screenX, -(screenY + radius + LABEL_GAP), z + TEXT_Z_OFFSET);
+        labelPosition.set(screenX, -(screenY + radius + LABEL_GAP), z);
         RenderText.drawText(getLocalizedTypeName(typeCategory, rawType), null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F, true, wrapWidth, true, gui.worldLightValue);
     }
 
@@ -315,6 +311,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         renderable.setColor(color);
         renderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
         renderable.setTransucentOverride();
+        renderable.setDepthWriting(true);
         return renderable;
     }
 
