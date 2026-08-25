@@ -130,6 +130,11 @@ public final class ControlSystem {
         return Math.max(0.0F, Math.min(1.0F, (partInstallationElapsedTicks + partialTicks) / partInstallationTime));
     }
 
+    public static boolean isPartInstallationTarget(AEntityF_Multipart<?> multipart, BoundingBox box) {
+        return partInstallationEntity == multipart
+                && partInstallationBox == box;
+    }
+
     public static void resetMouseYoke() {
         mouseYokePosX = Double.NaN;
         mouseYokePosY = Double.NaN;

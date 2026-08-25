@@ -22,6 +22,7 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.rendering.RenderableData;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.rendering.RenderableVertices;
+import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
@@ -31,12 +32,16 @@ import minecrafttransportsimulator.systems.LanguageSystem;
 public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final int FLOATS_PER_VERTEX = 8;
     private static final int VERTICES_PER_QUAD = 6;
+    private static final int PROGRESS_SEGMENTS = 32;
     private static final double INTERACTION_REACH = 3.5D;
     private static final double INTERACTION_REACH_SQUARED = INTERACTION_REACH * INTERACTION_REACH;
     private static final double MARKER_RADIUS = 6.0D;
+    private static final double PROGRESS_INNER_RADIUS = MARKER_RADIUS + 0.5D;
+    private static final double PROGRESS_OUTER_RADIUS = MARKER_RADIUS + 2.0D;
     private static final String MARKER_TEXTURE = "mts:textures/guis/part_marker.png";
     private static final String UNAVAILABLE_MARKER_TEXTURE = "mts:textures/guis/part_marker_unavailable.png";
     private static final String REMOVE_MARKER_TEXTURE = "mts:textures/guis/part_marker_remove.png";
+    private static final String PROGRESS_TEXTURE = "mts:textures/rendering/light.png";
     private static final double MARKER_BASE_Z = 350.0D;
     private static final double LABEL_GAP = 3.0D;
 
@@ -57,6 +62,9 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private final RenderableData unavailableMarkerRenderable;
     private final RenderableData removeMarkerRenderable;
     private final RenderableData lockedIconRenderable;
+    private final RenderableData installationProgressTrackRenderable;
+    private final RenderableData installationProgressRenderable;
+    private final RenderableVertices installationProgressVertices;
     private final EnumMap<PartTypeCategory, RenderableData> typeMarkerRenderables = new EnumMap<>(PartTypeCategory.class);
     private final Point3D markerCenter = new Point3D();
     private final Point3D labelPosition = new Point3D();
@@ -68,6 +76,9 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         unavailableMarkerRenderable = createTexturedMarkerRenderable(UNAVAILABLE_MARKER_TEXTURE);
         removeMarkerRenderable = createTexturedMarkerRenderable(REMOVE_MARKER_TEXTURE);
         lockedIconRenderable = createUnlitRenderable(createLockedIconVertices(), ColorRGB.BLACK);
+        installationProgressTrackRenderable = createProgressRenderable(createProgressRingVertices("PART_SLOT_INSTALL_PROGRESS_TRACK", 1.0F), ColorRGB.DARK_GRAY, 0.75F);
+        installationProgressVertices = createProgressRingVertices("PART_SLOT_INSTALL_PROGRESS", 0.0F);
+        installationProgressRenderable = createProgressRenderable(installationProgressVertices, ColorRGB.WHITE, 1.0F);
         for (Entry<PartTypeCategory, String> typeMarkerTexture : TYPE_MARKER_TEXTURES.entrySet()) {
             typeMarkerRenderables.put(typeMarkerTexture.getKey(), createTexturedMarkerRenderable(typeMarkerTexture.getValue()));
         }
@@ -183,6 +194,9 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         if (state == PartSlotMarkerState.LOCKED) {
             renderStatusIcon(screenX, screenY, markerRadius, markerZ, state);
         }
+        if (ControlSystem.isPartInstallationTarget(markerEntity, markerBox)) {
+            renderInstallationProgress(screenX, screenY, markerZ, partialTicks);
+        }
         renderTypeLabel(gui, screenX, screenY, markerRadius, markerZ, typeCategory, rawType);
     }
 
@@ -227,6 +241,22 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         iconRenderable.transform.setTranslation(screenX, -screenY, z);
         iconRenderable.transform.applyScaling(iconScale, iconScale, 1.0D);
         iconRenderable.render();
+    }
+
+    private void renderInstallationProgress(double screenX, double screenY, double z, float partialTicks) {
+        renderProgressRing(installationProgressTrackRenderable, screenX, screenY, z);
+
+        float progress = ControlSystem.getPartInstallationProgress(partialTicks);
+        if (progress > 0.0F) {
+            setProgressRingVertices(installationProgressVertices.vertices, progress);
+            renderProgressRing(installationProgressRenderable, screenX, screenY, z);
+        }
+    }
+
+    private static void renderProgressRing(RenderableData renderable, double screenX, double screenY, double z) {
+        renderable.transform.resetTransforms();
+        renderable.transform.setTranslation(screenX, -screenY, z);
+        renderable.render();
     }
 
     private void renderTypeLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, PartTypeCategory typeCategory, String rawType) {
@@ -313,6 +343,54 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         renderable.setTransucentOverride();
         renderable.setDepthWriting(true);
         return renderable;
+    }
+
+    private static RenderableData createProgressRenderable(RenderableVertices vertices, ColorRGB color, float alpha) {
+        RenderableData renderable = createUnlitRenderable(vertices, color);
+        renderable.setTexture(PROGRESS_TEXTURE);
+        renderable.setAlpha(alpha);
+        return renderable;
+    }
+
+    private static RenderableVertices createProgressRingVertices(String name, float progress) {
+        RenderableVertices vertices = new RenderableVertices(name, FloatBuffer.allocate(PROGRESS_SEGMENTS * VERTICES_PER_QUAD * FLOATS_PER_VERTEX), false);
+        setProgressRingVertices(vertices.vertices, progress);
+        return vertices;
+    }
+
+    private static void setProgressRingVertices(FloatBuffer vertices, float progress) {
+        vertices.clear();
+        double completedSegments = Math.max(0.0D, Math.min(1.0D, progress)) * PROGRESS_SEGMENTS;
+        int fullSegments = (int) completedSegments;
+        for (int segmentIndex = 0; segmentIndex < fullSegments; ++segmentIndex) {
+            addProgressRingSegment(vertices, segmentIndex, segmentIndex + 1.0D);
+        }
+
+        double partialSegment = completedSegments - fullSegments;
+        if (partialSegment > 0.0D && fullSegments < PROGRESS_SEGMENTS) {
+            addProgressRingSegment(vertices, fullSegments, fullSegments + partialSegment);
+        }
+        vertices.flip();
+    }
+
+    private static void addProgressRingSegment(FloatBuffer vertices, double segmentStart, double segmentEnd) {
+        double startAngle = Math.PI / 2.0D - 2.0D * Math.PI * segmentStart / PROGRESS_SEGMENTS;
+        double endAngle = Math.PI / 2.0D - 2.0D * Math.PI * segmentEnd / PROGRESS_SEGMENTS;
+        float outerStartX = (float) (PROGRESS_OUTER_RADIUS * Math.cos(startAngle));
+        float outerStartY = (float) (PROGRESS_OUTER_RADIUS * Math.sin(startAngle));
+        float innerStartX = (float) (PROGRESS_INNER_RADIUS * Math.cos(startAngle));
+        float innerStartY = (float) (PROGRESS_INNER_RADIUS * Math.sin(startAngle));
+        float outerEndX = (float) (PROGRESS_OUTER_RADIUS * Math.cos(endAngle));
+        float outerEndY = (float) (PROGRESS_OUTER_RADIUS * Math.sin(endAngle));
+        float innerEndX = (float) (PROGRESS_INNER_RADIUS * Math.cos(endAngle));
+        float innerEndY = (float) (PROGRESS_INNER_RADIUS * Math.sin(endAngle));
+
+        addVertex(vertices, outerStartX, outerStartY);
+        addVertex(vertices, innerStartX, innerStartY);
+        addVertex(vertices, innerEndX, innerEndY);
+        addVertex(vertices, outerStartX, outerStartY);
+        addVertex(vertices, innerEndX, innerEndY);
+        addVertex(vertices, outerEndX, outerEndY);
     }
 
     private static RenderableVertices createLockedIconVertices() {
