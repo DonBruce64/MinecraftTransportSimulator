@@ -111,6 +111,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The height of the part.")
         public float height;
 
+        @JSONDescription("How long, in ticks, this part takes to install while holding right-click.  Values less than or equal to 0 make installation instant.")
+        public int installTime;
+
         @JSONDescription("The multiplier for forwarded damage.  If set, this part will forward damage onto the vehicle it is on when hit.  This will also cause any bullets to stop when they hit this part.  Defaults to 1.0 for engines, 0.0 for other parts.")
         public float forwardsDamageMultiplier;
 

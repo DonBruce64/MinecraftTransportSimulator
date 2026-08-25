@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.systems;
 
 import java.util.Locale;
+import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.EntityInteractResult;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -11,8 +13,12 @@ import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityCameraChange;
@@ -54,6 +60,12 @@ public final class ControlSystem {
     private static boolean dismountInputPressedLastCall;
 
     private static EntityInteractResult interactResult = null;
+    private static AEntityF_Multipart<?> partInstallationEntity;
+    private static BoundingBox partInstallationBox;
+    private static IWrapperItemStack partInstallationStack;
+    private static int partInstallationSlotIndex = -1;
+    private static int partInstallationElapsedTicks;
+    private static int partInstallationTime;
 
     /**
      * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
@@ -94,6 +106,8 @@ public final class ControlSystem {
             if (!clickingRight) {
                 clickingRight = true;
                 handleClick(player, playerGun, false, false, true, false);
+            } else if (isPartInstallationInProgress()) {
+                updatePartInstallation(player);
             }
         } else if (clickingRight) {
             clickingRight = false;
@@ -103,6 +117,17 @@ public final class ControlSystem {
         if (playerGun != null && playerGun.activeGun != null && !InterfaceManager.clientInterface.isGUIOpen() && ControlsKeyboard.GENERAL_RELOAD.isPressed()) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.RELOAD_HAND));
         }
+    }
+
+    public static boolean isPartInstallationInProgress() {
+        return partInstallationEntity != null;
+    }
+
+    public static float getPartInstallationProgress(float partialTicks) {
+        if (!isPartInstallationInProgress() || partInstallationTime <= 0) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, (partInstallationElapsedTicks + partialTicks) / partInstallationTime));
     }
 
     public static void resetMouseYoke() {
@@ -193,19 +218,115 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, PacketPartGun.Request.AIM_OFF));
             }
         }
+        if (rightClickUp && isPartInstallationInProgress()) {
+            cancelPartInstallation(player);
+            return;
+        }
         if (leftClickDown || rightClickDown) {
             Point3D startPosition = player.getEyePosition();
             Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
 
             interactResult = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
             if (interactResult != null) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, leftClickDown, rightClickDown));
+                if (!rightClickDown || !startPartInstallation(player, interactResult)) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, leftClickDown, rightClickDown));
+                }
             }
         } else if (interactResult != null) {
             //Fire off un-click to entity last clicked.
             InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(interactResult.entity, player, interactResult.box, false, false));
             interactResult = null;
         }
+    }
+
+    private static boolean startPartInstallation(IWrapperPlayer player, EntityInteractResult target) {
+        if (!(target.entity instanceof AEntityF_Multipart) || player.isSneaking()) {
+            return false;
+        }
+
+        AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) target.entity;
+        IWrapperItemStack heldStack = player.getHeldStack();
+        AItemBase heldItem = heldStack.getItem();
+        if (!(heldItem instanceof AItemPart)) {
+            return false;
+        }
+
+        AItemPart heldPart = (AItemPart) heldItem;
+        int installTime = heldPart.definition.generic.installTime;
+        if (installTime <= 0 || isPartInstallationVehicleLocked(multipart)) {
+            return false;
+        }
+
+        int slotIndex = getPartInstallationSlotIndex(multipart, target.box.localCenter);
+        if (slotIndex < 0 || multipart.partsInSlots.get(slotIndex) != null) {
+            return false;
+        }
+
+        JSONPartDefinition slotDefinition = multipart.definition.parts.get(slotIndex);
+        if (!multipart.isVariableListTrue(slotDefinition.interactableVariables) || !heldPart.isPartValidForPackDef(slotDefinition, multipart.subDefinition, !slotDefinition.bypassSlotMinMax)) {
+            return false;
+        }
+
+        partInstallationEntity = multipart;
+        partInstallationBox = target.box;
+        partInstallationStack = heldStack.copy();
+        partInstallationSlotIndex = slotIndex;
+        partInstallationElapsedTicks = 0;
+        partInstallationTime = installTime;
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(target.entity, player, target.box, false, true, false));
+        return true;
+    }
+
+    private static void updatePartInstallation(IWrapperPlayer player) {
+        Point3D startPosition = player.getEyePosition();
+        Point3D endPosition = player.getLineOfSight(INTERACTION_DISTANCE).add(startPosition);
+        EntityInteractResult currentTarget = player.getWorld().getMultipartEntityIntersect(startPosition, endPosition);
+        IWrapperItemStack heldStack = player.getHeldStack();
+        AItemBase heldItem = heldStack.getItem();
+        JSONPartDefinition slotDefinition = partInstallationSlotIndex >= 0 && partInstallationSlotIndex < partInstallationEntity.partsInSlots.size() ? partInstallationEntity.definition.parts.get(partInstallationSlotIndex) : null;
+        boolean validTarget = currentTarget != null && currentTarget.entity == partInstallationEntity && currentTarget.box.localCenter.equals(partInstallationBox.localCenter);
+        boolean validItem = heldItem instanceof AItemPart && heldStack.isCompleteMatch(partInstallationStack);
+        boolean validSlot = slotDefinition != null && partInstallationEntity.partsInSlots.get(partInstallationSlotIndex) == null && getPartInstallationSlotIndex(partInstallationEntity, partInstallationBox.localCenter) == partInstallationSlotIndex;
+        if (!validTarget || !validItem || !validSlot || player.isSneaking() || isPartInstallationVehicleLocked(partInstallationEntity) || !partInstallationEntity.isVariableListTrue(slotDefinition.interactableVariables) || !((AItemPart) heldItem).isPartValidForPackDef(slotDefinition, partInstallationEntity.subDefinition, !slotDefinition.bypassSlotMinMax)) {
+            cancelPartInstallation(player);
+            return;
+        }
+
+        if (partInstallationElapsedTicks < partInstallationTime) {
+            ++partInstallationElapsedTicks;
+        }
+        if (partInstallationElapsedTicks >= partInstallationTime) {
+            InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(partInstallationEntity, player, partInstallationBox, false, true, true));
+        }
+    }
+
+    private static void cancelPartInstallation(IWrapperPlayer player) {
+        InterfaceManager.packetInterface.sendToServer(new PacketEntityInteract(partInstallationEntity, player, partInstallationBox, false, false, false));
+        clearPartInstallation();
+        interactResult = null;
+    }
+
+    private static void clearPartInstallation() {
+        partInstallationEntity = null;
+        partInstallationBox = null;
+        partInstallationStack = null;
+        partInstallationSlotIndex = -1;
+        partInstallationElapsedTicks = 0;
+        partInstallationTime = 0;
+    }
+
+    private static int getPartInstallationSlotIndex(AEntityF_Multipart<?> multipart, Point3D localCenter) {
+        for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
+            if (slotEntry.getKey().localCenter.equals(localCenter)) {
+                return multipart.definition.parts.indexOf(slotEntry.getValue());
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isPartInstallationVehicleLocked(AEntityF_Multipart<?> multipart) {
+        EntityVehicleF_Physics vehicle = multipart instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) multipart : (multipart instanceof APart ? ((APart) multipart).vehicleOn : null);
+        return vehicle != null && vehicle.lockedVar.isActive;
     }
 
     private static PartSeat getClientVehicleSeat(IWrapperPlayer player) {

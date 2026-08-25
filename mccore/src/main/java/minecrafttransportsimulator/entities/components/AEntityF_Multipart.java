@@ -818,50 +818,59 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             if (!partSlotBoxes.isEmpty()) {
                 world.beginProfiling("PartSlotActives", false);
                 activeClientPartSlotBoxes.clear();
-                if (canBeClicked()) {
-                    IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-                    AItemBase heldItem = player.getHeldItem();
-                    boolean holdingScanner = heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER;
-                    if (holdingScanner || heldItem instanceof AItemPart) {
-                        for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
-                            BoundingBox box = partSlotBoxEntry.getKey();
-                            JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
-                            boolean activeSlotFound = false;
-                            if (holdingScanner) {
-                                //Don't check held parts, just check if we can actually place anything in a slot.
-                                if (isVariableListTrue(partSlotBoxEntry.getValue().interactableVariables)) {
-                                    activeSlotFound = true;
-                                }
-                            } else {
-                                AItemPart heldPart = (AItemPart) heldItem;
-                                if (heldPart.isPartValidForPackDef(slotDef, subDefinition, false) && isVariableListTrue(slotDef.interactableVariables)) {
-                                    //Part matches.  Add the box.  Set the box bounds to the special bounds of the generic part if we're holding one, but only if we don't have a holo box bounds defined.
-                                    if (slotDef.slotWidth == 0 && heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
-                                        box.widthRadius = heldPart.definition.generic.width / 2D;
-                                        box.heightRadius = heldPart.definition.generic.height / 2D;
-                                        box.depthRadius = heldPart.definition.generic.width / 2D;
-                                    }
-                                    activeSlotFound = true;
-                                }
-                            }
-                            if (activeSlotFound) {
-                                collisionBoxes.add(box);
-                                activeClientPartSlotBoxes.put(box, slotDef);
-                                if (requiresDeltaUpdates) {
-                                    AnimationSwitchbox switchBox = partSlotSwitchboxes.get(slotDef);
-                                    if (switchBox != null) {
-                                        if (switchBox.runSwitchbox(0, false)) {
-                                            box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
-                                            box.updateToEntity(this, box.globalCenter);
-                                        }
-                                    } else {
-                                        box.updateToEntity(this, null);
-                                    }
-                                }
-                            } else {
-                                collisionBoxes.remove(box);
+                IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+                AItemBase heldItem = player.getHeldItem();
+                AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
+                boolean holdingScanner = heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type == ItemComponentType.SCANNER;
+                boolean slotsCanBeClicked = canBeClicked();
+                for (Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()) {
+                    BoundingBox box = partSlotBoxEntry.getKey();
+                    JSONPartDefinition slotDef = partSlotBoxEntry.getValue();
+
+                    //Always update empty slot positions so inactive boxes and their GUI markers cannot retain stale transforms.
+                    AnimationSwitchbox switchBox = partSlotSwitchboxes.get(slotDef);
+                    if (switchBox != null && switchBox.runSwitchbox(0, false)) {
+                        box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
+                        box.updateToEntity(this, box.globalCenter);
+                    } else {
+                        box.updateToEntity(this, null);
+                    }
+
+                    //Reset slot bounds every tick so changing held items cannot leave dimensions from the prior item behind.
+                    boolean heldPartValidForSlot = heldPart != null && heldPart.isPartValidForPackDef(slotDef, subDefinition, false);
+                    if (slotDef.slotWidth != 0) {
+                        box.widthRadius = slotDef.slotWidth / 2D;
+                        box.heightRadius = slotDef.slotHeight / 2D;
+                        box.depthRadius = slotDef.slotWidth / 2D;
+                    } else if (heldPartValidForSlot && heldPart.definition.generic.width != 0 && heldPart.definition.generic.height != 0) {
+                        box.widthRadius = heldPart.definition.generic.width / 2D;
+                        box.heightRadius = heldPart.definition.generic.height / 2D;
+                        box.depthRadius = heldPart.definition.generic.width / 2D;
+                    } else {
+                        boolean isLarge = false;
+                        for (String type : slotDef.types) {
+                            if (type.startsWith("engine_") || type.startsWith("ground_") || type.startsWith("propeller")) {
+                                isLarge = true;
+                                break;
                             }
                         }
+                        box.widthRadius = (isLarge ? PART_SLOT_LARGE_HITBOX_WIDTH : PART_SLOT_NORMAL_HITBOX_WIDTH) / 2D;
+                        box.heightRadius = (isLarge ? PART_SLOT_LARGE_HITBOX_HEIGHT : PART_SLOT_NORMAL_HITBOX_HEIGHT) / 2D;
+                        box.depthRadius = box.widthRadius;
+                    }
+
+                    boolean activeSlotFound = false;
+                    if (slotsCanBeClicked && holdingScanner) {
+                        //Don't check held parts, just check if we can actually place anything in a slot.
+                        activeSlotFound = isVariableListTrue(slotDef.interactableVariables);
+                    } else if (slotsCanBeClicked && heldPartValidForSlot) {
+                        activeSlotFound = isVariableListTrue(slotDef.interactableVariables);
+                    }
+                    if (activeSlotFound) {
+                        collisionBoxes.add(box);
+                        activeClientPartSlotBoxes.put(box, slotDef);
+                    } else {
+                        collisionBoxes.remove(box);
                     }
                 }
             }
@@ -904,54 +913,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         super.renderBoundingBoxes(transform);
         if (System.currentTimeMillis() % 1000 > 500) {
             encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
-        }
-    }
-
-    @Override
-    protected void renderHolographicBoxes(TransformationMatrix transform) {
-        if (!activeClientPartSlotBoxes.isEmpty()) {
-            //If we are holding a part or scanner, render the valid slots.
-            world.beginProfiling("PartHoloboxes", true);
-            IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-            AItemBase heldItem = player.getHeldItem();
-            AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
-            boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
-            if (heldPart != null || holdingScanner) {
-                if (holdingScanner) {
-                    for (Entry<BoundingBox, JSONPartDefinition> slotEntry : activeClientPartSlotBoxes.entrySet()) {
-                        BoundingBox box = slotEntry.getKey();
-                        JSONPartDefinition slotDef = slotEntry.getValue();
-                        Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        boolean isImportant = false;
-                        for (String slotType : slotDef.types) {
-                            if (slotType.startsWith("ground") || slotType.startsWith("engine") || slotType.startsWith("propeller") || slotType.startsWith("seat")) {
-                                isImportant = true;
-                                break;
-                            }
-                        }
-                        box.renderHolographic(transform, boxCenterDelta, isImportant ? ColorRGB.YELLOW : ColorRGB.DARK_GRAY);
-                    }
-                } else {
-                    for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activeClientPartSlotBoxes.entrySet()) {
-                        boolean isHoldingCorrectTypePart = false;
-                        boolean isHoldingCorrectParamPart = false;
-
-                        if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subDefinition, false)) {
-                            isHoldingCorrectTypePart = true;
-                            if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subDefinition, true)) {
-                                isHoldingCorrectParamPart = true;
-                            }
-                        }
-
-                        if (isHoldingCorrectTypePart) {
-                            BoundingBox box = partSlotEntry.getKey();
-                            Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                            box.renderHolographic(transform, boxCenterDelta, isHoldingCorrectParamPart ? ColorRGB.GREEN : ColorRGB.RED);
-                        }
-                    }
-                }
-            }
-            world.endProfiling();
         }
     }
 

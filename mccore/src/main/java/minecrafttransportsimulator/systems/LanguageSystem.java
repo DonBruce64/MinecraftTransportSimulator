@@ -278,6 +278,16 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
+    public static final LanguageEntry GUI_PARTINSTALL_INSTALLING = new LanguageEntry("gui.partinstall.installing", "Installing part...");
+    public static final LanguageEntry GUI_PART_SLOT_GENERIC = new LanguageEntry("gui.parttype.generic", "Generic Part");
+    public static final LanguageEntry GUI_PART_SLOT_ENGINE = new LanguageEntry("gui.parttype.engine", "Engine");
+    public static final LanguageEntry GUI_PART_SLOT_GROUND = new LanguageEntry("gui.parttype.ground", "Ground Device");
+    public static final LanguageEntry GUI_PART_SLOT_PROPELLER = new LanguageEntry("gui.parttype.propeller", "Propeller");
+    public static final LanguageEntry GUI_PART_SLOT_SEAT = new LanguageEntry("gui.parttype.seat", "Seat");
+    public static final LanguageEntry GUI_PART_SLOT_GUN = new LanguageEntry("gui.parttype.gun", "Gun");
+    public static final LanguageEntry GUI_PART_SLOT_INTERACTABLE = new LanguageEntry("gui.parttype.interactable", "Interactable");
+    public static final LanguageEntry GUI_PART_SLOT_EFFECTOR = new LanguageEntry("gui.parttype.effector", "Effector");
+
     public static final LanguageEntry GUI_PANEL_TRIM_ROLL = new LanguageEntry("gui.panel.trim_roll", "ROLL TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_PITCH = new LanguageEntry("gui.panel.trim_pitch", "PITCH TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_YAW = new LanguageEntry("gui.panel.trim_yaw", "YAW TRIM");

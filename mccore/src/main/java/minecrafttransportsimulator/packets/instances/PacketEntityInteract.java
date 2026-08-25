@@ -1,6 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -31,15 +34,22 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * @author don_bruce
  */
 public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperPlayer> {
+    private static final Map<UUID, PendingPartInstallation> pendingPartInstallations = new HashMap<>();
     private final Point3D hitBoxLocalCenter;
     private final boolean leftClick;
     private final boolean rightClick;
+    private final boolean partInstallComplete;
 
     public PacketEntityInteract(AEntityE_Interactable<?> entity, IWrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick) {
+        this(entity, player, hitBox, leftClick, rightClick, false);
+    }
+
+    public PacketEntityInteract(AEntityE_Interactable<?> entity, IWrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick, boolean partInstallComplete) {
         super(entity, player);
         this.hitBoxLocalCenter = hitBox.localCenter;
         this.leftClick = leftClick;
         this.rightClick = rightClick;
+        this.partInstallComplete = partInstallComplete;
     }
 
     public PacketEntityInteract(ByteBuf buf) {
@@ -47,6 +57,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         this.hitBoxLocalCenter = readPoint3dFromBuffer(buf);
         this.leftClick = buf.readBoolean();
         this.rightClick = buf.readBoolean();
+        this.partInstallComplete = buf.readBoolean();
     }
 
     @Override
@@ -55,6 +66,7 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         writePoint3dToBuffer(hitBoxLocalCenter, buf);
         buf.writeBoolean(leftClick);
         buf.writeBoolean(rightClick);
+        buf.writeBoolean(partInstallComplete);
     }
 
     @Override
@@ -62,6 +74,10 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         EntityVehicleF_Physics vehicle = entity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity : (entity instanceof APart ? ((APart) entity).vehicleOn : null);
         IWrapperItemStack heldStack = player.getHeldStack();
         AItemBase heldItem = heldStack.getItem();
+
+        if (!leftClick && !rightClick) {
+            pendingPartInstallations.remove(player.getID());
+        }
 
         //Get the bounding box hit for future operations.
         BoundingBox hitBox = null;
@@ -73,10 +89,30 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
                 if (slotEntry.getKey().localCenter.equals(hitBoxLocalCenter)) {
                     //Only owners can add parts.
-                    if (vehicle == null || !vehicle.lockedVar.isActive) {
+                    int slotIndex = multipart.definition.parts.indexOf(slotEntry.getValue());
+                    if (partInstallComplete) {
+                        PendingPartInstallation pendingInstallation = pendingPartInstallations.get(player.getID());
+                        if (pendingInstallation != null && pendingInstallation.multipartID.equals(multipart.uniqueUUID) && pendingInstallation.slotIndex == slotIndex && heldItem instanceof AItemPart && heldStack.isCompleteMatch(pendingInstallation.stack) && isPartInstallationValid(multipart, vehicle, player, (AItemPart) heldItem, slotEntry.getValue(), slotIndex)) {
+                            if (multipart.ticksExisted - pendingInstallation.startTick + 1 >= pendingInstallation.installTime) {
+                                pendingPartInstallations.remove(player.getID());
+                                if (multipart.addPartFromStack(heldStack, player, slotIndex, false, false) != null && !player.isCreative()) {
+                                    player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+                                }
+                            }
+                        } else {
+                            pendingPartInstallations.remove(player.getID());
+                        }
+                    } else if (heldItem instanceof AItemPart && ((AItemPart) heldItem).definition.generic.installTime > 0) {
+                        pendingPartInstallations.remove(player.getID());
+                        if (isPartInstallationValid(multipart, vehicle, player, (AItemPart) heldItem, slotEntry.getValue(), slotIndex)) {
+                            pendingPartInstallations.put(player.getID(), new PendingPartInstallation(multipart, slotIndex, heldStack.copy(), multipart.ticksExisted, ((AItemPart) heldItem).definition.generic.installTime));
+                        } else if (vehicle != null && vehicle.lockedVar.isActive) {
+                            player.sendPacket(new PacketPlayerChatMessage(player, LanguageSystem.INTERACT_VEHICLE_LOCKED));
+                        }
+                    } else if (vehicle == null || !vehicle.lockedVar.isActive) {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
                         if (heldItem instanceof AItemPart && !player.isSneaking()) {
-                            if (multipart.addPartFromStack(heldStack, player, multipart.definition.parts.indexOf(slotEntry.getValue()), false, false) != null && !player.isCreative()) {
+                            if (multipart.addPartFromStack(heldStack, player, slotIndex, false, false) != null && !player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
                         }
@@ -86,6 +122,11 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
                     return false;
                 }
             }
+        }
+
+        if (partInstallComplete) {
+            pendingPartInstallations.remove(player.getID());
+            return false;
         }
 
         //If we didn't get the box from the part slot, get it from the main list.
@@ -144,5 +185,25 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
             entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
         }
         return false;
+    }
+
+    private static boolean isPartInstallationValid(AEntityF_Multipart<?> multipart, EntityVehicleF_Physics vehicle, IWrapperPlayer player, AItemPart heldPart, JSONPartDefinition slotDefinition, int slotIndex) {
+        return slotIndex >= 0 && slotIndex < multipart.partsInSlots.size() && multipart.partsInSlots.get(slotIndex) == null && !player.isSneaking() && (vehicle == null || !vehicle.lockedVar.isActive) && multipart.isVariableListTrue(slotDefinition.interactableVariables) && heldPart.isPartValidForPackDef(slotDefinition, multipart.subDefinition, !slotDefinition.bypassSlotMinMax);
+    }
+
+    private static class PendingPartInstallation {
+        private final UUID multipartID;
+        private final int slotIndex;
+        private final IWrapperItemStack stack;
+        private final long startTick;
+        private final int installTime;
+
+        private PendingPartInstallation(AEntityF_Multipart<?> multipart, int slotIndex, IWrapperItemStack stack, long startTick, int installTime) {
+            this.multipartID = multipart.uniqueUUID;
+            this.slotIndex = slotIndex;
+            this.stack = stack;
+            this.startTick = startTick;
+            this.installTime = installTime;
+        }
     }
 }
