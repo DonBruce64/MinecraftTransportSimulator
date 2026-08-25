@@ -25,10 +25,6 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
     private final Axis hitSide;
     private final HitType hitType;
 
-    public PacketEntityBulletHitGeneric(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
-        this(gun, bulletNumber, position, getBulletOrientation(gun, bulletNumber), hitSide, hitType);
-    }
-
     public PacketEntityBulletHitGeneric(PartGun gun, int bulletNumber, Point3D position, RotationMatrix orientation, Axis hitSide, HitType hitType) {
         super(null);
         this.gunID = gun.uniqueUUID;
@@ -64,10 +60,5 @@ public class PacketEntityBulletHitGeneric extends APacketBase {
     public void handle(AWrapperWorld world) {
         RotationMatrix orientation = new RotationMatrix().setToAngles(orientationAngles);
         EntityBullet.performGenericHitLogic(world.getBulletGun(gunID), bulletNumber, position, orientation, hitSide, hitType);
-    }
-
-    private static RotationMatrix getBulletOrientation(PartGun gun, int bulletNumber) {
-        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
-        return bullet != null ? bullet.orientation : new RotationMatrix();
     }
 }
