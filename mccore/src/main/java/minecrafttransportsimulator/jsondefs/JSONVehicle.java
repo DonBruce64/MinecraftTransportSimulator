@@ -30,6 +30,12 @@ public class JSONVehicle extends AJSONPartProvider {
 
         @JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
         public boolean isTrailer;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to deploy while holding right-click on the target block.  Values less than or equal to 0 make deployment instant.")
+        public int deployTime;
+
+        @JSONDescription("How long, in ticks, this vehicle takes to pack while holding sneak and left-click with the required tool.  Values less than or equal to 0 make packing instant.")
+        public int packTime;
         
         @JSONDescription("Sets the default third-person zoom level when this vehicle is spawned.  0 is the closest possible camera position, 1 is one step out, 2 is two steps out, and so on.  This only affects the starting zoom level; players can still zoom in or out normally after entering the vehicle.")
         public int defaultZoom;

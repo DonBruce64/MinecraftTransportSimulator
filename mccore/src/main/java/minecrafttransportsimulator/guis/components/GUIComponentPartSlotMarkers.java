@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -36,8 +37,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final double INTERACTION_REACH = 3.5D;
     private static final double INTERACTION_REACH_SQUARED = INTERACTION_REACH * INTERACTION_REACH;
     private static final double MARKER_RADIUS = 6.0D;
-    private static final double PROGRESS_INNER_RADIUS = MARKER_RADIUS + 0.5D;
-    private static final double PROGRESS_OUTER_RADIUS = MARKER_RADIUS + 2.0D;
+    private static final double PROGRESS_INNER_RADIUS = MARKER_RADIUS - 1.0D;
+    private static final double PROGRESS_OUTER_RADIUS = MARKER_RADIUS + 1.0D;
     private static final String MARKER_TEXTURE = "mts:textures/guis/part_marker.png";
     private static final String UNAVAILABLE_MARKER_TEXTURE = "mts:textures/guis/part_marker_unavailable.png";
     private static final String REMOVE_MARKER_TEXTURE = "mts:textures/guis/part_marker_remove.png";
@@ -64,6 +65,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private final RenderableData lockedIconRenderable;
     private final RenderableData installationProgressTrackRenderable;
     private final RenderableData installationProgressRenderable;
+    private final RenderableData removalProgressRenderable;
     private final RenderableVertices installationProgressVertices;
     private final EnumMap<PartTypeCategory, RenderableData> typeMarkerRenderables = new EnumMap<>(PartTypeCategory.class);
     private final Point3D markerCenter = new Point3D();
@@ -78,7 +80,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         lockedIconRenderable = createUnlitRenderable(createLockedIconVertices(), ColorRGB.BLACK);
         installationProgressTrackRenderable = createProgressRenderable(createProgressRingVertices("PART_SLOT_INSTALL_PROGRESS_TRACK", 1.0F), ColorRGB.DARK_GRAY, 0.75F);
         installationProgressVertices = createProgressRingVertices("PART_SLOT_INSTALL_PROGRESS", 0.0F);
-        installationProgressRenderable = createProgressRenderable(installationProgressVertices, ColorRGB.WHITE, 1.0F);
+        installationProgressRenderable = createProgressRenderable(installationProgressVertices, ColorRGB.GREEN, 1.0F);
+        removalProgressRenderable = createProgressRenderable(installationProgressVertices, ColorRGB.RED, 1.0F);
         for (Entry<PartTypeCategory, String> typeMarkerTexture : TYPE_MARKER_TEXTURES.entrySet()) {
             typeMarkerRenderables.put(typeMarkerTexture.getKey(), createTexturedMarkerRenderable(typeMarkerTexture.getValue()));
         }
@@ -91,31 +94,49 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         }
 
         IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-        if (player == null || player.getWorld() == null) {
+        if (player == null || player.getWorld() == null || player.isSpectator()) {
             return;
+        }
+
+        if (ControlSystem.getVehiclePackingMarkerPosition(markerCenter)) {
+            renderWorldActionProgress(gui, markerCenter, ControlSystem.getVehiclePackingProgress(partialTicks), removalProgressRenderable);
+            return;
+        } else if (!ControlSystem.isPartInstallationInProgress()
+                && !ControlSystem.isPartRemovalInProgress()) {
+            int vehicleDeploymentCount = ControlSystem.getVehicleDeploymentCount();
+            for (int deploymentIndex = 0; deploymentIndex < vehicleDeploymentCount; ++deploymentIndex) {
+                if (ControlSystem.getVehicleDeploymentMarkerPosition(deploymentIndex, markerCenter)) {
+                    renderWorldActionProgress(gui, markerCenter, ControlSystem.getVehicleDeploymentProgress(deploymentIndex, partialTicks), installationProgressRenderable);
+                }
+            }
         }
 
         AItemBase heldItem = player.getHeldItem();
         AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
         boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
         boolean holdingWrench = player.isHoldingItemType(ItemComponentType.WRENCH);
-        if (heldPart == null && !holdingScanner && !holdingWrench) {
+        boolean holdingScrewdriver = player.isHoldingItemType(ItemComponentType.SCREWDRIVER);
+        boolean holdingRemovalTool = holdingWrench || holdingScrewdriver;
+        if (heldPart == null && !holdingScanner && !holdingRemovalTool) {
             return;
         }
 
         Point3D eyePosition = player.getEyePosition();
         for (AEntityF_Multipart<?> multipart : player.getWorld().getEntitiesExtendingType(AEntityF_Multipart.class)) {
-            renderMultipartMarkers(gui, multipart, eyePosition, heldPart, holdingScanner, holdingWrench, player, partialTicks);
+            renderMultipartMarkers(gui, multipart, eyePosition, heldPart, holdingScanner, holdingRemovalTool, player, partialTicks);
         }
     }
 
-    private void renderMultipartMarkers(AGUIBase gui, AEntityF_Multipart<?> multipart, Point3D eyePosition, AItemPart heldPart, boolean holdingScanner, boolean holdingWrench, IWrapperPlayer player, float partialTicks) {
-        if (!multipart.isValid || multipart.definition.parts == null) {
+    private void renderMultipartMarkers(AGUIBase gui, AEntityF_Multipart<?> multipart, Point3D eyePosition, AItemPart heldPart, boolean holdingScanner, boolean holdingRemovalTool, IWrapperPlayer player, float partialTicks) {
+        if (multipart instanceof EntityPlayerGun
+                || multipart instanceof APart && ((APart) multipart).masterEntity instanceof EntityPlayerGun
+                || !multipart.isValid
+                || multipart.definition.parts == null) {
             return;
         }
 
         //Empty slots retain their placement hitboxes in this map even when they are unavailable.
-        if (!holdingWrench) {
+        if (!holdingRemovalTool) {
             for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
                 JSONPartDefinition slotDefinition = slotEntry.getValue();
                 if (!holdingScanner && !heldPart.isPartValidForPackDef(slotDefinition, multipart.subDefinition, false)) {
@@ -148,8 +169,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
 
             JSONPartDefinition slotDefinition = multipart.definition.parts.get(slotIndex);
             PartSlotMarkerState state;
-            if (holdingWrench) {
-                if (!canRemoveWithWrench(installedPart, player)) {
+            if (holdingRemovalTool) {
+                if (!canRemoveWithTool(installedPart, player)) {
                     continue;
                 }
                 state = PartSlotMarkerState.REMOVE;
@@ -165,6 +186,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     }
 
     private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, String rawType, PartSlotMarkerState state, float partialTicks) {
+        boolean installationTarget = ControlSystem.isPartInstallationTarget(markerEntity, markerBox);
         if (!isWithinReach(eyePosition, markerBox)) {
             return;
         }
@@ -190,12 +212,18 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         double markerZ = MARKER_BASE_Z - screenDepth;
         PartTypeCategory typeCategory = getPartTypeCategory(rawType);
 
+        if (installationTarget) {
+            renderInstallationProgress(screenX, screenY, markerZ, partialTicks);
+            return;
+        }
+        if (state == PartSlotMarkerState.REMOVE && ControlSystem.isPartRemovalTarget(markerEntity)) {
+            renderRemovalProgress(screenX, screenY, markerZ, partialTicks);
+            return;
+        }
+
         renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory);
         if (state == PartSlotMarkerState.LOCKED) {
             renderStatusIcon(screenX, screenY, markerRadius, markerZ, state);
-        }
-        if (ControlSystem.isPartInstallationTarget(markerEntity, markerBox)) {
-            renderInstallationProgress(screenX, screenY, markerZ, partialTicks);
         }
         renderTypeLabel(gui, screenX, screenY, markerRadius, markerZ, typeCategory, rawType);
     }
@@ -244,12 +272,29 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     }
 
     private void renderInstallationProgress(double screenX, double screenY, double z, float partialTicks) {
+        renderActionProgress(screenX, screenY, z, ControlSystem.getPartInstallationProgress(partialTicks), installationProgressRenderable);
+    }
+
+    private void renderRemovalProgress(double screenX, double screenY, double z, float partialTicks) {
+        renderActionProgress(screenX, screenY, z, ControlSystem.getPartRemovalProgress(partialTicks), removalProgressRenderable);
+    }
+
+    private void renderWorldActionProgress(AGUIBase gui, Point3D worldPosition, float progress, RenderableData progressRenderable) {
+        Point3D projectedCenter = InterfaceManager.clientInterface.projectToScreen(worldPosition, gui.screenWidth, gui.screenHeight);
+        if (projectedCenter != null) {
+            double screenX = projectedCenter.x;
+            double screenY = projectedCenter.y;
+            double markerZ = MARKER_BASE_Z - projectedCenter.z;
+            renderActionProgress(screenX, screenY, markerZ, progress, progressRenderable);
+        }
+    }
+
+    private void renderActionProgress(double screenX, double screenY, double z, float progress, RenderableData progressRenderable) {
         renderProgressRing(installationProgressTrackRenderable, screenX, screenY, z);
 
-        float progress = ControlSystem.getPartInstallationProgress(partialTicks);
         if (progress > 0.0F) {
             setProgressRingVertices(installationProgressVertices.vertices, progress);
-            renderProgressRing(installationProgressRenderable, screenX, screenY, z);
+            renderProgressRing(progressRenderable, screenX, screenY, z);
         }
     }
 
@@ -279,7 +324,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         return vehicle != null && vehicle.lockedVar.isActive;
     }
 
-    private static boolean canRemoveWithWrench(APart part, IWrapperPlayer player) {
+    private static boolean canRemoveWithTool(APart part, IWrapperPlayer player) {
         return !player.isSneaking()
                 && part.isValid
                 && !part.isFake()

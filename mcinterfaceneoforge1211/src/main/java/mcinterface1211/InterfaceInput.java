@@ -329,7 +329,9 @@ public class InterfaceInput implements IInterfaceInput {
 
     @SubscribeEvent
     public static void onIVInteractionKeyMapping(InputEvent.InteractionKeyMappingTriggered event) {
-        if (event.isUseItem() && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaRightClick(InterfaceManager.clientInterface.getClientPlayer())) {
+        if (InterfaceManager.clientInterface != null
+                && (event.isUseItem() && ControlSystem.shouldSuppressVanillaRightClick(InterfaceManager.clientInterface.getClientPlayer())
+                        || event.isAttack() && ControlSystem.shouldSuppressVanillaLeftClick(InterfaceManager.clientInterface.getClientPlayer()))) {
             event.setCanceled(true);
             event.setSwingHand(false);
         }

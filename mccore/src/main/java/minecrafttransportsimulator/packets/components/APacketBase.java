@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketCrafterTimeSet;
@@ -60,6 +61,8 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnect
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlNotification;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePacking;
 import minecrafttransportsimulator.packets.instances.PacketVehicleRotorControl;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
@@ -112,6 +115,15 @@ public abstract class APacketBase {
      * the world is passed-in here for referencing objects.
      */
     public abstract void handle(AWrapperWorld world);
+
+    /**
+     * Handles a packet with the authenticated network sender when it was sent from a client.
+     * Packets that need sender identity may override this method; all existing packets retain
+     * their normal payload-based handling through the default implementation.
+     */
+    public void handleFromClient(AWrapperWorld world, IWrapperPlayer sendingPlayer) {
+        handle(world);
+    }
 
     /**
      * Helper method to write a string to the buffer.
@@ -303,5 +315,9 @@ public abstract class APacketBase {
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
+
+        //New packet types are appended to preserve the IDs of existing packets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
     }
 }

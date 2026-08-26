@@ -279,6 +279,9 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
     public static final LanguageEntry GUI_PARTINSTALL_INSTALLING = new LanguageEntry("gui.partinstall.installing", "Installing part...");
+    public static final LanguageEntry GUI_PARTREMOVE_REMOVING = new LanguageEntry("gui.partremove.removing", "Removing part...");
+    public static final LanguageEntry GUI_VEHICLEDEPLOY_DEPLOYING = new LanguageEntry("gui.vehicledeploy.deploying", "Deploying vehicle...");
+    public static final LanguageEntry GUI_VEHICLEPACK_PACKING = new LanguageEntry("gui.vehiclepack.packing", "Packing vehicle...");
     public static final LanguageEntry GUI_PART_SLOT_GENERIC = new LanguageEntry("gui.parttype.generic", "Generic Part");
     public static final LanguageEntry GUI_PART_SLOT_ENGINE = new LanguageEntry("gui.parttype.engine", "Engine");
     public static final LanguageEntry GUI_PART_SLOT_GROUND = new LanguageEntry("gui.parttype.ground", "Ground Device");
