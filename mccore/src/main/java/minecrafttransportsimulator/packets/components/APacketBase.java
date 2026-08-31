@@ -26,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInteract;
 import minecrafttransportsimulator.packets.instances.PacketEntityInteractGUI;
 import minecrafttransportsimulator.packets.instances.PacketEntityKeyChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityLastOpenedItemChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityParticleEmitter;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
@@ -303,5 +304,6 @@ public abstract class APacketBase {
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityParticleEmitter.class);
     }
 }
