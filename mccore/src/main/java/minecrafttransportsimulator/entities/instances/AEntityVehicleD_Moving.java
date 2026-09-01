@@ -51,6 +51,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 	public final ComputedVariable parkingBrakeVar;
     public final ComputedVariable lockedVar;
     public static final double MAX_BRAKE = 1D;
+	private static final double CHUNK_GUARD_LOOKAHEAD_MULTIPLIER = 1.5D;
+    private static final double CHUNK_GUARD_MIN_LOOKAHEAD_DISTANCE = 16D;
+    private static final double CHUNK_GUARD_SAMPLE_STEP = 4D;
+    private static final double CHUNK_GUARD_STOP_BUFFER = 2D;
+    private static final double CHUNK_GUARD_CAP_RECOVERY_PER_TICK = 1D / 20D;
+    private static final double CHUNK_GUARD_PROBE_Y = 1D;
+    private static final double CHUNK_GUARD_MIN_HORIZONTAL_CHECK_DISTANCE = 0.01D;
     public UUID keyUUID;
 
     //Internal states.
@@ -113,6 +120,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D tempBoxPosition = new Point3D();
     private final Point3D normalizedGroundVelocityVector = new Point3D();
     private final Point3D normalizedGroundHeadingVector = new Point3D();
+	private final Point3D chunkGuardDirection = new Point3D();
+    private final Point3D chunkGuardProbePoint = new Point3D();
+    private double chunkGuardSpeedCap = 1D;
     public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>(); //Public so we can add ground device boxes to this set.
     private AEntityE_Interactable<?> lastCollidedEntity;
     public VehicleGroundDeviceCollection groundDeviceCollective;
@@ -915,6 +925,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 rotationApplied.angles.add(vehicleCollisionRotation.angles);
             }
 
+			applyChunkGuardSpeedLimit();
+
             //All contributions done, add calculated motions.
             position.add(motionApplied);
             if (!rotationApplied.angles.isZero()) {
@@ -980,6 +992,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //Mounted vehicles don't do most motions, only a sub-set of them.
             world.beginProfiling("ApplyMotions", true);
             motionApplied.set(motion).scale(speedFactor);
+			applyChunkGuardSpeedLimit();
             position.add(motionApplied);
 
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
@@ -998,6 +1011,88 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
         world.endProfiling();
+    }
+
+        /**
+     * Applies a dynamic speed limit if the vehicle is approaching unloaded chunks.
+     * This runs only on the server to avoid client-side false positives.
+     */
+    private void applyChunkGuardSpeedLimit() {
+        if (world.isClient()) {
+            return;
+        }
+
+        double intendedHorizontalMotionDistance = getChunkGuardHorizontalDistance(motionApplied);
+        if (intendedHorizontalMotionDistance <= CHUNK_GUARD_MIN_HORIZONTAL_CHECK_DISTANCE) {
+            chunkGuardSpeedCap = Math.min(1D, chunkGuardSpeedCap + CHUNK_GUARD_CAP_RECOVERY_PER_TICK);
+            return;
+        }
+
+        double safeSpeedFactor = getChunkGuardSafeSpeedFactor(intendedHorizontalMotionDistance);
+        if (safeSpeedFactor < chunkGuardSpeedCap) {
+            chunkGuardSpeedCap = safeSpeedFactor;
+        } else {
+            chunkGuardSpeedCap = Math.min(safeSpeedFactor, chunkGuardSpeedCap + CHUNK_GUARD_CAP_RECOVERY_PER_TICK);
+        }
+
+        if (chunkGuardSpeedCap < 1D) {
+            // Chunk loading is X/Z-based, so clamp horizontal motion only.
+            motion.x *= chunkGuardSpeedCap;
+            motion.z *= chunkGuardSpeedCap;
+            motionApplied.x *= chunkGuardSpeedCap;
+            motionApplied.z *= chunkGuardSpeedCap;
+            pathingApplied *= chunkGuardSpeedCap;
+        }
+    }
+
+    /**
+     * Returns the max safe speed factor for this tick based on loaded chunks ahead.
+     */
+    private double getChunkGuardSafeSpeedFactor(double intendedHorizontalMotionDistance) {
+        double probeY = getChunkGuardProbeY();
+        chunkGuardProbePoint.set(position.x + motionApplied.x, probeY, position.z + motionApplied.z);
+        if (!world.chunkLoaded(chunkGuardProbePoint)) {
+            return 0D;
+        }
+
+        // Convert movement to chunks/second, then probe 1.5x that distance ahead.
+        double chunksPerSecond = intendedHorizontalMotionDistance * 20D / 16D;
+        double lookAheadDistance = Math.max(chunksPerSecond * CHUNK_GUARD_LOOKAHEAD_MULTIPLIER * 16D, CHUNK_GUARD_MIN_LOOKAHEAD_DISTANCE);
+
+        chunkGuardDirection.set(motionApplied.x, 0D, motionApplied.z).normalize();
+        int sampleCount = Math.max(1, (int) Math.ceil(lookAheadDistance / CHUNK_GUARD_SAMPLE_STEP));
+        double firstUnloadedDistance = -1D;
+        for (int sampleIndex = 1; sampleIndex <= sampleCount; ++sampleIndex) {
+            double sampleDistance = Math.min(sampleIndex * CHUNK_GUARD_SAMPLE_STEP, lookAheadDistance);
+            chunkGuardProbePoint.set(position.x, probeY, position.z).addScaled(chunkGuardDirection, sampleDistance);
+            if (!world.chunkLoaded(chunkGuardProbePoint)) {
+                firstUnloadedDistance = sampleDistance;
+                break;
+            }
+        }
+
+        if (firstUnloadedDistance < 0) {
+            return 1D;
+        }
+
+        double safeDistance = Math.max(firstUnloadedDistance - CHUNK_GUARD_STOP_BUFFER, 0D);
+
+        // Primary guard: ensure current speed only requires lookahead that is actually loaded.
+        double lookAheadSpeedFactor = safeDistance / lookAheadDistance;
+
+        // Secondary guard: never allow us to move farther this tick than the known-safe distance.
+        double immediateSpeedFactor = safeDistance / intendedHorizontalMotionDistance;
+
+        return Math.max(0D, Math.min(Math.min(lookAheadSpeedFactor, immediateSpeedFactor), 1D));
+    }
+
+    private double getChunkGuardHorizontalDistance(Point3D motionVector) {
+        return Math.sqrt(motionVector.x * motionVector.x + motionVector.z * motionVector.z);
+    }
+
+    private double getChunkGuardProbeY() {
+        // Chunk load state is X/Z-based, so use a stable in-bounds Y for probes.
+        return CHUNK_GUARD_PROBE_Y;
     }
 
     /**
