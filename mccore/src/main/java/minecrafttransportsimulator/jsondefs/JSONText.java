@@ -64,6 +64,9 @@ public class JSONText {
     @JSONDescription("If true, then this text will light up when the model is lit up.")
     public boolean lightsUp;
 
+    @JSONDescription("If true, this text will ignore directional surface shading while still respecting world light levels.  Useful for flat text on signs and labels.")
+    public boolean flatLighting;
+
     @JSONDescription("The mode for this text to render.  Position 0 is centered text, with the text anchored at the top-center, position 1 is left-aligned, where pos is the top-left point of the text.  Mode 2 is right-aligned, where pos is the top-right point.")
     public int renderPosition;
 
