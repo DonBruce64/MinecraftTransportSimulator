@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -60,6 +61,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     }
 
     private final RenderableData defaultMarkerRenderable;
+    private final RenderableData customMarkerRenderable;
     private final RenderableData unavailableMarkerRenderable;
     private final RenderableData removeMarkerRenderable;
     private final RenderableData lockedIconRenderable;
@@ -75,6 +77,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         super(0, 0, 0, 0);
 
         defaultMarkerRenderable = createTexturedMarkerRenderable(MARKER_TEXTURE);
+        customMarkerRenderable = createTexturedMarkerRenderable(MARKER_TEXTURE);
         unavailableMarkerRenderable = createTexturedMarkerRenderable(UNAVAILABLE_MARKER_TEXTURE);
         removeMarkerRenderable = createTexturedMarkerRenderable(REMOVE_MARKER_TEXTURE);
         lockedIconRenderable = createUnlitRenderable(createLockedIconVertices(), ColorRGB.BLACK);
@@ -155,7 +158,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 }
 
                 String rawType = heldPart != null ? heldPart.definition.generic.type : getFirstSlotType(slotDefinition);
-                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, rawType, state, partialTicks);
+                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, multipart.definition, slotDefinition, rawType, state, partialTicks);
             }
         }
 
@@ -181,11 +184,11 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 state = PartSlotMarkerState.INSTALLED;
             }
 
-            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, installedPart.definition.generic.type, state, partialTicks);
+            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, multipart.definition, slotDefinition, installedPart.definition.generic.type, state, partialTicks);
         }
     }
 
-    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, String rawType, PartSlotMarkerState state, float partialTicks) {
+    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition, String rawType, PartSlotMarkerState state, float partialTicks) {
         boolean installationTarget = ControlSystem.isPartInstallationTarget(markerEntity, markerBox);
         if (!isWithinReach(eyePosition, markerBox)) {
             return;
@@ -221,20 +224,25 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         }
 
-        renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory);
+        renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory, getMarkerTexture(slotOwnerDefinition, slotDefinition));
         if (state == PartSlotMarkerState.LOCKED) {
             renderStatusIcon(screenX, screenY, markerRadius, markerZ, state);
         }
-        renderTypeLabel(gui, screenX, screenY, markerRadius, markerZ, typeCategory, rawType);
+        renderMarkerLabel(gui, screenX, screenY, markerRadius, markerZ, getMarkerName(slotDefinition, typeCategory, rawType));
     }
 
-    private void renderMarkerBackground(double screenX, double screenY, double radius, double z, PartSlotMarkerState state, PartTypeCategory typeCategory) {
+    private void renderMarkerBackground(double screenX, double screenY, double radius, double z, PartSlotMarkerState state, PartTypeCategory typeCategory, String customTexture) {
         RenderableData markerRenderable;
         switch (state) {
             case AVAILABLE:
-                markerRenderable = typeMarkerRenderables.get(typeCategory);
-                if (markerRenderable == null) {
-                    markerRenderable = defaultMarkerRenderable;
+                if (customTexture != null) {
+                    customMarkerRenderable.setTexture(customTexture);
+                    markerRenderable = customMarkerRenderable;
+                } else {
+                    markerRenderable = typeMarkerRenderables.get(typeCategory);
+                    if (markerRenderable == null) {
+                        markerRenderable = defaultMarkerRenderable;
+                    }
                 }
                 break;
             case UNAVAILABLE:
@@ -304,10 +312,10 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         renderable.render();
     }
 
-    private void renderTypeLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, PartTypeCategory typeCategory, String rawType) {
+    private void renderMarkerLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, String markerName) {
         int wrapWidth = (int) Math.max(48.0D, radius * 4.0D);
         labelPosition.set(screenX, -(screenY + radius + LABEL_GAP), z);
-        RenderText.drawText(getLocalizedTypeName(typeCategory, rawType), null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F, true, wrapWidth, true, gui.worldLightValue);
+        RenderText.drawText(markerName, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F, true, wrapWidth, true, gui.worldLightValue);
     }
 
     private static boolean isWithinReach(Point3D eyePosition, BoundingBox box) {
@@ -350,6 +358,27 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         } catch (IllegalArgumentException ignored) {
             return PartTypeCategory.UNKNOWN;
         }
+    }
+
+    private static String getMarkerName(JSONPartDefinition slotDefinition, PartTypeCategory typeCategory, String rawType) {
+        if (slotDefinition.markerName != null) {
+            String markerName = slotDefinition.markerName;
+            if (!markerName.trim().isEmpty()) {
+                return markerName;
+            }
+        }
+        return getLocalizedTypeName(typeCategory, rawType);
+    }
+
+    private static String getMarkerTexture(AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition) {
+        if (slotDefinition.markerIcon == null) {
+            return null;
+        }
+        String markerIcon = slotDefinition.markerIcon.trim().replace('\\', '/');
+        while (markerIcon.startsWith("/")) {
+            markerIcon = markerIcon.substring(1);
+        }
+        return markerIcon.isEmpty() ? null : "/assets/" + slotOwnerDefinition.packID + "/textures/" + markerIcon;
     }
 
     private static String getLocalizedTypeName(PartTypeCategory typeCategory, String rawType) {
