@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.jsondefs.JSONAction.ActionType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -13,8 +14,14 @@ public class JSONCollisionBox {
     @JSONDescription("The width of this collision box, in meters.  Note that since the pos parameter is the center of the box the box will actually extend � the width in the X and Z direction.")
     public float width;
 
+    @JSONDescription("The length of this collision box, in meters.  If omitted, width will be used for the Z direction.")
+    public float length;
+
     @JSONDescription("Same as width, just for the Y direction.")
     public float height;
+
+    @JSONDescription("The rotation of this collision box. Only used if the owning collision group has isOBB set to true.")
+    public RotationMatrix rot;
 
     @JSONDescription("If true, the collision box will behave like a ground device set to float.  Note that if you make a boat that uses only these boxes, you'll need one for every corner like you would wheels on a car.  Failing to do so will result in your boat doing a Titanic, just without an iceberg.")
     public boolean collidesWithLiquids;
