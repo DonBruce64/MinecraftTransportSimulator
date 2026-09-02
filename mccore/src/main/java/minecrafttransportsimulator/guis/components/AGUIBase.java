@@ -23,6 +23,8 @@ public abstract class AGUIBase {
     protected static final int STANDARD_COLOR_WIDTH = 20;
     protected static final int STANDARD_COLOR_HEIGHT = 20;
     protected static final int STANDARD_COLOR_WIDTH_OFFSET = 236;
+    protected static final int STANDARD_WHITE_HEIGHT_OFFSET = 196;
+    protected static final int STANDARD_WHITE_WIDTH_OFFSET = 216;
     protected static final int STANDARD_RED_HEIGHT_OFFSET = 196;
     protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
     protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
