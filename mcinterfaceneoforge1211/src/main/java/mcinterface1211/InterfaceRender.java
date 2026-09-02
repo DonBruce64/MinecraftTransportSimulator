@@ -228,7 +228,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
@@ -426,7 +426,7 @@ public class InterfaceRender implements IInterfaceRender {
             if (data.enableBrightBlending) {
                 stateBuilder.setTransparencyState(BRIGHTNESS_TRANSPARENCY);
             } else if (data.isTranslucent) {
-                stateBuilder.setTransparencyState(PROPER_TRANSLUCENT_TRANSPARENCY);
+                stateBuilder.setTransparencyState(data.writeDepth ? DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY : PROPER_TRANSLUCENT_TRANSPARENCY);
             } else {
                 stateBuilder.setTransparencyState(NO_TRANSPARENCY);
             }
@@ -718,6 +718,17 @@ public class InterfaceRender implements IInterfaceRender {
             byteBufferBuilder.close();
         }
     }
+
+    /**Translucent transparency that retains depth writes for depth-positioned overlays.*/
+    private static final RenderStateShard.TransparencyStateShard DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("depth_writing_translucent_transparency", () -> {
+        RenderSystem.enableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+    }, () -> {
+        RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.defaultBlendFunc();
+    });
 
     /**
      * Proper translucent transparency.  MC's one has the wrong blending function.

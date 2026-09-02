@@ -41,7 +41,7 @@ class InterfacePacket implements IInterfacePacket {
      * with NeoForge's networking system.
      */
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("1");
+        PayloadRegistrar registrar = event.registrar(InterfaceLoader.MODID).versioned("3");
         registrar.playBidirectional(
             WrapperPayload.TYPE,
             WrapperPayload.CODEC,
@@ -126,7 +126,11 @@ class InterfacePacket implements IInterfacePacket {
                         world = InterfaceManager.clientInterface.getClientWorld();
                     }
                     if (world != null) {
-                        payload.packet.handle(world);
+                        if (context.flow().isServerbound()) {
+                            payload.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(context.player()));
+                        } else {
+                            payload.packet.handle(world);
+                        }
                     }
                 });
             } else {
@@ -137,7 +141,11 @@ class InterfacePacket implements IInterfacePacket {
                     world = InterfaceManager.clientInterface.getClientWorld();
                 }
                 if (world != null) {
-                    payload.packet.handle(world);
+                    if (context.flow().isServerbound()) {
+                        payload.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(context.player()));
+                    } else {
+                        payload.packet.handle(world);
+                    }
                 }
             }
         }

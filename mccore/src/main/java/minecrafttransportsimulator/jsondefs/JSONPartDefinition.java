@@ -124,6 +124,12 @@ public class JSONPartDefinition {
     @JSONDescription("Like defaultPart, but this is a map of variable values associated with individual parts.  If the variable is true, then that default part will be used.  If multiple possible parts are present, the first valid one is used.")
     public LinkedHashMap<String, String> conditionalDefaultParts;
 
+    @JSONDescription("Optional name to display below this part slot's marker.  This text is displayed as provided.  If omitted or blank, the localized name for the relevant part type is used.")
+    public String markerName;
+
+    @JSONDescription("Optional path to this part slot's marker texture, relative to the root textures folder of the pack that defines the slot.  Include the file extension, for example: guis/engine_slot_marker.png.  If omitted or blank, the standard icon for the slot's part type is used.  Status icons for locked, unavailable, installed, and removable parts are not replaced by this texture.")
+    public String markerIcon;
+
     @JSONRequired
     @JSONDescription("A list of part types that can go in this position.  Normally you'll only have one entry in this list, as there's really no reason to have a ground_device at the same location as an engine.  There are some exceptions to this, however.  One is for interior equipment, like seats and chests, where you want players to be able to choose what they put in that position. ")
     public List<String> types;

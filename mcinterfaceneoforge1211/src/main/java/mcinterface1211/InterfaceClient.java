@@ -385,6 +385,7 @@ public class InterfaceClient implements IInterfaceClient {
                 //Kick off / continue model preloading across ticks.
                 initModelPreload();
                 tickModelPreload();
+                ControlSystem.cancelTimedActionsForSpectator(player);
                 if (!player.isSpectator()) {
                     //Handle controls.  This has to happen prior to vehicle updates to ensure click handling is based on current position of the player.
                     ControlSystem.controlGlobal(player);

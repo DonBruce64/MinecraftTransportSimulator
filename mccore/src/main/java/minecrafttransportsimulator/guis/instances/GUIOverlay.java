@@ -27,6 +27,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -82,6 +83,7 @@ public class GUIOverlay extends AGUIBase {
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
         aimingCrosshair.ignoreGUILightingState = true;
+        addComponent(new GUIComponentPartSlotMarkers());
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override

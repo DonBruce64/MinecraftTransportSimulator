@@ -25,9 +25,12 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
@@ -43,6 +46,28 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class RenderableModelObject {
+    /**
+     * Provides the data required for generated tread rendering without requiring a live
+     * {@link PartGroundDevice}.  Detached vehicle previews implement this interface.
+     */
+    public interface TreadPreview {
+        boolean isTreadPreview();
+
+        AJSONPartProvider getTreadParentDefinition();
+
+        JSONPartDefinition getTreadPlacementDefinition();
+
+        JSONPart getTreadDefinition();
+
+        Point3D getTreadLocalOffset();
+
+        Point3D getTreadParentScale();
+
+        boolean isTreadAttachedToPart();
+
+        Object getTreadParentDescription();
+    }
+
     public final RenderableData renderable;
     private final boolean isWindow;
     private final boolean isOnlineTexture;
@@ -55,6 +80,7 @@ public class RenderableModelObject {
     private final RenderableData beamRenderable;
     private final RenderableData coverRenderable;
     private final List<Double[]> treadPoints;
+    private final TreadPreview treadPreview;
 
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
@@ -152,9 +178,15 @@ public class RenderableModelObject {
 
         //If we are a tread, create tread points.
         if (entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare) {
-            this.treadPoints = generateTreads((PartGroundDevice) entity);
+            PartGroundDevice tread = (PartGroundDevice) entity;
+            this.treadPoints = generateTreads(tread.entityOn.definition, tread.placementDefinition, tread.definition, tread.entityOn);
+            this.treadPreview = null;
+        } else if (entity instanceof TreadPreview && ((TreadPreview) entity).isTreadPreview()) {
+            this.treadPreview = (TreadPreview) entity;
+            this.treadPoints = generateTreads(treadPreview.getTreadParentDefinition(), treadPreview.getTreadPlacementDefinition(), treadPreview.getTreadDefinition(), treadPreview.getTreadParentDescription());
         } else {
             this.treadPoints = null;
+            this.treadPreview = null;
         }
 
         //Bind the error texture if we haven't already.
@@ -213,16 +245,19 @@ public class RenderableModelObject {
             }
 
             //Now set dynamic alpha if we have it, since this dictates translucent state.
+            float modelAlpha = entity.getRenderAlpha();
+            float objectAlpha = modelAlpha;
             if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
                 if (switchbox.lastVisibilityValue <= switchbox.lastVisibilityClock.animation.clampMin) {
-                    renderable.setAlpha(0);
+                    objectAlpha = 0;
                 } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
                     //Need >= here instead of above for things where min/max clamps are equal.
-                    renderable.setAlpha(1);
+                    objectAlpha = modelAlpha;
                 } else {
-                    renderable.setAlpha((float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin)));
+                    objectAlpha *= (float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin));
                 }
             }
+            renderable.setAlpha(objectAlpha);
 
             //If we aren't on the right pass for our main object, and we don't have lights, skip further calcs.
             if (renderable.isTranslucent != blendingEnabled && lightDef == null) {
@@ -260,7 +295,12 @@ public class RenderableModelObject {
             if (treadPoints != null) {
                 //Active tread.  Do tread-path rendering instead of normal model.
                 renderable.setLightValue(entity.worldLightValue);
-                doTreadRendering((PartGroundDevice) entity, partialTicks);
+                if (entity instanceof PartGroundDevice) {
+                    PartGroundDevice tread = (PartGroundDevice) entity;
+                    doTreadRendering(tread, tread.definition, tread.entityOn instanceof APart, tread.localOffset, tread.entityOn.scale, partialTicks);
+                } else {
+                    doTreadRendering(entity, treadPreview.getTreadDefinition(), treadPreview.isTreadAttachedToPart(), treadPreview.getTreadLocalOffset(), treadPreview.getTreadParentScale(), partialTicks);
+                }
             } else {
                 //Set object states and render.
                 boolean isLitTexture = lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
@@ -270,7 +310,7 @@ public class RenderableModelObject {
                         renderable.setLightValue(entity.worldLightValue);
                         renderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                         renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                        renderable.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1));
+                        renderable.setAlpha(Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1) * objectAlpha);
                         renderable.render();
                     } else {
                         //Do normal rendering.
@@ -280,6 +320,7 @@ public class RenderableModelObject {
 
                         //Render interior window if we have one.
                         if (interiorWindowRenderable != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
+                            interiorWindowRenderable.setAlpha(objectAlpha);
                             interiorWindowRenderable.setLightValue(renderable.worldLightValue);
                             interiorWindowRenderable.transform.set(renderable.transform);
                             interiorWindowRenderable.render();
@@ -293,7 +334,7 @@ public class RenderableModelObject {
                 ColorRGB color = entity.lightColorValues.get(lightDef);
                 if (colorRenderable != null && lightLevel > 0) {
                     //Color renderable might or might not be translucent depending on current alpha state.
-                    colorRenderable.setAlpha(lightLevel);
+                    colorRenderable.setAlpha(lightLevel * objectAlpha);
                     if (blendingEnabled == colorRenderable.isTranslucent) {
                         colorRenderable.setLightValue(renderable.worldLightValue);
                         colorRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.IGNORE_ORIENTATION_LIGHTING);
@@ -313,7 +354,7 @@ public class RenderableModelObject {
                             flareRenderable.setLightValue(renderable.worldLightValue);
                             flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                             flareRenderable.setColor(color);
-                            flareRenderable.setAlpha(blendableBrightness);
+                            flareRenderable.setAlpha(blendableBrightness * objectAlpha);
                             flareRenderable.transform.set(renderable.transform);
                             flareRenderable.render();
                         }
@@ -322,14 +363,17 @@ public class RenderableModelObject {
                             beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                             beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
                             beamRenderable.setColor(color);
-                            beamRenderable.setAlpha(blendableBrightness);
+                            beamRenderable.setAlpha(blendableBrightness * objectAlpha);
                             beamRenderable.transform.set(renderable.transform);
                             beamRenderable.render();
                         }
                     }
                 }
-                if (!blendingEnabled && coverRenderable != null) {
-                    //Light cover detected on solid render pass.
+                if (coverRenderable != null) {
+                    coverRenderable.setAlpha(objectAlpha);
+                }
+                if (coverRenderable != null && coverRenderable.isTranslucent == blendingEnabled) {
+                    //Light cover detected on the correct render pass.
                     coverRenderable.setLightValue(renderable.worldLightValue);
                     coverRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0 ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
                     coverRenderable.transform.set(renderable.transform);
@@ -342,8 +386,9 @@ public class RenderableModelObject {
                 JSONText textDef = textEntry.getKey();
                 if (renderable.vertexObject.name.equals(textDef.attachedTo)) {
                     boolean isLitTexture = textDef.lightsUp && entity.renderTextLit();
-                    if (isLitTexture ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (renderable.isTranslucent == blendingEnabled)) {
-                        RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false, isLitTexture);
+                    boolean correctRenderPass = isLitTexture ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (renderable.isTranslucent == blendingEnabled);
+                    if (modelAlpha < 1.0F ? blendingEnabled : correctRenderPass) {
+                        RenderText.draw3DText(textEntry.getValue(), entity, renderable.transform, textDef, false, isLitTexture, modelAlpha);
                     }
                 }
             }
@@ -375,13 +420,13 @@ public class RenderableModelObject {
         return true;
     }
 
-    private void doTreadRendering(PartGroundDevice tread, float partialTicks) {
+    private void doTreadRendering(AEntityD_Definable<?> tread, JSONPart treadDefinition, boolean attachedToPart, Point3D localOffset, Point3D parentScale, float partialTicks) {
         //Render the treads along their points.
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
         //For each remaining point, we only translate the delta of the point.
         float treadLinearPosition = (float) (tread.getOrCreateVariable("ground_rotation").computeValue(partialTicks) / 360D);
-        float treadMovementPercentage = (treadLinearPosition % tread.definition.ground.spacing) / tread.definition.ground.spacing;
+        float treadMovementPercentage = (treadLinearPosition % treadDefinition.ground.spacing) / treadDefinition.ground.spacing;
         if (treadMovementPercentage < 0) {
             ++treadMovementPercentage;
         }
@@ -393,8 +438,8 @@ public class RenderableModelObject {
 
         //Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
         //We need to undo the offset of the tread part for this routine.
-        if (!(tread.entityOn instanceof APart)) {
-            renderable.transform.applyTranslation(0, -tread.localOffset.y / tread.entityOn.scale.y, -tread.localOffset.z / tread.entityOn.scale.z);
+        if (!attachedToPart) {
+            renderable.transform.applyTranslation(0, -localOffset.y / parentScale.y, -localOffset.z / parentScale.z);
         }
 
         //Add initial translation for the first point
@@ -403,9 +448,9 @@ public class RenderableModelObject {
 
         //Get cycle index for later.
         boolean[] renderIndexes = null;
-        if (tread.definition.ground.treadOrder != null) {
-            int treadCycleCount = tread.definition.ground.treadOrder.size();
-            double treadCycleTotalDistance = treadCycleCount * tread.definition.ground.spacing;
+        if (treadDefinition.ground.treadOrder != null) {
+            int treadCycleCount = treadDefinition.ground.treadOrder.size();
+            double treadCycleTotalDistance = treadCycleCount * treadDefinition.ground.spacing;
             int treadCycleIndex = (int) Math.floor(treadCycleCount * ((treadLinearPosition % treadCycleTotalDistance) / treadCycleTotalDistance));
             if (treadCycleIndex < 0) {
                 //Need to handle negatives if we only go backwards.
@@ -413,7 +458,7 @@ public class RenderableModelObject {
             }
             renderIndexes = new boolean[treadCycleCount];
             for (int i = 0; i < treadCycleCount; ++i) {
-                String treadObject = tread.definition.ground.treadOrder.get(i);
+                String treadObject = treadDefinition.ground.treadOrder.get(i);
                 renderIndexes[(i + treadCycleIndex) % treadCycleCount] = treadObject.equals(renderable.vertexObject.name);
             }
         }
@@ -479,15 +524,15 @@ public class RenderableModelObject {
         }
     }
 
-    private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(PartGroundDevice tread) {
+    private static List<Double[]> generateTreads(AJSONPartProvider parentDefinition, JSONPartDefinition placementDefinition, JSONPart treadDefinition, Object parentDescription) {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
-        List<RenderableVertices> parsedModel = AModelParser.parseModel(tread.entityOn.definition.getModelLocation(tread.entityOn.definition.definitions.get(0)), true);
+        List<RenderableVertices> parsedModel = AModelParser.parseModel(parentDefinition.getModelLocation(parentDefinition.definitions.get(0)), true);
         List<TreadRoller> rollers = new ArrayList<>();
-        if (tread.placementDefinition.treadPath == null) {
-            throw new IllegalArgumentException("No tread path found for part slot on " + tread.entityOn + "!");
+        if (placementDefinition.treadPath == null) {
+            throw new IllegalArgumentException("No tread path found for part slot on " + parentDescription + "!");
         }
-        for (String rollerName : tread.placementDefinition.treadPath) {
+        for (String rollerName : placementDefinition.treadPath) {
             boolean foundRoller = false;
             for (RenderableVertices modelObject : parsedModel) {
                 if (modelObject.name.equals(rollerName)) {
@@ -497,7 +542,7 @@ public class RenderableModelObject {
                 }
             }
             if (!foundRoller) {
-                InterfaceManager.coreInterface.logError("Could not create tread path for " + tread.entityOn + " due to missing roller " + rollerName + " in the model.  Skipping tread animation for this object.");
+                InterfaceManager.coreInterface.logError("Could not create tread path for " + parentDescription + " due to missing roller " + rollerName + " in the model.  Skipping tread animation for this object.");
                 return null;
             }
         }
@@ -570,15 +615,15 @@ public class RenderableModelObject {
             //This is a hyperbolic function, so we need to calculate the integral value to account for the path.
             TreadRoller nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
             double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
-            if (tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle % 360 < 10 || roller.endAngle % 360 > 350) && (nextRoller.startAngle % 360 < 10 || nextRoller.startAngle % 360 > 350)) {
+            if (placementDefinition.treadDroopConstant > 0 && (roller.endAngle % 360 < 10 || roller.endAngle % 360 > 350) && (nextRoller.startAngle % 360 < 10 || nextRoller.startAngle % 360 > 350)) {
                 //Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
-                totalPathLength += 2D * tread.placementDefinition.treadDroopConstant * Math.sinh((straightPathLength / 2D) / tread.placementDefinition.treadDroopConstant);
+                totalPathLength += 2D * placementDefinition.treadDroopConstant * Math.sinh((straightPathLength / 2D) / placementDefinition.treadDroopConstant);
             } else {
                 totalPathLength += straightPathLength;
             }
         }
 
-        double deltaDist = tread.definition.ground.spacing + (totalPathLength % tread.definition.ground.spacing) / (totalPathLength / tread.definition.ground.spacing);
+        double deltaDist = treadDefinition.ground.spacing + (totalPathLength % treadDefinition.ground.spacing) / (totalPathLength / treadDefinition.ground.spacing);
         double leftoverPathLength = 0;
         double yPoint = 0;
         double zPoint = 0;
@@ -646,13 +691,13 @@ public class RenderableModelObject {
             TreadRoller nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
             double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
             double extraPathLength = rollerPathLength + leftoverPathLength;
-            if (tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle % 360 < 10 || roller.endAngle % 360 > 350) && (nextRoller.startAngle % 360 < 10 || nextRoller.startAngle % 360 > 350)) {
+            if (placementDefinition.treadDroopConstant > 0 && (roller.endAngle % 360 < 10 || roller.endAngle % 360 > 350) && (nextRoller.startAngle % 360 < 10 || nextRoller.startAngle % 360 > 350)) {
                 //Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
-                double catenaryPathLength = 2D * tread.placementDefinition.treadDroopConstant * Math.sinh((straightPathLength / 2D) / tread.placementDefinition.treadDroopConstant);
+                double catenaryPathLength = 2D * placementDefinition.treadDroopConstant * Math.sinh((straightPathLength / 2D) / placementDefinition.treadDroopConstant);
 
                 //Get the top point in Y for the tips of the catenary (1/2 the span).  We will translate the droop path down this far to make the ends line up at Y=0.
                 //We then offset this value to the rollers for the actual point position.
-                final double catenaryPathEdgeY = tread.placementDefinition.treadDroopConstant * Math.cosh((straightPathLength / 2D) / tread.placementDefinition.treadDroopConstant);
+                final double catenaryPathEdgeY = placementDefinition.treadDroopConstant * Math.cosh((straightPathLength / 2D) / placementDefinition.treadDroopConstant);
 
                 double catenaryFunctionCurrent = -catenaryPathLength / 2F;
                 double catenaryPointZ;
@@ -669,14 +714,14 @@ public class RenderableModelObject {
                         catenaryFunctionCurrent += deltaDist;
                         catenaryPathLength -= deltaDist;
                     }
-                    double value = catenaryFunctionCurrent / tread.placementDefinition.treadDroopConstant;
+                    double value = catenaryFunctionCurrent / placementDefinition.treadDroopConstant;
                     double arcSin = catenaryFunctionCurrent == 0.0 ? 0 : Math.log(value + Math.sqrt(value * value + 1.0));
                     double catenaryFunctionPercent = (catenaryFunctionCurrent + startingCatenaryPathLength / 2) / startingCatenaryPathLength;
-                    catenaryPointZ = tread.placementDefinition.treadDroopConstant * arcSin;
-                    catenaryPointY = tread.placementDefinition.treadDroopConstant * Math.cosh(catenaryPointZ / tread.placementDefinition.treadDroopConstant);
+                    catenaryPointZ = placementDefinition.treadDroopConstant * arcSin;
+                    catenaryPointY = placementDefinition.treadDroopConstant * Math.cosh(catenaryPointZ / placementDefinition.treadDroopConstant);
                     yPoint = roller.endY + yDelta * catenaryFunctionPercent + catenaryPointY - catenaryPathEdgeY;
                     zPoint = roller.endZ + catenaryPointZ + straightPathLength / 2D;
-                    points.add(new Double[]{yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent / tread.placementDefinition.treadDroopConstant))});
+                    points.add(new Double[]{yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent / placementDefinition.treadDroopConstant))});
                 }
                 leftoverPathLength = catenaryPathLength;
             } else {

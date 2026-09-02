@@ -516,6 +516,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
+     * Returns the alpha multiplier applied to this entity's model renderables.
+     * Normal entities are fully opaque; detached preview states override this.
+     */
+    public float getRenderAlpha() {
+        return 1.0F;
+    }
+
+    /**
      * Returns true if this entity is lit up, and text should be rendered lit.
      * Note that what text is lit is dependent on the text's definition, so just
      * because text could be lit, does not mean it will be lit if the pack
@@ -1455,8 +1463,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             JSONText textDef = textEntry.getKey();
             if (textDef.attachedTo == null) {
                 boolean isLitTexture = textDef.lightsUp && renderTextLit();
-                if (isLitTexture ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (!blendingEnabled)) {
-                    RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false, isLitTexture);
+                float renderAlpha = getRenderAlpha();
+                boolean correctRenderPass = isLitTexture ? (ConfigSystem.client.renderingSettings.lightsTransp.value == blendingEnabled) : (!blendingEnabled);
+                if (renderAlpha < 1.0F ? blendingEnabled : correctRenderPass) {
+                    RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false, isLitTexture, renderAlpha);
                 }
             }
         }
