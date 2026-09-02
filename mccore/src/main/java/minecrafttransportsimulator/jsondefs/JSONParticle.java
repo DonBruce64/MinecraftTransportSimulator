@@ -15,6 +15,15 @@ public class JSONParticle {
 
     @JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
     public boolean spawnEveryTick;
+
+    @JSONDescription("If true, this particle is emitted on each client from a lightweight server-tracked emitter and uses long-range rendering between longRangeRenderDisMin and longRangeRenderDisMax.  Intended for effects such as flares and contrails that must remain visible at very long range.")
+    public boolean renderAtLongRange;
+
+    @JSONDescription("The minimum viewer distance, in blocks, at which renderAtLongRange particles use long-range rendering.  Below this distance they use normal fog, lighting, and projection.  Defaults to 512.")
+    public double longRangeRenderDisMin = 512D;
+
+    @JSONDescription("The maximum viewer distance, in blocks, at which renderAtLongRange particles are synchronized and rendered.  Defaults to 5000.  Set to 0 for no maximum distance.")
+    public double longRangeRenderDisMax = 5000D;
     
     @JSONDescription("If true, the particle will use the block color of the block it is spawned from.  Valid only on break type particles.")
     public boolean useBlockColor;
@@ -177,6 +186,34 @@ public class JSONParticle {
 
     @Deprecated
     public boolean axisAligned;
+
+    /** Returns true when a viewer is not beyond this definition's configured maximum range. */
+    public boolean isWithinLongRangeRenderDistanceMax(Point3D particlePosition, Point3D viewerPosition) {
+        return isWithinLongRangeRenderDistanceMax(particlePosition, viewerPosition, longRangeRenderDisMax);
+    }
+
+    /** Returns true when the viewer is inside the range that uses the fog/far-plane bypass. */
+    public boolean isInLongRangeRenderMode(Point3D particlePosition, Point3D viewerPosition) {
+        return isInLongRangeRenderMode(particlePosition, viewerPosition, longRangeRenderDisMin, longRangeRenderDisMax);
+    }
+
+    public static boolean isWithinLongRangeRenderDistanceMax(Point3D particlePosition, Point3D viewerPosition, double maximumDistance) {
+        if (maximumDistance <= 0) {
+            return true;
+        }
+        double deltaX = particlePosition.x - viewerPosition.x;
+        double deltaY = particlePosition.y - viewerPosition.y;
+        double deltaZ = particlePosition.z - viewerPosition.z;
+        return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ <= maximumDistance * maximumDistance;
+    }
+
+    public static boolean isInLongRangeRenderMode(Point3D particlePosition, Point3D viewerPosition, double minimumDistance, double maximumDistance) {
+        double effectiveMinimum = Math.max(0, minimumDistance);
+        if (effectiveMinimum > 0 && particlePosition.isDistanceToCloserThan(viewerPosition, effectiveMinimum)) {
+            return false;
+        }
+        return isWithinLongRangeRenderDistanceMax(particlePosition, viewerPosition, maximumDistance);
+    }
 
     public static class JSONSubParticle {
 

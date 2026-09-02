@@ -93,13 +93,16 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static ShaderInstance entityLightsShader;
     private static ShaderInstance entityCutoutNoshadowsShader;
+    private static ShaderInstance longRangeParticleShader;
     private static final RenderStateShard.ShaderStateShard MTS_ENTITY_LIGHTS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityLightsShader);
     private static final RenderStateShard.ShaderStateShard MTS_ENTITY_CUTOUT_NOSHADOWS_SHADER = new RenderStateShard.ShaderStateShard(() -> entityCutoutNoshadowsShader);
+    private static final RenderStateShard.ShaderStateShard MTS_LONG_RANGE_PARTICLE_SHADER = new RenderStateShard.ShaderStateShard(() -> longRangeParticleShader);
 
     public static void onIVRegisterShadersEvent(RegisterShadersEvent event) {
         try {
             event.registerShader(new ShaderInstance(event.getResourceManager(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_lights"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityLightsShader = createdShader);
             event.registerShader(new ShaderInstance(event.getResourceManager(), new ResourceLocation(InterfaceManager.coreModID, "mts_entity_cutout_noshadows"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> entityCutoutNoshadowsShader = createdShader);
+            event.registerShader(new ShaderInstance(event.getResourceManager(), new ResourceLocation(InterfaceManager.coreModID, "mts_long_range_particle"), DefaultVertexFormat.NEW_ENTITY), (createdShader) -> longRangeParticleShader = createdShader);
         } catch (IOException e) {
             InterfaceManager.coreInterface.logError("COULD NOT LOAD SHADER FOR LIGHTS!  THIS WILL END BADLY FOR RENDERING!");
             e.printStackTrace();
@@ -223,7 +226,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.renderAtLongRange;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
@@ -402,7 +405,9 @@ public class InterfaceRender implements IInterfaceRender {
             RenderType.CompositeState.CompositeStateBuilder stateBuilder = RenderType.CompositeState.builder();
 
             //Set shader to use.
-            if (data.lightingMode.disableTextureShadows) {
+            if (data.renderAtLongRange) {
+                stateBuilder.setShaderState(MTS_LONG_RANGE_PARTICLE_SHADER);
+            } else if (data.lightingMode.disableTextureShadows) {
                 //This shouldn't use OpenGL lighting, use shader that ignores this.
                 if (data.lightingMode.disableWorldLighting) {
                     stateBuilder.setShaderState(MTS_ENTITY_LIGHTS_SHADER);
