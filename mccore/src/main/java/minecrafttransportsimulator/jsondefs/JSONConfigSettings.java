@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,11 +106,25 @@ public class JSONConfigSettings {
     }
 
     public static class ConfigFuel {
-        public String comment1 = "The following section is used for fuel configs for engines.  Each entry here is a single fuel type for engines.";
-        public String comment2 = "Inside each entry exist values for the potency of the fluids that can be considered to be that fuel type.";
-        public String comment3 = "You can make engines take different types of fluids for their fuels by editing these values.  See the in-game handbook for more information.";
-        public String comment4 = "If you are having troubles getting the name for a particular fluid, run the game with the mods you want and check the 'lastLoadedFluids' list.  This contains all the fluids that were present during the last run of the game.";
-        public String comment5 = "The first entry in the list is the registered fluid name, while the second entry will be the displayed name.  Only use the first name, as the second name changes based on game language settings.";
+        public List<String> _comment = Arrays.asList(
+            "The following section is used for fuel configs for engines.",
+            "Each entry here is a single fuel type / fuel category for engines.",
+            "",
+            "Example: Avgas is not a real fluid. It is a category. An engine can use the avgas category for fuel.",
+            "In the avgas category, there is lava and gasoline. This means an avgas-type engine can use lava and gasoline fluids.",
+            "",
+            "You can make engines take different types of fluids for their fuels by editing these values.",
+            "For example, you can add 'creosote' to 'avgas', and now any avgas engine can also use creosote oil for fuel.",
+            "",
+            "The number is the potency of the fuel.",
+            "Higher potency reduces consumption, but does not affect engine power.",
+            "This means a fluid with potency 2.0 lasts twice as long / the engine consumes only half its fuel rate for the same performance.",
+            "",
+            "If you want to add a fluid as fuel but do not know the correct name, run the game with the mods you want and check the 'lastLoadedFluids' list.",
+            "This contains all the fluids that were present during the last run of the game.",
+            "The first entry in the list is the registered fluid name, while the second entry will be the displayed name.",
+            "Only use the first name, as the second name changes based on game language settings!"
+        );
         public Map<String, Map<String, Double>> fuels;
         public Map<String, String> lastLoadedFluids;
 
