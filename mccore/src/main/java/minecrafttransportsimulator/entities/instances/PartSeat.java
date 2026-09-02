@@ -330,7 +330,7 @@ public final class PartSeat extends APart {
 
     @Override
     public boolean updateRider() {
-        boolean usingMouseYoke = world.isClient() && riderIsClient && placementDefinition.isController && vehicleOn != null && vehicleOn.definition.motorized.isAircraft && ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
+        boolean usingMouseYoke = world.isClient() && riderIsClient && placementDefinition.isController && vehicleOn != null && vehicleOn.definition.motorized.isAircraft && !vehicleOn.definition.motorized.isBlimp && ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
         double riderYawDelta = 0;
         double riderPitchDelta = 0;
         if (usingMouseYoke) {
