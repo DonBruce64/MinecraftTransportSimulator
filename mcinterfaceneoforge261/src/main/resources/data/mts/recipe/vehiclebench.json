@@ -1,0 +1,19 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "bcd",
+        "e e"
+    ],
+    "key": {
+        "a": "#minecraft:planks",
+        "b": "minecraft:paper",
+        "c": "minecraft:lectern",
+        "d": "minecraft:writable_book",
+        "e": "#c:fences/wooden"
+    },
+    "result": {
+        "id": "mts:mts.vehiclebench"
+    }
+}
+
