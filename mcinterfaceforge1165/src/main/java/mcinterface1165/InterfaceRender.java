@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -78,7 +79,19 @@ public class InterfaceRender implements IInterfaceRender {
     private static final Map<String, RenderType> renderTypes = new HashMap<>();
     private static final Map<RenderableData, BufferData> buffers = new HashMap<>();
     private static final Map<RenderType, List<RenderData>> queuedRenders = new HashMap<>();
+    private static final Map<RenderType, Integer> renderTypeOrders = new HashMap<>();
     private static final ConcurrentLinkedQueue<BufferData> removedRenders = new ConcurrentLinkedQueue<>();
+    private static int priorTextureWrapS;
+    private static int priorTextureWrapT;
+    private static final RenderState.TexturingState TRANSPARENT_BORDER_TEXTURING = new RenderState.TexturingState("mts_transparent_texture_border", () -> {
+        priorTextureWrapS = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S);
+        priorTextureWrapT = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL13.GL_CLAMP_TO_BORDER);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL13.GL_CLAMP_TO_BORDER);
+    }, () -> {
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, priorTextureWrapS);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, priorTextureWrapT);
+    });
 
     private static RenderState.TextureState MISSING_STATE;
     private static RenderState.TextureState BLOCK_STATE;
@@ -143,11 +156,12 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            String typeID = data.texture + "|" + data.isTranslucent + "|" + data.lightingMode + "|" + data.enableBrightBlending + "|" + data.textureClampToTransparent + "|" + data.renderingOrder;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 2097152, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
+                renderTypeOrders.put(renderType, data.renderingOrder);
                 BufferData buffer = buffers.computeIfAbsent(data, k -> new BufferData(renderType, data));
 
                 //Reset buffer if it's not ready.
@@ -163,8 +177,8 @@ public class InterfaceRender implements IInterfaceRender {
                         float normalX = data.vertexObject.vertices.get();
                         float normalY = data.vertexObject.vertices.get();
                         float normalZ = data.vertexObject.vertices.get();
-                        float texU = data.vertexObject.vertices.get();
-                        float texV = data.vertexObject.vertices.get();
+                        float texU = data.vertexObject.vertices.get() * data.textureScaleU + data.textureOffsetU;
+                        float texV = data.vertexObject.vertices.get() * data.textureScaleV + data.textureOffsetV;
                         float posX = data.vertexObject.vertices.get();
                         float posY = data.vertexObject.vertices.get();
                         float posZ = data.vertexObject.vertices.get();
@@ -201,8 +215,8 @@ public class InterfaceRender implements IInterfaceRender {
                     float normalX = data.vertexObject.vertices.get();
                     float normalY = data.vertexObject.vertices.get();
                     float normalZ = data.vertexObject.vertices.get();
-                    float texU = data.vertexObject.vertices.get();
-                    float texV = data.vertexObject.vertices.get();
+                    float texU = data.vertexObject.vertices.get() * data.textureScaleU + data.textureOffsetU;
+                    float texV = data.vertexObject.vertices.get() * data.textureScaleV + data.textureOffsetV;
                     float posX = data.vertexObject.vertices.get();
                     float posY = data.vertexObject.vertices.get();
                     float posZ = data.vertexObject.vertices.get();
@@ -503,7 +517,9 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static void renderBuffers() {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
-        for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
+        List<Entry<RenderType, List<RenderData>>> orderedRenderEntries = new ArrayList<>(queuedRenders.entrySet());
+        orderedRenderEntries.sort((entry1, entry2) -> Integer.compare(renderTypeOrders.getOrDefault(entry1.getKey(), 0), renderTypeOrders.getOrDefault(entry2.getKey(), 0)));
+        for (Entry<RenderType, List<RenderData>> renderEntry : orderedRenderEntries) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
             if (!datas.isEmpty()) {
@@ -574,11 +590,22 @@ public class InterfaceRender implements IInterfaceRender {
             //No fog.
             //stateBuilder.setFogState(NO_FOG);
             //No layering.
-            //stateBuilder.setLayeringState(NO_LAYERING);
+            if (data.renderingOrder > 0) {
+                final float depthOffset = -10.0F * data.renderingOrder;
+                stateBuilder.setLayeringState(new RenderState.LayerState("mts_texture_overlay_depth_" + data.renderingOrder, () -> {
+                    RenderSystem.polygonOffset(-1.0F, depthOffset);
+                    RenderSystem.enablePolygonOffset();
+                }, () -> {
+                    RenderSystem.polygonOffset(0.0F, 0.0F);
+                    RenderSystem.disablePolygonOffset();
+                }));
+            }
             //Target is always main.
             //stateBuilder.setOutputState(MAIN_TARGET);
             //Default texture is fine.
-            //stateBuilder.setTexturingState(DEFAULT_TEXTURING);
+            if (data.textureClampToTransparent) {
+                stateBuilder.setTexturingState(TRANSPARENT_BORDER_TEXTURING);
+            }
             //Not sure what this does, but it should be fine as-is?
             //stateBuilder.setWriteMaskState(COLOR_DEPTH_WRITE);
             //Don't need to poke lines, there's only one state.

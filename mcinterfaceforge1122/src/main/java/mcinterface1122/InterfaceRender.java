@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -114,14 +115,36 @@ public class InterfaceRender implements IInterfaceRender {
         if (data.enableBrightBlending) {
             setBlendBright(true);
         }
+        if (data.renderingOrder > 0) {
+            GL11.glPolygonOffset(-1.0F, -10.0F * data.renderingOrder);
+            GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+        }
+        int priorTextureWrapS = GL11.GL_REPEAT;
+        int priorTextureWrapT = GL11.GL_REPEAT;
         if (data.texture != null) {
             bindTexture(data.texture);
+            if (data.textureClampToTransparent) {
+                priorTextureWrapS = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S);
+                priorTextureWrapT = GL11.glGetTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL13.GL_CLAMP_TO_BORDER);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL13.GL_CLAMP_TO_BORDER);
+            }
         } else {
             GL11.glDisable(GL11.GL_TEXTURE_2D);
         }
         GlStateManager.color(data.color.red, data.color.green, data.color.blue, data.alpha);
         if (!data.lightingMode.disableWorldLighting && !data.vertexObject.isLines) {
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, data.worldLightValue % 65536, data.worldLightValue / 65536);
+        }
+
+        boolean hasTextureTransform = data.texture != null && (data.textureOffsetU != 0 || data.textureOffsetV != 0 || data.textureScaleU != 1 || data.textureScaleV != 1);
+        if (hasTextureTransform) {
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GL11.glMatrixMode(GL11.GL_TEXTURE);
+            GL11.glPushMatrix();
+            GL11.glTranslatef(data.textureOffsetU, data.textureOffsetV, 0);
+            GL11.glScalef(data.textureScaleU, data.textureScaleV, 1);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
         }
 
         GL11.glPushMatrix();
@@ -144,14 +167,29 @@ public class InterfaceRender implements IInterfaceRender {
         }
         GL11.glPopMatrix();
 
+        if (hasTextureTransform) {
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GL11.glMatrixMode(GL11.GL_TEXTURE);
+            GL11.glPopMatrix();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        }
+
         if (data.texture == null) {
             GL11.glEnable(GL11.GL_TEXTURE_2D);
+        } else if (data.textureClampToTransparent) {
+            //Texture objects are shared with Minecraft, so restore their exact sampling state.
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, priorTextureWrapS);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, priorTextureWrapT);
         }
         if (data.lightingMode.disableWorldLighting || data.lightingMode.disableTextureShadows || data.vertexObject.isLines) {
             setLightingState(true);
         }
         if (data.enableBrightBlending) {
             setBlendBright(false);
+        }
+        if (data.renderingOrder > 0) {
+            GL11.glPolygonOffset(0.0F, 0.0F);
+            GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
         }
     }
 
