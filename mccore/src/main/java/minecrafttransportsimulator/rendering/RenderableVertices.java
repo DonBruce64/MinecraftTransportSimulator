@@ -28,6 +28,14 @@ public class RenderableVertices {
     public final boolean isErrorPlaceholder;
     public final boolean isLines;
 
+    //Optional source-texture bounds used by atlas-backed models such as LittleTiles.  Standalone
+    //overlay textures normalize these bounds back into 0-1 texture space.
+    private boolean hasTextureNormalizationBounds;
+    private float textureNormalizationMinU;
+    private float textureNormalizationMaxU;
+    private float textureNormalizationMinV;
+    private float textureNormalizationMaxV;
+
     /**Index offset array for quad faces required to build a quad-textured box.
      * Order is set here to reference the points in a counter-clockwise order for rendering.
      * Points are set for 6 vertices in a two-tri rendering format to be directly used in vertex data.
@@ -290,6 +298,46 @@ public class RenderableVertices {
         offsetObject.vertices.flip();
         offsetObject.setTextureBounds(0, 1, 0, 1);
         return offsetObject;
+    }
+
+    /**
+     * Records the region of an atlas used by these vertices.  This lets a standalone texture use
+     * the same local UV layout without requiring pack authors to reproduce Minecraft's atlas.
+     */
+    public void setTextureNormalizationBounds(float minU, float maxU, float minV, float maxV) {
+        this.hasTextureNormalizationBounds = true;
+        this.textureNormalizationMinU = minU;
+        this.textureNormalizationMaxU = maxU;
+        this.textureNormalizationMinV = minV;
+        this.textureNormalizationMaxV = maxV;
+    }
+
+    /**
+     * Returns this object when its UVs are already standalone, or a cached-safe copy whose
+     * atlas-local UV coordinates have been normalized to the 0-1 range.
+     */
+    public RenderableVertices createTextureNormalizedCopy() {
+        if (!hasTextureNormalizationBounds) {
+            return this;
+        }
+
+        FloatBuffer sourceData = vertices.duplicate();
+        sourceData.rewind();
+        FloatBuffer copiedData = FloatBuffer.allocate(vertices.capacity());
+        copiedData.put(sourceData);
+        copiedData.flip();
+        RenderableVertices normalizedObject = new RenderableVertices(name, copiedData, cacheVertices, isErrorPlaceholder);
+        float textureSpanU = textureNormalizationMaxU - textureNormalizationMinU;
+        float textureSpanV = textureNormalizationMaxV - textureNormalizationMinV;
+        if (textureSpanU != 0 && textureSpanV != 0) {
+            for (int vertexOffset = 0; vertexOffset < normalizedObject.vertices.limit(); vertexOffset += FLOATS_PER_VERTEX) {
+                float normalizedU = (normalizedObject.vertices.get(vertexOffset + VERTEX_BUFFER_U_OFFSET) - textureNormalizationMinU) / textureSpanU;
+                float normalizedV = (normalizedObject.vertices.get(vertexOffset + VERTEX_BUFFER_V_OFFSET) - textureNormalizationMinV) / textureSpanV;
+                normalizedObject.vertices.put(vertexOffset + VERTEX_BUFFER_U_OFFSET, normalizedU);
+                normalizedObject.vertices.put(vertexOffset + VERTEX_BUFFER_V_OFFSET, normalizedV);
+            }
+        }
+        return normalizedObject;
     }
 
     /**

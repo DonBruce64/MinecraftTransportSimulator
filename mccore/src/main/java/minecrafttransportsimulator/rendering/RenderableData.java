@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Class designed to represent rendering data.  This contains {@link RenderableVertices},
@@ -36,6 +37,17 @@ public class RenderableData {
     public LightingMode lightingMode = LightingMode.NORMAL;
     public boolean enableBrightBlending;
     public boolean isTranslucent;
+    /**Normalized offsets added to every texture coordinate at render time.**/
+    public float textureOffsetU;
+    public float textureOffsetV;
+    /**Scale applied to texture coordinates before offsets.**/
+    public float textureScaleU = 1.0F;
+    public float textureScaleV = 1.0F;
+    /**If true, texture coordinates outside 0-1 sample transparent pixels instead of wrapping.**/
+    public boolean textureClampToTransparent;
+    /**Draw order for renderers that batch by texture.  Higher values are rendered later and
+     * receive a progressively stronger depth bias to separate coplanar texture layers.**/
+    public int renderingOrder;
 
     private double lastWidthRadius;
     private double lastHeightRadius;
@@ -121,6 +133,36 @@ public class RenderableData {
         }
     }
 
+    public void setTextureOffset(float textureOffsetU, float textureOffsetV) {
+        if (this.textureOffsetU != textureOffsetU || this.textureOffsetV != textureOffsetV) {
+            this.textureOffsetU = textureOffsetU;
+            this.textureOffsetV = textureOffsetV;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setTextureScale(float textureScaleU, float textureScaleV) {
+        if (this.textureScaleU != textureScaleU || this.textureScaleV != textureScaleV) {
+            this.textureScaleU = textureScaleU;
+            this.textureScaleV = textureScaleV;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setTextureClampToTransparent() {
+        if (!this.textureClampToTransparent) {
+            this.textureClampToTransparent = true;
+            this.changedSinceLastRender = true;
+        }
+    }
+
+    public void setRenderingOrder(int renderingOrder) {
+        if (this.renderingOrder != renderingOrder) {
+            this.renderingOrder = renderingOrder;
+            this.changedSinceLastRender = true;
+        }
+    }
+
     public void setBoxBounds(BoundingBox box, boolean wireframe) {
         if (box.widthRadius != lastWidthRadius || box.heightRadius != lastHeightRadius || box.depthRadius != lastDepthRadius) {
             vertexObject.setBoundingBox(box, wireframe);
@@ -133,7 +175,11 @@ public class RenderableData {
 
     public void render() {
         InterfaceManager.renderingInterface.renderVertices(this, changedSinceLastRender);
-        changedSinceLastRender = false;
+        //Mode 2 streams cached model vertices directly.  Keep the dirty state in that mode so a
+        //later switch back to modes 0/1 cannot reuse a VBO baked with stale UV, alpha, or light data.
+        if (!vertexObject.cacheVertices || ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
+            changedSinceLastRender = false;
+        }
     }
 
     public void destroy() {

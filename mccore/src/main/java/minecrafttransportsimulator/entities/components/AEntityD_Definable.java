@@ -20,6 +20,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.TextureOverlaySwitchbox;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
@@ -39,6 +40,7 @@ import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONTextureOverlay;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -123,6 +125,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Maps animated (model) object names to their switchboxes.  This is created from the JSON definition as each entity has their own switchbox.
      **/
     public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<>();
+
+    /**
+     * Maps texture overlays to their switchboxes.  One switchbox is shared by all model objects
+     * so animation clocks and animation-triggered sounds only run once per overlay and entity.
+     **/
+    public final Map<JSONTextureOverlay, TextureOverlaySwitchbox> textureOverlaySwitchboxes = new LinkedHashMap<>();
 
     /**
      * Maps cameras to their respective switchboxes.
@@ -327,6 +335,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
 
+            initializeTextureOverlaySwitchboxes();
+
             if (definition.rendering.cameraObjects != null) {
                 for (JSONCameraObject cameraDef : definition.rendering.cameraObjects) {
                     if (cameraDef.animations != null) {
@@ -341,6 +351,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         //GUI text only uses the switchbox result for visibility, but keeps the normal animation syntax.
                         guiTextSwitchboxes.put(guiTextDef, new AnimationSwitchbox(this, guiTextDef.animations, null));
                     }
+                }
+            }
+        }
+    }
+
+    /**Creates the entity-wide animation state shared by every model object for each overlay.*/
+    private void initializeTextureOverlaySwitchboxes() {
+        textureOverlaySwitchboxes.clear();
+        if (definition.rendering != null && definition.rendering.textureOverlays != null) {
+            for (JSONTextureOverlay overlayDef : definition.rendering.textureOverlays) {
+                if (overlayDef.animations != null && !overlayDef.animations.isEmpty()) {
+                    textureOverlaySwitchboxes.put(overlayDef, new TextureOverlaySwitchbox(this, overlayDef));
                 }
             }
         }
@@ -1449,6 +1471,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Render model object individually.
         objectList.forEach(modelObject -> modelObject.render(this, transform, blendingEnabled, partialTicks));
 
+        //Render texture layers from the last entry to the first.  Entry zero is therefore
+        //submitted last and is guaranteed to be the top-most overlay.
+        if (definition.rendering.textureOverlays != null) {
+            for (int overlayIndex = definition.rendering.textureOverlays.size() - 1; overlayIndex >= 0; --overlayIndex) {
+                final int index = overlayIndex;
+                objectList.forEach(modelObject -> modelObject.renderTextureOverlay(this, transform, blendingEnabled, partialTicks, index));
+            }
+        }
+
         //Render any static text.
         world.beginProfiling("MainText", false);
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
@@ -1480,7 +1511,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * Called externally to reset all caches for all objects and animations on this entity.
      */
     public void resetModelsAndAnimations() {
-    	if (definition.rendering.modelType != ModelType.NONE) {
+        if (definition.rendering.modelType != ModelType.NONE) {
             if (objectList != null) {
                 objectList.forEach(object -> object.destroy());
                 objectList = null;

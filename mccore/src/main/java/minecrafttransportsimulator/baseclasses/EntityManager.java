@@ -27,6 +27,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.systems.CameraSystem;
 
 /**
@@ -504,6 +505,7 @@ public abstract class EntityManager {
      *  
      */
     public static void doImports(HotloadFunction hotloadFunction) {
+        RenderableModelObject.clearTextureOverlayCaches();
     	for(EntityManager manager : managers) {
     		if(!manager.getWorld().isClient()) {
     			//Only add server managers for hotloading since we don't remove entities on clients.
