@@ -35,6 +35,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -765,7 +766,7 @@ public class PartGun extends APart {
             //Get new target if we don't have one, or if we've gone 1 second and we have a closer target by 5 blocks.
             boolean checkForCloser = entityTarget != null && ticksExisted % 20 == 0;
             if (entityTarget == null || checkForCloser) {
-                for (IWrapperEntity entity : world.getEntitiesHostile(controller, 48)) {
+                for (IWrapperEntity entity : world.getEntitiesHostile(controller, 128)) {
                     if (validateTarget(controller, entity)) {
                         if (entityTarget != null) {
                             double distanceToBeat = position.distanceTo(entityTarget.getPosition());
@@ -957,7 +958,8 @@ public class PartGun extends APart {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
                 }
             }
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity))) {
+            boolean mouseFlightFirstPerson = lastControllerSeat.riderIsClient && MouseFlightController.isMouseFlightActive && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON;
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) && !mouseFlightFirstPerson) {
                 lockControllerToActiveCamera(controller);
             }
         }
@@ -995,7 +997,7 @@ public class PartGun extends APart {
             bulletPosition.rotate(internalOrientation).add(position);
 
             targetVector.set(target.getPosition());
-            targetVector.y += target.getEyeHeight() / 2D;
+            targetVector.y += target.getBounds().heightRadius;
             targetVector.subtract(bulletPosition);
 
             //Transform vector to gun's coordinate system.

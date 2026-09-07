@@ -698,7 +698,7 @@ public final class LegacyCompatSystem {
                         JSONParticle backfireDef = new JSONParticle();
                         backfireDef.type = exhaustDef.type;
                         backfireDef.color = ColorRGB.BLACK;
-                        backfireDef.scale = 2.5F;
+                        backfireDef.scale = new Point3D(2.5F, 2.5F, 2.5F);
                         backfireDef.quantity = 5;
                         backfireDef.pos = exhaustDef.pos;
                         backfireDef.initialVelocity = exhaustDef.initialVelocity;
@@ -1426,7 +1426,7 @@ public final class LegacyCompatSystem {
                 particleDef.color = ColorRGB.BLACK;
                 particleDef.spawnEveryTick = true;
                 particleDef.quantity = 1;
-                particleDef.scale = 2.5F;
+                particleDef.scale = new Point3D(2.5F, 2.5F, 2.5F);
                 particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1531,7 +1531,7 @@ public final class LegacyCompatSystem {
                 particleDef.type = ParticleType.BREAK;
                 particleDef.color = new ColorRGB("999999");
                 particleDef.quantity = 4;
-                particleDef.scale = 0.3F;
+                particleDef.scale = new Point3D(0.3F, 0.3F, 0.3F);
                 particleDef.spawnEveryTick = true;
                 particleDef.pos = new Point3D(0, -definition.ground.height / 2, 0);
                 particleDef.initialVelocity = new Point3D(0, 1.5, -1.5);
@@ -1559,7 +1559,7 @@ public final class LegacyCompatSystem {
                 particleDef.type = ParticleType.BREAK;
                 particleDef.color = new ColorRGB("999999");
                 particleDef.quantity = 4;
-                particleDef.scale = 0.3F;
+                particleDef.scale = new Point3D(0.3F, 0.3F, 0.3F);
                 particleDef.spawnEveryTick = true;
                 particleDef.pos = new Point3D(0, -definition.ground.height / 2, 0);
                 particleDef.initialVelocity = new Point3D(0, 1.5, 0.0);
@@ -2032,7 +2032,7 @@ public final class LegacyCompatSystem {
             particleDef.type = ParticleType.BREAK;
             particleDef.color = new ColorRGB("999999");
             particleDef.quantity = 4;
-            particleDef.scale = 0.3F;
+            particleDef.scale = new Point3D(0.3F, 0.3F, 0.3F);
             particleDef.pos = new Point3D(0, 0.5, 0);
             particleDef.initialVelocity = new Point3D(0, 1.5, 0);
             particleDef.activeAnimations = new ArrayList<>();
@@ -2065,7 +2065,9 @@ public final class LegacyCompatSystem {
         }
         if (particleDef.hitboxSize == 0) {
             particleDef.hitboxSize = particleDef.type == ParticleType.BREAK ? 0.1F : 0.2F;
-            particleDef.scale *= particleDef.hitboxSize;
+            if (particleDef.scale != null) {
+                particleDef.scale.scale(particleDef.hitboxSize);
+            }
             particleDef.toScale *= particleDef.hitboxSize;
         }
         if (particleDef.fadeTransparencyTime != 0) {
@@ -2221,7 +2223,7 @@ public final class LegacyCompatSystem {
                 particle.type = ParticleType.SMOKE;
                 particle.pos = new Point3D(partDef.exhaustPos[i], partDef.exhaustPos[i + 1], partDef.exhaustPos[i + 2]);
                 particle.velocityVector = new Point3D(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i + 1], partDef.exhaustVelocity[i + 2]);
-                particle.scale = 1.0F;
+                particle.scale = new Point3D(1.0F, 1.0F, 1.0F);
                 particle.color = new ColorRGB("#D9D9D9");
                 particle.transparency = 0.25F;
                 particle.toTransparency = 0.25F;
@@ -2237,7 +2239,7 @@ public final class LegacyCompatSystem {
                 particle.type = ParticleType.SMOKE;
                 particle.pos = exhaust.pos;
                 particle.velocityVector = exhaust.velocity;
-                particle.scale = exhaust.scale;
+                particle.scale = new Point3D(exhaust.scale, exhaust.scale, exhaust.scale);
                 particle.color = new ColorRGB("#D9D9D9");
                 particle.transparency = 0.25F;
                 particle.toTransparency = 0.25F;

@@ -14,13 +14,8 @@ import com.google.common.collect.ImmutableList.Builder;
 
 import mcinterface1192.BuilderEntityExisting;
 import mcinterface1192.BuilderEntityLinkedSeat;
-import mcinterface1192.WrapperEntity;
 import mcinterface1192.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.systems.MouseFlightController;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -30,7 +25,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 @Mixin(Entity.class)
 public abstract class EntityMixin {
     private Vec3 pVec;
-    private final Point3D mouseFlightLineOfSight = new Point3D();
 
     /**
      * Need this to force eye position while in vehicles.
@@ -44,20 +38,6 @@ public abstract class EntityMixin {
             BuilderEntityLinkedSeat builder = (BuilderEntityLinkedSeat) riding;
             if(builder.entity != null) {
                 ci.setReturnValue(new Vec3(builder.entity.riderHeadPosition.x, builder.entity.riderHeadPosition.y, builder.entity.riderHeadPosition.z));
-            }
-        }
-    }
-
-    /**
-     * Make vanilla picking follow the visual camera in first-person mouse flight.
-     */
-    @Inject(method = "getViewVector(F)Lnet/minecraft/world/phys/Vec3;", at = @At(value = "HEAD"), cancellable = true)
-    private void inject_getViewVector(float partialTicks, CallbackInfoReturnable<Vec3> ci) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && clientPlayer.equals(WrapperEntity.getWrapperFor((Entity) (Object) this))) {
-                Point3D lineOfSight = MouseFlightController.getCameraLineOfSight(mouseFlightLineOfSight, 1, partialTicks);
-                ci.setReturnValue(new Vec3(lineOfSight.x, lineOfSight.y, lineOfSight.z));
             }
         }
     }

@@ -110,6 +110,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     private long lastTickParticlesSpawned;
     private float lastPartialTickParticlesSpawned;
     private static final Point3D particleSpawningPosition = new Point3D();
+    private static final Point3D particleTrailPosition = new Point3D();
+    private static final Point3D particleTrailDelta = new Point3D();
 
     /**
      * Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
@@ -593,7 +595,30 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             //Make the particle spawn if able.
             if (shouldParticleSpawn) {
                 AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
-                if (particleDef.distance > 0) {
+                if (particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.TRAIL) {
+                    //First get spawning position as defined by JSON and animations.
+                    EntityParticle.setPointToSpawn(position, orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
+
+                    //Spawn one particle for the whole segment, aligned on the local Z-axis.
+                    Point3D lastParticlePosition = lastPositionParticleSpawned.get(particleDef);
+                    if (lastParticlePosition == null) {
+                        lastPositionParticleSpawned.put(particleDef, particleSpawningPosition.copy());
+                        continue;//First tick we are active, checks are assured to fail.
+                    }
+                    if (particleDef.distance == 0 || !lastParticlePosition.isDistanceToCloserThan(particleSpawningPosition, particleDef.distance)) {
+                        particleTrailDelta.set(particleSpawningPosition).subtract(lastParticlePosition);
+                        double trailLength = particleTrailDelta.length();
+                        if (trailLength > 0) {
+                            particleTrailPosition.set(lastParticlePosition).interpolate(particleSpawningPosition, 0.5);
+                            for (int i = 0; i < particleDef.quantity; ++i) {
+                                EntityParticle particle = new EntityParticle(this, particleDef, particleTrailPosition, particleTrailDelta.copy().getAngles(true), spawningSwitchbox);
+                                particle.setTrailSegmentLength(trailLength);
+                                world.addEntity(particle);
+                            }
+                        }
+                        lastParticlePosition.set(particleSpawningPosition);
+                    }
+                } else if (particleDef.distance > 0) {
                     //First get spawning position as defined by JSON and animations.
                     EntityParticle.setPointToSpawn(position, particleDef.spawningOrientation == JSONParticle.ParticleSpawningOrientation.WORLD ? null : orientation, particleDef.pos, scale, spawningSwitchbox, particleSpawningPosition);
 
