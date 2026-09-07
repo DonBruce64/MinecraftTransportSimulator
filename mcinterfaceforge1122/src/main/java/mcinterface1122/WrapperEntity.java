@@ -227,6 +227,25 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public void correctHorizontalPosition(Point3D position) {
+        double deltaX = position.x - entity.posX;
+        double deltaZ = position.z - entity.posZ;
+        entity.setPosition(position.x, entity.posY, position.z);
+        if (entity.motionX * deltaX < 0) {
+            entity.motionX = 0;
+        }
+        if (entity.motionZ * deltaZ < 0) {
+            entity.motionZ = 0;
+        }
+    }
+
+    @Override
+    public void correctCeilingPosition(double y) {
+        entity.setPosition(entity.posX, y, entity.posZ);
+        entity.motionY = Math.min(entity.motionY, 0);
+    }
+
+    @Override
     public void applyMotion(Point3D motion) {
         entity.addVelocity(motion.x, motion.y, motion.z);
         entity.velocityChanged = true;
