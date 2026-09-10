@@ -59,6 +59,7 @@ import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -79,6 +80,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -96,6 +98,7 @@ import net.minecraftforge.items.IItemHandler;
  * @author don_bruce
  */
 public class WrapperWorld extends AWrapperWorld {
+    private static final double COLLISION_EPSILON = 1.0E-7;
     private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
     private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
     private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
@@ -548,6 +551,7 @@ public class WrapperWorld extends AWrapperWorld {
                         if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null && state.getMaterial() != Material.LEAVES) {
                             int oldCollidingBlockCount = mutableCollidingAABBs.size();
                             state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
+                            mutableCollidingAABBs.subList(oldCollidingBlockCount, mutableCollidingAABBs.size()).removeIf(colBox -> !intersectsForCollision(mcBox, colBox));
                             if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
                                 box.collidingBlockPositions.add(new Point3D(i, j, k));
                             }
@@ -641,6 +645,7 @@ public class WrapperWorld extends AWrapperWorld {
                                 if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
                                     int oldCollidingBlockCount = mutableCollidingAABBs.size();
                                     state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
+                                    mutableCollidingAABBs.subList(oldCollidingBlockCount, mutableCollidingAABBs.size()).removeIf(colBox -> !intersectsForCollision(mcBox, colBox));
                                     if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
                                         return true;
                                     }
@@ -663,6 +668,14 @@ public class WrapperWorld extends AWrapperWorld {
             }
         }
         return false;
+    }
+
+    private static boolean intersectsForCollision(AxisAlignedBB first, AxisAlignedBB second) {
+        //Match modern voxel collision tolerance. Tiny face overlaps must not trigger a ground boost
+        //or pitch correction, even when horizontal motion would give them a large collision depth.
+        return Math.min(first.maxX, second.maxX) - Math.max(first.minX, second.minX) > COLLISION_EPSILON
+                && Math.min(first.maxY, second.maxY) - Math.max(first.minY, second.minY) > COLLISION_EPSILON
+                && Math.min(first.maxZ, second.maxZ) - Math.max(first.minZ, second.minZ) > COLLISION_EPSILON;
     }
 
     @Override
@@ -1031,6 +1044,19 @@ public class WrapperWorld extends AWrapperWorld {
      */
     public static AxisAlignedBB convertWithOffset(BoundingBox box, double x, double y, double z) {
         return new AxisAlignedBB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
+    }
+
+    @SubscribeEvent
+    public void onIVPlayerMovementValidation(GetCollisionBoxesEvent event) {
+        if (event.getWorld() == world && !world.isRemote && event.getEntity() instanceof EntityPlayerMP) {
+            //NetHandlerPlayServer uses this contracted box to validate a received player position.
+            //Vehicle collisions can differ slightly between the predicted client and the server.
+            //Like modern versions, leave them to Entity.move and our overlap recovery, rather than
+            //rejecting the packet and resetting the player position and velocity.
+            if (event.getAabb().equals(event.getEntity().getEntityBoundingBox().shrink(0.0625D))) {
+                event.getCollisionBoxesList().removeIf(box -> box instanceof WrapperAABBCollective);
+            }
+        }
     }
 
     /**

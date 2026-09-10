@@ -246,9 +246,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             for (IWrapperEntity entity : nearbyEntities) {
                 //Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
                 if (entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())) {
-                    //Check each box individually.  Need to do this to know which delta to apply.
+                    //Choose the highest support so stepping across boxes cannot snap us back to a lower one.
                     BoundingBox entityBounds = entity.getBounds();
                     entityBounds.heightRadius += 0.25;
+                    BoundingBox supportingBox = null;
+                    Point3D entityVelocity = entity.getVelocity();
                     for (BoundingBox box : allCollisionBoxes) {
                         if (box.collisionTypes.contains(CollisionType.ENTITY) && entityBounds.intersects(box)) {
                             //If the entity is within 0.5 units of the top of the box, we can move them.
@@ -256,32 +258,33 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                             double entityBottomDelta = box.globalCenter.y + box.heightRadius - entity.getPosition().y;
                             if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
                                 //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
-                                Point3D entityVelocity = entity.getVelocity();
                                 double entityTopDelta = entity.getPosition().y + (entityBounds.heightRadius - 0.25) * 2 - (box.globalCenter.y - box.heightRadius);
                                 //An upward-moving entity near the underside must not be lifted onto the box.
                                 if (entityVelocity.y <= 0 || (entityVelocity.y < entityBottomDelta && entityBottomDelta <= entityTopDelta)) {
-                                    //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
-                                    //This lets entities "move along" with entities when touching a collision box.
-                                    Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
-                                    Point3D startingAngles = entityPositionVector.copy().getAngles(true);
-                                    Point3D entityPositionDelta = entityPositionVector.copy();
-                                    entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
-                                    Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
-
-                                    entityPositionDelta.add(position).subtract(prevPosition);
-                                    entityPositionDelta.subtract(entityPositionVector).add(entity.getPosition());
-                                    //The box is already at its new height, so do not add vertical vehicle motion again.
-                                    entityPositionDelta.y = box.globalCenter.y + box.heightRadius;
-                                    entity.setPosition(entityPositionDelta, true);
-                                    //Setting onGround alone does not stop the entity's downward velocity.
-                                    entityVelocity.y = 0;
-                                    entity.setVelocity(entityVelocity);
-                                    entity.setYaw(entity.getYaw() + entityAngleDelta.y);
-                                    entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
-                                    break;
+                                    if (supportingBox == null || box.globalCenter.y + box.heightRadius > supportingBox.globalCenter.y + supportingBox.heightRadius) {
+                                        supportingBox = box;
+                                    }
                                 }
                             }
                         }
+                    }
+                    if (supportingBox != null) {
+                        //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
+                        //This lets entities "move along" with entities when touching a collision box.
+                        Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
+                        Point3D startingAngles = entityPositionVector.copy().getAngles(true);
+                        Point3D entityPositionDelta = entityPositionVector.copy();
+                        entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
+                        Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
+
+                        entityPositionDelta.add(position).subtract(prevPosition);
+                        entityPositionDelta.subtract(entityPositionVector).add(entity.getPosition());
+                        //The box is already at its new height, so do not add vertical vehicle motion again.
+                        entityPositionDelta.y = supportingBox.globalCenter.y + supportingBox.heightRadius;
+                        //Keep downward motion so vanilla detects floor contact and preserves its grounded camera state.
+                        entity.setPosition(entityPositionDelta, true);
+                        entity.setYaw(entity.getYaw() + entityAngleDelta.y);
+                        entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
                     }
 
                     //Use the actual bounds after carrying, so a floor contact does not skip adjacent walls or ceilings.
