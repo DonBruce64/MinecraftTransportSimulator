@@ -35,6 +35,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final int FLOATS_PER_VERTEX = 8;
     private static final int VERTICES_PER_QUAD = 6;
     private static final int PROGRESS_SEGMENTS = 32;
+    private static final double SCANNER_REACH = 5.0D;
+    private static final double SCANNER_REACH_SQUARED = SCANNER_REACH * SCANNER_REACH;
     private static final double INTERACTION_REACH = 3.5D;
     private static final double INTERACTION_REACH_SQUARED = INTERACTION_REACH * INTERACTION_REACH;
     private static final double MARKER_RADIUS = 6.0D;
@@ -138,6 +140,8 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         }
 
+        double reachSquared = holdingScanner ? SCANNER_REACH_SQUARED : INTERACTION_REACH_SQUARED;
+
         //Empty slots retain their placement hitboxes in this map even when they are unavailable.
         if (!holdingRemovalTool) {
             for (Entry<BoundingBox, JSONPartDefinition> slotEntry : multipart.partSlotBoxes.entrySet()) {
@@ -158,7 +162,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 }
 
                 String rawType = heldPart != null ? heldPart.definition.generic.type : getFirstSlotType(slotDefinition);
-                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, multipart.definition, slotDefinition, rawType, state, partialTicks);
+                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, multipart.definition, slotDefinition, rawType, state, reachSquared, partialTicks);
             }
         }
 
@@ -184,13 +188,13 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 state = PartSlotMarkerState.INSTALLED;
             }
 
-            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, multipart.definition, slotDefinition, installedPart.definition.generic.type, state, partialTicks);
+            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, multipart.definition, slotDefinition, installedPart.definition.generic.type, state, reachSquared, partialTicks);
         }
     }
 
-    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition, String rawType, PartSlotMarkerState state, float partialTicks) {
+    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition, String rawType, PartSlotMarkerState state, double reachSquared, float partialTicks) {
         boolean installationTarget = ControlSystem.isPartInstallationTarget(markerEntity, markerBox);
-        if (!isWithinReach(eyePosition, markerBox)) {
+        if (slotDefinition.isPermanent || !isWithinReach(eyePosition, markerBox, reachSquared)) {
             return;
         }
 
@@ -318,11 +322,11 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         RenderText.drawText(markerName, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F, true, wrapWidth, true, gui.worldLightValue);
     }
 
-    private static boolean isWithinReach(Point3D eyePosition, BoundingBox box) {
+    private static boolean isWithinReach(Point3D eyePosition, BoundingBox box, double reachSquared) {
         double xDistance = Math.max(Math.abs(eyePosition.x - box.globalCenter.x) - box.widthRadius, 0.0D);
         double yDistance = Math.max(Math.abs(eyePosition.y - box.globalCenter.y) - box.heightRadius, 0.0D);
         double zDistance = Math.max(Math.abs(eyePosition.z - box.globalCenter.z) - box.depthRadius, 0.0D);
-        return xDistance * xDistance + yDistance * yDistance + zDistance * zDistance <= INTERACTION_REACH_SQUARED;
+        return xDistance * xDistance + yDistance * yDistance + zDistance * zDistance <= reachSquared;
     }
 
     private static boolean isLocked(AEntityF_Multipart<?> multipart) {
