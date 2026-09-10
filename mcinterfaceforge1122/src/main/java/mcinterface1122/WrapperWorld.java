@@ -1021,7 +1021,7 @@ public class WrapperWorld extends AWrapperWorld {
      * Helper method to convert a BoundingBox to an AxisAlignedBB.
      */
     public static AxisAlignedBB convert(BoundingBox box) {
-        return new AxisAlignedBB(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius, box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+        return new AxisAlignedBB(box.getMinX(), box.getMinY(), box.getMinZ(), box.getMaxX(), box.getMaxY(), box.getMaxZ());
     }
 
     /**
@@ -1030,7 +1030,7 @@ public class WrapperWorld extends AWrapperWorld {
      * creating two AABBs (the conversion and the offset box).
      */
     public static AxisAlignedBB convertWithOffset(BoundingBox box, double x, double y, double z) {
-        return new AxisAlignedBB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
+        return new AxisAlignedBB(x + box.getMinX(), y + box.getMinY(), z + box.getMinZ(), x + box.getMaxX(), y + box.getMaxY(), z + box.getMaxZ());
     }
 
     /**
