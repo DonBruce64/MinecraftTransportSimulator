@@ -258,7 +258,7 @@ public final class PartSeat extends APart {
                     ControlSystem.resetMouseYoke();
                 }
 
-                //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats, or this vehicle has the override.
+                //Auto-stop engines if configured, unless the vehicle overrides it or another controller remains.
                 if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value && !vehicleOn.definition.motorized.overrideAutoStart) {
                     vehicleOn.engines.forEach(engine -> {
                         if (engine.magnetoVar.isActive) {
@@ -268,10 +268,14 @@ public final class PartSeat extends APart {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine.electricStarterVar));
                         }
                     });
+                }
+
+                //Apply the parking brake for simpleThrottle controls as well as engine auto-stop.
+                if (placementDefinition.isController && !otherController
+                    && ((ConfigSystem.client.controlSettings.simpleThrottle.value && !vehicleOn.definition.motorized.isAircraft)
+                        || (ConfigSystem.client.controlSettings.autostartEng.value && !vehicleOn.definition.motorized.overrideAutoStart))) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn.brakeVar, 0));
-                    if (!vehicleOn.parkingBrakeVar.isActive) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn.parkingBrakeVar));
-                    }
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn.parkingBrakeVar, 1));
                 }
             }
         }
