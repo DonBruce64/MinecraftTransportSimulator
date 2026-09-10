@@ -147,7 +147,7 @@ public class CameraSystem {
             boolean freecamThirdPerson = ConfigSystem.client.renderingSettings.freecam_3P.value && cameraMode.thirdPerson;
             if (freecamThirdPerson) {
                 sittingSeat.getRiderInterpolatedOrientation(cameraRotation, partialTicks);
-            } else if (MouseFlightController.isMouseFlightActive) {
+            } else if (MouseFlightController.isMouseFlightActive && cameraMode.thirdPerson) {
                 MouseFlightController.getInterpolatedCameraOrientation(cameraRotation, partialTicks);
             } else {
                 sittingSeat.getInterpolatedOrientation(cameraRotation, partialTicks);

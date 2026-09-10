@@ -39,13 +39,11 @@ minecraft {
     runs {
         client {
             workingDirectory file("run")
-            property "fml.coreMods.load", "mcinterface1122.coremod.InterfaceCoreMod"
         }
 
         //Run the server in a different directory so that the run directory isn't a mess
         server {
             workingDirectory file("runServer")
-            property "fml.coreMods.load", "mcinterface1122.coremod.InterfaceCoreMod"
         }
     }
 }
@@ -79,11 +77,6 @@ dependencies {
 }
 
 jar {
-    manifest {
-        attributes(["FMLCorePlugin": "mcinterface1122.coremod.InterfaceCoreMod",
-                    "FMLCorePluginContainsFMLMod": "true"])
-    }
-
     //Zip all embeds and add them to the jar
     configurations.embed.each { dependency ->
         from(project.zipTree(dependency)) {

@@ -255,16 +255,33 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
 
-            //When mouse flight is active for this client rider, capture mouse deltas
-            //for the MouseFlightController instead of applying them to rider orientation.
-            //The rider's relative orientation stays locked forward so the camera can be
-            //independently controlled by the MouseFlightController.
-            boolean freecamThirdPerson = riderIsClient && ConfigSystem.client.renderingSettings.freecam_3P.value && InterfaceManager.clientInterface.getCameraMode().thirdPerson;
-            if (riderIsClient && MouseFlightController.isMouseFlightActive && !freecamThirdPerson) {
-                //Capture deltas for the mouse flight controller.
+            //Detached mouse-flight views consume mouse input without moving the rider.  First-person
+            //uses the same rider-orientation path that existed before arcade mode and mirrors the
+            //same deltas to the aim controller.
+            CameraMode riderCameraMode = riderIsClient ? InterfaceManager.clientInterface.getCameraMode() : null;
+            boolean freecamThirdPerson = riderIsClient && ConfigSystem.client.renderingSettings.freecam_3P.value && riderCameraMode.thirdPerson;
+            boolean mouseFlightFirstPerson = riderIsClient && MouseFlightController.isMouseFlightActive && riderCameraMode == CameraMode.FIRST_PERSON;
+            if (mouseFlightFirstPerson) {
                 MouseFlightController.storedYawDelta = rider.getYawDelta();
                 MouseFlightController.storedPitchDelta = rider.getPitchDelta();
-                //Keep rider orientation locked forward (zero relative orientation).
+                if (!hasHeadTracking) {
+                    riderRelativeOrientation.angles.y += MouseFlightController.storedYawDelta;
+                    if (riderRelativeOrientation.angles.y > 180) {
+                        riderRelativeOrientation.angles.y -= 360;
+                        prevRiderRelativeOrientation.angles.y -= 360;
+                    } else if (riderRelativeOrientation.angles.y < -180) {
+                        riderRelativeOrientation.angles.y += 360;
+                        prevRiderRelativeOrientation.angles.y += 360;
+                    }
+                    if (Math.abs(riderRelativeOrientation.angles.x + MouseFlightController.storedPitchDelta) < 85) {
+                        riderRelativeOrientation.angles.x += MouseFlightController.storedPitchDelta;
+                    }
+                } else {
+                    riderRelativeOrientation.angles.set(headTrackingOrientation);
+                }
+            } else if (riderIsClient && MouseFlightController.isMouseFlightActive && !freecamThirdPerson) {
+                MouseFlightController.storedYawDelta = rider.getYawDelta();
+                MouseFlightController.storedPitchDelta = rider.getPitchDelta();
                 riderRelativeOrientation.setToZero();
                 riderRelativeOrientation.angles.set(0, 0, 0);
             } else if (!hasHeadTracking) {

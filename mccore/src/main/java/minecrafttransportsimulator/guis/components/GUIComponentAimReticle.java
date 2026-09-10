@@ -90,6 +90,7 @@ public class GUIComponentAimReticle extends AGUIComponent {
     private static final Point3D cameraLocalAim = new Point3D();
     private static final Point3D projectedAimPoint = new Point3D();
     private static final RotationMatrix cameraOrientation = new RotationMatrix();
+    private static final RotationMatrix riderOrientation = new RotationMatrix();
     private static final RotationMatrix projectionOrientation = new RotationMatrix();
 
     @Override
@@ -111,38 +112,49 @@ public class GUIComponentAimReticle extends AGUIComponent {
             aimForward.set(0, 0, 1);
         }
 
-        Point3D projectedScreenPoint = InterfaceManager.clientInterface.projectToScreen(projectedAimPoint.set(InterfaceManager.clientInterface.getCameraPosition()).addScaled(aimForward, AIM_PROJECTION_DISTANCE), screenWidth, screenHeight);
         double screenX;
         double screenY;
-        if (projectedScreenPoint != null) {
-            screenX = projectedScreenPoint.x;
-            screenY = projectedScreenPoint.y;
+        if (mouseFlightActive && cameraMode == CameraMode.FIRST_PERSON && controllingSeat != null) {
+            //First-person flight aim is the normal centered rider view.  Keep the ring exactly on
+            //the MC crosshair rather than projecting tick-time angles against a render-time camera.
+            screenX = screenWidth / 2.0D;
+            screenY = screenHeight / 2.0D;
         } else {
-            if (freecamThirdPerson && controllingSeat != null) {
-                controllingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
-            } else if (mouseFlightActive) {
-                MouseFlightController.getInterpolatedCameraOrientation(cameraOrientation, partialTicks);
+            Point3D projectedScreenPoint = InterfaceManager.clientInterface.projectToScreen(projectedAimPoint.set(InterfaceManager.clientInterface.getCameraPosition()).addScaled(aimForward, AIM_PROJECTION_DISTANCE), screenWidth, screenHeight);
+            if (projectedScreenPoint != null) {
+                screenX = projectedScreenPoint.x;
+                screenY = projectedScreenPoint.y;
             } else {
-                cameraOrientation.setToZero();
-            }
+                if (cameraMode == CameraMode.FIRST_PERSON && controllingSeat != null) {
+                    controllingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+                    controllingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
+                    cameraOrientation.multiply(riderOrientation);
+                } else if (freecamThirdPerson && controllingSeat != null) {
+                    controllingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
+                } else if (mouseFlightActive) {
+                    MouseFlightController.getInterpolatedCameraOrientation(cameraOrientation, partialTicks);
+                } else {
+                    cameraOrientation.setToZero();
+                }
 
-            projectionOrientation.set(cameraOrientation);
-            if (cameraMode == CameraMode.THIRD_PERSON_INVERTED) {
-                projectionOrientation.convertToAngles();
-                projectionOrientation.angles.set(-projectionOrientation.angles.x, projectionOrientation.angles.y - 180, -projectionOrientation.angles.z);
-                projectionOrientation.updateToAngles();
-            }
-            cameraLocalAim.set(aimForward);
-            projectionOrientation.reOrigin(cameraLocalAim);
+                projectionOrientation.set(cameraOrientation);
+                if (cameraMode == CameraMode.THIRD_PERSON_INVERTED) {
+                    projectionOrientation.convertToAngles();
+                    projectionOrientation.angles.set(-projectionOrientation.angles.x, projectionOrientation.angles.y - 180, -projectionOrientation.angles.z);
+                    projectionOrientation.updateToAngles();
+                }
+                cameraLocalAim.set(aimForward);
+                projectionOrientation.reOrigin(cameraLocalAim);
 
-            double fov = Math.max(1.0D, Math.min(179.0D, InterfaceManager.clientInterface.getFOV()));
-            double tanHalfFOV = Math.tan(Math.toRadians(fov) / 2.0D);
-            double aspect = screenHeight > 0 ? (double) screenWidth / screenHeight : 1.0D;
-            double depth = Math.max(0.001D, cameraLocalAim.z);
-            double ndcX = -cameraLocalAim.x / (depth * tanHalfFOV * aspect);
-            double ndcY = cameraLocalAim.y / (depth * tanHalfFOV);
-            screenX = (ndcX + 1.0D) / 2.0D * screenWidth;
-            screenY = (1.0D - ndcY) / 2.0D * screenHeight;
+                double fov = Math.max(1.0D, Math.min(179.0D, InterfaceManager.clientInterface.getFOV()));
+                double tanHalfFOV = Math.tan(Math.toRadians(fov) / 2.0D);
+                double aspect = screenHeight > 0 ? (double) screenWidth / screenHeight : 1.0D;
+                double depth = Math.max(0.001D, cameraLocalAim.z);
+                double ndcX = -cameraLocalAim.x / (depth * tanHalfFOV * aspect);
+                double ndcY = cameraLocalAim.y / (depth * tanHalfFOV);
+                screenX = (ndcX + 1.0D) / 2.0D * screenWidth;
+                screenY = (1.0D - ndcY) / 2.0D * screenHeight;
+            }
         }
 
         // Clamp to screen bounds.

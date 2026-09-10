@@ -66,6 +66,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     //Autopilot.
     public final ComputedVariable autopilotValueVar;
     public final ComputedVariable autolevelEnabledVar;
+    public final ComputedVariable mouseAimControlVar;
 
     //Open top.
     public final ComputedVariable openTopVar;
@@ -86,15 +87,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D normalizedVelocityVector = new Point3D();
     private final Point3D verticalVector = new Point3D();
     private final Point3D sideVector = new Point3D();
-    private final Point3D arcadeRotorDirection = new Point3D();
-    private final Point3D arcadeRotorAxis = new Point3D();
-    private final Point3D arcadeRotorLocalAxis = new Point3D();
-    private final Point3D arcadeRotorTangent = new Point3D();
     private final Point3D hitchPrevOffset = new Point3D();
     private final Point3D hitchCurrentOffset = new Point3D();
     private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
-    private static final double MAX_ARCADE_ROTOR_TILT_RADIANS = Math.toRadians(20D);
-    private static final double MAIN_ROTOR_VERTICAL_COMPONENT = 0.5D;
 
     //Physics properties
     public final ComputedVariable dragCoefficientVar;
@@ -159,6 +154,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
         addVariable(this.autopilotValueVar = new ComputedVariable(this, "autopilot", data));
         addVariable(this.autolevelEnabledVar = new ComputedVariable(this, "auto_level", data));
+        addVariable(this.mouseAimControlVar = new ComputedVariable(this, "mouse_aim_control", data));
         addVariable(this.openTopVar = new ComputedVariable(this, "hasOpenTop", data));
 
         addVariable(this.dragCoefficientVar = new ComputedVariable(this, "dragCoefficient"));
@@ -179,8 +175,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         verticalVector.set(0D, 1D, 0D).rotate(orientation);
         normalizedVelocityVector.set(motion).normalize();
         sideVector.set(verticalVector.crossProduct(headingVector));
-        if (controllerCount == 0 && !arcadeRotorDirection.isZero()) {
-            arcadeRotorDirection.set(0, 0, 0);
+        if (!world.isClient() && controllerCount == 0 && mouseAimControlVar.isActive) {
+            mouseAimControlVar.setActive(false, true);
         }
         world.endProfiling();
     }
@@ -188,55 +184,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     public boolean requiresDeltaUpdates() {
         return true;
-    }
-
-    /**
-     * Sets the world-space horizontal direction for arcade rotor thrust.
-     * Magnitude controls rotor-disk deflection and is clamped to a unit vector.
-     */
-    public void setArcadeRotorDirection(double directionX, double directionZ) {
-        if (!Double.isFinite(directionX) || !Double.isFinite(directionZ)) {
-            arcadeRotorDirection.set(0, 0, 0);
-            return;
-        }
-
-        double magnitude = Math.hypot(directionX, directionZ);
-        if (magnitude > 1D) {
-            directionX /= magnitude;
-            directionZ /= magnitude;
-        }
-        arcadeRotorDirection.set(directionX, 0, directionZ);
-    }
-
-    /**
-     * Applies cyclic deflection to upward-facing rotors while preserving thrust magnitude.
-     * Tail rotors are ignored, and the aircraft body remains under normal pitch/roll control.
-     */
-    public void applyArcadeRotorDirection(Point3D rotorForce) {
-        double controlMagnitude = arcadeRotorDirection.length();
-        double forceMagnitude = rotorForce.length();
-        if (controllerCount == 0 || controlMagnitude < 0.0001D || forceMagnitude < 0.0001D) {
-            return;
-        }
-
-        arcadeRotorAxis.set(rotorForce).scale(1D / forceMagnitude);
-        arcadeRotorLocalAxis.set(arcadeRotorAxis);
-        orientation.reOrigin(arcadeRotorLocalAxis);
-        if (Math.abs(arcadeRotorLocalAxis.y) < MAIN_ROTOR_VERTICAL_COMPONENT) {
-            return;
-        }
-
-        arcadeRotorTangent.set(arcadeRotorDirection).scale(1D / controlMagnitude);
-        arcadeRotorTangent.addScaled(arcadeRotorAxis, -arcadeRotorTangent.dotProduct(arcadeRotorAxis, false));
-        double tangentMagnitude = arcadeRotorTangent.length();
-        if (tangentMagnitude < 0.0001D) {
-            return;
-        }
-
-        double tiltRadians = MAX_ARCADE_ROTOR_TILT_RADIANS * controlMagnitude;
-        arcadeRotorTangent.scale(1D / tangentMagnitude);
-        rotorForce.set(arcadeRotorAxis).scale(Math.cos(tiltRadians));
-        rotorForce.addScaled(arcadeRotorTangent, Math.sin(tiltRadians)).scale(forceMagnitude);
     }
 
     @Override
@@ -338,10 +285,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     thrustForceValue += propeller.addToForceOutput(thrustForce, thrustTorque);
                     if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
                         hasRotors = true;
-                        if (!autopilotValueVar.isActive && autolevelEnabledVar.isActive) {
-                            rotorRotation.set((-(elevatorAngleVar.currentValue + elevatorTrimVar.currentValue) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE, ((aileronAngleVar.currentValue + aileronTrimVar.currentValue) - orientation.angles.z) / MAX_AILERON_ANGLE);
+                        if (controllerCount > 0 && mouseAimControlVar.isActive) {
+                            //Mouse aim has its own attitude controller, so legacy auto-level
+                            //and auto-hover must not reinterpret the cyclic commands.
+                            rotorRotation.set(-5D * elevatorAngleVar.currentValue / MAX_ELEVATOR_ANGLE, -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE, 5D * aileronAngleVar.currentValue / MAX_AILERON_ANGLE);
                         } else {
-                            if (!autopilotValueVar.isActive) {
+                            if (!autopilotValueVar.isActive && autolevelEnabledVar.isActive) {
+                                rotorRotation.set((-(elevatorAngleVar.currentValue + elevatorTrimVar.currentValue) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE, ((aileronAngleVar.currentValue + aileronTrimVar.currentValue) - orientation.angles.z) / MAX_AILERON_ANGLE);
+                            } else if (!autopilotValueVar.isActive) {
                                 rotorRotation.set(-5D * elevatorAngleVar.currentValue / MAX_ELEVATOR_ANGLE, -5D * rudderAngleVar.currentValue / MAX_RUDDER_ANGLE, 5D * aileronAngleVar.currentValue / MAX_AILERON_ANGLE);
                             } else {
                                 if (orientation.angles.x < -1) {

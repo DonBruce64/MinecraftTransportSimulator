@@ -12,13 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import mcinterface1165.BuilderEntityExisting;
 import mcinterface1165.BuilderEntityLinkedSeat;
-import mcinterface1165.WrapperEntity;
 import mcinterface1165.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.systems.MouseFlightController;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -28,7 +23,6 @@ import net.minecraft.util.math.vector.Vector3d;
 @Mixin(Entity.class)
 public abstract class EntityMixin {
     private Vector3d pVec;
-    private final Point3D mouseFlightLineOfSight = new Point3D();
 
     /**
      * Need this to force eye position while in vehicles.
@@ -45,21 +39,6 @@ public abstract class EntityMixin {
             }
         }
     }
-
-    /**
-     * Make vanilla picking follow the visual camera in first-person mouse flight.
-     */
-    @Inject(method = "getViewVector(F)Lnet/minecraft/util/math/vector/Vector3d;", at = @At(value = "HEAD"), cancellable = true)
-    private void inject_getViewVector(float partialTicks, CallbackInfoReturnable<Vector3d> ci) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && clientPlayer.equals(WrapperEntity.getWrapperFor((Entity) (Object) this))) {
-                Point3D lineOfSight = MouseFlightController.getCameraLineOfSight(mouseFlightLineOfSight, 1, partialTicks);
-                ci.setReturnValue(new Vector3d(lineOfSight.x, lineOfSight.y, lineOfSight.z));
-            }
-        }
-    }
-
 
     /**
      * Need this to force collision with vehicles.  First we get variables when function is called, then
