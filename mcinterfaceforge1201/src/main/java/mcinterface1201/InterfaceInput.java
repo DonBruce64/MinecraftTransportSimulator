@@ -362,4 +362,12 @@ public class InterfaceInput implements IInterfaceInput {
             lastScrollValue = (int) event.getScrollDelta();
         }
     }
+
+    @SubscribeEvent
+    public static void onIVGameplayMouseScroll(InputEvent.MouseScrollingEvent event) {
+        int wheelDirection = (int) Math.signum(event.getScrollDelta());
+        if (wheelDirection != 0 && ControlSystem.onMouseWheel(wheelDirection)) {
+            event.setCanceled(true);
+        }
+    }
 }
