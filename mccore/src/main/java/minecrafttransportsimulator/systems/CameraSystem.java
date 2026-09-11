@@ -52,6 +52,8 @@ public class CameraSystem {
     private static final RotationMatrix cameraOffsetOrientation = new RotationMatrix();
     private static double cameraShakeAmplitude;
     private static double cameraShakePhase;
+    private static double cameraShakeTime;
+    private static double cameraShakeIntensity = 1.0D;
     private static long cameraShakeStartTime;
     private static long cameraShakeEndTime;
 
@@ -246,7 +248,11 @@ public class CameraSystem {
     }
 
     public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
-        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value, radius, duration);
+        sendExplosionCameraShake(world, source, strength, radius, duration, 1.0D);
+    }
+
+    public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value, radius, duration, intensity);
     }
 
     public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength) {
@@ -254,16 +260,21 @@ public class CameraSystem {
     }
 
     public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
-        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.gunCameraShakeFactor.value, radius, duration);
+        sendGunshotCameraShake(world, source, strength, radius, duration, 1.0D);
+    }
+
+    public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.gunCameraShakeFactor.value, radius, duration, intensity);
     }
 
     /**
      * Sends a camera shake impulse to players close enough to the source.  Strength is attenuated
      * by distance on the server so the server config remains authoritative without synchronizing it
      * to every client.  Radius is in blocks and duration is in ticks, with non-positive values
-     * retaining the default radius and duration.
+     * retaining the default radius and duration.  Intensity multiplies the oscillation speed,
+     * with non-positive or non-finite values retaining the default speed.
      */
-    private static void sendCameraShake(AWrapperWorld world, Point3D source, double strength, double factor, double radius, int duration) {
+    private static void sendCameraShake(AWrapperWorld world, Point3D source, double strength, double factor, double radius, int duration, double intensity) {
         if (world.isClient() || strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength)) {
             return;
         }
@@ -277,13 +288,16 @@ public class CameraSystem {
         if (duration <= 0) {
             duration = CAMERA_SHAKE_DURATION_TICKS;
         }
+        if (intensity <= 0 || Double.isNaN(intensity) || Double.isInfinite(intensity)) {
+            intensity = 1.0D;
+        }
 
         for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(source, radius))) {
             double distance = source.distanceTo(player.getEyePosition());
             if (distance <= radius) {
                 double adjustedStrength = strength * factor / Math.max(1.0D, distance);
                 if (!Double.isNaN(adjustedStrength) && !Double.isInfinite(adjustedStrength) && adjustedStrength * CAMERA_SHAKE_ANGLE_FACTOR >= CAMERA_SHAKE_MIN_ANGLE) {
-                    player.sendPacket(new PacketCameraShake(adjustedStrength, duration));
+                    player.sendPacket(new PacketCameraShake(adjustedStrength, duration, intensity));
                 }
             }
         }
@@ -298,8 +312,15 @@ public class CameraSystem {
     }
 
     public static void startCameraShake(double strength, int duration) {
+        startCameraShake(strength, duration, 1.0D);
+    }
+
+    public static void startCameraShake(double strength, int duration, double intensity) {
         if (strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength) || duration <= 0) {
             return;
+        }
+        if (intensity <= 0 || Double.isNaN(intensity) || Double.isInfinite(intensity)) {
+            intensity = 1.0D;
         }
 
         long currentTime = System.nanoTime();
@@ -308,9 +329,13 @@ public class CameraSystem {
             double elapsed = (double) (currentTime - cameraShakeStartTime) / (cameraShakeEndTime - cameraShakeStartTime);
             double decay = Math.max(0, 1.0D - elapsed);
             remainingAmplitude = cameraShakeAmplitude * decay * decay;
+            //Anchor the current oscillation before changing its speed to preserve phase.
+            cameraShakeTime += (currentTime - cameraShakeStartTime) * 0.000000001D * cameraShakeIntensity;
         } else {
             cameraShakePhase = currentTime * 0.000000001D;
+            cameraShakeTime = cameraShakePhase;
         }
+        cameraShakeIntensity = intensity;
         double impulseAmplitude = Math.min(strength * CAMERA_SHAKE_ANGLE_FACTOR, CAMERA_SHAKE_MAX_ANGLE);
         cameraShakeAmplitude = Math.min(remainingAmplitude + impulseAmplitude, CAMERA_SHAKE_MAX_ANGLE);
         cameraShakeStartTime = currentTime;
@@ -331,7 +356,7 @@ public class CameraSystem {
         double decay = 1.0D - elapsed;
         decay *= decay;
         double amplitude = cameraShakeAmplitude * decay;
-        double time = currentTime * 0.000000001D;
+        double time = cameraShakeTime + (currentTime - cameraShakeStartTime) * 0.000000001D * cameraShakeIntensity;
         cameraRotation.rotateY(Math.sin(time * 38.0D + cameraShakePhase * 1.3D) * amplitude * 0.75D);
         cameraRotation.rotateX(Math.sin(time * 45.0D + cameraShakePhase) * amplitude);
         cameraRotation.rotateZ(Math.sin(time * 51.0D + cameraShakePhase * 0.7D) * amplitude * 0.5D);
@@ -341,6 +366,8 @@ public class CameraSystem {
     public static void clearCameraShake() {
         cameraShakeAmplitude = 0;
         cameraShakePhase = 0;
+        cameraShakeTime = 0;
+        cameraShakeIntensity = 1.0D;
         cameraShakeStartTime = 0;
         cameraShakeEndTime = 0;
     }

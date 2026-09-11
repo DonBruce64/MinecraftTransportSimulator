@@ -30,6 +30,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONCameraShake;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -1010,6 +1011,17 @@ public final class LegacyCompatSystem {
         //If the part is a gun, set yaw and pitch speed if not set.
         //Also set muzzle position.
         if (definition.gun != null) {
+            //Move camera shake settings into their shared parameter block.
+            if (definition.gun.cameraShakeParams == null && (definition.gun.cameraShakeStrength != null || definition.gun.cameraShakeRadius != null || definition.gun.cameraShakeDuration != 0)) {
+                definition.gun.cameraShakeParams = new JSONCameraShake();
+                definition.gun.cameraShakeParams.strength = definition.gun.cameraShakeStrength;
+                definition.gun.cameraShakeParams.radius = definition.gun.cameraShakeRadius != null ? definition.gun.cameraShakeRadius : 0;
+                definition.gun.cameraShakeParams.duration = definition.gun.cameraShakeDuration;
+            }
+            definition.gun.cameraShakeStrength = null;
+            definition.gun.cameraShakeRadius = null;
+            definition.gun.cameraShakeDuration = 0;
+
             if (definition.gun.yawSpeed == 0) {
                 definition.gun.yawSpeed = 50 / definition.gun.diameter + 1 / definition.gun.length;
             }
@@ -1993,6 +2005,17 @@ public final class LegacyCompatSystem {
     }
 
     private static void performBulletLegacyCompats(JSONBullet definition) {
+        //Move camera shake settings into their shared parameter block.
+        if (definition.bullet.cameraShakeParams == null && (definition.bullet.cameraShakeStrength != null || definition.bullet.cameraShakeRadius != null || definition.bullet.cameraShakeDuration != 0)) {
+            definition.bullet.cameraShakeParams = new JSONCameraShake();
+            definition.bullet.cameraShakeParams.strength = definition.bullet.cameraShakeStrength;
+            definition.bullet.cameraShakeParams.radius = definition.bullet.cameraShakeRadius != null ? definition.bullet.cameraShakeRadius : 0;
+            definition.bullet.cameraShakeParams.duration = definition.bullet.cameraShakeDuration;
+        }
+        definition.bullet.cameraShakeStrength = null;
+        definition.bullet.cameraShakeRadius = null;
+        definition.bullet.cameraShakeDuration = 0;
+
         //If we are a bullet without a definition, add one so we don't crash on other systems.
         if (definition.definitions == null) {
             definition.definitions = new ArrayList<>();
