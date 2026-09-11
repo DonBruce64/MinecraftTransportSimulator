@@ -36,6 +36,7 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -964,7 +965,8 @@ public class PartGun extends APart {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
                 }
             }
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity))) {
+            boolean mouseFlightFirstPerson = lastControllerSeat.riderIsClient && MouseFlightController.isMouseFlightActive && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON;
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) && !mouseFlightFirstPerson) {
                 lockControllerToActiveCamera(controller);
             }
         }
