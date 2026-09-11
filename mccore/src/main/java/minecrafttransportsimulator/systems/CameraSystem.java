@@ -12,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -128,9 +127,9 @@ public class CameraSystem {
 
                 //Rotational portion is good.  Finally, add the position of the provider.
                 //This needs to be interpolated to ensure smooth movement on partial ticks.
+                //Custom cameras keep their defined position; collision clipping only applies to third-person views.
                 cameraOffset.set(cameraProvider.activeCameraEntity.prevPosition).interpolate(cameraProvider.activeCameraEntity.position, partialTicks);
                 cameraAdjustedPosition.add(cameraOffset);
-                applyCameraCollision(player, cameraOffset, cameraAdjustedPosition, getMultipartToIgnore(cameraProvider, sittingSeat));
 
                 //Also check night vision.
                 if (activeCamera.nightVision) {
@@ -180,18 +179,6 @@ public class CameraSystem {
         } else {
             //Not doing any camera changes.
             return false;
-        }
-    }
-
-    private static AEntityF_Multipart<?> getMultipartToIgnore(AEntityB_Existing cameraProvider, PartSeat sittingSeat) {
-        if (sittingSeat != null && sittingSeat.vehicleOn != null) {
-            return sittingSeat.vehicleOn;
-        } else if (cameraProvider instanceof APart) {
-            return ((APart) cameraProvider).masterEntity;
-        } else if (cameraProvider instanceof AEntityF_Multipart) {
-            return (AEntityF_Multipart<?>) cameraProvider;
-        } else {
-            return null;
         }
     }
 

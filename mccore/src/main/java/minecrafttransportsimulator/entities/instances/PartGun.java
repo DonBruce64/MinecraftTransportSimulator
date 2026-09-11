@@ -18,6 +18,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.LockOnType;
@@ -35,7 +36,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.MouseFlightController;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -958,11 +958,29 @@ public class PartGun extends APart {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
                 }
             }
-            boolean mouseFlightFirstPerson = lastControllerSeat.riderIsClient && MouseFlightController.isMouseFlightActive && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON;
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) && !mouseFlightFirstPerson) {
+            //Active gun cameras keep the rider within gun rotation bounds in every control mode.
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && isActiveCameraOnGun()) {
                 lockControllerToActiveCamera(controller);
             }
         }
+    }
+
+    private boolean isActiveCameraOnGun() {
+        if (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) {
+            return true;
+        }
+        //Cameras on the vehicle or another part can follow this gun through numbered variables.
+        if (lastControllerSeat.activeCamera.animations != null) {
+            for (JSONAnimationDefinition animation : lastControllerSeat.activeCamera.animations) {
+                if (animation.animationType == AnimationComponentType.ROTATION) {
+                    ComputedVariable variable = lastControllerSeat.activeCameraEntity.getOrCreateVariable(animation.variable);
+                    if (variable.entity == this && (variable.variableKey.equals("gun_yaw") || variable.variableKey.equals("gun_pitch"))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void lockControllerToActiveCamera(IWrapperEntity controller) {
