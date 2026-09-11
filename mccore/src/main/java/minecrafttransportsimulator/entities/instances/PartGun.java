@@ -530,7 +530,7 @@ public class PartGun extends APart {
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group, so if we did, break out early.
                                 //Also add a bullet to the fired list, since the last loaded could be changed if we change ammo.
-                                cameraShakeStrength += lastLoadedBullet.definition.bullet.diameter;
+                                cameraShakeStrength += definition.gun.cameraShakeStrength != null ? definition.gun.cameraShakeStrength : lastLoadedBullet.definition.bullet.diameter;
                                 firedBullets.add(lastLoadedBullet);
                                 if (loadedBulletCount > 0) {
                                     --loadedBulletCount;
@@ -554,7 +554,7 @@ public class PartGun extends APart {
                             }
 
                             if (!world.isClient()) {
-                                CameraSystem.sendGunshotCameraShake(world, position, cameraShakeStrength);
+                                CameraSystem.sendGunshotCameraShake(world, position, cameraShakeStrength, definition.gun.cameraShakeRadius, definition.gun.cameraShakeDuration);
                             }
 
                             //Update states.

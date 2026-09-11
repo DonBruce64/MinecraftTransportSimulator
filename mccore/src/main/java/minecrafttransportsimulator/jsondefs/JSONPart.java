@@ -487,6 +487,15 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much knocback this gun provides to the shooter.")
         public float knockback;
 
+        @JSONDescription("The camera shake strength from each fired muzzle. Defaults to the loaded bullet's diameter if omitted. Applied once per fired cartridge, regardless of pellet count. Set to 0 to disable gunshot camera shake. The server gunCameraShakeFactor and distance attenuation still apply.")
+        public Double cameraShakeStrength;
+
+        @JSONDescription("The maximum distance, in blocks, at which this gun's shots cause camera shake. Defaults to 128 when omitted or non-positive.")
+        public double cameraShakeRadius;
+
+        @JSONDescription("The duration of camera shake from this gun's shots, in ticks (20 ticks = 1 second), measured in real time. Defaults to 10 ticks (0.5 seconds) when omitted or non-positive.")
+        public int cameraShakeDuration;
+
         @JSONDescription("How much pitch recoil this gun provides to the shooter.  This will apply this value every shot.  Only for hand-held mode.")
         public float pitchRecoil;
 

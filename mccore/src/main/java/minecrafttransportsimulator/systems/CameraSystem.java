@@ -44,7 +44,7 @@ public class CameraSystem {
     private static final double CAMERA_SHAKE_ANGLE_FACTOR = 0.1D;
     private static final double CAMERA_SHAKE_MIN_ANGLE = 0.01D;
     private static final double CAMERA_SHAKE_MAX_ANGLE = 10.0D;
-    private static final long CAMERA_SHAKE_DURATION_NANOS = 500000000L;
+    private static final int CAMERA_SHAKE_DURATION_TICKS = 10;
     private static final Point3D cameraOffset = new Point3D();
     private static final Point3D cameraCollisionStart = new Point3D();
     private static final Point3D cameraCollisionVector = new Point3D();
@@ -242,19 +242,28 @@ public class CameraSystem {
     }
 
     public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength) {
-        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value);
+        sendExplosionCameraShake(world, source, strength, CAMERA_SHAKE_MAX_DISTANCE, CAMERA_SHAKE_DURATION_TICKS);
+    }
+
+    public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value, radius, duration);
     }
 
     public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength) {
-        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.gunCameraShakeFactor.value);
+        sendGunshotCameraShake(world, source, strength, CAMERA_SHAKE_MAX_DISTANCE, CAMERA_SHAKE_DURATION_TICKS);
+    }
+
+    public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
+        sendCameraShake(world, source, strength, ConfigSystem.settings.damage.gunCameraShakeFactor.value, radius, duration);
     }
 
     /**
      * Sends a camera shake impulse to players close enough to the source.  Strength is attenuated
      * by distance on the server so the server config remains authoritative without synchronizing it
-     * to every client.
+     * to every client.  Radius is in blocks and duration is in ticks, with non-positive values
+     * retaining the default radius and duration.
      */
-    private static void sendCameraShake(AWrapperWorld world, Point3D source, double strength, double factor) {
+    private static void sendCameraShake(AWrapperWorld world, Point3D source, double strength, double factor, double radius, int duration) {
         if (world.isClient() || strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength)) {
             return;
         }
@@ -262,12 +271,19 @@ public class CameraSystem {
             return;
         }
 
-        for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(source, CAMERA_SHAKE_MAX_DISTANCE))) {
+        if (radius <= 0 || Double.isNaN(radius) || Double.isInfinite(radius)) {
+            radius = CAMERA_SHAKE_MAX_DISTANCE;
+        }
+        if (duration <= 0) {
+            duration = CAMERA_SHAKE_DURATION_TICKS;
+        }
+
+        for (IWrapperPlayer player : world.getPlayersWithin(new BoundingBox(source, radius))) {
             double distance = source.distanceTo(player.getEyePosition());
-            if (distance <= CAMERA_SHAKE_MAX_DISTANCE) {
+            if (distance <= radius) {
                 double adjustedStrength = strength * factor / Math.max(1.0D, distance);
                 if (!Double.isNaN(adjustedStrength) && !Double.isInfinite(adjustedStrength) && adjustedStrength * CAMERA_SHAKE_ANGLE_FACTOR >= CAMERA_SHAKE_MIN_ANGLE) {
-                    player.sendPacket(new PacketCameraShake(adjustedStrength));
+                    player.sendPacket(new PacketCameraShake(adjustedStrength, duration));
                 }
             }
         }
@@ -278,14 +294,18 @@ public class CameraSystem {
      * amplitude without causing the previous impulse to jump back to its original strength.
      */
     public static void startCameraShake(double strength) {
-        if (strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength)) {
+        startCameraShake(strength, CAMERA_SHAKE_DURATION_TICKS);
+    }
+
+    public static void startCameraShake(double strength, int duration) {
+        if (strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength) || duration <= 0) {
             return;
         }
 
         long currentTime = System.nanoTime();
         double remainingAmplitude = 0;
         if (currentTime < cameraShakeEndTime) {
-            double elapsed = (double) (currentTime - cameraShakeStartTime) / CAMERA_SHAKE_DURATION_NANOS;
+            double elapsed = (double) (currentTime - cameraShakeStartTime) / (cameraShakeEndTime - cameraShakeStartTime);
             double decay = Math.max(0, 1.0D - elapsed);
             remainingAmplitude = cameraShakeAmplitude * decay * decay;
         } else {
@@ -294,7 +314,7 @@ public class CameraSystem {
         double impulseAmplitude = Math.min(strength * CAMERA_SHAKE_ANGLE_FACTOR, CAMERA_SHAKE_MAX_ANGLE);
         cameraShakeAmplitude = Math.min(remainingAmplitude + impulseAmplitude, CAMERA_SHAKE_MAX_ANGLE);
         cameraShakeStartTime = currentTime;
-        cameraShakeEndTime = currentTime + CAMERA_SHAKE_DURATION_NANOS;
+        cameraShakeEndTime = currentTime + duration * 50000000L;
     }
 
     /**
@@ -307,7 +327,7 @@ public class CameraSystem {
             return false;
         }
 
-        double elapsed = (double) (currentTime - cameraShakeStartTime) / CAMERA_SHAKE_DURATION_NANOS;
+        double elapsed = (double) (currentTime - cameraShakeStartTime) / (cameraShakeEndTime - cameraShakeStartTime);
         double decay = 1.0D - elapsed;
         decay *= decay;
         double amplitude = cameraShakeAmplitude * decay;

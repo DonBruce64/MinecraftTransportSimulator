@@ -664,7 +664,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 if (gun.lastLoadedBullet.definition.bullet.blastDamage == 0 && cameraShakeBlastStrength == 0) {
                     cameraShakeBlastStrength = gun.lastLoadedBullet.definition.bullet.diameter / 10F;
                 }
-                CameraSystem.sendExplosionCameraShake(gun.world, explosionPosition, (gun.lastLoadedBullet.definition.bullet.blastDamage + cameraShakeBlastStrength) / 2D);
+                double cameraShakeStrength = gun.lastLoadedBullet.definition.bullet.cameraShakeStrength != null ? gun.lastLoadedBullet.definition.bullet.cameraShakeStrength : (gun.lastLoadedBullet.definition.bullet.blastDamage + cameraShakeBlastStrength) / 2D;
+                CameraSystem.sendExplosionCameraShake(gun.world, explosionPosition, cameraShakeStrength, gun.lastLoadedBullet.definition.bullet.cameraShakeRadius, gun.lastLoadedBullet.definition.bullet.cameraShakeDuration);
                 if (gun.lastLoadedBullet.definition.bullet.blastDamage != 0) {
                     //Use custom explosion system with elliptical radii and per-target-type damage.
                     new Explosion(gun.world, explosionPosition, gun).doExplosion();
