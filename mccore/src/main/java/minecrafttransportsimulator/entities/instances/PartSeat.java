@@ -367,7 +367,7 @@ public final class PartSeat extends APart {
                         riderYawDelta += 360;
                     }
                     riderPitchDelta = riderRelativeOrientation.angles.x - prevRiderRelativeOrientation.angles.x;
-                } else {
+                } else if (!isRiderCameraInputActive) {
                     riderRelativeOrientation.angles.set(prevRiderRelativeOrientation.angles);
                     riderRelativeOrientation.updateToAngles();
                     RotationMatrix riderOrientation = new RotationMatrix().set(orientation).multiply(riderRelativeOrientation);

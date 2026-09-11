@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.CameraSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
@@ -64,7 +64,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public final List<AEntityD_Definable<?>> cameraEntities = new ArrayList<>();
     public JSONCameraObject activeCamera;
     public AEntityD_Definable<?> activeCameraEntity;
-    public AnimationSwitchbox activeCameraSwitchbox;
+    public CameraSwitchbox activeCameraSwitchbox;
     private CameraMode lastCameraMode;
 
     /**
@@ -88,6 +88,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      **/
     public RotationMatrix riderRelativeOrientation;
     public RotationMatrix prevRiderRelativeOrientation;
+    /**Input for rider-driven camera animations, kept separate from the resulting head orientation.**/
+    public RotationMatrix riderCameraInputOrientation;
+    public RotationMatrix prevRiderCameraInputOrientation;
+    /**Last angles applied to the player, used to distinguish new input from camera transforms.**/
+    public Point3D riderCameraLastAngles;
+    public boolean isRiderCameraInputActive;
     private static final Point3D riderTempPoint = new Point3D();
     private static final RotationMatrix riderTempMatrix = new RotationMatrix();
 
@@ -254,6 +260,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
             prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            boolean hadCameraInput = isRiderCameraInputActive;
+            isRiderCameraInputActive = riderIsClient && activeCamera != null && activeCameraSwitchbox != null && activeCameraSwitchbox.hasRotationAnimations;
+            if (isRiderCameraInputActive) {
+                if (!hadCameraInput) {
+                    riderCameraInputOrientation.set(riderRelativeOrientation);
+                }
+                prevRiderCameraInputOrientation.set(riderCameraInputOrientation);
+                riderRelativeOrientation.set(riderCameraInputOrientation);
+            }
 
             //Detached mouse-flight views consume mouse input without moving the rider.  First-person
             //uses the same rider-orientation path that existed before arcade mode and mirrors the
@@ -268,10 +283,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                     riderRelativeOrientation.angles.y += MouseFlightController.storedYawDelta;
                     if (riderRelativeOrientation.angles.y > 180) {
                         riderRelativeOrientation.angles.y -= 360;
-                        prevRiderRelativeOrientation.angles.y -= 360;
+                        if (!isRiderCameraInputActive) {
+                            prevRiderRelativeOrientation.angles.y -= 360;
+                        }
                     } else if (riderRelativeOrientation.angles.y < -180) {
                         riderRelativeOrientation.angles.y += 360;
-                        prevRiderRelativeOrientation.angles.y += 360;
+                        if (!isRiderCameraInputActive) {
+                            prevRiderRelativeOrientation.angles.y += 360;
+                        }
                     }
                     if (Math.abs(riderRelativeOrientation.angles.x + MouseFlightController.storedPitchDelta) < 85) {
                         riderRelativeOrientation.angles.x += MouseFlightController.storedPitchDelta;
@@ -290,10 +309,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 //Need to clamp between +/- 180 to ensure that we don't confuse things and other variables and animations.
                 if (riderRelativeOrientation.angles.y > 180) {
                     riderRelativeOrientation.angles.y -= 360;
-                    prevRiderRelativeOrientation.angles.y -= 360;
+                    if (!isRiderCameraInputActive) {
+                        prevRiderRelativeOrientation.angles.y -= 360;
+                    }
                 } else if (riderRelativeOrientation.angles.y < -180) {
                     riderRelativeOrientation.angles.y += 360;
-                    prevRiderRelativeOrientation.angles.y += 360;
+                    if (!isRiderCameraInputActive) {
+                        prevRiderRelativeOrientation.angles.y += 360;
+                    }
                 }
 
                 //Rider yaw can go full 360, but clamp pitch to +/- 85 so the player's head can't go upside-down.
@@ -306,7 +329,24 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             }
             riderRelativeOrientation.updateToAngles();
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            if (isRiderCameraInputActive) {
+                riderCameraInputOrientation.set(riderRelativeOrientation);
+                //Keep input interpolation continuous when yaw wraps at +/-180.
+                double inputYawDelta = riderCameraInputOrientation.angles.y - prevRiderCameraInputOrientation.angles.y;
+                if (inputYawDelta > 180) {
+                    prevRiderCameraInputOrientation.angles.y += 360;
+                } else if (inputYawDelta < -180) {
+                    prevRiderCameraInputOrientation.angles.y -= 360;
+                }
+                CameraSystem.adjustRiderOrientation(this, riderTempMatrix);
+            }
             rider.setOrientation(riderTempMatrix);
+            if (isRiderCameraInputActive) {
+                riderCameraLastAngles.set(rider.getPitch(), rider.getYaw(), 0);
+                //Camera transforms must not become mouse input on the next tick.
+                rider.getYawDelta();
+                rider.getPitchDelta();
+            }
             riderEyePosition.set(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
             riderHeadPosition.set(riderEyePosition);
 
@@ -374,6 +414,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
             if (riderRelativeOrientation == null) {
                 riderRelativeOrientation = new RotationMatrix();
                 prevRiderRelativeOrientation = new RotationMatrix();
+                riderCameraInputOrientation = new RotationMatrix();
+                prevRiderCameraInputOrientation = new RotationMatrix();
+                riderCameraLastAngles = new Point3D();
             }
 
             if (facesForwards) {
@@ -408,6 +451,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
         }
         rider = null;
         riderIsClient = false;
+        isRiderCameraInputActive = false;
     }
 
     /**

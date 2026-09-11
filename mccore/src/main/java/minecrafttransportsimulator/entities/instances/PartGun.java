@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BlockHitResult;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -126,6 +127,10 @@ public class PartGun extends APart {
     private IWrapperEntity currentController;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
+    private UUID cameraControllerID;
+    private final Point3D cameraControlAngles = new Point3D();
+    private UUID cameraControllerSentID;
+    private boolean cameraControlActiveThisTick;
     private Point3D controllerRelativeLookVector = new Point3D();
     public IWrapperEntity entityTarget;
     public PartEngine engineTarget;
@@ -315,6 +320,7 @@ public class PartGun extends APart {
     @Override
     public void update() {
         //Set gun state and do updates.
+        cameraControlActiveThisTick = false;
         firedThisTick = false;
         isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
@@ -674,6 +680,10 @@ public class PartGun extends APart {
         isHandHeldGunReloadRequested = false;
         playerPressedTrigger = false;
 
+        if (!cameraControlActiveThisTick) {
+            clearCameraControl();
+        }
+
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
 
@@ -683,7 +693,17 @@ public class PartGun extends APart {
             orientation.convertToAngles();
             lastControllerSeat.riderRelativeOrientation.angles.y -= (orientation.angles.y - prevOrientation.angles.y);
             lastControllerSeat.riderRelativeOrientation.angles.x -= (orientation.angles.x - prevOrientation.angles.x);
+            if (lastControllerSeat.isRiderCameraInputActive) {
+                lastControllerSeat.riderCameraInputOrientation.angles.y -= (orientation.angles.y - prevOrientation.angles.y);
+                lastControllerSeat.riderCameraInputOrientation.angles.x -= (orientation.angles.x - prevOrientation.angles.x);
+            }
         }
+    }
+
+    @Override
+    public void remove() {
+        clearCameraControl();
+        super.remove();
     }
 
     @Override
@@ -936,8 +956,42 @@ public class PartGun extends APart {
 
         //Get the delta between our orientation and the player's orientation.
         if (lastControllerSeat != null) {
-            controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+            boolean localCameraControl = world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && lastControllerSeat.activeCameraSwitchbox != null && lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations && isActiveCameraOnGun();
+            boolean remoteCameraControl = !lastControllerSeat.riderIsClient && cameraControllerID != null && cameraControllerID.equals(controller.getID());
+            if (remoteCameraControl) {
+                controllerRelativeLookVector.set(cameraControlAngles);
+                cameraControlActiveThisTick = true;
+            } else if (localCameraControl && lastControllerSeat.isRiderCameraInputActive) {
+                if (lastControllerSeat.hasHeadTracking) {
+                    controllerCameraGunOrientation.setToAngles(lastControllerSeat.headTrackingOrientation);
+                    controllerCameraOrientation.set(lastControllerSeat.orientation).multiply(controllerCameraGunOrientation);
+                } else {
+                    //Apply only new input to the gun; camera scale and offset must not steer it on the next tick.
+                    double yawDelta = (controller.getYaw() - lastControllerSeat.riderCameraLastAngles.y) % 360;
+                    if (yawDelta > 180) {
+                        yawDelta -= 360;
+                    } else if (yawDelta < -180) {
+                        yawDelta += 360;
+                    }
+                    controllerCameraGunOrientation.setToAngles(internalOrientation.angles);
+                    controllerCameraOrientation.set(zeroReferenceOrientation).multiply(controllerCameraGunOrientation).convertToAngles();
+                    controllerCameraOrientation.angles.y += yawDelta;
+                    controllerCameraOrientation.angles.x += controller.getPitch() - lastControllerSeat.riderCameraLastAngles.x;
+                    controllerCameraOrientation.updateToAngles();
+                }
+                controllerRelativeLookVector.computeVectorAngles(controllerCameraOrientation, zeroReferenceOrientation);
+            } else {
+                controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+            }
             handleMovement(controllerRelativeLookVector.y - internalOrientation.angles.y, controllerRelativeLookVector.x - internalOrientation.angles.x);
+            if (localCameraControl) {
+                cameraControlActiveThisTick = true;
+                //Refresh even stationary aim so newly tracking clients receive the control state.
+                cameraControllerSentID = controller.getID();
+                InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, cameraControllerSentID, internalOrientation.angles));
+            } else if (!remoteCameraControl) {
+                clearCameraControl();
+            }
             //If the seat is a part on us, or the seat has animations linked to us, adjust player rotations.
             //This is required to ensure this gun doesn't rotate forever.
             if (!lastControllerSeat.externalAnglesRotated.isZero() && lastControllerSeat.placementDefinition.animations != null) {
@@ -952,16 +1006,57 @@ public class PartGun extends APart {
                 }
                 if (updateYaw) {
                     lastControllerSeat.riderRelativeOrientation.angles.y -= (internalOrientation.angles.y - prevInternalOrientation.angles.y);
+                    if (lastControllerSeat.isRiderCameraInputActive) {
+                        lastControllerSeat.riderCameraInputOrientation.angles.y -= (internalOrientation.angles.y - prevInternalOrientation.angles.y);
+                    }
 
                 }
                 if (updatePitch) {
                     lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
+                    if (lastControllerSeat.isRiderCameraInputActive) {
+                        lastControllerSeat.riderCameraInputOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
+                    }
                 }
             }
-            //Active gun cameras keep the rider within gun rotation bounds in every control mode.
-            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && isActiveCameraOnGun()) {
+            //Animated cameras synchronize the rider after input is updated; retain the legacy lock for static gun cameras.
+            if (world.isClient() && lastControllerSeat.riderIsClient && lastControllerSeat.activeCamera != null && (lastControllerSeat.activeCameraSwitchbox == null || !lastControllerSeat.activeCameraSwitchbox.hasRotationAnimations) && isActiveCameraOnGun()) {
                 lockControllerToActiveCamera(controller);
             }
+        }
+    }
+
+    /**Receives the physical aim independently of the controller's animated camera orientation.**/
+    public boolean setCameraControlAngles(UUID controllerID, Point3D angles) {
+        if (controllerID == null) {
+            return false;
+        }
+        if (angles == null) {
+            if (!controllerID.equals(cameraControllerID)) {
+                return false;
+            }
+            cameraControllerID = null;
+            return true;
+        }
+        if (!Double.isFinite(angles.x) || !Double.isFinite(angles.y)) {
+            return false;
+        }
+        IWrapperEntity controller = getGunController();
+        if (controller == null || !controllerID.equals(controller.getID())) {
+            controller = currentController;
+        }
+        if (controller == null || !controllerID.equals(controller.getID()) || !(controller.getEntityRiding() instanceof PartSeat)) {
+            return false;
+        }
+        cameraControllerID = controllerID;
+        cameraControlAngles.set(Math.max(minPitch, Math.min(maxPitch, angles.x)), Math.max(minYaw, Math.min(maxYaw, angles.y)), 0);
+        return true;
+    }
+
+    private void clearCameraControl() {
+        cameraControllerID = null;
+        if (cameraControllerSentID != null) {
+            InterfaceManager.packetInterface.sendToServer(new PacketPartGun(this, cameraControllerSentID, null));
+            cameraControllerSentID = null;
         }
     }
 
@@ -969,12 +1064,12 @@ public class PartGun extends APart {
         if (lastControllerSeat.activeCameraEntity == this || allParts.contains(lastControllerSeat.activeCameraEntity)) {
             return true;
         }
-        //Cameras on the vehicle or another part can follow this gun through numbered variables.
-        if (lastControllerSeat.activeCamera.animations != null) {
+        //Any rotation sourced from this gun can feed back into its controller, including numbered custom variables.
+        if (lastControllerSeat.activeCamera != null && lastControllerSeat.activeCamera.animations != null) {
             for (JSONAnimationDefinition animation : lastControllerSeat.activeCamera.animations) {
                 if (animation.animationType == AnimationComponentType.ROTATION) {
                     ComputedVariable variable = lastControllerSeat.activeCameraEntity.getOrCreateVariable(animation.variable);
-                    if (variable.entity == this && (variable.variableKey.equals("gun_yaw") || variable.variableKey.equals("gun_pitch"))) {
+                    if (variable.entity == this) {
                         return true;
                     }
                 }
