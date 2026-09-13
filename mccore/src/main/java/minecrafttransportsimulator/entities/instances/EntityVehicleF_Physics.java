@@ -843,6 +843,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? 1 : 0, false);
             case ("beacon_direction"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0, false);
+            case ("beacon_direction_true"):
+                return new ComputedVariable(this, variable, partialTicks -> {
+                    double heading = -orientation.angles.y;
+                    double direction = selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;
+                    double truedir = direction + heading;
+                    if (ConfigSystem.client.controlSettings.north360.value)
+                        truedir += 180;
+                    while (truedir < 0)
+                        truedir += 360;
+                    while (truedir > 360)
+                        truedir -= 360;
+                    return truedir;
+                }, false);
             case ("beacon_bearing_setpoint"):
                 return new ComputedVariable(this, variable, partialTicks -> selectedBeacon != null ? selectedBeacon.bearing : 0, false);
             case ("beacon_bearing_delta"):
