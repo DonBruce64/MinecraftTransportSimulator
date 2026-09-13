@@ -301,6 +301,7 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD = new LanguageEntry("gui.config.controls.general.keyboard", "GENERAL KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK = new LanguageEntry("gui.config.controls.general.joystick", "GENERAL JOYSTICK");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRSHIP_KEYBOARD = new LanguageEntry("gui.config.controls.airship.keyboard", "AIRSHIP KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
@@ -523,6 +524,9 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE = new LanguageEntry("input.throttle", "Throttle");
     public static final LanguageEntry INPUT_THROTTLE_U = new LanguageEntry("input.throttle_u", "ThrottleUp");
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
+    public static final LanguageEntry INPUT_FORWARD = new LanguageEntry("input.forward", "Forward");
+    public static final LanguageEntry INPUT_HEIGHT_U = new LanguageEntry("input.height_u", "HeightUp");
+    public static final LanguageEntry INPUT_HEIGHT_D = new LanguageEntry("input.height_d", "HeightDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
     public static final LanguageEntry INPUT_ARCADE = new LanguageEntry("input.arcade", "Arcade Mode");

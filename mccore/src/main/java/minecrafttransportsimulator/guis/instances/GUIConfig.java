@@ -172,9 +172,11 @@ public class GUIConfig extends AGUIBase {
 
         //Control selection buttons and text.
         controlSelectionButtons.clear();
-        addComponent(controlSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 100, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
+        addComponent(controlSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 115, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
+        int controlSelectionRow = 0;
         for (ControlTypeEnum controlType : ControlTypeEnum.values()) {
-            GUIComponentButton buttonKeyboard = new GUIComponentButton(this, guiLeft + getWidth() / 2 - 110, guiTop + 30 + 20 * controlSelectionButtons.size() / 2, 110, 20, controlType.keyboardLanguage.getCurrentValue()) {
+            int buttonY = guiTop + 30 + 20 * controlSelectionRow++;
+            GUIComponentButton buttonKeyboard = new GUIComponentButton(this, guiLeft + getWidth() / 2 - 110, buttonY, 110, 20, controlType.keyboardLanguage.getCurrentValue()) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     String lookupString = controlSelectionButtons.get(this);
@@ -185,17 +187,19 @@ public class GUIConfig extends AGUIBase {
             controlSelectionButtons.put(buttonKeyboard, controlType.name().toLowerCase() + ".keyboard");
             addComponent(buttonKeyboard);
 
-            GUIComponentButton buttonJoystick = new GUIComponentButton(this, guiLeft + getWidth() / 2, guiTop + 30 + 20 * (controlSelectionButtons.size() - 1) / 2, 110, 20, controlType.joystickLanguage.getCurrentValue()) {
-                @Override
-                public void onClicked(boolean leftSide) {
-                    String lookupString = controlSelectionButtons.get(this);
-                    controlConfiguring = ControlTypeEnum.valueOf(lookupString.substring(0, lookupString.indexOf('.')).toUpperCase());
-                    digitalAssignmentGroupIndexMax = digitalAssignButtons.get(controlConfiguring).size() - 1;
-                    configuringKeyboard = false;
-                }
-            };
-            controlSelectionButtons.put(buttonJoystick, controlType.name().toLowerCase() + ".joystick");
-            addComponent(buttonJoystick);
+            if (controlType.joystickLanguage != null) {
+                GUIComponentButton buttonJoystick = new GUIComponentButton(this, guiLeft + getWidth() / 2, buttonY, 110, 20, controlType.joystickLanguage.getCurrentValue()) {
+                    @Override
+                    public void onClicked(boolean leftSide) {
+                        String lookupString = controlSelectionButtons.get(this);
+                        controlConfiguring = ControlTypeEnum.valueOf(lookupString.substring(0, lookupString.indexOf('.')).toUpperCase());
+                        digitalAssignmentGroupIndexMax = digitalAssignButtons.get(controlConfiguring).size() - 1;
+                        configuringKeyboard = false;
+                    }
+                };
+                controlSelectionButtons.put(buttonJoystick, controlType.name().toLowerCase() + ".joystick");
+                addComponent(buttonJoystick);
+            }
 
             //Add screen label if we haven't already.
             if (controlSelectionButtons.size() == 1) {
@@ -737,7 +741,8 @@ public class GUIConfig extends AGUIBase {
     private static enum ControlTypeEnum {
         GENERAL(LanguageSystem.GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK),
         CAR(LanguageSystem.GUI_CONFIG_CONTROLS_CAR_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_CAR_JOYSTICK),
-        AIRCRAFT(LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK);
+        AIRCRAFT(LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD, LanguageSystem.GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK),
+        AIRSHIP(LanguageSystem.GUI_CONFIG_CONTROLS_AIRSHIP_KEYBOARD, null);
 
         private final LanguageEntry keyboardLanguage;
         private final LanguageEntry joystickLanguage;
