@@ -1,9 +1,8 @@
-package mcinterface1182;
+package mcinterface1165;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -15,38 +14,37 @@ import com.google.common.collect.Multimap;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.UseAction;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -82,22 +80,6 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         this.item = item;
         itemMap.put(item, this);
 
-        //If the item is for OreDict, make it a fake tag, since we are forced to use JSON otherwise.
-        //Stupid JSON everything without code hooks.
-        if (item instanceof AItemPack) {
-            AItemPack<?> packItem = (AItemPack<?>) item;
-            if (packItem.definition.general.oreDict != null) {
-                String lowerCaseOre = packItem.definition.general.oreDict.toLowerCase(Locale.ROOT);
-                List<BuilderItem> items = InterfaceCore.taggedItems.get(lowerCaseOre);
-                if (items == null) {
-                    items = new ArrayList<>();
-                    InterfaceCore.taggedItems.put(lowerCaseOre, items);
-                }
-                items.add(this);
-            }
-        }
-
-        //Add weapon modifiers.
         Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
         if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null) {
             ItemItem weapon = (ItemItem) item;
@@ -134,7 +116,8 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Also prevents us from using a MC class with a changing name.
      */
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltipLines, TooltipFlag flagIn) {
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> tooltipLines, ITooltipFlag flagIn) {
         List<String> textLines = new ArrayList<>();
         //tooltipLines.forEach(line -> textLines.add(line.getString()));
         if (stack.hasTag()) {
@@ -142,7 +125,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
         } else {
             item.addTooltipLines(textLines, InterfaceManager.coreInterface.getNewNBTWrapper());
         }
-        textLines.forEach(line -> tooltipLines.add(new TextComponent(line)));
+        textLines.forEach(line -> tooltipLines.add(new StringTextComponent(line)));
     }
 
     /**
@@ -159,20 +142,20 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If we are a food item, and can be eaten, return eating here.
      */
     @Override
-    public UseAnim getUseAnimation(ItemStack stack) {
+    public UseAction getUseAnimation(ItemStack stack) {
         if (item instanceof IItemFood) {
             IItemFood food = (IItemFood) item;
             if (food.getTimeToEat() > 0) {
-                return food.isDrink() ? UseAnim.DRINK : UseAnim.EAT;
+                return food.isDrink() ? UseAction.DRINK : UseAction.EAT;
             }
         }
-        return UseAnim.NONE;
+        return UseAction.NONE;
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
-        return slot == EquipmentSlot.MAINHAND ? this.defaultModifiers : super.getDefaultAttributeModifiers(slot);
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlotType slot) {
+        return slot == EquipmentSlotType.MAINHAND ? this.defaultModifiers : super.getDefaultAttributeModifiers(slot);
     }
 
     /**
@@ -180,23 +163,23 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        if (context.getHand() == InteractionHand.MAIN_HAND) {
+    public ActionResultType useOn(ItemUseContext context) {
+        if (context.getHand() == Hand.MAIN_HAND) {
             if (item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name()))) {
-                return InteractionResult.SUCCESS;
+                return ActionResultType.SUCCESS;
             } else if (context.getPlayer() != null && context.getPlayer().isCrouching()) {
                 //Forward sneak click too, since blocks don't get these.
                 if (!context.getLevel().isClientSide) {
-                    BlockEntity tile = context.getLevel().getBlockEntity(context.getClickedPos());
+                    TileEntity tile = context.getLevel().getBlockEntity(context.getClickedPos());
                     if (tile instanceof BuilderTileEntity) {
                         if (((BuilderTileEntity) tile).tileEntity != null) {
-                            return ((BuilderTileEntity) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(context.getPlayer())) ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+                            return ((BuilderTileEntity) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(context.getPlayer())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
                         }
                     }
                 }
-                return InteractionResult.FAIL;
+                return ActionResultType.FAIL;
             }
-            return item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 ? InteractionResult.PASS : InteractionResult.FAIL;
+            return item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 ? ActionResultType.PASS : ActionResultType.FAIL;
         } else {
             return super.useOn(context);
         }
@@ -207,14 +190,14 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        if (hand == InteractionHand.MAIN_HAND) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+        if (hand == Hand.MAIN_HAND) {
             //If we are a food item, set our hand to start eating.
             //If we are a gun item, set our hand to prevent attacking.
             if ((item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 && player.canEat(true)) || (item instanceof ItemPartGun && ((ItemPartGun) item).definition.gun.handHeld)) {
                 player.startUsingItem(hand);
             }
-            return item.onUsed(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player)) ? InteractionResultHolder.success(player.getItemInHand(hand)) : InteractionResultHolder.fail(player.getItemInHand(hand));
+            return item.onUsed(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player)) ? ActionResult.success(player.getItemInHand(hand)) : ActionResult.fail(player.getItemInHand(hand));
         } else {
             return super.use(world, player, hand);
         }
@@ -226,11 +209,11 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If this item is food, and a player is holding the item, have it apply to them.
      */
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, World world, LivingEntity entityLiving) {
         if (item instanceof IItemFood) {
-            if (entityLiving instanceof Player) {
+            if (entityLiving instanceof PlayerEntity) {
                 IItemFood food = ((IItemFood) item);
-                Player player = (Player) entityLiving;
+                PlayerEntity player = (PlayerEntity) entityLiving;
 
                 //Add hunger and saturation.
                 player.getFoodData().eat(food.getHungerAmount(), food.getSaturationAmount());
@@ -239,21 +222,14 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 List<JSONPotionEffect> effects = food.getEffects();
                 if (!world.isClientSide && effects != null) {
                     for (JSONPotionEffect effect : effects) {
-                        Potion potion = Potion.byName(effect.name);
-                        if (potion != null) {
-                            potion.getEffects().forEach(mcEffect -> {
-                                entityLiving.addEffect(new MobEffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, true));
-                            });
-                        } else {
-                            throw new NullPointerException("Potion " + effect.name + " does not exist.");
-                        }
+                        WrapperEntity.addPotionEffect(entityLiving, effect, true);
                     }
                 }
 
                 //Play sound of food being eaten and add stats.
-                world.playSound(player, player.position().x, player.position().y, player.position().z, SoundEvents.PLAYER_BURP, SoundSource.PLAYERS, 0.5F, world.random.nextFloat() * 0.1F + 0.9F);
-                if (player instanceof ServerPlayer) {
-                    CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer) player, stack);
+                world.playSound(player, player.position().x, player.position().y, player.position().z, SoundEvents.PLAYER_BURP, SoundCategory.PLAYERS, 0.5F, world.random.nextFloat() * 0.1F + 0.9F);
+                if (player instanceof ServerPlayerEntity) {
+                    CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity) player, stack);
                 }
             }
             //Remove 1 item due to it being eaten.
@@ -263,7 +239,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     }
 
     @Override
-    public boolean canAttackBlock(BlockState state, Level world, BlockPos pos, Player player) {
+    public boolean canAttackBlock(BlockState state, World world, BlockPos pos, PlayerEntity player) {
         return item.canBreakBlocks();
     }
 }
