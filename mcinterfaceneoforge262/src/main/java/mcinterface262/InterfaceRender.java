@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 
-import org.joml.Matrix3f;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -40,6 +39,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.RenderableVertices;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -91,6 +91,16 @@ public class InterfaceRender implements IInterfaceRender {
     private static final ConcurrentHashMap<String, Identifier> textureLocations = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Identifier, RenderType> mtsEntityCutoutTypes = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Identifier, RenderType> mtsEntityTranslucentTypes = new ConcurrentHashMap<>();
+
+    /**
+     * Cached copies of vertex buffers, keyed by the vertex object.  The submit callbacks run later,
+     * so the data must be copied off the MTS buffers.  Only re-copy when the model changes.
+     */
+    private static final Map<RenderableVertices, float[]> vertexCopies = new ConcurrentHashMap<>();
+
+    /**Scratch objects for the render thread, to avoid per-renderable allocations.*/
+    private static final Matrix4f matrixScratch = new Matrix4f();
+    private static final Vector3f vectorScratch = new Vector3f();
 
     private static RenderPipeline mtsEntityCutoutPipeline;
     private static RenderPipeline mtsEntityTranslucentPipeline;
@@ -197,16 +207,10 @@ public class InterfaceRender implements IInterfaceRender {
         }
 
         //Copy the vertices out now; the submit callback runs later, after the MTS buffers move on.
-        FloatBuffer vertexBuffer = data.vertexObject.vertices;
-        vertexBuffer.rewind();
-        float[] vertices = new float[vertexBuffer.remaining()];
-        vertexBuffer.get(vertices);
-        vertexBuffer.rewind();
+        float[] vertices = getVertexCopy(data, changedSinceLastRender);
 
         stack.pushPose();
-        Matrix4f matrix = convertMatrix4f(data.transform);
-        stack.last().pose().mul(matrix);
-        stack.last().normal().mul(new Matrix3f(matrix));
+        stack.mulPose(convertMatrix4f(data.transform, matrixScratch));
         if (data.vertexObject.isLines) {
             int lineCount = vertices.length / 12;
             float red = data.color.red;
@@ -303,7 +307,22 @@ public class InterfaceRender implements IInterfaceRender {
 
     @Override
     public void deleteVertices(RenderableData data) {
-        //Nothing to do: geometry is submitted to the feature renderer each frame.
+        //Geometry is submitted to the feature renderer each frame, but drop our cached vertex copy.
+        vertexCopies.remove(data.vertexObject);
+    }
+
+    /**Returns a stable copy of the passed-in data's vertices, re-copying only when they changed.*/
+    private static float[] getVertexCopy(RenderableData data, boolean changedSinceLastRender) {
+        float[] cached = vertexCopies.get(data.vertexObject);
+        if (cached == null || changedSinceLastRender) {
+            FloatBuffer vertexBuffer = data.vertexObject.vertices;
+            vertexBuffer.rewind();
+            cached = new float[vertexBuffer.remaining()];
+            vertexBuffer.get(cached);
+            vertexBuffer.rewind();
+            vertexCopies.put(data.vertexObject, cached);
+        }
+        return cached;
     }
 
     @Override
@@ -468,14 +487,14 @@ public class InterfaceRender implements IInterfaceRender {
         if (data.vertexObject.cacheVertices) {
             //3D model.  Transform each vertex with the component's full transform and
             //project it onto the GUI plane (MTS is Y-up, the GUI renderer is Y-down).
-            Matrix4f matrix = convertMatrix4f(data.transform);
+            Matrix4f matrix = convertMatrix4f(data.transform, matrixScratch);
             int triangleCount = vertexCount / 3;
             if (triangleCount == 0) {
                 return;
             }
             float[] triangleDepth = new float[triangleCount];
             float[] triangleVerts = new float[triangleCount * 4 * 4];
-            Vector3f transformed = new Vector3f();
+            Vector3f transformed = vectorScratch;
             for (int triangle = 0; triangle < triangleCount; ++triangle) {
                 float depth = 0;
                 for (int vertex = 0; vertex < 3; ++vertex) {
@@ -523,8 +542,8 @@ public class InterfaceRender implements IInterfaceRender {
             //Components store their position in a bottom-left origin frame (Y is negated on construction),
             //but the GUI renderer uses a top-left origin.  Apply the component's full transform (this
             //includes scaling, which instruments use to size themselves) and then flip Y.
-            Matrix4f matrix = convertMatrix4f(data.transform);
-            Vector3f transformed = new Vector3f();
+            Matrix4f matrix = convertMatrix4f(data.transform, matrixScratch);
+            Vector3f transformed = vectorScratch;
             for (int quad = 0; quad < quadCount; ++quad) {
                 for (int vertex = 0; vertex < 4; ++vertex) {
                     int source = (quad * 6 + order[vertex]) * 8;
@@ -567,7 +586,12 @@ public class InterfaceRender implements IInterfaceRender {
      * so this is actually the transpose of the passed-in matrix.
      */
     public static Matrix4f convertMatrix4f(TransformationMatrix transform) {
-        return new Matrix4f((float) transform.m00, (float) transform.m10, (float) transform.m20, (float) transform.m30, (float) transform.m01, (float) transform.m11, (float) transform.m21, (float) transform.m31, (float) transform.m02, (float) transform.m12, (float) transform.m22, (float) transform.m32, (float) transform.m03, (float) transform.m13, (float) transform.m23, (float) transform.m33);
+        return convertMatrix4f(transform, new Matrix4f());
+    }
+
+    /**Like {@link #convertMatrix4f(TransformationMatrix)}, but writes into the passed-in matrix.*/
+    public static Matrix4f convertMatrix4f(TransformationMatrix transform, Matrix4f dest) {
+        return dest.set((float) transform.m00, (float) transform.m10, (float) transform.m20, (float) transform.m30, (float) transform.m01, (float) transform.m11, (float) transform.m21, (float) transform.m31, (float) transform.m02, (float) transform.m12, (float) transform.m22, (float) transform.m32, (float) transform.m03, (float) transform.m13, (float) transform.m23, (float) transform.m33);
     }
 
     /** Render state for the render-forwarding entity. **/
