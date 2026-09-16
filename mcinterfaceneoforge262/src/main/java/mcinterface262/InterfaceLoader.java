@@ -113,6 +113,7 @@ public class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
         modBus.addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
         modBus.addListener(InterfaceRender::onIVRegisterRenderersEvent);
+        modBus.addListener(InterfaceRender::onIVRegisterPipelinesEvent);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }

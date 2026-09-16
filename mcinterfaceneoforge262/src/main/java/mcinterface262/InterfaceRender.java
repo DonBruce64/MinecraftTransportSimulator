@@ -16,9 +16,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 
+import org.joml.Matrix3f;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -40,12 +45,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
@@ -63,6 +70,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers;
+import net.neoforged.neoforge.client.event.RegisterRenderPipelinesEvent;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -81,12 +89,44 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static final ConcurrentHashMap<String, RenderType> renderTypes = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Identifier> textureLocations = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Identifier, RenderType> mtsEntityCutoutTypes = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Identifier, RenderType> mtsEntityTranslucentTypes = new ConcurrentHashMap<>();
+
+    private static RenderPipeline mtsEntityCutoutPipeline;
+    private static RenderPipeline mtsEntityTranslucentPipeline;
 
     public static PoseStack matrixStack;
     public static SubmitNodeCollector renderCollector;
     public static Point3D renderCameraOffset = new Point3D();
     private static boolean renderingGUI;
     private static GuiGraphicsExtractor guiExtractor;
+
+    /**
+     * Event that's called to register our render pipelines.  MTS models are triangle lists,
+     * so we need TRIANGLES variants of the entity pipelines.
+     */
+    public static void onIVRegisterPipelinesEvent(RegisterRenderPipelinesEvent event) {
+        mtsEntityCutoutPipeline = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+            .withLocation(Identifier.fromNamespaceAndPath(InterfaceLoader.MODID, "pipeline/entity_cutout_triangles"))
+            .withShaderDefine("ALPHA_CUTOUT", 0.1F)
+            .withShaderDefine("PER_FACE_LIGHTING")
+            .withBindGroupLayout(BindGroupLayouts.SAMPLER1)
+            .withCull(false)
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+            .build();
+        event.registerPipeline(mtsEntityCutoutPipeline);
+
+        mtsEntityTranslucentPipeline = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+            .withLocation(Identifier.fromNamespaceAndPath(InterfaceLoader.MODID, "pipeline/entity_translucent_triangles"))
+            .withShaderDefine("ALPHA_CUTOUT", 0.1F)
+            .withShaderDefine("PER_FACE_LIGHTING")
+            .withBindGroupLayout(BindGroupLayouts.SAMPLER1)
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withCull(false)
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+            .build();
+        event.registerPipeline(mtsEntityTranslucentPipeline);
+    }
 
     /**
      * Event that's called to setup the client.  We register our render wrapper
@@ -166,6 +206,7 @@ public class InterfaceRender implements IInterfaceRender {
         stack.pushPose();
         Matrix4f matrix = convertMatrix4f(data.transform);
         stack.last().pose().mul(matrix);
+        stack.last().normal().mul(new Matrix3f(matrix));
         if (data.vertexObject.isLines) {
             int lineCount = vertices.length / 12;
             float red = data.color.red;
@@ -201,7 +242,9 @@ public class InterfaceRender implements IInterfaceRender {
             float green = data.color.green;
             float blue = data.color.blue;
             float alpha = data.alpha;
-            int light = data.worldLightValue;
+            //MTS's old custom shaders ignored world lighting for some objects.  Approximate that
+            //by using full brightness for those lighting modes.
+            int light = data.lightingMode.disableWorldLighting ? LightCoordsUtil.FULL_BRIGHT : data.worldLightValue;
             collector.submitCustomGeometry(stack, renderType, (pose, buffer) -> {
                 for (int i = 0; i < vertexCount; ++i) {
                     int offset = i * 8;
@@ -226,15 +269,14 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     private static RenderType getEntityRenderType(RenderableData data) {
-        String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
-        return renderTypes.computeIfAbsent(typeID, k -> {
-            Identifier texture = getTexture(data.texture);
-            if (data.isTranslucent || data.enableBrightBlending) {
-                return RenderTypes.entityTranslucent(texture);
-            } else {
-                return RenderTypes.entityCutout(texture);
-            }
-        });
+        Identifier texture = getTexture(data.texture);
+        //Vanilla entity render types use a QUADS topology, but MTS models are triangle lists.
+        //Use our own TRIANGLES variants or the geometry gets assembled into the wrong primitives.
+        if (data.isTranslucent || data.enableBrightBlending) {
+            return mtsEntityTranslucentTypes.computeIfAbsent(texture, t -> RenderType.create("mts_entity_translucent_triangles", RenderSetup.builder(mtsEntityTranslucentPipeline).withTexture("Sampler0", t).useLightmap().useOverlay().affectsCrumbling().createRenderSetup()));
+        } else {
+            return mtsEntityCutoutTypes.computeIfAbsent(texture, t -> RenderType.create("mts_entity_cutout_triangles", RenderSetup.builder(mtsEntityCutoutPipeline).withTexture("Sampler0", t).useLightmap().useOverlay().affectsCrumbling().createRenderSetup()));
+        }
     }
 
     public static void doRenderCall(boolean blendingEnabled, float partialTicks) {
@@ -399,8 +441,10 @@ public class InterfaceRender implements IInterfaceRender {
 
     /**
      * Submits MTS GUI geometry to the new GUI render state system.
-     * MTS vertices are stored as triangle pairs, which are converted to quads here
-     * since the GUI pipeline uses a quad topology.
+     * 2D sprites are stored as triangle pairs and are converted to quads here.
+     * 3D GUI models (bench previews, instruments) are stored as triangle lists, so
+     * they are transformed to the GUI plane and submitted as degenerate quads
+     * (a quad with the last vertex repeated is just a triangle).
      */
     private static void renderGUIVertices(RenderableData data) {
         GuiGraphicsExtractor extractor = guiExtractor;
@@ -414,35 +458,93 @@ public class InterfaceRender implements IInterfaceRender {
         vertexBuffer.get(vertices);
         vertexBuffer.rewind();
 
-        int quadCount = vertices.length / (8 * 6);
-        if (quadCount == 0) {
+        int vertexCount = vertices.length / 8;
+        if (vertexCount == 0) {
             return;
         }
 
-        //Triangles are ordered BR, TR, TL, BR, TL, BL.  Quads need BR, TR, TL, BL.
-        float[] quads = new float[quadCount * 4 * 4];
+        float[] quads;
+        int quadCount;
+        if (data.vertexObject.cacheVertices) {
+            //3D model.  Transform each vertex with the component's full transform and
+            //project it onto the GUI plane (MTS is Y-up, the GUI renderer is Y-down).
+            Matrix4f matrix = convertMatrix4f(data.transform);
+            int triangleCount = vertexCount / 3;
+            if (triangleCount == 0) {
+                return;
+            }
+            float[] triangleDepth = new float[triangleCount];
+            float[] triangleVerts = new float[triangleCount * 4 * 4];
+            Vector3f transformed = new Vector3f();
+            for (int triangle = 0; triangle < triangleCount; ++triangle) {
+                float depth = 0;
+                for (int vertex = 0; vertex < 3; ++vertex) {
+                    int source = (triangle * 3 + vertex) * 8;
+                    transformed.set(vertices[source + 5], vertices[source + 6], vertices[source + 7]);
+                    matrix.transformPosition(transformed);
+                    //Repeat the last vertex to pad the triangle out to a quad.
+                    int target = (triangle * 4 + Math.min(vertex, 3)) * 4;
+                    triangleVerts[target] = transformed.x;
+                    triangleVerts[target + 1] = -transformed.y;
+                    triangleVerts[target + 2] = vertices[source + 3];
+                    triangleVerts[target + 3] = vertices[source + 4];
+                    depth += transformed.z;
+                }
+                //Pad triangle out to a quad with the final vertex repeated.
+                int last = (triangle * 4 + 3) * 4;
+                int previous = (triangle * 4 + 2) * 4;
+                triangleVerts[last] = triangleVerts[previous];
+                triangleVerts[last + 1] = triangleVerts[previous + 1];
+                triangleVerts[last + 2] = triangleVerts[previous + 2];
+                triangleVerts[last + 3] = triangleVerts[previous + 3];
+                triangleDepth[triangle] = depth / 3.0F;
+            }
+
+            //Draw farther triangles first.  The GUI pipeline has no depth buffer, so this
+            //painter's sort is needed to keep models from looking inside-out.
+            Integer[] order = new Integer[triangleCount];
+            for (int i = 0; i < triangleCount; ++i) {
+                order[i] = i;
+            }
+            java.util.Arrays.sort(order, java.util.Comparator.comparingDouble(i -> triangleDepth[i]));
+            quads = new float[triangleCount * 4 * 4];
+            for (int i = 0; i < triangleCount; ++i) {
+                System.arraycopy(triangleVerts, order[i] * 4 * 4, quads, i * 4 * 4, 4 * 4);
+            }
+            quadCount = triangleCount;
+        } else {
+            //2D sprite.  Triangles are ordered BR, TR, TL, BR, TL, BL.  Quads need BR, TR, TL, BL.
+            quadCount = vertexCount / 6;
+            if (quadCount == 0) {
+                return;
+            }
+            quads = new float[quadCount * 4 * 4];
+            int[] order = new int[] { 0, 1, 2, 5 };
+            //Components store their position in a bottom-left origin frame (Y is negated on construction),
+            //but the GUI renderer uses a top-left origin.  Apply the component translation and flip Y.
+            float translateX = (float) data.transform.m03;
+            float translateY = (float) data.transform.m13;
+            for (int quad = 0; quad < quadCount; ++quad) {
+                for (int vertex = 0; vertex < 4; ++vertex) {
+                    int source = (quad * 6 + order[vertex]) * 8;
+                    int target = (quad * 4 + vertex) * 4;
+                    quads[target] = vertices[source + 5] + translateX;
+                    quads[target + 1] = -(vertices[source + 6] + translateY);
+                    quads[target + 2] = vertices[source + 3];
+                    quads[target + 3] = vertices[source + 4];
+                }
+            }
+        }
+
         float minX = Float.MAX_VALUE;
         float minY = Float.MAX_VALUE;
         float maxX = -Float.MAX_VALUE;
         float maxY = -Float.MAX_VALUE;
-        int[] order = new int[] { 0, 1, 2, 5 };
-        for (int quad = 0; quad < quadCount; ++quad) {
-            for (int vertex = 0; vertex < 4; ++vertex) {
-                int source = (quad * 6 + order[vertex]) * 8;
-                int target = (quad * 4 + vertex) * 4;
-                float texU = vertices[source + 3];
-                float texV = vertices[source + 4];
-                float posX = vertices[source + 5];
-                float posY = vertices[source + 6];
-                quads[target] = posX;
-                quads[target + 1] = posY;
-                quads[target + 2] = texU;
-                quads[target + 3] = texV;
-                minX = Math.min(minX, posX);
-                minY = Math.min(minY, posY);
-                maxX = Math.max(maxX, posX);
-                maxY = Math.max(maxY, posY);
-            }
+        for (int i = 0; i < quadCount * 4; ++i) {
+            minX = Math.min(minX, quads[i * 4]);
+            minY = Math.min(minY, quads[i * 4 + 1]);
+            maxX = Math.max(maxX, quads[i * 4]);
+            maxY = Math.max(maxY, quads[i * 4 + 1]);
         }
 
         Identifier texture = getTexture(data.texture);
@@ -450,6 +552,9 @@ public class InterfaceRender implements IInterfaceRender {
         TextureSetup textureSetup = TextureSetup.singleTexture(mcTexture.getTextureView(), mcTexture.getSampler());
         Matrix3x2f pose = new Matrix3x2f(extractor.pose());
         int color = ((int) (data.alpha * 255) << 24) | ((int) (data.color.red * 255) << 16) | ((int) (data.color.green * 255) << 8) | (int) (data.color.blue * 255);
+        //Elements in a stratum get sorted by texture, which re-orders components relative to each other.
+        //Put each component in its own stratum so MTS's own draw order is preserved.
+        extractor.nextStratum();
         extractor.submitGuiElementRenderState(new MTSGuiElement(pose, textureSetup, quads, quadCount, color, new ScreenRectangle((int) minX, (int) minY, (int) (maxX - minX), (int) (maxY - minY))));
     }
 

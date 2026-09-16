@@ -1,10 +1,14 @@
 package mcinterface262;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -70,6 +74,15 @@ public class InterfaceEventsModelLoader {
         @Override
         public IoSupplier<InputStream> getResource(PackType type, Identifier location) {
             String path = location.getPath();
+            //Pack items need a 26.2 item model definition (items/<name>.json) that references
+            //the model the pack ships at mts:item/<name>.  Generate it on demand.
+            if (type == PackType.CLIENT_RESOURCES && location.getNamespace().equals(InterfaceLoader.MODID) && path.startsWith("items/") && path.endsWith(".json")) {
+                String itemName = path.substring("items/".length(), path.length() - ".json".length());
+                if (isPackItem(itemName)) {
+                    return () -> new ByteArrayInputStream(generateItemDefinition(itemName).getBytes(StandardCharsets.UTF_8));
+                }
+                return null;
+            }
             String packID = getPackID(path);
             //Core resources (textures in the mccore jar) are only in the resource path in dev runs.
             //In production they are unpacked into the mod JAR and the normal mod resource pack finds them.
@@ -130,7 +143,32 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public void listResources(PackType pType, String pNamespace, String pPath, PackResources.ResourceOutput pResourceOutput) {
-            //Don't list resources.  Ours are on-demand and we don't handle the cached items/models.
+            //List the generated item model definitions for all pack items.  The models themselves
+            //are shipped by the packs at mts:item/<name>.
+            if (pType == PackType.CLIENT_RESOURCES && pNamespace.equals(InterfaceLoader.MODID) && (pPath.isEmpty() || pPath.equals("items"))) {
+                for (AItemBase item : BuilderItem.itemMap.keySet()) {
+                    if (item instanceof AItemPack && !((AItemPack<?>) item).definition.packID.equals(InterfaceLoader.MODID)) {
+                        String itemName = item.getRegistrationName();
+                        Identifier location = Identifier.fromNamespaceAndPath(InterfaceLoader.MODID, "items/" + itemName + ".json");
+                        pResourceOutput.accept(location, () -> new ByteArrayInputStream(generateItemDefinition(itemName).getBytes(StandardCharsets.UTF_8)));
+                    }
+                }
+            }
+        }
+
+        /**Returns true if the passed-in name is a registered item from an external pack.*/
+        private static boolean isPackItem(String itemName) {
+            for (AItemBase item : BuilderItem.itemMap.keySet()) {
+                if (item instanceof AItemPack && !((AItemPack<?>) item).definition.packID.equals(InterfaceLoader.MODID) && item.getRegistrationName().equals(itemName)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**Generates the 26.2 item model definition for a pack item.*/
+        private static String generateItemDefinition(String itemName) {
+            return "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + InterfaceLoader.MODID + ":item/" + itemName + "\"}}";
         }
 
         private static String getPackID(String path) {

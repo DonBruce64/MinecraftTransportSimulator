@@ -33,24 +33,22 @@ public abstract class MultiPackResourceManagerMixin {
     @Mutable
     private List<PackResources> packs;
     private static boolean populatedLanguages;
-    private static final boolean runningDevIDE = InterfaceEventsModelLoader.runningDevIDE;
 
     /**
      * Need this to add our packs to the fallback pack location to properly load.
      */
     @Inject(method = "<init>(Lnet/minecraft/server/packs/PackType;Ljava/util/List;)V", at = @At(value = "TAIL"))
     public void inject_init(PackType pType, List<PackResources> pPackResources, CallbackInfo ci) {
-        if (runningDevIDE) {
-            //Only do this if we are running a dev IDE.  This forces us to load core-pack assets from the jarfile vs the mods directory location.
-            //If we don't do this, item textures don't work with the MTS loaders.  We don't need this for regular play since all mods are in the
-            //mnds directory, and this breaks some shader stuff for some reason.
-            List<PackResources> packs2 = new ArrayList<>();
-            packs2.addAll(packs);
-            packs2.add(InterfaceEventsModelLoader.packPack);
-            packs = packs2;
-            namespacedManagers.computeIfAbsent(InterfaceLoader.MODID, k -> new FallbackResourceManager(pType, InterfaceLoader.MODID)).push(InterfaceEventsModelLoader.packPack);
-            PackParser.getAllPackIDs().forEach(packID -> namespacedManagers.computeIfAbsent(packID, k -> new FallbackResourceManager(pType, packID)).push(InterfaceEventsModelLoader.packPack));
-        }
+        //Content packs aren't mods on NeoForge 26.2 (they only ship the legacy mods.toml), so the loader
+        //won't expose their assets through resource packs.  Add our pack to the lookup stack so pack
+        //textures can be resolved by the texture manager.  Core assets are only served in dev runs,
+        //where they live in a separate JAR the game can't see.
+        List<PackResources> packs2 = new ArrayList<>();
+        packs2.addAll(packs);
+        packs2.add(InterfaceEventsModelLoader.packPack);
+        packs = packs2;
+        namespacedManagers.computeIfAbsent(InterfaceLoader.MODID, k -> new FallbackResourceManager(pType, InterfaceLoader.MODID)).push(InterfaceEventsModelLoader.packPack);
+        PackParser.getAllPackIDs().forEach(packID -> namespacedManagers.computeIfAbsent(packID, k -> new FallbackResourceManager(pType, packID)).push(InterfaceEventsModelLoader.packPack));
 
         //Need to do this here since languages happen on pack loading vs on boot.
         //Keep checking until we get more than one: MC starts with only en_us on boot.

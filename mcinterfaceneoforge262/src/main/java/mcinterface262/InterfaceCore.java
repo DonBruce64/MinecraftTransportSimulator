@@ -83,9 +83,8 @@ class InterfaceCore implements IInterfaceCore {
         }
 
         //Full lookup — try each strategy and cache the one that works.
-        //In NeoForge 1.21.1, mods are loaded via JPMS ModuleLayer. ModContainer no longer has getMod().
-        //Use InterfaceLoader's classloader which sees all fat-jar'd resources (including pack assets).
-        //This works because all pack resources are embedded in the same JAR as InterfaceLoader.
+        //In NeoForge, mods are loaded via JPMS ModuleLayer.  Content packs that ship a
+        //neoforge.mods.toml are loaded as mods, so their assets are on the classpath.
         if (ModList.get().isLoaded(modID)) {
             InputStream stream = InterfaceLoader.class.getClassLoader().getResourceAsStream(cleanResource);
             if (stream != null) {

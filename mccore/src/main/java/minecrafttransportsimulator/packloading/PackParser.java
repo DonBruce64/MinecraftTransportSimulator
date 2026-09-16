@@ -660,6 +660,15 @@ public final class PackParser {
         return packItemMap.keySet();
     }
 
+    /**
+     * Returns the JAR file the passed-in pack was loaded from, or null if it isn't loaded.
+     * Used by interface implementations that need to read pack assets directly from the JAR,
+     * since newer loaders may not put non-mod packs on the classpath.
+     */
+    public static File getPackJar(String packID) {
+        return packJarMap.get(packID);
+    }
+
     public static JSONPack getPackConfiguration(String packID) {
         return packMap.get(packID);
     }
