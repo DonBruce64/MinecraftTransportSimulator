@@ -521,15 +521,18 @@ public class InterfaceRender implements IInterfaceRender {
             quads = new float[quadCount * 4 * 4];
             int[] order = new int[] { 0, 1, 2, 5 };
             //Components store their position in a bottom-left origin frame (Y is negated on construction),
-            //but the GUI renderer uses a top-left origin.  Apply the component translation and flip Y.
-            float translateX = (float) data.transform.m03;
-            float translateY = (float) data.transform.m13;
+            //but the GUI renderer uses a top-left origin.  Apply the component's full transform (this
+            //includes scaling, which instruments use to size themselves) and then flip Y.
+            Matrix4f matrix = convertMatrix4f(data.transform);
+            Vector3f transformed = new Vector3f();
             for (int quad = 0; quad < quadCount; ++quad) {
                 for (int vertex = 0; vertex < 4; ++vertex) {
                     int source = (quad * 6 + order[vertex]) * 8;
                     int target = (quad * 4 + vertex) * 4;
-                    quads[target] = vertices[source + 5] + translateX;
-                    quads[target + 1] = -(vertices[source + 6] + translateY);
+                    transformed.set(vertices[source + 5], vertices[source + 6], vertices[source + 7]);
+                    matrix.transformPosition(transformed);
+                    quads[target] = transformed.x;
+                    quads[target + 1] = -transformed.y;
                     quads[target + 2] = vertices[source + 3];
                     quads[target + 3] = vertices[source + 4];
                 }
