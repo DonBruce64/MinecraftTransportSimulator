@@ -18,6 +18,9 @@ public class JSONRendering {
     @JSONDescription("Animated objects are the most complex part of rendering and will likely result in a few pack reloads before you get them right.  However, they are a powerful system that allows any type of rotation, including multi-axis for things like driveshafts and steering assemblies. The animated objects section is composed of a few fields, and a listing of one or more animations to apply on the object.  Objects require no special naming in the model, though some objects may require special names to work with other systems.  For example, a light would have to be named according to the light convention, but could also be specified in this section to rotate it.")
     public List<JSONAnimatedObject> animatedObjects;
 
+    @JSONDescription("Texture overlays are transparent texture layers rendered over the model's normal texture.  Entries are composited from the bottom of the list upwards, so the first entry has the highest priority and appears on top of every later entry.  Each layer may be moved in texture space or controlled by visibility animations.")
+    public List<JSONTextureOverlay> textureOverlays;
+
     @JSONDescription("Light objects are used to make parts of the model light.  No big surprise here.  Lights can either be as simple as a light-up texture, or more complex lighting operations like emissive textures and beams/flares.")
     public List<JSONLight> lightObjects;
 

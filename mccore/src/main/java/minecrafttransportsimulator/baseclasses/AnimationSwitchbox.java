@@ -63,6 +63,7 @@ public class AnimationSwitchbox {
         if (forceSameTick || lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks) {
             lastTickRun = entity.ticksExisted;
             lastPartialTickRun = partialTicks;
+            onRunStart();
 
             if (applyAfter != null) {
                 AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
@@ -103,9 +104,12 @@ public class AnimationSwitchbox {
                         if (!inhibitAnimations) {
                             lastVisibilityClock = clock;
                             lastVisibilityValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
+                            onVisibilityEvaluated(clock, lastVisibilityValue);
                             if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
                                 switchboxEnabled = false;
-                                return false;
+                                if (!continueAfterFailedVisibility()) {
+                                    return false;
+                                }
                             }
                         }
                         break;
@@ -136,10 +140,27 @@ public class AnimationSwitchbox {
                     }
                 }
             }
-            return true;
+            return switchboxEnabled;
         } else {
             return switchboxEnabled;
         }
+    }
+
+    /**
+     * Allows specialized blended switchboxes to finish evaluating animations after a visibility
+     * animation leaves its clamps.  Standard switchboxes retain their historical early-return
+     * behavior.
+     */
+    protected boolean continueAfterFailedVisibility() {
+        return false;
+    }
+
+    /**Called before a new switchbox evaluation.  Specialized switchboxes may reset extra state.*/
+    protected void onRunStart() {
+    }
+
+    /**Called whenever a non-inhibited visibility animation is evaluated.*/
+    protected void onVisibilityEvaluated(DurationDelayClock clock, double visibilityValue) {
     }
 
     public void runTranslation(DurationDelayClock clock, float partialTicks) {

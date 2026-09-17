@@ -1,10 +1,13 @@
 package minecrafttransportsimulator.rendering;
 
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -21,15 +24,20 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.TextureOverlaySwitchbox;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONTextureOverlay;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -54,7 +62,9 @@ public class RenderableModelObject {
     private final RenderableData flareRenderable;
     private final RenderableData beamRenderable;
     private final RenderableData coverRenderable;
+    private final List<TextureOverlayRenderable> textureOverlayRenderables;
     private final List<Double[]> treadPoints;
+    private boolean onlineTextureReady;
 
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
@@ -66,12 +76,17 @@ public class RenderableModelObject {
     private static final Set<String> downloadedTextures = new HashSet<>();
     private static final String ERROR_TEXTURE_NAME = "ERROR";
     private static final Map<String, String> erroredTextures = new HashMap<>();
+    private static final Map<String, int[]> textureDimensions = new HashMap<>();
+    private static final Set<String> invalidTextureDimensions = new HashSet<>();
+    private static final Map<RenderableVertices, RenderableVertices> windowVertexObjects = new IdentityHashMap<>();
+    private static final Map<RenderableVertices, RenderableVertices> textureOverlayVertexObjects = new IdentityHashMap<>();
     private static boolean errorTextureBound;
 
     public RenderableModelObject(AEntityD_Definable<?> entity, RenderableVertices vertexObject) {
         super();
         this.isWindow = vertexObject.name.toLowerCase(Locale.ROOT).contains(AModelParser.WINDOW_OBJECT_NAME);
         this.isOnlineTexture = vertexObject.name.toLowerCase(Locale.ROOT).startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || vertexObject.name.toLowerCase(Locale.ROOT).endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
+        this.onlineTextureReady = !isOnlineTexture;
         this.objectDef = entity.animatedObjectDefinitions.get(vertexObject.name);
         this.lightDef = entity.lightObjectDefinitions.get(vertexObject.name);
         this.switchbox = entity.animatedObjectSwitchboxes.get(vertexObject.name);
@@ -79,12 +94,49 @@ public class RenderableModelObject {
         //If we are a window, split the model into two parts.  The first will be the exterior which will
         //be our normal model, the second will be a new, inverted, interior model.
         if (isWindow) {
-            this.renderable = new RenderableData(vertexObject, "mts:textures/rendering/glass.png");
-            renderable.vertexObject.setTextureBounds(0, 1, 0, 1);
-            this.interiorWindowRenderable = new RenderableData(vertexObject.createBackface(), "mts:textures/rendering/glass.png");
+            //Window rendering needs full-texture UVs.  Keep those on a cached copy rather than
+            //mutating the parser's shared vertices, since overlays need the original model UV map.
+            RenderableVertices windowVertexObject = getWindowVertexObject(vertexObject);
+            this.renderable = new RenderableData(windowVertexObject, "mts:textures/rendering/glass.png");
+            this.interiorWindowRenderable = new RenderableData(windowVertexObject.createBackface(), "mts:textures/rendering/glass.png");
         } else {
             this.renderable = new RenderableData(vertexObject);
             this.interiorWindowRenderable = null;
+        }
+
+        //Create texture overlays.  These intentionally share the model vertices so the original
+        //UV map is preserved exactly.  Each RenderableData still owns its texture/render state.
+        if (entity.definition.rendering.textureOverlays != null) {
+            int overlayCount = entity.definition.rendering.textureOverlays.size();
+            this.textureOverlayRenderables = new ArrayList<>(overlayCount);
+            RenderableVertices textureOverlayVertexObject = getTextureOverlayVertexObject(vertexObject);
+            RenderableVertices overlayBackfaceVertexObject = isWindow ? textureOverlayVertexObject.createBackface() : null;
+            for (int overlayIndex = 0; overlayIndex < overlayCount; ++overlayIndex) {
+                JSONTextureOverlay overlayDef = entity.definition.rendering.textureOverlays.get(overlayIndex);
+                String texture = resolveOverlayTexture(entity.definition, overlayDef.texture);
+                RenderableData overlayRenderable = new RenderableData(textureOverlayVertexObject, texture);
+                RenderableData interiorOverlayRenderable = overlayBackfaceVertexObject != null ? new RenderableData(overlayBackfaceVertexObject, texture) : null;
+                //All overlays need normal alpha compositing for transparent PNG pixels.  This is
+                //independent from blendedAnimations, which controls visibility-based fading.
+                overlayRenderable.setTransucentOverride();
+                overlayRenderable.setTextureClampToTransparent();
+                overlayRenderable.setRenderingOrder(overlayCount - overlayIndex);
+                if (interiorOverlayRenderable != null) {
+                    interiorOverlayRenderable.setTransucentOverride();
+                    interiorOverlayRenderable.setTextureClampToTransparent();
+                    interiorOverlayRenderable.setRenderingOrder(overlayCount - overlayIndex);
+                }
+                if (overlayDef.isBright) {
+                    overlayRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+                    if (interiorOverlayRenderable != null) {
+                        interiorOverlayRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+                    }
+                }
+                int[] dimensions = getTextureDimensions(texture);
+                textureOverlayRenderables.add(new TextureOverlayRenderable(overlayRenderable, interiorOverlayRenderable, dimensions[0], dimensions[1]));
+            }
+        } else {
+            this.textureOverlayRenderables = null;
         }
 
         //Create light objects.
@@ -175,6 +227,7 @@ public class RenderableModelObject {
             //If we are a online texture, bind that one rather than our own.
             //We do this first since we don't need to calculate other stuff if we aren't rendering.
             if (isOnlineTexture) {
+                onlineTextureReady = true;
                 //Get the texture from the text objects of the entity.
                 //If we don't have anything set, we just use the existing texture.
                 for (Entry<JSONText, String> textEntry : entity.text.entrySet()) {
@@ -193,14 +246,17 @@ public class RenderableModelObject {
                             renderable.setTexture(textValue);
                         } else if (downloadingTextures.contains(textValue)) {
                             //Still downloading, skip rendering.
+                            onlineTextureReady = false;
                             return;
                         } else if (textValue.isEmpty()) {
                             //Don't render since we don't have any text bound here.
+                            onlineTextureReady = false;
                             return;
                         } else {
                             //No data at all.  Need to queue up a downloader for this texture.  Do so and skip rendering until it completes.
                             new ConnectorThread(textValue).run();
                             downloadingTextures.add(textValue);
+                            onlineTextureReady = false;
                             return;
                         }
                         break;
@@ -214,14 +270,7 @@ public class RenderableModelObject {
 
             //Now set dynamic alpha if we have it, since this dictates translucent state.
             if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-                if (switchbox.lastVisibilityValue <= switchbox.lastVisibilityClock.animation.clampMin) {
-                    renderable.setAlpha(0);
-                } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
-                    //Need >= here instead of above for things where min/max clamps are equal.
-                    renderable.setAlpha(1);
-                } else {
-                    renderable.setAlpha((float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin)));
-                }
+                renderable.setAlpha(getVisibilityAlpha(switchbox));
             }
 
             //If we aren't on the right pass for our main object, and we don't have lights, skip further calcs.
@@ -260,7 +309,7 @@ public class RenderableModelObject {
             if (treadPoints != null) {
                 //Active tread.  Do tread-path rendering instead of normal model.
                 renderable.setLightValue(entity.worldLightValue);
-                doTreadRendering((PartGroundDevice) entity, partialTicks);
+                doTreadRendering((PartGroundDevice) entity, renderable, partialTicks);
             } else {
                 //Set object states and render.
                 boolean isLitTexture = lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
@@ -351,11 +400,115 @@ public class RenderableModelObject {
     }
 
     /**
+     * Renders one entity-wide texture overlay over this model object.  The owning entity calls
+     * this from the last JSON entry back to entry zero so lower layers are composited first.
+     */
+    public void renderTextureOverlay(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks, int overlayIndex) {
+        //Overlay textures always use alpha compositing, so they only belong on the blended pass.
+        if (!blendingEnabled || textureOverlayRenderables == null || !onlineTextureReady || overlayIndex < 0 || overlayIndex >= textureOverlayRenderables.size()) {
+            return;
+        }
+
+        //The layer follows the owning model object's visibility and physical animations.
+        if (!shouldRender(entity, blendingEnabled, partialTicks)) {
+            return;
+        }
+
+        JSONTextureOverlay overlayDef = entity.definition.rendering.textureOverlays.get(overlayIndex);
+        TextureOverlaySwitchbox overlaySwitchbox = entity.textureOverlaySwitchboxes.get(overlayDef);
+        if (overlaySwitchbox != null) {
+            boolean overlayVisible = overlaySwitchbox.runSwitchbox(partialTicks, false);
+            if (!overlayDef.blendedAnimations && !overlayVisible) {
+                return;
+            }
+        }
+
+        float alpha = overlayDef.blendedAnimations && overlaySwitchbox != null ? overlaySwitchbox.getVisibilityAlpha() : 1.0F;
+        if (objectDef != null && objectDef.blendedAnimations) {
+            alpha *= getVisibilityAlpha(switchbox);
+        }
+        if (alpha <= 0.0F) {
+            return;
+        }
+
+        TextureOverlayRenderable overlay = textureOverlayRenderables.get(overlayIndex);
+        overlay.renderable.setAlpha(alpha);
+        overlay.renderable.setLightValue(entity.worldLightValue);
+
+        //The JSON coordinate system is visual texture space: +X is right and +Y is down.
+        //Sampling offsets use the inverse sign so the artwork itself moves in that direction.
+        double translationX = overlaySwitchbox != null ? overlaySwitchbox.translation.x : 0.0D;
+        double translationY = overlaySwitchbox != null ? overlaySwitchbox.translation.y : 0.0D;
+        float textureOffsetU = (float) (-(overlayDef.centerPoint.x + translationX) / overlay.textureWidth);
+        float textureOffsetV = (float) (-(overlayDef.centerPoint.y + translationY) / overlay.textureHeight);
+        float textureScaleU = 1.0F;
+        float textureScaleV = 1.0F;
+        String normalTexture = entity.getTexture();
+        if (!isOnlineTexture && normalTexture != null && !RenderableData.GLOBAL_TEXTURE_NAME.equals(normalTexture)) {
+            int[] normalTextureDimensions = getTextureDimensions(normalTexture);
+            textureScaleU = normalTextureDimensions[0] / (float) overlay.textureWidth;
+            textureScaleV = normalTextureDimensions[1] / (float) overlay.textureHeight;
+        }
+        overlay.renderable.setTextureScale(textureScaleU, textureScaleV);
+        overlay.renderable.setTextureOffset(textureOffsetU, textureOffsetV);
+
+        overlay.renderable.transform.set(transform);
+        if (switchbox != null) {
+            overlay.renderable.transform.multiply(switchbox.netMatrix);
+        }
+
+        if (treadPoints != null) {
+            doTreadRendering((PartGroundDevice) entity, overlay.renderable, partialTicks);
+        } else {
+            overlay.renderable.render();
+            if (overlay.interiorRenderable != null && ConfigSystem.client.renderingSettings.innerWindows.value) {
+                overlay.interiorRenderable.setAlpha(alpha);
+                overlay.interiorRenderable.setLightValue(entity.worldLightValue);
+                overlay.interiorRenderable.setTextureScale(textureScaleU, textureScaleV);
+                overlay.interiorRenderable.setTextureOffset(textureOffsetU, textureOffsetV);
+                overlay.interiorRenderable.transform.set(overlay.renderable.transform);
+                overlay.interiorRenderable.render();
+            }
+        }
+    }
+
+    /**
      * Call to destroy this renderable object.  This should be done prior to re-parsing the model
      * as it allows for the freeing of OpenGL resources.
      */
     public void destroy() {
         renderable.destroy();
+        if (textureOverlayRenderables != null) {
+            textureOverlayRenderables.forEach(overlay -> {
+                overlay.renderable.destroy();
+                if (overlay.interiorRenderable != null) {
+                    overlay.interiorRenderable.destroy();
+                }
+            });
+        }
+    }
+
+    /**
+     * Converts the most recently evaluated visibility animation into an opacity value.
+     * Equal clamps are treated as a hard threshold, avoiding division by zero.
+     */
+    private static float getVisibilityAlpha(AnimationSwitchbox animationSwitchbox) {
+        if (animationSwitchbox == null || animationSwitchbox.lastVisibilityClock == null) {
+            return 1.0F;
+        }
+
+        double minimum = animationSwitchbox.lastVisibilityClock.animation.clampMin;
+        double maximum = animationSwitchbox.lastVisibilityClock.animation.clampMax;
+        double value = animationSwitchbox.lastVisibilityValue;
+        if (value <= minimum) {
+            return 0.0F;
+        } else if (value >= maximum) {
+            return 1.0F;
+        } else if (maximum <= minimum) {
+            return 0.0F;
+        } else {
+            return (float) ((value - minimum) / (maximum - minimum));
+        }
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {
@@ -375,7 +528,7 @@ public class RenderableModelObject {
         return true;
     }
 
-    private void doTreadRendering(PartGroundDevice tread, float partialTicks) {
+    private void doTreadRendering(PartGroundDevice tread, RenderableData renderable, float partialTicks) {
         //Render the treads along their points.
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
@@ -700,6 +853,117 @@ public class RenderableModelObject {
             }
         }
         return points;
+    }
+
+    /**
+     * Resolves convenient pack-relative names while retaining support for full cross-pack paths.
+     */
+    public static String resolveOverlayTexture(AJSONMultiModelProvider definition, String texture) {
+        if (texture == null || texture.startsWith("/") || texture.contains(":")) {
+            return texture;
+        }
+        String textureName = texture.endsWith(".png") ? texture.substring(0, texture.length() - ".png".length()) : texture;
+        return PackResourceLoader.getPackResource(definition, ResourceType.PNG, textureName);
+    }
+
+    /**
+     * Gets PNG dimensions for converting pixel positions to normalized UV offsets.  Successful
+     * reads are cached across entities; failed reads are retried after future model resets so
+     * resource hotloading can recover without restarting the game.
+     */
+    public static synchronized int[] getTextureDimensions(String texture) {
+        int[] cachedDimensions = textureDimensions.get(texture);
+        if (cachedDimensions != null) {
+            return cachedDimensions;
+        }
+
+        String resourceLocation = texture;
+        if (resourceLocation != null && resourceLocation.contains(":")) {
+            resourceLocation = "/assets/" + resourceLocation.replace(':', '/');
+        }
+        if (resourceLocation != null) {
+            try (InputStream textureStream = InterfaceManager.renderingInterface.getTextureStream(resourceLocation)) {
+                if (textureStream != null) {
+                    try (ImageInputStream imageStream = ImageIO.createImageInputStream(textureStream)) {
+                        Iterator<ImageReader> readers = ImageIO.getImageReaders(imageStream);
+                        if (readers.hasNext()) {
+                            ImageReader reader = readers.next();
+                            try {
+                                reader.setInput(imageStream, true, true);
+                                int width = reader.getWidth(0);
+                                int height = reader.getHeight(0);
+                                if (width > 0 && height > 0) {
+                                    int[] dimensions = new int[] {width, height};
+                                    textureDimensions.put(texture, dimensions);
+                                    invalidTextureDimensions.remove(texture);
+                                    return dimensions;
+                                }
+                            } finally {
+                                reader.dispose();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                //The renderer will substitute its normal missing texture below.  Log only once here
+                //to explain why pixel-based movement cannot be normalized for this resource.
+            }
+        }
+
+        if (invalidTextureDimensions.add(String.valueOf(texture))) {
+            InterfaceManager.coreInterface.logError("Could not read texture overlay dimensions for: " + texture + ". Pixel offsets will use a 1x1 fallback until the model is reloaded.");
+        }
+        return new int[] {1, 1};
+    }
+
+    /**Clears resource-derived overlay state when packs are hotloaded.**/
+    public static synchronized void clearTextureOverlayCaches() {
+        textureDimensions.clear();
+        invalidTextureDimensions.clear();
+        windowVertexObjects.clear();
+        textureOverlayVertexObjects.clear();
+    }
+
+    /**Returns full-texture window vertices without altering the model parser's shared UV data.**/
+    private static synchronized RenderableVertices getWindowVertexObject(RenderableVertices source) {
+        RenderableVertices cachedObject = windowVertexObjects.get(source);
+        if (cachedObject == null) {
+            FloatBuffer sourceData = source.vertices.duplicate();
+            sourceData.rewind();
+            FloatBuffer copiedData = FloatBuffer.allocate(source.vertices.capacity());
+            copiedData.put(sourceData);
+            copiedData.flip();
+            cachedObject = new RenderableVertices(source.name, copiedData, source.cacheVertices, source.isErrorPlaceholder);
+            cachedObject.setTextureBounds(0, 1, 0, 1);
+            windowVertexObjects.put(source, cachedObject);
+        }
+        return cachedObject;
+    }
+
+    /**Returns standalone-texture UVs for atlas-backed models, sharing the copy across entities.*/
+    public static synchronized RenderableVertices getTextureOverlayVertexObject(RenderableVertices source) {
+        RenderableVertices cachedObject = textureOverlayVertexObjects.get(source);
+        if (cachedObject == null) {
+            cachedObject = source.createTextureNormalizedCopy();
+            if (cachedObject != source) {
+                textureOverlayVertexObjects.put(source, cachedObject);
+            }
+        }
+        return cachedObject;
+    }
+
+    private static class TextureOverlayRenderable {
+        private final RenderableData renderable;
+        private final RenderableData interiorRenderable;
+        private final int textureWidth;
+        private final int textureHeight;
+
+        private TextureOverlayRenderable(RenderableData renderable, RenderableData interiorRenderable, int textureWidth, int textureHeight) {
+            this.renderable = renderable;
+            this.interiorRenderable = interiorRenderable;
+            this.textureWidth = textureWidth;
+            this.textureHeight = textureHeight;
+        }
     }
 
     /**
