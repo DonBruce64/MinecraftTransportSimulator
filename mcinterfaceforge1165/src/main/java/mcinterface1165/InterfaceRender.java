@@ -143,7 +143,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending + data.writeDepth;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
@@ -556,7 +556,7 @@ public class InterfaceRender implements IInterfaceRender {
 
             stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
             //Transparency is also blend function, so we need to override that with a custom one if we are doing bright blending.
-            stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? PROPER_TRANSLUCENT_TRANSPARENCY : RenderType.NO_TRANSPARENCY));
+            stateBuilder.setTransparencyState(data.enableBrightBlending ? BRIGHTNESS_TRANSPARENCY : (data.isTranslucent ? (data.writeDepth ? DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY : PROPER_TRANSLUCENT_TRANSPARENCY) : RenderType.NO_TRANSPARENCY));
             //Diffuse lighting is the ambient lighting that auto-shades models.
             stateBuilder.setDiffuseLightingState(data.lightingMode.disableTextureShadows ? NO_DIFFUSE_LIGHTING : DIFFUSE_LIGHTING);
             //Always smooth shading.
@@ -618,6 +618,17 @@ public class InterfaceRender implements IInterfaceRender {
             this.buffer = new VertexBuffer(type.format());
         }
     }
+
+    /**Translucent transparency that retains depth writes for depth-positioned overlays.*/
+    private static final RenderState.TransparencyState DEPTH_WRITING_TRANSLUCENT_TRANSPARENCY = new RenderState.TransparencyState("depth_writing_translucent_transparency", () -> {
+        RenderSystem.enableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+    }, () -> {
+        RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.defaultBlendFunc();
+    });
 
     /**
      * Proper translucent transparency.  MC's one has the wrong blending function, and

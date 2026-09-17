@@ -26,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -67,6 +68,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public double weightTransfer = 0;
     public final RotationMatrix rotation = new RotationMatrix();
     private final IWrapperPlayer placingPlayer;
+    private boolean checkPlacementOnFirstTick;
+    private IWrapperItemStack placementStackToReturn;
 
     //Properties
     public final ComputedVariable steeringForceIgnoresSpeedVar;
@@ -136,6 +139,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         this.clientDeltaP = serverDeltaP;
         this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
         this.placingPlayer = placingPlayer;
+        this.checkPlacementOnFirstTick = placingPlayer != null;
         this.blockBreakDelay = 500;
         
         addVariable(this.leftTurnLightVar = new ComputedVariable(this, "left_turn_signal", data));
@@ -154,6 +158,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         addVariable(this.hasSkidSteerVar = new ComputedVariable(this, "hasSkidSteer"));
     }
 
+    /**
+     * Marks this as a newly-placed vehicle even when the placing player is no longer online.
+     * If requested, the supplied stack is returned on a failed first-tick collision check.
+     */
+    public void setPlacementContext(IWrapperItemStack deploymentStack, boolean refundOnPlacementFailure) {
+        checkPlacementOnFirstTick = true;
+        placementStackToReturn = refundOnPlacementFailure ? deploymentStack.copy().split(1) : null;
+    }
+
     @Override
     public void update() {
         super.update();
@@ -170,7 +183,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
         }
 
         //If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
-        if (ticksExisted == 1 && placingPlayer != null && !world.isClient()) {
+        if (ticksExisted == 1 && checkPlacementOnFirstTick && !world.isClient()) {
             //Get how far above the ground the vehicle needs to be, and move it to that position.
             //First boost Y based on collision boxes.
             double furthestDownPoint = 0;
@@ -199,10 +212,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollisions(world, new Point3D(0D, -furthestDownPoint, 0D), false)) {
                     //New vehicle shouldn't have been spawned.  Bail out.
-                    placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
-                    //Need to add stack back as it will have been removed here.
-                    if (!placingPlayer.isCreative()) {
-                        placingPlayer.setHeldStack(getStack());
+                    if (placingPlayer != null && placingPlayer.isValid()) {
+                        placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, LanguageSystem.INTERACT_VEHICLE_NOSPACE));
+                    }
+                    //Return the exact reserved stack without overwriting whichever slot is currently selected.
+                    if (placementStackToReturn != null && !placementStackToReturn.isEmpty()) {
+                        if (placingPlayer != null && placingPlayer.isValid()) {
+                            placingPlayer.getInventory().addStack(placementStackToReturn);
+                        }
+                        if (!placementStackToReturn.isEmpty()) {
+                            world.spawnItemStack(placementStackToReturn, position, null);
+                        }
+                        placementStackToReturn = null;
                     }
                     remove();
                     world.endProfiling();
@@ -211,6 +232,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     addToServerDeltas(null, null, 0);
                 }
             }
+            checkPlacementOnFirstTick = false;
+            placementStackToReturn = null;
         }
 
         //Now do update calculations and logic.

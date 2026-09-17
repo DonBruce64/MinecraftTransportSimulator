@@ -33,6 +33,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Boolean> opSignEditingOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
         public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<>(false, "If true, vehicles can only be picked up in creative mode.");
+        public JSONConfigEntry<Boolean> singleClickVehicleDeployment = new JSONConfigEntry<>(false, "If true, a single right-click reserves the vehicle item and schedules deployment entirely on the server. If false, the right mouse button, vehicle item, and deployment target must be held until deployment completes.");
         public JSONConfigEntry<Boolean> keyRequiredToStartVehicles = new JSONConfigEntry<>(false, "If true, vehicles can only be started if the player has the key in their hand.");
         public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
         public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");

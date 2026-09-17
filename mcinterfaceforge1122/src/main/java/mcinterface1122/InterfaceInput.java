@@ -30,6 +30,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumActionResult;
 import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -47,6 +48,7 @@ public class InterfaceInput implements IInterfaceInput {
     private static boolean betterCombatDetected;
     private static boolean leftMouseButtonDown;
     private static boolean rightMouseButtonDown;
+    private static boolean suppressingVanillaAttack;
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
@@ -196,6 +198,7 @@ public class InterfaceInput implements IInterfaceInput {
         if (enabled) {
             leftMouseButtonDown = false;
             rightMouseButtonDown = false;
+            suppressingVanillaAttack = false;
         }
     }
 
@@ -288,7 +291,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public boolean isLeftMouseButtonDown() {
-        return betterCombatDetected ? leftMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
+        return betterCombatDetected || suppressingVanillaAttack ? leftMouseButtonDown : Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
     }
 
     @Override
@@ -339,13 +342,19 @@ public class InterfaceInput implements IInterfaceInput {
      */
     @SubscribeEvent
     public static void onIVMouseInput(MouseEvent event) {
-        if (betterCombatDetected) {
-            int button = event.getButton();
-            if (button == 0) {
-                leftMouseButtonDown = event.isButtonstate();
-            } else if (button == 1) {
-                rightMouseButtonDown = event.isButtonstate();
+        int button = event.getButton();
+        int attackKeyCode = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode();
+        boolean attackButtonEvent = betterCombatDetected ? button == 0 : attackKeyCode < 0 && button == attackKeyCode + 100;
+        if (attackButtonEvent) {
+            leftMouseButtonDown = event.isButtonstate();
+            if (!leftMouseButtonDown) {
+                suppressingVanillaAttack = false;
+            } else if (Minecraft.getMinecraft().currentScreen == null && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaLeftClick(InterfaceManager.clientInterface.getClientPlayer())) {
+                suppressingVanillaAttack = true;
+                event.setCanceled(true);
             }
+        } else if (button == 1 && betterCombatDetected) {
+            rightMouseButtonDown = event.isButtonstate();
         }
     }
 
@@ -353,6 +362,20 @@ public class InterfaceInput implements IInterfaceInput {
     public static void onIVMovementInput(InputUpdateEvent event) {
         if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().sneak)) {
             event.getMovementInput().sneak = false;
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (event.getEntityPlayer().world.isRemote && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaLeftClick(InterfaceManager.clientInterface.getClientPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getEntityPlayer().world.isRemote && InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressVanillaLeftClick(InterfaceManager.clientInterface.getClientPlayer())) {
+            event.setCanceled(true);
         }
     }
 

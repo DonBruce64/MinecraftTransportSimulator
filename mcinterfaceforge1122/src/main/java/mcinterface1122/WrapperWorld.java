@@ -161,6 +161,11 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
+    public long getTickCount() {
+        return world.getTotalWorldTime();
+    }
+
+    @Override
     public String getName() {
         return world.provider.getDimensionType().getName();
     }
@@ -381,6 +386,11 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public boolean chunkLoaded(Point3D position) {
         return world.isBlockLoaded(new BlockPos(position.x, position.y, position.z));
+    }
+
+    @Override
+    public void loadChunk(Point3D position) {
+        world.getChunkProvider().provideChunk((int) Math.floor(position.x) >> 4, (int) Math.floor(position.z) >> 4);
     }
 
     @Override

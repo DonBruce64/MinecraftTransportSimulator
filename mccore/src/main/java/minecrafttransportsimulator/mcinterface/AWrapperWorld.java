@@ -20,6 +20,7 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.packets.instances.PacketVehicleDeployment;
 
 /**
  * IWrapper to a world instance.  This contains many common methods that
@@ -34,6 +35,20 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
  */
 public abstract class AWrapperWorld extends EntityManager {
 
+    @Override
+    public void tickAll(boolean beforePlayer) {
+        super.tickAll(beforePlayer);
+        if (beforePlayer && !isClient()) {
+            PacketVehicleDeployment.tickDeployments(this);
+        }
+    }
+
+    @Override
+    public void onUnload() {
+        PacketVehicleDeployment.unloadDeployments(this);
+        super.onUnload();
+    }
+
     /**
      * Returns true if this is a client world, false if we're on the server.
      */
@@ -45,6 +60,12 @@ public abstract class AWrapperWorld extends EntityManager {
      * advancing.
      */
     public abstract long getTime();
+
+    /**
+     * Returns the total number of ticks elapsed in this world.  Unlike {@link #getTime()}, this
+     * value is not limited to a single day and is not affected by daylight-cycle settings.
+     */
+    public abstract long getTickCount();
 
     /**
      * Returns the name of this world (dimension).  All names are assured to be unique, so this may
@@ -165,6 +186,12 @@ public abstract class AWrapperWorld extends EntityManager {
      * Returns true if the chunk that contains the position is loaded.
      */
     public abstract boolean chunkLoaded(Point3D position);
+
+    /**
+     * Synchronously loads the chunk containing this position.  Intended for short server-side
+     * operations that must complete after their initiating player has left the area.
+     */
+    public abstract void loadChunk(Point3D position);
 
     /**
      * Returns the block at the passed-in position, or null if it doesn't exist in the world.
