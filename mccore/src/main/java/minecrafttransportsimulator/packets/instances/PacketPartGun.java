@@ -1,6 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -19,12 +22,16 @@ public class PacketPartGun extends APacketEntity<PartGun> {
     private final Request stateRequest;
     private final ItemBullet bulletItem;
     private final int bulletQty;
+    private final UUID cameraControllerID;
+    private final Point3D cameraControlAngles;
 
     public PacketPartGun(PartGun gun, Request stateRequest) {
         super(gun);
         this.stateRequest = stateRequest;
         this.bulletItem = null;
         this.bulletQty = 0;
+        this.cameraControllerID = null;
+        this.cameraControlAngles = null;
     }
 
     public PacketPartGun(PartGun gun, ItemBullet bullet, int bulletQty) {
@@ -32,6 +39,17 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         this.stateRequest = Request.RELOAD_ONCLIENT;
         this.bulletItem = bullet;
         this.bulletQty = bulletQty;
+        this.cameraControllerID = null;
+        this.cameraControlAngles = null;
+    }
+
+    public PacketPartGun(PartGun gun, UUID controllerID, Point3D angles) {
+        super(gun);
+        this.stateRequest = Request.CAMERA_CONTROL;
+        this.bulletItem = null;
+        this.bulletQty = 0;
+        this.cameraControllerID = controllerID;
+        this.cameraControlAngles = angles != null ? angles.copy() : null;
     }
 
     public PacketPartGun(ByteBuf buf) {
@@ -44,6 +62,14 @@ public class PacketPartGun extends APacketEntity<PartGun> {
             this.bulletItem = null;
             this.bulletQty = 0;
         }
+        if (stateRequest == Request.CAMERA_CONTROL) {
+            boolean active = buf.readBoolean();
+            this.cameraControllerID = readUUIDFromBuffer(buf);
+            this.cameraControlAngles = active ? new Point3D(buf.readDouble(), buf.readDouble(), 0) : null;
+        } else {
+            this.cameraControllerID = null;
+            this.cameraControlAngles = null;
+        }
     }
 
     @Override
@@ -53,6 +79,13 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         if (stateRequest == Request.RELOAD_ONCLIENT) {
             writeItemToBuffer(bulletItem, buf);
             buf.writeInt(bulletQty);
+        } else if (stateRequest == Request.CAMERA_CONTROL) {
+            buf.writeBoolean(cameraControlAngles != null);
+            writeUUIDToBuffer(cameraControllerID, buf);
+            if (cameraControlAngles != null) {
+                buf.writeDouble(cameraControlAngles.x);
+                buf.writeDouble(cameraControlAngles.y);
+            }
         }
     }
 
@@ -100,6 +133,9 @@ public class PacketPartGun extends APacketEntity<PartGun> {
                 gun.performGunHandheldMovements();
                 break;
             }
+            case CAMERA_CONTROL: {
+                return gun.setCameraControlAngles(cameraControllerID, cameraControlAngles);
+            }
         }
         return stateRequest.sendToClients;
     }
@@ -114,7 +150,8 @@ public class PacketPartGun extends APacketEntity<PartGun> {
         AIM_OFF(true),
         BULLETS_OUT(false),
         BULLETS_PRESENT(false),
-        HANDHELD_MOVEMENTS(true);
+        HANDHELD_MOVEMENTS(true),
+        CAMERA_CONTROL(true);
 
         private final boolean sendToClients;
 

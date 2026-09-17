@@ -102,7 +102,7 @@ public class AnimationSwitchbox {
                     case VISIBILITY: {
                         if (!inhibitAnimations) {
                             lastVisibilityClock = clock;
-                            lastVisibilityValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
+                            lastVisibilityValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (lastVisibilityValue < clock.animation.clampMin || lastVisibilityValue > clock.animation.clampMax) {
                                 switchboxEnabled = false;
                                 return false;
@@ -112,7 +112,7 @@ public class AnimationSwitchbox {
                     }
                     case INHIBITOR: {
                         if (!inhibitAnimations) {
-                            double variableValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
+                            double variableValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
                                 inhibitAnimations = true;
                             }
@@ -121,7 +121,7 @@ public class AnimationSwitchbox {
                     }
                     case ACTIVATOR: {
                         if (inhibitAnimations) {
-                            double variableValue = entity.getAnimatedVariableValue(clock, 1.0, partialTicks);
+                            double variableValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
                             if (variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax) {
                                 inhibitAnimations = false;
                             }
@@ -142,9 +142,13 @@ public class AnimationSwitchbox {
         }
     }
 
+    protected double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {
+        return entity.getAnimatedVariableValue(clock, scaleFactor, partialTicks);
+    }
+
     public void runTranslation(DurationDelayClock clock, float partialTicks) {
         //Found translation.  This gets applied in the translation axis direction directly.
-        double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
+        double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         if (variableValue != 0) {
             helperPoint.set(clock.animationAxisNormalized).scale(variableValue);
             netMatrix.applyTranslation(helperPoint);
@@ -154,7 +158,7 @@ public class AnimationSwitchbox {
 
     public void runRotation(DurationDelayClock clock, float partialTicks) {
         //Found rotation.  Get angles that needs to be applied.
-        double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
+        double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         if (variableValue != 0) {
             helperRotationMatrix.setToAxisAngle(clock.animationAxisNormalized, variableValue);
 
@@ -185,7 +189,7 @@ public class AnimationSwitchbox {
 
     public void runScaling(DurationDelayClock clock, float partialTicks) {
         //Found scaling.  Get scale that needs to be applied.
-        double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
+        double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         helperScalingVector.set(clock.animationAxisNormalized).scale(variableValue);
         //Check for 0s and remove them.
         if (helperScalingVector.x == 0)
