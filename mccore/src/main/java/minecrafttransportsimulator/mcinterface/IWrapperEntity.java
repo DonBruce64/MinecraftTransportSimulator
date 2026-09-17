@@ -119,6 +119,18 @@ public interface IWrapperEntity {
      * but not if they are riding an entity.
      */
     void setPosition(Point3D position, boolean onGround);
+
+    /**
+     * Corrects the entity's X/Z position and stops horizontal velocity directed into the corrected faces.
+     * Preserves its Y position, vertical velocity, ground state, and fall distance.
+     */
+    void correctHorizontalPosition(Point3D position);
+
+    /**
+     * Moves the entity's feet to the given Y below a ceiling and stops upward velocity.
+     * Preserves its X/Z position, horizontal velocity, ground state, and fall distance.
+     */
+    void correctCeilingPosition(double y);
     
     /**
      * Applies a motive force to the entity of the passed-in amount.
