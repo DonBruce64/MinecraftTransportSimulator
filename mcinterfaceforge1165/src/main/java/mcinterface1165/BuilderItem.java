@@ -33,6 +33,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.UseAction;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Potion;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
@@ -222,7 +224,14 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 List<JSONPotionEffect> effects = food.getEffects();
                 if (!world.isClientSide && effects != null) {
                     for (JSONPotionEffect effect : effects) {
-                        WrapperEntity.addPotionEffect(entityLiving, effect, true);
+                        Potion potion = Potion.byName(effect.name);
+                        if (potion != null) {
+                            potion.getEffects().forEach(mcEffect -> {
+                                entityLiving.addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, true));
+                            });
+                        } else {
+                            throw new NullPointerException("Potion " + effect.name + " does not exist.");
+                        }
                     }
                 }
 

@@ -15,9 +15,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.MouseFlightController;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -27,7 +25,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.LeadItem;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.DamageSource;
@@ -38,7 +35,6 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
@@ -328,12 +324,6 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && equals(clientPlayer)) {
-                return MouseFlightController.getCameraLineOfSight(mutableSight, distance, 1.0D);
-            }
-        }
         mutableSight.set(0, 0, distance).rotate(getOrientation());
         return mutableSight;
     }
@@ -445,60 +435,29 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void addPotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            addPotionEffect((LivingEntity) entity, effect, false);
+            Potion potion = Potion.byName(effect.name);
+            if (potion != null) {
+                potion.getEffects().forEach(mcEffect -> {
+                    ((LivingEntity) entity).addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, false));
+                });
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
         }
-    }
-
-    static void addPotionEffect(LivingEntity entity, JSONPotionEffect effect, boolean showParticles) {
-        Potion potion = resolvePotion(effect.name);
-        if (potion != null) {
-            potion.getEffects().forEach(mcEffect -> entity.addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, showParticles)));
-            return;
-        }
-
-        Effect legacyEffect = resolveLegacyEffect(effect.name);
-        if (legacyEffect != null) {
-            entity.addEffect(new EffectInstance(legacyEffect, effect.duration, effect.amplifier, false, showParticles));
-            return;
-        }
-        throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
     }
 
     @Override
     public void removePotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            LivingEntity livingEntity = (LivingEntity) entity;
-            Potion potion = resolvePotion(effect.name);
+            Potion potion = Potion.byName(effect.name);
             if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> livingEntity.removeEffect(mcEffect.getEffect()));
-                return;
+                potion.getEffects().forEach(mcEffect -> {
+                    ((LivingEntity) entity).removeEffect(mcEffect.getEffect());
+                });
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
-
-            Effect legacyEffect = resolveLegacyEffect(effect.name);
-            if (legacyEffect != null) {
-                livingEntity.removeEffect(legacyEffect);
-                return;
-            }
-            throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
         }
-    }
-
-    static Potion resolvePotion(String configuredName) {
-        ResourceLocation directName = ResourceLocation.tryParse(JSONPotionEffect.getNamespacedName(configuredName));
-        if (directName == null) {
-            throw new IllegalArgumentException("Invalid potion ID: " + configuredName);
-        }
-        ResourceLocation canonicalName = ResourceLocation.tryParse(JSONPotionEffect.getCanonicalPotionName(configuredName));
-        Potion potion = ForgeRegistries.POTION_TYPES.getValue(canonicalName);
-        if (potion == null && !directName.equals(canonicalName)) {
-            potion = ForgeRegistries.POTION_TYPES.getValue(directName);
-        }
-        return potion;
-    }
-
-    private static Effect resolveLegacyEffect(String configuredName) {
-        ResourceLocation effectName = ResourceLocation.tryParse(JSONPotionEffect.getNamespacedName(configuredName));
-        return effectName != null ? ForgeRegistries.POTIONS.getValue(effectName) : null;
     }
 
     /**

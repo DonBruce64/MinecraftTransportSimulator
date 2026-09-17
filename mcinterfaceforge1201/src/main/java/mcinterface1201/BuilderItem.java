@@ -30,6 +30,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -40,6 +41,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -233,7 +235,14 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 List<JSONPotionEffect> effects = food.getEffects();
                 if (!world.isClientSide && effects != null) {
                     for (JSONPotionEffect effect : effects) {
-                        WrapperEntity.addPotionEffect(entityLiving, effect, true);
+                        Potion potion = Potion.byName(effect.name);
+                        if (potion != null) {
+                            potion.getEffects().forEach(mcEffect -> {
+                                entityLiving.addEffect(new MobEffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, true));
+                            });
+                        } else {
+                            throw new NullPointerException("Potion " + effect.name + " does not exist.");
+                        }
                     }
                 }
 

@@ -1,4 +1,4 @@
-package mcinterface1165;
+package mcinterface1182;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,30 +15,26 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.MouseFlightController;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.LeadItem;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Potion;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.EntityDamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.LeadItem;
+import net.minecraft.world.item.alchemy.Potion;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
@@ -55,8 +51,8 @@ public class WrapperEntity implements IWrapperEntity {
      * If the entity is a player, then a player wrapper is returned.
      */
     public static WrapperEntity getWrapperFor(Entity entity) {
-        if (entity instanceof PlayerEntity) {
-            return WrapperPlayer.getWrapperFor((PlayerEntity) entity);
+        if (entity instanceof Player) {
+            return WrapperPlayer.getWrapperFor((Player) entity);
         } else if (entity != null) {
             Map<Entity, WrapperEntity> entityWrappers = entity.level.isClientSide ? entityClientWrappers : entityServerWrappers;
             WrapperEntity wrapper = entityWrappers.get(entity);
@@ -176,10 +172,10 @@ public class WrapperEntity implements IWrapperEntity {
         //We account for this here.
         AEntityB_Existing riding = getEntityRiding();
         if (riding instanceof PartSeat && !((PartSeat) riding).definition.seat.standing) {
-            if (entity instanceof AnimalEntity) {
+            if (entity instanceof Animal) {
                 //Animals are moved up 0.14 pixels (~2.25), for their sitting positions.  Un-do this.
                 return entity.getMyRidingOffset() - 0.14D;
-            } else if (entity instanceof VillagerEntity) {
+            } else if (entity instanceof Villager) {
                 //Villagers get the same offset as players.
                 return (-12D / 16D) * (30D / 32D);
             } else {
@@ -259,10 +255,12 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public RotationMatrix getOrientation() {
-        if (lastPitchChecked != entity.xRot || lastYawChecked != entity.yRot) {
-            lastPitchChecked = entity.xRot;
-            lastYawChecked = entity.yRot;
-            mutableOrientation.angles.set(entity.xRot, -entity.yRot, 0);
+        float pitchChecked = entity.getXRot();
+        float yawChecked = entity.getYRot();
+        if (lastPitchChecked != pitchChecked || lastYawChecked != yawChecked) {
+            lastPitchChecked = pitchChecked;
+            lastYawChecked = yawChecked;
+            mutableOrientation.angles.set(lastPitchChecked, -lastYawChecked, 0);
             mutableOrientation.setToAngles(mutableOrientation.angles);
         }
         return mutableOrientation;
@@ -285,23 +283,24 @@ public class WrapperEntity implements IWrapperEntity {
             } else if (yawDelta < -180) {
                 yawDelta -= 360;
             }
-            entity.yRot = lastYawApplied + yawDelta;
-            lastYawApplied = entity.yRot;
+            entity.setYRot(lastYawApplied + yawDelta);
+            lastYawApplied += yawDelta;
         } else {
-            entity.yRot = (float) -rotation.angles.y;
+            entity.setYRot((float) -rotation.angles.y);
         }
-        entity.xRot = (float) rotation.angles.x;
+        entity.setXRot((float) rotation.angles.x);
     }
 
     @Override
     public float getPitch() {
-        return entity.xRot;
+        return entity.getXRot();
     }
 
     @Override
     public float getPitchDelta() {
-        float value = entity.xRot - lastPitch;
-        lastPitch = entity.xRot;
+        float currentPitch = entity.getXRot();
+        float value = currentPitch - lastPitch;
+        lastPitch = currentPitch;
         return value;
     }
 
@@ -309,13 +308,14 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public float getYaw() {
-        return -entity.yRot;
+        return -entity.getYRot();
     }
 
     @Override
     public float getYawDelta() {
-        float value = entity.yRot - lastYaw;
-        lastYaw = entity.yRot;
+        float currentYaw = entity.getYRot();
+        float value = currentYaw - lastYaw;
+        lastYaw = currentYaw;
         return -value;
     }
 
@@ -328,12 +328,6 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && equals(clientPlayer)) {
-                return MouseFlightController.getCameraLineOfSight(mutableSight, distance, 1.0D);
-            }
-        }
         mutableSight.set(0, 0, distance).rotate(getOrientation());
         return mutableSight;
     }
@@ -342,7 +336,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void setYaw(double yaw) {
-        entity.yRot = (float) -yaw;
+        entity.setYRot((float) -yaw);
     }
 
     @Override
@@ -354,7 +348,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public void setPitch(double pitch) {
-        entity.xRot = (float) pitch;
+        entity.setXRot((float) pitch);
     }
 
     @Override
@@ -370,7 +364,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public IWrapperNBT getData() {
-        CompoundNBT tag = new CompoundNBT();
+        CompoundTag tag = new CompoundTag();
         entity.save(tag);
         return new WrapperNBT(tag);
     }
@@ -382,11 +376,11 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public boolean leashTo(IWrapperPlayer player) {
-        PlayerEntity mcPlayer = ((WrapperPlayer) player).player;
-        if (entity instanceof MobEntity) {
+        Player mcPlayer = ((WrapperPlayer) player).player;
+        if (entity instanceof Mob) {
             ItemStack heldStack = mcPlayer.getMainHandItem();
-            if (((MobEntity) entity).canBeLeashed(mcPlayer) && heldStack.getItem() instanceof LeadItem) {
-                ((MobEntity) entity).setLeashedTo(mcPlayer, true);
+            if (((Mob) entity).canBeLeashed(mcPlayer) && heldStack.getItem() instanceof LeadItem) {
+                ((Mob) entity).setLeashedTo(mcPlayer, true);
                 if (!mcPlayer.isCreative()) {
                     heldStack.shrink(1);
                 }
@@ -403,11 +397,11 @@ public class WrapperEntity implements IWrapperEntity {
         }
         DamageSource newSource = new EntityDamageSource(damage.language.getCurrentValue(), damage.entityResponsible != null ? ((WrapperEntity) damage.entityResponsible).entity : null) {
             @Override
-            public ITextComponent getLocalizedDeathMessage(LivingEntity player) {
+            public Component getLocalizedDeathMessage(LivingEntity player) {
                 if (damage.entityResponsible != null) {
-                    return new StringTextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
+                    return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getString()));
                 } else {
-                    return new StringTextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString()));
+                    return new TextComponent(String.format(damage.language.getCurrentValue(), player.getDisplayName().getString()));
                 }
             }
         };
@@ -445,60 +439,29 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void addPotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            addPotionEffect((LivingEntity) entity, effect, false);
+            Potion potion = Potion.byName(effect.name);
+            if (potion != null) {
+                potion.getEffects().forEach(mcEffect -> {
+                    ((LivingEntity) entity).addEffect(new MobEffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, false));
+                });
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
         }
-    }
-
-    static void addPotionEffect(LivingEntity entity, JSONPotionEffect effect, boolean showParticles) {
-        Potion potion = resolvePotion(effect.name);
-        if (potion != null) {
-            potion.getEffects().forEach(mcEffect -> entity.addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, showParticles)));
-            return;
-        }
-
-        Effect legacyEffect = resolveLegacyEffect(effect.name);
-        if (legacyEffect != null) {
-            entity.addEffect(new EffectInstance(legacyEffect, effect.duration, effect.amplifier, false, showParticles));
-            return;
-        }
-        throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
     }
 
     @Override
     public void removePotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            LivingEntity livingEntity = (LivingEntity) entity;
-            Potion potion = resolvePotion(effect.name);
+            Potion potion = Potion.byName(effect.name);
             if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> livingEntity.removeEffect(mcEffect.getEffect()));
-                return;
+                potion.getEffects().forEach(mcEffect -> {
+                    ((LivingEntity) entity).removeEffect(mcEffect.getEffect());
+                });
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
-
-            Effect legacyEffect = resolveLegacyEffect(effect.name);
-            if (legacyEffect != null) {
-                livingEntity.removeEffect(legacyEffect);
-                return;
-            }
-            throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
         }
-    }
-
-    static Potion resolvePotion(String configuredName) {
-        ResourceLocation directName = ResourceLocation.tryParse(JSONPotionEffect.getNamespacedName(configuredName));
-        if (directName == null) {
-            throw new IllegalArgumentException("Invalid potion ID: " + configuredName);
-        }
-        ResourceLocation canonicalName = ResourceLocation.tryParse(JSONPotionEffect.getCanonicalPotionName(configuredName));
-        Potion potion = ForgeRegistries.POTION_TYPES.getValue(canonicalName);
-        if (potion == null && !directName.equals(canonicalName)) {
-            potion = ForgeRegistries.POTION_TYPES.getValue(directName);
-        }
-        return potion;
-    }
-
-    private static Effect resolveLegacyEffect(String configuredName) {
-        ResourceLocation effectName = ResourceLocation.tryParse(JSONPotionEffect.getNamespacedName(configuredName));
-        return effectName != null ? ForgeRegistries.POTIONS.getValue(effectName) : null;
     }
 
     /**

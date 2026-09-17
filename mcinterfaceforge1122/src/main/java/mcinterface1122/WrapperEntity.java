@@ -15,9 +15,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.MouseFlightController;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -29,23 +27,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.potion.PotionType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
     private static final Map<Entity, WrapperEntity> entityClientWrappers = new HashMap<>();
     private static final Map<Entity, WrapperEntity> entityServerWrappers = new HashMap<>();
-    private static final Point3D mouseFlightLineOfSight = new Point3D();
 
     protected final Entity entity;
     private AEntityB_Existing cachedEntityRiding;
@@ -70,21 +64,6 @@ public class WrapperEntity implements IWrapperEntity {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Replaces the vanilla view vector only for the local player in first-person mouse flight.
-     * Called from the 1.12.2 EntityLivingBase transformer.
-     */
-    public static Vec3d getMouseFlightViewVector(Vec3d vanillaViewVector, Entity entity, float partialTicks) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && clientPlayer.equals(getWrapperFor(entity))) {
-                Point3D lineOfSight = MouseFlightController.getCameraLineOfSight(mouseFlightLineOfSight, 1, partialTicks);
-                return new Vec3d(lineOfSight.x, lineOfSight.y, lineOfSight.z);
-            }
-        }
-        return vanillaViewVector;
     }
 
     protected WrapperEntity(Entity entity) {
@@ -340,12 +319,6 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
-        if (MouseFlightController.shouldUseCameraLineOfSight()) {
-            IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
-            if (clientPlayer != null && equals(clientPlayer)) {
-                return MouseFlightController.getCameraLineOfSight(mutableSight, distance, 1.0D);
-            }
-        }
         mutableSight.set(0, 0, distance).rotate(getOrientation());
         return mutableSight;
     }
@@ -458,57 +431,27 @@ public class WrapperEntity implements IWrapperEntity {
     public void addPotionEffect(JSONPotionEffect effect) {
         // Only instances of EntityLivingBase can receive potion effects
         if ((entity instanceof EntityLivingBase)) {
-            addPotionEffect((EntityLivingBase) entity, effect, false);
+            Potion potion = Potion.getPotionFromResourceLocation(effect.name);
+            if (potion != null) {
+                ((EntityLivingBase) entity).addPotionEffect(new PotionEffect(potion, effect.duration, effect.amplifier, false, false));
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
         }
-    }
-
-    static void addPotionEffect(EntityLivingBase entity, JSONPotionEffect effect, boolean showParticles) {
-        PotionType potion = resolvePotion(effect.name);
-        if (potion != null) {
-            potion.getEffects().forEach(mcEffect -> entity.addPotionEffect(new PotionEffect(mcEffect.getPotion(), effect.duration, effect.amplifier, false, showParticles)));
-            return;
-        }
-
-        Potion legacyEffect = resolveLegacyEffect(effect.name);
-        if (legacyEffect != null) {
-            entity.addPotionEffect(new PotionEffect(legacyEffect, effect.duration, effect.amplifier, false, showParticles));
-            return;
-        }
-        throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
     }
 
     @Override
     public void removePotionEffect(JSONPotionEffect effect) {
         // Only instances of EntityLivingBase can have potion effects
         if ((entity instanceof EntityLivingBase)) {
-            EntityLivingBase livingEntity = (EntityLivingBase) entity;
-            PotionType potion = resolvePotion(effect.name);
+            //Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
+            Potion potion = Potion.getPotionFromResourceLocation(effect.name);
             if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> livingEntity.removePotionEffect(mcEffect.getPotion()));
-                return;
+                ((EntityLivingBase) entity).removePotionEffect(potion);
+            } else {
+                throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
-
-            Potion legacyEffect = resolveLegacyEffect(effect.name);
-            if (legacyEffect != null) {
-                livingEntity.removePotionEffect(legacyEffect);
-                return;
-            }
-            throw new NullPointerException("Potion or effect " + effect.name + " does not exist.");
         }
-    }
-
-    static PotionType resolvePotion(String configuredName) {
-        ResourceLocation directName = new ResourceLocation(JSONPotionEffect.getNamespacedName(configuredName));
-        ResourceLocation canonicalName = new ResourceLocation(JSONPotionEffect.getCanonicalPotionName(configuredName));
-        PotionType potion = ForgeRegistries.POTION_TYPES.getValue(canonicalName);
-        if (potion == null && !canonicalName.equals(directName)) {
-            potion = ForgeRegistries.POTION_TYPES.getValue(directName);
-        }
-        return potion;
-    }
-
-    private static Potion resolveLegacyEffect(String configuredName) {
-        return ForgeRegistries.POTIONS.getValue(new ResourceLocation(JSONPotionEffect.getNamespacedName(configuredName)));
     }
 
     /**
