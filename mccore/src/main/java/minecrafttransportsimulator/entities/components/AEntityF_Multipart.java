@@ -369,7 +369,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(bullet.gun, bullet.bulletNumber, hitEntry.position, bullet.orientation, hitEntry.side, HitType.ARMOR));
                             bullet.waitingOnActionPacket = true;
                         } else {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, bullet.orientation, hitEntry.side, HitType.ARMOR);
+                            EntityBullet.performGenericHitLogic(bullet, hitEntry.position, bullet.orientation, hitEntry.side, HitType.ARMOR);
                         }
                         bullet.displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                         return EntityBullet.HitType.ARMOR;
@@ -411,7 +411,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     } else {
                         EntityBullet.performEntityHitLogic(hitEntity, damage);
                         if (removeAfterDamage) {
-                            EntityBullet.performGenericHitLogic(bullet.gun, bullet.bulletNumber, hitEntry.position, bullet.orientation, hitEntry.side, HitType.VEHICLE);
+                            EntityBullet.performGenericHitLogic(bullet, hitEntry.position, bullet.orientation, hitEntry.side, HitType.VEHICLE);
                             return EntityBullet.HitType.VEHICLE;
                         }
                     }

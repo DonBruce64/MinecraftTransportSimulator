@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.EntityParticleEmitter;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -30,10 +31,15 @@ public class PacketWorldSavedDataRequest extends APacketPlayer {
         for (String dataName : savedData.getAllNames()) {
             player.sendPacket(new PacketWorldSavedDataUpdate(dataName, savedData.getData(dataName)));
         }
+        //The same request is issued whenever a client enters a world, making it a
+        //natural late-join/dimension-change snapshot for active particle emitters.
+        EntityParticleEmitter.sendActiveEmittersTo(world, player);
     }
 
     @Override
     public boolean runOnMainThread() {
-        return false;
+        //Emitter snapshots include mutable transforms and must be captured on the
+        //world thread.  This packet only runs on join/dimension change.
+        return true;
     }
 }

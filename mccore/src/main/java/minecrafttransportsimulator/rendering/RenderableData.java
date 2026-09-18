@@ -36,6 +36,7 @@ public class RenderableData {
     public LightingMode lightingMode = LightingMode.NORMAL;
     public boolean enableBrightBlending;
     public boolean isTranslucent;
+    public boolean renderAtLongRange;
 
     private double lastWidthRadius;
     private double lastHeightRadius;
@@ -118,6 +119,18 @@ public class RenderableData {
         if (this.enableBrightBlending != enableBrightBlending) {
             this.enableBrightBlending = enableBrightBlending;
             this.changedSinceLastRender = true;
+        }
+    }
+
+    /**
+     * Marks this renderable for the fog-free long-range render path.  The platform
+     * renderer is responsible for retaining normal depth testing while bypassing
+     * its projection far plane.
+     */
+    public void setRenderAtLongRange(boolean renderAtLongRange) {
+        if (this.renderAtLongRange != renderAtLongRange) {
+            this.renderAtLongRange = renderAtLongRange;
+            changedSinceLastRender = true;
         }
     }
 
