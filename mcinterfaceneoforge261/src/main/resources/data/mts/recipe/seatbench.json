@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "abb",
+        "c c"
+    ],
+    "key": {
+        "a": "minecraft:stonecutter",
+        "b": "minecraft:heavy_weighted_pressure_plate",
+        "c": "#c:ingots/iron"
+    },
+    "result": {
+        "id": "mts:mts.seatbench"
+    }
+}
+

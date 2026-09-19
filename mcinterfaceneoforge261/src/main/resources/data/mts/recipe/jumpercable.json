@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "a a",
+        "bcb",
+        "dbd"
+    ],
+    "key": {
+        "a": "minecraft:shears",
+        "b": "minecraft:string",
+        "c": "minecraft:redstone",
+        "d": "#c:ingots/copper"
+    },
+    "result": {
+        "id": "mts:mts.jumpercable"
+    }
+}
+

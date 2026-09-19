@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "cdc"
+    ],
+    "key": {
+        "a": "#c:ingots/iron",
+        "b": "minecraft:glass_pane",
+        "c": "#c:ingots/copper",
+        "d": "minecraft:comparator"
+    },
+    "result": {
+        "id": "mts:mts.itembench"
+    }
+}
+

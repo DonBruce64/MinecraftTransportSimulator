@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "entities": [
+      "mts:builder_seat"
+    ]
+  },
+  // If you want it, you can specify data that the player must have 
+  "rider": {},
+  // Amount of cold insulation (0 to 1) 
+  "cold_insulation": 1.0,
+  // Amount of heat insulation (0 to 1)
+  "heat_insulation": 0.75,
+  // Map of temperature modifier immunities
+  "immune_temp_modifiers": {
+    // You can add this if you want the vehicle to protect the player from rain and stuff
+    "cold_sweat:water": 1.0
+  }
+}

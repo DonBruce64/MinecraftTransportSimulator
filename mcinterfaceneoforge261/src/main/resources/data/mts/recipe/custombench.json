@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "aaa"
+    ],
+    "key": {
+        "a": "#c:ingots/copper",
+        "b": "minecraft:crafting_table"
+    },
+    "result": {
+        "id": "mts:mts.custombench"
+    }
+}
+
