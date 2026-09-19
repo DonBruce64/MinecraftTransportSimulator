@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "b a",
+        "cdd"
+    ],
+    "key": {
+        "a": "#c:ingots/iron",
+        "b": "minecraft:iron_chain",
+        "c": "mts:mts.wrench",
+        "d": "minecraft:heavy_weighted_pressure_plate"
+    },
+    "result": {
+        "id": "mts:mts.enginebench"
+    }
+}
