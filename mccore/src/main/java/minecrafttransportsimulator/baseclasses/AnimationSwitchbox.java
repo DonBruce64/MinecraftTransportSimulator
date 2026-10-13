@@ -114,7 +114,6 @@ public class AnimationSwitchbox {
                         }
                         break;
                     }
-                    }
                     case INHIBITOR: {
                         if (!inhibitAnimations) {
                             double variableValue = getAnimatedVariableValue(clock, 1.0, partialTicks);
