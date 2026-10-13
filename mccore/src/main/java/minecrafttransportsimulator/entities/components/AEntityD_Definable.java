@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.CameraSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -135,7 +136,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Maps cameras to their respective switchboxes.
      **/
-    public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
+    public final Map<JSONCameraObject, CameraSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
 
     /**
      * Maps light definitions to their current brightness.  This is updated every frame prior to rendering.
@@ -340,7 +341,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (definition.rendering.cameraObjects != null) {
                 for (JSONCameraObject cameraDef : definition.rendering.cameraObjects) {
                     if (cameraDef.animations != null) {
-                        cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations, null));
+                        cameraSwitchboxes.put(cameraDef, new CameraSwitchbox(this, cameraDef.animations));
                     }
                 }
             }
@@ -1502,9 +1503,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     @Override
-    protected boolean disableRendering() {
+    protected boolean disableModelRendering() {
         //Don't render if we don't have a model.
-        return super.disableRendering() || definition.rendering.modelType.equals(ModelType.NONE);
+        return definition.rendering.modelType == ModelType.NONE;
     }
 
     /**

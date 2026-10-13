@@ -12,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
@@ -43,6 +42,7 @@ public class CameraSystem {
     private static final Point3D cameraCollisionStart = new Point3D();
     private static final Point3D cameraCollisionVector = new Point3D();
     private static final RotationMatrix riderOrientation = new RotationMatrix();
+    private static final Point3D riderCameraRelativeAngles = new Point3D();
     private static final RotationMatrix cameraOffsetOrientation = new RotationMatrix();
 
     private static final JSONPotionEffect NIGHT_VISION_CAMERA_POTION = new JSONPotionEffect();
@@ -128,9 +128,9 @@ public class CameraSystem {
 
                 //Rotational portion is good.  Finally, add the position of the provider.
                 //This needs to be interpolated to ensure smooth movement on partial ticks.
+                //Custom cameras keep their defined position; collision clipping only applies to third-person views.
                 cameraOffset.set(cameraProvider.activeCameraEntity.prevPosition).interpolate(cameraProvider.activeCameraEntity.position, partialTicks);
                 cameraAdjustedPosition.add(cameraOffset);
-                applyCameraCollision(player, cameraOffset, cameraAdjustedPosition, getMultipartToIgnore(cameraProvider, sittingSeat));
 
                 //Also check night vision.
                 if (activeCamera.nightVision) {
@@ -183,16 +183,25 @@ public class CameraSystem {
         }
     }
 
-    private static AEntityF_Multipart<?> getMultipartToIgnore(AEntityB_Existing cameraProvider, PartSeat sittingSeat) {
-        if (sittingSeat != null && sittingSeat.vehicleOn != null) {
-            return sittingSeat.vehicleOn;
-        } else if (cameraProvider instanceof APart) {
-            return ((APart) cameraProvider).masterEntity;
-        } else if (cameraProvider instanceof AEntityF_Multipart) {
-            return (AEntityF_Multipart<?>) cameraProvider;
-        } else {
-            return null;
+    /**Applies the active camera's final rotation after rider input and entity movement have been updated.**/
+    public static void adjustRiderOrientation(AEntityB_Existing cameraProvider, RotationMatrix riderRotation) {
+        if (cameraProvider.activeCameraSwitchbox.updateRider(cameraProvider)) {
+            riderRotation.set(cameraProvider.activeCameraEntity.orientation).multiply(cameraProvider.activeCameraSwitchbox.rotation);
+            if (cameraProvider.activeCamera.rot != null) {
+                riderRotation.multiply(cameraProvider.activeCamera.rot);
+            }
+            riderRotation.convertToAngles();
+            riderCameraRelativeAngles.computeVectorAngles(riderRotation, cameraProvider.orientation);
+            cameraProvider.riderRelativeOrientation.angles.set(riderCameraRelativeAngles);
+            cameraProvider.riderRelativeOrientation.updateToAngles();
         }
+        double yawDelta = cameraProvider.riderRelativeOrientation.angles.y - cameraProvider.prevRiderRelativeOrientation.angles.y;
+        if (yawDelta > 180) {
+            cameraProvider.prevRiderRelativeOrientation.angles.y += 360;
+        } else if (yawDelta < -180) {
+            cameraProvider.prevRiderRelativeOrientation.angles.y -= 360;
+        }
+        cameraProvider.riderCameraInputOrientation.updateToAngles();
     }
 
     private static void applyCameraCollision(IWrapperPlayer player, Point3D startPoint, Point3D cameraAdjustedPosition, AEntityF_Multipart<?> multipartToIgnore) {
