@@ -423,6 +423,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                                 }
                                 double newDamage = entity.damageVar.currentValue - amountRepaired;
                                 entity.damageVar.setTo(newDamage, true);
+                                if (definition.repair.canRepairTotaled && entity instanceof EntityVehicleF_Physics) {
+                                    ((EntityVehicleF_Physics) entity).electricPower = ((EntityVehicleF_Physics) entity).batteryCapacityVar.currentValue * AEntityVehicleE_Powered.BATTERY_DEFAULT_CHARGE;
+                                }
                                 if (entity instanceof PartEngine) {
                                     ((PartEngine) entity).hoursVar.setTo(0, true);
                                 }
