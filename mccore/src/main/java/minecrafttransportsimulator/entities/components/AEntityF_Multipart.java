@@ -93,8 +93,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     private final Map<JSONPartDefinition, AnimationSwitchbox> partSlotSwitchboxes = new HashMap<>();
 
     //Constants
-    private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.5F;
-    private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.5F;
+    private static final float PART_SLOT_NORMAL_HITBOX_WIDTH = 0.3F;
+    private static final float PART_SLOT_NORMAL_HITBOX_HEIGHT = 0.3F;
     private static final float PART_SLOT_LARGE_HITBOX_WIDTH = 0.75F;
     private static final float PART_SLOT_LARGE_HITBOX_HEIGHT = 2.25F;
     private static final Point3D PART_TRANSFER_GROWTH = new Point3D(16, 16, 16);
