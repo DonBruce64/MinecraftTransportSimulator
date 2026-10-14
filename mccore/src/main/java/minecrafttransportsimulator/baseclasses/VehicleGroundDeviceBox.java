@@ -434,13 +434,13 @@ public class VehicleGroundDeviceBox {
                 for (BoundingBox box : otherVehicle.allCollisionBoxes) {
                     if (box.collisionTypes.contains(CollisionType.VEHICLE) && box.intersects(solidBox)) {
                         if (collisionMotion.y > 0) {
-                            boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
+                            boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.getYRadius());
                             if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
                                 solidBox.currentCollisionDepth.y = boxCollisionDepth;
                                 collidingBox = box;
                             }
                         } else {
-                            boxCollisionDepth = solidBox.globalCenter.y - solidBox.heightRadius - (box.globalCenter.y + box.heightRadius);
+                            boxCollisionDepth = solidBox.globalCenter.y - solidBox.heightRadius - (box.globalCenter.y + box.getYRadius());
                             if (boxCollisionDepth < solidBox.currentCollisionDepth.y) {
                                 solidBox.currentCollisionDepth.y = boxCollisionDepth;
                                 collidingBox = box;
