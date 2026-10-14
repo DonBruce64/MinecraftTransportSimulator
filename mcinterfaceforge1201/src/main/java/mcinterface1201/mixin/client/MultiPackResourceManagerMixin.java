@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.systems.LanguageSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.PackResources;
@@ -71,6 +72,7 @@ public abstract class MultiPackResourceManagerMixin {
         if (InterfaceManager.clientInterface != null) {
             //Stop all sounds, since sound slots will have changed.
             InterfaceSound.stopAllSounds();
+            RenderableModelObject.clearTextureOverlayCaches();
 
             //Clear all model caches, since OpenGL indexes will have changed.
             AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();

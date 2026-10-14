@@ -7,10 +7,15 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -85,6 +90,18 @@ public final class InterfaceLoader {
         if (event.getSide().isClient()) {
             //Populate language system names.
             LanguageSystem.populateNames();
+
+            //Rebuild overlay renderables after F3+T so changed PNG dimensions and UV caches
+            //cannot survive a resource reload.
+            ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
+                RenderableModelObject.clearTextureOverlayCaches();
+                AWrapperWorld world = InterfaceManager.clientInterface.getClientWorld();
+                if (world != null) {
+                    for (AEntityD_Definable<?> entity : world.getEntitiesExtendingType(AEntityD_Definable.class)) {
+                        entity.resetModelsAndAnimations();
+                    }
+                }
+            });
 
             //Init keybinds.
             InterfaceManager.inputInterface.initConfigKey();
