@@ -28,7 +28,7 @@ import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
 
 /**
- * Screen-space markers for part slots.  Markers use a fixed small screen-space size, while
+ * Screen-space markers for part slots.  Markers shrink and fade with distance, while
  * interaction reach continues to follow the slot's actual world-space hitbox.
  */
 public class GUIComponentPartSlotMarkers extends AGUIComponent {
@@ -36,10 +36,12 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private static final int VERTICES_PER_QUAD = 6;
     private static final int PROGRESS_SEGMENTS = 32;
     private static final double SCANNER_REACH = 5.0D;
-    private static final double SCANNER_REACH_SQUARED = SCANNER_REACH * SCANNER_REACH;
+    static final double SCANNER_REACH_SQUARED = SCANNER_REACH * SCANNER_REACH;
     private static final double INTERACTION_REACH = 3.5D;
     private static final double INTERACTION_REACH_SQUARED = INTERACTION_REACH * INTERACTION_REACH;
     private static final double MARKER_RADIUS = 6.0D;
+    private static final double SCANNER_HOVER_SCALE = 1.4D;
+    private static final double MARKER_FADE_START = 1.5D;
     private static final double PROGRESS_INNER_RADIUS = MARKER_RADIUS - 1.0D;
     private static final double PROGRESS_OUTER_RADIUS = MARKER_RADIUS + 1.0D;
     private static final String MARKER_TEXTURE = "mts:textures/guis/part_marker.png";
@@ -72,11 +74,17 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
     private final RenderableData removalProgressRenderable;
     private final RenderableVertices installationProgressVertices;
     private final EnumMap<PartTypeCategory, RenderableData> typeMarkerRenderables = new EnumMap<>(PartTypeCategory.class);
+    private final GUIComponentPartSlotScanner scannerPreview;
     private final Point3D markerCenter = new Point3D();
     private final Point3D labelPosition = new Point3D();
 
     public GUIComponentPartSlotMarkers() {
+        this(null);
+    }
+
+    public GUIComponentPartSlotMarkers(GUIComponentPartSlotScanner scannerPreview) {
         super(0, 0, 0, 0);
+        this.scannerPreview = scannerPreview;
 
         defaultMarkerRenderable = createTexturedMarkerRenderable(MARKER_TEXTURE);
         customMarkerRenderable = createTexturedMarkerRenderable(MARKER_TEXTURE);
@@ -162,7 +170,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 }
 
                 String rawType = heldPart != null ? heldPart.definition.generic.type : getFirstSlotType(slotDefinition);
-                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, multipart.definition, slotDefinition, rawType, state, reachSquared, partialTicks);
+                renderMarker(gui, multipart, slotEntry.getKey(), eyePosition, multipart.definition, slotDefinition, rawType, state, holdingScanner, reachSquared, partialTicks);
             }
         }
 
@@ -188,13 +196,14 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 state = PartSlotMarkerState.INSTALLED;
             }
 
-            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, multipart.definition, slotDefinition, installedPart.definition.generic.type, state, reachSquared, partialTicks);
+            renderMarker(gui, installedPart, installedPart.boundingBox, eyePosition, multipart.definition, slotDefinition, installedPart.definition.generic.type, state, holdingScanner, reachSquared, partialTicks);
         }
     }
 
-    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition, String rawType, PartSlotMarkerState state, double reachSquared, float partialTicks) {
+    private void renderMarker(AGUIBase gui, AEntityF_Multipart<?> markerEntity, BoundingBox markerBox, Point3D eyePosition, AJSONPartProvider slotOwnerDefinition, JSONPartDefinition slotDefinition, String rawType, PartSlotMarkerState state, boolean holdingScanner, double reachSquared, float partialTicks) {
         boolean installationTarget = ControlSystem.isPartInstallationTarget(markerEntity, markerBox);
-        if (slotDefinition.isPermanent || !isWithinReach(eyePosition, markerBox, reachSquared)) {
+        double distanceSquared = getDistanceSquaredToBox(eyePosition, markerBox);
+        if (slotDefinition.isPermanent || distanceSquared >= reachSquared) {
             return;
         }
 
@@ -215,7 +224,13 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         double screenX = projectedCenter.x;
         double screenY = projectedCenter.y;
         double screenDepth = projectedCenter.z;
-        double markerRadius = MARKER_RADIUS;
+        float markerScale = getMarkerScale(Math.sqrt(distanceSquared), Math.sqrt(reachSquared));
+        boolean scannerHovered = holdingScanner && scannerPreview != null && scannerPreview.isHoveredSlot(markerEntity, markerBox);
+        boolean scannerTarget = scannerHovered && scannerPreview.isTarget(markerEntity, markerBox);
+        if (scannerHovered) {
+            markerScale = 1.0F;
+        }
+        double markerRadius = MARKER_RADIUS * markerScale * (scannerHovered ? SCANNER_HOVER_SCALE : 1.0D);
         double markerZ = MARKER_BASE_Z - screenDepth;
         PartTypeCategory typeCategory = getPartTypeCategory(rawType);
 
@@ -228,14 +243,20 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return;
         }
 
-        renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory, getMarkerTexture(slotOwnerDefinition, slotDefinition));
-        if (state == PartSlotMarkerState.LOCKED) {
-            renderStatusIcon(screenX, screenY, markerRadius, markerZ, state);
+        if (markerScale <= 0.0F) {
+            return;
         }
-        renderMarkerLabel(gui, screenX, screenY, markerRadius, markerZ, getMarkerName(slotDefinition, typeCategory, rawType));
+
+        renderMarkerBackground(screenX, screenY, markerRadius, markerZ, state, typeCategory, getMarkerTexture(slotOwnerDefinition, slotDefinition), markerScale);
+        if (state == PartSlotMarkerState.LOCKED) {
+            renderStatusIcon(screenX, screenY, markerRadius, markerZ, state, markerScale);
+        }
+        if (!scannerTarget) {
+            renderMarkerLabel(gui, screenX, screenY, markerRadius, markerZ, getMarkerName(slotDefinition, typeCategory, rawType), markerScale);
+        }
     }
 
-    private void renderMarkerBackground(double screenX, double screenY, double radius, double z, PartSlotMarkerState state, PartTypeCategory typeCategory, String customTexture) {
+    private void renderMarkerBackground(double screenX, double screenY, double radius, double z, PartSlotMarkerState state, PartTypeCategory typeCategory, String customTexture, float alpha) {
         RenderableData markerRenderable;
         switch (state) {
             case AVAILABLE:
@@ -260,13 +281,14 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
                 markerRenderable = defaultMarkerRenderable;
                 break;
         }
+        markerRenderable.setAlpha(alpha);
         markerRenderable.transform.resetTransforms();
         markerRenderable.transform.setTranslation(screenX, -screenY, z);
         markerRenderable.transform.applyScaling(radius * 2.0D, radius * 2.0D, 1.0D);
         markerRenderable.render();
     }
 
-    private void renderStatusIcon(double screenX, double screenY, double radius, double z, PartSlotMarkerState state) {
+    private void renderStatusIcon(double screenX, double screenY, double radius, double z, PartSlotMarkerState state, float alpha) {
         RenderableData iconRenderable;
         switch (state) {
             case LOCKED:
@@ -277,6 +299,7 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         }
 
         double iconScale = radius * 0.72D;
+        iconRenderable.setAlpha(alpha);
         iconRenderable.transform.resetTransforms();
         iconRenderable.transform.setTranslation(screenX, -screenY, z);
         iconRenderable.transform.applyScaling(iconScale, iconScale, 1.0D);
@@ -316,17 +339,22 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
         renderable.render();
     }
 
-    private void renderMarkerLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, String markerName) {
-        int wrapWidth = (int) Math.max(48.0D, radius * 4.0D);
-        labelPosition.set(screenX, -(screenY + radius + LABEL_GAP), z);
-        RenderText.drawText(markerName, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F, true, wrapWidth, true, gui.worldLightValue);
+    private void renderMarkerLabel(AGUIBase gui, double screenX, double screenY, double radius, double z, String markerName, float alpha) {
+        int wrapWidth = (int) Math.max(1.0D, 48.0D * alpha);
+        labelPosition.set(screenX, -(screenY + radius + LABEL_GAP * alpha), z);
+        RenderText.drawText(markerName, null, labelPosition, ColorRGB.WHITE, TextAlignment.CENTERED, 0.75F * alpha, true, wrapWidth, true, gui.worldLightValue, alpha);
     }
 
-    private static boolean isWithinReach(Point3D eyePosition, BoundingBox box, double reachSquared) {
+    private static float getMarkerScale(double distance, double reach) {
+        double fadeProgress = Math.max(0.0D, Math.min(1.0D, (distance - MARKER_FADE_START) / (reach - MARKER_FADE_START)));
+        return (float) (1.0D - fadeProgress * fadeProgress * (3.0D - 2.0D * fadeProgress));
+    }
+
+    static double getDistanceSquaredToBox(Point3D eyePosition, BoundingBox box) {
         double xDistance = Math.max(Math.abs(eyePosition.x - box.globalCenter.x) - box.widthRadius, 0.0D);
         double yDistance = Math.max(Math.abs(eyePosition.y - box.globalCenter.y) - box.heightRadius, 0.0D);
         double zDistance = Math.max(Math.abs(eyePosition.z - box.globalCenter.z) - box.depthRadius, 0.0D);
-        return xDistance * xDistance + yDistance * yDistance + zDistance * zDistance <= reachSquared;
+        return xDistance * xDistance + yDistance * yDistance + zDistance * zDistance;
     }
 
     private static boolean isLocked(AEntityF_Multipart<?> multipart) {
@@ -379,10 +407,16 @@ public class GUIComponentPartSlotMarkers extends AGUIComponent {
             return null;
         }
         String markerIcon = slotDefinition.markerIcon.trim().replace('\\', '/');
+        String packID = slotOwnerDefinition.packID;
+        int separatorIndex = markerIcon.indexOf(':');
+        if (separatorIndex >= 0) {
+            packID = markerIcon.substring(0, separatorIndex).trim();
+            markerIcon = markerIcon.substring(separatorIndex + 1).trim();
+        }
         while (markerIcon.startsWith("/")) {
             markerIcon = markerIcon.substring(1);
         }
-        return markerIcon.isEmpty() ? null : "/assets/" + slotOwnerDefinition.packID + "/textures/" + markerIcon;
+        return packID.isEmpty() || markerIcon.isEmpty() ? null : "/assets/" + packID + "/textures/" + markerIcon;
     }
 
     private static String getLocalizedTypeName(PartTypeCategory typeCategory, String rawType) {

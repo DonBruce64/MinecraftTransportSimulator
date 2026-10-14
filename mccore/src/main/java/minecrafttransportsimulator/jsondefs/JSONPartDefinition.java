@@ -127,7 +127,7 @@ public class JSONPartDefinition {
     @JSONDescription("Optional name to display below this part slot's marker.  This text is displayed as provided.  If omitted or blank, the localized name for the relevant part type is used.")
     public String markerName;
 
-    @JSONDescription("Optional path to this part slot's marker texture, relative to the root textures folder of the pack that defines the slot.  Include the file extension, for example: guis/engine_slot_marker.png.  If omitted or blank, the standard icon for the slot's part type is used.  Status icons for locked, unavailable, installed, and removable parts are not replaced by this texture.")
+    @JSONDescription("Optional path to this part slot's marker texture, relative to the root textures folder of the pack that defines the slot.  If omitted or blank, the standard icon for the slot's part type is used.  Status icons for locked, unavailable, installed, and removable parts are not replaced by this texture.")
     public String markerIcon;
 
     @JSONRequired
