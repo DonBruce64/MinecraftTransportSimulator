@@ -397,6 +397,8 @@ public class InterfaceRender implements IInterfaceRender {
      */
     @SubscribeEvent
     public static void onIVRenderLast(RenderWorldLastEvent event) {
+        InterfaceClient.captureWorldProjection(event.getPartialTicks());
+
         //Enable lighting as pass -1 has that disabled.
         RenderHelper.enableStandardItemLighting();
         setLightingState(true);
