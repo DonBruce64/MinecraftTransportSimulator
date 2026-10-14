@@ -49,9 +49,9 @@ public class InterfaceEventsEntityRendering {
     public static final Point3D cameraAdjustedPosition = new Point3D();
     public static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
     private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
-    static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
+    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     public static boolean adjustedCamera;
-    static boolean cameraShakeActive;
+    public static boolean cameraShakeActive;
     private static PlayerEntity mcPlayer;
 
     private static int lastScreenWidth;

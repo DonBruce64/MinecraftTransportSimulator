@@ -17,14 +17,6 @@ public class PacketCameraShake extends APacketBase {
     private final int duration;
     private final double intensity;
 
-    public PacketCameraShake(double strength) {
-        this(strength, 10);
-    }
-
-    public PacketCameraShake(double strength, int duration) {
-        this(strength, duration, 1.0D);
-    }
-
     public PacketCameraShake(double strength, int duration, double intensity) {
         super(null);
         this.strength = strength;

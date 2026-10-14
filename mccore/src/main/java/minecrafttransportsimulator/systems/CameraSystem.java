@@ -252,24 +252,8 @@ public class CameraSystem {
         }
     }
 
-    public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength) {
-        sendExplosionCameraShake(world, source, strength, CAMERA_SHAKE_MAX_DISTANCE, CAMERA_SHAKE_DURATION_TICKS);
-    }
-
-    public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
-        sendExplosionCameraShake(world, source, strength, radius, duration, 1.0D);
-    }
-
     public static void sendExplosionCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
         sendCameraShake(world, source, strength, ConfigSystem.settings.damage.cameraShakeFactor.value, radius, duration, intensity);
-    }
-
-    public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength) {
-        sendGunshotCameraShake(world, source, strength, CAMERA_SHAKE_MAX_DISTANCE, CAMERA_SHAKE_DURATION_TICKS);
-    }
-
-    public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration) {
-        sendGunshotCameraShake(world, source, strength, radius, duration, 1.0D);
     }
 
     public static void sendGunshotCameraShake(AWrapperWorld world, Point3D source, double strength, double radius, int duration, double intensity) {
@@ -316,14 +300,6 @@ public class CameraSystem {
      * Starts a client-side shake impulse.  Overlapping impulses add to the currently visible
      * amplitude without causing the previous impulse to jump back to its original strength.
      */
-    public static void startCameraShake(double strength) {
-        startCameraShake(strength, CAMERA_SHAKE_DURATION_TICKS);
-    }
-
-    public static void startCameraShake(double strength, int duration) {
-        startCameraShake(strength, duration, 1.0D);
-    }
-
     public static void startCameraShake(double strength, int duration, double intensity) {
         if (strength <= 0 || Double.isNaN(strength) || Double.isInfinite(strength) || duration <= 0) {
             return;

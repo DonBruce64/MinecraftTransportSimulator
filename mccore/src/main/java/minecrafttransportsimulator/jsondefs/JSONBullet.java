@@ -53,13 +53,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Camera shake settings for this bullet's explosion. Strength defaults to half the sum of blastDamage and the explosion's effective blastStrength. If omitted, the default shake settings are used.")
         public JSONCameraShake cameraShakeParams;
 
-        @Deprecated
-        public Double cameraShakeStrength;
-        @Deprecated
-        public Double cameraShakeRadius;
-        @Deprecated
-        public int cameraShakeDuration;
-
         @JSONDescription("If set, this bullet, when it hits an entity, will push it back this far.")
         public float knockback;
 

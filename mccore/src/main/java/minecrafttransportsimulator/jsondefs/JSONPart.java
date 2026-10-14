@@ -490,13 +490,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Camera shake settings for this gun's shots. Strength defaults to the loaded bullet's diameter and is applied once per fired cartridge, regardless of pellet count. If omitted, the default shake settings are used.")
         public JSONCameraShake cameraShakeParams;
 
-        @Deprecated
-        public Double cameraShakeStrength;
-        @Deprecated
-        public Double cameraShakeRadius;
-        @Deprecated
-        public int cameraShakeDuration;
-
         @JSONDescription("How much pitch recoil this gun provides to the shooter.  This will apply this value every shot.  Only for hand-held mode.")
         public float pitchRecoil;
 

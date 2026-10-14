@@ -303,7 +303,7 @@ public abstract class APacketBase {
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
 
-        //Client effect packets.  Keep these last to avoid changing existing packet indexes.
+        //Client effect packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCameraShake.class);
     }
 }
