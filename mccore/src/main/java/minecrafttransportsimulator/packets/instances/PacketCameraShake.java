@@ -41,8 +41,6 @@ public class PacketCameraShake extends APacketBase {
 
     @Override
     public void handle(AWrapperWorld world) {
-        if (world.isClient()) {
-            CameraSystem.startCameraShake(strength, duration, intensity);
-        }
+        CameraSystem.startCameraShake(strength, duration, intensity);
     }
 }
