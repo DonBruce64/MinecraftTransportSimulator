@@ -64,10 +64,13 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
+    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
     /**Saved camera world-space position and orientation for use by {@link InterfaceClient#projectToScreen}.
      * These are captured BEFORE the in-place transpose/subtraction that the GL pipeline requires.**/
     public static boolean adjustedCamera;
+    public static boolean cameraShakeActive;
     public static final Point3D projectionCameraPosition = new Point3D();
     public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
     private static int lastScreenWidth;
@@ -83,6 +86,7 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVCameraSetup(CameraSetup event) {
+        cameraShakeActive = false;
         if (event.getEntity() instanceof EntityPlayer) {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
@@ -132,6 +136,16 @@ public class InterfaceEventsEntityRendering {
                 event.setYaw(0);
                 event.setPitch(0);
                 event.setRoll(0);
+            }
+            cameraShakeRotation.setToZero();
+            cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
+            if (cameraShakeActive) {
+                cameraShakeRotation.convertToAngles();
+                event.setRoll((float) (event.getRoll() + cameraShakeRotation.angles.z));
+                event.setPitch((float) (event.getPitch() + cameraShakeRotation.angles.x));
+                event.setYaw((float) (event.getYaw() - cameraShakeRotation.angles.y));
+                cameraShakeProjectionRotation.angles.set(cameraShakeRotation.angles);
+                cameraShakeProjectionRotation.updateToAngles();
             }
         }
     }
