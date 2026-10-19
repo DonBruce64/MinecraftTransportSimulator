@@ -90,11 +90,13 @@ public abstract class EntityManager {
         }
         if (entity instanceof PartGun) {
             gunMap.put(entity.uniqueUUID, (PartGun) entity);
-            bulletMap.put(entity.uniqueUUID, new HashMap<>());
+            //A gun may be reconstructed while its projectiles are still in flight.
+            //Keep their index rather than replacing it with an empty map.
+            bulletMap.computeIfAbsent(entity.uniqueUUID, key -> new HashMap<>());
         }
         if (entity instanceof EntityBullet) {
             EntityBullet bullet = (EntityBullet) entity;
-            bulletMap.get(bullet.gun.uniqueUUID).put(bullet.bulletNumber, bullet);
+            bulletMap.computeIfAbsent(bullet.gun.uniqueUUID, key -> new HashMap<>()).put(bullet.bulletNumber, bullet);
         }
 
         @SuppressWarnings("unchecked")
@@ -132,7 +134,8 @@ public abstract class EntityManager {
      * This bullet MAY be null if we have had de-syncs across worlds that fouled the indexing.
      */
     public EntityBullet getBullet(UUID gunID, int bulletNumber) {
-        return bulletMap.get(gunID).get(bulletNumber);
+        Map<Integer, EntityBullet> bulletsForGun = bulletMap.get(gunID);
+        return bulletsForGun != null ? bulletsForGun.get(bulletNumber) : null;
     }
 
     /**
@@ -442,7 +445,10 @@ public abstract class EntityManager {
         }
         if (entity instanceof EntityBullet) {
             EntityBullet bullet = (EntityBullet) entity;
-            bulletMap.get(bullet.gun.uniqueUUID).remove(bullet.bulletNumber);
+            Map<Integer, EntityBullet> bulletsForGun = bulletMap.get(bullet.gun.uniqueUUID);
+            if (bulletsForGun != null && bulletsForGun.get(bullet.bulletNumber) == bullet) {
+                bulletsForGun.remove(bullet.bulletNumber);
+            }
         }
     }
     

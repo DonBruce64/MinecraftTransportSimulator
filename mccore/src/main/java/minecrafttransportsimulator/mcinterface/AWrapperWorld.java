@@ -114,6 +114,13 @@ public abstract class AWrapperWorld extends EntityManager {
     public abstract List<IWrapperEntity> getEntitiesWithin(BoundingBox box);
 
     /**
+     * Returns all players currently in this world.  This is intentionally separate
+     * from a large bounds query, as vanilla entity-section scans become very costly
+     * for multi-thousand-block particle ranges.
+     */
+    public abstract List<IWrapperPlayer> getPlayers();
+
+    /**
      * Like {@link #getEntitiesWithin(BoundingBox)}, but for players.
      */
     public abstract List<IWrapperPlayer> getPlayersWithin(BoundingBox box);

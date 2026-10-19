@@ -54,6 +54,10 @@ public class EntityParticle extends AEntityC_Renderable {
     private final JSONParticle definition;
     private final int maxAge;
     private final Point3D initialVelocity;
+    private final boolean exactSpawnPosition;
+    private final boolean longRangeEmitterParticle;
+    private final double longRangeRenderDisMin;
+    private final double longRangeRenderDisMax;
     private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 
     private ColorRGB startColor;
@@ -76,10 +80,26 @@ public class EntityParticle extends AEntityC_Renderable {
     private int colorDelayIndex;
 
     public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, Point3D spawningAngles, AnimationSwitchbox spawningSwitchbox) {
+        this(entitySpawning, definition, spawningPosition, spawningAngles, spawningSwitchbox, false, false, definition.longRangeRenderDisMin, definition.longRangeRenderDisMax);
+    }
+
+    /**
+     * Extended constructor used by synchronized emitters.  Exact positions have
+     * already had the definition offset/spawning animations applied on the server.
+     */
+    public EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, Point3D spawningAngles, AnimationSwitchbox spawningSwitchbox, boolean exactSpawnPosition, boolean forceLongRange) {
+        this(entitySpawning, definition, spawningPosition, spawningAngles, spawningSwitchbox, exactSpawnPosition, forceLongRange, definition.longRangeRenderDisMin, definition.longRangeRenderDisMax);
+    }
+
+    private EntityParticle(AEntityC_Renderable entitySpawning, JSONParticle definition, Point3D spawningPosition, Point3D spawningAngles, AnimationSwitchbox spawningSwitchbox, boolean exactSpawnPosition, boolean forceLongRange, double longRangeRenderDisMin, double longRangeRenderDisMax) {
         super(entitySpawning.world, spawningPosition, ZERO_FOR_CONSTRUCTOR, spawningAngles != null ? spawningAngles : ZERO_FOR_CONSTRUCTOR);
         this.entitySpawning = entitySpawning;
         this.definition = definition;
         this.spawningSwitchbox = spawningSwitchbox;
+        this.exactSpawnPosition = exactSpawnPosition;
+        this.longRangeEmitterParticle = forceLongRange;
+        this.longRangeRenderDisMin = longRangeRenderDisMin;
+        this.longRangeRenderDisMax = longRangeRenderDisMax;
         this.maxAge = generateMaxAge();
         boundingBox.widthRadius = definition.hitboxSize / 2D;
         boundingBox.heightRadius = boundingBox.widthRadius;
@@ -109,7 +129,7 @@ public class EntityParticle extends AEntityC_Renderable {
             case FACING: {
                 if (entitySpawning instanceof EntityBullet) {
                     EntityBullet bullet = (EntityBullet) entitySpawning;
-                    if (bullet.sideHit != Axis.NONE) {
+                    if (bullet.sideHit != null && bullet.sideHit != Axis.NONE) {
                         helperRotation.setToZero().rotateX(-90);
                         orientation.set(bullet.sideHit.facingRotation).multiplyTranspose(helperRotation);
                         helperTransform.set(orientation);
@@ -123,6 +143,11 @@ public class EntityParticle extends AEntityC_Renderable {
                         this.killBadParticle = true;
                         return;
                     }
+                } else if (exactSpawnPosition) {
+                    //Remote FACING emitters carry the server-computed face orientation.
+                    orientation.set(entitySpawning.orientation);
+                    helperTransform.set(orientation);
+                    positionOrientation = orientation;
                 }
                 break;
             }
@@ -134,7 +159,9 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set position, but only if we aren't a distance particle.
         //Distance particles are set prior to spawning with their actual position since it handles rotation.
-        if (definition.distance == 0 && definition.spawningOrientation != ParticleSpawningOrientation.TRAIL) {
+        if (exactSpawnPosition) {
+            position.set(spawningPosition);
+        } else if (definition.distance == 0 && definition.spawningOrientation != ParticleSpawningOrientation.TRAIL) {
             setPointToSpawn(spawningPosition, positionOrientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
         } else {
             position.set(spawningPosition);
@@ -142,8 +169,9 @@ public class EntityParticle extends AEntityC_Renderable {
         prevPosition.set(position);
 
         //Get block position for particle properties.  This changes from our actual position to calculated depending on properties.
+        boolean canAccessBlocks = !longRangeEmitterParticle || world.chunkLoaded(position);
         Point3D blockCheckPosition;
-        if (definition.getBlockPropertiesFromGround) {
+        if (definition.getBlockPropertiesFromGround && canAccessBlocks) {
             //Center of block for safety of FPEs.
             blockCheckPosition = position.copy().add(0, -world.getHeight(position) - 0.5, 0);
         } else {
@@ -153,7 +181,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Now that position is set, check to make sure we aren't an invalid particle.
         if (definition.type == ParticleType.BREAK) {
-            if (world.isAir(blockCheckPosition)) {
+            if (!canAccessBlocks || world.isAir(blockCheckPosition)) {
                 //Don't spawn break particles in the air, they're null textures.
                 this.staticColor = null;
                 this.renderable = null;
@@ -210,6 +238,13 @@ public class EntityParticle extends AEntityC_Renderable {
         } else if (definition.type == ParticleType.BREAK) {
             texture = RenderableData.GLOBAL_TEXTURE_NAME;
         } else if (definition.type == ParticleType.CASING) {
+            if (!(entitySpawning instanceof PartGun)) {
+                this.staticColor = null;
+                this.renderable = null;
+                this.model = null;
+                this.killBadParticle = true;
+                return;
+            }
             PartGun gun = (PartGun) entitySpawning;
             if(!gun.firedBullets.isEmpty()) {
                 ItemBullet bullet = gun.firedBullets.get(0);
@@ -294,7 +329,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         //Set color.
         if(definition.useBlockColor) {
-        	this.staticColor = world.getBlockColor(blockCheckPosition);
+	        	this.staticColor = canAccessBlocks ? world.getBlockColor(blockCheckPosition) : ColorRGB.WHITE;
         }else if (definition.color != null) {
             if (definition.toColor != null) {
                 this.startColor = definition.color;
@@ -347,7 +382,6 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.isBlended) {
             renderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
         }
-
         this.killBadParticle = false;
     }
 
@@ -413,10 +447,18 @@ public class EntityParticle extends AEntityC_Renderable {
         if (!definition.stopsOnGround || !touchingBlocks) {
             if(definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED || definition.spawningOrientation == ParticleSpawningOrientation.ATTACHED_Z) {
                 orientation.set(entitySpawning.orientation);
-                setPointToSpawn(entitySpawning.position, orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                if (exactSpawnPosition) {
+                    position.set(entitySpawning.position);
+                } else {
+                    setPointToSpawn(entitySpawning.position, orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                }
                 setOrientationToSpawn();
             } else if (definition.spawningOrientation == ParticleSpawningOrientation.WORLD_ATTACHED) {
-                setPointToSpawn(entitySpawning.position, entitySpawning.orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                if (exactSpawnPosition) {
+                    position.set(entitySpawning.position);
+                } else {
+                    setPointToSpawn(entitySpawning.position, entitySpawning.orientation, definition.pos, entitySpawning.scale, spawningSwitchbox, position);
+                }
             }
             
             if (definition.movementDuration != 0) {
@@ -461,7 +503,9 @@ public class EntityParticle extends AEntityC_Renderable {
                     }
                     case BUBBLE: {
                         //Bubbles float up until they break the surface of the water, then they pop.
-                        if (!world.isBlockLiquid(position)) {
+                        if (longRangeEmitterParticle && !world.chunkLoaded(position)) {
+                            motion.scale(0.85).add(0, 0.002D, 0);
+                        } else if (!world.isBlockLiquid(position)) {
                             remove();
                         } else {
                             motion.scale(0.85).add(0, 0.002D, 0);
@@ -506,7 +550,7 @@ public class EntityParticle extends AEntityC_Renderable {
             }
 
             //Check collision movement.  If we hit a block, don't move.
-            if (!definition.ignoreCollision) {
+            if (!definition.ignoreCollision && (!longRangeEmitterParticle || world.chunkLoaded(position) && world.chunkLoaded(position.copy().add(motion)))) {
                 touchingBlocks = boundingBox.updateCollisions(world, motion, true);
                 if (touchingBlocks) {
                     motion.subtract(boundingBox.currentCollisionDepth);
@@ -572,7 +616,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.subParticles != null) {
             for (JSONSubParticle subDef : definition.subParticles) {
                 if (subDef.particle.spawnEveryTick ? subDef.time >= ticksExisted : subDef.time == ticksExisted) {
-                    world.addEntity(new EntityParticle(this, subDef.particle, position, null, null));
+                    world.addEntity(new EntityParticle(this, subDef.particle, position, null, null, false, longRangeEmitterParticle, longRangeRenderDisMin, longRangeRenderDisMax));
                 }
             }
         }
@@ -594,7 +638,13 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     @Override
+    public int getWorldLightValue() {
+        return longRangeEmitterParticle && (isInLongRangeRenderMode() || !world.chunkLoaded(position)) ? 0x00F000F0 : super.getWorldLightValue();
+    }
+
+    @Override
     protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
+        renderable.setRenderAtLongRange(isInLongRangeRenderMode());
         //First set alpha, then check translucent.
         //We could change it this update cycle.
         if (definition.toTransparency != 0) {
@@ -608,7 +658,7 @@ public class EntityParticle extends AEntityC_Renderable {
         if (definition.fadeOutTransparencyTime > maxAge - ticksExisted) {
             renderable.setAlpha(renderable.alpha * (maxAge - ticksExisted) / definition.fadeOutTransparencyTime);
         }
-        if (definition.daytimeReductionFactor != 0) {
+        if (definition.daytimeReductionFactor != 0 && (!longRangeEmitterParticle || world.chunkLoaded(position))) {
             //Get world light and factor this into the alpha value.
             renderable.setAlpha(renderable.alpha * (1 - (definition.daytimeReductionFactor * world.getLightBrightness(position, true))));
         }
@@ -661,7 +711,14 @@ public class EntityParticle extends AEntityC_Renderable {
 
     @Override
     public boolean disableRendering() {
-        return killBadParticle || super.disableRendering();
+        Point3D cameraPosition = InterfaceManager.clientInterface.getCameraPosition();
+        boolean beyondLongRangeMaximum = longRangeEmitterParticle && cameraPosition != null && !JSONParticle.isWithinLongRangeRenderDistanceMax(position, cameraPosition, longRangeRenderDisMax);
+        return killBadParticle || beyondLongRangeMaximum || super.disableRendering();
+    }
+
+    private boolean isInLongRangeRenderMode() {
+        Point3D cameraPosition = InterfaceManager.clientInterface.getCameraPosition();
+        return longRangeEmitterParticle && cameraPosition != null && JSONParticle.isInLongRangeRenderMode(position, cameraPosition, longRangeRenderDisMin, longRangeRenderDisMax);
     }
 
     private void updateOrientation() {

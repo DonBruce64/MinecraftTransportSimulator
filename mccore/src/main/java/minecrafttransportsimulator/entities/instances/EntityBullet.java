@@ -40,9 +40,9 @@ import minecrafttransportsimulator.systems.LanguageSystem;
  * are particles.  This allows them to be independent of the
  * vehicle that fired them.
  * <p>
- * As particles, bullets are client-side only.  This prevents them from getting stuck
- * in un-loaded chunks on the server, and prevents the massive network usage that
- * would be required to spawn 100s of bullets from a machine gun into the world.
+ * Most bullets are client-side only.  Long-range/NPC bullets, and bullets that own a
+ * long-range particle emitter, also have a server simulation.  The emitter still
+ * avoids synchronizing the bullet's individual particles.
  *
  * @author don_bruce
  */
@@ -314,9 +314,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 orientation.setToVector(motion, true);
             }
 
-            //Long-range bullets and those fired by NPCs do checks on server only, all others do so on clients.
+            //Long-range bullets, bullets with synchronized long-range particle emitters,
+            //and those fired by NPCs do checks on the server only.  All others use the
+            //original primary-client behavior.
             //We only do client checks on the primary client, not all clients.
-            if (((definition.bullet.isLongRange || !(gun.lastController instanceof IWrapperPlayer)) ^ world.isClient()) && (!world.isClient() || InterfaceManager.clientInterface.getClientPlayer().getID().equals(gun.lastController.getID()))) {
+            boolean hasLongRangeParticleEmitter = hasLongRangeParticles(definition);
+            boolean serverIsPrimaryController = definition.bullet.isLongRange || hasLongRangeParticleEmitter || !(gun.lastController instanceof IWrapperPlayer);
+            if ((serverIsPrimaryController ^ world.isClient()) && (!world.isClient() || InterfaceManager.clientInterface.getClientPlayer().getID().equals(gun.lastController.getID()))) {
                 //Now that we have an accurate motion, check for collisions.
                 //First get a damage object to try to attack entities with.
                 double amount = definition.bullet.isHeat ? definition.bullet.damage : (velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value * ConfigSystem.settings.damage.packBulletDamageFactors.value.get(gun.lastLoadedBullet.definition.packID);
@@ -327,8 +331,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                 Collection<BoundingBoxHitResult> hitMultipartBoxes = null;
                 IWrapperEntity hitExternalEntity = null;
                 Point3D hitExternalEntityPosition = null;
-                hitBlock = world.getBlockHit(position, motion);
                 Point3D endPoint = position.copy().add(motion);
+                hitBlock = (!hasLongRangeParticleEmitter || world.chunkLoaded(position) && world.chunkLoaded(endPoint)) ? world.getBlockHit(position, motion) : null;
                 
                 //Check for collided external entities.
                 List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);
@@ -427,7 +431,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         waitingOnActionPacket = true;
                     } else {
                         performExternalEntityHitLogic(hitExternalEntity, damage);
-                        performGenericHitLogic(gun, bulletNumber, hitExternalEntityPosition, orientation, Axis.getFromVector(motion), HitType.ENTITY);
+                        performGenericHitLogic(this, hitExternalEntityPosition, orientation, Axis.getFromVector(motion), HitType.ENTITY);
                     }
                     displayDebugMessage("HIT MC ENTITY " + hitExternalEntity.getName());
                     return;
@@ -449,7 +453,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, hitBlock.hitPosition, orientation, hitBlock.side, HitType.BLOCK));
                         waitingOnActionPacket = true;
                     } else {
-                        performGenericHitLogic(gun, bulletNumber, hitBlock.hitPosition, orientation, hitBlock.side, HitType.BLOCK);
+                        performGenericHitLogic(this, hitBlock.hitPosition, orientation, hitBlock.side, HitType.BLOCK);
                     }
                     displayDebugMessage("HIT BLOCK AT " + hitBlock.blockPosition + " WITH ACTUAL POSITION " + hitBlock.hitPosition);
                     return;
@@ -468,7 +472,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                         }
                     } else {
                         //No entity target, first check blocks.
-                        hitBlock = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
+                        Point3D proximityMotion = motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity);
+                        Point3D proximityEndPoint = position.copy().add(proximityMotion);
+                        hitBlock = (!hasLongRangeParticleEmitter || world.chunkLoaded(position) && world.chunkLoaded(proximityEndPoint)) ? world.getBlockHit(position, proximityMotion) : null;
                         if (hitBlock != null) {
                             targetToHit = hitBlock.hitPosition;
                             hitType = HitType.BLOCK;
@@ -532,7 +538,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, orientation, Axis.getFromVector(motion), hitType));
                             waitingOnActionPacket = true;
                         } else {
-                            performGenericHitLogic(gun, bulletNumber, position, orientation, Axis.getFromVector(motion), hitType);
+                            performGenericHitLogic(this, position, orientation, Axis.getFromVector(motion), hitType);
                         }
                         return;
                     }
@@ -545,7 +551,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, orientation, Axis.NONE, HitType.BURST));
                             waitingOnActionPacket = true;
                         } else {
-                            performGenericHitLogic(gun, bulletNumber, position, orientation, Axis.NONE, HitType.BURST);
+                            performGenericHitLogic(this, position, orientation, Axis.NONE, HitType.BURST);
                         }
                         displayDebugMessage("BURST");
                         return;
@@ -641,13 +647,21 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
     public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, Axis hitSide, HitType hitType) {
         EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
-        performGenericHitLogic(gun, bulletNumber, position, bullet != null ? bullet.orientation : new RotationMatrix(), hitSide, hitType);
+        performGenericHitLogic(gun, bulletNumber, bullet, position, bullet != null ? bullet.orientation : new RotationMatrix(), hitSide, hitType);
     }
 
     public static void performGenericHitLogic(PartGun gun, int bulletNumber, Point3D position, RotationMatrix orientation, Axis hitSide, HitType hitType) {
+        performGenericHitLogic(gun, bulletNumber, gun.world.getBullet(gun.uniqueUUID, bulletNumber), position, orientation, hitSide, hitType);
+    }
+
+    /** Uses the authoritative instance directly so registry churn cannot leave it colliding every tick. */
+    public static void performGenericHitLogic(EntityBullet bullet, Point3D position, RotationMatrix orientation, Axis hitSide, HitType hitType) {
+        performGenericHitLogic(bullet.gun, bullet.bulletNumber, bullet, position, orientation, hitSide, hitType);
+    }
+
+    private static void performGenericHitLogic(PartGun gun, int bulletNumber, EntityBullet bullet, Point3D position, RotationMatrix orientation, Axis hitSide, HitType hitType) {
         //Query up return packets first.  This ensures that we get to do this generic logic which spawns particles on clients before
         //any block-breaking packets arrive.
-        EntityBullet bullet = gun.world.getBullet(gun.uniqueUUID, bulletNumber);
         if (!gun.world.isClient()) {
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitGeneric(gun, bulletNumber, position, orientation, hitSide, hitType));
         }
