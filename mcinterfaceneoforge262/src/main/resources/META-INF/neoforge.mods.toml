@@ -1,0 +1,25 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "All rights reserved"
+issueTrackerURL = "https://github.com/DonBruce64/MinecraftTransportSimulator/issues"
+
+[[mods]]
+modId = "mts"
+version = "${file.jarVersion}"
+displayName = "Immersive Vehicles (formerly MTS)"
+displayURL = "https://www.curseforge.com/minecraft/mc-mods/minecraft-transport-simulator"
+logoFile = "vingette.png"
+credits = "Don Bruce & The Modeling Crew."
+description = '''
+Realistic planes and cars for Minecraft!
+'''
+
+[[mixins]]
+config = "mts.mixins.json"
+
+[[dependencies.mts]]
+    modId = "neoforge"
+    type = "required"
+    versionRange = "[21.1,)"
+    ordering = "NONE"
+    side = "BOTH"
