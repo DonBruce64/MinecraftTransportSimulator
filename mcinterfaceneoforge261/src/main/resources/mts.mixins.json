@@ -1,0 +1,31 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "mcinterface261.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "client": [
+        "client.ArmedEntityRenderStateMixin",
+        "client.CameraMixin",
+        "client.CameraExtractStateMixin",
+        "client.GameRendererAccessor",
+        "client.GameRendererMixin",
+        "client.HumanoidModelMixin",
+        "client.LevelRendererMixin",
+        "client.ListenerMixin",
+        "client.LivingEntityRendererMixin",
+        "client.MinecraftMixin",
+        "client.MultiPackResourceManagerMixin",
+        "client.OptionInstanceMixin",
+        "client.WeatherEffectRendererMixin",
+        "client.VillagerModelMixin"
+    ],
+    "mixins": [
+        "common.BiomeMixin",
+        "common.ConcretePowderBlockMixin",
+        "common.SavedDataStorageMixin",
+        "common.EntityMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
