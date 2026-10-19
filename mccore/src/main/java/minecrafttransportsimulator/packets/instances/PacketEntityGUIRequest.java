@@ -68,7 +68,10 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
                 new GUIPackExporter((EntityVehicleF_Physics) entity);
                 break;
             case PAINT_GUN:
-                new GUIPaintGun((AEntityD_Definable<?>) entity, player);
+                AEntityD_Definable<?> definableEntity = (AEntityD_Definable<?>) entity;
+                if (!definableEntity.definition.disableRepaint) {
+                    new GUIPaintGun(definableEntity, player);
+                }
                 break;
             case PART_BENCH:
                 new GUIPartBench((AEntityD_Definable<?>) entity, ((TileEntityDecor) entity).definition.decor.crafting);
