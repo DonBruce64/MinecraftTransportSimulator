@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
@@ -460,7 +461,7 @@ public final class ControlSystem {
     }
 
     private static boolean controlMouseYoke(EntityVehicleF_Physics aircraft, double mouseXDelta, double mouseYDelta) {
-        boolean mouseYokeEnabled = ConfigSystem.client.controlSettings.mouseYoke.value && !ConfigSystem.client.controlSettings.arcadeMode.value;
+        boolean mouseYokeEnabled = ConfigSystem.client.controlSettings.mouseYoke.value && !aircraft.isArcadeFlightActive();
         if (mouseYokeEnabled != mouseYokeEnabledLastCall) {
             resetMouseYoke();
             mouseYokeEnabledLastCall = mouseYokeEnabled;
@@ -521,9 +522,26 @@ public final class ControlSystem {
         }
 
         if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {
-            ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
-            ConfigSystem.saveToDisk();
-            InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
+            String overrideKey = aircraft.getArcadeFlightOverrideKey();
+            if (overrideKey == null) {
+                ConfigSystem.client.controlSettings.arcadeMode.value = !ConfigSystem.client.controlSettings.arcadeMode.value;
+                ConfigSystem.saveToDisk();
+                InterfaceManager.clientInterface.displayOverlayMessage((ConfigSystem.client.controlSettings.arcadeMode.value ? LanguageSystem.INTERACT_ARCADEMODE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_DISABLED).getCurrentValue());
+            } else {
+                //This aircraft sets its own default for this mode, so remember the player's choice
+                //for it here rather than changing their global setting.
+                boolean newArcadeState = !aircraft.isArcadeFlightActive();
+                if (ConfigSystem.client.controlSettings.arcadeFlightOverrides == null) {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides = new HashMap<>();
+                }
+                if (newArcadeState == aircraft.isArcadeFlightDefault()) {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides.remove(overrideKey);
+                } else {
+                    ConfigSystem.client.controlSettings.arcadeFlightOverrides.put(overrideKey, newArcadeState);
+                }
+                ConfigSystem.saveToDisk();
+                InterfaceManager.clientInterface.displayOverlayMessage((newArcadeState ? LanguageSystem.INTERACT_ARCADEMODE_VEHICLE_ENABLED : LanguageSystem.INTERACT_ARCADEMODE_VEHICLE_DISABLED).getCurrentValue());
+            }
         }
 
         //Open or close the panel.
@@ -599,7 +617,7 @@ public final class ControlSystem {
                 break;
             }
         }
-        boolean useMouseFlight = ConfigSystem.client.controlSettings.arcadeMode.value
+        boolean useMouseFlight = aircraft.isArcadeFlightActive()
                 && !aircraft.definition.motorized.isBlimp
                 && !ControlsJoystick.AIRCRAFT_PITCH.isJoystickActive()
                 && !ControlsJoystick.AIRCRAFT_ROLL.isJoystickActive()

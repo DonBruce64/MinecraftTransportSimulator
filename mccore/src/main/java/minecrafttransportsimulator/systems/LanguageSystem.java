@@ -382,6 +382,8 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_MOUSEYOKE_DISABLED = new LanguageEntry("interact.mouseyoke.disabled", "Mouse Yoke disabled");
     public static final LanguageEntry INTERACT_ARCADEMODE_ENABLED = new LanguageEntry("interact.arcademode.enabled", "Arcade Mode enabled");
     public static final LanguageEntry INTERACT_ARCADEMODE_DISABLED = new LanguageEntry("interact.arcademode.disabled", "Arcade Mode disabled");
+    public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_ENABLED = new LanguageEntry("interact.arcademode.vehicle.enabled", "Arcade flight enabled for this aircraft in this mode");
+    public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_DISABLED = new LanguageEntry("interact.arcademode.vehicle.disabled", "Arcade flight disabled for this aircraft in this mode");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
