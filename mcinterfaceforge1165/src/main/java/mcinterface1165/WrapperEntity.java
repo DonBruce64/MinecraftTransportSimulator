@@ -32,6 +32,10 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -219,6 +223,14 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void setPosition(Point3D position, boolean onGround) {
         if (cachedEntityRiding != null) {
+            //Also clear flight when mounting while already flying, on both sides.
+            if (entity instanceof PlayerEntity) {
+                PlayerEntity player = (PlayerEntity) entity;
+                if (!player.isSpectator() && player.abilities.flying) {
+                    player.abilities.flying = false;
+                    player.onUpdateAbilities();
+                }
+            }
             //Need to offset down to make bounding hitbox go down like normal.
             entity.setPos(position.x, position.y + getSeatOffset(), position.z);
         } else {
@@ -478,6 +490,48 @@ public class WrapperEntity implements IWrapperEntity {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingAttackEvent event) {
+        if (event.getEntityLiving() instanceof PlayerEntity && !event.getEntityLiving().level.isClientSide) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getDirectEntity();
+            if (attacker instanceof MobEntity && attacker == source.getEntity() && ("mob".equals(source.getMsgId()) || "sting".equals(source.getMsgId()))) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((PlayerEntity) event.getEntityLiving()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).isRiderProtectedFromMelee(getWrapperFor(attacker))) {
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getPlayer()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity == ((BuilderEntityExisting) event.getTarget()).entity) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(PlayerEntity player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**

@@ -322,6 +322,10 @@ public class InterfaceInput implements IInterfaceInput {
 
     @SubscribeEvent
     public static void onIVMovementInput(MovementInputUpdateEvent event) {
+        //Vanilla double-tap flight must not activate while controlling a seat.
+        if (!event.getEntity().isSpectator() && WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding() != null) {
+            event.getInput().jumping = false;
+        }
         if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getInput().shiftKeyDown)) {
             event.getInput().shiftKeyDown = false;
         }

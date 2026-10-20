@@ -38,6 +38,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.alchemy.Potion;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -236,6 +240,14 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void setPosition(Point3D position, boolean onGround) {
         if (cachedEntityRiding != null) {
+            //Also clear flight when mounting while already flying, on both sides.
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
+                if (!player.isSpectator() && player.getAbilities().flying) {
+                    player.getAbilities().flying = false;
+                    player.onUpdateAbilities();
+                }
+            }
             //Need to offset down to make bounding hitbox go down like normal.
             entity.setPos(position.x, position.y + getSeatOffset(), position.z);
         } else {
@@ -503,6 +515,48 @@ public class WrapperEntity implements IWrapperEntity {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingIncomingDamageEvent event) {
+        if (event.getEntity() instanceof Player && !event.getEntity().level().isClientSide) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getDirectEntity();
+            if (attacker instanceof Mob && attacker == source.getEntity() && (source.is(DamageTypes.MOB_ATTACK) || source.is(DamageTypes.MOB_ATTACK_NO_AGGRO) || source.is(DamageTypes.STING))) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntity()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).isRiderProtectedFromMelee(getWrapperFor(attacker))) {
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity == ((BuilderEntityExisting) event.getTarget()).entity) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(Player player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**

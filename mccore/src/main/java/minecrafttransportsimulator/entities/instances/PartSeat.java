@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ComputedVariable;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -17,6 +18,7 @@ import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup.CollisionType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -100,6 +102,23 @@ public final class PartSeat extends APart {
             }
         }
         return true;
+    }
+
+    /**
+     * Returns true if an active ATTACK box on the vehicle or its parts blocks a melee
+     * attack on the rider.  Use the seated head position, independent of camera offsets.
+     */
+    public boolean isRiderProtectedFromMelee(IWrapperEntity attacker) {
+        if (rider != null) {
+            Point3D attackStart = attacker.getHeadPosition();
+            Point3D attackEnd = new Point3D(0, (rider.getEyeHeight() + rider.getSeatOffset()) * rider.getVerticalScale(), 0).rotate(orientation).add(position);
+            for (BoundingBox box : masterEntity.allCollisionBoxes) {
+                if (box.collisionTypes.contains(CollisionType.ATTACK) && box.getIntersection(attackStart, attackEnd) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
