@@ -17,28 +17,32 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  */
 public class PacketGUIRequest extends APacketPlayer {
     private final GUIType guiRequested;
+    private final ItemItem item;
 
-    public PacketGUIRequest(IWrapperPlayer player, GUIType guiRequested) {
+    public PacketGUIRequest(IWrapperPlayer player, GUIType guiRequested, ItemItem item) {
         super(player);
         this.guiRequested = guiRequested;
+        this.item = item;
     }
 
     public PacketGUIRequest(ByteBuf buf) {
         super(buf);
         this.guiRequested = GUIType.values()[buf.readByte()];
+        this.item = readItemFromBuffer(buf);
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         buf.writeByte(guiRequested.ordinal());
+        writeItemToBuffer(item, buf);
     }
 
     @Override
     public void handle(AWrapperWorld world, IWrapperPlayer player) {
         switch (guiRequested) {
             case BOOKLET:
-                new GUIBooklet((ItemItem) player.getHeldItem());
+                new GUIBooklet(item);
         }
     }
 

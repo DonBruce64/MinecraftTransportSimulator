@@ -88,6 +88,8 @@ public class InterfaceRender implements IInterfaceRender {
     /**Cache for resolved TextureStateShards to avoid repeated classpath lookups via getPackResource().*/
     private static final ConcurrentHashMap<String, RenderStateShard.TextureStateShard> textureStateCache = new ConcurrentHashMap<>();
 
+    private static final String WHITE_TEXTURE_NAME = "mts:textures/rendering/light.png";
+
     @SuppressWarnings("deprecation")
     private static final ResourceLocation BLOCK_TEXTURE_LOCATION = TextureAtlas.LOCATION_BLOCKS;
     private static RenderStateShard.TextureStateShard MISSING_STATE;
@@ -228,7 +230,7 @@ public class InterfaceRender implements IInterfaceRender {
             //Rewind buffer for next read.
             data.vertexObject.vertices.rewind();
         } else {
-            String typeID = data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
+            String typeID = (renderingGUI ? "gui_" : "entity_") + data.texture + data.isTranslucent + data.lightingMode + data.enableBrightBlending;
             final RenderType renderType;
             if (data.vertexObject.cacheVertices && !renderingGUI && ConfigSystem.client.renderingSettings.renderingMode.value != 2) {
             	//Get the render type and data buffer for this entity.
@@ -431,18 +433,27 @@ public class InterfaceRender implements IInterfaceRender {
                 stateBuilder.setTransparencyState(NO_TRANSPARENCY);
             }
 
-            //Texture is just based on what is specified.
-            stateBuilder.setTextureState(data.texture != null ? getTexture(data.texture) : NO_TEXTURE);
-            //Always need lightmaps for entities per their vertex format.
-            stateBuilder.setLightmapState(LIGHTMAP);
+            //Entity shaders always sample Sampler0, so color-only primitives use a solid white texture.
+            stateBuilder.setTextureState(getTexture(data.texture != null ? data.texture : WHITE_TEXTURE_NAME));
             //Entities go to the main target.
             stateBuilder.setOutputState(MAIN_TARGET);
-            //All entity shaders require overlays, so we use those here.
-            stateBuilder.setOverlayState(OVERLAY);
-            //Culling is required for textured surfaces since they have normals and this saves FPS.
-            stateBuilder.setCullState(CULL);
-            //Depth test is fine, it ensures translucent things don't render in front of everything.
-            //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
+            if (renderingGUI) {
+                //GUI primitives should not inherit world render state or be clipped by the scene.
+                stateBuilder.setLightmapState(data.lightingMode.disableWorldLighting ? NO_LIGHTMAP : LIGHTMAP);
+                stateBuilder.setOverlayState(OVERLAY);
+                stateBuilder.setCullState(NO_CULL);
+                stateBuilder.setDepthTestState(NO_DEPTH_TEST);
+                stateBuilder.setWriteMaskState(COLOR_WRITE);
+            } else {
+                //Always need lightmaps for entities per their vertex format.
+                stateBuilder.setLightmapState(LIGHTMAP);
+                //All entity shaders require overlays, so we use those here.
+                stateBuilder.setOverlayState(OVERLAY);
+                //Culling is required for textured surfaces since they have normals and this saves FPS.
+                stateBuilder.setCullState(CULL);
+                //Depth test is fine, it ensures translucent things don't render in front of everything.
+                //stateBuilder.setDepthTestState(LEQUAL_DEPTH_TEST);
+            }
             //No layering is fine.
             //stateBuilder.setLayeringState(NO_LAYERING);
             //Default texture application is fine.
