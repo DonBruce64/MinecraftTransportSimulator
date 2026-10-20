@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -27,14 +28,24 @@ public class PacketItemInteractable extends APacketPlayer {
     private final int units;
     private final int stackSize;
     private final String texture;
+    private final boolean saveToHeldItem;
 
     public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture) {
+        this(player, inventory, texture, true);
+    }
+
+    /**
+     * Legacy-interface fallback for versions that do not expose IV inventories through a native
+     * Minecraft menu.  Modern interfaces open the same inventory directly as a vanilla menu.
+     */
+    public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
         super(player);
         this.uniqueUUID = inventory.uniqueUUID;
         this.data = inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper());
         this.units = inventory.getSize();
         this.stackSize = inventory.getStackSize();
         this.texture = texture;
+        this.saveToHeldItem = saveToHeldItem;
     }
 
     private PacketItemInteractable(IWrapperPlayer player, UUID uniqueUUID) {
@@ -44,6 +55,7 @@ public class PacketItemInteractable extends APacketPlayer {
         this.units = 0;
         this.stackSize = 0;
         this.texture = null;
+        this.saveToHeldItem = true;
     }
 
     public PacketItemInteractable(ByteBuf buf) {
@@ -58,11 +70,13 @@ public class PacketItemInteractable extends APacketPlayer {
             } else {
                 this.texture = null;
             }
+            this.saveToHeldItem = buf.readBoolean();
         } else {
             this.data = null;
             this.units = 0;
             this.stackSize = 0;
             this.texture = null;
+            this.saveToHeldItem = true;
         }
     }
 
@@ -83,24 +97,33 @@ public class PacketItemInteractable extends APacketPlayer {
             } else {
                 buf.writeBoolean(false);
             }
+            buf.writeBoolean(saveToHeldItem);
         }
     }
 
     @Override
     public void handle(AWrapperWorld world, IWrapperPlayer player) {
         if (world.isClient()) {
-            //Create new inventory container ad-hoc to match server's data.
-            //We then delete this container, and the one on the server, when the GUI is closed.
-            EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units, stackSize);
-            new GUIInventoryContainer(inventory, texture, true) {
+            //Persistent world inventories normally already exist on the client.  Held crates need
+            //an ad-hoc client container populated from this packet.
+            AEntityA_Base existingEntity = world.getEntity(uniqueUUID);
+            boolean temporaryInventory = !(existingEntity instanceof EntityInventoryContainer);
+            EntityInventoryContainer inventory = temporaryInventory ? new EntityInventoryContainer(world, data, units, stackSize) : (EntityInventoryContainer) existingEntity;
+            new GUIInventoryContainer(inventory, texture, saveToHeldItem) {
                 @Override
                 public void close() {
                     super.close();
-                    InterfaceManager.packetInterface.sendToServer(new PacketItemInteractable(player, uniqueUUID));
-                    inventory.remove();
+                    if (saveToHeldItem) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketItemInteractable(player, uniqueUUID));
+                    }
+                    if (temporaryInventory) {
+                        inventory.remove();
+                    }
                 }
             };
-            world.addEntity(inventory);
+            if (temporaryInventory) {
+                world.addEntity(inventory);
+            }
         } else {
             world.getEntity(uniqueUUID).remove();
         }

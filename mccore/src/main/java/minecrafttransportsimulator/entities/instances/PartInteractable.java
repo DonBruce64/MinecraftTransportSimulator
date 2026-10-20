@@ -104,11 +104,16 @@ public final class PartInteractable extends APart {
     public boolean interact(IWrapperPlayer player) {
         if (isActiveVar.isActive && (vehicleOn == null || !vehicleOn.lockedVar.isActive)) {
             switch (definition.interactable.interactionType) {
-                case CRATE:
                 case CRAFTING_BENCH:
                 case FURNACE:
                 case BREWER: {
                     player.sendPacket(new PacketPartInteractable(this, player));
+                    break;
+                }
+                case CRATE: {
+                    player.openInventoryGUI(inventory, subDefinition.inventoryTexture, false);
+                    playersInteracting.add(player);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
                     break;
                 }
                 case CRAFTING_TABLE: {
