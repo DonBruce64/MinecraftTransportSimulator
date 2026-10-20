@@ -73,6 +73,11 @@ public class JSONConfigClient {
         public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
         public JSONConfigEntry<Float> soundVolume = new JSONConfigEntry<>(1.0F, "Volume for all sounds in the mod.  This is used instead of the game's master volume.");
         public JSONConfigEntry<Float> radioVolume = new JSONConfigEntry<>(1.0F, "Volume for radios in the mod.  This is used instead of the game's master volume.");
+
+        //Per-aircraft arcade flight choices for aircraft that set arcadeFlightMode, set with the arcade key.
+        //Keyed by "packID:systemName|arcade" or "packID:systemName|standard" (the default being overridden).
+        //True is arcade flight, false is standard controls.  May be null if loaded from an older config.
+        public Map<String, Boolean> arcadeFlightOverrides = new HashMap<>();
     }
 
     public static class JSONControls {
