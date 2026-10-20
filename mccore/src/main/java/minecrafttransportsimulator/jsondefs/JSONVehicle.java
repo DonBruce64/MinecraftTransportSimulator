@@ -186,6 +186,10 @@ public class JSONVehicle extends AJSONPartProvider {
         public float waterBallastFactor;
 
         @ModifiableValue
+        @JSONDescription("Sets this aircraft's default flight controls in its current mode, instead of the player's arcade flight setting.  1 defaults to arcade (mouse) flight, -1 defaults to standard controls, and 0 (the default) follows the player's setting.  Players can override the default for this aircraft and mode with the arcade key, and their choice is remembered on their client.  Make this a variableModifier to set a different default per mode, like arcade in normal flight and standard in a hover mode.")
+        public float arcadeFlightMode;
+
+        @ModifiableValue
         @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
         public float gravityFactor;
 
