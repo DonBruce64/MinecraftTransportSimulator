@@ -14,6 +14,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -128,7 +129,7 @@ public class BuilderInventoryContainerMenu extends AbstractContainerMenu {
     @Override
     public ItemStack quickMoveStack(Player player, int menuSlotIndex) {
         Slot slot = slots.get(menuSlotIndex);
-        if (!slot.hasItem()) {
+        if (!slot.hasItem() || !slot.mayPickup(player)) {
             return ItemStack.EMPTY;
         }
 
@@ -153,6 +154,14 @@ public class BuilderInventoryContainerMenu extends AbstractContainerMenu {
         }
         slot.onTake(player, slotStack);
         return originalStack;
+    }
+
+    @Override
+    public void clicked(int slotID, int dragType, ClickType clickType, Player player) {
+        if (saveToHeldItem && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
+            return;
+        }
+        super.clicked(slotID, dragType, clickType, player);
     }
 
     @Override

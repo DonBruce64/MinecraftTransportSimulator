@@ -13,8 +13,10 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.RegistryObject;
@@ -120,6 +122,11 @@ public class BuilderInventoryContainerMenu extends Container {
     public boolean clickMenuButton(PlayerEntity player, int buttonID) {
         if (buttonID >= 0 && buttonID <= getMaxRowOffset()) {
             setRowOffset(buttonID);
+            //1.16 has no broadcastFullState API.  Explicitly refresh the window so all
+            //remapped facade slots are sent even when two pages contain equal stacks.
+            if (player instanceof ServerPlayerEntity) {
+                ((ServerPlayerEntity) player).refreshContainer(this);
+            }
             return true;
         }
         return false;
@@ -128,7 +135,7 @@ public class BuilderInventoryContainerMenu extends Container {
     @Override
     public ItemStack quickMoveStack(PlayerEntity player, int menuSlotIndex) {
         Slot slot = slots.get(menuSlotIndex);
-        if (!slot.hasItem()) {
+        if (!slot.hasItem() || !slot.mayPickup(player)) {
             return ItemStack.EMPTY;
         }
 
@@ -153,6 +160,14 @@ public class BuilderInventoryContainerMenu extends Container {
         }
         slot.onTake(player, slotStack);
         return originalStack;
+    }
+
+    @Override
+    public ItemStack clicked(int slotID, int dragType, ClickType clickType, PlayerEntity player) {
+        if (saveToHeldItem && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
+            return ItemStack.EMPTY;
+        }
+        return super.clicked(slotID, dragType, clickType, player);
     }
 
     @Override

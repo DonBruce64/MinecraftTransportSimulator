@@ -6,14 +6,19 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfacePacket;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -21,6 +26,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 class InterfacePacket implements IInterfacePacket {
     private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(InterfaceLoader.MODID);
@@ -34,12 +40,35 @@ class InterfacePacket implements IInterfacePacket {
         //Register the main wrapper packet.
         network.registerMessage(WrapperHandler.class, WrapperPacket.class, 0, Side.CLIENT);
         network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);
+        network.registerMessage(InventoryOpenHandler.class, InventoryOpenPacket.class, 2, Side.CLIENT);
 
         //Register internal packets, then external.
         byte packetIndex = 0;
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
         APacketBase.initPackets(packetIndex);
+    }
+
+    /**
+     * Opens a native 1.12 container without registering a fixed vanilla window type.  The custom
+     * packet only supplies the client-side construction data and the server-selected window ID;
+     * all subsequent clicks and slot synchronization use Minecraft's normal container packets.
+     */
+    public static void openInventoryGUI(EntityPlayerMP player, EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+        if (player.openContainer != player.inventoryContainer) {
+            player.closeScreen();
+        }
+        player.getNextWindowId();
+
+        BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(player.inventory, inventory, texture, saveToHeldItem);
+        menu.windowId = player.currentWindowId;
+        player.openContainer = menu;
+
+        WrapperNBT inventoryData = new WrapperNBT();
+        inventory.save(inventoryData);
+        network.sendTo(new InventoryOpenPacket(menu.windowId, inventoryData.tag, inventory.getSize(), inventory.getStackSize(), menu.getTexture(), saveToHeldItem), player);
+        menu.addListener(player);
+        MinecraftForge.EVENT_BUS.post(new PlayerContainerEvent.Open(player, menu));
     }
 
     @Override
@@ -149,18 +178,91 @@ class InterfacePacket implements IInterfacePacket {
                         world = InterfaceManager.clientInterface.getClientWorld();
                     }
                     if (world != null) {
-                        message.packet.handle(world);
+                        if (ctx.side.isServer()) {
+                            message.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
+                        } else {
+                            message.packet.handle(world);
+                        }
                     }
                 });
             } else {
                 if (ctx.side.isServer()) {
-                    message.packet.handle(getServerWorld(ctx));
+                    message.packet.handleFromClient(getServerWorld(ctx), WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
                 } else {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }
             }
             return null;
         }
+    }
+
+    /** Construction payload for the client half of the 1.12 native container. */
+    public static class InventoryOpenPacket implements IMessage {
+        private int windowID;
+        private NBTTagCompound inventoryData;
+        private int inventorySize;
+        private int stackSize;
+        private String texture;
+        private boolean saveToHeldItem;
+
+        public InventoryOpenPacket() {
+        }
+
+        private InventoryOpenPacket(int windowID, NBTTagCompound inventoryData, int inventorySize, int stackSize, String texture, boolean saveToHeldItem) {
+            this.windowID = windowID;
+            this.inventoryData = inventoryData;
+            this.inventorySize = inventorySize;
+            this.stackSize = stackSize;
+            this.texture = texture;
+            this.saveToHeldItem = saveToHeldItem;
+        }
+
+        @Override
+        public void fromBytes(ByteBuf buf) {
+            PacketBuffer packetBuffer = new PacketBuffer(buf);
+            windowID = packetBuffer.readInt();
+            try {
+                inventoryData = packetBuffer.readCompoundTag();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            inventorySize = packetBuffer.readInt();
+            stackSize = packetBuffer.readInt();
+            texture = packetBuffer.readString(32767);
+            saveToHeldItem = packetBuffer.readBoolean();
+        }
+
+        @Override
+        public void toBytes(ByteBuf buf) {
+            PacketBuffer packetBuffer = new PacketBuffer(buf);
+            packetBuffer.writeInt(windowID);
+            packetBuffer.writeCompoundTag(inventoryData);
+            packetBuffer.writeInt(inventorySize);
+            packetBuffer.writeInt(stackSize);
+            packetBuffer.writeString(texture);
+            packetBuffer.writeBoolean(saveToHeldItem);
+        }
+    }
+
+    public static class InventoryOpenHandler implements IMessageHandler<InventoryOpenPacket, IMessage> {
+        @Override
+        public IMessage onMessage(InventoryOpenPacket message, MessageContext ctx) {
+            openInventoryGUIOnClient(message);
+            return null;
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void openInventoryGUIOnClient(InventoryOpenPacket message) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        minecraft.addScheduledTask(() -> {
+            WrapperWorld world = WrapperWorld.getWrapperFor(minecraft.world);
+            EntityInventoryContainer inventory = new EntityInventoryContainer(world, new WrapperNBT(message.inventoryData), message.inventorySize, message.stackSize);
+            BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(minecraft.player.inventory, inventory, message.texture, message.saveToHeldItem);
+            menu.windowId = message.windowID;
+            minecraft.player.openContainer = menu;
+            minecraft.displayGuiScreen(new BuilderInventoryContainerScreen(menu));
+        });
     }
 
 }
