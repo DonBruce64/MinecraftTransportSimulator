@@ -480,7 +480,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             }
         } else if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
             if (!world.isClient()) {
-                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET, this));
             }
         }
         return false;
@@ -490,7 +490,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
         if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
             if (!world.isClient()) {
-                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET, this));
             }
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {

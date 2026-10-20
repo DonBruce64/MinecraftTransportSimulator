@@ -36,6 +36,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * A GUI that is used to render overlay components.  These components are independent of
@@ -120,7 +121,7 @@ public class GUIOverlay extends AGUIBase {
             }
 
             // Update the aiming crosshair position when a gun is active.
-            if (activeGunGroup != null) {
+            if (activeGunGroup != null && ConfigSystem.client.renderingSettings.gunCrosshair.value) {
                 updateAimingCrosshair(activeGunGroup, player.getWorld());
             }
         }
