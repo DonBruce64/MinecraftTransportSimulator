@@ -1177,13 +1177,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             serverDeltaP += pathingAdded;
         } else {
             //Internal call, add normally and send packet if needed.
-            if (!motionApplied.isZero()) {
+            //Send on rotation-only ticks too, otherwise clients never get rotation done in place
+            //(like levelling while hovering) and rubber-band back towards the old angle.
+            boolean rotated = !orientation.angles.equals(prevOrientation.angles);
+            if (!motionApplied.isZero() || rotated) {
                 serverDeltaMApplied.set(motionApplied);
                 serverDeltaM.add(motionApplied);
-                if (!orientation.angles.equals(prevOrientation.angles)) {
+                if (rotated) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
                     serverDeltaRApplied.set(rotationApplied.angles);
                     serverDeltaR.add(rotationApplied.angles);
+                } else {
+                    //Don't send a stale rotation the client would add but we didn't.
+                    rotationApplied.angles.set(0, 0, 0);
                 }
                 serverDeltaPApplied += pathingApplied;
                 serverDeltaP += pathingApplied;
