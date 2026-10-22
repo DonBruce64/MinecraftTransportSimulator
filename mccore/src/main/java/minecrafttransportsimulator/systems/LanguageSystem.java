@@ -278,6 +278,19 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
+    public static final LanguageEntry GUI_PARTINSTALL_INSTALLING = new LanguageEntry("gui.partinstall.installing", "Installing part...");
+    public static final LanguageEntry GUI_PARTREMOVE_REMOVING = new LanguageEntry("gui.partremove.removing", "Removing part...");
+    public static final LanguageEntry GUI_VEHICLEDEPLOY_DEPLOYING = new LanguageEntry("gui.vehicledeploy.deploying", "Deploying vehicle...");
+    public static final LanguageEntry GUI_VEHICLEPACK_PACKING = new LanguageEntry("gui.vehiclepack.packing", "Packing vehicle...");
+    public static final LanguageEntry GUI_PART_SLOT_GENERIC = new LanguageEntry("gui.parttype.generic", "Generic Part");
+    public static final LanguageEntry GUI_PART_SLOT_ENGINE = new LanguageEntry("gui.parttype.engine", "Engine");
+    public static final LanguageEntry GUI_PART_SLOT_GROUND = new LanguageEntry("gui.parttype.ground", "Ground Device");
+    public static final LanguageEntry GUI_PART_SLOT_PROPELLER = new LanguageEntry("gui.parttype.propeller", "Propeller");
+    public static final LanguageEntry GUI_PART_SLOT_SEAT = new LanguageEntry("gui.parttype.seat", "Seat");
+    public static final LanguageEntry GUI_PART_SLOT_GUN = new LanguageEntry("gui.parttype.gun", "Gun");
+    public static final LanguageEntry GUI_PART_SLOT_INTERACTABLE = new LanguageEntry("gui.parttype.interactable", "Interactable");
+    public static final LanguageEntry GUI_PART_SLOT_EFFECTOR = new LanguageEntry("gui.parttype.effector", "Effector");
+
     public static final LanguageEntry GUI_PANEL_TRIM_ROLL = new LanguageEntry("gui.panel.trim_roll", "ROLL TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_PITCH = new LanguageEntry("gui.panel.trim_pitch", "PITCH TRIM");
     public static final LanguageEntry GUI_PANEL_TRIM_YAW = new LanguageEntry("gui.panel.trim_yaw", "YAW TRIM");
@@ -301,6 +314,7 @@ public class LanguageSystem {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_RADIOVOLUME = new LanguageEntry("gui.config.controls.radiovolume", "Radio Volume: ");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_KEYBOARD = new LanguageEntry("gui.config.controls.general.keyboard", "GENERAL KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_GENERAL_JOYSTICK = new LanguageEntry("gui.config.controls.general.joystick", "GENERAL JOYSTICK");
+    public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRSHIP_KEYBOARD = new LanguageEntry("gui.config.controls.airship.keyboard", "AIRSHIP KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
@@ -328,6 +342,8 @@ public class LanguageSystem {
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
     public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
+    public static final LanguageEntry GUI_TARGET_TRACKING = new LanguageEntry("gui.target.tracking", "TRACKING");
+    public static final LanguageEntry GUI_TARGET_LOCKED = new LanguageEntry("gui.target.locked", "LOCKED");
 
     public static final LanguageEntry INTERACT_KEY_LOCK = new LanguageEntry("interact.key.lock", "Vehicle locked!");
     public static final LanguageEntry INTERACT_KEY_UNLOCK = new LanguageEntry("interact.key.unlock", "Vehicle unlocked!");
@@ -523,6 +539,9 @@ public class LanguageSystem {
     public static final LanguageEntry INPUT_THROTTLE = new LanguageEntry("input.throttle", "Throttle");
     public static final LanguageEntry INPUT_THROTTLE_U = new LanguageEntry("input.throttle_u", "ThrottleUp");
     public static final LanguageEntry INPUT_THROTTLE_D = new LanguageEntry("input.throttle_d", "ThrottleDown");
+    public static final LanguageEntry INPUT_FORWARD = new LanguageEntry("input.forward", "Forward");
+    public static final LanguageEntry INPUT_HEIGHT_U = new LanguageEntry("input.height_u", "HeightUp");
+    public static final LanguageEntry INPUT_HEIGHT_D = new LanguageEntry("input.height_d", "HeightDown");
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
     public static final LanguageEntry INPUT_ARCADE = new LanguageEntry("input.arcade", "Arcade Mode");
