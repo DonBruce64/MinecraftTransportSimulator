@@ -32,6 +32,7 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -469,6 +470,20 @@ public class WrapperEntity implements IWrapperEntity {
                 ((EntityLivingBase) entity).removePotionEffect(potion);
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingAttackEvent event) {
+        if (event.getEntityLiving() instanceof EntityPlayer && !event.getEntityLiving().world.isRemote) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getImmediateSource();
+            if (attacker instanceof EntityLiving && attacker == source.getTrueSource() && "mob".equals(source.getDamageType())) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntityLiving()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                    event.setCanceled(true);
+                }
             }
         }
     }
