@@ -38,6 +38,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -497,6 +498,20 @@ public class WrapperEntity implements IWrapperEntity {
                 ((LivingEntity) entity).removeEffect(mcEffect);
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingIncomingDamageEvent event) {
+        if (event.getEntity() instanceof Player && !event.getEntity().level().isClientSide) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getDirectEntity();
+            if (attacker instanceof Mob && attacker == source.getEntity() && (source.is(DamageTypes.MOB_ATTACK) || source.is(DamageTypes.MOB_ATTACK_NO_AGGRO) || source.is(DamageTypes.STING))) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntity()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                    event.setCanceled(true);
+                }
             }
         }
     }

@@ -31,6 +31,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.alchemy.Potion;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -480,6 +481,20 @@ public class WrapperEntity implements IWrapperEntity {
                 });
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLivingAttack(LivingAttackEvent event) {
+        if (event.getEntity() instanceof Player && !event.getEntity().level.isClientSide) {
+            DamageSource source = event.getSource();
+            Entity attacker = source.getDirectEntity();
+            if (attacker instanceof Mob && attacker == source.getEntity() && ("mob".equals(source.getMsgId()) || "sting".equals(source.getMsgId()))) {
+                AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntity()).getEntityRiding();
+                if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
+                    event.setCanceled(true);
+                }
             }
         }
     }
