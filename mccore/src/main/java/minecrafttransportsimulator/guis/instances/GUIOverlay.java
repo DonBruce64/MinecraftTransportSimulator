@@ -27,6 +27,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentAimReticle;
 import minecrafttransportsimulator.guis.components.GUIComponentCrosshair;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentPartSlotMarkers;
+import minecrafttransportsimulator.guis.components.GUIComponentTargetingHUD;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -56,6 +58,7 @@ public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel gunLabel;
     private GUIComponentItem scannerItem;
     private GUIComponentCrosshair aimingCrosshair;
+    private GUIComponentTargetingHUD targetingHUD;
     private GUIComponentAimReticle aimReticle;
     private final List<String> tooltipText = new ArrayList<>();
     private EntityInteractResult lastInteractResult;
@@ -83,6 +86,10 @@ public class GUIOverlay extends AGUIBase {
         addComponent(aimingCrosshair = new GUIComponentCrosshair(screenWidth / 2, screenHeight / 2));
         aimingCrosshair.visible = false;
         aimingCrosshair.ignoreGUILightingState = true;
+        addComponent(targetingHUD = new GUIComponentTargetingHUD(screenWidth, screenHeight));
+        targetingHUD.visible = false;
+        targetingHUD.ignoreGUILightingState = true;
+        addComponent(new GUIComponentPartSlotMarkers());
         addComponent(scannerItem = new GUIComponentItem(0, screenHeight / 4, 6.0F) {
             //Render the item stats as a tooltip, as it's easier to see.
             @Override
@@ -112,6 +119,7 @@ public class GUIOverlay extends AGUIBase {
         aimingCrosshair.visible = false;
         aimingCrosshair.pendingImpactPoint = null;
         aimingCrosshair.vehicleRef = null;
+        targetingHUD.setGunGroup(null);
         if (!InterfaceManager.clientInterface.isChatOpen()) {
             EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
             List<PartGun> activeGunGroup = null;
@@ -133,7 +141,9 @@ public class GUIOverlay extends AGUIBase {
                             }
                             List<PartGun> gunGroup = seat.gunGroups.get(seat.activeGunItem);
                             if (gunGroup != null && !gunGroup.isEmpty()) {
-                                activeGunGroup = gunGroup;
+                                activeGunGroup = seat.activeGunItem.definition.gun.fireSolo
+                                        ? java.util.Collections.singletonList(gunGroup.get(seat.gunIndex))
+                                        : gunGroup;
                             }
                         } else {
                             gunLabel.text += "None";
@@ -145,6 +155,7 @@ public class GUIOverlay extends AGUIBase {
             // Update the aiming crosshair position when a gun is active.
             if (activeGunGroup != null && ConfigSystem.client.renderingSettings.gunCrosshair.value) {
                 updateAimingCrosshair(activeGunGroup, player.getWorld());
+                targetingHUD.setGunGroup(activeGunGroup);
             }
         }
 
