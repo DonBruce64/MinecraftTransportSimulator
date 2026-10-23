@@ -32,6 +32,7 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -476,6 +477,16 @@ public class WrapperEntity implements IWrapperEntity {
                 });
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getPlayer()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity == ((BuilderEntityExisting) event.getTarget()).entity) {
+                event.setCanceled(true);
             }
         }
     }
