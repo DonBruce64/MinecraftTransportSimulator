@@ -23,7 +23,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.LanguageSystem;
@@ -223,7 +222,7 @@ public class ItemPartInteractable extends AItemPart implements IItemEntityIntera
                 IWrapperNBT data = player.getHeldStack().getData();
                 EntityInventoryContainer inventory = new EntityInventoryContainer(world, data != null ? data.getData("inventory") : null, (int) (definition.interactable.inventoryUnits * 9F), definition.interactable.inventoryStackSize > 0 ? definition.interactable.inventoryStackSize : 64);
                 world.addEntity(inventory);
-                player.sendPacket(new PacketItemInteractable(player, inventory, subDefinition.inventoryTexture));
+                player.openInventoryGUI(inventory, subDefinition.inventoryTexture, true);
             }
             return true;
         } else {

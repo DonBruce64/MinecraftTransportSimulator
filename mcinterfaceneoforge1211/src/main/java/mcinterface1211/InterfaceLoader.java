@@ -41,9 +41,12 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTab.DisplayItemsGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
@@ -78,6 +81,7 @@ public class InterfaceLoader {
     private static List<BuilderBlock> inventoryBlocks = new ArrayList<>();
     private static List<BuilderBlock> chargerBlocks = new ArrayList<>();
     protected static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, InterfaceLoader.MODID);
+    protected static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, InterfaceLoader.MODID);
 
     public InterfaceLoader(IEventBus modBus) {
         this.modBus = modBus;
@@ -101,6 +105,7 @@ public class InterfaceLoader {
         BuilderTileEntity.TILE_ENTITIES.register(modBus);
         ABuilderEntityBase.ENTITIES.register(modBus);
         CREATIVE_TABS.register(modBus);
+        MENUS.register(modBus);
 
         //Need to do pack parsing first, since that generates items which have to be registered prior to any other events.
         boolean isClient = FMLLoader.getDist() == Dist.CLIENT;
@@ -111,6 +116,7 @@ public class InterfaceLoader {
             modBus.addListener(InterfaceInput::onIVRegisterKeyMappingsEvent);
             modBus.addListener(InterfaceRender::onIVRegisterShadersEvent);
             modBus.addListener(InterfaceRender::onIVRegisterRenderersEvent);
+            modBus.addListener(InterfaceLoader::onRegisterMenuScreens);
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
@@ -245,6 +251,10 @@ public class InterfaceLoader {
         BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> BlockEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null));
         BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> BlockEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null));
 
+        //Native inventory menu.  This is deliberately separate from IV's generic GUI framework so
+        //Minecraft and inventory helper mods can see and operate its slots normally.
+        BuilderInventoryContainerMenu.TYPE = MENUS.register("inventory", () -> IMenuTypeExtension.create(BuilderInventoryContainerMenu::new));
+
         //Init entities.
         BuilderEntityExisting.E_TYPE2 = ABuilderEntityBase.ENTITIES.register("builder_existing", () -> EntityType.Builder.<BuilderEntityExisting>of(BuilderEntityExisting::new, MobCategory.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_existing"));
         BuilderEntityLinkedSeat.E_TYPE3 = ABuilderEntityBase.ENTITIES.register("builder_seat", () -> EntityType.Builder.<BuilderEntityLinkedSeat>of(BuilderEntityLinkedSeat::new, MobCategory.MISC).sized(0.05F, 0.05F).clientTrackingRange(32 * 16).updateInterval(5).build("builder_seat"));
@@ -296,5 +306,9 @@ public class InterfaceLoader {
             BuilderTileEntityEnergyCharger.TE_TYPE2.get(),
             (blockEntity, direction) -> direction != null ? blockEntity : null
         );
+    }
+
+    public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(BuilderInventoryContainerMenu.TYPE.get(), BuilderInventoryContainerScreen::new);
     }
 }

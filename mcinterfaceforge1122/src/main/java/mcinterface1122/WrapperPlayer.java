@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -17,6 +18,7 @@ import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
@@ -170,6 +172,11 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
                 };
             }
         });
+    }
+
+    @Override
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+        InterfacePacket.openInventoryGUI((EntityPlayerMP) player, inventory, texture, saveToHeldItem);
     }
 
     /**
