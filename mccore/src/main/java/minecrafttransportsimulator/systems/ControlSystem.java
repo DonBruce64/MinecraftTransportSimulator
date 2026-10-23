@@ -711,6 +711,9 @@ public final class ControlSystem {
         } else {
             double throttleRequest = -999;
             if (ConfigSystem.client.controlSettings.simpleThrottle.value) {
+                if (ControlsKeyboard.CAR_PARK.isPressed()) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered.parkingBrakeVar));
+                }
                 if (!powered.engines.isEmpty()) {
                     //Get the brake value.
                     double brakeRequest = -999;
