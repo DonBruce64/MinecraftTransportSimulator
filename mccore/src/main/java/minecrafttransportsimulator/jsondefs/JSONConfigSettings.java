@@ -101,6 +101,8 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> blockCrashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by vehicles when they crash into blocks and use crash speed thresholds.");
         public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage received by players when their vehicle explodes in a crash.");
         public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<>(1.0D, "Factor for damage caused by bullets on vehicles.");
+        public JSONConfigEntry<Double> cameraShakeFactor = new JSONConfigEntry<>(1.0D, "Factor applied to camera shake from nearby bullet explosions.  Set this to 0 to disable explosion camera shake.");
+        public JSONConfigEntry<Double> gunCameraShakeFactor = new JSONConfigEntry<>(0.25D, "Factor applied to camera shake from nearby gunshots.  Set this to 0 to disable gunshot camera shake.");
         public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
         public JSONConfigEntry<Map<String, Double>> packBulletDamageFactors = new JSONConfigEntry<>(new HashMap<>(), "A mapping of pack-speciifc bullet damage factors.  These values will apply to all bullets in a pack when they hit something, be it a vehicle or entity.");
     }
