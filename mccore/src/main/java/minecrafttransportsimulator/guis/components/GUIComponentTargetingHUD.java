@@ -38,7 +38,7 @@ public class GUIComponentTargetingHUD extends AGUIComponent {
     private static final int VERTICES_PER_QUAD = 6;
     private static final int BRACKET_QUADS = 8;
     private static final int VALID_TARGET_QUADS = 4;
-    private static final float RING_THICKNESS = 0.75F;
+    private static final float RING_THICKNESS = 0.375F;
     private static final float BRACKET_THICKNESS = 1.25F;
     private static final float VALID_TARGET_THICKNESS = 0.6F;
     private static final float VALID_TARGET_PADDING = 2.0F;
