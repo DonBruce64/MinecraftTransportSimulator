@@ -219,6 +219,14 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void setPosition(Point3D position, boolean onGround) {
         if (cachedEntityRiding != null) {
+            //Also clear flight when mounting while already flying, on both sides.
+            if (entity instanceof PlayerEntity) {
+                PlayerEntity player = (PlayerEntity) entity;
+                if (!player.isSpectator() && player.abilities.flying) {
+                    player.abilities.flying = false;
+                    player.onUpdateAbilities();
+                }
+            }
             //Need to offset down to make bounding hitbox go down like normal.
             entity.setPos(position.x, position.y + getSeatOffset(), position.z);
         } else {
