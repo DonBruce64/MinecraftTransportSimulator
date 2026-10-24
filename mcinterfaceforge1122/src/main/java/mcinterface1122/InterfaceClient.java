@@ -168,6 +168,7 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     private static final Point3D mutablePosition = new Point3D();
+    private static final Point3D cameraProjectionShakeVector = new Point3D();
     private static final RotationMatrix cameraProjectionOrientation = new RotationMatrix();
 
     @Override
@@ -218,10 +219,15 @@ public class InterfaceClient implements IInterfaceClient {
         double dz = worldPos.z - camZ;
 
         double depth = dx * fwdX + dy * fwdY + dz * fwdZ;
-        if (depth <= 0.001) return null;
-
         double xView = dx * rgtX + dy * rgtY + dz * rgtZ;
         double yView = dx * upX  + dy * upY  + dz * upZ;
+        if (InterfaceEventsEntityRendering.cameraShakeActive) {
+            cameraProjectionShakeVector.set(-xView, yView, depth).reOrigin(InterfaceEventsEntityRendering.cameraShakeProjectionRotation);
+            xView = -cameraProjectionShakeVector.x;
+            yView = cameraProjectionShakeVector.y;
+            depth = cameraProjectionShakeVector.z;
+        }
+        if (depth <= 0.001) return null;
 
         double fovRad = Math.toRadians(getFOV());
         double tanHalfFov = Math.tan(fovRad / 2.0);
