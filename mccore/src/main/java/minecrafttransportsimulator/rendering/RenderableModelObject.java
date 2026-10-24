@@ -363,6 +363,10 @@ public class RenderableModelObject {
         if (isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value) {
             return false;
         }
+        //Block custom light beams if we have them disabled.
+        if (lightDef != null && lightDef.isBeam && !ConfigSystem.client.renderingSettings.renderBeams.value) {
+            return false;
+        }
         //If we have a switchbox, run it once, and if it returns false for a non-blended object, don't render.
         if (switchbox != null) {
             if (objectDef.blendedAnimations) {

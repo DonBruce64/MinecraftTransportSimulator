@@ -487,6 +487,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("How much knocback this gun provides to the shooter.")
         public float knockback;
 
+        @JSONDescription("Camera shake settings for this gun's shots. Strength defaults to the loaded bullet's diameter and is applied once per fired cartridge, regardless of pellet count. If omitted, the default shake settings are used.")
+        public JSONCameraShake cameraShakeParams;
+
         @JSONDescription("How much pitch recoil this gun provides to the shooter.  This will apply this value every shot.  Only for hand-held mode.")
         public float pitchRecoil;
 
