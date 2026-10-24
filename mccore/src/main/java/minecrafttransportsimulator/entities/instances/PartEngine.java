@@ -387,7 +387,7 @@ public class PartEngine extends APart {
             //Update driven wheels.  These are a subset of linked depending on the wheel state.
             drivenWheels.clear();
             for (PartGroundDevice wheel : linkedWheels) {
-                if (!wheel.isSpare && wheel.isActiveVar.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
+                if (!wheel.isSpare && !wheel.isSpareVar.isActive && wheel.isActiveVar.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
                     drivenWheels.add(wheel);
                     wheel.drivenLastTick = true;
                 }
