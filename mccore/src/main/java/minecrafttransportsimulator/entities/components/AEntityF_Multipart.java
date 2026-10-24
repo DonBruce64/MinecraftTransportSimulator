@@ -476,7 +476,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             String partType = partVariable;
 
             //Remove inversion prefix, if present.
-            if (partType.startsWith(ComputedVariable.INVERTED_PREFIX)) {
+            boolean isInverted = partType.startsWith(ComputedVariable.INVERTED_PREFIX);
+            if (isInverted) {
                 partType = partType.substring(ComputedVariable.INVERTED_PREFIX.length());
             }
 
@@ -492,6 +493,32 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             //Get part number from raw variable.
             int partNumber = ComputedVariable.getVariableNumber(variable);
+
+            //Special handling for isSpare variables - these don't follow part-type prefixes.
+            if (partVariable.equals("isSpare") || partVariable.equals("part_isSpare") || partVariable.equals("part_isspare")) {
+                if (definition.parts != null) {
+                    for (int i = 0; i < definition.parts.size(); ++i) {
+                        JSONPartDefinition partDef = definition.parts.get(i);
+                        if (partNumber == 0) {
+                            APart partFound = partsInSlots.get(i);
+                            if (partFound != null) {
+                                return partFound.getOrCreateVariable("isSpare");
+                            } else {
+                                return new ComputedVariable(false);
+                            }
+                        } else {
+                            --partNumber;
+                        }
+                    }
+                }
+                APart partFound = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
+                if (partFound != null) {
+                    return partFound.getOrCreateVariable("isSpare");
+                } else if (partNumber < partsInSlots.size()) {
+                    return new ComputedVariable(false);
+                }
+                //Fall through to general lookup if slot is empty in our array.
+            }
 
             //Get the "general" part variable.  If we find a specific part later, we use that one instead.
             APart generalPart = partNumber < partsInSlots.size() ? partsInSlots.get(partNumber) : null;
@@ -519,7 +546,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
             if (generalPart != null) {
-                //Using general part variable since we didn't find anything specific.
+                //Using general part variable since we don't have a specific type match.
                 return generalPart.createComputedVariable(partVariable, true);
             } else {
                 //No general part found, and no specifics.  Part simply does not exist.  Return 0.

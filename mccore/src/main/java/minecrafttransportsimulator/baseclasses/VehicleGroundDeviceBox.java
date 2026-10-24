@@ -105,7 +105,7 @@ public class VehicleGroundDeviceBox {
         float totalClimbHeight = 0;
         for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
-                if (!part.isSpare && part.isActiveVar.isActive) {
+                if (!part.isSpare && !part.isSpareVar.isActive && part.isActiveVar.isActive) {
                     PartGroundDevice ground = (PartGroundDevice) part;
                     APart currentPart = part;
 
