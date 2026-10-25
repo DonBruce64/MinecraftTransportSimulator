@@ -28,6 +28,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -37,7 +38,8 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
-import net.minecraft.world.item.alchemy.Potion;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -480,11 +482,9 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void addPotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            Potion potion = BuiltInRegistries.POTION.get(ResourceLocation.parse(effect.name));
-            if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> {
-                    ((LivingEntity) entity).addEffect(new MobEffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, false));
-                });
+            Holder<MobEffect> mcEffect = BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(effect.name)).orElse(null);
+            if (mcEffect != null) {
+                ((LivingEntity) entity).addEffect(new MobEffectInstance(mcEffect, effect.duration, effect.amplifier, false, false));
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
@@ -494,15 +494,31 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void removePotionEffect(JSONPotionEffect effect) {
         if ((entity instanceof LivingEntity)) {
-            Potion potion = BuiltInRegistries.POTION.get(ResourceLocation.parse(effect.name));
-            if (potion != null) {
-                potion.getEffects().forEach(mcEffect -> {
-                    ((LivingEntity) entity).removeEffect(mcEffect.getEffect());
-                });
+            Holder<MobEffect> mcEffect = BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(effect.name)).orElse(null);
+            if (mcEffect != null) {
+                ((LivingEntity) entity).removeEffect(mcEffect);
             } else {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(Player player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**
