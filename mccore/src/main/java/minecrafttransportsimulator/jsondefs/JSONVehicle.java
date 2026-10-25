@@ -192,6 +192,18 @@ public class JSONVehicle extends AJSONPartProvider {
         public float waterBallastFactor;
 
         @ModifiableValue
+        @JSONDescription("How fast this vehicle can yaw in place, in degrees per tick at full rudder.  Unlike the rudder, this does not need airspeed, so it lets blimps and hovering aircraft turn on the spot.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
+        public float blimpSkidSteer;
+
+        @ModifiableValue
+        @JSONDescription("How strongly this vehicle eases its pitch and roll back to level while airborne, as the fraction of the current tilt removed each tick, from 0 to 1.  0.05 levels out over a few seconds, and tilts under 0.01 degrees snap to exactly level.  Like blimpSkidSteer, this does not need airspeed.  0 (the default) disables it.  Make this a variableModifier to only enable it in certain modes, like a hover mode.")
+        public float blimpLevelFactor;
+
+        @ModifiableValue
+        @JSONDescription("The most blimpLevelFactor may rotate this vehicle, in degrees per tick, so large tilts level at a steady rate instead of snapping.  0 (the default) means no limit.")
+        public float blimpLevelMaxRate;
+
+        @ModifiableValue
         @JSONDescription("The factor of which to apply gravity to this vehicle. If defined, will override the main mtsconfig file value.")
         public float gravityFactor;
 

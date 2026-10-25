@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -27,19 +29,32 @@ import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.PaneBlock;
+import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.RenderType.State.Builder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.culling.ClippingHelper;
@@ -53,12 +68,20 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.inventory.container.PlayerContainer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.world.LightType;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -157,6 +180,8 @@ public class InterfaceRender implements IInterfaceRender {
                 }
                 if (!buffer.isReady) {
                     int index = 0;
+                    buffer.radius = 0;
+                    buffer.vertexCount = 0;
                     buffer.builder.begin(GL11.GL_QUADS, renderType.format());
                     while (data.vertexObject.vertices.hasRemaining()) {
                         //Need to parse these out first since our order differs.
@@ -168,16 +193,19 @@ public class InterfaceRender implements IInterfaceRender {
                         float posX = data.vertexObject.vertices.get();
                         float posY = data.vertexObject.vertices.get();
                         float posZ = data.vertexObject.vertices.get();
+                        buffer.radius = Math.max(buffer.radius, posX * posX + posY * posY + posZ * posZ);
 
                         //Add the vertex format bits.
                         do {
                             buffer.builder.vertex(posX, posY, posZ, data.color.red, data.color.green, data.color.blue, data.alpha, texU, texV, OverlayTexture.NO_OVERLAY, data.worldLightValue, normalX, normalY, normalZ);
+                            buffer.vertexCount++;
                         } while (++index == 3);
                         if (index == 4) {
                             index = 0;
                         }
                     }
                     buffer.isReady = true;
+                    buffer.radius = (float) Math.sqrt(buffer.radius);
                     buffer.builder.end();
                     buffer.buffer.upload(buffer.builder);
                     data.vertexObject.vertices.rewind();
@@ -189,7 +217,7 @@ public class InterfaceRender implements IInterfaceRender {
                     renders = new ArrayList<>();
                     queuedRenders.put(renderType, renders);
                 }
-                renders.add(new RenderData(stackEntry.pose(), buffer.buffer));
+                renders.add(new RenderData(stackEntry.pose(), buffer));
             } else {
                 renderType = renderTypes.computeIfAbsent(typeID, k -> CustomRenderType.create("mts_entity", DefaultVertexFormats.NEW_ENTITY, 7, 256, true, data.isTranslucent, CustomRenderType.createForObject(data).createCompositeState(false)));
                 IVertexBuilder buffer = renderBuffer.getBuffer(renderType);
@@ -227,6 +255,15 @@ public class InterfaceRender implements IInterfaceRender {
                 }
                 //Rewind buffer for next read.
                 data.vertexObject.vertices.rewind();
+                if (data.vertexObject.cacheVertices && !renderingGUI && DynamicLightShadowAtlas.isCapturing()) {
+                    //Slow mode: no cached buffer to capture, so dynamic light shadows copy the vertices as drawn, with
+                    //the texture they are drawn with (none for a blended type).
+                    int shadowTexture = InterfaceDynamicLightingGL.shadowTexture(renderType);
+                    if (shadowTexture >= 0) {
+                        toColumnMajor(stackEntry.pose(), dynamicLightPose);
+                        DynamicLightShadowAtlas.captureVertices(data.vertexObject.vertices, dynamicLightPose, shadowTexture);
+                    }
+                }
             }
         }
         matrixStack.popPose();
@@ -250,7 +287,201 @@ public class InterfaceRender implements IInterfaceRender {
     @Override
     public int getLightingAtPosition(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        return LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos), Minecraft.getInstance().level.getBrightness(LightType.SKY, pos));
+        //Under a shader pack, dynamic lights raise block light: IV models take it like the world's meshes do.
+        int blockLight = Math.max(Minecraft.getInstance().level.getBrightness(LightType.BLOCK, pos), DynamicLightSystem.blockLightAt(pos.getX(), pos.getY(), pos.getZ()));
+        return LightTexture.pack(blockLight, Minecraft.getInstance().level.getBrightness(LightType.SKY, pos));
+    }
+
+    /**
+     * Called at the start of the world render: forgets the last frame's shadow body captures, which a frame without
+     * a light pass never consumed.
+     */
+    public static void startDynamicLightFrame() {
+        DynamicLightShadowAtlas.frameEnd();
+    }
+
+    /**
+     * Builds and draws this frame's dynamic lights; call after the solid passes and before IV's blended pass.
+     * {@code pose} is the world render's camera rotation, {@code projection} its projection.  1.16.5 keeps no frustum
+     * or camera side vectors to borrow, so the frustum is rebuilt from the same two matrices and the left vector is
+     * the camera's up crossed with its look direction.
+     */
+    @SuppressWarnings("deprecation")
+    public static void renderDynamicLightFrame(Matrix4f pose, Matrix4f projection, ActiveRenderInfo camera, float partialTicks) {
+        Vector3d position = camera.getPosition();
+        ClippingHelper frustum = new ClippingHelper(pose, projection);
+        frustum.prepare(position.x, position.y, position.z);
+        DynamicLightFrustum test = (minX, minY, minZ, maxX, maxY, maxZ) -> frustum.isVisible(new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ));
+        Vector3f look = camera.getLookVector();
+        Vector3f up = camera.getUpVector();
+        dynamicLightLeft[0] = up.y() * look.z() - up.z() * look.y();
+        dynamicLightLeft[1] = up.z() * look.x() - up.x() * look.z();
+        dynamicLightLeft[2] = up.x() * look.y() - up.y() * look.x();
+        dynamicLightUp[0] = up.x();
+        dynamicLightUp[1] = up.y();
+        dynamicLightUp[2] = up.z();
+        toColumnMajor(pose, dynamicLightView);
+        toColumnMajor(projection, dynamicLightProjection);
+
+        //The passes draw with their own programs, but 1.16.5's fixed-function alpha test still discards their zero-alpha
+        //fragments: off for the frame, then back to what MC had.
+        boolean alphaTest = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
+        RenderSystem.disableAlphaTest();
+        try {
+            DynamicLightSystem.renderFrame(partialTicks, test, position.x, position.y, position.z, dynamicLightLeft, dynamicLightUp, dynamicLightView, dynamicLightProjection);
+        } finally {
+            if (alphaTest) {
+                RenderSystem.enableAlphaTest();
+            }
+        }
+    }
+
+    /** MC's matrix as 16 floats, column-major (its {@code store} writes the OpenGL layout). */
+    private static void toColumnMajor(Matrix4f matrix, float[] out) {
+        matrixStaging.clear();
+        matrix.store(matrixStaging);
+        matrixStaging.rewind();
+        matrixStaging.get(out, 0, 16);
+    }
+
+    private static final FloatBuffer matrixStaging = BufferUtils.createFloatBuffer(16);
+    private static final float[] dynamicLightLeft = new float[3];
+    private static final float[] dynamicLightUp = new float[3];
+    private static final float[] dynamicLightView = new float[16];
+    private static final float[] dynamicLightProjection = new float[16];
+    /** A drawn buffer's model-view for {@code DynamicLightShadowAtlas.captureBody}, which copies it. */
+    private static final float[] dynamicLightPose = new float[16];
+    /** Whether the buffers being drawn are the solid pass's, for the shadow atlas to keep. */
+    private static boolean capturingBodies;
+
+    @Override
+    public IInterfaceDynamicLightingGL getDynamicLightGL() {
+        return InterfaceDynamicLightingGL.supported() ? InterfaceDynamicLightingGL.INSTANCE : null;
+    }
+
+    @Override
+    public float getDaylight(AWrapperWorld world, Point3D position) {
+        World mcWorld = ((WrapperWorld) world).world;
+        if (!(mcWorld instanceof ClientWorld)) {
+            return MathHelper.clamp(world.getLightBrightness(position, false), 0F, 1F);
+        }
+        float open = mcWorld.getBrightness(LightType.SKY, new BlockPos(position.x, position.y, position.z)) / 15F;
+        //getSkyDarken(partial) runs 0.2 (night) .. 1 (clear noon); sky light alone is 15 at midnight too.
+        float sun = MathHelper.clamp((((ClientWorld) mcWorld).getSkyDarken(1F) - 0.2F) / 0.8F, 0F, 1F);
+        return open * sun;
+    }
+
+    @Override
+    public float getRainLevel(AWrapperWorld world, float partialTicks) {
+        return ((WrapperWorld) world).world.getRainLevel(partialTicks);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean readDynamicLightSection(AWrapperWorld wrapper, int sx, int sy, int sz, DynamicLightVoxelWindow window) {
+        World world = ((WrapperWorld) wrapper).world;
+        //1.16.5 worlds are 16 sections tall from y = 0; anything else is air.
+        ChunkSection section = null;
+        Chunk chunk = world.getChunkSource().getChunk(sx, sz, false);
+        if (chunk != null && sy >= 0 && sy < chunk.getSections().length) {
+            section = chunk.getSections()[sy];
+        }
+        int x0 = sx << 4;
+        int y0 = sy << 4;
+        int z0 = sz << 4;
+        lightProbe.set(x0, y0, z0);
+        //A section of one kind (air, stone) is filled whole from its palette.
+        if (section == null || section.isEmpty() || !section.maybeHas(state -> shadowByte(world, state, window) != 0)) {
+            window.fillSection(sx, sy, sz, false);
+            return true;
+        }
+        if (!section.maybeHas(state -> shadowByte(world, state, window) != FULL_SHADOW)) {
+            window.fillSection(sx, sy, sz, true);
+            return true;
+        }
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    lightProbe.set(x0 + x, y0 + y, z0 + z);
+                    window.setShape(x0 + x, y0 + y, z0 + z, shadowByte(world, section.getBlockState(x, y, z), window));
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * {@code state}'s byte in the dynamic light grid, worked out once per state at {@link #lightProbe}: a full block
+     * casts a full shadow; one that is not (slabs, stairs, fences, doors, hoppers, bells, banners, signs, mob heads,
+     * candles) casts its outline shape's; none for air, IV's own blocks, blocks without a block model and without a
+     * tile entity to draw them (liquids, barriers), see-through blocks (glass, leaves, bars and panes, the translucent
+     * layer, ladders, scaffolding and other climbables, spawners), blocks with neither a collision shape nor a solid
+     * layer (plants, torches, rails) and blocks drawn at a random offset.
+     */
+    @SuppressWarnings("deprecation")
+    private static int shadowByte(World world, BlockState state, DynamicLightVoxelWindow window) {
+        DynamicLightBlockShapes shapes = window.shapes();
+        int value = shapes.byteOf(state);
+        if (value < 0) {
+            shapes.begin();
+            if (state.isAir() || state.getBlock() instanceof BuilderBlock || (state.getRenderShape() == BlockRenderType.INVISIBLE && !state.hasTileEntity())) {
+                //No boxes: IV's own blocks are drawn by the entity renderer, whose bodies cast the shadow; liquids,
+                //barriers and other blocks without a block model, even full ones, show nothing to shade with.  A tile
+                //entity block (sign, mob head, banner) is invisible to the chunk mesh too, but its tile entity renderer
+                //draws it, so it goes on to cast its outline.
+            } else if (state.isSolidRender(world, lightProbe)) {
+                shapes.box(0, 0, 0, 1, 1, 1);
+            } else if (castsShapedShadow(world, state)) {
+                for (AxisAlignedBB box : state.getShape(world, lightProbe).toAabbs()) {
+                    shapes.box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+                }
+            }
+            value = window.endShape(state);
+        }
+        return value;
+    }
+
+    /** Whether {@code state}, visible but not a full block, casts its shape's shadow: see {@link #shadowByte}. */
+    @SuppressWarnings("deprecation")
+    private static boolean castsShapedShadow(World world, BlockState state) {
+        //Climbables and spawners are mostly holes, which the grid cannot see: their box would shade as a wall.
+        if (state.getBlock().getOffsetType() != AbstractBlock.OffsetType.NONE || state.getMaterial() == Material.GLASS || state.is(BlockTags.LEAVES) || state.is(BlockTags.CLIMBABLE) || state.is(Blocks.SPAWNER)) {
+            return false;
+        }
+        if (state.getRenderShape() == BlockRenderType.ENTITYBLOCK_ANIMATED) {
+            return true;
+        }
+        //Bars and panes (glass panes, stained or not) are mostly holes; they share the cutout mipped layer with solid
+        //things like hoppers, so the layer cannot tell them apart.
+        if (state.getBlock() instanceof PaneBlock || RenderTypeLookup.canRenderInLayer(state, RenderType.translucent())) {
+            return false;
+        }
+        return RenderTypeLookup.canRenderInLayer(state, RenderType.solid()) || !state.getCollisionShape(world, lightProbe).isEmpty();
+    }
+
+    /** {@link #shadowByte} of a full block. */
+    private static final int FULL_SHADOW = DynamicLightVoxelWindow.SOLID & 0xFF;
+    /** Scratch position the block shape queries run at; the dynamic light grid is read on the render thread only. */
+    private static final BlockPos.Mutable lightProbe = new BlockPos.Mutable();
+
+    @Override
+    public void markLightSectionsDirty(int[] boxes, int count) {
+        if (Minecraft.getInstance().level == null) {
+            return;
+        }
+        //Grown by one block: a face takes the light of the block beside it.  1.16.5 worlds have sections 0..15 only.
+        for (int i = 0, o = 0; i < count; i++, o += 6) {
+            int x0 = (boxes[o] - 1) >> 4, x1 = (boxes[o + 3] + 1) >> 4;
+            int y0 = Math.max(0, (boxes[o + 1] - 1) >> 4), y1 = Math.min(15, (boxes[o + 4] + 1) >> 4);
+            int z0 = (boxes[o + 2] - 1) >> 4, z1 = (boxes[o + 5] + 1) >> 4;
+            for (int sx = x0; sx <= x1; sx++) {
+                for (int sy = y0; sy <= y1; sy++) {
+                    for (int sz = z0; sz <= z1; sz++) {
+                        Minecraft.getInstance().levelRenderer.setSectionDirty(sx, sy, sz);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -480,38 +711,58 @@ public class InterfaceRender implements IInterfaceRender {
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
 
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
+
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
+            //The Slow mode draws its vertices here, without buffers: dynamic light shadows copy them as they go.
+            DynamicLightShadowAtlas.setCapturing(captureBodies && ConfigSystem.client.renderingSettings.renderingMode.value == 2);
             for (AEntityC_Renderable entity : allEntities) {
                 matrixStack.pushPose();
                 matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
                 entity.render(blendingEnabled, partialTicks);
                 matrixStack.popPose();
             }
+            DynamicLightShadowAtlas.setCapturing(false);
 
             //Need to tell the immediate buffer  it's done rendering, else it'll hold onto the data and crash other systems.
             if (renderBuffer instanceof IRenderTypeBuffer.Impl) {
                 ((IRenderTypeBuffer.Impl) renderBuffer).endBatch();
             }
 
-            //Now do the actual render.
+            //Now do the actual render.  The solid pass's buffers are also the bodies dynamic light shadows draw.
             world.beginProfiling("MTSRendering_Execution", false);
-            renderBuffers();
+            capturingBodies = captureBodies;
+            DynamicLightShadowAtlas.setCapturing(capturingBodies);
+            renderBuffers(blendingEnabled);
+            DynamicLightShadowAtlas.setCapturing(false);
+            capturingBodies = false;
             world.endProfiling();
         }
     }
 
-    private static void renderBuffers() {
+    /**
+     * Draws the queued cached buffers.  Removed buffers are closed only after the blended pass, since the dynamic
+     * light shadows between the passes may still draw a buffer captured in the solid pass.
+     */
+    private static void renderBuffers(boolean closeRemoved) {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
         for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
             if (!datas.isEmpty()) {
                 renderType.setupRenderState();
+                //The texture its bodies cast dynamic light shadows through, -1 for none; read after the setup, which
+                //loads it.
+                int shadowTexture = capturingBodies ? InterfaceDynamicLightingGL.shadowTexture(renderType) : -1;
                 for (RenderData data : datas) {
-                    data.buffer.bind();
+                    data.bufferData.buffer.bind();
                     renderType.format().setupBufferState(0L);
-                    data.buffer.draw(data.matrix, GL11.GL_QUADS);
+                    data.bufferData.buffer.draw(data.matrix, GL11.GL_QUADS);
+                    if (shadowTexture >= 0) {
+                        toColumnMajor(data.matrix, dynamicLightPose);
+                        DynamicLightShadowAtlas.captureBody(data.bufferData, dynamicLightPose, data.bufferData.radius, shadowTexture);
+                    }
                 }
                 renderType.format().clearBufferState();
                 renderType.clearRenderState();
@@ -519,7 +770,7 @@ public class InterfaceRender implements IInterfaceRender {
             }
         }
         VertexBuffer.unbind();
-        if (!removedRenders.isEmpty()) {
+        if (closeRemoved && !removedRenders.isEmpty()) {
             removedRenders.forEach(render -> render.buffer.close());
             removedRenders.clear();
         }
@@ -591,22 +842,29 @@ public class InterfaceRender implements IInterfaceRender {
 
     private static class RenderData {
         private final Matrix4f matrix;
-        private final VertexBuffer buffer;
+        private final BufferData bufferData;
 
-        private RenderData(Matrix4f matrix, VertexBuffer buffer) {
+        private RenderData(Matrix4f matrix, BufferData bufferData) {
             this.matrix = new Matrix4f(matrix);
-            this.buffer = buffer;
+            this.bufferData = bufferData;
         }
     }
 
-    private static class BufferData {
+    /** A cached quad buffer; the shadow atlas draws it too ({@link InterfaceDynamicLightingGL#drawBody}). */
+    static class BufferData {
         final BufferBuilder builder;
         final VertexBuffer buffer;
         boolean isReady;
+        /** Bounding radius of the vertices around their origin; the squared radius while uploading. */
+        float radius;
+        /** Vertices in the buffer (a quad's repeated corner included) and the size of one in bytes. */
+        int vertexCount;
+        final int stride;
 
         private BufferData() {
             builder = null;
             buffer = null;
+            stride = 0;
         }
 
         private BufferData(RenderType type, RenderableData data) {
@@ -616,6 +874,7 @@ public class InterfaceRender implements IInterfaceRender {
             vertices = ((vertices / 3) + 1) * 4;
             this.builder = new BufferBuilder(type.format().getIntegerSize() * vertices);
             this.buffer = new VertexBuffer(type.format());
+            this.stride = type.format().getVertexSize();
         }
     }
 

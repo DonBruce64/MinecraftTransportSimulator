@@ -145,7 +145,11 @@ public class WrapperWorld extends AWrapperWorld {
                 throw new IllegalStateException("Could not load saved data from disk!  This will result in data loss if we continue!");
             }
         }
-        MinecraftForge.EVENT_BUS.register(this);
+        //The client and the integrated server thread each make a wrapper as their world appears; Forge's event handler class
+        //generator is not thread safe, and two registrations at once define the same handler class twice (LinkageError).
+        synchronized (WrapperWorld.class) {
+            MinecraftForge.EVENT_BUS.register(this);
+        }
     }
 
     @Override

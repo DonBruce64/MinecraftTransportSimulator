@@ -18,6 +18,8 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -35,6 +37,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -64,7 +67,15 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D playerPositionHelper = new Point3D();
     private static final Point3D cameraAdjustedPosition = new Point3D();
     private static final RotationMatrix cameraAdjustedOrientation = new RotationMatrix();
+    private static final RotationMatrix cameraShakeRotation = new RotationMatrix();
+    public static final RotationMatrix cameraShakeProjectionRotation = new RotationMatrix();
     private static final TransformationMatrix cameraAdjustments = new TransformationMatrix();
+    /**Saved camera world-space position and orientation for use by {@link InterfaceClient#projectToScreen}.
+     * These are captured BEFORE the in-place transpose/subtraction that the GL pipeline requires.**/
+    public static boolean adjustedCamera;
+    public static boolean cameraShakeActive;
+    public static final Point3D projectionCameraPosition = new Point3D();
+    public static final RotationMatrix projectionCameraOrientation = new RotationMatrix();
     private static int lastScreenWidth;
     private static int lastScreenHeight;
     private static float lastRiderYawHead;
@@ -78,6 +89,7 @@ public class InterfaceEventsEntityRendering {
      */
     @SubscribeEvent
     public static void onIVCameraSetup(CameraSetup event) {
+        cameraShakeActive = false;
         if (event.getEntity() instanceof EntityPlayer) {
             IWrapperPlayer player = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntity());
             cameraAdjustedPosition.set(0, 0, 0);
@@ -122,6 +134,16 @@ public class InterfaceEventsEntityRendering {
                 event.setPitch(0);
                 event.setRoll(0);
             }
+            cameraShakeRotation.setToZero();
+            cameraShakeActive = CameraSystem.applyCameraShake(cameraShakeRotation);
+            if (cameraShakeActive) {
+                cameraShakeRotation.convertToAngles();
+                event.setRoll((float) (event.getRoll() + cameraShakeRotation.angles.z));
+                event.setPitch((float) (event.getPitch() + cameraShakeRotation.angles.x));
+                event.setYaw((float) (event.getYaw() - cameraShakeRotation.angles.y));
+                cameraShakeProjectionRotation.angles.set(cameraShakeRotation.angles);
+                cameraShakeProjectionRotation.updateToAngles();
+            }
         }
     }
 
@@ -164,6 +186,26 @@ public class InterfaceEventsEntityRendering {
                 lastScreenHeight = screenHeight;
             }
             InterfaceRender.renderGUI(mouseX, mouseY, screenWidth, screenHeight, partialTicks, updateGUIs);
+        }
+    }
+
+    /**
+     * A chunk arrived on the client: the dynamic light block grid reads its sections again.
+     */
+    @SubscribeEvent
+    public static void onIVChunkLoad(ChunkEvent.Load event) {
+        if (event.getWorld().isRemote) {
+            DynamicLightSystem.markColumn(event.getChunk().x, event.getChunk().z);
+        }
+    }
+
+    /**
+     * No name tag inside a dynamic light shadow tile: the shadow of a living entity is drawn by its own renderer.
+     */
+    @SubscribeEvent
+    public static void onIVRenderLivingSpecials(@SuppressWarnings("rawtypes") RenderLivingEvent.Specials.Pre event) {
+        if (DynamicLightShadowAtlas.isRendering()) {
+            event.setCanceled(true);
         }
     }
 

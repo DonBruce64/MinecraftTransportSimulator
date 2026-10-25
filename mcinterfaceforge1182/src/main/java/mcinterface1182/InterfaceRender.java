@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -29,6 +30,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -36,13 +38,22 @@ import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IInterfaceDynamicLightingGL;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightBlockShapes;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrustum;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightShadowAtlas;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightVoxelWindow;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -56,10 +67,22 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.event.RegisterShadersEvent;
@@ -243,6 +266,9 @@ public class InterfaceRender implements IInterfaceRender {
                     bufferData.isReady = false;
                 }
                 if (!bufferData.isReady) {
+                    bufferData.radius = 0;
+                }
+                if (!bufferData.isReady) {
                     bufferData.builder.begin(VertexFormat.Mode.TRIANGLES, renderType.format());
                     while (data.vertexObject.vertices.hasRemaining()) {
                         //Need to parse these out first since our order differs.
@@ -254,9 +280,11 @@ public class InterfaceRender implements IInterfaceRender {
                         float posX = data.vertexObject.vertices.get();
                         float posY = data.vertexObject.vertices.get();
                         float posZ = data.vertexObject.vertices.get();
+                        bufferData.radius = Math.max(bufferData.radius, posX * posX + posY * posY + posZ * posZ);
                         bufferData.builder.vertex(posX, posY, posZ, data.color.red, data.color.green, data.color.blue, data.alpha, texU, texV, OverlayTexture.NO_OVERLAY, data.worldLightValue, normalX, normalY, normalZ);
                     }
                     bufferData.isReady = true;
+                    bufferData.radius = (float) Math.sqrt(bufferData.radius);
                     bufferData.builder.end();
                     bufferData.buffer.upload(bufferData.builder);
                     data.vertexObject.vertices.rewind();
@@ -297,6 +325,12 @@ public class InterfaceRender implements IInterfaceRender {
                 }
                 //Rewind buffer for next read.
                 data.vertexObject.vertices.rewind();
+                if (data.vertexObject.cacheVertices && !renderingGUI && DynamicLightShadowAtlas.isCapturing()) {
+                    int shadowTexture = InterfaceDynamicLightingGL.shadowTexture(renderType);
+                    if (shadowTexture >= 0) {
+                        DynamicLightShadowAtlas.captureVertices(data.vertexObject.vertices, poseFloats(stackEntry.pose()), shadowTexture);
+                    }
+                }
             }
         }
         matrixStack.popPose();
@@ -307,30 +341,42 @@ public class InterfaceRender implements IInterfaceRender {
         ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
         if (allEntities != null) {
             world.beginProfiling("MTSRendering_Setup", true);
+            boolean captureBodies = !blendingEnabled && DynamicLightSystem.getMode() == DynamicLightSystem.Mode.DEFERRED && ConfigSystem.client.renderingSettings.DynL_shadows.value;
 
             //NOTE: this operation occurs on a ConcurrentLinkedQueue.  Therefore, updates will
             //not occur one after another.  Sanitize your inputs!
+            //The Slow mode draws its vertices here, without buffers: dynamic light shadows copy them as they go.
+            DynamicLightShadowAtlas.setCapturing(captureBodies && ConfigSystem.client.renderingSettings.renderingMode.value == 2);
             for (AEntityC_Renderable entity : allEntities) {
                 matrixStack.pushPose();
                 matrixStack.translate(entity.position.x - renderCameraOffset.x, entity.position.y - renderCameraOffset.y, entity.position.z - renderCameraOffset.z);
                 entity.render(blendingEnabled, partialTicks);
                 matrixStack.popPose();
             }
+            DynamicLightShadowAtlas.setCapturing(false);
 
             //Now do the actual render.
             if (!queuedRenders.isEmpty()) {
                 world.beginProfiling("MTSRendering_Batch", false);
-                renderBuffers(partialTicks);
+                DynamicLightShadowAtlas.setCapturing(captureBodies);
+                renderBuffers(partialTicks, blendingEnabled);
+                DynamicLightShadowAtlas.setCapturing(false);
                 world.endProfiling();
             }
         }
     }
 
-    private static void renderBuffers(float partialTicks) {
+    /**
+     * Draws the queued cached buffers.  Removed buffers are closed only after the blended pass, since the dynamic
+     * light shadows between the passes may still draw a buffer captured in the solid pass.
+     */
+    private static void renderBuffers(float partialTicks, boolean closeRemoved) {
         //Call order is CRITICAL and will lead to random JME faults with no stacktrace if modified!
         for (Entry<RenderType, List<RenderData>> renderEntry : queuedRenders.entrySet()) {
             RenderType renderType = renderEntry.getKey();
             List<RenderData> datas = renderEntry.getValue();
+            //The texture its bodies cast dynamic light shadows through, -1 for none.
+            int shadowTexture = DynamicLightShadowAtlas.isCapturing() && !datas.isEmpty() ? InterfaceDynamicLightingGL.shadowTexture(renderType) : -1;
             if (!datas.isEmpty() && ConfigSystem.client.renderingSettings.renderingMode.value == 0) {
                 //Setup common render states.
                 renderType.setupRenderState();
@@ -372,6 +418,9 @@ public class InterfaceRender implements IInterfaceRender {
                     }
                     shaderInstance.apply();
                     data.bufferData.buffer.drawChunkLayer();
+                    if (shadowTexture >= 0) {
+                        DynamicLightShadowAtlas.captureBody(data.bufferData.buffer, poseFloats(data.matrix), data.bufferData.radius, shadowTexture);
+                    }
                 }
                 shaderInstance.clear();
                 renderType.clearRenderState();
@@ -382,6 +431,9 @@ public class InterfaceRender implements IInterfaceRender {
                 renderType.setupRenderState();
                 for (RenderData data : datas) {
                     data.bufferData.buffer.drawWithShader(data.matrix, projectionMatrix, RenderSystem.getShader());
+                    if (shadowTexture >= 0) {
+                        DynamicLightShadowAtlas.captureBody(data.bufferData.buffer, poseFloats(data.matrix), data.bufferData.radius, shadowTexture);
+                    }
                 }
 
                 renderType.clearRenderState();
@@ -389,7 +441,7 @@ public class InterfaceRender implements IInterfaceRender {
             }
         }
 
-        if (!removedRenders.isEmpty()) {
+        if (closeRemoved && !removedRenders.isEmpty()) {
             removedRenders.forEach(render -> render.buffer.close());
             removedRenders.clear();
         }
@@ -472,7 +524,187 @@ public class InterfaceRender implements IInterfaceRender {
     @Override
     public int getLightingAtPosition(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        return LightTexture.pack(Minecraft.getInstance().level.getBrightness(LightLayer.BLOCK, pos), Minecraft.getInstance().level.getBrightness(LightLayer.SKY, pos));
+        //Under a shader pack, dynamic lights raise block light: IV models take it like the world's meshes do.
+        int blockLight = Math.max(Minecraft.getInstance().level.getBrightness(LightLayer.BLOCK, pos), DynamicLightSystem.blockLightAt(pos.getX(), pos.getY(), pos.getZ()));
+        return LightTexture.pack(blockLight, Minecraft.getInstance().level.getBrightness(LightLayer.SKY, pos));
+    }
+
+    /**
+     * Called at the start of the world render: forgets the last frame's shadow body captures, which a frame without
+     * a light pass never consumed.
+     */
+    public static void startDynamicLightFrame() {
+        DynamicLightShadowAtlas.frameEnd();
+    }
+
+    /**
+     * Builds and draws this frame's dynamic lights; call after the solid passes and before IV's blended pass.
+     * {@code view} is the world render's camera rotation, {@code projection} its projection.
+     */
+    public static void renderDynamicLightFrame(Matrix4f view, Matrix4f projection, Frustum frustum, Camera camera, float partialTicks) {
+        DynamicLightFrustum test = frustum == null ? DynamicLightFrustum.ACCEPT_ALL : (minX, minY, minZ, maxX, maxY, maxZ) -> frustum.isVisible(new AABB(minX, minY, minZ, maxX, maxY, maxZ));
+        Vec3 position = camera.getPosition();
+        Vector3f left = camera.getLeftVector();
+        Vector3f up = camera.getUpVector();
+        dynamicLightLeft[0] = left.x();
+        dynamicLightLeft[1] = left.y();
+        dynamicLightLeft[2] = left.z();
+        dynamicLightUp[0] = up.x();
+        dynamicLightUp[1] = up.y();
+        dynamicLightUp[2] = up.z();
+        DynamicLightSystem.renderFrame(partialTicks, test, position.x, position.y, position.z, dynamicLightLeft, dynamicLightUp, columnMajor(view, dynamicLightView), columnMajor(projection, dynamicLightProjection));
+    }
+
+    private static final float[] dynamicLightLeft = new float[3];
+    private static final float[] dynamicLightUp = new float[3];
+    private static final float[] dynamicLightView = new float[16];
+    private static final float[] dynamicLightProjection = new float[16];
+    /** A drawn buffer's model-view for {@code DynamicLightShadowAtlas.captureBody}, which copies it. */
+    private static final float[] dynamicLightPose = new float[16];
+    private static final FloatBuffer matrixStaging = FloatBuffer.allocate(16);
+
+    /** MC's {@link Matrix4f} as 16 column-major floats (its {@code store} writes in GL order). */
+    private static float[] columnMajor(Matrix4f matrix, float[] into) {
+        matrixStaging.clear();
+        matrix.store(matrixStaging);
+        matrixStaging.rewind();
+        matrixStaging.get(into);
+        return into;
+    }
+
+    private static float[] poseFloats(Matrix4f matrix) {
+        return columnMajor(matrix, dynamicLightPose);
+    }
+
+    @Override
+    public IInterfaceDynamicLightingGL getDynamicLightGL() {
+        return InterfaceDynamicLightingGL.INSTANCE;
+    }
+
+    @Override
+    public float getDaylight(AWrapperWorld world, Point3D position) {
+        Level level = ((WrapperWorld) world).world;
+        if (!(level instanceof ClientLevel)) {
+            return Math.max(0F, Math.min(1F, world.getLightBrightness(position, false)));
+        }
+        float open = level.getBrightness(LightLayer.SKY, new BlockPos(position.x, position.y, position.z)) / 15F;
+        //getSkyDarken(partial) runs 0.2 (night) .. 1 (clear noon); sky light alone is 15 at midnight too.
+        float sun = Mth.clamp((((ClientLevel) level).getSkyDarken(1F) - 0.2F) / 0.8F, 0F, 1F);
+        return open * sun;
+    }
+
+    @Override
+    public float getRainLevel(AWrapperWorld world, float partialTicks) {
+        return ((WrapperWorld) world).world.getRainLevel(partialTicks);
+    }
+
+    @Override
+    public boolean readDynamicLightSection(AWrapperWorld world, int sx, int sy, int sz, DynamicLightVoxelWindow window) {
+        Level level = ((WrapperWorld) world).world;
+        LevelChunkSection section = null;
+        LevelChunk chunk = level.getChunkSource().getChunk(sx, sz, false);
+        if (chunk != null) {
+            int index = level.getSectionIndexFromSectionY(sy);
+            if (index >= 0 && index < chunk.getSections().length) {
+                section = chunk.getSections()[index];
+            }
+        }
+        int x0 = sx << 4;
+        int y0 = sy << 4;
+        int z0 = sz << 4;
+        lightProbe.set(x0, y0, z0);
+        //A section of one kind (air, stone) is filled whole from its palette.
+        if (section == null || section.hasOnlyAir() || !section.maybeHas(state -> shadowByte(level, state, window) != 0)) {
+            window.fillSection(sx, sy, sz, false);
+            return true;
+        }
+        if (!section.maybeHas(state -> shadowByte(level, state, window) != FULL_SHADOW)) {
+            window.fillSection(sx, sy, sz, true);
+            return true;
+        }
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    lightProbe.set(x0 + x, y0 + y, z0 + z);
+                    window.setShape(x0 + x, y0 + y, z0 + z, shadowByte(level, section.getBlockState(x, y, z), window));
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * {@code state}'s byte in the dynamic light grid, worked out once per state at {@link #lightProbe}: a full block
+     * casts a full shadow; one that is not (slabs, stairs, fences, doors, hoppers, bells, banners, signs, mob heads,
+     * candles) casts its outline shape's; none for air, IV's own blocks, blocks without a block model and without a
+     * block entity to draw them (liquids, barriers), see-through blocks (glass, leaves, bars and panes, the translucent
+     * layer, ladders, scaffolding and other climbables, spawners), blocks with neither a collision shape nor a solid
+     * layer (plants, torches, rails) and blocks drawn at a random offset.
+     */
+    private int shadowByte(Level level, BlockState state, DynamicLightVoxelWindow window) {
+        DynamicLightBlockShapes shapes = window.shapes();
+        int value = shapes.byteOf(state);
+        if (value < 0) {
+            shapes.begin();
+            if (state.isAir() || state.getBlock() instanceof BuilderBlock || (state.getRenderShape() == RenderShape.INVISIBLE && !(state.getBlock() instanceof EntityBlock))) {
+                //No boxes: IV's own blocks are drawn by the entity renderer, whose bodies cast the shadow; liquids,
+                //barriers and other blocks without a block model, even full ones, show nothing to shade with.  A block
+                //entity block (sign, mob head, banner) is invisible to the chunk mesh too, but its block entity
+                //renderer draws it, so it goes on to cast its outline.
+            } else if (state.isSolidRender(level, lightProbe)) {
+                shapes.box(0, 0, 0, 1, 1, 1);
+            } else if (castsShapedShadow(level, state)) {
+                for (AABB box : state.getShape(level, lightProbe).toAabbs()) {
+                    shapes.box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+                }
+            }
+            value = window.endShape(state);
+        }
+        return value;
+    }
+
+    /** Whether {@code state}, visible but not a full block, casts its shape's shadow: see {@link #shadowByte}. */
+    private boolean castsShapedShadow(Level level, BlockState state) {
+        //Climbables and spawners are mostly holes, which the grid cannot see: their box would shade as a wall.
+        if (state.getBlock().getOffsetType() != Block.OffsetType.NONE || state.is(BlockTags.IMPERMEABLE) || state.is(BlockTags.LEAVES) || state.is(BlockTags.CLIMBABLE) || state.is(Blocks.SPAWNER)) {
+            return false;
+        }
+        if (state.getRenderShape() == RenderShape.ENTITYBLOCK_ANIMATED) {
+            return true;
+        }
+        //Bars and panes (glass panes, stained or not) are mostly holes; they share the cutout mipped layer with solid
+        //things like hoppers, so the layer cannot tell them apart.
+        if (state.getBlock() instanceof IronBarsBlock) {
+            return false;
+        }
+        if (ItemBlockRenderTypes.canRenderInLayer(state, RenderType.translucent())) {
+            return false;
+        }
+        return ItemBlockRenderTypes.canRenderInLayer(state, RenderType.solid()) || !state.getCollisionShape(level, lightProbe).isEmpty();
+    }
+
+    /** {@link #shadowByte} of a full block. */
+    private static final int FULL_SHADOW = DynamicLightVoxelWindow.SOLID & 0xFF;
+    private final BlockPos.MutableBlockPos lightProbe = new BlockPos.MutableBlockPos();
+
+    @Override
+    public void markLightSectionsDirty(int[] boxes, int count) {
+        if (Minecraft.getInstance().level == null) {
+            return;
+        }
+        //Grown by one block: a face takes the light of the block beside it.
+        for (int i = 0, o = 0; i < count; i++, o += 6) {
+            int x0 = SectionPos.blockToSectionCoord(boxes[o] - 1), x1 = SectionPos.blockToSectionCoord(boxes[o + 3] + 1);
+            int y0 = SectionPos.blockToSectionCoord(boxes[o + 1] - 1), y1 = SectionPos.blockToSectionCoord(boxes[o + 4] + 1);
+            int z0 = SectionPos.blockToSectionCoord(boxes[o + 2] - 1), z1 = SectionPos.blockToSectionCoord(boxes[o + 5] + 1);
+            for (int sx = x0; sx <= x1; sx++) {
+                for (int sy = y0; sy <= y1; sy++) {
+                    for (int sz = z0; sz <= z1; sz++) {
+                        Minecraft.getInstance().levelRenderer.setSectionDirty(sx, sy, sz);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -693,6 +925,8 @@ public class InterfaceRender implements IInterfaceRender {
         final BufferBuilder builder;
         final VertexBuffer buffer;
         boolean isReady;
+        /** Bounding radius of the vertices around their origin; the squared radius while uploading. */
+        float radius;
 
         private BufferData() {
             builder = null;

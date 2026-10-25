@@ -11,6 +11,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketCameraShake;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketCrafterTimeSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
@@ -317,5 +318,8 @@ public abstract class APacketBase {
         //New packet types are appended to preserve the IDs of existing packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleDeployment.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehiclePacking.class);
+
+        //Client effect packets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCameraShake.class);
     }
 }

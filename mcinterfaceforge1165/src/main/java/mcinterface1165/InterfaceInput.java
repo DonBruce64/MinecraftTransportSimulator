@@ -374,6 +374,11 @@ public class InterfaceInput implements IInterfaceInput {
 
     @SubscribeEvent
     public static void onIVMovementInput(InputUpdateEvent event) {
+        //Block vanilla's double-tap toggle before it enables flight and sends an abilities packet.
+        //The setPosition override handles flight that was already active before mounting.
+        if (!event.getPlayer().isSpectator() && WrapperPlayer.getWrapperFor(event.getPlayer()).getEntityRiding() != null) {
+            event.getMovementInput().jumping = false;
+        }
         if (InterfaceManager.clientInterface != null && ControlSystem.shouldSuppressDismount(InterfaceManager.clientInterface.getClientPlayer(), event.getMovementInput().shiftKeyDown)) {
             event.getMovementInput().shiftKeyDown = false;
         }

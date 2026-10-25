@@ -148,7 +148,7 @@ public class VehicleGroundDeviceCollection {
                             furthestRearPoint = part.localOffset.z;
                         }
                     }
-                } else if (part instanceof PartGroundDevice && part.isActiveVar.isActive) {
+                } else if (part instanceof PartGroundDevice) {
                     PartGroundDevice groundDevice = (PartGroundDevice) part;
                     if (groundDevice.wheelbasePoint.z > furthestFrontPoint) {
                         furthestFrontPoint = groundDevice.wheelbasePoint.z;

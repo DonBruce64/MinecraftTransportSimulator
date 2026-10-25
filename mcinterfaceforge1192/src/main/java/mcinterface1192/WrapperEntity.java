@@ -31,6 +31,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.alchemy.Potion;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -482,6 +485,34 @@ public class WrapperEntity implements IWrapperEntity {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity.equals(((BuilderEntityExisting) event.getTarget()).entity)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(Player player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**

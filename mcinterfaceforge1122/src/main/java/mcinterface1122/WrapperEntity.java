@@ -32,6 +32,9 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -471,6 +474,34 @@ public class WrapperEntity implements IWrapperEntity {
                 throw new NullPointerException("Potion " + effect.name + " does not exist.");
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getEntityPlayer()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity.equals(((BuilderEntityExisting) event.getTarget()).entity)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if (shouldPreventBlockBreaking(event.getEntityPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVBlockBreak(BlockEvent.BreakEvent event) {
+        if (shouldPreventBlockBreaking(event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean shouldPreventBlockBreaking(EntityPlayer player) {
+        return ConfigSystem.settings.general.preventBlockBreakingWhileRiding.value && WrapperPlayer.getWrapperFor(player).getEntityRiding() instanceof PartSeat;
     }
 
     /**
