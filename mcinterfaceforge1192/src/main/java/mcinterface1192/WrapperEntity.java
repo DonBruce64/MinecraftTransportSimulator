@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.LevelEvent;
@@ -497,6 +498,16 @@ public class WrapperEntity implements IWrapperEntity {
                 if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
                     event.setCanceled(true);
                 }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIVAttackEntity(AttackEntityEvent event) {
+        if (event.getTarget() instanceof BuilderEntityExisting) {
+            AEntityB_Existing riding = WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding();
+            if (riding instanceof PartSeat && ((PartSeat) riding).masterEntity.equals(((BuilderEntityExisting) event.getTarget()).entity)) {
+                event.setCanceled(true);
             }
         }
     }

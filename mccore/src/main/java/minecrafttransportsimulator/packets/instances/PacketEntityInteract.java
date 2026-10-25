@@ -141,6 +141,13 @@ public class PacketEntityInteract extends APacketEntityInteract<AEntityE_Interac
         if (rightClick) {
             entity.interact(player);
         } else if (leftClick && (hitBox.groupDef == null || hitBox.groupDef.armorThickness == 0)) {
+            //Do not let riders punch their own vehicle or remove its parts by hand.
+            if (player.getEntityRiding() instanceof APart) {
+                AEntityF_Multipart<?> riddenEntity = ((APart) player.getEntityRiding()).masterEntity;
+                if (riddenEntity.equals(entity instanceof APart ? ((APart) entity).masterEntity : entity)) {
+                    return false;
+                }
+            }
             entity.attack(new Damage(1.0F, entity.boundingBox, null, player, null).setHand());
         }
         return false;
