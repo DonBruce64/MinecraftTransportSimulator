@@ -322,7 +322,8 @@ public class InterfaceInput implements IInterfaceInput {
 
     @SubscribeEvent
     public static void onIVMovementInput(MovementInputUpdateEvent event) {
-        //Vanilla double-tap flight must not activate while controlling a seat.
+        //Block vanilla's double-tap toggle before it enables flight and sends an abilities packet.
+        //The setPosition override handles flight that was already active before mounting.
         if (!event.getEntity().isSpectator() && WrapperPlayer.getWrapperFor(event.getEntity()).getEntityRiding() != null) {
             event.getInput().jumping = false;
         }
