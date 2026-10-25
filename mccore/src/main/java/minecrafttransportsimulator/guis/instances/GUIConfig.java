@@ -16,6 +16,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrame;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -35,6 +36,8 @@ public class GUIConfig extends AGUIBase {
     private boolean configuringRendering = false;
     private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<>();
     private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<>();
+    /** Number buttons of the rendering page: left half lowers the value, right half raises it. */
+    private final Map<GUIComponentButton, JSONConfigEntry<Integer>> renderNumberButtons = new HashMap<>();
     private GUIComponentButton renderMode0Button;
     private GUIComponentButton renderMode1Button;
     private GUIComponentButton renderMode2Button;
@@ -143,32 +146,34 @@ public class GUIConfig extends AGUIBase {
 
         //Config buttons and text.
         //We have two sets here.  One for rendering, one for controls.
-        populateConfigButtonList(renderConfigButtons, ConfigSystem.client.renderingSettings);
-        populateConfigButtonList(controlConfigButtons, ConfigSystem.client.controlSettings);
+        //The rendering page holds more entries, so its rows are shorter: its 10 rows end at y 140, above the mode label.
+        renderNumberButtons.clear();
+        populateConfigButtonList(renderConfigButtons, ConfigSystem.client.renderingSettings, 12);
+        populateConfigButtonList(controlConfigButtons, ConfigSystem.client.controlSettings, 16);
 
         //Add render mode components.
-        addComponent(renderMode0Button = new GUIComponentButton(this, guiLeft + 20, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE0.getCurrentValue()) {
+        addComponent(renderMode0Button = new GUIComponentButton(this, guiLeft + 20, guiTop + 166, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE0.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 ConfigSystem.client.renderingSettings.renderingMode.value = 0;
                 ConfigSystem.saveToDisk();
             }
         });
-        addComponent(renderMode1Button = new GUIComponentButton(this, guiLeft + 90, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE1.getCurrentValue()) {
+        addComponent(renderMode1Button = new GUIComponentButton(this, guiLeft + 90, guiTop + 166, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE1.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 ConfigSystem.client.renderingSettings.renderingMode.value = 1;
                 ConfigSystem.saveToDisk();
             }
         });
-        addComponent(renderMode2Button = new GUIComponentButton(this, guiLeft + 160, guiTop + 160, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE2.getCurrentValue()) {
+        addComponent(renderMode2Button = new GUIComponentButton(this, guiLeft + 160, guiTop + 166, 70, 20, LanguageSystem.GUI_CONFIG_RENDERING_MODE2.getCurrentValue()) {
             @Override
             public void onClicked(boolean leftSide) {
                 ConfigSystem.client.renderingSettings.renderingMode.value = 2;
                 ConfigSystem.saveToDisk();
             }
         });
-        addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 140, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_RENDERING_LABEL.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F, getWidth() - 20).setComponent(renderMode1Button));
+        addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 152, ColorRGB.BLACK, LanguageSystem.GUI_CONFIG_RENDERING_LABEL.getCurrentValue(), TextAlignment.LEFT_ALIGNED, 0.75F, getWidth() - 20).setComponent(renderMode1Button));
 
         //Control selection buttons and text.
         controlSelectionButtons.clear();
@@ -503,6 +508,9 @@ public class GUIConfig extends AGUIBase {
         for (GUIComponentButton button : renderConfigButtons.keySet()) {
             button.visible = !renderConfigScreenButton.enabled;
         }
+        for (GUIComponentButton button : renderNumberButtons.keySet()) {
+            button.visible = !renderConfigScreenButton.enabled;
+        }
         renderMode0Button.visible = !renderConfigScreenButton.enabled;
         renderMode0Button.enabled = ConfigSystem.client.renderingSettings.renderingMode.value != 0;
         renderMode1Button.visible = !renderConfigScreenButton.enabled;
@@ -695,16 +703,45 @@ public class GUIConfig extends AGUIBase {
         }
     }
 
+    /**
+     * Adds a button for every Boolean entry of {@code configObject}, two a row of {@code rowHeight} pixels, and a
+     * number button for {@code DynL_MaxLights} (the only number entry players set here).
+     */
     @SuppressWarnings("unchecked")
-    private void populateConfigButtonList(Map<GUIComponentButton, JSONConfigEntry<Boolean>> configButtons, Object configObject) {
+    private void populateConfigButtonList(Map<GUIComponentButton, JSONConfigEntry<Boolean>> configButtons, Object configObject, int rowHeight) {
         configButtons.clear();
+        int index = 0;
         for (Field field : configObject.getClass().getFields()) {
             if (field.getType().equals(JSONConfigEntry.class)) {
                 try {
                     JSONConfigEntry<?> configEntry = (JSONConfigEntry<?>) field.get(configObject);
-                    if (configEntry.value.getClass().equals(Boolean.class)) {
+                    if (configEntry.value.getClass().equals(Integer.class) && "DynL_MaxLights".equals(field.getName())) {
+                        GUIComponentButton button = new GUIComponentButton(this, guiLeft + 85 + 120 * (index % 2), guiTop + 20 + rowHeight * (index / 2), 40, rowHeight, String.valueOf(configEntry.value)) {
+                            @Override
+                            public void onClicked(boolean leftSide) {
+                                JSONConfigEntry<Integer> entry = renderNumberButtons.get(this);
+                                //Steps of 1 up to 16, 4 up to 64, then 16, so 256 is a few clicks away.
+                                int value = entry.value;
+                                int step = leftSide ? (value <= 16 ? 1 : value <= 64 ? 4 : 16) : (value < 16 ? 1 : value < 64 ? 4 : 16);
+                                entry.value = Math.max(0, Math.min(DynamicLightFrame.CAPACITY, value + (leftSide ? -step : step)));
+                                ConfigSystem.saveToDisk();
+                                text = String.valueOf(entry.value);
+                            }
+
+                            @Override
+                            public List<String> getTooltipText() {
+                                List<String> tooltipText = new ArrayList<>();
+                                tooltipText.add(configEntry.comment);
+                                return tooltipText;
+                            }
+                        };
+                        addComponent(button);
+                        renderNumberButtons.put(button, (JSONConfigEntry<Integer>) configEntry);
+                        addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + rowHeight / 2 - 3, ColorRGB.BLACK, field.getName()).setComponent(button));
+                        ++index;
+                    } else if (configEntry.value.getClass().equals(Boolean.class)) {
                         String fieldName = field.getName();
-                        GUIComponentButton button = new GUIComponentButton(this, guiLeft + 85 + 120 * (configButtons.size() % 2), guiTop + 20 + 16 * (configButtons.size() / 2), 40, 16, String.valueOf(configEntry.value)) {
+                        GUIComponentButton button = new GUIComponentButton(this, guiLeft + 85 + 120 * (index % 2), guiTop + 20 + rowHeight * (index / 2), 40, rowHeight, String.valueOf(configEntry.value)) {
                             @Override
                             public void onClicked(boolean leftSide) {
                                 if ("mouseYoke".equals(fieldName)) {
@@ -725,7 +762,8 @@ public class GUIConfig extends AGUIBase {
                         };
                         addComponent(button);
                         configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);
-                        addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + 5, ColorRGB.BLACK, field.getName()).setComponent(button));
+                        addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + rowHeight / 2 - 3, ColorRGB.BLACK, field.getName()).setComponent(button));
+                        ++index;
                     }
                 } catch (Exception e) {
                     //How the heck does this even happen?

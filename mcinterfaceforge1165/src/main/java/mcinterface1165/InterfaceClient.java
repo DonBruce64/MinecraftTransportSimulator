@@ -215,6 +215,12 @@ public class InterfaceClient implements IInterfaceClient {
             rgtY = upZ * fwdX - upX * fwdZ;
             rgtZ = upX * fwdY - upY * fwdX;
         }
+        if (InterfaceEventsEntityRendering.cameraShakeActive) {
+            RotationMatrix ori = InterfaceEventsEntityRendering.cameraShakeProjectionRotation;
+            fwdX = ori.m02; fwdY = ori.m12; fwdZ = ori.m22;
+            upX  = ori.m01; upY  = ori.m11; upZ  = ori.m21;
+            rgtX = -ori.m00; rgtY = -ori.m10; rgtZ = -ori.m20;
+        }
 
         double dx = worldPos.x - camX;
         double dy = worldPos.y - camY;
