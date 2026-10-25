@@ -189,6 +189,10 @@ public final class PartSeat extends APart {
                 //Open the HUD.  This will have been closed in the remove call.
                 new GUIHUD(vehicleOn, this);
 
+                if (placementDefinition.isController) {
+                    ControlSystem.resetAircraftControlsNotice();
+                }
+
                 //Auto-start the engines, if we have that config enabled and we can start them.
                 if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider) && !vehicleOn.definition.motorized.overrideAutoStart) {
                     vehicleOn.engines.forEach(engine -> {

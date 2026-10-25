@@ -40,6 +40,8 @@ public final class ControlSystem {
     private static final long DISMOUNT_CONFIRM_WINDOW_MILLIS = 3000L;
     private static boolean joysticksInhibited = false;
     private static IWrapperPlayer clientPlayer;
+    private static boolean arcadeNoticeShownThisRide;
+    private static boolean standardNoticeShownThisRide;
 
     private static boolean clickingLeft = false;
     private static boolean clickingRight = false;
@@ -231,6 +233,15 @@ public final class ControlSystem {
     private static void clearDismountConfirmation() {
         dismountConfirmationSeat = null;
         dismountConfirmationExpireTime = 0;
+    }
+
+    /**
+     * Call when the client player gets into a controller seat.  Starts a new ride for the
+     * default aircraft controls notice, so it shows again if it is set to show every time.
+     */
+    public static void resetAircraftControlsNotice() {
+        arcadeNoticeShownThisRide = false;
+        standardNoticeShownThisRide = false;
     }
 
     public static void controlMultipart(AEntityF_Multipart<?> multipart, boolean isPlayerController, double mouseXDelta, double mouseYDelta) {
@@ -519,6 +530,45 @@ public final class ControlSystem {
         if (!isPlayerController) {
             resetMouseYoke();
             return;
+        }
+
+        if (aircraft.getArcadeFlightOverrideKey() != null && ConfigSystem.client.controlSettings.showTutorial.value) {
+            //First time this player flies this aircraft with this default, tell them what controls they have.
+            //If they already saw the other default's notice, the aircraft has changed modes.
+            //With showDefaultAircraftControlsMessageEveryTime, "first time" is per ride instead.
+            boolean arcadeDefault = aircraft.isArcadeFlightDefault();
+            //Saved on the vehicle per player, so each newly-placed aircraft shows each player the notice once per default.
+            String noticePrefix = "arcadeNoticeShown_";
+            String noticeSuffix = "_" + clientPlayer.getID();
+            ComputedVariable noticeVar = aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "arcade" : "standard") + noticeSuffix);
+            boolean showEveryTime = ConfigSystem.client.controlSettings.showDefaultAircraftControlsMessageEveryTime.value;
+            boolean shownBefore = showEveryTime ? (arcadeDefault ? arcadeNoticeShownThisRide : standardNoticeShownThisRide) : noticeVar.currentValue != 0;
+            if (!shownBefore) {
+                if (noticeVar.currentValue == 0) {
+                    //Still mark the vehicle, so turning the config off doesn't re-show notices already seen.
+                    noticeVar.setTo(1, false);
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(noticeVar, 1));
+                }
+                if (arcadeDefault) {
+                    arcadeNoticeShownThisRide = true;
+                } else {
+                    standardNoticeShownThisRide = true;
+                }
+                boolean arcadeActive = aircraft.isArcadeFlightActive();
+                boolean isOverridden = arcadeActive != arcadeDefault;
+                boolean isModeChange = showEveryTime ? (arcadeDefault ? standardNoticeShownThisRide : arcadeNoticeShownThisRide) : aircraft.getOrCreateVariable(noticePrefix + (arcadeDefault ? "standard" : "arcade") + noticeSuffix).currentValue != 0;
+                LanguageEntry message;
+                if (isModeChange) {
+                    message = isOverridden ? LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_OVERRIDE : LanguageSystem.INTERACT_ARCADEMODE_NOTICE_MODE_DEFAULT;
+                } else {
+                    message = isOverridden ? LanguageSystem.INTERACT_ARCADEMODE_NOTICE_OVERRIDE : LanguageSystem.INTERACT_ARCADEMODE_NOTICE_DEFAULT;
+                }
+                String currentScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD).getCurrentValue();
+                String otherScheme = (arcadeActive ? LanguageSystem.INTERACT_ARCADEMODE_SCHEME_STANDARD : LanguageSystem.INTERACT_ARCADEMODE_SCHEME_ARCADE).getCurrentValue();
+                ConfigKeyboard arcadeKey = ControlsKeyboard.AIRCRAFT_ARCADE.config;
+                String keyName = arcadeKey.isMouseButton ? InterfaceManager.inputInterface.getNameForMouseButton(arcadeKey.keyCode) : InterfaceManager.inputInterface.getNameForKeyCode(arcadeKey.keyCode);
+                InterfaceManager.clientInterface.displayOverlayMessage(String.format(message.getCurrentValue(), currentScheme, keyName, otherScheme));
+            }
         }
 
         if (ControlsKeyboard.AIRCRAFT_ARCADE.isPressed()) {

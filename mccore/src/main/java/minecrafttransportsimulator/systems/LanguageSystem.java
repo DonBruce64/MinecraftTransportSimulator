@@ -384,6 +384,12 @@ public class LanguageSystem {
     public static final LanguageEntry INTERACT_ARCADEMODE_DISABLED = new LanguageEntry("interact.arcademode.disabled", "Arcade Mode disabled");
     public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_ENABLED = new LanguageEntry("interact.arcademode.vehicle.enabled", "Arcade flight enabled for this aircraft in this mode");
     public static final LanguageEntry INTERACT_ARCADEMODE_VEHICLE_DISABLED = new LanguageEntry("interact.arcademode.vehicle.disabled", "Arcade flight disabled for this aircraft in this mode");
+    public static final LanguageEntry INTERACT_ARCADEMODE_SCHEME_ARCADE = new LanguageEntry("interact.arcademode.scheme.arcade", "arcade (mouse) flight");
+    public static final LanguageEntry INTERACT_ARCADEMODE_SCHEME_STANDARD = new LanguageEntry("interact.arcademode.scheme.standard", "standard controls");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_DEFAULT = new LanguageEntry("interact.arcademode.notice.default", "This aircraft defaults to %1$s. Press [%2$s] to fly with %3$s instead.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_OVERRIDE = new LanguageEntry("interact.arcademode.notice.override", "This aircraft is set to %1$s from your saved choice. Press [%2$s] to fly with %3$s instead.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_MODE_DEFAULT = new LanguageEntry("interact.arcademode.notice.mode.default", "This mode defaults to %1$s. Press [%2$s] to switch. Your choice is remembered separately for each mode.");
+    public static final LanguageEntry INTERACT_ARCADEMODE_NOTICE_MODE_OVERRIDE = new LanguageEntry("interact.arcademode.notice.mode.override", "This mode is set to %1$s from your saved choice. Press [%2$s] to switch. Your choice is remembered separately for each mode.");
     
     public static final LanguageEntry INTERACT_PARTREMOVE_HASPARTS = new LanguageEntry("interact.partremove.hasparts", "You must first remove all parts from this part to remove it!");
     public static final LanguageEntry INTERACT_PARTREMOVE_WRENCH = new LanguageEntry("interact.partremove.wrench", "This part requires a wrench to remove!");
