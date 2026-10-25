@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
@@ -13,6 +14,7 @@ import com.mojang.math.Matrix4f;
 import mcinterface1192.InterfaceRender;
 import mcinterface1192.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -21,6 +23,10 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -29,6 +35,8 @@ import net.minecraft.world.phys.Vec3;
 public abstract class LevelRendererMixin {
     @Shadow
     private RenderBuffers renderBuffers;
+    @Shadow
+    private Frustum cullingFrustum;
 
     /**
      * Need this to grab variables used in the level rendering routine for the rendering routine.
@@ -36,6 +44,7 @@ public abstract class LevelRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
     public void inject_renderLevelDataGetter(PoseStack pMatrixStack, float pPartialTicks, long pFinishTimeNano, boolean pDrawBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightmap, Matrix4f pProjection, CallbackInfo ci) {
         InterfaceRender.projectionMatrix = pProjection;
+        InterfaceRender.startDynamicLightFrame();
     }
 
     /**
@@ -53,9 +62,27 @@ public abstract class LevelRendererMixin {
         if (ConfigSystem.settings.general.forceRenderLastSolid.value) {
             InterfaceRender.doRenderCall(false, pPartialTicks);
         }
+        //Dynamic lights go over the finished world and IV's solid pass, under IV's blended pass.
+        InterfaceRender.renderDynamicLightFrame(pMatrixStack.last().pose(), pProjection, cullingFrustum, pCamera, pPartialTicks);
         InterfaceRender.doRenderCall(true, pPartialTicks);
         //Need to end batch after drawing translucents, otherwise they'll get other matrices applied.
         irendertypebuffer$impl.endBatch();
+    }
+
+    /**
+     * Raises the block light chunk meshes bake by the dynamic lights while a shader pack is active
+     * ({@link DynamicLightSystem#blockLightAt} is 0 otherwise).  Sodium forks (Rubidium, Embeddium) bake chunk light
+     * through this method too, so they need no mixin of their own.
+     */
+    @Inject(method = "getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)I", at = @At("RETURN"), cancellable = true)
+    private static void inject_getLightColor(BlockAndTintGetter world, BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+        int raised = DynamicLightSystem.blockLightAt(pos.getX(), pos.getY(), pos.getZ());
+        if (raised > 0) {
+            int packed = cir.getReturnValueI();
+            if (raised > LightTexture.block(packed)) {
+                cir.setReturnValue(LightTexture.pack(raised, LightTexture.sky(packed)));
+            }
+        }
     }
 
     /**

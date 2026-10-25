@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.rendering;
 
 import java.net.HttpURLConnection;
+import java.nio.FloatBuffer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,9 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.RenderableData.LightingMode;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightFrame;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightOwner;
+import minecrafttransportsimulator.rendering.dynamiclight.DynamicLightSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -54,6 +58,11 @@ public class RenderableModelObject {
     private final RenderableData flareRenderable;
     private final RenderableData beamRenderable;
     private final RenderableData coverRenderable;
+    /** Components with their own color or brightness, or a dynamic light. */
+    private final List<ComponentRenderables> componentRenderables;
+    /** The dynamic light components, in their lamp order ({@link ComponentRenderables#lampIndex}). */
+    private final List<JSONLightBlendableComponent> dynamicComponents;
+    private DynamicLightOwner dynamicLightOwner;
     private final List<Double[]> treadPoints;
 
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
@@ -101,42 +110,36 @@ public class RenderableModelObject {
                 renderable.setTransucentOverride();
             }
             if (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()) {
+                //Components that share the light's color and brightness stay batched in one flare and one beam renderable.
                 List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
                 List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
+                List<ComponentRenderables> ownRenderables = new ArrayList<>();
+                List<JSONLightBlendableComponent> dynamicDefs = new ArrayList<>();
                 for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
-                    if (component.flareHeight > 0) {
-                        flareDefs.add(component);
-                    }
-                    if (component.beamDiameter > 0) {
-                        beamDefs.add(component);
+                    if (component.hasOwnLighting()) {
+                        boolean dynamic = component.isDynamic();
+                        ownRenderables.add(new ComponentRenderables(component, dynamic ? dynamicDefs.size() : -1));
+                        if (dynamic) {
+                            dynamicDefs.add(component);
+                        }
+                    } else {
+                        if (component.flareHeight > 0) {
+                            flareDefs.add(component);
+                        }
+                        if (component.beamDiameter > 0) {
+                            beamDefs.add(component);
+                        }
                     }
                 }
-                if (!flareDefs.isEmpty()) {
-                    List<TransformationMatrix> flareTransforms = new ArrayList<>();
-                    List<Point3D> flareNormals = new ArrayList<>();
-                    for (JSONLightBlendableComponent flareDef : flareDefs) {
-                        //Get the matrix  that is needed to rotate points to the normalized vector.
-                        TransformationMatrix transform = new TransformationMatrix();
-                        transform.applyTranslation(flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos));
-                        transform.applyRotation(new RotationMatrix().setToVector(flareDef.axis, false));
-                        transform.applyScaling(flareDef.flareWidth, flareDef.flareHeight, 1);
-                        flareTransforms.add(transform);
-                        flareNormals.add(flareDef.axis);
-                    }
-                    this.flareRenderable = new RenderableData(RenderableVertices.createSprite(flareDefs.size(), flareTransforms, flareNormals), "mts:textures/rendering/lensflare.png");
-                    flareRenderable.setTransucentOverride();
-                } else {
-                    this.flareRenderable = null;
-                }
-                if (!beamDefs.isEmpty()) {
-                    this.beamRenderable = new RenderableData(RenderableVertices.createLightBeams(beamDefs), "mts:textures/rendering/lightbeam.png");
-                    beamRenderable.setTransucentOverride();
-                } else {
-                    this.beamRenderable = null;
-                }
+                this.flareRenderable = createFlareRenderable(flareDefs);
+                this.beamRenderable = createBeamRenderable(beamDefs);
+                this.componentRenderables = ownRenderables.isEmpty() ? null : ownRenderables;
+                this.dynamicComponents = dynamicDefs.isEmpty() ? null : dynamicDefs;
             } else {
                 this.flareRenderable = null;
                 this.beamRenderable = null;
+                this.componentRenderables = null;
+                this.dynamicComponents = null;
             }
             if (lightDef.covered) {
                 this.coverRenderable = new RenderableData(renderable.vertexObject.createOverlay(COVER_OFFSET), "mts:textures/rendering/glass.png");
@@ -148,6 +151,8 @@ public class RenderableModelObject {
             this.flareRenderable = null;
             this.beamRenderable = null;
             this.coverRenderable = null;
+            this.componentRenderables = null;
+            this.dynamicComponents = null;
         }
 
         //If we are a tread, create tread points.
@@ -214,14 +219,7 @@ public class RenderableModelObject {
 
             //Now set dynamic alpha if we have it, since this dictates translucent state.
             if (objectDef != null && objectDef.blendedAnimations && switchbox != null && switchbox.lastVisibilityClock != null) {
-                if (switchbox.lastVisibilityValue <= switchbox.lastVisibilityClock.animation.clampMin) {
-                    renderable.setAlpha(0);
-                } else if (switchbox.lastVisibilityValue >= switchbox.lastVisibilityClock.animation.clampMax) {
-                    //Need >= here instead of above for things where min/max clamps are equal.
-                    renderable.setAlpha(1);
-                } else {
-                    renderable.setAlpha((float) ((switchbox.lastVisibilityValue - switchbox.lastVisibilityClock.animation.clampMin) / (switchbox.lastVisibilityClock.animation.clampMax - switchbox.lastVisibilityClock.animation.clampMin)));
-                }
+                renderable.setAlpha(getBlendedAlpha());
             }
 
             //If we aren't on the right pass for our main object, and we don't have lights, skip further calcs.
@@ -230,25 +228,7 @@ public class RenderableModelObject {
             }
 
             //If we are a light, get lightLevel for later.
-            float lightLevel;
-            if (lightDef != null) {
-                lightLevel = entity.lightBrightnessValues.get(lightDef);
-                AEntityD_Definable<?> masterEntity = entity;
-                if (masterEntity instanceof APart) {
-                    masterEntity = ((APart) masterEntity).masterEntity;
-                }
-                if (lightDef.isElectric && masterEntity instanceof EntityVehicleF_Physics) {
-                    //Light start dimming at 10V, then go dark at 3V.
-                    double electricPower = ((EntityVehicleF_Physics) masterEntity).electricPower;
-                    if (electricPower < 3) {
-                        lightLevel = 0;
-                    } else if (electricPower < 10) {
-                        lightLevel *= (electricPower - 3) / 7D;
-                    }
-                }
-            } else {
-                lightLevel = 0;
-            }
+            float lightLevel = lightDef != null ? getLightLevel(entity, lightDef) : 0;
 
             //Apply transforms.
             renderable.transform.set(transform);
@@ -303,29 +283,31 @@ public class RenderableModelObject {
                     }
                 }
 
+                //Dynamic light components hand their pose and brightness to the dynamic light system on the solid pass.
+                if (!blendingEnabled && dynamicComponents != null && DynamicLightSystem.getMode() != DynamicLightSystem.Mode.OFF) {
+                    if (dynamicLightOwner == null) {
+                        dynamicLightOwner = DynamicLightSystem.getOwner(this, entity, lightDef, dynamicComponents);
+                    }
+                    dynamicLightOwner.update(renderable.transform, switchbox != null ? switchbox.netMatrix : null);
+                    //A fading object (blendedAnimations) dims its lamps with it.
+                    float shown = objectDef != null && objectDef.blendedAnimations ? renderable.alpha : 1;
+                    for (DynamicLightOwner.Lamp lamp : dynamicLightOwner.lamps) {
+                        lamp.setLighting(shown * lightLevel);
+                    }
+                }
+
                 //Flares and beams are always rendered on the blended pass since they need to do alpha blending.
                 if (blendingEnabled && lightLevel > 0) {
                     //Light flares or beams detected on blended render pass.
                     //First render all flares, then render all beams.
-                    float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
+                    float darkness = 1 - entity.world.getLightBrightness(entity.position, false);
+                    float blendableBrightness = Math.min(darkness * lightLevel, 1);
                     if (blendableBrightness > 0) {
-                        if (flareRenderable != null && ConfigSystem.client.renderingSettings.renderFlares.value) {
-                            flareRenderable.setLightValue(renderable.worldLightValue);
-                            flareRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                            flareRenderable.setColor(color);
-                            flareRenderable.setAlpha(blendableBrightness);
-                            flareRenderable.transform.set(renderable.transform);
-                            flareRenderable.render();
-                        }
-                        if (beamRenderable != null && ConfigSystem.client.renderingSettings.renderBeams.value) {
-                            beamRenderable.setLightValue(renderable.worldLightValue);
-                            beamRenderable.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
-                            beamRenderable.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
-                            beamRenderable.setColor(color);
-                            beamRenderable.setAlpha(blendableBrightness);
-                            beamRenderable.transform.set(renderable.transform);
-                            beamRenderable.render();
-                        }
+                        renderFlare(flareRenderable, color, blendableBrightness);
+                        renderBeam(beamRenderable, color, blendableBrightness);
+                    }
+                    if (componentRenderables != null) {
+                        renderComponents(entity, color, darkness, lightLevel);
                     }
                 }
                 if (!blendingEnabled && coverRenderable != null) {
@@ -347,6 +329,44 @@ public class RenderableModelObject {
                     }
                 }
             }
+        } else if (!blendingEnabled && dynamicLightOwner != null) {
+            //Hidden by its visibility animations: its lamps go dark with it.
+            dynamicLightOwner.hide();
+        }
+    }
+
+    /**
+     * For a dynamic light owner whose entity was not drawn this frame: runs this object's animations as a draw would
+     * and returns how much of it shows, 0 to 1 (0 hidden by a visibility animation, the alpha of a fading
+     * {@code blendedAnimations} object).  {@link #getAnimationMatrix} is then this frame's.
+     */
+    public float runVisibility(float partialTicks) {
+        if (switchbox == null) {
+            return 1;
+        }
+        boolean shown = switchbox.runSwitchbox(partialTicks, false);
+        if (objectDef.blendedAnimations) {
+            return switchbox.lastVisibilityClock != null ? getBlendedAlpha() : 1;
+        }
+        return shown ? 1 : 0;
+    }
+
+    /** This object's animation matrix as its switchbox last ran, or null without animations. */
+    public TransformationMatrix getAnimationMatrix() {
+        return switchbox != null ? switchbox.netMatrix : null;
+    }
+
+    /** The alpha of a {@code blendedAnimations} object from its switchbox's last visibility value. */
+    private float getBlendedAlpha() {
+        double min = switchbox.lastVisibilityClock.animation.clampMin;
+        double max = switchbox.lastVisibilityClock.animation.clampMax;
+        if (switchbox.lastVisibilityValue <= min) {
+            return 0;
+        } else if (switchbox.lastVisibilityValue >= max) {
+            //Need >= here instead of above for things where min/max clamps are equal.
+            return 1;
+        } else {
+            return (float) ((switchbox.lastVisibilityValue - min) / (max - min));
         }
     }
 
@@ -356,6 +376,299 @@ public class RenderableModelObject {
      */
     public void destroy() {
         renderable.destroy();
+        if (dynamicLightOwner != null) {
+            DynamicLightSystem.removeOwner(this);
+            dynamicLightOwner = null;
+        }
+    }
+
+    /**
+     * Returns the brightness of {@code lightDef} on {@code entity} from its current light values, dimmed by the
+     * electric power of the vehicle it is on for electric lights.
+     */
+    public static float getLightLevel(AEntityD_Definable<?> entity, JSONLight lightDef) {
+        Float brightness = entity.lightBrightnessValues.get(lightDef);
+        float lightLevel = brightness != null ? brightness : 0;
+        AEntityD_Definable<?> masterEntity = entity;
+        if (masterEntity instanceof APart) {
+            masterEntity = ((APart) masterEntity).masterEntity;
+        }
+        if (lightDef.isElectric && masterEntity instanceof EntityVehicleF_Physics) {
+            //Light start dimming at 10V, then go dark at 3V.
+            double electricPower = ((EntityVehicleF_Physics) masterEntity).electricPower;
+            if (electricPower < 3) {
+                lightLevel = 0;
+            } else if (electricPower < 10) {
+                lightLevel *= (electricPower - 3) / 7D;
+            }
+        }
+        return lightLevel;
+    }
+
+    /**
+     * Draws the flares and beams of the components with their own lighting, each with its own color and brightness.
+     * A dynamic light component draws nothing here while the light pass draws it, and its shader pack fallback while a
+     * pack is active.  With dynamic lights off it draws its regular flare and beam, as the others do.  A
+     * {@code hideWhenDynLightActive} component draws only while {@link DynamicLightSystem#hidesStandIns} is false.
+     */
+    private void renderComponents(AEntityD_Definable<?> entity, ColorRGB lightColor, float darkness, float lightLevel) {
+        DynamicLightSystem.Mode dynamicMode = DynamicLightSystem.getMode();
+        boolean hideStandIns = DynamicLightSystem.hidesStandIns();
+        for (ComponentRenderables component : componentRenderables) {
+            if (hideStandIns && component.definition.hideWhenDynLightActive) {
+                continue;
+            }
+            if (component.lampIndex >= 0 && dynamicMode != DynamicLightSystem.Mode.OFF) {
+                if (dynamicMode == DynamicLightSystem.Mode.FALLBACK && dynamicLightOwner != null) {
+                    component.renderFallback(entity, dynamicLightOwner.lamps[component.lampIndex]);
+                }
+                continue;
+            }
+            Float componentBrightness = entity.lightComponentBrightnessValues.get(component.definition);
+            //A dynamic light's beamIntensity is its light's intensity: its regular flare and beam keep the light's brightness.
+            float intensity = component.lampIndex >= 0 ? 1 : component.definition.getIntensity();
+            float brightness = Math.min(darkness * lightLevel * (componentBrightness != null ? componentBrightness : 1) * intensity, 1);
+            if (brightness > 0) {
+                ColorRGB componentColor = entity.lightComponentColorValues.get(component.definition);
+                renderFlare(component.flareRenderable, componentColor != null ? componentColor : lightColor, brightness);
+                renderBeam(component.beamRenderable, componentColor != null ? componentColor : lightColor, brightness);
+            }
+        }
+    }
+
+    private void renderFlare(RenderableData flare, ColorRGB color, float brightness) {
+        if (flare != null && ConfigSystem.client.renderingSettings.renderFlares.value) {
+            flare.setLightValue(renderable.worldLightValue);
+            flare.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+            flare.setColor(color);
+            flare.setAlpha(brightness);
+            flare.transform.set(renderable.transform);
+            flare.render();
+        }
+    }
+
+    private void renderBeam(RenderableData beam, ColorRGB color, float brightness) {
+        if (beam != null && ConfigSystem.client.renderingSettings.renderBeams.value) {
+            beam.setLightValue(renderable.worldLightValue);
+            beam.setLightMode(ConfigSystem.client.renderingSettings.brightLights.value ? LightingMode.IGNORE_ALL_LIGHTING : LightingMode.NORMAL);
+            beam.setBlending(ConfigSystem.client.renderingSettings.blendedLights.value);
+            beam.setColor(color);
+            beam.setAlpha(brightness);
+            beam.transform.set(renderable.transform);
+            beam.render();
+        }
+    }
+
+    private static RenderableData createFlareRenderable(List<JSONLightBlendableComponent> flareDefs) {
+        if (flareDefs.isEmpty()) {
+            return null;
+        }
+        List<TransformationMatrix> flareTransforms = new ArrayList<>();
+        List<Point3D> flareNormals = new ArrayList<>();
+        for (JSONLightBlendableComponent flareDef : flareDefs) {
+            //Get the matrix  that is needed to rotate points to the normalized vector.
+            TransformationMatrix transform = new TransformationMatrix();
+            transform.applyTranslation(flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos));
+            transform.applyRotation(new RotationMatrix().setToVector(flareDef.axis, false));
+            transform.applyScaling(flareDef.flareWidth, flareDef.flareHeight, 1);
+            flareTransforms.add(transform);
+            flareNormals.add(flareDef.axis);
+        }
+        RenderableData flare = new RenderableData(RenderableVertices.createSprite(flareDefs.size(), flareTransforms, flareNormals), "mts:textures/rendering/lensflare.png");
+        flare.setTransucentOverride();
+        return flare;
+    }
+
+    private static RenderableData createBeamRenderable(List<JSONLightBlendableComponent> beamDefs) {
+        if (beamDefs.isEmpty()) {
+            return null;
+        }
+        RenderableData beam = new RenderableData(RenderableVertices.createLightBeams(beamDefs), "mts:textures/rendering/lightbeam.png");
+        beam.setTransucentOverride();
+        return beam;
+    }
+
+    /**
+     * The renderables of one component with its own lighting: its regular flare and beam, and for a dynamic light
+     * the cone mesh and flare billboard it draws under a shader pack.
+     */
+    private static class ComponentRenderables {
+        private static final int CONE_SIDES = 16;
+        private static final int CONE_RINGS = 8;
+        /** The cone's radius at the lens, blocks. */
+        private static final float CONE_START = 0.06F;
+        /** How far a fallback flare sits toward the camera from its lamp: off the lens face, not off the hull. */
+        private static final float FLARE_PULL = 0.15F;
+        private static final float[] coneXYZ = new float[(CONE_RINGS + 1) * CONE_SIDES * 3];
+        private static final float[] coneLevel = new float[(CONE_RINGS + 1) * CONE_SIDES];
+        private static final float[][] FLARE_CORNERS = { { -1, -1, 0, 1 }, { -1, 1, 0, 0 }, { 1, 1, 1, 0 }, { 1, -1, 1, 1 } };
+        /** Both windings of the flare's two triangles. */
+        private static final int[] FLARE_ORDER = { 0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2 };
+
+        private final JSONLightBlendableComponent definition;
+        /** Its lamp in the owner, -1 if not a dynamic light. */
+        private final int lampIndex;
+        private final RenderableData flareRenderable;
+        private final RenderableData beamRenderable;
+        /** The shader pack fallback meshes, made on first use. */
+        private RenderableData coneRenderable;
+        private RenderableData billboardRenderable;
+
+        private ComponentRenderables(JSONLightBlendableComponent definition, int lampIndex) {
+            this.definition = definition;
+            this.lampIndex = lampIndex;
+            List<JSONLightBlendableComponent> list = new ArrayList<>();
+            list.add(definition);
+            this.flareRenderable = definition.flareHeight > 0 ? createFlareRenderable(list) : null;
+            this.beamRenderable = definition.beamDiameter > 0 ? createBeamRenderable(list) : null;
+        }
+
+        private void createFallbackRenderables() {
+            //Both windings of every face, so a culled pass still shows the cone's far side through its near side.
+            coneRenderable = new RenderableData(new RenderableVertices("DYNAMIC_LIGHT_CONE", FloatBuffer.allocate(CONE_RINGS * CONE_SIDES * 12 * 8), false), "mts:textures/rendering/dynamiclight_ramp.png");
+            coneRenderable.setTransucentOverride();
+            coneRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+            billboardRenderable = new RenderableData(new RenderableVertices("DYNAMIC_LIGHT_FLARE", FloatBuffer.allocate(FLARE_ORDER.length * 8), false), "mts:textures/rendering/lensflare.png");
+            billboardRenderable.setTransucentOverride();
+            billboardRenderable.setLightMode(LightingMode.IGNORE_ALL_LIGHTING);
+        }
+
+        /**
+         * Draws a dynamic light the way it shows under a shader pack: an open cone mesh from the lens fading along its
+         * length and toward its silhouette, and a camera-facing flare.  The vertices are relative to the entity
+         * position, the origin the render call sits at, so the transforms are identity.
+         */
+        private void renderFallback(AEntityD_Definable<?> entity, DynamicLightOwner.Lamp lamp) {
+            if (!lamp.showsCone && !lamp.showsFlare) {
+                return;
+            }
+            if (coneRenderable == null) {
+                createFallbackRenderables();
+            }
+            DynamicLightFrame frame = DynamicLightSystem.getFrame();
+            float ox = (float) (lamp.x - entity.position.x);
+            float oy = (float) (lamp.y - entity.position.y);
+            float oz = (float) (lamp.z - entity.position.z);
+            float camX = (float) (frame.cameraX - entity.position.x);
+            float camY = (float) (frame.cameraY - entity.position.y);
+            float camZ = (float) (frame.cameraZ - entity.position.z);
+            if (lamp.showsCone) {
+                renderCone(lamp, ox, oy, oz, camX, camY, camZ);
+            }
+            if (lamp.showsFlare) {
+                float tx = camX - ox;
+                float ty = camY - oy;
+                float tz = camZ - oz;
+                float distance = (float) Math.sqrt(tx * tx + ty * ty + tz * tz);
+                if (distance > 1e-4F) {
+                    tx /= distance;
+                    ty /= distance;
+                    tz /= distance;
+                    float cx = ox + tx * FLARE_PULL;
+                    float cy = oy + ty * FLARE_PULL;
+                    float cz = oz + tz * FLARE_PULL;
+                    float[] left = frame.cameraLeft;
+                    float[] up = frame.cameraUp;
+                    float size = lamp.flareSize;
+                    FloatBuffer buffer = billboardRenderable.vertexObject.vertices;
+                    buffer.clear();
+                    for (int index : FLARE_ORDER) {
+                        float[] corner = FLARE_CORNERS[index];
+                        buffer.put(tx).put(ty).put(tz).put(corner[2]).put(corner[3]);
+                        buffer.put(cx + (left[0] * corner[0] + up[0] * corner[1]) * size);
+                        buffer.put(cy + (left[1] * corner[0] + up[1] * corner[1]) * size);
+                        buffer.put(cz + (left[2] * corner[0] + up[2] * corner[1]) * size);
+                    }
+                    buffer.flip();
+                    billboardRenderable.transform.resetTransforms();
+                    billboardRenderable.setColor(lamp.color);
+                    billboardRenderable.setAlpha(Math.min(1F, lamp.flareStrength));
+                    billboardRenderable.render();
+                }
+            }
+        }
+
+        /**
+         * The cone mesh: along the beam a quadratic fade, across it the chord the eye looks through, as in a fog,
+         * fading near the camera.  Each vertex's level is the ramp texture's alpha at its U, times the renderable's alpha.
+         */
+        private void renderCone(DynamicLightOwner.Lamp lamp, float ox, float oy, float oz, float camX, float camY, float camZ) {
+            boolean level = Math.abs(lamp.dy) < 0.9F;
+            //(level ? up : x) cross direction.
+            float ux = level ? lamp.dz : 0;
+            float uy = level ? 0 : -lamp.dz;
+            float uz = level ? -lamp.dx : lamp.dy;
+            float ul = (float) Math.sqrt(ux * ux + uy * uy + uz * uz);
+            ux /= ul;
+            uy /= ul;
+            uz /= ul;
+            float vx = lamp.dy * uz - lamp.dz * uy;
+            float vy = lamp.dz * ux - lamp.dx * uz;
+            float vz = lamp.dx * uy - lamp.dy * ux;
+            float maxLevel = 0;
+            for (int i = 0; i <= CONE_RINGS; i++) {
+                float s = (float) i / CONE_RINGS;
+                float d = lamp.coneLength * s;
+                float radius = CONE_START + d * lamp.coneTan;
+                float along = (1F - s) * (1F - s);
+                for (int j = 0; j < CONE_SIDES; j++) {
+                    double around = j * 2.0 * Math.PI / CONE_SIDES;
+                    float c = (float) Math.cos(around);
+                    float n = (float) Math.sin(around);
+                    float nx = ux * c + vx * n;
+                    float ny = uy * c + vy * n;
+                    float nz = uz * c + vz * n;
+                    float x = ox + lamp.dx * d + nx * radius;
+                    float y = oy + lamp.dy * d + ny * radius;
+                    float z = oz + lamp.dz * d + nz * radius;
+                    float tx = camX - x;
+                    float ty = camY - y;
+                    float tz = camZ - z;
+                    float dist = (float) Math.sqrt(tx * tx + ty * ty + tz * tz);
+                    float facing = dist > 1e-4F ? Math.abs(nx * tx + ny * ty + nz * tz) / dist : 0F;
+                    int k = i * CONE_SIDES + j;
+                    coneXYZ[k * 3] = x;
+                    coneXYZ[k * 3 + 1] = y;
+                    coneXYZ[k * 3 + 2] = z;
+                    coneLevel[k] = lamp.coneDensity * along * facing * Math.min(1F, dist * 0.5F);
+                    maxLevel = Math.max(maxLevel, coneLevel[k]);
+                }
+            }
+            if (!(maxLevel > 0)) {
+                return;
+            }
+            FloatBuffer buffer = coneRenderable.vertexObject.vertices;
+            buffer.clear();
+            for (int i = 0; i < CONE_RINGS; i++) {
+                for (int j = 0; j < CONE_SIDES; j++) {
+                    int j1 = (j + 1) % CONE_SIDES;
+                    int a = i * CONE_SIDES + j;
+                    int b = (i + 1) * CONE_SIDES + j;
+                    int c = (i + 1) * CONE_SIDES + j1;
+                    int e = i * CONE_SIDES + j1;
+                    putConeTriangle(buffer, a, b, c, maxLevel);
+                    putConeTriangle(buffer, a, c, e, maxLevel);
+                    putConeTriangle(buffer, a, c, b, maxLevel);
+                    putConeTriangle(buffer, a, e, c, maxLevel);
+                }
+            }
+            buffer.flip();
+            coneRenderable.transform.resetTransforms();
+            coneRenderable.setColor(lamp.color);
+            coneRenderable.setAlpha(Math.min(1F, maxLevel));
+            coneRenderable.render();
+        }
+
+        private static void putConeTriangle(FloatBuffer buffer, int a, int b, int c, float maxLevel) {
+            putConeVertex(buffer, a, maxLevel);
+            putConeVertex(buffer, b, maxLevel);
+            putConeVertex(buffer, c, maxLevel);
+        }
+
+        private static void putConeVertex(FloatBuffer buffer, int k, float maxLevel) {
+            buffer.put(0).put(1).put(0).put(coneLevel[k] / maxLevel).put(0.5F);
+            buffer.put(coneXYZ[k * 3]).put(coneXYZ[k * 3 + 1]).put(coneXYZ[k * 3 + 2]);
+        }
     }
 
     private boolean shouldRender(AEntityD_Definable<?> entity, boolean blendingEnabled, float partialTicks) {

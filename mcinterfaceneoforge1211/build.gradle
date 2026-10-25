@@ -36,6 +36,11 @@ repositories {
     maven { url = "https://maven.blamejared.com/" }
     // Cursemaven hosts the Jade API artifact for optional compile-time integration.
     maven { url = "https://www.cursemaven.com" }
+    // Sodium, compile-only for its optional mixin
+    maven {
+        url = "https://api.modrinth.com/maven"
+        content { includeGroup "maven.modrinth" }
+    }
 }
 
 configurations {
@@ -59,6 +64,8 @@ dependencies {
     compileOnly "mezz.jei:jei-${project.mc_version}-neoforge-api:${project.jei_version}"
     runtimeOnly "mezz.jei:jei-${project.mc_version}-neoforge:${project.jei_version}"
     compileOnly "curse.maven:jade-324717:${project.jade_file_id}"
+    // Compile against Sodium for the optional dynamic light mixin; it is never shipped or required.
+    compileOnly "maven.modrinth:sodium:${project.sodium_version}"
 }
 
 jar {
