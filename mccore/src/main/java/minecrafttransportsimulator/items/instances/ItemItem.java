@@ -184,7 +184,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
                 return CallbackType.NONE;
             }
             case PAINT_GUN: {
-                if (!entity.world.isClient() && rightClick) {
+                if (!entity.definition.disableRepaint && !entity.world.isClient() && rightClick) {
                     if (vehicle == null || !vehicle.lockedVar.isActive) {
                         player.sendPacket(new PacketEntityGUIRequest(entity, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
                     } else {
@@ -453,14 +453,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemEntityInteract
             if (!world.isClient()) {
                 ATileEntityBase<?> tile = world.getTileEntity(position);
                 if (tile instanceof TileEntityDecor) {
-                    player.sendPacket(new PacketEntityGUIRequest(tile, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
+                    if (!tile.definition.disableRepaint) {
+                        player.sendPacket(new PacketEntityGUIRequest(tile, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
+                    }
                     return true;
                 } else if (tile instanceof TileEntityPole) {
                     TileEntityPole pole = (TileEntityPole) tile;
                     //Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
                     axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
                     if (pole.components.containsKey(axis)) {
-                        player.sendPacket(new PacketEntityGUIRequest(pole.components.get(axis), player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
+                        if (!pole.components.get(axis).definition.disableRepaint) {
+                            player.sendPacket(new PacketEntityGUIRequest(pole.components.get(axis), player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
+                        }
                     }
                     return true;
                 }

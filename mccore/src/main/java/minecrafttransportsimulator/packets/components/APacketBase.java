@@ -10,6 +10,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketCameraShake;
 import minecrafttransportsimulator.packets.instances.PacketCrafterFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketCrafterTimeSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
@@ -301,5 +302,8 @@ public abstract class APacketBase {
         //World packets.
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
+
+        //Client effect packets.
+        InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketCameraShake.class);
     }
 }

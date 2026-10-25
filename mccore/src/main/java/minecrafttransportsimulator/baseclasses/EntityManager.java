@@ -492,6 +492,7 @@ public abstract class EntityManager {
         allEntities.forEach(entity -> entity.remove());
         if (getWorld().isClient()) {
             CameraSystem.resetCameraProperties();
+            CameraSystem.clearCameraShake();
         }
     }
 

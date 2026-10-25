@@ -33,6 +33,11 @@ public class JSONConfigClient {
         public JSONConfigEntry<Boolean> renderFlares = new JSONConfigEntry<>(true, "If false, flares on lights will not render.");
         public JSONConfigEntry<Boolean> renderBeams = new JSONConfigEntry<>(true, "If false, beams on lights will not render.");
 
+        public JSONConfigEntry<Boolean> dynamicLights = new JSONConfigEntry<>(true, "If true, light components marked isDynamicLight light up the world around them, cast shadows and draw a volumetric beam and corona.  If false, they render as regular beams and flares.");
+        public JSONConfigEntry<Boolean> DynL_shadows = new JSONConfigEntry<>(true, "If true, dynamic lights cast shadows from blocks, vehicles and mobs.  Turn off to save GPU time.");
+        public JSONConfigEntry<Integer> DynL_MaxLights = new JSONConfigEntry<>(48, "How many dynamic lights may light the world at once, 0 to 256, and how many beams and coronas are drawn.  The strongest and closest are kept.  Fewer lights cost less GPU time; raise it on a powerful machine.");
+        public JSONConfigEntry<Boolean> DynL_ShaderFB = new JSONConfigEntry<>(false, "If true, dynamic lights still light the world under a shader pack (Iris, Oculus, OptiFine) by raising block light and drawing a simple beam cone and flare.  If false, they render as regular beams and flares while a shader pack is active.");
+
         public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<>(true, "If false, lights from vehicles and blocks will not make themselves bright and instead will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
         public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 
