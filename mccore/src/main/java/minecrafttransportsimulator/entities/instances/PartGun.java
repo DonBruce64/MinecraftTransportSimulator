@@ -37,6 +37,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.CameraSystem.CameraMode;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -135,6 +136,10 @@ public class PartGun extends APart {
     private Point3D controllerRelativeLookVector = new Point3D();
     public IWrapperEntity entityTarget;
     public PartEngine engineTarget;
+    /** Vehicles currently inside this gun's unobstructed acquisition cone and valid for its target type. */
+    public final List<EntityVehicleF_Physics> validVehicleTargets = new ArrayList<>();
+    /** External entities currently inside this gun's unobstructed acquisition cone and valid for its target type. */
+    public final List<IWrapperEntity> validEntityTargets = new ArrayList<>();
     public Point3D targetPosition;
     public EntityBullet currentBullet;
     public final Set<EntityBullet> activeManualBullets = new HashSet<>();
@@ -165,6 +170,7 @@ public class PartGun extends APart {
 
     //Global data.
     private static final int PITCH_RECOIL_CLAMPING = 80;
+    private static final double TARGET_RETENTION_ANGLE_BONUS = 0.15D;
 
     public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, ItemPartGun item, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, item, data);
@@ -324,6 +330,8 @@ public class PartGun extends APart {
         cameraControlActiveThisTick = false;
         firedThisTick = false;
         isRunningInCoaxialMode = false;
+        validVehicleTargets.clear();
+        validEntityTargets.clear();
         prevInternalOrientation.set(internalOrientation);
         if (currentBullet != null && !currentBullet.isValid) {
             currentBullet = null;
@@ -853,9 +861,17 @@ public class PartGun extends APart {
                         break;
                     }
                     case BORESIGHT: {
-                        //Boresight gets target based on gun position and barrel orientation, rather than player.
-                        startPoint = position;
-                        searchVector = new Point3D(0, 0, definition.gun.lockRange).rotate(orientation);
+                        //Boresight gets targets from the active muzzle's real position and
+                        //orientation, including gun articulation and any muzzle rotation.
+                        JSONMuzzle lockMuzzle = getActiveMuzzle();
+                        if (lockMuzzle != null) {
+                            setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, lockMuzzle, false);
+                            startPoint = bulletPosition;
+                            searchVector = new Point3D(0, 0, definition.gun.lockRange).rotate(bulletOrientation);
+                        } else {
+                            startPoint = position;
+                            searchVector = new Point3D(0, 0, definition.gun.lockRange).rotate(orientation);
+                        }
                         coneAngle = definition.gun.lockMaxAngle;
                         break;
                     }
@@ -873,75 +889,91 @@ public class PartGun extends APart {
                     }
                 }
 
-                //If we are the type of gun that needs to lock-on, try to do so now.
-                //First set targets to null to clear any existing targets.
-                engineTarget = null;
-                entityTarget = null;
-                updateTargetRegistration();
+                //Keep the prior target for a small angular retention bonus.  This prevents two
+                //nearly-overlapping contacts from flickering while still letting a contact much
+                //closer to the exact bore centre take priority.
+                PartEngine previousEngineTarget = engineTarget;
+                IWrapperEntity previousEntityTarget = entityTarget;
+                PartEngine selectedEngineTarget = null;
+                IWrapperEntity selectedEntityTarget = null;
 
                 //If we have a start point, it means we're a cone-based target system and need to find a target.
                 if (startPoint != null) {
-                    //First check for hard targets, since those are more dangerous.
+                    normalizedConeVector.set(searchVector).normalize();
+                    double maximumDistance = searchVector.length();
+                    double bestSelectionScore = Double.MAX_VALUE;
+                    double bestDistance = Double.MAX_VALUE;
+                    double retentionAngleBonus = Math.min(TARGET_RETENTION_ANGLE_BONUS, coneAngle * 0.1D);
+
+                    //Collect hard targets and rank them primarily by angular distance from the
+                    //bore axis.  Distance is only a tie-breaker.
                     if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.HARD || definition.gun.targetType == TargetType.AIRCRAFT || definition.gun.targetType == TargetType.GROUND) {
-                        normalizedConeVector.set(searchVector).normalize();
-                        EntityVehicleF_Physics vehicleTarget = null;
-                        double smallestDistance = searchVector.length();
                         for (EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
                             //Make sure we don't lock-on to our own vehicle.  Also, ensure if we want aircraft, or ground, we only get those.
-                            if (vehicle != vehicleOn && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
-                                //Check range and cone before the raycast.  The raycast loads every chunk it passes through,
-                                //so casting it to out-of-range vehicles force-loads chunks across the world every tick.
-                                double entityDistance = vehicle.position.distanceTo(startPoint);
-                                if (entityDistance < smallestDistance) {
-                                    normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                    if (targetAngle < coneAngle) {
-                                        targetVector.set(vehicle.position).subtract(startPoint);
-                                        if (world.getBlockHit(startPoint, targetVector) == null) {
-                                            smallestDistance = entityDistance;
-                                            vehicleTarget = vehicle;
+                            if (vehicle != vehicleOn && !vehicle.outOfHealth && (definition.gun.targetType != TargetType.AIRCRAFT || vehicle.definition.motorized.isAircraft) && (definition.gun.targetType != TargetType.GROUND || !vehicle.definition.motorized.isAircraft)) {
+                                targetVector.set(vehicle.position).subtract(startPoint);
+                                if (world.getBlockHit(startPoint, targetVector) == null) {
+                                    double entityDistance = vehicle.position.distanceTo(startPoint);
+                                    if (entityDistance < maximumDistance) {
+                                        normalizedEntityVector.set(vehicle.position).subtract(startPoint).normalize();
+                                        double targetAngle = getTargetAngle(normalizedConeVector, normalizedEntityVector);
+                                        if (targetAngle < coneAngle) {
+                                            PartEngine candidateEngine = null;
+                                            for (APart part : vehicle.parts) {
+                                                if (part instanceof PartEngine) {
+                                                    candidateEngine = (PartEngine) part;
+                                                    break;
+                                                }
+                                            }
+                                            if (candidateEngine != null) {
+                                                validVehicleTargets.add(vehicle);
+                                                boolean isPreviousTarget = previousEngineTarget != null && previousEngineTarget.vehicleOn == vehicle;
+                                                double selectionScore = targetAngle - (isPreviousTarget ? retentionAngleBonus : 0);
+                                                if (selectionScore < bestSelectionScore || (selectionScore == bestSelectionScore && entityDistance < bestDistance)) {
+                                                    bestSelectionScore = selectionScore;
+                                                    bestDistance = entityDistance;
+                                                    selectedEngineTarget = candidateEngine;
+                                                    selectedEntityTarget = null;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-
-                        //If we found a vehicle, get the engine to target.
-                        if (vehicleTarget != null && !vehicleTarget.outOfHealth) {
-                            for (APart part : vehicleTarget.parts) {
-                                if (part instanceof PartEngine) {
-                                    engineTarget = (PartEngine) part;
-                                    break;
-                                }
-                            }
-                        }
                     }
 
-                    //If we didn't find a hard vehicle target, try and get a soft one.
-                    if (engineTarget == null && definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.SOFT) {
-                        normalizedConeVector.set(searchVector).normalize();
-                        double smallestDistance = searchVector.length();
-                        BoundingBox searchBox = new BoundingBox(position, smallestDistance, smallestDistance, smallestDistance);
+                    //Collect soft targets into the same angle-first ranking when the gun permits them.
+                    if (definition.gun.targetType == TargetType.ALL || definition.gun.targetType == TargetType.SOFT) {
+                        BoundingBox searchBox = new BoundingBox(startPoint, maximumDistance, maximumDistance, maximumDistance);
                         for (IWrapperEntity entity : world.getEntitiesWithin(searchBox)) {
                             if (entity.isValid() && entity != controller) {
-                                //Check range and cone before the raycast, as with vehicles above.
-                                double entityDistance = entity.getPosition().distanceTo(startPoint);
-                                if (entityDistance < smallestDistance) {
-                                    normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
-                                    double targetAngle = Math.abs(Math.toDegrees(Math.acos(normalizedConeVector.dotProduct(normalizedEntityVector, false))));
-                                    if (targetAngle < coneAngle) {
-                                        targetVector.set(entity.getPosition()).subtract(startPoint);
-                                        if (world.getBlockHit(startPoint, targetVector) == null) {
-                                            smallestDistance = entityDistance;
-                                            entityTarget = entity;
+                                targetVector.set(entity.getPosition()).subtract(startPoint);
+                                if (world.getBlockHit(startPoint, targetVector) == null) {
+                                    double entityDistance = entity.getPosition().distanceTo(startPoint);
+                                    if (entityDistance < maximumDistance) {
+                                        normalizedEntityVector.set(entity.getPosition()).subtract(startPoint).normalize();
+                                        double targetAngle = getTargetAngle(normalizedConeVector, normalizedEntityVector);
+                                        if (targetAngle < coneAngle) {
+                                            validEntityTargets.add(entity);
+                                            double selectionScore = targetAngle - (entity.equals(previousEntityTarget) ? retentionAngleBonus : 0);
+                                            if (selectionScore < bestSelectionScore || (selectionScore == bestSelectionScore && entityDistance < bestDistance)) {
+                                                bestSelectionScore = selectionScore;
+                                                bestDistance = entityDistance;
+                                                selectedEngineTarget = null;
+                                                selectedEntityTarget = entity;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                    updateTargetRegistration();
                 }
+
+                engineTarget = selectedEngineTarget;
+                entityTarget = selectedEntityTarget;
+                updateTargetRegistration();
             }
 
             //If we have any manual bullets, do tracking for them.
@@ -1097,6 +1129,12 @@ public class PartGun extends APart {
         //Reset deltas after forcing orientation so the next tick doesn't replay the correction.
         controller.getYawDelta();
         controller.getPitchDelta();
+    }
+
+    private static double getTargetAngle(Point3D normalizedConeVector, Point3D normalizedEntityVector) {
+        //Clamp for floating-point drift so acos never receives a value just outside [-1, 1].
+        double dotProduct = normalizedConeVector.dotProduct(normalizedEntityVector, false);
+        return Math.abs(Math.toDegrees(Math.acos(Math.max(-1.0D, Math.min(1.0D, dotProduct)))));
     }
 
     /**
@@ -1495,6 +1533,13 @@ public class PartGun extends APart {
         return null;
     }
 
+    /**
+     * Returns the current, modifier-aware target-lock capability of this gun.
+     */
+    public boolean canCurrentlyLockTargets() {
+        return canLockTargetsVar.isActive;
+    }
+
     public double getLeadAngleY() {
         double angle = 0;
         Point3D referencePos = vehicleOn != null ? vehicleOn.position : position;
@@ -1537,7 +1582,7 @@ public class PartGun extends APart {
             case ("gun_inhand_equipped"):
                 return new ComputedVariable(this, variable, partialTicks -> isHandHeldGunEquipped && isValid ? 1 : 0, false);
             case ("gun_controller_firstperson"):
-                return new ComputedVariable(this, variable, partialTicks -> world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(currentController) && InterfaceManager.clientInterface.getCameraMode() == CameraSystem.CameraMode.FIRST_PERSON ? 1 : 0, false);
+                return new ComputedVariable(this, variable, partialTicks -> world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(currentController) && InterfaceManager.clientInterface.getCameraMode() == CameraMode.FIRST_PERSON ? 1 : 0, false);
             case ("gun_active"):
                 return new ComputedVariable(this, variable, partialTicks -> state.isAtLeast(GunState.CONTROLLED) ? 1 : 0, false);
             case ("gun_firing"):
