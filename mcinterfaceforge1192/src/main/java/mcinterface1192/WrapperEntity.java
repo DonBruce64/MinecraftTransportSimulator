@@ -492,7 +492,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (event.getEntity() instanceof Player && !event.getEntity().level.isClientSide) {
             DamageSource source = event.getSource();
             Entity attacker = source.getDirectEntity();
-            if (attacker instanceof Mob && attacker == source.getEntity() && ("mob".equals(source.getMsgId()) || "sting".equals(source.getMsgId()))) {
+            if (attacker instanceof Mob && attacker.equals(source.getEntity()) && ("mob".equals(source.getMsgId()) || "sting".equals(source.getMsgId()))) {
                 AEntityB_Existing riding = WrapperPlayer.getWrapperFor((Player) event.getEntity()).getEntityRiding();
                 if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
                     event.setCanceled(true);

@@ -481,7 +481,7 @@ public class WrapperEntity implements IWrapperEntity {
         if (event.getEntityLiving() instanceof EntityPlayer && !event.getEntityLiving().world.isRemote) {
             DamageSource source = event.getSource();
             Entity attacker = source.getImmediateSource();
-            if (attacker instanceof EntityLiving && attacker == source.getTrueSource() && "mob".equals(source.getDamageType())) {
+            if (attacker instanceof EntityLiving && attacker.equals(source.getTrueSource()) && "mob".equals(source.getDamageType())) {
                 AEntityB_Existing riding = WrapperPlayer.getWrapperFor((EntityPlayer) event.getEntityLiving()).getEntityRiding();
                 if (riding instanceof PartSeat && ((PartSeat) riding).interceptRiderMeleeAttack(getWrapperFor(attacker), event.getAmount())) {
                     event.setCanceled(true);
