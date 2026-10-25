@@ -48,7 +48,7 @@ public class TileEntityChest extends TileEntityDecor {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        player.openInventoryGUI(inventory, subDefinition.inventoryTexture, false);
+        player.openInventoryGUI(inventory, subDefinition.inventoryTexture, null);
         playersInteracting.add(player);
         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
         return true;

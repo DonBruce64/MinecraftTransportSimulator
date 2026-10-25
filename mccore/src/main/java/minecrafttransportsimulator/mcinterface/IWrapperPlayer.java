@@ -114,8 +114,9 @@ public interface IWrapperPlayer extends IWrapperEntity {
      *
      * @param inventory The IV inventory to expose through the menu.
      * @param texture The pack-defined inventory texture, or null for IV's default texture.
-     * @param saveToHeldItem True for a crate opened from the player's hand.  Such an inventory is
-     *                       saved back to the held stack and removed when the menu closes.
+     * @param inventoryItem The exact item stack that owns this inventory, or null for inventories
+     *                      attached to world objects.  Passing the stack prevents a later hotbar
+     *                      selection change from saving into an unrelated item.
      */
-    void openInventoryGUI(EntityInventoryContainer inventory, String texture, boolean saveToHeldItem);
+    void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem);
 }

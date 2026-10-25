@@ -7,6 +7,7 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.network.PacketBuffer;
@@ -37,7 +38,7 @@ public class BuilderInventoryContainerMenu extends Container {
     private final EntityInventoryContainer inventory;
     private final PagedContainer pagedInventory;
     private final PlayerInventory playerInventory;
-    private final boolean saveToHeldItem;
+    private final IWrapperItemStack inventoryItem;
     private final int heldPlayerSlot;
     private final int visibleSlots;
     private final int inventoryYOffset;
@@ -46,15 +47,15 @@ public class BuilderInventoryContainerMenu extends Container {
 
     /** Client-side factory invoked with the extra data written by {@link WrapperPlayer}. */
     public BuilderInventoryContainerMenu(int containerID, PlayerInventory playerInventory, PacketBuffer data) {
-        this(containerID, playerInventory, getClientInventory(playerInventory, data.readUUID(), data.readInt(), data.readInt()), data.readUtf(), data.readBoolean());
+        this(containerID, playerInventory, getClientInventory(playerInventory, data.readUUID(), data.readInt(), data.readInt()), data.readUtf(), null, data.readInt());
     }
 
-    public BuilderInventoryContainerMenu(int containerID, PlayerInventory playerInventory, EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+    public BuilderInventoryContainerMenu(int containerID, PlayerInventory playerInventory, EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem, int heldPlayerSlot) {
         super(TYPE.get(), containerID);
         this.inventory = inventory;
         this.playerInventory = playerInventory;
-        this.saveToHeldItem = saveToHeldItem;
-        this.heldPlayerSlot = saveToHeldItem ? playerInventory.selected : -1;
+        this.inventoryItem = inventoryItem;
+        this.heldPlayerSlot = heldPlayerSlot;
         this.visibleSlots = Math.min(inventory.getSize(), MAX_VISIBLE_SLOTS);
         this.inventoryYOffset = (MAX_VISIBLE_SLOTS - visibleSlots) * 18 / COLUMNS / 2;
         this.texture = texture == null || texture.isEmpty() ? "mts:textures/guis/inventory.png" : texture;
@@ -164,7 +165,7 @@ public class BuilderInventoryContainerMenu extends Container {
 
     @Override
     public ItemStack clicked(int slotID, int dragType, ClickType clickType, PlayerEntity player) {
-        if (saveToHeldItem && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
+        if (heldPlayerSlot >= 0 && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
             return ItemStack.EMPTY;
         }
         return super.clicked(slotID, dragType, clickType, player);
@@ -178,7 +179,7 @@ public class BuilderInventoryContainerMenu extends Container {
     @Override
     public void removed(PlayerEntity player) {
         super.removed(player);
-        if (saveToHeldItem && !player.level.isClientSide) {
+        if (inventoryItem != null && !player.level.isClientSide) {
             saveHeldInventory();
             inventory.remove();
         }
@@ -187,7 +188,7 @@ public class BuilderInventoryContainerMenu extends Container {
     private void saveHeldInventory() {
         IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
         newData.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        new WrapperItemStack(playerInventory.getItem(heldPlayerSlot)).setData(newData);
+        inventoryItem.setData(newData);
     }
 
     private static boolean isAllowedInIVInventory(ItemStack stack) {
@@ -266,7 +267,7 @@ public class BuilderInventoryContainerMenu extends Container {
 
         @Override
         public void setChanged() {
-            if (saveToHeldItem && !playerInventory.player.level.isClientSide) {
+            if (inventoryItem != null && !playerInventory.player.level.isClientSide) {
                 saveHeldInventory();
             }
         }
@@ -317,12 +318,12 @@ public class BuilderInventoryContainerMenu extends Container {
 
         @Override
         public boolean mayPickup(PlayerEntity player) {
-            return !saveToHeldItem || index != heldPlayerSlot;
+            return heldPlayerSlot < 0 || index != heldPlayerSlot;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return (!saveToHeldItem || index != heldPlayerSlot) && super.mayPlace(stack);
+            return (heldPlayerSlot < 0 || index != heldPlayerSlot) && super.mayPlace(stack);
         }
     }
 }

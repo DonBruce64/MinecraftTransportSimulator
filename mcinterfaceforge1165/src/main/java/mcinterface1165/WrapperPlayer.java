@@ -172,14 +172,15 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     }
 
     @Override
-    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
         NetworkHooks.openGui((ServerPlayerEntity) player, new SimpleNamedContainerProvider((containerID, playerInventory, player) ->
-            new BuilderInventoryContainerMenu(containerID, playerInventory, inventory, texture, saveToHeldItem), new StringTextComponent("")), data -> {
+            new BuilderInventoryContainerMenu(containerID, playerInventory, inventory, texture, inventoryItem, heldPlayerSlot), new StringTextComponent("")), data -> {
                 data.writeUUID(inventory.uniqueUUID);
                 data.writeInt(inventory.getSize());
                 data.writeInt(inventory.getStackSize());
                 data.writeUtf(texture == null ? "" : texture);
-                data.writeBoolean(saveToHeldItem);
+                data.writeInt(heldPlayerSlot);
             });
     }
 

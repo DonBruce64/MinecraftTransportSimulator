@@ -175,8 +175,9 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     }
 
     @Override
-    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
-        InterfacePacket.openInventoryGUI((EntityPlayerMP) player, inventory, texture, saveToHeldItem);
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
+        InterfacePacket.openInventoryGUI((EntityPlayerMP) player, inventory, texture, inventoryItem, heldPlayerSlot);
     }
 
     /**

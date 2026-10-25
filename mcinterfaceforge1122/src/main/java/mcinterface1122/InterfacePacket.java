@@ -9,11 +9,11 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfacePacket;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -26,7 +26,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 class InterfacePacket implements IInterfacePacket {
     private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(InterfaceLoader.MODID);
@@ -54,19 +53,19 @@ class InterfacePacket implements IInterfacePacket {
      * packet only supplies the client-side construction data and the server-selected window ID;
      * all subsequent clicks and slot synchronization use Minecraft's normal container packets.
      */
-    public static void openInventoryGUI(EntityPlayerMP player, EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+    public static void openInventoryGUI(EntityPlayerMP player, EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem, int heldPlayerSlot) {
         if (player.openContainer != player.inventoryContainer) {
             player.closeScreen();
         }
         player.getNextWindowId();
 
-        BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(player.inventory, inventory, texture, saveToHeldItem);
+        BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(player.inventory, inventory, texture, inventoryItem, heldPlayerSlot);
         menu.windowId = player.currentWindowId;
         player.openContainer = menu;
 
         WrapperNBT inventoryData = new WrapperNBT();
         inventory.save(inventoryData);
-        network.sendTo(new InventoryOpenPacket(menu.windowId, inventoryData.tag, inventory.getSize(), inventory.getStackSize(), menu.getTexture(), saveToHeldItem), player);
+        network.sendTo(new InventoryOpenPacket(menu.windowId, inventoryData.tag, inventory.getSize(), inventory.getStackSize(), menu.getTexture(), heldPlayerSlot), player);
         menu.addListener(player);
         MinecraftForge.EVENT_BUS.post(new PlayerContainerEvent.Open(player, menu));
     }
@@ -178,16 +177,12 @@ class InterfacePacket implements IInterfacePacket {
                         world = InterfaceManager.clientInterface.getClientWorld();
                     }
                     if (world != null) {
-                        if (ctx.side.isServer()) {
-                            message.packet.handleFromClient(world, WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
-                        } else {
-                            message.packet.handle(world);
-                        }
+                        message.packet.handle(world);
                     }
                 });
             } else {
                 if (ctx.side.isServer()) {
-                    message.packet.handleFromClient(getServerWorld(ctx), WrapperPlayer.getWrapperFor(ctx.getServerHandler().player));
+                    message.packet.handle(getServerWorld(ctx));
                 } else {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }
@@ -203,18 +198,18 @@ class InterfacePacket implements IInterfacePacket {
         private int inventorySize;
         private int stackSize;
         private String texture;
-        private boolean saveToHeldItem;
+        private int heldPlayerSlot;
 
         public InventoryOpenPacket() {
         }
 
-        private InventoryOpenPacket(int windowID, NBTTagCompound inventoryData, int inventorySize, int stackSize, String texture, boolean saveToHeldItem) {
+        private InventoryOpenPacket(int windowID, NBTTagCompound inventoryData, int inventorySize, int stackSize, String texture, int heldPlayerSlot) {
             this.windowID = windowID;
             this.inventoryData = inventoryData;
             this.inventorySize = inventorySize;
             this.stackSize = stackSize;
             this.texture = texture;
-            this.saveToHeldItem = saveToHeldItem;
+            this.heldPlayerSlot = heldPlayerSlot;
         }
 
         @Override
@@ -229,7 +224,7 @@ class InterfacePacket implements IInterfacePacket {
             inventorySize = packetBuffer.readInt();
             stackSize = packetBuffer.readInt();
             texture = packetBuffer.readString(32767);
-            saveToHeldItem = packetBuffer.readBoolean();
+            heldPlayerSlot = packetBuffer.readInt();
         }
 
         @Override
@@ -240,29 +235,19 @@ class InterfacePacket implements IInterfacePacket {
             packetBuffer.writeInt(inventorySize);
             packetBuffer.writeInt(stackSize);
             packetBuffer.writeString(texture);
-            packetBuffer.writeBoolean(saveToHeldItem);
+            packetBuffer.writeInt(heldPlayerSlot);
         }
     }
 
     public static class InventoryOpenHandler implements IMessageHandler<InventoryOpenPacket, IMessage> {
         @Override
         public IMessage onMessage(InventoryOpenPacket message, MessageContext ctx) {
-            openInventoryGUIOnClient(message);
+            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() ->
+                ((IInventoryGUIClient) InterfaceManager.clientInterface).openInventoryGUI(
+                    new WrapperNBT(message.inventoryData), message.inventorySize, message.stackSize,
+                    message.texture, message.heldPlayerSlot, message.windowID));
             return null;
         }
-    }
-
-    @SideOnly(Side.CLIENT)
-    private static void openInventoryGUIOnClient(InventoryOpenPacket message) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        minecraft.addScheduledTask(() -> {
-            WrapperWorld world = WrapperWorld.getWrapperFor(minecraft.world);
-            EntityInventoryContainer inventory = new EntityInventoryContainer(world, new WrapperNBT(message.inventoryData), message.inventorySize, message.stackSize);
-            BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(minecraft.player.inventory, inventory, message.texture, message.saveToHeldItem);
-            menu.windowId = message.windowID;
-            minecraft.player.openContainer = menu;
-            minecraft.displayGuiScreen(new BuilderInventoryContainerScreen(menu));
-        });
     }
 
 }

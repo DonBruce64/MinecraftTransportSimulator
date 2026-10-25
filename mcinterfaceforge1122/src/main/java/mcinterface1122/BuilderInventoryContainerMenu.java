@@ -4,6 +4,7 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,18 +32,18 @@ public class BuilderInventoryContainerMenu extends Container {
     private final EntityInventoryContainer inventory;
     private final PagedInventory pagedInventory;
     private final InventoryPlayer playerInventory;
-    private final boolean saveToHeldItem;
+    private final IWrapperItemStack inventoryItem;
     private final int heldPlayerSlot;
     private final int visibleSlots;
     private final int inventoryYOffset;
     private final String texture;
     private int rowOffset;
 
-    public BuilderInventoryContainerMenu(InventoryPlayer playerInventory, EntityInventoryContainer inventory, String texture, boolean saveToHeldItem) {
+    public BuilderInventoryContainerMenu(InventoryPlayer playerInventory, EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem, int heldPlayerSlot) {
         this.inventory = inventory;
         this.playerInventory = playerInventory;
-        this.saveToHeldItem = saveToHeldItem;
-        this.heldPlayerSlot = saveToHeldItem ? playerInventory.currentItem : -1;
+        this.inventoryItem = inventoryItem;
+        this.heldPlayerSlot = heldPlayerSlot;
         this.visibleSlots = Math.min(inventory.getSize(), MAX_VISIBLE_SLOTS);
         this.inventoryYOffset = (MAX_VISIBLE_SLOTS - visibleSlots) * 18 / COLUMNS / 2;
         this.texture = texture == null || texture.isEmpty() ? "mts:textures/guis/inventory.png" : texture;
@@ -137,7 +138,7 @@ public class BuilderInventoryContainerMenu extends Container {
     public ItemStack slotClick(int slotID, int dragType, ClickType clickType, EntityPlayer player) {
         //Number-key swaps address the hotbar directly and bypass the PlayerSlot instance below.
         //Keep a held crate anchored while its contents are being edited so it cannot contain itself.
-        if (saveToHeldItem && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
+        if (heldPlayerSlot >= 0 && clickType == ClickType.SWAP && dragType == heldPlayerSlot) {
             return ItemStack.EMPTY;
         }
         return super.slotClick(slotID, dragType, clickType, player);
@@ -151,7 +152,7 @@ public class BuilderInventoryContainerMenu extends Container {
     @Override
     public void onContainerClosed(EntityPlayer player) {
         super.onContainerClosed(player);
-        if (saveToHeldItem && !player.world.isRemote) {
+        if (inventoryItem != null && !player.world.isRemote) {
             saveHeldInventory();
             inventory.remove();
         }
@@ -160,7 +161,7 @@ public class BuilderInventoryContainerMenu extends Container {
     private void saveHeldInventory() {
         IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
         newData.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        new WrapperItemStack(playerInventory.getStackInSlot(heldPlayerSlot)).setData(newData);
+        inventoryItem.setData(newData);
     }
 
     private static boolean isAllowedInIVInventory(ItemStack stack) {
@@ -239,7 +240,7 @@ public class BuilderInventoryContainerMenu extends Container {
 
         @Override
         public void markDirty() {
-            if (saveToHeldItem && !playerInventory.player.world.isRemote) {
+            if (inventoryItem != null && !playerInventory.player.world.isRemote) {
                 saveHeldInventory();
             }
         }
@@ -327,12 +328,12 @@ public class BuilderInventoryContainerMenu extends Container {
 
         @Override
         public boolean canTakeStack(EntityPlayer player) {
-            return !saveToHeldItem || getSlotIndex() != heldPlayerSlot;
+            return heldPlayerSlot < 0 || getSlotIndex() != heldPlayerSlot;
         }
 
         @Override
         public boolean isItemValid(ItemStack stack) {
-            return (!saveToHeldItem || getSlotIndex() != heldPlayerSlot) && super.isItemValid(stack);
+            return (heldPlayerSlot < 0 || getSlotIndex() != heldPlayerSlot) && super.isItemValid(stack);
         }
     }
 }

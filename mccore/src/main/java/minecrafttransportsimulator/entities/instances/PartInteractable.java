@@ -111,7 +111,7 @@ public final class PartInteractable extends APart {
                     break;
                 }
                 case CRATE: {
-                    player.openInventoryGUI(inventory, subDefinition.inventoryTexture, false);
+                    player.openInventoryGUI(inventory, subDefinition.inventoryTexture, null);
                     playersInteracting.add(player);
                     InterfaceManager.packetInterface.sendToAllClients(new PacketEntityInteractGUI(this, player, true));
                     break;
