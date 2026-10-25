@@ -6,14 +6,19 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfacePacket;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -34,12 +39,35 @@ class InterfacePacket implements IInterfacePacket {
         //Register the main wrapper packet.
         network.registerMessage(WrapperHandler.class, WrapperPacket.class, 0, Side.CLIENT);
         network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);
+        network.registerMessage(InventoryOpenHandler.class, InventoryOpenPacket.class, 2, Side.CLIENT);
 
         //Register internal packets, then external.
         byte packetIndex = 0;
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
         InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
         APacketBase.initPackets(packetIndex);
+    }
+
+    /**
+     * Opens a native 1.12 container without registering a fixed vanilla window type.  The custom
+     * packet only supplies the client-side construction data and the server-selected window ID;
+     * all subsequent clicks and slot synchronization use Minecraft's normal container packets.
+     */
+    public static void openInventoryGUI(EntityPlayerMP player, EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem, int heldPlayerSlot) {
+        if (player.openContainer != player.inventoryContainer) {
+            player.closeScreen();
+        }
+        player.getNextWindowId();
+
+        BuilderInventoryContainerMenu menu = new BuilderInventoryContainerMenu(player.inventory, inventory, texture, inventoryItem, heldPlayerSlot);
+        menu.windowId = player.currentWindowId;
+        player.openContainer = menu;
+
+        WrapperNBT inventoryData = new WrapperNBT();
+        inventory.save(inventoryData);
+        network.sendTo(new InventoryOpenPacket(menu.windowId, inventoryData.tag, inventory.getSize(), inventory.getStackSize(), menu.getTexture(), heldPlayerSlot), player);
+        menu.addListener(player);
+        MinecraftForge.EVENT_BUS.post(new PlayerContainerEvent.Open(player, menu));
     }
 
     @Override
@@ -159,6 +187,65 @@ class InterfacePacket implements IInterfacePacket {
                     message.packet.handle(InterfaceManager.clientInterface.getClientWorld());
                 }
             }
+            return null;
+        }
+    }
+
+    /** Construction payload for the client half of the 1.12 native container. */
+    public static class InventoryOpenPacket implements IMessage {
+        private int windowID;
+        private NBTTagCompound inventoryData;
+        private int inventorySize;
+        private int stackSize;
+        private String texture;
+        private int heldPlayerSlot;
+
+        public InventoryOpenPacket() {
+        }
+
+        private InventoryOpenPacket(int windowID, NBTTagCompound inventoryData, int inventorySize, int stackSize, String texture, int heldPlayerSlot) {
+            this.windowID = windowID;
+            this.inventoryData = inventoryData;
+            this.inventorySize = inventorySize;
+            this.stackSize = stackSize;
+            this.texture = texture;
+            this.heldPlayerSlot = heldPlayerSlot;
+        }
+
+        @Override
+        public void fromBytes(ByteBuf buf) {
+            PacketBuffer packetBuffer = new PacketBuffer(buf);
+            windowID = packetBuffer.readInt();
+            try {
+                inventoryData = packetBuffer.readCompoundTag();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            inventorySize = packetBuffer.readInt();
+            stackSize = packetBuffer.readInt();
+            texture = packetBuffer.readString(32767);
+            heldPlayerSlot = packetBuffer.readInt();
+        }
+
+        @Override
+        public void toBytes(ByteBuf buf) {
+            PacketBuffer packetBuffer = new PacketBuffer(buf);
+            packetBuffer.writeInt(windowID);
+            packetBuffer.writeCompoundTag(inventoryData);
+            packetBuffer.writeInt(inventorySize);
+            packetBuffer.writeInt(stackSize);
+            packetBuffer.writeString(texture);
+            packetBuffer.writeInt(heldPlayerSlot);
+        }
+    }
+
+    public static class InventoryOpenHandler implements IMessageHandler<InventoryOpenPacket, IMessage> {
+        @Override
+        public IMessage onMessage(InventoryOpenPacket message, MessageContext ctx) {
+            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() ->
+                ((IInventoryGUIClient) InterfaceManager.clientInterface).openInventoryGUI(
+                    new WrapperNBT(message.inventoryData), message.inventorySize, message.stackSize,
+                    message.texture, message.heldPlayerSlot, message.windowID));
             return null;
         }
     }

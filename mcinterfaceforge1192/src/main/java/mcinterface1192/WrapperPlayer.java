@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -15,6 +16,7 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.LanguageSystem.LanguageEntry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Mob;
@@ -26,6 +28,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.network.NetworkHooks;
 
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
@@ -166,6 +169,19 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
                 }
             };
         }, Component.literal("")));
+    }
+
+    @Override
+    public void openInventoryGUI(EntityInventoryContainer inventory, String texture, IWrapperItemStack inventoryItem) {
+        int heldPlayerSlot = inventoryItem != null ? getHotbarIndex() : -1;
+        NetworkHooks.openScreen((ServerPlayer) player, new SimpleMenuProvider((containerID, playerInventory, player) ->
+            new BuilderInventoryContainerMenu(containerID, playerInventory, inventory, texture, inventoryItem, heldPlayerSlot), Component.literal("")), data -> {
+                data.writeUUID(inventory.uniqueUUID);
+                data.writeInt(inventory.getSize());
+                data.writeInt(inventory.getStackSize());
+                data.writeUtf(texture == null ? "" : texture);
+                data.writeInt(heldPlayerSlot);
+            });
     }
 
     /**
